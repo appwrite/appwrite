@@ -24,6 +24,7 @@ use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Truncate as TruncateException;
 use Utopia\Database\Format;
 use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Relationship\Update as DatabaseRelationshipUpdate;
 use Utopia\Database\RelationshipDeleteAction;
 use Utopia\Database\RelationshipSide;
@@ -748,6 +749,21 @@ abstract class Action extends DatabasesAction
                     $index->setAttribute('attributes', $attributes);
                     $dbForProject->updateDocument('indexes', $index->getId(), $index);
                 }
+            }
+
+            // The grant follows the column, as the index references above do. The library
+            // moves it on the collection itself; the metadata row keeps its own copy -- the
+            // one the API reports and the next update replays -- so a grant left naming the
+            // old key would be reported as live and then pushed back onto the collection as
+            // a grant on a column that no longer exists.
+            $columnPermissions = $collection->getAttribute('columnPermissions', []);
+
+            if (\is_array($columnPermissions) && $columnPermissions !== []) {
+                $dbForProject->updateDocument(
+                    'database_' . $db->getSequence(),
+                    $collection->getId(),
+                    new Document(['columnPermissions' => Permission::renameColumn($columnPermissions, $key, $newKey)]),
+                );
             }
         } else {
             $attribute = $dbForProject->updateDocument('attributes', $db->getSequence() . '_' . $collection->getSequence() . '_' . $key, $attribute);

@@ -10,6 +10,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\RoutePermissions;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Config\Config;
 use Utopia\Database\Attribute;
@@ -74,7 +75,7 @@ class Create extends CollectionAction
             ->param('collectionId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
             ->param('dimension', null, new Range(MIN_VECTOR_DIMENSION, MAX_VECTOR_DIMENSION), 'Embedding dimension.', example: '4')
-            ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('permissions', null, new RoutePermissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
             ->param('description', '', new Text(1024, 0), 'Optional description for the collection.', true)
@@ -99,6 +100,13 @@ class Create extends CollectionAction
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions) ?? [];
 
+        // Kept in the two forms the two stores want: the row's permissions decide who may see
+        // the collection in a listing, and the read gate matches the stored string, so a column
+        // left there would hide it from the role it was granted to -- which the library refuses
+        // outright. The verbatim list is kept beside it to report and to replay.
+        $columnPermissions = Permission::hasColumns($permissions) ? $permissions : [];
+        $rowPermissions = Permission::withoutColumns($permissions);
+
         // Resolve the data-plane database BEFORE writing the metadata row. For a
         // dedicated product database this throws while provisioning (no DSN yet);
         // writing the row first would leave an orphaned collection with no backing
@@ -111,7 +119,8 @@ class Create extends CollectionAction
                 '$id' => $collectionId,
                 'databaseInternalId' => $database->getSequence(),
                 'databaseId' => $databaseId,
-                '$permissions' => $permissions,
+                '$permissions' => $rowPermissions,
+                'columnPermissions' => $columnPermissions,
                 'documentSecurity' => $documentSecurity,
                 'enabled' => $enabled,
                 'name' => $name,
@@ -154,13 +163,19 @@ class Create extends CollectionAction
                     \usleep(100_000);
                 }
             }
-            $dbForDatabases->createCollection(Collection::create(
+            $create = fn () => $dbForDatabases->createCollection(Collection::create(
                 id: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                 attributes: $attributes,
                 indexes: $indexes,
                 permissions: $permissions,
                 documentSecurity: $documentSecurity,
             ));
+
+            // Scoped only when one of them names a column, so the library's refusal stays the
+            // backstop for a request that never asked for the feature.
+            $columnPermissions === []
+                ? $create()
+                : $dbForDatabases->withColumnPermissions($create);
             $attributeDocuments = \array_map(function (Attribute $attribute) use ($database, $collection, $databaseId, $collectionId) {
                 return new Document([
                     '$id' => Id::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $attribute->key),

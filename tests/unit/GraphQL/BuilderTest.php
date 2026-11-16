@@ -8,6 +8,7 @@ use Appwrite\GraphQL\Types\Mapper;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Parameter;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\RoutePermissions;
 use Appwrite\Utopia\Response;
 use GraphQL\GraphQL;
 use GraphQL\Type\Definition\NamedType;
@@ -16,6 +17,7 @@ use GraphQL\Type\Schema;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Swoole\Http\Response as SwooleResponse;
+use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\Queries\Base as Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
@@ -223,6 +225,35 @@ final class BuilderTest extends TestCase
         $fields = \iterator_to_array($this->mapRoute($route, $method));
 
         $this->assertSame('[String]', (string) $fields[0]['args']['queries']['type']);
+    }
+
+    public function testPermissionValidatorsMapToAStringList(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $method = new Method(
+            namespace: 'test',
+            group: null,
+            name: 'createGraphQLPermissionsTest',
+            description: 'Create test.',
+            auth: [],
+            responses: [
+                new SDKResponse(code: 201, model: Response::MODEL_ANY),
+            ],
+        );
+
+        // RoutePermissions judges the column half itself, but it is the same list of
+        // permission strings on the wire, so it must map exactly as its parent does.
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->param('permissions', [], new Permissions(), 'Permissions.', true)
+            ->param('routePermissions', [], new RoutePermissions(), 'Route permissions.', true);
+
+        $fields = \iterator_to_array($this->mapRoute($route, $method));
+
+        $this->assertSame('[String]', (string) $fields[0]['args']['permissions']['type']);
+        $this->assertSame('[String]', (string) $fields[0]['args']['routePermissions']['type']);
     }
 
     private function mapRoute(Route $route, Method $method): iterable

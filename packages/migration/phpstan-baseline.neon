@@ -325,12 +325,6 @@ parameters:
 			path: src/Destinations/Appwrite.php
 
 		-
-			message: '#^Parameter \#1 \$array of function sort expects array\<string\>, array\<string\>\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Destinations/Appwrite.php
-
-		-
 			message: '#^Parameter \#1 \$data of static method Utopia\\Database\\Attribute\:\:fromArray\(\) expects array\<string, mixed\>, array\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
@@ -862,12 +856,6 @@ parameters:
 			message: '#^Parameter \$indexes of static method Utopia\\Database\\Collection\:\:create\(\) expects list\<Utopia\\Database\\Index\>, array\<Utopia\\Database\\Index\> given\.$#'
 			identifier: argument.type
 			count: 2
-			path: src/Destinations/Appwrite.php
-
-		-
-			message: '#^Parameter \$permissions of static method Utopia\\Database\\Collection\:\:create\(\) expects list\<string\>\|null, array\<string\> given\.$#'
-			identifier: argument.type
-			count: 1
 			path: src/Destinations/Appwrite.php
 
 		-
