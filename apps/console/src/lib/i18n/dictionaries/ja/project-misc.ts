@@ -3799,7 +3799,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Greater than': 'より大きい',
   'Greater than or equal': '以上',
   'Inbound bandwidth': '受信帯域幅',
-  'Know when usage crosses a line': '使用量がしきい値を超えたら把握する',
+  'Know when something needs attention': '対応が必要なときに把握する',
   'Last value': '最新の値',
   'Less than': 'より小さい',
   'Less than or equal': '以下',
@@ -3923,8 +3923,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Monitor has been updated': 'モニターを更新しました',
   'Monitor not found': 'モニターが見つかりません',
   Monitors: 'モニター',
-  'Monitors watch your project usage and notify you when a metric crosses the threshold you set.':
-    'モニターはプロジェクトの使用量を監視し、メトリクスが設定したしきい値を超えると通知します。',
+  'Monitors watch your project usage and your endpoints, and notify you when a metric crosses your threshold or a check fails.':
+    'モニターはプロジェクトの使用量とエンドポイントを監視し、メトリクスがしきい値を超えたときやチェックが失敗したときに通知します。',
   'No alerts yet': 'まだアラートはありません',
   Ongoing: '継続中',
   Peak: 'ピーク',

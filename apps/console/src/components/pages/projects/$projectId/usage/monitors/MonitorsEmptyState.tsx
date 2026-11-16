@@ -184,9 +184,9 @@ export function MonitorsEmptyState({
       <ProductEmptyStateHero
         visual={<AlertsVisual />}
         icon={Bell}
-        title={t('Know when usage crosses a line')}
+        title={t('Know when something needs attention')}
         description={t(
-          'Monitors watch your project usage and notify you when a metric crosses the threshold you set.',
+          'Monitors watch your project usage and your endpoints, and notify you when a metric crosses your threshold or a check fails.',
         )}
         actions={
           <ProductEmptyStateCreateButton

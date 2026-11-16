@@ -3731,7 +3731,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Greater than': 'גדול מ-',
   'Greater than or equal': 'גדול או שווה ל-',
   'Inbound bandwidth': 'תעבורה נכנסת',
-  'Know when usage crosses a line': 'דעו מתי השימוש חוצה את הגבול',
+  'Know when something needs attention': 'דעו מתי משהו דורש תשומת לב',
   'Last value': 'ערך אחרון',
   'Less than': 'קטן מ-',
   'Less than or equal': 'קטן או שווה ל-',
@@ -3851,8 +3851,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Monitor has been updated': 'המוניטור עודכן',
   'Monitor not found': 'המוניטור לא נמצא',
   Monitors: 'מוניטורים',
-  'Monitors watch your project usage and notify you when a metric crosses the threshold you set.':
-    'מוניטורים עוקבים אחר השימוש בפרויקט ומתריעים כשמדד חוצה את הסף שהגדרתם.',
+  'Monitors watch your project usage and your endpoints, and notify you when a metric crosses your threshold or a check fails.':
+    'מוניטורים עוקבים אחר השימוש בפרויקט ואחר נקודות הקצה שלכם, ומתריעים כשמדד חוצה את הסף שהגדרתם או כשבדיקה נכשלת.',
   'No alerts yet': 'אין עדיין התראות',
   Ongoing: 'מתמשך',
   Peak: 'שיא',
