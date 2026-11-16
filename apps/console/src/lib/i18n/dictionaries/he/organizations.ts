@@ -921,6 +921,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Popular integrations from the marketplace catalog.':
     'אינטגרציות פופולריות מקטלוג המרקטפלייס.',
   Port: 'פורט',
+  'Port is required': 'פורט הוא שדה חובה',
+  'Port must be between 0 and 65535': 'הפורט חייב להיות בין 0 ל-65535',
   'Post-logout redirect URIs': 'כתובות URI להפניה לאחר התנתקות',
   'Postal code': 'מיקוד',
   Premium: 'פרימיום',
@@ -937,6 +939,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Primary payment method updated': 'אמצעי התשלום הראשי עודכן',
   Priority: 'עדיפות',
   'Priority for SRV record': 'עדיפות לרשומת SRV',
+  'Priority is required': 'עדיפות היא שדה חובה',
+  'Priority must be between 0 and 65535': 'העדיפות חייבת להיות בין 0 ל-65535',
   'Privacy policy': 'מדיניות פרטיות',
   Project: 'פרויקט',
   'Project (optional)': 'פרויקט (אופציונלי)',
@@ -1294,6 +1298,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   "We've received your request and will get back to you as soon as we can.":
     'קיבלנו את הבקשה שלכם ונחזור אליכם בהקדם האפשרי.',
   Weight: 'משקל',
+  'Weight is required': 'משקל הוא שדה חובה',
+  'Weight must be between 0 and 65535': 'המשקל חייב להיות בין 0 ל-65535',
   'What happens next': 'מה קורה בהמשך',
   "What wasn't working for you? Please share anything that influenced your decision to downgrade. This feedback helps us improve the platform.":
     'מה לא עבד עבורכם? שתפו כל דבר שהשפיע על ההחלטה שלכם לשנמך. המשוב הזה עוזר לנו לשפר את הפלטפורמה.',

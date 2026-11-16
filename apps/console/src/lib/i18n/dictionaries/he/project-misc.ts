@@ -4004,38 +4004,53 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Auto-deploy on every push': 'פריסה אוטומטית בכל push',
   // Identity servers (LDAP)
   'Identity servers': 'שרתי זהויות',
+  'Enable LDAP sign-in': 'הפעלת התחברות באמצעות LDAP',
+  'When enabled, users can sign in with their directory username and password.':
+    'כאשר האפשרות מופעלת, משתמשים יכולים להתחבר עם שם המשתמש והסיסמה שלהם בספרייה.',
+  'Tried in order until one answers, up to 10. Pasting an LDAP URL also fills in encryption, port and base DN.':
+    'המארחים מנוסים לפי הסדר עד שאחד מהם עונה, עד 10. הדבקת כתובת URL של LDAP ממלאת גם את ההצפנה, הפורט וה-base DN.',
+  'Leave empty for 636 with LDAPS, or 389 otherwise.':
+    'השאירו ריק עבור 636 עם LDAPS, או 389 אחרת.',
+  'Use None only on a trusted private network.':
+    'השתמשו ב"ללא" רק ברשת פרטית מהימנה.',
+  "Check the directory's certificate before sending any password.":
+    'בדיקת התעודה של הספרייה לפני שליחת סיסמה כלשהי.',
+  'The CA or self-signed certificate to trust. Leave empty to use the system trust store.':
+    'תעודת ה-CA או התעודה בחתימה עצמית שיש לסמוך עליה. השאירו ריק כדי להשתמש במאגר התעודות המהימנות של המערכת.',
+  'How long to wait for each answer, from 1 to 30.':
+    'כמה זמן להמתין לכל תשובה, בין 1 ל-30.',
+  'Service account for the search, or empty for anonymous.':
+    'חשבון השירות לחיפוש, או ריק לחיפוש אנונימי.',
+  'Never shown again. Re-enter it when the connection changes.':
+    'לא מוצגת שוב. הזינו אותה מחדש כשהחיבור משתנה.',
+  'Enter the bind password again to save.':
+    'הזינו שוב את סיסמת ה-Bind כדי לשמור.',
+  'Only its members can sign in. Leave empty to allow everyone.':
+    'רק חברי הקבוצה יכולים להתחבר. השאירו ריק כדי לאפשר לכולם.',
+  'An ID that never changes, such as entryUUID.':
+    'מזהה שאף פעם לא משתנה, כמו entryUUID.',
+  'Attribute holding the display name, usually cn.':
+    'המאפיין שמכיל את שם התצוגה, בדרך כלל cn.',
+  'Attribute holding an E.164 phone number. Optional.':
+    'המאפיין שמכיל מספר טלפון בפורמט E.164. אופציונלי.',
+  'Using Active Directory?': 'משתמשים ב-Active Directory?',
+  'Search identity servers...': 'חיפוש שרתי זהויות...',
+  'Identity servers section': 'אזור שרתי זהויות',
+  'Identity servers navigation': 'ניווט שרתי זהויות',
   LDAP: 'LDAP',
-  'Connect the identity systems your organization already runs so people can sign in with the accounts they have.':
-    'חברו את מערכות הזהויות שהארגון שלכם כבר מפעיל, כדי שמשתמשים יוכלו להתחבר עם החשבונות שכבר יש להם.',
   'Let users sign in with the credentials of your LDAP directory, such as Active Directory or OpenLDAP.':
     'אפשרו למשתמשים להתחבר עם פרטי האימות של ספריית ה-LDAP שלכם, כמו Active Directory או OpenLDAP.',
-  'Turn on LDAP sign-in for this project. Enabling connects to the directory to validate the configuration, so add at least one host and a base DN first.':
-    'הפעלת התחברות דרך LDAP לפרויקט הזה. ההפעלה מתחברת לספרייה כדי לאמת את התצורה, לכן הוסיפו קודם לפחות מארח אחד ו-base DN.',
   Directory: 'ספרייה',
   Hosts: 'מארחים',
-  'Hostnames or IP addresses of the directory, tried in order until one answers. Press Enter after each host, up to 10. Paste an LDAP URL to also fill in encryption, port and base DN.':
-    'שמות מארחים או כתובות IP של הספרייה, מנוסים לפי הסדר עד שאחד מהם עונה. לחצו Enter אחרי כל מארח, עד 10 מארחים. הדביקו כתובת URL של LDAP כדי למלא גם את ההצפנה, הפורט וה-base DN.',
   'Use {dn} as the base DN?': 'להשתמש ב-{dn} בתור base DN?',
   Use: 'שימוש',
-  'Leave empty for the default: 636 for LDAPS, 389 otherwise.':
-    'השאירו ריק לברירת המחדל: 636 עבור LDAPS, אחרת 389.',
-  'LDAPS encrypts from the first byte, StartTLS upgrades a plain connection, None is for a trusted network only.':
-    'LDAPS מצפין מהבייט הראשון, StartTLS משדרג חיבור לא מוצפן, ו"ללא" מיועד לרשת מהימנה בלבד.',
   'Verify certificate': 'אימות תעודה',
-  "Check the directory's certificate against the certificate below, or the system trust store if it is empty.":
-    'בדיקת התעודה של הספרייה מול התעודה שלמטה, או מול מאגר התעודות המהימנות של המערכת אם השדה ריק.',
   'Timeout (seconds)': 'Timeout (שניות)',
-  'Seconds to wait for the directory to connect and answer each operation, from 1 to 30.':
-    'מספר השניות להמתין לחיבור לספרייה ולמענה על כל פעולה, בין 1 ל-30.',
   'Certificate (PEM)': 'תעודה (PEM)',
-  "Certificate of the authority that signed the directory's certificate, or the directory's own certificate if it is self-signed. Paste several to trust more than one. Leave empty to use the system trust store.":
-    'התעודה של הרשות שחתמה על תעודת הספרייה, או התעודה של הספרייה עצמה אם היא בחתימה עצמית. הדביקו כמה תעודות כדי לסמוך על יותר מאחת. השאירו ריק כדי להשתמש במאגר התעודות המהימנות של המערכת.',
   'Base DN': 'Base DN',
   'Subtree the user search starts from, for example ou=people,dc=example,dc=com.':
     'תת-העץ שממנו מתחיל חיפוש המשתמשים, למשל ou=people,dc=example,dc=com.',
   'Bind DN': 'Bind DN',
-  'Service account used to search for users. Leave empty if the directory allows anonymous search.':
-    'חשבון השירות שמשמש לחיפוש משתמשים. השאירו ריק אם הספרייה מאפשרת חיפוש אנונימי.',
   'Bind password': 'סיסמת Bind',
   'User filter': 'מסנן משתמשים',
   'Finds the person signing in. {username} is replaced with what they type.':
@@ -4043,24 +4058,14 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'The user filter must contain {username}.':
     'מסנן המשתמשים חייב לכלול את {username}.',
   'Sign-in rules': 'כללי התחברות',
-  'Using Active Directory? Set the user filter to (sAMAccountName={username}) and the ID attribute to objectGUID.':
-    'משתמשים ב-Active Directory? הגדירו את מסנן המשתמשים ל-(sAMAccountName={username}) ואת מאפיין המזהה ל-objectGUID.',
   'Attribute mapping': 'מיפוי מאפיינים',
   'ID attribute': 'מאפיין מזהה',
-  'Attribute with the identifier that stays the same when an entry is renamed or moved: entryUUID, or objectGUID on Active Directory.':
-    'המאפיין שמכיל את המזהה שנשאר קבוע גם כששם הרשומה משתנה או כשהיא מועברת: entryUUID, או objectGUID ב-Active Directory.',
   'Email attribute': 'מאפיין אימייל',
   'Attribute holding the email address, usually mail.':
     'המאפיין שמכיל את כתובת האימייל, בדרך כלל mail.',
   'Name attribute': 'מאפיין שם',
-  'Attribute holding the display name: cn, or displayName on Active Directory.':
-    'המאפיין שמכיל את שם התצוגה: cn, או displayName ב-Active Directory.',
   'Phone attribute': 'מאפיין טלפון',
-  'Attribute holding the phone number in E.164 format, for example mobile. Leave empty to skip phone numbers.':
-    'המאפיין שמכיל את מספר הטלפון בפורמט E.164, למשל mobile. השאירו ריק כדי לדלג על מספרי טלפון.',
   'Required group DN': 'DN של קבוצה נדרשת',
-  'Group a user must belong to in order to sign in, checked on every sign-in. Leave empty to allow every user the directory authenticates.':
-    'קבוצה שמשתמש חייב להשתייך אליה כדי להתחבר, נבדקת בכל התחברות. השאירו ריק כדי לאפשר כניסה לכל משתמש שהספרייה מאמתת.',
   'Port must be between 1 and 65535.': 'הפורט חייב להיות בין 1 ל-65535.',
   'LDAP settings have been updated.': 'הגדרות ה-LDAP עודכנו.',
   'LDAP sign-in has been enabled.': 'ההתחברות דרך LDAP הופעלה.',
@@ -4088,10 +4093,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'המשתמש נמצא, בדיקת הקבוצה עברה, הסיסמה התקבלה.',
   'User found, group check passed.': 'המשתמש נמצא, בדיקת הקבוצה עברה.',
   'Failed to test the LDAP connection': 'בדיקת חיבור ה-LDAP נכשלה',
-  'Stored securely and never shown again. Required again when hosts, port, encryption, certificate settings or bind DN change.':
-    'נשמרת באופן מאובטח ולא מוצגת שוב. נדרשת שוב בכל שינוי של מארחים, פורט, הצפנה, הגדרות התעודה או bind DN.',
-  'Enter the bind password again to save: the connection or certificate settings changed.':
-    'הזינו שוב את סיסמת ה-bind כדי לשמור: הגדרות החיבור או האישור השתנו.',
   'Add at least one host and a base DN to enable LDAP sign-in.':
     'הוסיפו לפחות מארח אחד ו-base DN כדי להפעיל התחברות דרך LDAP.',
   'Add at least one host and a base DN under Settings > Identity servers to enable LDAP sign-in.':
