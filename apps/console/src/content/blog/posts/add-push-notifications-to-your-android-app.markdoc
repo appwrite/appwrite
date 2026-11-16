@@ -71,7 +71,7 @@ android {
 }
 
 dependencies {
-    implementation("io.appwrite:sdk-for-android:31.1.0")
+    implementation("io.appwrite:sdk-for-android:31.3.0")
 }
 ```
 
@@ -272,7 +272,9 @@ Foreground mode is opt-in, so declare its permissions in `app/src/main/AndroidMa
 ```xml
 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING" />
-``` [Delivery while the app is closed](/docs/products/messaging/appwrite-push#background-android) covers exact alarms and battery optimization, which also affect timing.
+```
+
+[Delivery while the app is closed](/docs/products/messaging/appwrite-push#background-android) covers exact alarms and battery optimization, which also affect timing.
 
 # Sign out
 
