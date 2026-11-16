@@ -27,7 +27,7 @@ The interface opens on the first project it finds in this order:
 
 1. The `--project-id` flag.
 2. The `APPWRITE_PROJECT_ID` environment variable.
-3. The `projectId` in the nearest `appwrite.config.json`, so running the command inside a project directory opens that project.
+3. The `projectId` in the project config: the file chosen with `--config-file` or `APPWRITE_CONFIG_FILE`, or else the nearest `appwrite.config.json`, so running the command inside a project directory opens that project. Learn more about [multiple environments](/docs/tooling/command-line/installation#multiple-environments).
 
 Without a project, a console login opens on your organizations, where you can pick any project you have access to.
 
