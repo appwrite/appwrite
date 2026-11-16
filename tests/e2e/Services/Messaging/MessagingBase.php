@@ -1158,6 +1158,62 @@ trait MessagingBase
         $this->assertCount(0, $message['body']['deliveryErrors']);
     }
 
+    public function testSendPushViaAppwriteProviderToNumericUserId(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/appwrite', $headers, [
+            'providerId' => Id::unique(),
+            'name' => 'Appwrite-numeric-user',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        // PHP turns an all-digit string array key into an int.
+        $userId = (string) \random_int(100000000000000000, 999999999999999999);
+        $user = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => $userId,
+            'email' => 'appwrite-push-numeric-' . Id::unique() . '@mail.org',
+            'password' => 'password',
+            'name' => 'Numeric Push User',
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+        $this->assertSame($userId, $user['body']['$id']);
+
+        $target = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/targets', $headers, [
+            'targetId' => Id::unique(),
+            'providerType' => 'push',
+            'providerId' => $provider['body']['$id'],
+            'identifier' => Id::unique(),
+        ]);
+        $this->assertEquals(201, $target['headers']['status-code']);
+
+        $push = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', $headers, [
+            'messageId' => Id::unique(),
+            'users' => [$userId],
+            'title' => 'Order shipped',
+            'body' => 'Your order is on the way',
+        ]);
+        $this->assertEquals(201, $push['headers']['status-code']);
+        $pushMessageId = $push['body']['$id'];
+
+        // Test for SUCCESS
+        $this->assertEventually(function () use ($pushMessageId, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $pushMessageId, $headers);
+            $this->assertContains($response['body']['status'], [MessageStatus::SENT, MessageStatus::FAILED]);
+        }, 30000, 500);
+
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $pushMessageId, $headers);
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SENT, $message['body']['status']);
+        $this->assertEquals(1, $message['body']['deliveredTotal']);
+        $this->assertCount(0, $message['body']['deliveryErrors']);
+    }
+
     public function testUpdateProviders(): void
     {
         $providers = $this->setupCreatedProviders();
