@@ -28,6 +28,7 @@ import {
   useDeleteDomain,
 } from '@/lib/react-query/hooks'
 import {
+  domainFieldError,
   ensureApexDomainInOrganization,
   getDomainClaimReason,
   type DomainClaimReason,
@@ -64,7 +65,8 @@ export function AddDomainWizard() {
   const [branch, setBranch] = useState('')
   const [redirectUrl, setRedirectUrl] = useState('')
   const [statusCode, setStatusCode] = useState('302')
-  const [error, setError] = useState('')
+  const [domainTouched, setDomainTouched] = useState(false)
+  const domainError = domainFieldError(domain, domainTouched, t)
   const [rule, setRule] = useState<Models.ProxyRule | null>(null)
   // Set while the create waits for the domain's ownership TXT record
   const [claimDomain, setClaimDomain] = useState<string | null>(null)
@@ -112,16 +114,9 @@ export function AddDomainWizard() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (isPending) return
+    setDomainTouched(true)
+    if (!isValidDomain(domain)) return
     const d = domain.trim().toLowerCase()
-    setError('')
-    if (!d) {
-      setError(t('Required'))
-      return
-    }
-    if (!isValidDomain(d)) {
-      setError(t('Please enter a valid domain'))
-      return
-    }
     if (behaviour === 'branch' && !hasRepo) {
       toast.error(t('Connect repository first'))
       return
@@ -171,9 +166,9 @@ export function AddDomainWizard() {
         setClaimDomain(d)
         return
       }
-      toast.error(
-        err instanceof Error ? err.message : t('Failed to add domain'),
-      )
+      const message = getErrorMessage(err, 'Failed to add domain')
+      setError(message)
+      toast.error(message)
     }
   }
 
@@ -319,7 +314,10 @@ export function AddDomainWizard() {
           >
             {t('Cancel')}
           </Button>
-          <Button onClick={handleSubmit} disabled={isPending || !domain.trim()}>
+          <Button
+            onClick={handleSubmit}
+            disabled={isPending || !isValidDomain(domain)}
+          >
             {t('Add')}
           </Button>
         </div>
@@ -357,16 +355,15 @@ export function AddDomainWizard() {
             <Input
               placeholder="my-function.example.com"
               value={domain}
-              onChange={(e) => {
-                setDomain(e.target.value)
-                setError('')
-              }}
-              className={`font-mono mt-1.5 ${error ? 'border-destructive' : ''}`}
+              onChange={(e) => setDomain(e.target.value)}
+              onBlur={() => setDomainTouched(true)}
+              aria-invalid={domainError ? true : undefined}
+              className="font-mono mt-1.5"
               disabled={createMutation.isPending}
             />
-            {error && (
-              <p className="text-[11px] text-destructive mt-1">{error}</p>
-            )}
+            {domainError ? (
+              <p className="text-[11px] text-destructive mt-1">{domainError}</p>
+            ) : null}
           </div>
         </div>
 
