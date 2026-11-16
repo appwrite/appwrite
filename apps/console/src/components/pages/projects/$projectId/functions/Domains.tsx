@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
-import { useParams, useSearch, useNavigate } from '@tanstack/react-router'
+import { useParams, useSearch } from '@tanstack/react-router'
 import {
   AlertCircle,
   Loader2,
@@ -36,6 +36,7 @@ import {
   useOrganizationDomains,
 } from '@/lib/react-query/hooks'
 import { VerifyDomain } from './_components/VerifyDomain'
+import { DomainRecordsDialog } from '@/components/pages/projects/$projectId/settings/domains/DomainRecords'
 import { ViewLogsDialog } from '@/components/pages/projects/$projectId/settings/domains/ViewLogs'
 import { DeleteDomainDialog } from '@/components/pages/projects/$projectId/settings/domains/DeleteDomain'
 import { ProxyRuleContextMenu } from '@/components/pages/projects/$projectId/settings/domains/ProxyRuleContextMenu'
@@ -65,7 +66,6 @@ export function View() {
   const t = useT()
   const visitUrl = useVisitUrl()
   const { projectId, functionId } = useParams({ strict: false })
-  const navigate = useNavigate()
   const search = useSearch({ strict: false }) as {
     search?: string
     query?: string
@@ -74,6 +74,7 @@ export function View() {
   const [currentPage, setCurrentPage] = useState(0)
   const [pageSize, setPageSize] = useState(DOMAINS_DEFAULT_PAGE_SIZE)
   const [verifyOpen, setVerifyOpen] = useState(false)
+  const [recordsOpen, setRecordsOpen] = useState(false)
   const [smtpVerifyOpen, setSmtpVerifyOpen] = useState(false)
   const [viewLogsOpen, setViewLogsOpen] = useState(false)
   const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)
@@ -151,6 +152,13 @@ export function View() {
       } else {
         setVerifyOpen(true)
       }
+    })
+  }
+
+  const handleRecords = (rule: Models.ProxyRule) => {
+    openDialogAfterOverlayCloses(() => {
+      setSelectedRule(rule)
+      setRecordsOpen(true)
     })
   }
 
@@ -257,10 +265,9 @@ export function View() {
                       key={rule.$id}
                       projectId={projectId!}
                       rule={rule}
-                      projectTeamId={project?.teamId}
-                      apexToOrgDomainId={apexToOrgDomainId}
                       onViewLogs={handleViewLogs}
                       onRetry={handleRetry}
+                      onRecords={handleRecords}
                       onDelete={handleDelete}
                     >
                       <TableRow>
@@ -364,32 +371,7 @@ export function View() {
                                   </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem
-                                  onClick={() => {
-                                    const apex = getApexDomain(rule.domain)
-                                    const orgDomainId = apex
-                                      ? apexToOrgDomainId.get(
-                                          apex.toLowerCase(),
-                                        )
-                                      : undefined
-                                    if (project?.teamId && orgDomainId) {
-                                      navigate({
-                                        to: '/organizations/$orgId/domains/$domainId',
-                                        params: {
-                                          orgId: project.teamId,
-                                          domainId: orgDomainId,
-                                        },
-                                      })
-                                    }
-                                  }}
-                                  disabled={
-                                    !project?.teamId ||
-                                    !getApexDomain(rule.domain) ||
-                                    !apexToOrgDomainId.has(
-                                      getApexDomain(
-                                        rule.domain,
-                                      )?.toLowerCase() ?? '',
-                                    )
-                                  }
+                                  onClick={() => handleRecords(rule)}
                                 >
                                   <MenuItemContent icon={Globe}>
                                     {t('Records')}
@@ -454,6 +436,13 @@ export function View() {
             region={project?.region}
             organizationDomainId={getOrganizationDomainId(selectedRule)}
             onVerifySuccess={() => setSelectedRule(null)}
+          />
+          <DomainRecordsDialog
+            open={recordsOpen}
+            onOpenChange={setRecordsOpen}
+            rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
+            region={project?.region}
+            resourceType="function"
           />
           <DeleteDomainDialog
             open={deleteDomainOpen}
