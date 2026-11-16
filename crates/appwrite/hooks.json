@@ -23,12 +23,12 @@
     {
       "id": "abuse",
       "title": "Abuse limits",
-      "description": "Rate limits a route by its `abuse-key`, `abuse-limit` and `abuse-time` labels (raised 100 times for listed projects), skipping keys and privileged users and when `_APP_OPTIONS_ABUSE` is disabled; sets the X-RateLimit headers and throws a rate limit error past the limit. Also hands the user to the request and response.",
+      "description": "Rate limits a route by each `Limit` of its `abuse` label (raised 100 times for listed projects): a key or privileged caller is counted only by limits declared for everyone, nothing is counted when `_APP_OPTIONS_ABUSE` is disabled, a failure limit reserves its hit, and a refused request gives back the hits it reserved; sets the X-RateLimit headers and throws a rate limit error past a limit. Also hands the user to the request and response.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "init", "anchor": "GENERAL_RATE_LIMIT_EXCEEDED" },
       "rust": {
         "file": "crates/appwrite/core/src/platform/hooks/init/abuse.rs",
         "status": "done",
-        "note": "Teams' `createMembership` (`abuse-limit` 10 on the default key) and `updateMembershipStatus` (`ip:{ip},url:{url}`) and the Account recovery, verification and password routes (keys with `{param-email}`, `{userId}` and `{param-userId}`, several keys per route) prove the counters and the `X-RateLimit-*` headers in `bin/compat appwrite diff` (the dev stack runs with `_APP_OPTIONS_ABUSE=disabled`, so requests are counted, not refused). `{url}` is the route path alone (no request host), `{param-<name>}` covers the route's path params too, which a query param of the same name cannot override, `{param-email}` is lowercased (sign in matches emails case-insensitively) and `{chunkId}` the chunk a `Content-Range` starts in at the 5MB server chunk size.",
+        "note": "Teams' `createMembership` (`url`, `ip`) and `updateMembershipStatus` (`ip`, `url`), Storage's file writes and previews and the Account recovery, verification and session routes (several limits per route) prove the `X-RateLimit-*` headers in `bin/compat appwrite diff` (the dev stack runs with `_APP_OPTIONS_ABUSE=disabled`, so limits are read, not counted). Keys are the literal `part:value` pairs of `Limit::key()`: `url` is the route path alone (no request host), `param.<name>` covers the route's path params too, which a query param of the same name cannot override, `param.email` is lowercased and `param.username` trimmed and lowercased, and `chunkId` the chunk a `Content-Range` starts in at the 5MB server chunk size.",
         "where": [
           { "file": "crates/appwrite/core/src/platform/hooks/init/abuse.rs", "anchor": "async fn abuse" }
         ]
@@ -95,15 +95,15 @@
     },
     {
       "id": "abuse-reset",
-      "title": "Abuse counter reset",
-      "description": "Resets the route's abuse counters when the response status is one of its `abuse-reset` codes.",
-      "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "abuse-reset" },
+      "title": "Abuse failure release",
+      "description": "Gives back the hits a successful request's failure limits reserved on arrival (only the limits that counted for the caller).",
+      "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "give back the hits its" },
       "rust": {
         "file": "crates/appwrite/core/src/platform/hooks/shutdown/abuse_reset.rs",
         "status": "done",
-        "note": "Account's session routes carry `abuse-reset` (201) like PHP. Unit tests (`abuse_reset_tests`) prove a listed status zeroes the request's keys in the current window and leaves other statuses, keys and routes alone. The parity diff cannot cover it: `_APP_OPTIONS_ABUSE` is read per process by both runtimes and the shared stack runs with it `disabled`.",
+        "note": "Account's email, token, magic URL, ID token and LDAP session routes declare failure limits like PHP. Shutdown hooks run only for a request that did not fail, so a failed request keeps its reserved hit. The parity diff cannot cover it: `_APP_OPTIONS_ABUSE` is read per process by both runtimes and the shared stack runs with it `disabled`.",
         "where": [
-          { "file": "crates/appwrite/core/src/platform/hooks/shutdown/abuse_reset.rs", "anchor": "async fn reset_limits" }
+          { "file": "crates/appwrite/core/src/platform/hooks/shutdown/abuse_reset.rs", "anchor": "async fn abuse_reset" }
         ]
       }
     },
