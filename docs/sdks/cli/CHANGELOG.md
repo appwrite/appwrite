@@ -1,5 +1,12 @@
 # Change Log
 
+## 28.13.0
+
+* Added: `account create-ldap-session` for LDAP sign-in
+* Added: `project update-ldap` and `project create-ldap-test` to configure and test a project's LDAP directory; output masks `ldapBindPassword`
+* Added: `sites update-analytics` to turn site analytics on or off
+* Updated: built against Go SDK `v7.20.0`
+
 ## 28.12.1
 
 * Fixed: `terminal` lists organizations on Cloud
