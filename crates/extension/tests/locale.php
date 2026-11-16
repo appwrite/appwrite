@@ -1,20 +1,16 @@
 <?php
 
-// Parity corpus for Utopia\Locale\Locale. Run it on the PHP class and on the utopia
-// extension's (_APP_EXTENSION_LIBRARIES=locale), and diff stdout: every line must match.
-// Stderr names the implementation that ran. Languages are static state, so cases run in
-// order on one set of languages, as they would in a worker.
+// Parity corpus for Utopia\Locale\Locale, which only the utopia extension provides. Its
+// stdout must match locale.expected.jsonl, the output of the PHP class it replaced
+// (utopia-php/locale). Languages are static state, so cases run in order on one set of
+// languages, as they would in a worker.
 
 require __DIR__ . '/../../../vendor/autoload.php';
 
 use Utopia\Locale\Locale;
 
-$internal = (new ReflectionClass(Locale::class))->isInternal();
-fwrite(STDERR, 'Utopia\\Locale\\Locale: ' . ($internal ? 'utopia extension' : 'PHP') . PHP_EOL);
-// A run meant for the extension that gets the PHP class would compare PHP with PHP and pass.
-$requested = in_array('locale', array_map(trim(...), explode(',', getenv('_APP_EXTENSION_LIBRARIES') ?: '')), true);
-if ($internal !== $requested) {
-    fwrite(STDERR, '_APP_EXTENSION_LIBRARIES ' . ($requested ? 'names' : 'does not name') . ' locale, but the other implementation loaded' . PHP_EOL);
+if (!(new ReflectionClass(Locale::class))->isInternal()) {
+    fwrite(STDERR, 'Utopia\\Locale\\Locale is not the utopia extension\'s' . PHP_EOL);
     exit(1);
 }
 
@@ -56,8 +52,9 @@ $file = function (string $name, string $content) use ($files): string {
     return "{$files}/{$name}";
 };
 
-// Every Appwrite translation, the way app/init/locales.php loads them.
-$translations = __DIR__ . '/../../../app/config/locale/translations';
+// Real Appwrite translations (a copy, so the expected output does not move when they change),
+// loaded the way app/init/locales.php loads them: right-to-left, CJK, Cyrillic and Devanagari.
+$translations = __DIR__ . '/fixtures/locale';
 $codes = array_map(fn (string $path) => basename($path, '.json'), glob("{$translations}/*.json"));
 emit('exceptions default', outcome(fn () => Locale::$exceptions));
 Locale::$exceptions = false;
@@ -317,7 +314,7 @@ $waivers['non-UTF-8 text'] = outcome(fn () => Locale::setLanguageFromArray('bina
 $waivers['non-UTF-8 translation key'] = outcome(fn () => Locale::setLanguageFromArray('binary', ["\xff" => 'a', "\xfe" => 'b']));
 $waivers['non-UTF-8 language name'] = outcome(fn () => Locale::setLanguageFromArray("\xff", ['k' => 'a']));
 $waivers['non-UTF-8 JSON language name'] = outcome(fn () => Locale::setLanguageFromJSON("\xff", $file('binary-name.json', '{"k": "a"}')));
-$expected = $internal ? [
+$expected = [
     'array values' => ['throws' => 'Exception', 'message' => 'Translation "n" is not a string.'],
     'non-UTF-8 key' => ['value' => true],
     'unknown default language' => ['throws' => 'TypeError', 'message' => 'array_key_exists(): Argument #2 ($array) must be of type array, null given'],
@@ -328,7 +325,7 @@ $expected = $internal ? [
     'non-UTF-8 translation key' => ['throws' => 'Exception', 'message' => 'Translation key is not UTF-8.'],
     'non-UTF-8 language name' => ['throws' => 'Exception', 'message' => 'Language name is not UTF-8.'],
     'non-UTF-8 JSON language name' => ['throws' => 'Exception', 'message' => 'Language name is not UTF-8.'],
-] : $waivers;
+];
 foreach ($expected as $name => $outcome) {
     if ($waivers[$name] !== $outcome) {
         fwrite(STDERR, "Waiver changed: {$name}: " . json_encode($waivers[$name], JSON_INVALID_UTF8_SUBSTITUTE) . PHP_EOL);
