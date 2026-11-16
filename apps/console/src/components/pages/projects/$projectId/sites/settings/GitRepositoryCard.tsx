@@ -260,7 +260,6 @@ export function GitRepositoryCard({
     }
 
     updateSiteMutation.mutate({
-      providerBranch: selectedBranch || undefined,
       providerRootDirectory: selectedDir || undefined,
     })
   }
