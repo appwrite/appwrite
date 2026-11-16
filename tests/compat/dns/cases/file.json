@@ -1921,6 +1921,118 @@
           ]
         }
       ]
+    },
+    {
+      "name": "import ttl directive is the default ttl",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n$TTL 60\n@ IN SOA ns hm 1 2 3 4 5\nwww 300 IN A 1.2.3.4\nmail IN A 1.2.3.5\n$TTL 120\nftp IN A 1.2.3.6\napi 30 IN A 1.2.3.7\n"
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 300,
+                "rdata": "1.2.3.4",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "mail.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 60,
+                "rdata": "1.2.3.5",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "ftp.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 120,
+                "rdata": "1.2.3.6",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "api.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 30,
+                "rdata": "1.2.3.7",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 60,
+              "rdata": "ns.example.com hm.example.com 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import without ttl directive keeps the last ttl",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN example.com.\n@ 900 IN SOA ns hm 1 2 3 4 5\nwww 300 IN A 1.2.3.4\nmail IN A 1.2.3.5\n"
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 300,
+                "rdata": "1.2.3.4",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "mail.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 300,
+                "rdata": "1.2.3.5",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 900,
+              "rdata": "ns.example.com hm.example.com 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
     }
   ]
 }

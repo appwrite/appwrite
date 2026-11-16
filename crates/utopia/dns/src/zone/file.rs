@@ -12,9 +12,9 @@ const CLASSES: [(&str, u16); 4] =
 ///
 /// Supports `$ORIGIN` and `$TTL` (other `$` directives are skipped,
 /// `$INCLUDE` is refused), `@`, relative names, omitted owners (the
-/// previous one), omitted TTLs and classes (the previous ones, in any
-/// order), `;` comments outside quotes, and records spanning lines in
-/// parentheses. TXT strings are joined and `\DDD` escapes decoded. The zone
+/// previous one), omitted TTLs (the last `$TTL`, else the previous record's
+/// TTL) and classes (the previous one), in any order, `;` comments outside
+/// quotes, and records spanning lines in parentheses. TXT strings are joined and `\DDD` escapes decoded. The zone
 /// is named by the first `$ORIGIN`, else `default_origin`; it needs exactly
 /// one `SOA` record.
 ///
@@ -74,13 +74,15 @@ pub fn import(content: &[u8], default_origin: Option<&[u8]>, default_ttl: i64) -
     }
     let mut last_owner: Option<Vec<u8>> = None;
     let mut last_ttl = default_ttl;
+    // `$TTL` directive (RFC 2308 §4); overrides the last TTL when set.
+    let mut zone_ttl: Option<i64> = None;
     let mut last_class = Record::CLASS_IN;
 
     for (line, num) in lines {
         if line.is_empty() {
             continue;
         }
-        match directive(&line, &mut origin, &mut last_ttl) {
+        match directive(&line, &mut origin, &mut zone_ttl) {
             Err(e) => {
                 let message = e.message().to_vec();
                 return Err(fail(message, Some(e)));
@@ -108,7 +110,7 @@ pub fn import(content: &[u8], default_origin: Option<&[u8]>, default_ttl: i64) -
             line,
             origin.as_deref(),
             last_owner.as_deref(),
-            last_ttl,
+            zone_ttl.unwrap_or(last_ttl),
             last_class,
             owner_omitted,
             num,
@@ -236,7 +238,11 @@ fn is_space(b: u8) -> bool {
 
 /// `/^\s*\$ORIGIN\s+(\S+)\s*$/i`, `/^\s*\$TTL\s+(\d+)\s*$/i` and
 /// `/^\s*\$INCLUDE\b/i`.
-fn directive(line: &[u8], origin: &mut Option<Vec<u8>>, last_ttl: &mut i64) -> Result<Option<Directive>, Error> {
+fn directive(
+    line: &[u8],
+    origin: &mut Option<Vec<u8>>,
+    zone_ttl: &mut Option<i64>,
+) -> Result<Option<Directive>, Error> {
     let start = line.iter().position(|&b| !is_space(b)).unwrap_or(line.len());
     let rest = &line[start..];
     // `$` matches at the end or before a final newline.
@@ -250,7 +256,7 @@ fn directive(line: &[u8], origin: &mut Option<Vec<u8>>, last_ttl: &mut i64) -> R
     if let Some(argument) = keyword(body, b"$TTL")
         && let Some(value) = single_token(argument, |b| b.is_ascii_digit())
     {
-        *last_ttl = php_std::format::str_to_int(value);
+        *zone_ttl = Some(php_std::format::str_to_int(value));
         return Ok(Some(Directive::Ttl));
     }
     if rest.len() >= 8
