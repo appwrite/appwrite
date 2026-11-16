@@ -1,4 +1,5 @@
 import {
+  Fragment,
   useEffect,
   useMemo,
   useState,
@@ -28,14 +29,18 @@ import {
   ldapSettingsFromUrls,
   type LdapEncryption,
 } from '@/lib/ldap'
-import { TestLDAPConnection } from './_components/TestLDAPConnection'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { TestLDAPConnection } from '../_components/TestLDAPConnection'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { InputTags } from '@/components/ui/input-tags'
 import { Label } from '@/components/ui/label'
 import { NumberInput } from '@/components/ui/number-input'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import {
   Select,
   SelectContent,
@@ -53,7 +58,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 
-interface IdentityServersProps {
+interface LDAPProps {
   projectId: string
 }
 
@@ -229,7 +234,44 @@ function Field({
   )
 }
 
-export function IdentityServers({ projectId }: IdentityServersProps) {
+/** Active Directory names the user attributes differently: the values to use, on demand. */
+function ActiveDirectoryInfo() {
+  const t = useT()
+  const rows = [
+    [t('User filter'), '(sAMAccountName={username})'],
+    [t('ID attribute'), 'objectGUID'],
+    [t('Name attribute'), 'displayName'],
+  ]
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={t('Using Active Directory?')}
+          className="inline-flex h-4 w-4 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <Info className="h-3.5 w-3.5" aria-hidden />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-auto space-y-2 p-3">
+        <p className="text-[13px] font-medium text-foreground">
+          {t('Using Active Directory?')}
+        </p>
+        <dl className="grid grid-cols-[auto_auto] gap-x-4 gap-y-1 text-[12px]">
+          {rows.map(([label, value]) => (
+            <Fragment key={value}>
+              <dt className="text-muted-foreground">{label}</dt>
+              <dd className="select-all font-mono text-foreground">{value}</dd>
+            </Fragment>
+          ))}
+        </dl>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+export function LDAP({ projectId }: LDAPProps) {
   const t = useT()
   const { data: project, isLoading } = useQuery(projectQueryOptions(projectId))
   const updateLDAPMutation = useUpdateLDAP(projectId)
@@ -354,13 +396,7 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-4 sm:px-6">
-      <p className="text-[13px] text-muted-foreground">
-        {t(
-          'Connect the identity systems your organization already runs so people can sign in with the accounts they have.',
-        )}
-      </p>
-
+    <div className="space-y-6">
       {/* LDAP Configuration Card */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         {/* Header */}
@@ -394,11 +430,11 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
                 htmlFor="ldap-enabled"
                 className="text-[13px] font-medium text-foreground"
               >
-                {t('Enabled')}
+                {t('Enable LDAP sign-in')}
               </Label>
               <p className="text-[12px] text-muted-foreground mt-0.5">
                 {t(
-                  'Turn on LDAP sign-in for this project. Enabling connects to the directory to validate the configuration, so add at least one host and a base DN first.',
+                  'When enabled, users can sign in with their directory username and password.',
                 )}
               </p>
             </div>
@@ -423,7 +459,7 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
                     label={t('Hosts')}
                     required
                     hint={t(
-                      'Hostnames or IP addresses of the directory, tried in order until one answers. Press Enter after each host, up to 10. Paste an LDAP URL to also fill in encryption, port and base DN.',
+                      'Tried in order until one answers, up to 10. Pasting an LDAP URL also fills in encryption, port and base DN.',
                     )}
                     className="sm:col-span-2"
                   >
@@ -476,7 +512,7 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
                     id="ldap-port"
                     label={t('Port')}
                     hint={t(
-                      'Leave empty for the default: 636 for LDAPS, 389 otherwise.',
+                      'Leave empty for 636 with LDAPS, or 389 otherwise.',
                     )}
                   >
                     <Input
@@ -498,9 +534,7 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
                   <Field
                     id="ldap-encryption"
                     label={t('Encryption')}
-                    hint={t(
-                      'LDAPS encrypts from the first byte, StartTLS upgrades a plain connection, None is for a trusted network only.',
-                    )}
+                    hint={t('Use None only on a trusted private network.')}
                   >
                     <Select
                       value={form.encryption}
@@ -537,7 +571,7 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
                           </Label>
                           <p className="text-[12px] text-muted-foreground mt-0.5">
                             {t(
-                              "Check the directory's certificate against the certificate below, or the system trust store if it is empty.",
+                              "Check the directory's certificate before sending any password.",
                             )}
                           </p>
                         </div>
@@ -551,35 +585,36 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
                         />
                       </div>
 
-                      <Field
-                        id="ldap-certificate"
-                        label={t('Certificate (PEM)')}
-                        hint={t(
-                          "Certificate of the authority that signed the directory's certificate, or the directory's own certificate if it is self-signed. Paste several to trust more than one. Leave empty to use the system trust store.",
-                        )}
-                        className="sm:col-span-2"
-                      >
-                        <Textarea
+                      {/* Only a verified connection uses the certificate; the value stays for when verification comes back. */}
+                      {form.verification ? (
+                        <Field
                           id="ldap-certificate"
-                          placeholder={CERTIFICATE_PLACEHOLDER}
-                          value={form.certificate}
-                          onChange={(e) =>
-                            patch({ certificate: e.target.value })
-                          }
-                          disabled={isBusy}
-                          spellCheck={false}
-                          className="min-h-28 border-border bg-background font-mono text-[12px] text-foreground placeholder:text-muted-foreground md:text-[12px]"
-                        />
-                      </Field>
+                          label={t('Certificate (PEM)')}
+                          hint={t(
+                            'The CA or self-signed certificate to trust. Leave empty to use the system trust store.',
+                          )}
+                          className="sm:col-span-2"
+                        >
+                          <Textarea
+                            id="ldap-certificate"
+                            placeholder={CERTIFICATE_PLACEHOLDER}
+                            value={form.certificate}
+                            onChange={(e) =>
+                              patch({ certificate: e.target.value })
+                            }
+                            disabled={isBusy}
+                            spellCheck={false}
+                            className="min-h-28 border-border bg-background font-mono text-[12px] text-foreground placeholder:text-muted-foreground md:text-[12px]"
+                          />
+                        </Field>
+                      ) : null}
                     </>
                   ) : null}
 
                   <Field
                     id="ldap-timeout"
                     label={t('Timeout (seconds)')}
-                    hint={t(
-                      'Seconds to wait for the directory to connect and answer each operation, from 1 to 30.',
-                    )}
+                    hint={t('How long to wait for each answer, from 1 to 30.')}
                   >
                     <NumberInput
                       id="ldap-timeout"
@@ -625,7 +660,7 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
                     id="ldap-bind-dn"
                     label={t('Bind DN')}
                     hint={t(
-                      'Service account used to search for users. Leave empty if the directory allows anonymous search.',
+                      'Service account for the search, or empty for anonymous.',
                     )}
                   >
                     <Input
@@ -643,7 +678,7 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
                     label={t('Bind password')}
                     required={needsBindPassword}
                     hint={t(
-                      'Stored securely and never shown again. Required again when hosts, port, encryption, certificate settings or bind DN change.',
+                      'Never shown again. Re-enter it when the connection changes.',
                     )}
                   >
                     <Input
@@ -659,9 +694,7 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
                     />
                     {needsBindPassword ? (
                       <p className="text-[11px] text-destructive">
-                        {t(
-                          'Enter the bind password again to save: the connection or certificate settings changed.',
-                        )}
+                        {t('Enter the bind password again to save.')}
                       </p>
                     ) : null}
                   </Field>
@@ -672,17 +705,12 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
             {/* Sign-in Rules Section */}
             <div className="space-y-4">
               <div>
-                <h4 className="text-[13px] font-medium text-foreground mb-3">
-                  {t('Sign-in rules')}
-                </h4>
-                <Alert role="note" className="mb-4">
-                  <Info className="h-4 w-4" />
-                  <AlertDescription className="text-[13px]">
-                    {t(
-                      'Using Active Directory? Set the user filter to (sAMAccountName={username}) and the ID attribute to objectGUID.',
-                    )}
-                  </AlertDescription>
-                </Alert>
+                <div className="mb-3 flex items-center gap-1.5">
+                  <h4 className="text-[13px] font-medium text-foreground">
+                    {t('Sign-in rules')}
+                  </h4>
+                  <ActiveDirectoryInfo />
+                </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field
                     id="ldap-user-filter"
@@ -712,7 +740,7 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
                     id="ldap-required-group-dn"
                     label={t('Required group DN')}
                     hint={t(
-                      'Group a user must belong to in order to sign in, checked on every sign-in. Leave empty to allow every user the directory authenticates.',
+                      'Only its members can sign in. Leave empty to allow everyone.',
                     )}
                     className="sm:col-span-2"
                   >
@@ -741,9 +769,7 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
                   <Field
                     id="ldap-id-attribute"
                     label={t('ID attribute')}
-                    hint={t(
-                      'Attribute with the identifier that stays the same when an entry is renamed or moved: entryUUID, or objectGUID on Active Directory.',
-                    )}
+                    hint={t('An ID that never changes, such as entryUUID.')}
                   >
                     <Input
                       id="ldap-id-attribute"
@@ -777,9 +803,7 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
                   <Field
                     id="ldap-name-attribute"
                     label={t('Name attribute')}
-                    hint={t(
-                      'Attribute holding the display name: cn, or displayName on Active Directory.',
-                    )}
+                    hint={t('Attribute holding the display name, usually cn.')}
                   >
                     <Input
                       id="ldap-name-attribute"
@@ -795,7 +819,7 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
                     id="ldap-phone-attribute"
                     label={t('Phone attribute')}
                     hint={t(
-                      'Attribute holding the phone number in E.164 format, for example mobile. Leave empty to skip phone numbers.',
+                      'Attribute holding an E.164 phone number. Optional.',
                     )}
                   >
                     <Input
