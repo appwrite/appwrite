@@ -1384,7 +1384,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   Past: '過去',
   Upcoming: '近日公開',
   'AUGUST 31 - SEPTEMBER 4': '8月31日 - 9月4日',
-  'NOVEMBER 2 - 6': '11月2日 - 6日',
+  'NOVEMBER 23 - 27': '11月23日 - 27日',
   'Starts in': '開始まで',
   'Hero concept': 'ヒーローのコンセプト',
   Concept: 'コンセプト',

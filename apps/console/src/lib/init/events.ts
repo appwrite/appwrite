@@ -204,12 +204,12 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     id: 'init-nov-2026',
     slug: 'init-nov-2026',
     name: 'init',
-    dateRangeLabel: 'NOVEMBER 2 - 6',
-    headline: 'Init returns November 2 - 6',
+    dateRangeLabel: 'NOVEMBER 23 - 27',
+    headline: 'Init returns November 23 - 27',
     description:
-      'Init returns November 2 - 6. Five days of launches including Appwrite Videos, Appwrite Analytics, TablesDB upgrades, and Appwrite Distribution.',
-    startDate: '2026-11-02',
-    endDate: '2026-11-06',
+      'Init returns November 23 - 27. Five days of launches including Appwrite Videos, Appwrite Analytics, TablesDB upgrades, and Appwrite Distribution.',
+    startDate: '2026-11-23',
+    endDate: '2026-11-27',
     status: 'upcoming',
     tickets: INIT_NOV_2026_TICKET_CONFIG,
     primaryCta: {
@@ -308,9 +308,9 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     recap: {
       headline: 'Init recap',
       description:
-        'Five days of Init 5 launches are in the books. Rewatch sessions and explore every announcement from November 2 - 6.',
+        'Five days of Init 5 launches are in the books. Rewatch sessions and explore every announcement from November 23 - 27.',
       bannerMessage:
-        'Init November 2 - 6 has ended. Browse the full recap below.',
+        'Init November 23 - 27 has ended. Browse the full recap below.',
       introTitle: 'Everything we shipped',
       introDescription:
         'From Appwrite Videos and Analytics to TablesDB upgrades and Appwrite Distribution. Explore the full launch timeline.',

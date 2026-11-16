@@ -1421,7 +1421,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   Past: 'עבר',
   Upcoming: 'בקרוב',
   'AUGUST 31 - SEPTEMBER 4': '31 באוגוסט - 4 בספטמבר',
-  'NOVEMBER 2 - 6': '2-6 בנובמבר',
+  'NOVEMBER 23 - 27': '23-27 בנובמבר',
   'Starts in': 'מתחיל בעוד',
   'Hero concept': 'קונספט לכותרת',
   Concept: 'קונספט',

@@ -9,8 +9,8 @@ import { INIT_YOUTUBE_CHANNEL_HREF } from './links'
 export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
   {
     day: 1,
-    dateLabel: 'NOVEMBER 2',
-    weekdayLabel: 'MONDAY, NOVEMBER 2',
+    dateLabel: 'NOVEMBER 23',
+    weekdayLabel: 'MONDAY, NOVEMBER 23',
     title: 'Introducing Appwrite Videos',
     description: 'Host, stream, and deliver video in your Appwrite project.',
     longDescription:
@@ -39,8 +39,8 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
   },
   {
     day: 2,
-    dateLabel: 'NOVEMBER 3',
-    weekdayLabel: 'TUESDAY, NOVEMBER 3',
+    dateLabel: 'NOVEMBER 24',
+    weekdayLabel: 'TUESDAY, NOVEMBER 24',
     title: 'Introducing Appwrite Analytics',
     description: 'Product analytics built into Appwrite.',
     longDescription:
@@ -68,8 +68,8 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
   },
   {
     day: 3,
-    dateLabel: 'NOVEMBER 4',
-    weekdayLabel: 'WEDNESDAY, NOVEMBER 4',
+    dateLabel: 'NOVEMBER 25',
+    weekdayLabel: 'WEDNESDAY, NOVEMBER 25',
     title: 'TablesDB upgrades: joins and aggregations',
     description: 'Relational queries and rollups on TablesDB.',
     longDescription:
@@ -104,8 +104,8 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
   },
   {
     day: 4,
-    dateLabel: 'NOVEMBER 5',
-    weekdayLabel: 'THURSDAY, NOVEMBER 5',
+    dateLabel: 'NOVEMBER 26',
+    weekdayLabel: 'THURSDAY, NOVEMBER 26',
     title: 'Introducing Appwrite Distribution',
     description: 'Automate publishing to the App Store and Google Play.',
     longDescription:
@@ -133,8 +133,8 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
   },
   {
     day: 5,
-    dateLabel: 'NOVEMBER 6',
-    weekdayLabel: 'FRIDAY, NOVEMBER 6',
+    dateLabel: 'NOVEMBER 27',
+    weekdayLabel: 'FRIDAY, NOVEMBER 27',
     title: 'Init week finale',
     description: 'Recap the week and celebrate with the community.',
     longDescription:
@@ -169,7 +169,7 @@ export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     day: 1,
     platform: 'youtube',
     title: 'Appwrite Videos launch stream',
-    startsAt: '2026-11-02T09:00:00-08:00',
+    startsAt: '2026-11-23T09:00:00-08:00',
     isLive: true,
     href: INIT_YOUTUBE_CHANNEL_HREF,
   },
@@ -178,7 +178,7 @@ export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     day: 1,
     platform: 'reddit',
     title: 'Appwrite Videos AMA',
-    startsAt: '2026-11-02T10:00:00-08:00',
+    startsAt: '2026-11-23T10:00:00-08:00',
     href: 'https://www.reddit.com/r/appwrite/',
   },
   {
@@ -186,7 +186,7 @@ export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     day: 2,
     platform: 'youtube',
     title: 'Appwrite Analytics deep dive',
-    startsAt: '2026-11-03T09:00:00-08:00',
+    startsAt: '2026-11-24T09:00:00-08:00',
     isLive: true,
     href: INIT_YOUTUBE_CHANNEL_HREF,
   },
@@ -195,7 +195,7 @@ export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     day: 2,
     platform: 'reddit',
     title: 'Appwrite Analytics AMA',
-    startsAt: '2026-11-03T10:00:00-08:00',
+    startsAt: '2026-11-24T10:00:00-08:00',
     href: 'https://www.reddit.com/r/appwrite/',
   },
   {
@@ -203,7 +203,7 @@ export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     day: 3,
     platform: 'youtube',
     title: 'TablesDB joins and aggregations',
-    startsAt: '2026-11-04T09:00:00-08:00',
+    startsAt: '2026-11-25T09:00:00-08:00',
     isLive: true,
     href: INIT_YOUTUBE_CHANNEL_HREF,
   },
@@ -212,7 +212,7 @@ export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     day: 3,
     platform: 'reddit',
     title: 'TablesDB AMA',
-    startsAt: '2026-11-04T10:00:00-08:00',
+    startsAt: '2026-11-25T10:00:00-08:00',
     href: 'https://www.reddit.com/r/appwrite/',
   },
   {
@@ -220,7 +220,7 @@ export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     day: 4,
     platform: 'youtube',
     title: 'Appwrite Distribution launch stream',
-    startsAt: '2026-11-05T09:00:00-08:00',
+    startsAt: '2026-11-26T09:00:00-08:00',
     isLive: true,
     href: INIT_YOUTUBE_CHANNEL_HREF,
   },
@@ -229,7 +229,7 @@ export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     day: 4,
     platform: 'reddit',
     title: 'Appwrite Distribution AMA',
-    startsAt: '2026-11-05T10:00:00-08:00',
+    startsAt: '2026-11-26T10:00:00-08:00',
     href: 'https://www.reddit.com/r/appwrite/',
   },
   {
@@ -237,7 +237,7 @@ export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     day: 5,
     platform: 'youtube',
     title: 'Init 5 finale stream',
-    startsAt: '2026-11-06T09:00:00-08:00',
+    startsAt: '2026-11-27T09:00:00-08:00',
     isLive: true,
     href: INIT_YOUTUBE_CHANNEL_HREF,
   },
@@ -246,7 +246,7 @@ export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     day: 5,
     platform: 'reddit',
     title: 'Init 5 week AMA',
-    startsAt: '2026-11-06T10:00:00-08:00',
+    startsAt: '2026-11-27T10:00:00-08:00',
     href: 'https://www.reddit.com/r/appwrite/',
   },
   {
@@ -254,7 +254,7 @@ export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     day: 6,
     platform: 'discord',
     title: 'Init community recap',
-    startsAt: '2026-11-07T09:00:00-08:00',
+    startsAt: '2026-11-28T09:00:00-08:00',
     href: '/discord',
   },
 ]
@@ -269,7 +269,7 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
   dailyGiveaways: [
     {
       day: 1,
-      dateLabel: 'NOVEMBER 2',
+      dateLabel: 'NOVEMBER 23',
       scheduleItemId: 'sched-nov5-keynote',
       sessionTitle: 'Appwrite Videos launch stream',
       platform: 'youtube',
@@ -283,7 +283,7 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
     },
     {
       day: 2,
-      dateLabel: 'NOVEMBER 3',
+      dateLabel: 'NOVEMBER 24',
       scheduleItemId: 'sched-nov5-analytics',
       sessionTitle: 'Appwrite Analytics deep dive',
       platform: 'youtube',
@@ -297,7 +297,7 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
     },
     {
       day: 3,
-      dateLabel: 'NOVEMBER 4',
+      dateLabel: 'NOVEMBER 25',
       scheduleItemId: 'sched-nov5-tablesdb',
       sessionTitle: 'TablesDB joins and aggregations',
       platform: 'youtube',
@@ -311,7 +311,7 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
     },
     {
       day: 4,
-      dateLabel: 'NOVEMBER 5',
+      dateLabel: 'NOVEMBER 26',
       scheduleItemId: 'sched-nov5-distribution',
       sessionTitle: 'Appwrite Distribution launch stream',
       platform: 'youtube',
@@ -327,7 +327,7 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
   ],
   grandPrize: {
     day: 5,
-    dateLabel: 'NOVEMBER 6',
+    dateLabel: 'NOVEMBER 27',
     scheduleItemId: 'sched-nov5-finale',
     sessionTitle: 'Init 5 finale stream',
     platform: 'youtube',
