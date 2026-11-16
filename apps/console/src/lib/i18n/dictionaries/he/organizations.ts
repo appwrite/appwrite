@@ -911,6 +911,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Popular integrations from the marketplace catalog.':
     'אינטגרציות פופולריות מקטלוג המרקטפלייס.',
   Port: 'פורט',
+  'Port is required': 'פורט הוא שדה חובה',
+  'Port must be between 0 and 65535': 'הפורט חייב להיות בין 0 ל-65535',
   'Post-logout redirect URIs': 'כתובות URI להפניה לאחר התנתקות',
   'Postal code': 'מיקוד',
   Premium: 'פרימיום',
@@ -927,6 +929,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Primary payment method updated': 'אמצעי התשלום הראשי עודכן',
   Priority: 'עדיפות',
   'Priority for SRV record': 'עדיפות לרשומת SRV',
+  'Priority is required': 'עדיפות היא שדה חובה',
+  'Priority must be between 0 and 65535': 'העדיפות חייבת להיות בין 0 ל-65535',
   'Privacy policy': 'מדיניות פרטיות',
   Project: 'פרויקט',
   'Project (optional)': 'פרויקט (אופציונלי)',
@@ -1280,6 +1284,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   "We've received your request and will get back to you as soon as we can.":
     'קיבלנו את הבקשה שלכם ונחזור אליכם בהקדם האפשרי.',
   Weight: 'משקל',
+  'Weight is required': 'משקל הוא שדה חובה',
+  'Weight must be between 0 and 65535': 'המשקל חייב להיות בין 0 ל-65535',
   'What happens next': 'מה קורה בהמשך',
   "What wasn't working for you? Please share anything that influenced your decision to downgrade. This feedback helps us improve the platform.":
     'מה לא עבד עבורכם? שתפו כל דבר שהשפיע על ההחלטה שלכם לשנמך. המשוב הזה עוזר לנו לשפר את הפלטפורמה.',
@@ -1563,7 +1569,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'לא ניתן היה לטעון אילו מדיניות גיבוי יפסיקו לפעול כשהתוכנית תשתנה.',
   'Could not load which dedicated databases are spun down when your plan changes.':
     'לא ניתן היה לטעון אילו מסדי נתונים ייעודיים יושבתו כשהתוכנית תשתנה.',
-  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.': 'ארגונים שמתקינים את האפליקציה מעניקים לה את הרשאות הגישה שלמטה. משתמשים חוזרים לכתובת ההפניה אחרי התקנה או עדכון של ההתקנה.',
+  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.':
+    'ארגונים שמתקינים את האפליקציה מעניקים לה את הרשאות הגישה שלמטה. משתמשים חוזרים לכתובת ההפניה אחרי התקנה או עדכון של ההתקנה.',
   'Installation settings updated': 'הגדרות ההתקנה עודכנו',
   'No installation scopes are available.': 'אין הרשאות גישה להתקנה זמינות.',
   'Choose a new plan': 'בחירת תוכנית חדשה',
@@ -1630,7 +1637,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Failed to set up auto-pay': 'הגדרת התשלום האוטומטי נכשלה',
   'The bank asks for an OTP on automatic payments with this card. Set up auto-pay so payments up to $150 go through without one.':
     'הבנק מבקש OTP בתשלומים אוטומטיים בכרטיס הזה. הגדירו תשלום אוטומטי כדי שתשלומים של עד $150 יעברו בלי OTP.',
-  'Only the card owner can set up auto-pay': 'רק בעל הכרטיס יכול להגדיר תשלום אוטומטי',
+  'Only the card owner can set up auto-pay':
+    'רק בעל הכרטיס יכול להגדיר תשלום אוטומטי',
   'Check nameservers': 'בדיקת שרתי שמות',
   'Nameservers changed': 'שרתי השמות השתנו',
   'The nameservers for this domain no longer point to Appwrite. The domain status has been updated.':

@@ -16,6 +16,7 @@ import {
   RECORD_NUMBER_MAX,
   RECORD_TTL_MAX,
   parseRecordNumber,
+  recordNumberFieldMessage,
 } from '@/lib/domains/record-numeric-fields'
 
 const DNS_RECORD_TYPES = [
@@ -80,6 +81,11 @@ export function CreateRecordDialog({
   const [weight, setWeight] = useState('')
   const [port, setPort] = useState('')
   const [comment, setComment] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<{
+    priority?: string
+    weight?: string
+    port?: string
+  }>({})
 
   // Reset form when dialog closes
   useEffect(() => {
@@ -92,6 +98,7 @@ export function CreateRecordDialog({
       setWeight('')
       setPort('')
       setComment('')
+      setFieldErrors({})
     }
   }, [open])
 
@@ -103,7 +110,31 @@ export function CreateRecordDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name.trim() || !value.trim()) return
+
+    const priorityError =
+      type === 'MX' || type === 'SRV'
+        ? recordNumberFieldMessage(priority, 'priority')
+        : null
+    const weightError =
+      type === 'SRV' ? recordNumberFieldMessage(weight, 'weight') : null
+    const portError =
+      type === 'SRV' ? recordNumberFieldMessage(port, 'port') : null
+
+    setFieldErrors({
+      priority: priorityError ?? undefined,
+      weight: weightError ?? undefined,
+      port: portError ?? undefined,
+    })
+
+    if (
+      !name.trim() ||
+      !value.trim() ||
+      priorityError ||
+      weightError ||
+      portError
+    ) {
+      return
+    }
 
     const parsedTtl = parseRecordNumber(ttl)
     const parsedPriority = parseRecordNumber(priority)
@@ -131,14 +162,11 @@ export function CreateRecordDialog({
       onOpenChange={handleOpenChange}
       title={t('Create DNS Record')}
       maxWidth="sm:max-w-lg"
->
+    >
       <>
         <div className="border-t border-border shrink-0" />
 
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-1 flex-col min-h-0"
->
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col min-h-0">
           <div className="flex-1 overflow-y-auto">
             <div className="px-6 py-6">
               <div className="space-y-5">
@@ -148,20 +176,18 @@ export function CreateRecordDialog({
                   </Label>
                   <Select
                     value={type}
-                    onValueChange={setType}
+                    onValueChange={(next) => {
+                      setType(next)
+                      setFieldErrors({})
+                    }}
                     disabled={isLoading}
->
-                    <SelectTrigger
-                      id="type"
->
+                  >
+                    <SelectTrigger id="type">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {DNS_RECORD_TYPES.map((recordType) => (
-                        <SelectItem
-                          key={recordType}
-                          value={recordType}
->
+                        <SelectItem key={recordType} value={recordType}>
                           {recordType}
                         </SelectItem>
                       ))}
@@ -241,18 +267,36 @@ export function CreateRecordDialog({
                 {requiresPriority && (
                   <div className="space-y-2">
                     <Label htmlFor="priority">
-                      {t('Priority')} <span className="text-destructive">*</span>
+                      {t('Priority')}{' '}
+                      <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="priority"
                       type="number"
                       value={priority}
-                      onChange={(e) => setPriority(e.target.value)}
+                      onChange={(e) => {
+                        setPriority(e.target.value)
+                        if (fieldErrors.priority) {
+                          setFieldErrors((prev) => ({
+                            ...prev,
+                            priority: undefined,
+                          }))
+                        }
+                      }}
                       placeholder={type === 'MX' ? '10' : '0'}
                       min="0"
                       max={RECORD_NUMBER_MAX}
                       disabled={isLoading}
+                      aria-invalid={!!fieldErrors.priority}
+                      className={
+                        fieldErrors.priority ? 'border-destructive' : ''
+                      }
                     />
+                    {fieldErrors.priority && (
+                      <p className="text-[12px] text-destructive">
+                        {t(fieldErrors.priority)}
+                      </p>
+                    )}
                     <p className="text-[12px] text-muted-foreground">
                       {type === 'MX'
                         ? t('Lower numbers have higher priority')
@@ -265,18 +309,36 @@ export function CreateRecordDialog({
                   <>
                     <div className="space-y-2">
                       <Label htmlFor="weight">
-                        {t('Weight')} <span className="text-destructive">*</span>
+                        {t('Weight')}{' '}
+                        <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id="weight"
                         type="number"
                         value={weight}
-                        onChange={(e) => setWeight(e.target.value)}
+                        onChange={(e) => {
+                          setWeight(e.target.value)
+                          if (fieldErrors.weight) {
+                            setFieldErrors((prev) => ({
+                              ...prev,
+                              weight: undefined,
+                            }))
+                          }
+                        }}
                         placeholder="10"
                         min="0"
                         max={RECORD_NUMBER_MAX}
                         disabled={isLoading}
+                        aria-invalid={!!fieldErrors.weight}
+                        className={
+                          fieldErrors.weight ? 'border-destructive' : ''
+                        }
                       />
+                      {fieldErrors.weight && (
+                        <p className="text-[12px] text-destructive">
+                          {t(fieldErrors.weight)}
+                        </p>
+                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -287,12 +349,27 @@ export function CreateRecordDialog({
                         id="port"
                         type="number"
                         value={port}
-                        onChange={(e) => setPort(e.target.value)}
+                        onChange={(e) => {
+                          setPort(e.target.value)
+                          if (fieldErrors.port) {
+                            setFieldErrors((prev) => ({
+                              ...prev,
+                              port: undefined,
+                            }))
+                          }
+                        }}
                         placeholder="443"
                         min="0"
                         max={RECORD_NUMBER_MAX}
                         disabled={isLoading}
+                        aria-invalid={!!fieldErrors.port}
+                        className={fieldErrors.port ? 'border-destructive' : ''}
                       />
+                      {fieldErrors.port && (
+                        <p className="text-[12px] text-destructive">
+                          {t(fieldErrors.port)}
+                        </p>
+                      )}
                     </div>
                   </>
                 )}
@@ -316,7 +393,7 @@ export function CreateRecordDialog({
             <Button
               type="submit"
               disabled={isLoading || !name.trim() || !value.trim()}
->
+            >
               {t('Create Record')}
             </Button>
             <Button
@@ -324,7 +401,7 @@ export function CreateRecordDialog({
               variant="outline"
               onClick={() => handleOpenChange(false)}
               disabled={isLoading}
->
+            >
               {t('Cancel')}
             </Button>
           </div>

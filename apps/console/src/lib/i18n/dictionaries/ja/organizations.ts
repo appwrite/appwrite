@@ -544,6 +544,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Please select a state': '州を選択してください',
   'Please select exactly': '正確に選択してください',
   'Please try again.': 'もう一度お試しください。',
+  'Port is required': 'ポートは必須です',
+  'Port must be between 0 and 65535':
+    'ポートは 0 から 65535 の範囲で指定してください',
   'Post-logout redirect URIs': 'ログアウト後のリダイレクト URI',
   'Postal code': '郵便番号',
   'Preparing your organization dashboard.': '組織ダッシュボードを準備中です。',
@@ -551,6 +554,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Previous projects page': '前のプロジェクトページ',
   'Primary payment method updated': '主要な支払い方法を更新しました',
   'Priority for SRV record': 'SRV レコードの優先度',
+  'Priority is required': '優先度は必須です',
+  'Priority must be between 0 and 65535':
+    '優先度は 0 から 65535 の範囲で指定してください',
   'Privacy policy': 'プライバシーポリシー',
   'Project (optional)': 'プロジェクト (任意)',
   'Project ID': 'プロジェクト ID',
@@ -709,6 +715,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'View recap': 'まとめを見る',
   'View charges breakdown': '料金内訳を表示',
   'View detailed pricing': '詳細な料金を表示',
+  'Weight is required': '重みは必須です',
+  'Weight must be between 0 and 65535':
+    '重みは 0 から 65535 の範囲で指定してください',
   'View invoice': '請求書を表示',
   'View members': 'メンバーを表示',
   'View project': 'プロジェクトを表示',
@@ -1577,9 +1586,11 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'プラン変更時にどのバックアップポリシーが停止するかを読み込めませんでした。',
   'Could not load which dedicated databases are spun down when your plan changes.':
     'プラン変更時にどの専用データベースが停止されるかを読み込めませんでした。',
-  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.': 'このアプリをインストールした組織は、以下のスコープをアプリに付与します。インストールの作成または更新後、ユーザーはリダイレクト URL に戻ります。',
+  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.':
+    'このアプリをインストールした組織は、以下のスコープをアプリに付与します。インストールの作成または更新後、ユーザーはリダイレクト URL に戻ります。',
   'Installation settings updated': 'インストール設定を更新しました',
-  'No installation scopes are available.': '利用できるインストールスコープはありません。',
+  'No installation scopes are available.':
+    '利用できるインストールスコープはありません。',
   'Choose a new plan': '新しいプランを選択',
   'Plans could not be loaded. Refresh and try again.':
     'プランを読み込めませんでした。更新してやり直してください。',
@@ -1645,7 +1656,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Failed to set up auto-pay': '自動支払いの設定に失敗しました',
   'The bank asks for an OTP on automatic payments with this card. Set up auto-pay so payments up to $150 go through without one.':
     'このカードでは、自動支払いのたびに銀行が OTP を求めます。自動支払いを設定すると、$150 までの支払いは OTP なしで処理されます。',
-  'Only the card owner can set up auto-pay': 'カードの所有者のみが自動支払いを設定できます',
+  'Only the card owner can set up auto-pay':
+    'カードの所有者のみが自動支払いを設定できます',
   'Check nameservers': 'ネームサーバーを確認',
   'Nameservers changed': 'ネームサーバーが変更されました',
   'The nameservers for this domain no longer point to Appwrite. The domain status has been updated.':

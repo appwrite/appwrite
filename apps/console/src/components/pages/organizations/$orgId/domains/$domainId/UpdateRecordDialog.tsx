@@ -9,6 +9,7 @@ import {
   RECORD_NUMBER_MAX,
   RECORD_TTL_MAX,
   parseRecordNumber,
+  recordNumberFieldMessage,
 } from '@/lib/domains/record-numeric-fields'
 import type { Models } from '@appwrite.io/console'
 
@@ -60,6 +61,11 @@ export function UpdateRecordDialog({
   const [weight, setWeight] = useState(record.weight?.toString() || '')
   const [port, setPort] = useState(record.port?.toString() || '')
   const [comment, setComment] = useState(record.comment || '')
+  const [fieldErrors, setFieldErrors] = useState<{
+    priority?: string
+    weight?: string
+    port?: string
+  }>({})
 
   // Update form when record changes
   useEffect(() => {
@@ -71,6 +77,7 @@ export function UpdateRecordDialog({
       setWeight(record.weight?.toString() || '')
       setPort(record.port?.toString() || '')
       setComment(record.comment || '')
+      setFieldErrors({})
     }
   }, [open, record])
 
@@ -82,7 +89,31 @@ export function UpdateRecordDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name.trim() || !value.trim()) return
+
+    const priorityError =
+      record.type === 'MX' || record.type === 'SRV'
+        ? recordNumberFieldMessage(priority, 'priority')
+        : null
+    const weightError =
+      record.type === 'SRV' ? recordNumberFieldMessage(weight, 'weight') : null
+    const portError =
+      record.type === 'SRV' ? recordNumberFieldMessage(port, 'port') : null
+
+    setFieldErrors({
+      priority: priorityError ?? undefined,
+      weight: weightError ?? undefined,
+      port: portError ?? undefined,
+    })
+
+    if (
+      !name.trim() ||
+      !value.trim() ||
+      priorityError ||
+      weightError ||
+      portError
+    ) {
+      return
+    }
 
     const parsedTtl = parseRecordNumber(ttl)
     const parsedPriority = parseRecordNumber(priority)
@@ -175,17 +206,35 @@ export function UpdateRecordDialog({
                 {requiresPriority && (
                   <div className="space-y-2">
                     <Label htmlFor="priority">
-                      {t('Priority')} <span className="text-destructive">*</span>
+                      {t('Priority')}{' '}
+                      <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="priority"
                       type="number"
                       value={priority}
-                      onChange={(e) => setPriority(e.target.value)}
+                      onChange={(e) => {
+                        setPriority(e.target.value)
+                        if (fieldErrors.priority) {
+                          setFieldErrors((prev) => ({
+                            ...prev,
+                            priority: undefined,
+                          }))
+                        }
+                      }}
                       min="0"
                       max={RECORD_NUMBER_MAX}
                       disabled={isLoading}
+                      aria-invalid={!!fieldErrors.priority}
+                      className={
+                        fieldErrors.priority ? 'border-destructive' : ''
+                      }
                     />
+                    {fieldErrors.priority && (
+                      <p className="text-[12px] text-destructive">
+                        {t(fieldErrors.priority)}
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -193,17 +242,35 @@ export function UpdateRecordDialog({
                   <>
                     <div className="space-y-2">
                       <Label htmlFor="weight">
-                        {t('Weight')} <span className="text-destructive">*</span>
+                        {t('Weight')}{' '}
+                        <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id="weight"
                         type="number"
                         value={weight}
-                        onChange={(e) => setWeight(e.target.value)}
+                        onChange={(e) => {
+                          setWeight(e.target.value)
+                          if (fieldErrors.weight) {
+                            setFieldErrors((prev) => ({
+                              ...prev,
+                              weight: undefined,
+                            }))
+                          }
+                        }}
                         min="0"
                         max={RECORD_NUMBER_MAX}
                         disabled={isLoading}
+                        aria-invalid={!!fieldErrors.weight}
+                        className={
+                          fieldErrors.weight ? 'border-destructive' : ''
+                        }
                       />
+                      {fieldErrors.weight && (
+                        <p className="text-[12px] text-destructive">
+                          {t(fieldErrors.weight)}
+                        </p>
+                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -214,11 +281,26 @@ export function UpdateRecordDialog({
                         id="port"
                         type="number"
                         value={port}
-                        onChange={(e) => setPort(e.target.value)}
+                        onChange={(e) => {
+                          setPort(e.target.value)
+                          if (fieldErrors.port) {
+                            setFieldErrors((prev) => ({
+                              ...prev,
+                              port: undefined,
+                            }))
+                          }
+                        }}
                         min="0"
                         max={RECORD_NUMBER_MAX}
                         disabled={isLoading}
+                        aria-invalid={!!fieldErrors.port}
+                        className={fieldErrors.port ? 'border-destructive' : ''}
                       />
+                      {fieldErrors.port && (
+                        <p className="text-[12px] text-destructive">
+                          {t(fieldErrors.port)}
+                        </p>
+                      )}
                     </div>
                   </>
                 )}
