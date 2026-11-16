@@ -267,11 +267,8 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   }
 
   const hasChanges = useMemo(() => {
-    return (
-      selectedBranch !== func.providerBranch ||
-      selectedDir !== (func.providerRootDirectory || '')
-    )
-  }, [selectedBranch, selectedDir, func])
+    return selectedDir !== (func.providerRootDirectory || '')
+  }, [selectedDir, func])
 
   // Null while the repository is unreachable: only the provider knows its
   // owner and name, so the affected rows fall back to generic wording.
