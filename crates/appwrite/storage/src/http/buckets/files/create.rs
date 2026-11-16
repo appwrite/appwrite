@@ -25,6 +25,10 @@ use crate::filename::Filename;
 use crate::model::FileModel;
 
 use super::meta;
+use crate::encryption;
+use md5::{Digest, Md5};
+use utopia_storage::Cipher;
+use utopia_storage::cipher::SEGMENT;
 
 pub async fn create(ctx: &mut Context) -> Result<Response> {
     let bucket_id = ctx.required_str("bucketId", &uid())?;
@@ -99,6 +103,11 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
         .map_err(|err| Error::with_message(ErrorType::StorageInvalidFile, err.to_string()))?;
     let device = Stored::for_project(&ctx.project.id)?;
     let path = device.file_path(bucket.id(), &file_id, &upload.name);
+    // A resumed upload keeps the key stored with its first chunk.
+    let extra = meta::Extra {
+        encryption: if bucket.boolean("encryption").unwrap_or(true) { Some(encryption::create()?) } else { None },
+        ..meta::Extra::default()
+    };
     let lock_key = format!("storage:file:{}:{}:{file_id}", ctx.project.id, bucket.id());
     let lock = Distributed::new(ctx.state.abuse.clone(), lock_key, 600);
     let acquired = lock
@@ -124,6 +133,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
         ranged,
         bytes,
         mime,
+        extra,
         &lock,
     )
     .await;
@@ -199,6 +209,7 @@ async fn transfer(
     ranged: bool,
     bytes: Vec<u8>,
     mime: String,
+    mut extra: meta::Extra,
     lock: &Distributed,
 ) -> Result<Response> {
     let collection = bucket_collection(bucket);
@@ -225,9 +236,7 @@ async fn transfer(
         }
         let (stored, _) = meta::load(&existing);
         metadata = stored;
-        if metadata.content_type.is_none() {
-            metadata.content_type = Some(mime);
-        }
+        extra = meta::extra(&existing);
     } else {
         let content_type = metadata.content_type.clone().unwrap_or_default();
         device.prepare(path, &content_type, *chunks, &mut metadata).await?;
@@ -242,6 +251,7 @@ async fn transfer(
                 file_size,
                 *chunks,
                 &metadata,
+                &extra,
                 &user_id(ctx),
             );
             match db.create_document(&collection, document).await {
@@ -254,6 +264,16 @@ async fn transfer(
     if !lock.refresh().await.map_err(|err| Error::with_message(ErrorType::GeneralServerError, err.to_string()))? {
         return Err(busy(ctx));
     }
+    // Out-of-order uploads take the type from the first chunk, whenever it arrives.
+    if chunk == 1 {
+        metadata.content_type = Some(mime);
+    }
+    // Encrypt before the chunk reaches storage. Files resumed from before
+    // segmented encryption have no key.
+    let bytes = match &extra.encryption {
+        Some(envelope) => encrypt_chunk(&encryption::cipher(envelope)?, bytes, chunk, *chunks, &mut extra)?,
+        None => bytes,
+    };
     let content_type = metadata.content_type.clone().unwrap_or_default();
     let received = device.upload(bytes, path, &content_type, chunk, *chunks, &mut metadata).await?;
     if !lock.is_held().await.map_err(|err| Error::with_message(ErrorType::GeneralServerError, err.to_string()))? {
@@ -273,10 +293,37 @@ async fn transfer(
         file_size,
         ranged,
         metadata,
+        extra,
         created_in_request,
         received,
     )
     .await
+}
+
+/// `encrypt()`: one chunk sealed at its place in the file, with the digest
+/// of its plaintext kept for the signature. Every chunk but the last must be
+/// full, so chunks line up with segments.
+fn encrypt_chunk(cipher: &Cipher, data: Vec<u8>, chunk: i64, chunks: i64, extra: &mut meta::Extra) -> Result<Vec<u8>> {
+    if chunk < chunks && data.len() as i64 != base::CHUNK_SIZE {
+        return Err(Error::new(ErrorType::StorageInvalidContentRange));
+    }
+    extra.digests.insert(chunk, hex::encode(Md5::digest(&data)));
+    cipher
+        .encrypt(&data, (chunk - 1) * (base::CHUNK_SIZE / SEGMENT), chunk == chunks)
+        .map_err(|e| Error::with_message(ErrorType::GeneralServerError, e.to_string()))
+}
+
+/// `signature()`: the MD5 of a single chunk, or the S3 multipart ETag form
+/// (the MD5 of the part digests, a dash and the part count).
+fn signature(digests: &std::collections::BTreeMap<i64, String>) -> String {
+    if digests.len() == 1 {
+        return digests.values().next().cloned().unwrap_or_default();
+    }
+    let mut joined = Vec::new();
+    for digest in digests.values() {
+        joined.extend(hex::decode(digest).unwrap_or_default());
+    }
+    format!("{}-{}", hex::encode(Md5::digest(&joined)), digests.len())
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -294,6 +341,7 @@ async fn finish(
     file_size: i64,
     ranged: bool,
     mut metadata: Metadata,
+    mut extra: meta::Extra,
     created_in_request: bool,
     received: i64,
 ) -> Result<Response> {
@@ -314,6 +362,7 @@ async fn finish(
         }
         let (merged, merged_uploader) = meta::merge(&stored, &metadata, &stored_uploader);
         metadata = merged;
+        extra = meta::merge_extra(&meta::extra(&file), &extra);
         uploader = if merged_uploader.is_empty() { uploader } else { merged_uploader };
         if uploaded == chunks && !ranged {
             return Err(Error::new(ErrorType::StorageFileAlreadyExists));
@@ -333,30 +382,115 @@ async fn finish(
     let chunks_uploaded = uploaded.max(counted);
     let file = if chunks_uploaded == chunks && uploaded < chunks {
         device.finalize(path, chunks, &mut metadata).await?;
-        if ranged && device.file_size(path).await? as i64 != file_size {
+        // Files uploaded before segmented encryption have no key and were stored as sent.
+        let mut cipher = match &extra.encryption {
+            Some(envelope) => Some(encryption::cipher(envelope)?),
+            None => None,
+        };
+        let stored_size = device.file_size(path).await? as i64;
+        // A chunk can carry more or fewer bytes than its range announces.
+        let expected = if cipher.is_none() { file_size } else { utopia_storage::cipher::size(file_size) };
+        if ranged && stored_size != expected {
             discard(db, device, &collection, file_id, path, file.is_empty()).await?;
             return Err(Error::new(ErrorType::StorageInvalidContentRange));
         }
-        if device.is_local()
-            && let Err(err) = crate::scan::scan(path, bucket.boolean("antivirus").unwrap_or(true), file_size).await
-        {
+        if device.is_local() {
+            // ClamAV reads a path, so an encrypted file is scanned from a decrypted temporary copy.
+            let scanned = match &cipher {
+                None => crate::scan::scan(path, bucket.boolean("antivirus").unwrap_or(true), file_size).await,
+                Some(cipher) => {
+                    scan_decrypted(device, cipher, path, bucket.boolean("antivirus").unwrap_or(true), file_size).await
+                }
+            };
+            if let Err(err) = scanned {
+                discard(db, device, &collection, file_id, path, file.is_empty()).await?;
+                return Err(err);
+            }
+        }
+        // Chunk 1's type: encrypted bytes say nothing, and S3 keeps the type of whichever chunk arrived first.
+        let stored_type = metadata.content_type.clone().unwrap_or_default();
+        let mut mime =
+            if cipher.is_none() && stored_type.is_empty() { device.file_mime_type(path).await? } else { stored_type };
+        // A signed extension the bucket allows must hold content of its type.
+        let allowed = bucket.strings("allowedFileExtensions");
+        let signed = !signatures(&base::extension(file_name).to_ascii_lowercase()).is_empty();
+        let types: Vec<&str> =
+            allowed.iter().flat_map(|e| signatures(&e.to_ascii_lowercase()).iter().copied()).collect();
+        if !allowed.is_empty() && signed && !types.contains(&mime.as_str()) {
             discard(db, device, &collection, file_id, path, file.is_empty()).await?;
-            return Err(err);
+            return Err(Error::with_message(ErrorType::StorageFileTypeUnsupported, "File content type not allowed"));
         }
-        let mut mime = device.file_mime_type(path).await?;
         mime = rewrite_mime(&mime, file_name);
-        // Strip before hashing so the signature and sizes describe the file we store.
+        // The signature describes the plaintext, in the format the device reports for it.
+        let mut hash = match &cipher {
+            None => device.file_hash(path).await?,
+            Some(cipher) if chunks > 1 && device.is_local() => {
+                let plain = cipher
+                    .decrypt(&base::read_all(device, path).await?, 0, true)
+                    .map_err(|e| Error::with_message(ErrorType::GeneralServerError, e.to_string()))?;
+                hex::encode(Md5::digest(&plain))
+            }
+            Some(_) => signature(&extra.digests),
+        };
         let mut file_size = file_size;
-        if bucket.boolean("stripMetadata") == Some(true)
+        let requested = bucket.string_or_empty("compression");
+        let algorithm = if file_size > READ_BUFFER || requested.is_empty() { "none".to_owned() } else { requested };
+        let strip = bucket.boolean("stripMetadata") == Some(true)
             && file_size <= READ_BUFFER
-            && METADATA_MIMES.contains(&mime.as_str())
-            && let Some(stripped) = strip_metadata(device, path, &mime).await
-        {
-            file_size = stripped;
+            && METADATA_MIMES.contains(&mime.as_str());
+        // An upload started before segmented encryption is encrypted now, as it was before.
+        let encrypt = cipher.is_none() && bucket.boolean("encryption").unwrap_or(true) && file_size <= READ_BUFFER;
+        let mut sealed: Option<Sealed> = None;
+        // Changes to the content are made in memory and written once, still encrypted.
+        let mut written: Option<i64> = None;
+        if strip || algorithm != "none" || encrypt {
+            let mut data = base::read_all(device, path).await?;
+            if let Some(cipher) = &cipher {
+                data = cipher
+                    .decrypt(&data, 0, true)
+                    .map_err(|e| Error::with_message(ErrorType::GeneralServerError, e.to_string()))?;
+            }
+            // Strip before hashing so the signature and sizes describe the file we store.
+            if strip && let Some(stripped) = strip_metadata(data.clone()).await {
+                data = stripped;
+                file_size = data.len() as i64;
+                hash = hex::encode(Md5::digest(&data));
+            }
+            if algorithm != "none" {
+                let chosen = algorithm.clone();
+                data = utopia_async::spawn_blocking(move || match chosen.as_str() {
+                    "zstd" => Zstd::new().compress(&data),
+                    _ => Gzip::new().compress(&data),
+                })
+                .await
+                .map_err(|err| Error::with_message(ErrorType::GeneralServerError, err.to_string()))?
+                .map_err(|err| Error::with_message(ErrorType::GeneralServerError, err.to_string()))?;
+            }
+            if encrypt {
+                let envelope = encryption::create()?;
+                cipher = Some(encryption::cipher(&envelope)?);
+                extra.encryption = Some(envelope);
+            }
+            if let Some(cipher) = &cipher {
+                data = cipher
+                    .encrypt(&data, 0, true)
+                    .map_err(|e| Error::with_message(ErrorType::GeneralServerError, e.to_string()))?;
+            }
+            written = Some(data.len() as i64);
+            device.write(path, data, &mime).await?;
         }
-        let hash = device.file_hash(path).await?;
-        let (algorithm, sealed) = persist(ctx, device, bucket, path, file_size, &mime).await?;
-        let size_actual = device.file_size(path).await? as i64;
+        if let (Some(_), Some(envelope)) = (&cipher, &extra.encryption) {
+            let version = match envelope.get("version") {
+                Some(Json::String(v)) => v.clone(),
+                Some(other) => other.to_string(),
+                None => String::new(),
+            };
+            sealed = Some(Sealed { version });
+        }
+        let size_actual = match written {
+            Some(size) => size,
+            None => stored_size,
+        };
         if file.is_empty() {
             let mut document = Document::default();
             document.put("$id", Value::from(file_id));
@@ -376,7 +510,7 @@ async fn finish(
             document.put("chunksUploaded", Value::Int(chunks_uploaded));
             put_cipher(&mut document, sealed.as_ref());
             document.put("search", Value::from(format!("{file_id} {file_name}").as_str()));
-            document.put("metadata", meta::store(&metadata, &uploader));
+            document.put("metadata", meta::store(&metadata, &extra, &uploader));
             match db.create_document(&collection, document).await {
                 Ok(created) => created,
                 Err(err) if err.is_a(Kind::Duplicate) => return Err(Error::new(ErrorType::StorageFileAlreadyExists)),
@@ -390,14 +524,14 @@ async fn finish(
             updates.put("sizeActual", Value::Int(size_actual));
             updates.put("algorithm", Value::from(algorithm.as_str()));
             put_cipher(&mut updates, sealed.as_ref());
-            updates.put("metadata", meta::store(&metadata, &uploader));
+            updates.put("metadata", meta::store(&metadata, &extra, &uploader));
             updates.put("chunksUploaded", Value::Int(chunks_uploaded));
             auth.skip(db.update_document(&collection, file_id, updates)).await.map_err(base::map_db)?
         }
     } else {
         let mut updates = Document::default();
         updates.put("chunksUploaded", Value::Int(chunks_uploaded));
-        updates.put("metadata", meta::store(&metadata, &uploader));
+        updates.put("metadata", meta::store(&metadata, &extra, &uploader));
         auth.skip(db.update_document(&collection, file_id, updates)).await.map_err(base::map_db)?
     };
     if chunks_uploaded == chunks {
@@ -409,9 +543,54 @@ async fn finish(
     Ok(ctx.created(&FileModel { document: &file }))
 }
 
+/// A file stored with segmented encryption: the version of the key its
+/// file key is wrapped with.
 struct Sealed {
-    iv: String,
-    tag: String,
+    version: String,
+}
+
+/// `storage-formats`' `signatures`: the types a file with this extension
+/// must sniff as (text and container formats are not listed).
+fn signatures(extension: &str) -> &'static [&'static str] {
+    match extension {
+        "avif" => &["image/avif"],
+        "bmp" => &["image/bmp", "image/x-ms-bmp"],
+        "gif" => &["image/gif"],
+        "heic" | "heif" => &["image/heic", "image/heic-sequence", "image/heif", "image/heif-sequence"],
+        "ico" => &["image/vnd.microsoft.icon", "image/x-icon"],
+        "jfif" | "jpe" | "jpeg" | "jpg" => &["image/jpeg"],
+        "pdf" => &["application/pdf"],
+        "png" => &["image/png", "image/apng"],
+        "tif" | "tiff" => &["image/tiff"],
+        "webp" => &["image/webp"],
+        _ => &[],
+    }
+}
+
+/// The antivirus scan of an encrypted file: ClamAV reads a path, so it
+/// scans a decrypted temporary copy, removed afterwards. A copy that cannot
+/// be written fails the scan.
+async fn scan_decrypted(device: &Stored, cipher: &Cipher, path: &str, enabled: bool, size: i64) -> Result<()> {
+    if utopia_system::env("_APP_STORAGE_ANTIVIRUS").as_deref() != Some("enabled")
+        || !enabled
+        || size > base::ANTIVIRUS_LIMIT
+    {
+        return Ok(());
+    }
+    let plain = cipher
+        .decrypt(&base::read_all(device, path).await?, 0, true)
+        .map_err(|e| Error::with_message(ErrorType::GeneralServerError, e.to_string()))?;
+    let temporary = std::env::temp_dir().join(format!("scan{}", appwrite_core::database::unique_id()));
+    let written = utopia_async::fs::write(&temporary, &plain).await;
+    let result = match written {
+        Ok(()) => crate::scan::scan(&temporary.to_string_lossy(), enabled, size).await,
+        Err(_) => Err(Error::with_message(
+            ErrorType::GeneralServerError,
+            "Unable to scan the uploaded file: Unable to write the decrypted copy for scanning",
+        )),
+    };
+    let _ = utopia_async::fs::remove_file(&temporary).await;
+    result
 }
 
 /// Images whose metadata a bucket with `stripMetadata` removes.
@@ -419,15 +598,14 @@ const METADATA_MIMES: [&str; 8] =
     ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif", "image/avif", "image/gif", "image/tiff"];
 
 /// `stripMetadata()`: the file sent through the Exiftool service
-/// (`_APP_EXIFTOOL_HOST`) and written back; its new size, or `None` when it
-/// is kept as uploaded (logged, as PHP does).
-async fn strip_metadata(device: &Stored, path: &str, mime: &str) -> Option<i64> {
+/// (`_APP_EXIFTOOL_HOST`); the stripped file, or `None` when it is kept as
+/// uploaded (logged, as PHP does).
+async fn strip_metadata(source: Vec<u8>) -> Option<Vec<u8>> {
     let result: std::result::Result<Vec<u8>, String> = async {
         let host = utopia_system::env("_APP_EXIFTOOL_HOST").unwrap_or_default();
         if host.is_empty() {
             return Err("Exiftool needs to be configured with _APP_EXIFTOOL_HOST to strip metadata".to_owned());
         }
-        let source = base::read_all(device, path).await.map_err(|e| e.to_string())?;
         let client =
             utopia_client::Client::new(utopia_client::Http::new()).with_timeout(30.0).map_err(|e| e.to_string())?;
         let request = utopia_client::Request::new("POST", &format!("{}/strip", host.trim_end_matches('/')))
@@ -450,68 +628,22 @@ async fn strip_metadata(device: &Stored, path: &str, mime: &str) -> Option<i64> 
         Ok(body)
     }
     .await;
-    let stripped = match result {
-        Ok(stripped) => stripped,
+    match result {
+        Ok(stripped) => Some(stripped),
         Err(error) => {
-            tracing::warn!(path, error, "Image metadata was not removed");
-            return None;
-        }
-    };
-    let size = stripped.len() as i64;
-    match device.write(path, stripped, mime).await {
-        Ok(()) => Some(size),
-        Err(error) => {
-            tracing::warn!(path, error = %error, "Image metadata was not removed: the stripped file could not be saved");
+            tracing::warn!(error, "Image metadata was not removed");
             None
         }
     }
 }
 
-async fn persist(
-    ctx: &Context,
-    device: &Stored,
-    bucket: &Document,
-    path: &str,
-    file_size: i64,
-    mime: &str,
-) -> Result<(String, Option<Sealed>)> {
-    let requested = bucket.string_or_empty("compression");
-    let compress = file_size <= READ_BUFFER && !requested.is_empty() && requested != "none";
-    let encrypt = bucket.boolean("encryption").unwrap_or(true) && file_size <= READ_BUFFER;
-    let algorithm = if compress { requested } else { "none".to_owned() };
-    if !compress && !encrypt {
-        return Ok((algorithm, None));
-    }
-    let mut data = base::read_all(device, path).await?;
-    if compress {
-        let algorithm = algorithm.clone();
-        data = utopia_async::spawn_blocking(move || match algorithm.as_str() {
-            "zstd" => Zstd::new().compress(&data),
-            _ => Gzip::new().compress(&data),
-        })
-        .await
-        .map_err(|err| Error::with_message(ErrorType::GeneralServerError, err.to_string()))?
-        .map_err(|err| Error::with_message(ErrorType::GeneralServerError, err.to_string()))?;
-    }
-    let sealed = if encrypt {
-        // Options `0`, as PHP writes it: base64 ciphertext that either runtime reads.
-        let (encrypted, iv, tag) = appwrite_core::crypto::seal_encoded(&ctx.state.config.openssl_key_v1, &data);
-        data = encrypted;
-        Some(Sealed { iv: hex::encode(iv), tag: hex::encode(tag) })
-    } else {
-        None
-    };
-    device.write(path, data, mime).await?;
-    Ok((algorithm, sealed))
-}
-
 fn put_cipher(document: &mut Document, sealed: Option<&Sealed>) {
     match sealed {
         Some(sealed) => {
-            document.put("openSSLVersion", Value::from("1"));
-            document.put("openSSLCipher", Value::from("aes-128-gcm"));
-            document.put("openSSLTag", Value::from(sealed.tag.as_str()));
-            document.put("openSSLIV", Value::from(sealed.iv.as_str()));
+            document.put("openSSLVersion", Value::from(sealed.version.as_str()));
+            document.put("openSSLCipher", Value::from(utopia_storage::cipher::NAME));
+            document.put("openSSLTag", Value::Null);
+            document.put("openSSLIV", Value::Null);
         }
         None => {
             document.put("openSSLVersion", Value::Null);
@@ -533,6 +665,7 @@ fn pending(
     file_size: i64,
     chunks: i64,
     metadata: &Metadata,
+    extra: &meta::Extra,
     uploader: &str,
 ) -> Document {
     let mut document = Document::default();
@@ -552,7 +685,7 @@ fn pending(
     document.put("chunksTotal", Value::Int(chunks));
     document.put("chunksUploaded", Value::Int(0));
     document.put("search", Value::from(format!("{file_id} {file_name}").as_str()));
-    document.put("metadata", meta::store(metadata, uploader));
+    document.put("metadata", meta::store(metadata, extra, uploader));
     document
 }
 

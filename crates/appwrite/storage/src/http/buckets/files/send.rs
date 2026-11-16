@@ -11,6 +11,7 @@ use appwrite_core::{Error, ErrorType, Result};
 
 use crate::base::{self, DOWNLOAD_MAX_AGE, READ_BUFFER, token_for_bucket, token_matches_file};
 use crate::device::Stored;
+use crate::encryption;
 
 pub(super) const MIMES: &[&str] = &[
     "image/jpeg",
@@ -154,12 +155,34 @@ pub(super) async fn serve(
     let status = if ranged.is_some() { StatusCode::PARTIAL_CONTENT } else { StatusCode::OK };
     let encrypted = !file.string_or_empty("openSSLCipher").is_empty();
     let algorithm = file.string_or_empty("algorithm");
-    let mut response = if encrypted || matches!(algorithm.as_str(), "zstd" | "gzip") {
+    // Segmented files are read by range and streamed, never held whole.
+    let mut response = if encryption::is_segmented(file) {
+        match ranged {
+            Some((start, end)) => {
+                Response::with_body(status, content_type, encryption::range(device, file, start, end).await?)
+            }
+            None if size > READ_BUFFER => {
+                let mut response = Response::with_body(status, content_type, Vec::new());
+                let length = u64::try_from(size).unwrap_or(0);
+                response.stage_stream(
+                    segments(Stored::for_project(&ctx.project.id)?, file.clone()),
+                    usize::try_from(length).unwrap_or(usize::MAX),
+                );
+                response
+            }
+            // Sent from here even when empty, so a zero-byte file never falls through to the stored bytes.
+            None => Response::with_body(
+                status,
+                content_type,
+                encryption::decrypt(file, &base::read_all(device, &path).await?)?,
+            ),
+        }
+    } else if encrypted || matches!(algorithm.as_str(), "zstd" | "gzip") {
         // Like PHP, the whole object: encrypted and compressed files are at
         // most `APP_STORAGE_READ_BUFFER` (20 MB) before the transformation.
         let mut bytes = base::read_all(device, &path).await?;
         if encrypted {
-            bytes = decrypt(&ctx.state.config.openssl_key_v1, file, &bytes)?;
+            bytes = encryption::decrypt(file, &bytes)?;
         }
         bytes = decompress(&algorithm, bytes)?;
         let body = match ranged {
@@ -229,6 +252,31 @@ fn slice(bytes: &[u8], start: i64, end: i64) -> Vec<u8> {
     bytes[start..end.min(bytes.len())].to_vec()
 }
 
+/// A segmented file's plaintext, decrypted as it is read: segments go out as
+/// they are opened, and a failure cuts the response short.
+fn segments(
+    device: Stored,
+    file: Document,
+) -> impl futures_util::Stream<Item = std::result::Result<bytes::Bytes, Aborted>> + Send + 'static {
+    let (sender, receiver) =
+        utopia_async::sync::mpsc::unbounded_channel::<std::result::Result<bytes::Bytes, Aborted>>();
+    utopia_async::spawn(async move {
+        let result = encryption::stream(&device, &file, |chunk| {
+            let _ = sender.send(Ok(bytes::Bytes::from(chunk)));
+            Ok(())
+        })
+        .await;
+        if let Err(e) = result {
+            tracing::warn!(error = %e, "segmented file read failed");
+            let _ = sender.send(Err(Aborted));
+        }
+    });
+    futures_util::stream::unfold(receiver, |mut receiver| async move {
+        let item = receiver.recv().await?;
+        Some((item, receiver))
+    })
+}
+
 /// The `length` bytes of a stored file, in chunks of at most
 /// [`utopia_http::CHUNK_SIZE`]. Like PHP, a read that runs past or short of
 /// the captured size cuts the response short instead of ending it.
@@ -250,22 +298,6 @@ fn chunks(
             }
         }
     })
-}
-
-/// `OpenSSL::decrypt($data, $cipher, _APP_OPENSSL_KEY_V{openSSLVersion}, 0, $iv, $tag)`:
-/// base64 ciphertext, as PHP and this service write it.
-pub(super) fn decrypt(key_v1: &str, file: &Document, data: &[u8]) -> Result<Vec<u8>> {
-    let iv = hex::decode(file.string_or_empty("openSSLIV")).unwrap_or_default();
-    let tag = hex::decode(file.string_or_empty("openSSLTag")).unwrap_or_default();
-    let version = file.string_or_empty("openSSLVersion");
-    let key = match version.as_str() {
-        "" | "1" => key_v1.to_owned(),
-        version => appwrite_core::crypto::env_key(version).unwrap_or_default(),
-    };
-    appwrite_core::crypto::open_encoded(&key, data, &iv, &tag)
-        // Raw ciphertext, as early Rust builds of this service wrote it.
-        .or_else(|| appwrite_core::crypto::open(&key, data, &iv, &tag))
-        .ok_or_else(|| Error::with_message(ErrorType::GeneralServerError, "Failed to decrypt file"))
 }
 
 pub(super) fn decompress(algorithm: &str, data: Vec<u8>) -> Result<Vec<u8>> {

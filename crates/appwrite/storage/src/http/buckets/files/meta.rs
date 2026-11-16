@@ -9,6 +9,53 @@ use appwrite_core::database::documents::Attributes;
 
 const UPLOADER: &str = "uploaderId";
 
+/// What Appwrite keeps in the metadata beside the device's: the file key's
+/// envelope (`encryption`) and the MD5 of each chunk's plaintext
+/// (`digests`, by chunk number).
+#[derive(Debug, Clone, Default)]
+pub(super) struct Extra {
+    pub(super) encryption: Option<Json>,
+    pub(super) digests: std::collections::BTreeMap<i64, String>,
+}
+
+/// The [`Extra`] a file document holds.
+pub(super) fn extra(document: &Document) -> Extra {
+    let Some(json) = document.json("metadata") else {
+        return Extra::default();
+    };
+    let encryption = json.get("encryption").filter(|e| !e.is_null()).cloned();
+    let mut digests = std::collections::BTreeMap::new();
+    match json.get("digests") {
+        Some(Json::Object(map)) => {
+            for (key, value) in map {
+                if let (Ok(index), Some(digest)) = (key.parse::<i64>(), value.as_str()) {
+                    digests.insert(index, digest.to_owned());
+                }
+            }
+        }
+        // A list is keyed from 0.
+        Some(Json::Array(items)) => {
+            for (index, value) in items.iter().enumerate() {
+                if let Some(digest) = value.as_str() {
+                    digests.insert(index as i64, digest.to_owned());
+                }
+            }
+        }
+        _ => {}
+    }
+    Extra { encryption, digests }
+}
+
+/// `array_merge` of the stored and the current extra: the current envelope
+/// wins, and the digests are `$current + $stored` sorted by chunk.
+pub(super) fn merge_extra(stored: &Extra, current: &Extra) -> Extra {
+    let mut digests = stored.digests.clone();
+    for (key, value) in &current.digests {
+        digests.insert(*key, value.clone());
+    }
+    Extra { encryption: current.encryption.clone().or_else(|| stored.encryption.clone()), digests }
+}
+
 /// Metadata and the user who started the upload.
 pub(super) fn load(document: &Document) -> (Metadata, String) {
     let Some(json) = document.json("metadata") else {
@@ -53,8 +100,15 @@ pub(super) fn merge(stored: &Metadata, current: &Metadata, uploader: &str) -> (M
 }
 
 /// The document value of metadata, including the uploader.
-pub(super) fn store(metadata: &Metadata, uploader: &str) -> utopia_database::Value {
+pub(super) fn store(metadata: &Metadata, extra: &Extra, uploader: &str) -> utopia_database::Value {
     let mut map = Map::new();
+    if let Some(encryption) = &extra.encryption {
+        map.insert("encryption".to_owned(), encryption.clone());
+    }
+    if !extra.digests.is_empty() {
+        let digests: Map<String, Json> = extra.digests.iter().map(|(k, v)| (k.to_string(), json!(v))).collect();
+        map.insert("digests".to_owned(), Json::Object(digests));
+    }
     if let Some(content_type) = &metadata.content_type {
         map.insert("content_type".to_owned(), json!(content_type));
     }
