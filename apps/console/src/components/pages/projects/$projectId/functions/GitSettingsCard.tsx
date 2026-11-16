@@ -423,36 +423,18 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
               </div>
             ) : null}
 
-            <fieldset className="rounded-lg border border-border p-4 space-y-4">
-              <legend className="text-[13px] font-medium text-foreground px-2">
-                {t('Branch Settings')}
-              </legend>
-
-              {/* Branch selector */}
-              <BranchSelector
-                projectId={projectId}
-                installationId={func.installationId}
-                providerRepositoryId={func.providerRepositoryId}
-                value={selectedBranch}
-                onChange={setSelectedBranch}
-                label={t('Production branch')}
-                suppressInstallationError={!!repositoryErrorKind}
-              />
-
-              {/* Root directory selector */}
-              <RootDirectoryPicker
-                projectId={projectId}
-                installationId={func.installationId}
-                providerRepositoryId={func.providerRepositoryId}
-                branch={selectedBranch || 'main'}
-                value={selectedDir}
-                onChange={setSelectedDir}
-                label={t('Root directory')}
-                description={t(
-                  'Choose the directory containing your function code',
-                )}
-              />
-            </fieldset>
+            <RootDirectoryPicker
+              projectId={projectId}
+              installationId={func.installationId}
+              providerRepositoryId={func.providerRepositoryId}
+              branch={func.providerBranch || 'main'}
+              value={selectedDir}
+              onChange={setSelectedDir}
+              label={t('Root directory')}
+              description={t(
+                'Choose the directory containing your function code',
+              )}
+            />
           </div>
         )}
       </div>
