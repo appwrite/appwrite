@@ -238,6 +238,7 @@
             },
             "passkeyRpId": "example.com",
             "denyRealtimeGuests": true,
+            "accountDevices": null,
             "createdAt": "",
             "updatedAt": ""
           }
@@ -274,6 +275,7 @@
           },
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\Policies",
+            "getAccountDevices": null,
             "getCreatedAt": "",
             "getDenyAliasedEmail": null,
             "getDenyCorporateEmail": null,
@@ -345,6 +347,7 @@
           },
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\Policies",
+            "getAccountDevices": null,
             "getCreatedAt": "",
             "getDenyAliasedEmail": null,
             "getDenyCorporateEmail": null,

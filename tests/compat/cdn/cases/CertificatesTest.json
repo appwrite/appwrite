@@ -188,6 +188,60 @@
           }
         }
       ]
+    },
+    {
+      "name": "certificate expiry delegates to provider",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "log",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "recorder",
+            "name": "provider",
+            "log": {
+              "$ref": "log"
+            },
+            "expiry": "2027-01-31 00:00:00.000"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "facade",
+            "provider": {
+              "$ref": "p"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "c"
+            },
+            "method": "getCertificateExpiry",
+            "domain": "cdn.example.com"
+          },
+          "expect": {
+            "result": "2027-01-31 00:00:00.000"
+          }
+        }
+      ]
     }
   ]
 }

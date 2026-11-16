@@ -5,10 +5,11 @@
 //! `Utopia\Image\Canvas` and `Utopia\Image\Font` are always registered: their
 //! package has no PHP implementation. Every other library still has one, and
 //! its class is registered only when `_APP_EXTENSION_LIBRARIES` names its
-//! package (`dsn`, `locale`, `user-agent`), so each can be canaried and switched back to PHP with a
+//! package (`dsn`, `locale`, `user-agent`, `domains`), so each can be canaried and switched back to PHP with a
 //! restart, not a deploy.
 
 mod canvas;
+mod domains;
 mod dsn;
 mod locale;
 mod string;
@@ -30,6 +31,7 @@ fn enabled(package: &str) -> bool {
 pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     let module = module.name("utopia").class::<canvas::Canvas>().class::<canvas::Font>();
     let module = if enabled("dsn") { module.class::<dsn::Dsn>() } else { module };
+    let module = if enabled("domains") { module.class::<domains::Domain>() } else { module };
     let module = if enabled("locale") { module.class::<locale::Locale>() } else { module };
     let module = if enabled("user-agent") { module.class::<user_agent::UserAgent>() } else { module };
     module.request_shutdown_function(request_shutdown)

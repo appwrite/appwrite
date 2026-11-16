@@ -326,6 +326,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "extra": "kept"
             },
@@ -385,6 +386,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "extra": "kept"
             },
@@ -496,6 +498,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "extra": "kept"
               },
@@ -588,6 +591,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "extra": "kept"
               },
@@ -654,6 +658,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "extra": "kept"
               },
@@ -728,6 +733,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "extra": "kept"
               },

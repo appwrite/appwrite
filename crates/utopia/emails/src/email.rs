@@ -200,11 +200,22 @@ impl Email {
         self.domain.is_known() || self.domain.is_test()
     }
 
-    /// Whether the domain is on the disposable list.
+    /// Whether the domain, or its registrable domain, is on the disposable
+    /// list.
+    ///
+    /// A provider listed by its registrable domain owns every subdomain under
+    /// it (`user@6s.lucktaro.com` is `lucktaro.com`). Matching on the public
+    /// suffix list, not on any parent, keeps one site on a shared suffix such
+    /// as `it.com` from listing the rest.
     ///
     /// PHP: `isDisposable()`.
     pub fn is_disposable(&self) -> bool {
-        Lists::global().disposable.contains(self.domain())
+        let disposable = &Lists::global().disposable;
+        if disposable.contains(self.domain()) {
+            return true;
+        }
+        let registerable = self.domain.registerable();
+        !registerable.is_empty() && disposable.contains(registerable.as_str())
     }
 
     /// Whether the domain is on the free list and not disposable.

@@ -532,6 +532,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Failed to load logo files': 'טעינת קובצי הלוגו נכשלה',
   'Failed to load members': 'טעינת החברים נכשלה',
   'Failed to load page': 'טעינת הדף נכשלה',
+  'Failed to load preset records': 'טעינת רשומות ה-DNS של התבנית נכשלה',
   'Failed to load projects': 'טעינת הפרויקטים נכשלה',
   'Failed to load regions': 'טעינת האזורים נכשלה',
   'Failed to mount payment form. Please try again.':
@@ -1158,6 +1159,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'זה בדרך כלל לוקח כמה שניות. השאירו את החלון הזה פתוח.',
   'This usually takes a few seconds to a couple of minutes. Please keep this window open.':
     'זה בדרך כלל לוקח בין כמה שניות לכמה דקות. השאירו את החלון הזה פתוח.',
+  'These DNS records will be added. Records this domain already has are left unchanged. Nothing is created until you confirm.':
+    'רשומות ה-DNS האלה יתווספו. רשומות שכבר קיימות בדומיין נשארות ללא שינוי. לא נוצר שום דבר עד שתאשרו.',
   'This will add': 'פעולה זו תוסיף',
   'This will generate a transfer authorization code for your domain. Keep it private until you use it at the receiving registrar.':
     'פעולה זו תיצור קוד הרשאה להעברת הדומיין שלכם. שמרו אותו בסוד עד לשימוש אצל הרשם הקולט.',
@@ -1570,7 +1573,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'לא ניתן היה לטעון אילו מדיניות גיבוי יפסיקו לפעול כשהתוכנית תשתנה.',
   'Could not load which dedicated databases are spun down when your plan changes.':
     'לא ניתן היה לטעון אילו מסדי נתונים ייעודיים יושבתו כשהתוכנית תשתנה.',
-  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.': 'ארגונים שמתקינים את האפליקציה מעניקים לה את הרשאות הגישה שלמטה. משתמשים חוזרים לכתובת ההפניה אחרי התקנה או עדכון של ההתקנה.',
+  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.':
+    'ארגונים שמתקינים את האפליקציה מעניקים לה את הרשאות הגישה שלמטה. משתמשים חוזרים לכתובת ההפניה אחרי התקנה או עדכון של ההתקנה.',
   'Installation settings updated': 'הגדרות ההתקנה עודכנו',
   'No installation scopes are available.': 'אין הרשאות גישה להתקנה זמינות.',
   'Choose a new plan': 'בחירת תוכנית חדשה',
@@ -1637,7 +1641,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Failed to set up auto-pay': 'הגדרת התשלום האוטומטי נכשלה',
   'The bank asks for an OTP on automatic payments with this card. Set up auto-pay so payments up to $150 go through without one.':
     'הבנק מבקש OTP בתשלומים אוטומטיים בכרטיס הזה. הגדירו תשלום אוטומטי כדי שתשלומים של עד $150 יעברו בלי OTP.',
-  'Only the card owner can set up auto-pay': 'רק בעל הכרטיס יכול להגדיר תשלום אוטומטי',
+  'Only the card owner can set up auto-pay':
+    'רק בעל הכרטיס יכול להגדיר תשלום אוטומטי',
   'Check nameservers': 'בדיקת שרתי שמות',
   'Nameservers changed': 'שרתי השמות השתנו',
   'The nameservers for this domain no longer point to Appwrite. The domain status has been updated.':

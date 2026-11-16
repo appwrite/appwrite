@@ -2344,6 +2344,24 @@
           }
         }
       ]
+    },
+    {
+      "name": "certificate expiry is unknown without any request",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "AKID",
+        "secret_access_key": "secret",
+        "distribution": "EDFDVBD6EXAMPLE",
+        "connection_group": "cg_1",
+        "method": "getCertificateExpiry",
+        "domain": "example.com",
+        "responses": []
+      },
+      "expect": {
+        "result": null,
+        "requests": []
+      }
     }
   ]
 }

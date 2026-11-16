@@ -327,6 +327,7 @@ final class Adapter implements Base, Benchmarks
             'infobip' => new RoutedInfobip(...$args),
             'inforu' => new RoutedInforu(...$args),
             'mock_sms' => new RoutedMockSMS(...$args),
+            'mock_push' => new RoutedMockPush(...$args),
             'msg91' => new RoutedMsg91(...$args),
             'plivo' => new RoutedPlivo(...$args),
             'seven' => new RoutedSeven(...$args),
@@ -342,6 +343,7 @@ final class Adapter implements Base, Benchmarks
             'discord' => new RoutedDiscord(...$args),
             'geosms' => new GEOSMS($s->get($args['defaultAdapter'])['adapter']),
             'scripted' => new ScriptedSMS($args['name'] ?? 'Test', $args['max'] ?? 100, $args['response'] ?? null, $args['error'] ?? null),
+            'scripted_email' => new ScriptedEmail($args['name'] ?? 'Test', $args['max'] ?? 100, $args['response'] ?? null, $args['error'] ?? null),
             default => throw new Fault('unknown adapter ' . json_encode($a['adapter'])),
         };
     }
@@ -361,7 +363,7 @@ final class Adapter implements Base, Benchmarks
             'inforu' => RoutedInforu::class, 'mock_sms' => RoutedMockSMS::class, 'msg91' => RoutedMsg91::class, 'plivo' => RoutedPlivo::class,
             'seven' => RoutedSeven::class, 'sinch' => RoutedSinch::class, 'telesign' => RoutedTelesign::class, 'telnyx' => RoutedTelnyx::class,
             'textmagic' => RoutedTextMagic::class, 'twilio' => RoutedTwilio::class, 'vonage' => RoutedVonage::class, 'whatsapp' => RoutedWhatsApp::class,
-            'apns' => RoutedAPNS::class, 'fcm' => RoutedFCM::class, 'discord' => RoutedDiscord::class,
+            'apns' => RoutedAPNS::class, 'fcm' => RoutedFCM::class, 'mock_push' => RoutedMockPush::class, 'discord' => RoutedDiscord::class,
         ][$adapter] ?? throw new Fault('unknown adapter ' . $adapter);
         $names = array_map(static fn (\ReflectionParameter $p) => $p->getName(), (new \ReflectionMethod($class, '__construct'))->getParameters());
         if (\in_array('serviceAccountJSON', $names, true)) {
@@ -462,6 +464,8 @@ final class Adapter implements Base, Benchmarks
             $method === 'set_local' && $adapter instanceof GEOSMS => $adapter->setLocal($args['code'], $s->get($args['adapter'])['adapter']) === $adapter,
             $method === 'get_endpoint' && $adapter instanceof RoutedMockSMS => $adapter->getEndpoint(),
             $method === 'set_endpoint' && $adapter instanceof RoutedMockSMS => $adapter->setEndpoint(self::endpoint($args['url'], $s)) === $adapter,
+            $method === 'get_endpoint' && $adapter instanceof RoutedMockPush => $adapter->getEndpoint(),
+            $method === 'set_endpoint' && $adapter instanceof RoutedMockPush => $adapter->setEndpoint(self::endpoint($args['url'], $s)) === $adapter,
             $method === 'disconnect' && $adapter instanceof SMTP => $adapter->disconnect(),
             $method === 'upsert_template' && $adapter instanceof RoutedWhatsApp => $adapter->upsertTemplate(...array_merge(
                 $args,
@@ -515,6 +519,9 @@ final class Adapter implements Base, Benchmarks
         );
         if (\array_key_exists('origin', $a)) {
             $email->setOrigin($a['origin']);
+        }
+        if (\array_key_exists('template', $a)) {
+            $email->setTemplate($a['template']);
         }
 
         return $email;
@@ -651,6 +658,7 @@ final class Adapter implements Base, Benchmarks
             'html' => $email->isHtml(),
             'headers' => $email->getHeaders(),
             'origin' => $email->getOrigin(),
+            'template' => $email->getTemplate(),
         ];
     }
 

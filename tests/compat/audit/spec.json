@@ -628,6 +628,7 @@
         "Utopia\\Audit\\Log::getResource",
         "Utopia\\Audit\\Log::getSdk",
         "Utopia\\Audit\\Log::getSdkVersion",
+        "Utopia\\Audit\\Log::getReason",
         "Utopia\\Audit\\Log::getOsCode",
         "Utopia\\Audit\\Log::getOsName",
         "Utopia\\Audit\\Log::getOsVersion",
@@ -1147,6 +1148,10 @@
           "gen": "ref",
           "name": "scalar"
         },
+        "reason": {
+          "gen": "ref",
+          "name": "scalar"
+        },
         "osCode": {
           "gen": "ref",
           "name": "scalar"
@@ -1259,6 +1264,7 @@
         "resource",
         "sdk",
         "sdkVersion",
+        "reason",
         "osCode",
         "osName",
         "osVersion",

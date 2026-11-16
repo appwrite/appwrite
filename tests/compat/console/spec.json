@@ -699,9 +699,13 @@
       ]
     }
   },
-  "waivers": {},
+  "waivers": {
+    "Utopia\\Console\\PHPStan\\*": "PHPStan rule and extension that ban commands built as strings in PHP code: static analysis, no runtime behaviour. Rust has no shell-string APIs to ban: Command builds argv."
+  },
   "tests_waived": {
-    "packages/console/tests/CompatTest.php": "Checks that the pre-namespace class names Utopia\\Console and Utopia\\Command (class_alias in src/compat.php) resolve to the moved classes: PHP autoloading plumbing. Rust has one path per item; Console::log and new Command('echo'), which it also calls, are covered by ConsoleTest.json."
+    "packages/console/tests/CompatTest.php": "Checks that the pre-namespace class names Utopia\\Console and Utopia\\Command (class_alias in src/compat.php) resolve to the moved classes: PHP autoloading plumbing. Rust has one path per item; Console::log and new Command('echo'), which it also calls, are covered by ConsoleTest.json.",
+    "packages/console/tests/PHPStan/DisallowRawShellExtensionTest.php": "Tests the PHPStan extension that reports raw shell functions: static analysis of PHP code, no runtime behaviour.",
+    "packages/console/tests/PHPStan/DisallowShellStringRuleTest.php": "Tests the PHPStan rule that reports proc_open() and Console::execute() given a string: static analysis of PHP code, no runtime behaviour."
   },
   "quirks": [
     {

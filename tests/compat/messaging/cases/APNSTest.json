@@ -441,7 +441,8 @@
               ],
               "title": "Title",
               "body": "Body",
-              "priority": "HIGH"
+              "priority": "HIGH",
+              "tag": "alert:1"
             },
             "replies": [
               {
@@ -474,7 +475,8 @@
                   "Authorization: Bearer <jwt>",
                   "apns-topic: com.example.app",
                   "apns-push-type: alert",
-                  "apns-priority: 10"
+                  "apns-priority: 10",
+                  "apns-collapse-id: alert:1"
                 ],
                 "bodies": [
                   {
@@ -482,6 +484,178 @@
                       "alert": {
                         "title": "Title",
                         "body": "Body"
+                      }
+                    }
+                  }
+                ],
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "ES256",
+                      "kid": "keyId"
+                    },
+                    "payload": {
+                      "iss": "teamId",
+                      "iat": "<now>",
+                      "exp": "<iat+3600>"
+                    },
+                    "verified": true
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a tag over 64 bytes is left out of the collapse ID",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "apns",
+            "args": {
+              "authKey": {
+                "fixture": "es256"
+              },
+              "authKeyId": "keyId",
+              "teamId": "teamId",
+              "bundleId": "com.example.app"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "token"
+              ],
+              "title": "Title",
+              "tag": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "replies": [
+              {
+                "statusCode": 200
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "push",
+              "results": [
+                {
+                  "recipient": "token",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false,
+                  "code": 0
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "urls": [
+                  "https://api.push.apple.com/3/device/token"
+                ],
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer <jwt>",
+                  "apns-topic: com.example.app",
+                  "apns-push-type: alert"
+                ],
+                "bodies": [
+                  {
+                    "aps": {
+                      "alert": {
+                        "title": "Title"
+                      }
+                    }
+                  }
+                ],
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "ES256",
+                      "kid": "keyId"
+                    },
+                    "payload": {
+                      "iss": "teamId",
+                      "iat": "<now>",
+                      "exp": "<iat+3600>"
+                    },
+                    "verified": true
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "token"
+              ],
+              "title": "Title",
+              "tag": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "replies": [
+              {
+                "statusCode": 200
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "push",
+              "results": [
+                {
+                  "recipient": "token",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false,
+                  "code": 0
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "urls": [
+                  "https://api.push.apple.com/3/device/token"
+                ],
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer <jwt>",
+                  "apns-topic: com.example.app",
+                  "apns-push-type: alert",
+                  "apns-collapse-id: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                ],
+                "bodies": [
+                  {
+                    "aps": {
+                      "alert": {
+                        "title": "Title"
                       }
                     }
                   }
@@ -539,7 +713,8 @@
               "to": [
                 "abc#/victim-token",
                 "valid-token",
-                "a b?c"
+                "a b?c",
+                "uninstalled-token"
               ],
               "title": "Title"
             },
@@ -555,6 +730,12 @@
               },
               {
                 "statusCode": 200
+              },
+              {
+                "statusCode": 410,
+                "response": {
+                  "reason": "Unregistered"
+                }
               }
             ]
           },
@@ -583,6 +764,13 @@
                   "error": "",
                   "permanent": false,
                   "code": 0
+                },
+                {
+                  "recipient": "uninstalled-token",
+                  "status": "failure",
+                  "error": "Expired device token",
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -592,7 +780,8 @@
                 "urls": [
                   "https://api.push.apple.com/3/device/abc%23%2Fvictim-token",
                   "https://api.push.apple.com/3/device/valid-token",
-                  "https://api.push.apple.com/3/device/a%20b%3Fc"
+                  "https://api.push.apple.com/3/device/a%20b%3Fc",
+                  "https://api.push.apple.com/3/device/uninstalled-token"
                 ],
                 "headers": [
                   "Content-Type: application/json",
