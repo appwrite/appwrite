@@ -212,6 +212,11 @@ impl std::fmt::Debug for S3 {
 }
 
 impl S3 {
+    /// The longest a SigV4 query signature may last: 7 days.
+    ///
+    /// PHP: `S3::MAX_PRESIGN_SECONDS`.
+    pub const MAX_PRESIGN_SECONDS: i64 = 604_800;
+
     /// A device for the objects under `root` at `host`: a host name
     /// (`https://` is assumed) or a URL whose path is the bucket's
     /// (`http://minio:9000/bucket`). Objects are written with the `private`
@@ -907,12 +912,72 @@ impl S3 {
             "AWS4-HMAC-SHA256\n{amz_date}\n{scope}\n{}",
             hex::encode(Sha256::digest(canonical.join("\n").as_bytes()))
         );
-        let key = hmac(format!("AWS4{}", self.secret_key).as_bytes(), date_stamp.as_bytes());
+        let signature = self.sign(date_stamp, &to_sign);
+        format!("AWS4-HMAC-SHA256 Credential={}/{scope},SignedHeaders={signed},Signature={signature}", self.access_key)
+    }
+
+    /// The SigV4 signature of a string to sign, with the key for one day
+    /// (`date`, `Ymd`). Shared by the header-signed requests and presigned
+    /// URLs, so the two can never derive the key differently.
+    ///
+    /// PHP: the private `sign()`.
+    fn sign(&self, date: &str, string_to_sign: &str) -> String {
+        let key = hmac(format!("AWS4{}", self.secret_key).as_bytes(), date.as_bytes());
         let key = hmac(&key, self.region.as_bytes());
         let key = hmac(&key, b"s3");
         let key = hmac(&key, b"aws4_request");
-        let signature = hex::encode(hmac(&key, to_sign.as_bytes()));
-        format!("AWS4-HMAC-SHA256 Credential={}/{scope},SignedHeaders={signed},Signature={signature}", self.access_key)
+        hex::encode(hmac(&key, string_to_sign.as_bytes()))
+    }
+
+    /// A URL that lets whoever holds it GET the object at `path` until it
+    /// expires, with no credentials of their own (SigV4 query-string
+    /// signing).
+    ///
+    /// The object is addressed exactly as [`Device::read`] addresses it, so
+    /// path-style and virtual-hosted endpoints both work. Range requests are
+    /// allowed, which is what lets a reader such as ffmpeg seek in it rather
+    /// than download it whole. The URL is a credential for that object: keep
+    /// it out of logs and errors.
+    ///
+    /// `expires` is the seconds the URL stays valid, at most
+    /// [`S3::MAX_PRESIGN_SECONDS`] (7 days); `now` the signing time as a Unix
+    /// timestamp, `None` meaning now.
+    ///
+    /// Fails with [`Error::InvalidArgument`] when the lifetime is outside
+    /// `1..=604800` seconds.
+    ///
+    /// PHP: `$s3->getPresignedUrl($path, $expires = 3600, $now = null)`.
+    pub fn presigned_url(&self, path: &str, expires: i64, now: Option<i64>) -> Result<String> {
+        if !(1..=Self::MAX_PRESIGN_SECONDS).contains(&expires) {
+            return Err(Error::InvalidArgument(format!(
+                "A presigned URL must last between 1 and {} seconds",
+                Self::MAX_PRESIGN_SECONDS
+            )));
+        }
+        let now = now.unwrap_or_else(|| chrono::Utc::now().timestamp());
+        let amz_date = String::from_utf8_lossy(&php_std::datetime::gmdate(b"Ymd\\THis\\Z", now)).into_owned();
+        let date = amz_date.get(..8).unwrap_or(&amz_date);
+        let scope = format!("{date}/{}/s3/aws4_request", self.region);
+        let uri = format!("{}{}", self.path, device::absolute_path(&read_uri(path)));
+        let credential = format!("{}/{scope}", self.access_key);
+        let expires = expires.to_string();
+        // Already in the order sortMetaHeadersCmp() puts them.
+        let query = build_query(
+            [
+                ("X-Amz-Algorithm", "AWS4-HMAC-SHA256"),
+                ("X-Amz-Credential", credential.as_str()),
+                ("X-Amz-Date", amz_date.as_str()),
+                ("X-Amz-Expires", expires.as_str()),
+                ("X-Amz-SignedHeaders", "host"),
+            ]
+            .into_iter(),
+        );
+        let canonical =
+            [Method::Get.as_str(), &uri, &query, &format!("host:{}", self.host), "", "host", "UNSIGNED-PAYLOAD"]
+                .join("\n");
+        let to_sign =
+            format!("AWS4-HMAC-SHA256\n{amz_date}\n{scope}\n{}", hex::encode(Sha256::digest(canonical.as_bytes())));
+        Ok(format!("{}{uri}?{query}&X-Amz-Signature={}", self.fqdn, self.sign(date, &to_sign)))
     }
 }
 

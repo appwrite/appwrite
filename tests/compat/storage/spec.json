@@ -322,6 +322,15 @@
         "Utopia\\Storage\\UploadInfo::__construct"
       ]
     },
+    "s3.presigned_url": {
+      "doc": "$s3->getPresignedUrl(path, expires ?? 3600, now)",
+      "covers": [
+        "Utopia\\Storage\\Device\\S3::getPresignedUrl"
+      ]
+    },
+    "s3.presigned_get": {
+      "doc": "$s3->getPresignedUrl(path, expires ?? 3600), its last digit flipped with `tamper`, fetched with no credentials (cURL, `Range: bytes=<range>`): {status, body}, body null on an error status"
+    },
     "telemetry.list_uploads": {
       "doc": "$telemetry->listUploads(prefix, max, cursor)",
       "covers": [

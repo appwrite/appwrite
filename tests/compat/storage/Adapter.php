@@ -291,6 +291,38 @@ final class Adapter implements Base, Benchmarks
 
                 return self::uploadList($device->listUploads($a['prefix'] ?? '', $a['max'] ?? 1000, $a['cursor'] ?? null));
             }),
+            's3.presigned_url' => fn (array $a, Session $s) => self::run($a, function () use ($a, $s) {
+                $device = self::device($a, $s);
+                if (! $device instanceof S3) {
+                    throw new Fault('not an S3 device');
+                }
+
+                return $device->getPresignedUrl($a['path'], $a['expires'] ?? 3600, $a['now'] ?? null);
+            }),
+            's3.presigned_get' => function (array $a, Session $s) {
+                $device = self::device($a, $s);
+                if (! $device instanceof S3) {
+                    throw new Fault('not an S3 device');
+                }
+                $url = $device->getPresignedUrl($a['path'], $a['expires'] ?? 3600);
+                if ($a['tamper'] ?? false) {
+                    $url = substr($url, 0, -1) . (str_ends_with($url, '0') ? '1' : '0');
+                }
+
+                $curl = curl_init($url);
+                curl_setopt_array($curl, [\CURLOPT_RETURNTRANSFER => true, \CURLOPT_TIMEOUT => 30]);
+                if (isset($a['range'])) {
+                    curl_setopt($curl, \CURLOPT_HTTPHEADER, ['Range: bytes=' . $a['range']]);
+                }
+                $body = curl_exec($curl);
+                if ($body === false) {
+                    throw new Fault(curl_error($curl));
+                }
+                $status = curl_getinfo($curl, \CURLINFO_RESPONSE_CODE);
+
+                // An error body is the service's XML, which names request ids.
+                return ['status' => $status, 'body' => $status < 400 ? $body : null];
+            },
             'telemetry.list_uploads' => fn (array $a, Session $s) => self::run($a, fn () => self::uploadList(self::telemetry($a, $s)->listUploads($a['prefix'] ?? '', $a['max'] ?? 1000, $a['cursor'] ?? null))),
             'telemetry.device_is' => fn (array $a, Session $s) => self::telemetry($a, $s)->getDevice() === $s->get($a['of']),
             'telemetry.recorded' => function (array $a, Session $s) {

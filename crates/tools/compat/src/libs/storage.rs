@@ -7,7 +7,9 @@ use std::sync::{Arc, Mutex};
 use async_trait::async_trait;
 use bytes::Bytes;
 use serde_json::{Map, Value, json};
-use utopia_storage::s3::{Client, Method, Payload, Request, Response, Retry, RetryStrategy, TransportError};
+use utopia_storage::s3::{
+    Client, HttpClient, Method, Payload, Request, Response, Retry, RetryStrategy, TransportError,
+};
 use utopia_storage::validator::{FileExt, FileName, FileSize, FileType, Upload};
 use utopia_storage::{
     Acl, Body, COPY_CHUNK_SIZE, Cipher, Device, Error, FileInfo, FileList, Local, Metadata, Part, S3, Source,
@@ -75,6 +77,8 @@ pub const OPS: &[&str] = &[
     "local.partition_free_space",
     "local.partition_total_space",
     "s3.list_uploads",
+    "s3.presigned_url",
+    "s3.presigned_get",
     "telemetry.list_uploads",
     "telemetry.device_is",
     "telemetry.recorded",
@@ -991,6 +995,34 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                 )
                 .await;
             return result(&a, r, upload_list);
+        }
+        "s3.presigned_url" => {
+            let d = device(session)?;
+            let s3 = d.as_any().downcast_ref::<S3>().ok_or_else(|| Fault::new("not an S3 device"))?;
+            let r = s3.presigned_url(path()?, a.opt_i64("expires")?.unwrap_or(3600), a.opt_i64("now")?);
+            return result(&a, r, Value::from);
+        }
+        "s3.presigned_get" => {
+            let d = device(session)?;
+            let s3 = d.as_any().downcast_ref::<S3>().ok_or_else(|| Fault::new("not an S3 device"))?;
+            let mut url = match s3.presigned_url(path()?, a.opt_i64("expires")?.unwrap_or(3600), None) {
+                Ok(url) => url,
+                Err(e) => return Ok(err(e)),
+            };
+            if a.opt_bool("tamper")? == Some(true) {
+                let last = if url.ends_with('0') { '1' } else { '0' };
+                url.pop();
+                url.push(last);
+            }
+            let headers = match a.opt_str("range")? {
+                Some(range) => vec![("range".to_owned(), format!("bytes={range}"))],
+                None => Vec::new(),
+            };
+            let request = Request { method: Method::Get, url, headers, body: Payload::default() };
+            let response = HttpClient::new().send(&request).await.map_err(|e| Fault::new(e.to_string()))?;
+            // An error body is the service's XML, which names request ids.
+            let body = if response.status < 400 { bytes_value(&response.body) } else { Value::Null };
+            Outcome::Ok(json!({ "status": response.status, "body": body }))
         }
         "telemetry.list_uploads" => {
             let d = device(session)?;

@@ -575,3 +575,99 @@ fn keys_the_service_kept_are_errors() {
     );
     assert!(kept(Some(&decode("<DeleteResult></DeleteResult>")), 200, 2, "root/a/").is_ok());
 }
+
+/// Keeps every request it is sent, answering each with an ETag.
+#[derive(Default)]
+struct Capturing {
+    requests: std::sync::Mutex<Vec<Request>>,
+}
+
+#[async_trait]
+impl Client for Capturing {
+    async fn send(&self, request: &Request) -> std::result::Result<Response, TransportError> {
+        self.requests.lock().unwrap().push(request.clone());
+        Ok(Response::new(200).with_header("ETag", "\"abc\""))
+    }
+}
+
+/// Recomputes the signature the way an S3 server does, from the request as
+/// sent and the secret, so a wrong signing key cannot pass.
+///
+/// PHP: `S3Test::testAuthorizationHeaderCarriesAValidSigV4Signature`.
+#[utopia_async::test]
+async fn the_authorization_header_carries_a_valid_sigv4_signature() {
+    let client = Arc::new(Capturing::default());
+    let device = S3::new("/root", "test-key", "test-secret", "https://s3.example.com", "us-east-1")
+        .unwrap()
+        .with_client(client.clone());
+    device.write("/root/file.txt", Body::from(Bytes::from_static(b"Hello World")), "text/plain").await.unwrap();
+    let request = client.requests.lock().unwrap()[0].clone();
+
+    // Which headers were signed is the sender's choice; everything else is recomputed.
+    let authorization = request.header("authorization").unwrap().to_owned();
+    let signed = authorization.split(',').nth(1).unwrap_or_default().replace("SignedHeaders=", "");
+    let amz_date = request.header("x-amz-date").unwrap().to_owned();
+    let date = &amz_date[..8];
+    let scope = format!("{date}/us-east-1/s3/aws4_request");
+    let (path, query) = request
+        .url
+        .split_once("://")
+        .unwrap()
+        .1
+        .split_once('/')
+        .map_or(("", ""), |(_, rest)| rest.split_once('?').unwrap_or((rest, "")));
+    let mut canonical = vec![request.method.as_str().to_owned(), format!("/{path}"), query.to_owned()];
+    for name in signed.split(';') {
+        canonical.push(format!("{name}:{}", request.header(name).unwrap_or_default().trim()));
+    }
+    canonical.push(String::new());
+    canonical.push(signed.clone());
+    canonical.push(hex::encode(Sha256::digest(b"Hello World")));
+    let to_sign = format!(
+        "AWS4-HMAC-SHA256\n{amz_date}\n{scope}\n{}",
+        hex::encode(Sha256::digest(canonical.join("\n").as_bytes()))
+    );
+    let mut key = b"AWS4test-secret".to_vec();
+    for part in [date, "us-east-1", "s3", "aws4_request"] {
+        key = hmac(&key, part.as_bytes());
+    }
+
+    assert!(signed.split(';').any(|h| h == "host"));
+    assert_eq!(
+        authorization,
+        format!(
+            "AWS4-HMAC-SHA256 Credential=test-key/{scope},SignedHeaders={signed},Signature={}",
+            hex::encode(hmac(&key, to_sign.as_bytes()))
+        )
+    );
+}
+
+/// The worked example of AWS's SigV4 documentation ("Authenticating
+/// Requests: Using Query Parameters"), so the signature is compared with
+/// one nobody here computed.
+#[test]
+fn presigned_url_matches_the_documented_example() {
+    let device = S3::new(
+        "",
+        "AKIAIOSFODNN7EXAMPLE",
+        "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+        "https://examplebucket.s3.amazonaws.com",
+        "us-east-1",
+    )
+    .unwrap()
+    .with_bucket("examplebucket")
+    .unwrap();
+    assert_eq!(
+        device.presigned_url("test.txt", 86400, Some(1_369_353_600)).unwrap(),
+        "https://examplebucket.s3.amazonaws.com/test.txt\
+         ?X-Amz-Algorithm=AWS4-HMAC-SHA256\
+         &X-Amz-Credential=AKIAIOSFODNN7EXAMPLE%2F20130524%2Fus-east-1%2Fs3%2Faws4_request\
+         &X-Amz-Date=20130524T000000Z\
+         &X-Amz-Expires=86400\
+         &X-Amz-SignedHeaders=host\
+         &X-Amz-Signature=aeeed9bbccd4d02ee5c0109b86d86835f995330da4c265957d157751f604d404"
+    );
+    for expires in [0, -1, S3::MAX_PRESIGN_SECONDS + 1] {
+        assert!(matches!(device.presigned_url("a.mp4", expires, None), Err(Error::InvalidArgument(_))));
+    }
+}

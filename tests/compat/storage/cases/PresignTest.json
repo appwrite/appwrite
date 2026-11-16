@@ -1,0 +1,268 @@
+{
+  "source": "packages/storage/tests/Device/S3/PresignTest.php",
+  "cases": [
+    {
+      "name": "matches the documented example",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "",
+            "access_key": "AKIAIOSFODNN7EXAMPLE",
+            "secret_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+            "host": "https://examplebucket.s3.amazonaws.com",
+            "region": "us-east-1",
+            "bucket": "examplebucket"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.presigned_url",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "test.txt",
+            "expires": 86400,
+            "now": 1369353600
+          },
+          "expect": "https://examplebucket.s3.amazonaws.com/test.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE%2F20130524%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20130524T000000Z&X-Amz-Expires=86400&X-Amz-SignedHeaders=host&X-Amz-Signature=aeeed9bbccd4d02ee5c0109b86d86835f995330da4c265957d157751f604d404"
+        }
+      ]
+    },
+    {
+      "name": "a path-style endpoint keeps the bucket in the path",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "",
+            "access_key": "AKIAIOSFODNN7EXAMPLE",
+            "secret_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+            "host": "http://minio:9000/examplebucket",
+            "region": "us-east-1",
+            "bucket": "examplebucket"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.presigned_url",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "storage/uploads/app-1/file.mp4",
+            "expires": 60,
+            "now": 1369353600
+          },
+          "expect": "http://minio:9000/examplebucket/storage/uploads/app-1/file.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE%2F20130524%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20130524T000000Z&X-Amz-Expires=60&X-Amz-SignedHeaders=host&X-Amz-Signature=231ebf861c381da6c32ca66bc325e435761e410dbb3bf4c9f3c9a10f909faa19"
+        }
+      ]
+    },
+    {
+      "name": "a path is encoded once and its slashes kept",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "",
+            "access_key": "AKIAIOSFODNN7EXAMPLE",
+            "secret_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+            "host": "https://examplebucket.s3.amazonaws.com",
+            "region": "us-east-1",
+            "bucket": "examplebucket"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.presigned_url",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "dir/a file+1.mp4",
+            "expires": 60,
+            "now": 1369353600
+          },
+          "expect": "https://examplebucket.s3.amazonaws.com/dir/a%20file%2B1.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE%2F20130524%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20130524T000000Z&X-Amz-Expires=60&X-Amz-SignedHeaders=host&X-Amz-Signature=0d7e957462d574c8bd31e526ba84e0977e79e29afc7f1e7c4899ce598a749a56"
+        }
+      ]
+    },
+    {
+      "name": "the signature depends on the object and the lifetime",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "",
+            "access_key": "AKIAIOSFODNN7EXAMPLE",
+            "secret_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+            "host": "https://examplebucket.s3.amazonaws.com",
+            "region": "us-east-1",
+            "bucket": "examplebucket"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.presigned_url",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "a.mp4",
+            "expires": 60,
+            "now": 1369353600
+          },
+          "expect": "https://examplebucket.s3.amazonaws.com/a.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE%2F20130524%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20130524T000000Z&X-Amz-Expires=60&X-Amz-SignedHeaders=host&X-Amz-Signature=bf3e0d07cebda286e9a1b313b42933969ede0e499b1319d7a0754565d15751b5"
+        },
+        {
+          "op": "s3.presigned_url",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "b.mp4",
+            "expires": 60,
+            "now": 1369353600
+          },
+          "expect": "https://examplebucket.s3.amazonaws.com/b.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE%2F20130524%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20130524T000000Z&X-Amz-Expires=60&X-Amz-SignedHeaders=host&X-Amz-Signature=2663dca7136035589f3a35c24ea9545ee96eac03023de92b4efecf27f46af38a"
+        },
+        {
+          "op": "s3.presigned_url",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "a.mp4",
+            "expires": 61,
+            "now": 1369353600
+          },
+          "expect": "https://examplebucket.s3.amazonaws.com/a.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE%2F20130524%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20130524T000000Z&X-Amz-Expires=61&X-Amz-SignedHeaders=host&X-Amz-Signature=be30e6f8131bcae502a50e9ddea6073bcf90623f913a5680b299ede4b829310a"
+        }
+      ]
+    },
+    {
+      "name": "the lifetime defaults to an hour",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "",
+            "access_key": "AKIAIOSFODNN7EXAMPLE",
+            "secret_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+            "host": "https://examplebucket.s3.amazonaws.com",
+            "region": "us-east-1",
+            "bucket": "examplebucket"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.presigned_url",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "a.mp4",
+            "now": 1369353600
+          },
+          "expect": "https://examplebucket.s3.amazonaws.com/a.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE%2F20130524%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20130524T000000Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=22b7bb741e5d4941159f0f19911f78eff4a2f044eb6e3e877601001990e5d5b7"
+        }
+      ]
+    },
+    {
+      "name": "a lifetime outside what SigV4 allows is refused",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "",
+            "access_key": "AKIAIOSFODNN7EXAMPLE",
+            "secret_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+            "host": "https://examplebucket.s3.amazonaws.com",
+            "region": "us-east-1",
+            "bucket": "examplebucket"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.presigned_url",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "a.mp4",
+            "expires": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "A presigned URL must last between 1 and 604800 seconds"
+            }
+          }
+        },
+        {
+          "op": "s3.presigned_url",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "a.mp4",
+            "expires": -1
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "A presigned URL must last between 1 and 604800 seconds"
+            }
+          }
+        },
+        {
+          "op": "s3.presigned_url",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "a.mp4",
+            "expires": 604801
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "A presigned URL must last between 1 and 604800 seconds"
+            }
+          }
+        },
+        {
+          "op": "s3.presigned_url",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "a.mp4",
+            "expires": 604800,
+            "now": 1369353600
+          },
+          "expect": "https://examplebucket.s3.amazonaws.com/a.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE%2F20130524%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20130524T000000Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=9cd9d8cf7285d52b16e1c6281528c88f183f56f186e71f855d5e76d2f0ea47c5"
+        }
+      ]
+    }
+  ]
+}
