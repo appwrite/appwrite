@@ -447,34 +447,16 @@ export function GitRepositoryCard({
               </VcsInstallationErrorAlert>
             )}
 
-            <fieldset className="rounded-lg border border-border p-4 space-y-4">
-              <legend className="text-[13px] font-medium text-foreground px-2">
-                {t('Branch Settings')}
-              </legend>
-
-              <BranchSelector
-                projectId={projectId ?? undefined}
-                installationId={installationId}
-                providerRepositoryId={providerRepositoryId}
-                value={selectedBranch}
-                onChange={setSelectedBranch}
-                label={t('Production branch')}
-                suppressInstallationError={!!repositoryErrorKind}
-              />
-
-              <RootDirectoryPicker
-                projectId={projectId ?? undefined}
-                installationId={installationId}
-                providerRepositoryId={providerRepositoryId}
-                branch={selectedBranch || 'main'}
-                value={selectedDir}
-                onChange={setSelectedDir}
-                label={t('Root directory')}
-                description={t(
-                  'Choose the directory containing your site code',
-                )}
-              />
-            </fieldset>
+            <RootDirectoryPicker
+              projectId={projectId ?? undefined}
+              installationId={installationId}
+              providerRepositoryId={providerRepositoryId}
+              branch={site?.providerBranch || 'main'}
+              value={selectedDir}
+              onChange={setSelectedDir}
+              label={t('Root directory')}
+              description={t('Choose the directory containing your site code')}
+            />
           </div>
         )}
       </div>
