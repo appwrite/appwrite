@@ -12572,6 +12572,364 @@
           }
         }
       ]
+    },
+    {
+      "name": "response: a status code with a suffix",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "timeout",
+                3
+              ]
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/raw?r=SFRUUC8xLjAgMjAwUA0KQ29udGVudC1MZW5ndGg6IDINCg0Kb2s%3D"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Client\\Exception\\InvalidResponseException",
+              "message": "Received an invalid HTTP response."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "response: a tab before the reason",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "timeout",
+                3
+              ]
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/raw?r=SFRUUC8xLjEgMjAwCU9LDQpDb250ZW50LUxlbmd0aDogMg0KDQpvaw%3D%3D"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Length",
+                [
+                  "2"
+                ]
+              ]
+            ],
+            "body": "ok"
+          }
+        }
+      ]
+    },
+    {
+      "name": "response: a tab after the version",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "timeout",
+                3
+              ]
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/raw?r=SFRUUC8xLjEJMjAxIENyZWF0ZWQNCkNvbnRlbnQtTGVuZ3RoOiAyDQoNCm9r"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 201,
+            "reason": "Created",
+            "headers": [
+              [
+                "Content-Length",
+                [
+                  "2"
+                ]
+              ]
+            ],
+            "body": "ok"
+          }
+        }
+      ]
+    },
+    {
+      "name": "response: a reason without a space",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "timeout",
+                3
+              ]
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/raw?r=SFRUUC8xLjEgMjAwT0sNCkNvbnRlbnQtTGVuZ3RoOiAyDQoNCm9r"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Client\\Exception\\InvalidResponseException",
+              "message": "Received an invalid HTTP response."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "response: a four-digit status",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "timeout",
+                3
+              ]
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/raw?r=SFRUUC8xLjEgMjAwMA0KQ29udGVudC1MZW5ndGg6IDINCg0Kb2s%3D"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Client\\Exception\\InvalidResponseException",
+              "message": "Received an invalid HTTP response."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "response: http/2 status line with a reason",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "timeout",
+                3
+              ]
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/raw?r=SFRUUC8yIDIwNCBObyBDb250ZW50DQpDb250ZW50LUxlbmd0aDogMg0KDQpvaw%3D%3D"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Client\\Exception\\ProtocolException",
+              "message": "Version mismatch (from HTTP/1 to HTTP/2)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "response: http/3 status line with a reason",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "timeout",
+                3
+              ]
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/raw?r=SFRUUC8zIDIwMCBPSw0KQ29udGVudC1MZW5ndGg6IDINCg0Kb2s%3D"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Client\\Exception\\ProtocolException",
+              "message": "Unsupported HTTP version (3.0) in response"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "response: http/1.2 status line",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "timeout",
+                3
+              ]
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/raw?r=SFRUUC8xLjIgMjAwIE9LDQpDb250ZW50LUxlbmd0aDogMg0KDQpvaw%3D%3D"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Client\\Exception\\ProtocolException",
+              "message": "Unsupported HTTP/1 subversion in response"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "response: a NUL byte in a header",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "timeout",
+                3
+              ]
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/raw?r=SFRUUC8xLjEgMjAwIE9LDQpYLUE6IGEAYg0KQ29udGVudC1MZW5ndGg6IDINCg0Kb2s%3D"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Client\\Exception\\ProtocolException",
+              "message": "NUL byte in header"
+            }
+          }
+        }
+      ]
     }
   ]
 }
