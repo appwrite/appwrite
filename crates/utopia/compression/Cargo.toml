@@ -31,4 +31,4 @@ zstd = { workspace = true, optional = true, features = ["legacy"] }
 
 [package.metadata.utopia]
 category = "utilities"
-php-sync = "da0119eda7c139b8f99b13d814e5a99f9b5ac418"
+php-sync = "8053de67394b55f7237191aa4569a16f666da749"
