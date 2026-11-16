@@ -252,9 +252,7 @@ export function GitRepositoryCard({
   })
 
   const handleSaveConfiguration = () => {
-    const hasChanges =
-      selectedBranch !== site?.providerBranch ||
-      selectedDir !== (site?.providerRootDirectory || '')
+    const hasChanges = selectedDir !== (site?.providerRootDirectory || '')
 
     if (!hasChanges) {
       toast.info(t('No changes to save'))
