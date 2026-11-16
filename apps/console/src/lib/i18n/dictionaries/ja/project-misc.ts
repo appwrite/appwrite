@@ -3202,6 +3202,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   domains: 'ドメイン',
   functions: '関数',
   sites: 'サイト',
+  'firewall rule': 'ファイアウォールルール',
   'firewall rules': 'ファイアウォールルール',
   'Firewall rules': 'ファイアウォールルール',
   Downgraded: 'ダウングレード済み',
