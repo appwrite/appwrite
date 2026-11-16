@@ -4,6 +4,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useT } from '@/lib/i18n/translate'
 import {
   RECORD_NUMBER_MAX,
@@ -106,6 +111,7 @@ export function UpdateRecordDialog({
 
   const requiresPriority = record.type === 'MX' || record.type === 'SRV'
   const requiresSRVFields = record.type === 'SRV'
+  const nameAndValueMissing = !name.trim() || !value.trim()
 
   return (
     <BaseDrawer
@@ -175,7 +181,8 @@ export function UpdateRecordDialog({
                 {requiresPriority && (
                   <div className="space-y-2">
                     <Label htmlFor="priority">
-                      {t('Priority')} <span className="text-destructive">*</span>
+                      {t('Priority')}{' '}
+                      <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="priority"
@@ -193,7 +200,8 @@ export function UpdateRecordDialog({
                   <>
                     <div className="space-y-2">
                       <Label htmlFor="weight">
-                        {t('Weight')} <span className="text-destructive">*</span>
+                        {t('Weight')}{' '}
+                        <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id="weight"
@@ -239,12 +247,28 @@ export function UpdateRecordDialog({
           </div>
 
           <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
-            <Button
-              type="submit"
-              disabled={isLoading || !name.trim() || !value.trim()}
-            >
-              {t('Update Record')}
-            </Button>
+            {nameAndValueMissing ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex">
+                    <Button type="submit" disabled>
+                      {t('Update Record')}
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="z-[200] max-w-xs">
+                  <p>
+                    {t(
+                      'Name (use @ for the root domain) and value are required.',
+                    )}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <Button type="submit" disabled={isLoading}>
+                {t('Update Record')}
+              </Button>
+            )}
             <Button
               type="button"
               variant="outline"

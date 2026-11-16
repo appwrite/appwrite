@@ -11,6 +11,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useT } from '@/lib/i18n/translate'
 import {
   RECORD_NUMBER_MAX,
@@ -130,6 +135,7 @@ export function CreateRecordDialog({
 
   const requiresPriority = type === 'MX' || type === 'SRV'
   const requiresSRVFields = type === 'SRV'
+  const nameAndValueMissing = !name.trim() || !value.trim()
 
   return (
     <BaseDrawer
@@ -137,14 +143,11 @@ export function CreateRecordDialog({
       onOpenChange={handleOpenChange}
       title={t('Create DNS Record')}
       maxWidth="sm:max-w-lg"
->
+    >
       <>
         <div className="border-t border-border shrink-0" />
 
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-1 flex-col min-h-0"
->
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col min-h-0">
           <div className="flex-1 overflow-y-auto">
             <div className="px-6 py-6">
               <div className="space-y-5">
@@ -156,18 +159,13 @@ export function CreateRecordDialog({
                     value={type}
                     onValueChange={setType}
                     disabled={isLoading}
->
-                    <SelectTrigger
-                      id="type"
->
+                  >
+                    <SelectTrigger id="type">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {DNS_RECORD_TYPES.map((recordType) => (
-                        <SelectItem
-                          key={recordType}
-                          value={recordType}
->
+                        <SelectItem key={recordType} value={recordType}>
                           {recordType}
                         </SelectItem>
                       ))}
@@ -247,7 +245,8 @@ export function CreateRecordDialog({
                 {requiresPriority && (
                   <div className="space-y-2">
                     <Label htmlFor="priority">
-                      {t('Priority')} <span className="text-destructive">*</span>
+                      {t('Priority')}{' '}
+                      <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="priority"
@@ -273,7 +272,8 @@ export function CreateRecordDialog({
                   <>
                     <div className="space-y-2">
                       <Label htmlFor="weight">
-                        {t('Weight')} <span className="text-destructive">*</span>
+                        {t('Weight')}{' '}
+                        <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id="weight"
@@ -321,18 +321,34 @@ export function CreateRecordDialog({
           </div>
 
           <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
-            <Button
-              type="submit"
-              disabled={isLoading || !name.trim() || !value.trim()}
->
-              {t('Create Record')}
-            </Button>
+            {nameAndValueMissing ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex">
+                    <Button type="submit" disabled>
+                      {t('Create Record')}
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="z-[200] max-w-xs">
+                  <p>
+                    {t(
+                      'Name (use @ for the root domain) and value are required.',
+                    )}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <Button type="submit" disabled={isLoading}>
+                {t('Create Record')}
+              </Button>
+            )}
             <Button
               type="button"
               variant="outline"
               onClick={() => handleOpenChange(false)}
               disabled={isLoading}
->
+            >
               {t('Cancel')}
             </Button>
           </div>

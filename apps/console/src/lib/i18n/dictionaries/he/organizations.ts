@@ -728,6 +728,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Name and descriptions shown on the marketplace listing and OAuth2 consent screen.':
     'השם והתיאורים המוצגים בדף האפליקציה במרקטפלייס ובמסך ההסכמה של OAuth2.',
   'Name is required': 'שם הוא שדה חובה',
+  'Name (use @ for the root domain) and value are required.':
+    'שם (השתמשו ב-@ עבור הדומיין הראשי) וערך הם שדות חובה.',
   'Name must be no longer than': 'השם חייב להיות באורך של עד',
   Nameserver: 'שרת שמות',
   Nameservers: 'שרתי שמות',

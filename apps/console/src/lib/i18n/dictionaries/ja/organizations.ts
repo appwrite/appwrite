@@ -430,6 +430,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'My apps': 'マイアプリ',
   'My integration': 'マイインテグレーション',
   'Name is required': '名前は必須です',
+  'Name (use @ for the root domain) and value are required.':
+    '名前 (ルートドメインには @ を使用) と値は必須です。',
   'Name must be no longer than': '名前は次より長くできません',
   'Need 24/7 or enterprise support?':
     '24時間365日またはエンタープライズサポートが必要ですか?',
