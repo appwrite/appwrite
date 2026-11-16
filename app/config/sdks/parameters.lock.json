@@ -2313,7 +2313,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description"
+            "description",
+            "providerComments",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "functions.updateDeploymentStatus": [
             "functionId",
