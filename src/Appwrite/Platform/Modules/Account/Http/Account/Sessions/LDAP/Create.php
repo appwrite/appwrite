@@ -153,7 +153,17 @@ class Create extends Base
         }
         $duration ??= $maxDuration;
 
-        $entry = (new Client($publicHostname, $ldap))->authenticate($username, $password);
+        try {
+            $entry = (new Client($publicHostname, $ldap))->authenticate($username, $password);
+        } catch (Exception $error) {
+            // Directory errors name hosts, DNs and attributes, which are for the project's
+            // admins (the LDAP test endpoint), not for whoever calls this public route.
+            if ($error->getType() !== Exception::USER_LDAP_DIRECTORY_ERROR) {
+                throw $error;
+            }
+
+            throw new Exception(Exception::USER_LDAP_DIRECTORY_ERROR, previous: $error);
+        }
 
         // A browser on an account switching device may already be signed in. Signing in adds
         // the directory's user to the device; the entry is never linked to whoever is signed in.
@@ -293,8 +303,11 @@ class Create extends Base
 
         $emailFollowsDirectory = $entry['email'] === '' || $this->refreshEmail($user, $entry['email'], $dbForProject, $project, $plan, $authorization);
 
-        // A number the directory holds in another format cannot be messaged, so it is left alone
-        if ($entry['phone'] !== '' && $entry['phone'] !== $user->getAttribute('phone') && (new Phone())->isValid($entry['phone'])) {
+        // A number the directory holds in another format cannot be messaged, so it is left alone.
+        // A verified number that is a second factor stays too: this request has not passed MFA,
+        // and replacing it with an unverified one would drop the factor it is meant to prove.
+        $phoneIsFactor = $user->getAttribute('mfa', false) && $user->getAttribute('phoneVerification', false);
+        if ($entry['phone'] !== '' && $entry['phone'] !== $user->getAttribute('phone') && !$phoneIsFactor && (new Phone())->isValid($entry['phone'])) {
             $this->refreshPhone($user, $entry['phone'], $dbForProject, $authorization);
         }
 

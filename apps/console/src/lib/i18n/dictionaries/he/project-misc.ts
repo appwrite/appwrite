@@ -1837,6 +1837,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   domains: 'דומיינים',
   functions: 'פונקציות',
   sites: 'אתרים',
+  'firewall rule': 'כלל חומת אש',
   'firewall rules': 'כללי חומת אש',
   'Firewall rules': 'כללי חומת אש',
   'Select project': 'בחירת פרויקט',

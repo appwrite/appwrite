@@ -190,17 +190,25 @@ class Client
                 throw new Exception(Exception::USER_INVALID_CREDENTIALS);
             }
 
-            $entry = $this->map($entries[0]);
-
-            if ($this->requiredGroupDn !== '' && !$this->isMember($client, $entries[0])) {
+            // Prove the password before reading anything else about the entry, so a caller
+            // without it only ever learns that the credentials were refused.
+            if (!$this->bindUser($client, $entries[0]->getDn()->toString(), $password)) {
                 throw new Exception(Exception::USER_INVALID_CREDENTIALS);
             }
 
-            if (!$this->bindUser($client, $entry['dn'], $password)) {
-                throw new Exception(Exception::USER_INVALID_CREDENTIALS);
+            if ($this->requiredGroupDn !== '') {
+                // The group is read as the service account, as before the user bound. An
+                // anonymous configuration reads it as the user, who can see at least as much.
+                if ($this->bindDn !== '') {
+                    $this->bindService($client);
+                }
+
+                if (!$this->isMember($client, $entries[0])) {
+                    throw new Exception(Exception::USER_INVALID_CREDENTIALS);
+                }
             }
 
-            return $entry;
+            return $this->map($entries[0]);
         } finally {
             $this->disconnect($client);
         }
@@ -699,6 +707,20 @@ class Client
             throw new Exception(Exception::USER_LDAP_DIRECTORY_ERROR, "Reading the user's group membership failed: " . ($error->getCodeShort() ?? $error->getMessage()) . '.', previous: $error);
         } catch (ConnectionException | SocketException $error) {
             throw new Exception(Exception::USER_LDAP_DIRECTORY_ERROR, 'The LDAP connection was lost while checking the group membership.', previous: $error);
+        }
+    }
+
+    /**
+     * Bind as the service account again on a connection that bound as the user.
+     *
+     * @throws Exception USER_LDAP_DIRECTORY_ERROR when the directory refuses it
+     */
+    private function bindService(LdapClient $client): void
+    {
+        try {
+            $client->bind($this->bindDn, $this->bindPassword);
+        } catch (\Throwable $error) {
+            throw new Exception(Exception::USER_LDAP_DIRECTORY_ERROR, 'The LDAP directory refused the service account bind after the user signed in.', previous: $error);
         }
     }
 

@@ -552,6 +552,35 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->assertSame('alice@appwrite.test', $identities['body']['identities'][0]['providerEmail']);
     }
 
+    public function testAccountKeepsAVerifiedPhoneThatIsAnMfaFactor(): void
+    {
+        $alice = $this->signInAlice();
+        $users = '/users/' . $alice['userId'];
+
+        // A verified phone on an account with MFA is a second factor. Signing in with
+        // only the directory password must not swap it for the directory's number.
+        $response = $this->client->call(Client::METHOD_PATCH, $users . '/phone', $this->serverHeaders(), ['number' => '+15550000009']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $response = $this->client->call(Client::METHOD_PATCH, $users . '/verification/phone', $this->serverHeaders(), ['phoneVerification' => true]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $response = $this->client->call(Client::METHOD_PATCH, $users . '/mfa', $this->serverHeaders(), ['mfa' => true]);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $this->configureDirectory([
+            'phoneAttribute' => 'mobile',
+        ]);
+
+        $response = $this->signIn('alice', 'alicepass');
+
+        $this->assertSame(201, $response['headers']['status-code']);
+
+        $user = $this->client->call(Client::METHOD_GET, $users, $this->serverHeaders());
+
+        $this->assertSame('+15550000009', $user['body']['phone']);
+        $this->assertTrue($user['body']['phoneVerification']);
+        $this->assertTrue($user['body']['mfa']);
+    }
+
     public function testAccountKeepsItsAddressWhenTheDirectoryOneIsTaken(): void
     {
         // Another account already holds the address the directory now lists. The user
