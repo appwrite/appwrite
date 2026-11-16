@@ -30,10 +30,8 @@ pub mod detector;
 pub mod di;
 pub mod dns;
 pub mod domains;
-pub mod dsn;
 pub mod emails;
 pub mod http;
-pub mod locale;
 pub mod lock;
 pub mod messaging;
 pub mod migration;
@@ -82,10 +80,8 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("di", di::OPS),
     ("dns", dns::OPS),
     ("domains", domains::OPS),
-    ("dsn", dsn::OPS),
     ("emails", emails::OPS),
     ("http", http::OPS),
-    ("locale", locale::OPS),
     ("migration", migration::OPS),
     ("mongo", mongo::OPS),
     ("lock", lock::OPS),
@@ -136,10 +132,8 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "di" => di::call(op, args, session).await,
         "dns" => dns::call(op, args, session).await,
         "domains" => domains::call(op, args, session).await,
-        "dsn" => dsn::call(op, args, session).await,
         "emails" => emails::call(op, args, session).await,
         "http" => http::call(op, args, session).await,
-        "locale" => locale::call(op, args, session).await,
         "migration" => migration::call(op, args, session).await,
         "mongo" => mongo::call(op, args, session).await,
         "lock" => lock::call(op, args, session).await,
@@ -192,10 +186,8 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "di" => di::BENCHES,
         "dns" => dns::BENCHES,
         "domains" => domains::BENCHES,
-        "dsn" => dsn::BENCHES,
         "emails" => emails::BENCHES,
         "http" => http::BENCHES,
-        "locale" => locale::BENCHES,
         "migration" => migration::BENCHES,
         "mongo" => mongo::BENCHES,
         "lock" => lock::BENCHES,
@@ -248,10 +240,8 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "di" => di::bench(name, session).await,
         "dns" => dns::bench(name, session).await,
         "domains" => domains::bench(name, session).await,
-        "dsn" => dsn::bench(name, session).await,
         "emails" => emails::bench(name, session).await,
         "http" => http::bench(name, session).await,
-        "locale" => locale::bench(name, session).await,
         "migration" => migration::bench(name, session).await,
         "mongo" => mongo::bench(name, session).await,
         "lock" => lock::bench(name, session).await,

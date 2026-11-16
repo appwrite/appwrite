@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-16T14:27:00Z",
+  "updated": "2026-11-16T16:02:00Z",
   "tasks": [
     {
       "id": "crate-layout",
@@ -768,6 +768,14 @@
       "status": "done",
       "updated": "2026-11-16T14:27:00Z",
       "note": "Fixed (2537ae0915): a response-cache hit wrote its cached bytes back to the cache, which PHP never does (its cache-write shutdown only writes an action's own output). When the deletes worker removed the entry between the hit's read and that write, Rust recreated it with the old rendering. Now only a response the action produced is cached. testFilePreviewCache and testS3OverwritePathsInvalidatePreviewCache pass through the Rust proxy; the full diff is 6,210 of 6,210 identical. Not ported yet, and not covered by the diff or the default E2E config: the response cache on a storage device (_APP_CONNECTIONS_STORAGE_CACHE), account-switching devices (the authDevice resource and device routes)."
+    },
+    {
+      "id": "extension-retires-compat",
+      "title": "dsn, image and locale leave compat: PHP runs the Rust crates",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-11-16T16:02:00Z",
+      "note": "Main removed the PHP Utopia\\DSN\\DSN, Utopia\\Locale\\Locale and Utopia\\Image\\Image: the utopia extension (crates/extension) registers the Rust crates in their place, so there is no PHP implementation left to compare against. Their compat cases, adapters and documentation-example twins are gone; each crate's parity with the PHP class it replaced is checked by the extension's corpus (crates/extension/tests/<name>.php against <name>.expected.jsonl) in CI's Extension job. user-agent and domains keep their PHP classes (the extension serves them only when _APP_EXTENSION_LIBRARIES names them) and stay in compat. auth also follows web-auth/webauthn-lib 5.3.12's passkey validation (612 cases, 68,650 fuzz inputs, 0 differences)."
     }
   ]
 }

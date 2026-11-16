@@ -123,27 +123,7 @@ cargo fmt --all --check
 
 ### Compare with PHP
 
-Replay the results PHP recorded for every case against Rust, without PHP:
-
-```bash
-COMPAT_LIB=dsn cargo test -p compat
-```
-
-Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
-
-```bash
-bin/compat run dsn
-bin/compat fuzz dsn
-bin/compat check dsn
-```
-
-### Benchmark
-
-```bash
-bin/compat bench dsn
-```
-
-This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/dsn/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/dsn/bench.json). Run it on a quiet machine, one library at a time.
+The utopia PHP extension serves this crate as `Utopia\DSN\DSN`, which no longer has a PHP implementation. Its parity corpus, `crates/extension/tests/dsn.php`, must print `crates/extension/tests/dsn.expected.jsonl`, the output of the PHP class it replaced; `crates/extension/tests/run.sh` checks it in the development image.
 
 ## License
 

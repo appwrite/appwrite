@@ -211,10 +211,6 @@ jobs:
             if: ${{ !cancelled() && steps.install.outcome == 'success' }}
             run: composer analyze -- --no-progress
 
-          - name: Generate specs
-            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-            run: _APP_STORAGE_LIMIT=5368709120 php app/cli.php specs --version=latest --git=no
-
   locale:
     name: Checks / Locale
     needs: changes
@@ -375,7 +371,7 @@ jobs:
             fi
           fi
           CHANGED=$(echo "$CHANGED" | tr ' ' '\n' | sort -u \
-            | while read -r package; do [ -d "packages/$package" ] && echo "$package"; done)
+            | while read -r package; do if [ -d "packages/$package" ]; then echo "$package"; fi; done)
 
           # docs-only change: no packages to test
           if [ -z "$CHANGED" ]; then
@@ -603,6 +599,11 @@ jobs:
         timeout-minutes: 15
         run: docker compose exec appwrite test --testsuite packages
 
+      # In the image: booting Appwrite needs the utopia extension (Utopia\Locale\Locale).
+      - name: Generate specs
+        timeout-minutes: 10
+        run: docker compose exec -T -e _APP_STORAGE_LIMIT=5368709120 appwrite specs --version=latest --git=no
+
   e2e_general:
     name: Tests / E2E / General
     runs-on: >-
@@ -822,8 +823,8 @@ jobs:
         run: |
           ./dev/openldap/certs.sh
           docker compose up -d --wait openldap
-          # --profile would replace COMPOSE_PROFILES (and drop the database's).
-          COMPOSE_PROFILES="${COMPOSE_PROFILES},openldap-seed" docker compose run --rm openldap-seed
+          # --profile would replace COMPOSE_PROFILES and drop the lane's database service
+          COMPOSE_PROFILES="${COMPOSE_PROFILES:+$COMPOSE_PROFILES,}openldap-seed" docker compose run --rm openldap-seed
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
@@ -1406,14 +1407,14 @@ jobs:
           COMPAT_LIB: '!database'
         run: cargo test -p compat --test replay --locked
 
-      # image has no PHP class left to run its examples' PHP twins against (PHP
-      # runs the crate through the utopia extension), and agents' twins use the
-      # library before its redesign (task agents-redesign).
+      # dsn, image and locale have no PHP class left to run their examples' PHP
+      # twins against (PHP runs the crates through the utopia extension), and
+      # agents' twins use the library before its redesign (task agents-redesign).
       - name: Run documentation examples
         if: matrix.shard == 'integrations'
         env:
           COMPAT_IMAGE: compat-cache-php
-        run: bin/compat examples $(ls crates/utopia | grep -vxE 'agents|image') $(ls crates/support)
+        run: bin/compat examples $(ls crates/utopia | grep -vxE 'agents|dsn|image|locale') $(ls crates/support)
 
       - name: Stop library services
         if: always()

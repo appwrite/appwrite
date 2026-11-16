@@ -26,7 +26,6 @@
       "Cargo.lock",
       ".cargo/",
       "rustfmt.toml",
-      "packages/dsn/",
       "packages/image/",
       "Dockerfile",
       ".dockerignore"

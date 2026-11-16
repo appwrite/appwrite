@@ -187,27 +187,7 @@ cargo fmt --all --check
 
 ### Compare with PHP
 
-Replay the results PHP recorded for every case against Rust, without PHP:
-
-```bash
-COMPAT_LIB=locale cargo test -p compat
-```
-
-Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
-
-```bash
-bin/compat run locale
-bin/compat fuzz locale
-bin/compat check locale
-```
-
-### Benchmark
-
-```bash
-bin/compat bench locale
-```
-
-This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/locale/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/locale/bench.json). Run it on a quiet machine, one library at a time.
+The utopia PHP extension serves this crate as `Utopia\Locale\Locale`, which no longer has a PHP implementation. Its parity corpus, `crates/extension/tests/locale.php`, must print `crates/extension/tests/locale.expected.jsonl`, the output of the PHP class it replaced; `crates/extension/tests/run.sh` checks it in the development image.
 
 ## License
 

@@ -1976,7 +1976,8 @@ switch ($command) {
                 // solver, so its third-party dependencies resolve only if the
                 // root declares them too.
                 foreach ($manifest['require'] ?? [] as $dependency => $constraint) {
-                    if ($dependency === 'php' || str_starts_with($dependency, 'ext-') || isset($root['require'][$dependency])) {
+                    // The root `replace`s what it provides itself, such as utopia-php/dsn from the utopia extension.
+                    if ($dependency === 'php' || str_starts_with($dependency, 'ext-') || isset($root['require'][$dependency]) || isset($root['replace'][$dependency])) {
                         continue;
                     }
                     // A sibling is satisfied by its own packages/ directory; anything else must be hoisted.
