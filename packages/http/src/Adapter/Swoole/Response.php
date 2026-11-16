@@ -43,6 +43,13 @@ class Response extends UtopiaResponse
     /** Bytes written since the queue was last seen under the limit. */
     private int $unconfirmed = 0;
 
+    /**
+     * The connection this response first saw under its session id.
+     *
+     * @var array{mixed, mixed, mixed}|null
+     */
+    private ?array $connection = null;
+
     /** The server whose connection queues write() watches, if any. */
     private static ?SwooleServer $server = null;
 
@@ -101,12 +108,23 @@ class Response extends UtopiaResponse
             return null;
         }
 
+        // ignoreError: a connection that has gone is an answer here, not a warning.
         $info = self::$server->getClientInfo($this->swoole->fd, -1, true);
-        if ($info === false) {
+        if (!\is_array($info)) {
             return false;
         }
 
-        return $info['send_queued_bytes'] ?? null;
+        // Session ids are reused once a connection closes: a different connection
+        // under this one's id means this one is gone, and must not be waited on or closed.
+        $connection = [$info['connect_time'] ?? null, $info['remote_ip'] ?? null, $info['remote_port'] ?? null];
+        $this->connection ??= $connection;
+        if ($connection !== $this->connection) {
+            return false;
+        }
+
+        $queued = $info['send_queued_bytes'] ?? null;
+
+        return \is_int($queued) ? $queued : null;
     }
 
     /**
