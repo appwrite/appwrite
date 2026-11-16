@@ -8,7 +8,7 @@ use php_std::ArrayKey;
 use php_std::json::Flags;
 
 use crate::builder::AnyBuilder;
-use crate::builder::core::{Builder, Dialect, ExplainOptions, first};
+use crate::builder::core::{Builder, Dialect, ExplainOptions, enclose, first, quote_bytes};
 use crate::builder::feature::{
     BitwiseAggregates, ConditionalAggregates, CrossJoins, Cube, FullOuterJoins, FullTextSearch, InsertOrIgnore, Json,
     LateralJoins, Locking, NegatedFullTextSearch, RawSql, Returning, Rollup, Sequences, Spatial, StatisticalAggregates,
@@ -120,9 +120,9 @@ pub(crate) fn json_binding(value: &Value) -> Value {
     }
 }
 
-/// `/^[a-zA-Z0-9_.\[\]]+$/` (where `$` also matches before a final newline).
+/// `/^[a-zA-Z0-9_.\[\]]+$/D`.
 pub(crate) fn is_json_path(path: &str) -> bool {
-    let bytes = path.strip_suffix('\n').unwrap_or(path).as_bytes();
+    let bytes = path.as_bytes();
     !bytes.is_empty() && bytes.iter().all(|&b| b.is_ascii_alphanumeric() || matches!(b, b'_' | b'.' | b'[' | b']'))
 }
 
@@ -322,17 +322,14 @@ impl Builder<PostgreSqlDialect> {
         format!("({attribute} {operator} ?::vector)")
     }
 
-    /// Appends `extra` to the trailing `WHERE` of `parts`, or adds one.
-    fn merge_into_where(parts: &mut Vec<String>, extra: Vec<String>) {
-        if extra.is_empty() {
-            return;
-        }
+    /// Appends `condition` to the trailing `WHERE` of `parts`, or adds one.
+    fn merge_into_where(parts: &mut Vec<String>, condition: String) {
         match parts.last_mut() {
             Some(last) if last.starts_with("WHERE ") => {
                 last.push_str(" AND ");
-                last.push_str(&extra.join(" AND "));
+                last.push_str(&condition);
             }
-            _ => parts.push(format!("WHERE {}", extra.join(" AND "))),
+            _ => parts.push(format!("WHERE {condition}")),
         }
     }
 
@@ -353,13 +350,11 @@ impl Builder<PostgreSqlDialect> {
         }
         let mut parts =
             vec![format!("UPDATE {} SET {} FROM {from_clause}", self.quote(&self.core.table)?, assignments.join(", "))];
-        let mut extra = Vec::new();
+        self.compile_where_clauses(&mut parts, None)?;
         if !from.condition.is_empty() {
-            extra.push(from.condition);
+            Self::merge_into_where(&mut parts, enclose(&from.condition));
             self.add_bindings(from.bindings);
         }
-        self.compile_where_clauses(&mut parts, None)?;
-        Self::merge_into_where(&mut parts, extra);
         Ok(self.statement(parts.join(" ")))
     }
 
@@ -371,13 +366,11 @@ impl Builder<PostgreSqlDialect> {
         };
         let mut parts =
             vec![format!("DELETE FROM {} USING {}", self.quote(&self.core.table)?, self.quote(&using.table)?)];
-        let mut extra = Vec::new();
+        self.compile_where_clauses(&mut parts, None)?;
         if !using.condition.is_empty() {
-            extra.push(using.condition);
+            Self::merge_into_where(&mut parts, enclose(&using.condition));
             self.add_bindings(using.bindings);
         }
-        self.compile_where_clauses(&mut parts, None)?;
-        Self::merge_into_where(&mut parts, extra);
         Ok(self.statement(parts.join(" ")))
     }
 
@@ -656,6 +649,10 @@ impl Dialect for PostgreSqlDialect {
     const CLASS: &'static str = "Utopia\\Query\\Builder\\PostgreSQL";
     const WRAP: char = '"';
 
+    fn quote_string(value: &[u8]) -> Vec<u8> {
+        quote_bytes(value, false)
+    }
+
     fn compile_random(_b: &Builder<Self>) -> String {
         "RANDOM()".into()
     }
@@ -843,7 +840,7 @@ impl SqlDialect for PostgreSqlDialect {
         attribute: &str,
         values: &Array,
     ) -> Result<String> {
-        let filter = sql::distance_filter(values, "Builder/PostgreSQL.php", 832)?;
+        let filter = sql::distance_filter(values, "Builder/PostgreSQL.php", 815)?;
         let operator = distance_operator(method);
         b.add_binding(wkt_of(&filter.geometry)?, None);
         b.add_binding(Value::Float(filter.distance), None);
@@ -862,7 +859,7 @@ impl SqlDialect for PostgreSqlDialect {
         values: &Array,
         not: bool,
     ) -> Result<String> {
-        let wkt = sql::predicate_wkt(values, Self::CLASS, "Builder/PostgreSQL.php", 861)?;
+        let wkt = sql::predicate_wkt(values, Self::CLASS, "Builder/PostgreSQL.php", 844)?;
         b.add_binding(value::string(wkt), None);
         let expression = format!("{function}({attribute}, ST_GeomFromText(?, 4326))");
         Ok(if not { format!("NOT {expression}") } else { expression })

@@ -318,11 +318,14 @@ impl Serializer {
         // Operators are left-associative, so an equal-precedence right subtree
         // keeps its grouping: `a * (b / c)` is not `a * b / c` under integer
         // division, nor `a - (b - c)` `a - b - c`. Only the same associative
-        // operator may drop it: `a + (b + c)` is `a + b + c`.
+        // operator may drop it: `a + (b + c)` is `a + b + c`. Raw SQL is not
+        // regrouped; it takes the operator's own precedence, which is how
+        // binary_child() knows to enclose it as an operand of AND.
         let associative = matches!(&*binary.right, Expression::Binary(r)
             if r.operator.eq_ignore_ascii_case(&binary.operator)
                 && ["+", "*", "||", "AND", "OR"].iter().any(|o| o.eq_ignore_ascii_case(&binary.operator)));
-        let right_level = if associative { level } else { level + 1 };
+        let raw = matches!(&*binary.right, Expression::Raw(_));
+        let right_level = if associative || raw { level } else { level + 1 };
         let parens = parent.is_some_and(|p| level < p);
         if parens {
             out.push('(');
@@ -341,6 +344,15 @@ impl Serializer {
     fn binary_child(&self, out: &mut String, child: &Expression, parent: u8) -> Result<()> {
         match child {
             Expression::Binary(b) => self.binary(out, b, Some(parent)),
+            // Raw SQL hides its operators, so as an operand of AND it is
+            // enclosed: an OR inside it must not escape the condition it is
+            // ANDed with.
+            Expression::Raw(r) if parent == precedence("AND") => {
+                out.push('(');
+                out.push_str(&r.sql);
+                out.push(')');
+                Ok(())
+            }
             other => self.expression(out, other),
         }
     }

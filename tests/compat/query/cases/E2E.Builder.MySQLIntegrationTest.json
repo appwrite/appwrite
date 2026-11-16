@@ -1277,6 +1277,282 @@
       ]
     },
     {
+      "name": "testWhereRawOrStaysInsideTenantScope",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "7"
+              ]
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              {
+                "$o": 3
+              }
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "notes"
+            ]
+          },
+          {
+            "call": "whereRaw",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "title = ? OR title = ?",
+              [
+                "draft",
+                "archived"
+              ]
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                "tenant_id",
+                "title"
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "7"
+              ]
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              {
+                "$o": 6
+              }
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "notes"
+            ]
+          },
+          {
+            "call": "whereRaw",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "title = ? OR title = ?",
+              [
+                "draft",
+                "archived"
+              ]
+            ]
+          },
+          {
+            "call": "delete",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "notes"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "tenant_id",
+                "title"
+              ]
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "SELECT `tenant_id`, `title` FROM `notes` WHERE tenant_id IN (?) AND (title = ? OR title = ?)",
+            "bindings": [
+              "7",
+              "draft",
+              "archived"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 5
+        },
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 6
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 5
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 5
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 7,
+          "props": {
+            "query": "DELETE FROM `notes` WHERE tenant_id IN (?) AND (title = ? OR title = ?)",
+            "bindings": [
+              "7",
+              "draft",
+              "archived"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 8,
+          "props": {
+            "query": "SELECT `tenant_id`, `title` FROM `notes` ORDER BY `id` ASC",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
       "name": "testSelectWithGroupByAndHaving",
       "op": "builder",
       "args": {
