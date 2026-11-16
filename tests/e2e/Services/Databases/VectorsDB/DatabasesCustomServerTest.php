@@ -659,6 +659,30 @@ final class DatabasesCustomServerTest extends Scope
             'texts' => ['hello'],
         ]);
         $this->assertEquals(400, $unsupportedModel['headers']['status-code']);
+
+        // Error: blank texts, alone or next to valid text
+        foreach ([[' '], ["\n\t"], ["\u{00A0}"], ["\u{200B}"], ["\u{3000}"], ['hello world', ' ']] as $texts) {
+            $blank = $this->client->call(Client::METHOD_POST, '/embeddings/text', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ], [
+                'texts' => $texts,
+            ]);
+            $this->assertSame(400, $blank['headers']['status-code']);
+        }
+
+        // Error: every text fails, as the stack loads only nomic-embed-text
+        $unavailable = $this->client->call(Client::METHOD_POST, '/embeddings/text', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'model' => 'all-minilm',
+            'texts' => ['hello'],
+        ]);
+        $this->assertSame(503, $unavailable['headers']['status-code']);
+        $this->assertSame('general_embedding_unavailable', $unavailable['body']['type']);
     }
 
     /**
