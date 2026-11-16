@@ -15,6 +15,13 @@ use crate::transfer::{STORAGE_MAX_CHUNK_SIZE, group};
 /// The error type of a feature the destination's plan does not include.
 const ERROR_BILLING_FEATURE_UNSUPPORTED: &str = "billing_feature_unsupported";
 
+/// The error type of an argument the destination refuses.
+const ERROR_ARGUMENT_INVALID: &str = "general_argument_invalid";
+
+/// The specification types `listSpecifications()` takes.
+const SPECIFICATIONS_BUILDS: &str = "builds";
+const SPECIFICATIONS_RUNTIMES: &str = "runtimes";
+
 fn v(s: &str) -> Value {
     Value::from(s)
 }
@@ -204,34 +211,73 @@ impl Appwrite {
                         Exception::CODE_VALIDATION,
                     ));
                 }
-                let response = self
-                    .client
-                    .invoke(
-                        "Storage",
-                        "createBucket",
-                        &[
-                            ("bucketId", v(&r.id())),
-                            ("name", v(&b.name)),
-                            ("permissions", strings(&r.permissions())),
-                            ("fileSecurity", Value::Bool(b.file_security)),
-                            ("enabled", Value::Bool(b.enabled)),
-                            ("maximumFileSize", b.max_file_size.map_or(Value::Null, Value::Int)),
-                            ("allowedFileExtensions", Value::Array(b.allowed_file_extensions.clone())),
-                            ("compression", v(&b.compression)),
-                            ("encryption", Value::Bool(b.encryption)),
-                            ("antivirus", Value::Bool(b.anti_virus)),
-                            ("transformations", Value::Bool(b.transformations)),
-                            ("description", v(&r.description())),
-                            ("stripMetadata", Value::Bool(b.strip_metadata)),
-                        ],
-                    )
-                    .await?;
+                let response = match self.create_bucket(r, b, b.max_file_size).await {
+                    Ok(response) => response,
+                    Err(e @ Error::Appwrite { .. }) => {
+                        let Some(size) = b.max_file_size else { return Err(e) };
+                        if !matches!(&e, Error::Appwrite { error_type, .. } if error_type == ERROR_ARGUMENT_INVALID) {
+                            return Err(e);
+                        }
+                        // The size is the one argument held to a limit of the
+                        // destination, which a bucket can outlive. Created
+                        // without one, the bucket takes the destination's
+                        // limit; one refused for anything else is reported as
+                        // it first was.
+                        let response = match self.create_bucket(r, b, None).await {
+                            Ok(response) => response,
+                            Err(Error::Appwrite { .. }) => return Err(e),
+                            Err(other) => return Err(other),
+                        };
+                        let id = r.id();
+                        self.target.add_warning(Warning::new(
+                            types::BUCKET,
+                            group::STORAGE,
+                            format!(
+                                "Bucket \"{id}\" allowed files of up to {size} bytes, more than this project allows, so it was imported with the limit of {} bytes.",
+                                response.string("maximumFileSize")
+                            ),
+                            id,
+                        ));
+                        response
+                    }
+                    Err(e) => return Err(e),
+                };
                 r.set_id(response.string("id"));
             }
             _ => {}
         }
         r.set_status(status::SUCCESS, "");
         Ok(())
+    }
+
+    /// PHP: the private `createBucket($resource, $compression, $maximumFileSize)`.
+    async fn create_bucket(
+        &self,
+        r: &ResourceRef,
+        b: &crate::resources::storage::Bucket,
+        maximum_file_size: Option<i64>,
+    ) -> Result<crate::sdk::Model> {
+        self.client
+            .invoke(
+                "Storage",
+                "createBucket",
+                &[
+                    ("bucketId", v(&r.id())),
+                    ("name", v(&b.name)),
+                    ("permissions", strings(&r.permissions())),
+                    ("fileSecurity", Value::Bool(b.file_security)),
+                    ("enabled", Value::Bool(b.enabled)),
+                    ("maximumFileSize", maximum_file_size.map_or(Value::Null, Value::Int)),
+                    ("allowedFileExtensions", Value::Array(b.allowed_file_extensions.clone())),
+                    ("compression", v(&b.compression)),
+                    ("encryption", Value::Bool(b.encryption)),
+                    ("antivirus", Value::Bool(b.anti_virus)),
+                    ("transformations", Value::Bool(b.transformations)),
+                    ("description", v(&r.description())),
+                    ("stripMetadata", Value::Bool(b.strip_metadata)),
+                ],
+            )
+            .await
     }
 
     /// PHP: `importFile($file)`: one request for a small file, one per
@@ -524,14 +570,24 @@ impl Appwrite {
                         Error::InvalidArgument(format!("Unknown Runtime value: {}", f.runtime)),
                     ));
                 }
+                // Resolved once: the create below can run twice, and each
+                // specification the destination does not offer is warned
+                // about as it is resolved.
+                let build_spec = if f.build_specification.is_empty() || f.build_specification == "0" {
+                    f.specification.clone()
+                } else {
+                    f.build_specification.clone()
+                };
+                let build = self.specification("Functions", SPECIFICATIONS_BUILDS, r, &build_spec).await?;
+                let runtime = self.specification("Functions", SPECIFICATIONS_RUNTIMES, r, &f.specification).await?;
                 let interval = (f.interval != 0).then_some(f.interval);
-                match self.create_function(r, f, interval).await {
+                match self.create_function(r, f, interval, build.as_deref(), runtime.as_deref()).await {
                     Err(Error::Appwrite { error_type, .. })
                         if f.interval != 0 && error_type == ERROR_BILLING_FEATURE_UNSUPPORTED =>
                     {
                         // The plan does not allow the interval: the function
                         // is imported without a schedule, with a warning.
-                        self.create_function(r, f, None).await?;
+                        self.create_function(r, f, None, build.as_deref(), runtime.as_deref()).await?;
                         let id = r.id();
                         self.target.add_warning(Warning::new(
                             types::FUNCTION,
@@ -569,13 +625,15 @@ impl Appwrite {
         Ok(())
     }
 
-    /// PHP: `createFunction($resource, $runtime, $interval)`.
-    async fn create_function(&self, r: &ResourceRef, f: &Func, interval: Option<i64>) -> Result<()> {
-        let build = if f.build_specification.is_empty() || f.build_specification == "0" {
-            f.specification.clone()
-        } else {
-            f.build_specification.clone()
-        };
+    /// PHP: `createFunction($resource, $runtime, $interval, $buildSpecification, $runtimeSpecification)`.
+    async fn create_function(
+        &self,
+        r: &ResourceRef,
+        f: &Func,
+        interval: Option<i64>,
+        build_specification: Option<&str>,
+        runtime_specification: Option<&str>,
+    ) -> Result<()> {
         self.client
             .invoke(
                 "Functions",
@@ -593,8 +651,8 @@ impl Appwrite {
                     ("entrypoint", v(&f.entrypoint)),
                     ("commands", v(&f.commands)),
                     ("scopes", Value::Array(f.scopes.clone())),
-                    ("buildSpecification", or_null(&build)),
-                    ("runtimeSpecification", or_null(&f.specification)),
+                    ("buildSpecification", build_specification.map_or(Value::Null, v)),
+                    ("runtimeSpecification", runtime_specification.map_or(Value::Null, v)),
                     ("deploymentRetention", Value::Int(f.deployment_retention)),
                     ("interval", interval.map_or(Value::Null, Value::Int)),
                     ("description", v(&r.description())),
@@ -602,6 +660,59 @@ impl Appwrite {
             )
             .await?;
         Ok(())
+    }
+
+    /// The specification to create a function or site with: the one it had,
+    /// or none (the destination's default) when the destination lists its
+    /// specifications and that one is not among those it offers, with a
+    /// warning. A list that cannot be read leaves the create to answer.
+    ///
+    /// PHP: the private `specification($service, $type, $resource, $specification)`.
+    async fn specification(
+        &mut self,
+        service: &str,
+        kind: &str,
+        r: &ResourceRef,
+        specification: &str,
+    ) -> Result<Option<String>> {
+        if specification.is_empty() {
+            return Ok(None);
+        }
+        let key = format!("Appwrite\\Services\\{service}:{kind}");
+        if !self.specifications.contains_key(&key) {
+            let offered = match self.client.invoke(service, "listSpecifications", &[("type", v(kind))]).await {
+                Ok(list) => Some(
+                    list.models("specifications")
+                        .into_iter()
+                        // The list also names what a higher plan unlocks, flagged disabled.
+                        .filter(|m| m.class == "Specification" && crate::resources::cast_bool(&m.value("enabled")))
+                        .map(|m| m.string("slug"))
+                        .collect(),
+                ),
+                Err(Error::Appwrite { .. }) => None,
+                Err(e) => return Err(e),
+            };
+            self.specifications.insert(key.clone(), offered);
+        }
+        match &self.specifications[&key] {
+            Some(offered) if !offered.iter().any(|o| o == specification) => {}
+            _ => return Ok(Some(specification.to_owned())),
+        }
+        let (name, id) = (r.name().to_owned(), r.id());
+        let mut title = name.clone();
+        if let Some(first) = title.get_mut(0..1) {
+            first.make_ascii_uppercase();
+        }
+        let which = if kind == SPECIFICATIONS_BUILDS { "build" } else { "runtime" };
+        self.target.add_warning(Warning::new(
+            name,
+            r.group().to_owned(),
+            format!(
+                "{title} \"{id}\" used the {which} specification \"{specification}\", which this project's plan does not offer, so it was imported with the default."
+            ),
+            id,
+        ));
+        Ok(None)
     }
 
     async fn import_deployment(&mut self, r: &ResourceRef) -> Result<()> {
@@ -999,11 +1110,13 @@ impl Appwrite {
                     "ssr" => v("ssr"),
                     _ => Value::Null,
                 };
-                let build = if s.build_specification.is_empty() || s.build_specification == "0" {
+                let build_spec = if s.build_specification.is_empty() || s.build_specification == "0" {
                     s.specification.clone()
                 } else {
                     s.build_specification.clone()
                 };
+                let build = self.specification("Sites", SPECIFICATIONS_BUILDS, r, &build_spec).await?;
+                let runtime = self.specification("Sites", SPECIFICATIONS_RUNTIMES, r, &s.specification).await?;
                 self.client
                     .invoke(
                         "Sites",
@@ -1022,8 +1135,8 @@ impl Appwrite {
                             ("adapter", adapter),
                             ("startCommand", or_null(&s.start_command)),
                             ("fallbackFile", v(&s.fallback_file)),
-                            ("buildSpecification", or_null(&build)),
-                            ("runtimeSpecification", or_null(&s.specification)),
+                            ("buildSpecification", build.map_or(Value::Null, |b| v(&b))),
+                            ("runtimeSpecification", runtime.map_or(Value::Null, |r| v(&r))),
                             ("deploymentRetention", Value::Int(s.deployment_retention)),
                             ("scopes", Value::Array(s.scopes.clone())),
                             ("description", v(&r.description())),

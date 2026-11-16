@@ -29,10 +29,10 @@ use crate::target::{Destinations, Resolver, Shared};
 use spec_types::{Field, Method};
 
 /// The SDK version the requests name.
-pub const VERSION: &str = "32.1.0";
+pub const VERSION: &str = "32.3.0";
 
 /// The response format the requests ask for.
-pub const RESPONSE_FORMAT: &str = "2.6.2";
+pub const RESPONSE_FORMAT: &str = "2.7.1";
 
 /// A client of one project's API.
 ///

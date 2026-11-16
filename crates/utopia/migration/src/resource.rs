@@ -19,7 +19,9 @@ use crate::resources::domains::Rule;
 use crate::resources::functions::{Deployment, EnvVar, Func};
 use crate::resources::integrations::{ApiKey, Platform};
 use crate::resources::messaging::{Message, Provider, Subscriber, Topic};
-use crate::resources::settings::{Environment, Labels, ProjectVariable, Protocols, Services, Smtp, Webhook};
+use crate::resources::settings::{
+    Environment, Labels, Preferences, ProjectVariable, Protocols, Services, Smtp, Webhook,
+};
 use crate::resources::sites::{Site, SiteDeployment, SiteEnvVar};
 use crate::resources::storage::{Bucket, File};
 use crate::resources::templates::EmailTemplate;
@@ -114,6 +116,8 @@ pub mod types {
     pub const PROJECT_PROTOCOLS: &str = "project-protocols";
     /// The project's labels.
     pub const PROJECT_LABELS: &str = "project-labels";
+    /// `TYPE_PROJECT_PREFERENCES`.
+    pub const PROJECT_PREFERENCES: &str = "project-preferences";
     /// The project's services.
     pub const PROJECT_SERVICES: &str = "project-services";
     /// A project email template.
@@ -167,6 +171,7 @@ pub const ALL_RESOURCES: &[&str] = &[
     types::PROJECT_VARIABLE,
     types::PROJECT_PROTOCOLS,
     types::PROJECT_LABELS,
+    types::PROJECT_PREFERENCES,
     types::PROJECT_SERVICES,
     types::PROJECT_EMAIL_TEMPLATE,
     types::PROJECT_ENVIRONMENT,
@@ -375,6 +380,8 @@ pub enum Kind {
     Environment(Environment),
     /// `Settings\Labels`.
     Labels(Labels),
+    /// `Settings\Preferences`.
+    Preferences(Preferences),
     /// `Settings\ProjectVariable`.
     ProjectVariable(ProjectVariable),
     /// `Settings\Protocols`.
@@ -582,6 +589,7 @@ impl Resource {
             Kind::Topic(_) => types::TOPIC,
             Kind::Environment(_) => types::PROJECT_ENVIRONMENT,
             Kind::Labels(_) => types::PROJECT_LABELS,
+            Kind::Preferences(_) => types::PROJECT_PREFERENCES,
             Kind::ProjectVariable(_) => types::PROJECT_VARIABLE,
             Kind::Protocols(_) => types::PROJECT_PROTOCOLS,
             Kind::Services(_) => types::PROJECT_SERVICES,
@@ -617,6 +625,7 @@ impl Resource {
             Kind::Message(_) | Kind::Provider(_) | Kind::Subscriber(_) | Kind::Topic(_) => group::MESSAGING,
             Kind::Environment(_)
             | Kind::Labels(_)
+            | Kind::Preferences(_)
             | Kind::ProjectVariable(_)
             | Kind::Protocols(_)
             | Kind::Services(_)
@@ -669,6 +678,7 @@ impl Resource {
             Kind::Topic(_) => "Utopia\\Migration\\Resources\\Messaging\\Topic",
             Kind::Environment(_) => "Utopia\\Migration\\Resources\\Settings\\Environment",
             Kind::Labels(_) => "Utopia\\Migration\\Resources\\Settings\\Labels",
+            Kind::Preferences(_) => "Utopia\\Migration\\Resources\\Settings\\Preferences",
             Kind::ProjectVariable(_) => "Utopia\\Migration\\Resources\\Settings\\ProjectVariable",
             Kind::Protocols(_) => "Utopia\\Migration\\Resources\\Settings\\Protocols",
             Kind::Services(_) => "Utopia\\Migration\\Resources\\Settings\\Services",
@@ -763,6 +773,7 @@ impl Resource {
                 put("passwordRotation", p.password_rotation.clone().map_or(Value::Null, Value::Array));
                 put("passkeyRpId", opt_str(&p.passkey_rp_id));
                 put("denyRealtimeGuests", p.deny_realtime_guests.map_or(Value::Null, Value::Bool));
+                put("accountDevices", p.account_devices.map_or(Value::Null, Value::Bool));
                 put("createdAt", s!(base.created_at));
                 put("updatedAt", s!(base.updated_at));
             }
@@ -987,6 +998,12 @@ impl Resource {
             Kind::Labels(l) => {
                 put("id", s!(base.id));
                 put("labels", Value::Array(l.labels.clone()));
+                put("createdAt", s!(base.created_at));
+                put("updatedAt", s!(base.updated_at));
+            }
+            Kind::Preferences(p) => {
+                put("id", s!(base.id));
+                put("preferences", Value::Array(p.preferences.clone()));
                 put("createdAt", s!(base.created_at));
                 put("updatedAt", s!(base.updated_at));
             }
