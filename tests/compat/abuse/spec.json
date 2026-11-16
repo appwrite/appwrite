@@ -69,6 +69,12 @@
         "Utopia\\Abuse\\Adapter\\TokenBucket::reset"
       ]
     },
+    "limit.release": {
+      "doc": "$limit->release() on a time limit, at `now` (a clocked pool limit) or on the real clock",
+      "covers": [
+        "Utopia\\Abuse\\Adapter\\TimeLimit::release"
+      ]
+    },
     "limit.key": {
       "doc": "$limit->key()",
       "covers": [

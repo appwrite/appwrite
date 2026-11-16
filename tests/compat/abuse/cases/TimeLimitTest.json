@@ -1137,6 +1137,193 @@
           "expect": true
         }
       ]
+    },
+    {
+      "name": "release gives back one hit without going negative",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "now": 1700000017
+          },
+          "bind": "st",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "memory",
+            "memory": {
+              "$ref": "st"
+            },
+            "key": "ip:{ip}",
+            "limit": 2,
+            "seconds": 60
+          },
+          "bind": "base",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_param",
+          "args": {
+            "handle": {
+              "$ref": "base"
+            },
+            "name": "{ip}",
+            "value": "127.0.0.1"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.release",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": true,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.release",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "memory": {
+              "$ref": "st"
+            }
+          },
+          "expect": {
+            "counts": {
+              "ip:127.0.0.1__1699999980": 2
+            },
+            "calls": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "release on zero limit touches no storage",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "now": 1700000017
+          },
+          "bind": "st",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "memory",
+            "memory": {
+              "$ref": "st"
+            },
+            "key": "ip:{ip}",
+            "limit": 0,
+            "seconds": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.release",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "memory": {
+              "$ref": "st"
+            }
+          },
+          "expect": {
+            "counts": {},
+            "calls": 0
+          }
+        }
+      ]
     }
   ]
 }

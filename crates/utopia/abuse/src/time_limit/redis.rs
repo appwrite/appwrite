@@ -27,6 +27,18 @@ return c",
     )
 });
 
+/// KEYS[1] window counter. Takes one back, never below zero; returns the
+/// count before this call.
+///
+/// PHP: `RedisBase::UNHIT_SCRIPT`.
+static UNHIT: LazyLock<Script> = LazyLock::new(|| {
+    Script::new(
+        "local c = tonumber(redis.call('GET', KEYS[1]) or '0') or 0
+if c > 0 then redis.call('DECR', KEYS[1]) end
+return c",
+    )
+});
+
 /// KEYS[1] window counter. ARGV[1] value, ARGV[2] ttl seconds.
 static SET: LazyLock<Script> = LazyLock::new(|| {
     Script::new(
@@ -87,6 +99,12 @@ async fn set<C: ConnectionLike + Send>(
 ) -> Result<()> {
     let key = window_key(key, window);
     redis_conn::eval(conn, &SET, &[&key], &[Arg::Int(value), Arg::Int(rule.seconds)], cluster).await?;
+    Ok(())
+}
+
+async fn unhit<C: ConnectionLike + Send>(conn: &mut C, key: &str, window: i64, cluster: bool) -> Result<()> {
+    let key = window_key(key, window);
+    redis_conn::eval(conn, &UNHIT, &[&key], &[], cluster).await?;
     Ok(())
 }
 
@@ -159,6 +177,11 @@ impl<C: ConnectionLike + Clone + Send + Sync> Store for Redis<C> {
         set(&mut self.conn.clone(), key, window, value, rule, false).await
     }
 
+    /// Runs the unhit script on the window's counter.
+    async fn unhit(&self, key: &str, window: i64) -> Result<()> {
+        unhit(&mut self.conn.clone(), key, window, false).await
+    }
+
     /// The counters one `SCAN` of `limit` keys finds, in the order Redis
     /// returns them; `offset` is ignored.
     ///
@@ -225,6 +248,11 @@ impl Store for RedisCluster {
     /// `SET` and `EXPIRE` of the window's counter, in one script.
     async fn set(&self, key: &str, window: i64, value: i64, rule: Rule) -> Result<()> {
         set(&mut self.conn.clone(), key, window, value, rule, true).await
+    }
+
+    /// Runs the unhit script on the window's counter.
+    async fn unhit(&self, key: &str, window: i64) -> Result<()> {
+        unhit(&mut self.conn.clone(), key, window, true).await
     }
 
     /// The counters of every primary, sorted by key, `limit` (25) from
@@ -313,6 +341,11 @@ impl<P: Pool + 'static> Store for RedisPool<P> {
     /// `SET` and `EXPIRE` of the window's counter, in one script.
     async fn set(&self, key: &str, window: i64, value: i64, rule: Rule) -> Result<()> {
         with_conn!(self.pool, |conn, cluster| set(conn, key, window, value, rule, cluster).await)
+    }
+
+    /// Runs the unhit script on the window's counter.
+    async fn unhit(&self, key: &str, window: i64) -> Result<()> {
+        with_conn!(self.pool, |conn, cluster| unhit(conn, key, window, cluster).await)
     }
 
     /// Every counter, sorted by key, `limit` (25) from `offset` (0).

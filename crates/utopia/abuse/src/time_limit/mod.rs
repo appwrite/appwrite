@@ -43,6 +43,12 @@ pub trait Store: Send + Sync {
     /// Sets the counter of `key` in `window` to `value`.
     fn set(&self, key: &str, window: i64, value: i64, rule: Rule) -> impl Future<Output = Result<()>> + Send;
 
+    /// Takes one back from the counter of `key` in `window`, never below
+    /// zero.
+    ///
+    /// PHP: `unhit()`.
+    fn unhit(&self, key: &str, window: i64) -> impl Future<Output = Result<()>> + Send;
+
     /// What the store holds, `limit` entries from `offset`.
     fn logs(&self, offset: Option<i64>, limit: Option<i64>) -> impl Future<Output = Result<Vec<Self::Log>>> + Send;
 
@@ -176,6 +182,61 @@ impl<S: Store> TimeLimit<S> {
         self.store.set(self.key.as_str(), self.window(now), 0, self.rule).await
     }
 
+    /// [`TimeLimit::release`] at `now` (Unix seconds): takes one hit back
+    /// from the window `now` falls in, never below zero. Does nothing when
+    /// the limit is `0`.
+    pub async fn release_at(&self, now: i64) -> Result<()> {
+        if self.rule.limit == 0 {
+            return Ok(());
+        }
+        self.store.unhit(self.key.as_str(), self.window(now)).await
+    }
+
+    /// Takes one hit back from the current window, never below zero: for a
+    /// request that reserved a hit with [`check`](Adapter::check) and turned
+    /// out not to count. Reserving first keeps a limit atomic under
+    /// concurrent requests. Does nothing when the limit is `0`.
+    ///
+    /// ```
+    /// use utopia_abuse::{TimeLimit, time_limit};
+    ///
+    /// # utopia_async::Builder::current_thread().build()?.block_on(async {
+    /// let store = time_limit::Database::new(std::sync::Arc::new(time_limit::Memory::new()));
+    /// store.setup().await?;
+    /// let limit = TimeLimit::new("upload:{user}", 1, 60, store)?.with_param("{user}", "ada");
+    /// assert!(!limit.check_at(1_700_000_000).await?.limited);
+    /// // The upload failed: it does not count.
+    /// limit.release_at(1_700_000_001).await?;
+    /// assert!(!limit.check_at(1_700_000_002).await?.limited);
+    /// # Ok::<(), utopia_abuse::Error>(())
+    /// # })?;
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    ///
+    /// ```php
+    /// use Utopia\Abuse\Adapter\TimeLimit\Database as Store;
+    /// use Utopia\Cache\Adapter\None as NoCache;
+    /// use Utopia\Cache\Cache;
+    /// use Utopia\Database\Adapter\Memory;
+    /// use Utopia\Database\Database;
+    ///
+    /// $db = new Database(new Memory(), new Cache(new NoCache()));
+    /// $db->setDatabase('abuse');
+    /// $db->create();
+    /// $limit = new Store('upload:{user}', 1, 60, $db);
+    /// $limit->setup();
+    /// $limit = $limit->withParam('{user}', 'ada');
+    /// var_dump($limit->check()->limited); // bool(false)
+    /// // The upload failed: it does not count.
+    /// $limit->release();
+    /// var_dump($limit->check()->limited); // bool(false)
+    /// ```
+    ///
+    /// PHP: `TimeLimit::release()`.
+    pub async fn release(&self) -> Result<()> {
+        self.release_at(crate::now_secs()).await
+    }
+
     fn verdict(&self, used: i64, window: i64) -> Result<Verdict> {
         Ok(Verdict {
             limited: used >= self.rule.limit,
@@ -244,6 +305,11 @@ impl Store for None {
 
     /// Does nothing.
     async fn set(&self, _key: &str, _window: i64, _value: i64, _rule: Rule) -> Result<()> {
+        Ok(())
+    }
+
+    /// Does nothing.
+    async fn unhit(&self, _key: &str, _window: i64) -> Result<()> {
         Ok(())
     }
 

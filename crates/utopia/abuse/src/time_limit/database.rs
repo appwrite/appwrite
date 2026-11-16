@@ -62,6 +62,12 @@ pub trait Documents: Send + Sync {
     /// PHP: `increaseDocumentAttribute($collection, $id, 'count', 1, $max)`.
     fn increase(&self, id: &str, max: Option<i64>) -> impl Future<Output = Result<Entry>> + Send;
 
+    /// Takes one from the count of document `id`, unless that takes it
+    /// below `min` ([`Error::Limit`]): the document after the decrement.
+    ///
+    /// PHP: `decreaseDocumentAttribute($collection, $id, 'count', 1, $min)`.
+    fn decrease(&self, id: &str, min: Option<i64>) -> impl Future<Output = Result<Entry>> + Send;
+
     /// Sets the count of document `id`.
     fn update(&self, id: &str, count: i64) -> impl Future<Output = Result<()>> + Send;
 
@@ -107,6 +113,10 @@ impl<D: Documents + ?Sized> Documents for std::sync::Arc<D> {
 
     fn increase(&self, id: &str, max: Option<i64>) -> impl Future<Output = Result<Entry>> + Send {
         (**self).increase(id, max)
+    }
+
+    fn decrease(&self, id: &str, min: Option<i64>) -> impl Future<Output = Result<Entry>> + Send {
+        (**self).decrease(id, min)
     }
 
     fn update(&self, id: &str, count: i64) -> impl Future<Output = Result<()>> + Send {
@@ -308,6 +318,19 @@ impl<D: Documents> Store for Database<D> {
         Ok(())
     }
 
+    /// Takes one from the window's count, bounded at zero; nothing without
+    /// a document or when the count is already zero.
+    async fn unhit(&self, key: &str, window: i64) -> Result<()> {
+        let Some(entry) = self.db.find_one(key, &datetime(window)).await? else {
+            return Ok(());
+        };
+        match self.db.decrease(&entry.id, Some(0)).await {
+            // Already at zero.
+            Ok(_) | Err(Error::Limit(_)) => Ok(()),
+            Err(e) => Err(e),
+        }
+    }
+
     /// Documents newest first.
     async fn logs(&self, offset: Option<i64>, limit: Option<i64>) -> Result<Vec<Entry>> {
         self.db.list(offset, limit).await
@@ -411,6 +434,23 @@ impl Documents for Memory {
             return Err(Error::Limit(format!("Attribute value exceeds maximum limit: {max}")));
         }
         entry.count += 1;
+        Ok(entry.clone())
+    }
+
+    async fn decrease(&self, id: &str, min: Option<i64>) -> Result<Entry> {
+        let mut state = self.state();
+        Self::collection(&state)?;
+        let entry = state
+            .entries
+            .iter_mut()
+            .find(|e| e.id == id)
+            .ok_or_else(|| Error::Exception("Document not found".into()))?;
+        if let Some(min) = min
+            && entry.count - 1 < min
+        {
+            return Err(Error::Limit(format!("Attribute value exceeds minimum limit: {min}")));
+        }
+        entry.count -= 1;
         Ok(entry.clone())
     }
 

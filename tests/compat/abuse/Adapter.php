@@ -252,12 +252,13 @@ final class FakeTables extends Client
                 return $this->row($db, $table, $row, $meta);
             case 'PATCH tablesdb/*/tables/*/rows/{row}':
                 $increment = str_ends_with($path, '/increment');
+                $decrement = str_ends_with($path, '/decrement');
                 if ($increment && $this->race instanceof \Closure) {
                     $race = $this->race;
                     $this->race = null;
                     $race();
                 }
-                $this->calls[] = $increment ? 'incrementRowColumn' : 'updateRow';
+                $this->calls[] = $increment ? 'incrementRowColumn' : ($decrement ? 'decrementRowColumn' : 'updateRow');
                 $id = $parts[5];
                 foreach ($this->rows as $i => $row) {
                     if ($row['id'] === $id) {
@@ -265,7 +266,15 @@ final class FakeTables extends Client
                         if ($increment && \is_numeric($max) && $row['count'] + (int) ($params['value'] ?? 1) > $max) {
                             throw new AppwriteException('Column "count" has reached the maximum value of ' . $max, 400, 'column_limit_exceeded');
                         }
-                        $this->rows[$i]['count'] = $increment ? $row['count'] + (int) ($params['value'] ?? 1) : $params['data']['count'];
+                        $min = $params['min'] ?? null;
+                        if ($decrement && \is_numeric($min) && $row['count'] - (int) ($params['value'] ?? 1) < $min) {
+                            throw new AppwriteException('Column "count" has reached the minimum value of ' . $min, 400, 'column_limit_exceeded');
+                        }
+                        $this->rows[$i]['count'] = match (true) {
+                            $increment => $row['count'] + (int) ($params['value'] ?? 1),
+                            $decrement => $row['count'] - (int) ($params['value'] ?? 1),
+                            default => $params['data']['count'],
+                        };
 
                         return $this->row($db, $table, $this->rows[$i], $meta);
                     }
@@ -374,6 +383,15 @@ final class Adapter implements Base, Benchmarks
             'limit.peek' => fn (array $a, Session $s) => self::result(self::clocked($a, $s)->peek()),
             'limit.reset' => function (array $a, Session $s) {
                 self::clocked($a, $s)->reset();
+
+                return;
+            },
+            'limit.release' => function (array $a, Session $s) {
+                $limit = self::clocked($a, $s);
+                if (!$limit instanceof TimeLimit) {
+                    throw new Fault('release is a time limit\'s');
+                }
+                $limit->release();
 
                 return;
             },
