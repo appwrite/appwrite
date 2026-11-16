@@ -121,10 +121,8 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
 
   // Keep form in sync when server function changes (e.g. after connect or refetch)
   useEffect(() => {
-    setSelectedBranch(func.providerBranch || '')
     setSelectedDir(func.providerRootDirectory || '')
   }, [
-    func.providerBranch,
     func.providerRootDirectory,
     func.installationId,
     func.providerRepositoryId,
