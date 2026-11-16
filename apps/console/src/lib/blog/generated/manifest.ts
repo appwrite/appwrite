@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-git-automation",
+    "href": "/blog/post/announcing-git-automation",
+    "title": "Announcing Git automation: Choose what every push does",
+    "description": "Git automation for Appwrite Sites and Functions gives you separate switches for deploying on push, pull request build summaries, and reporting commit statuses.",
+    "date": "2026-11-18",
+    "lastUpdated": "2026-11-18",
+    "timeToRead": 6,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-git-automation/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-activity-reasons",
     "href": "/blog/post/announcing-activity-reasons",
     "title": "Announcing reasons in Activity: see why every change was made",
