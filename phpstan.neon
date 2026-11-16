@@ -10,6 +10,7 @@ parameters:
     - app/init/constants.php
   scanFiles:
     - packages/image/stubs/Canvas.php
+    - crates/extension/stubs/DSN.php
   scanDirectories:
     - vendor/swoole/ide-helper
   excludePaths:
