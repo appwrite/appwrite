@@ -207,10 +207,6 @@ jobs:
             if: ${{ !cancelled() && steps.install.outcome == 'success' }}
             run: composer analyze -- --no-progress
 
-          - name: Generate specs
-            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-            run: _APP_STORAGE_LIMIT=5368709120 php app/cli.php specs --version=latest --git=no
-
   locale:
     name: Checks / Locale
     needs: changes
@@ -595,6 +591,11 @@ jobs:
       - name: Run Package Tests
         timeout-minutes: 15
         run: docker compose exec appwrite test --testsuite packages
+
+      # In the image: booting Appwrite needs the utopia extension (Utopia\Locale\Locale).
+      - name: Generate specs
+        timeout-minutes: 10
+        run: docker compose exec -T -e _APP_STORAGE_LIMIT=5368709120 appwrite specs --version=latest --git=no
 
   e2e_general:
     name: Tests / E2E / General
