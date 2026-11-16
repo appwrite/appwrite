@@ -42,12 +42,18 @@ fn construct(class: &ClassEntry, arguments: &mut [Zval]) -> PhpResult<ZBox<ZendO
             );
         }
     }
+    thrown()?;
+    Ok(object)
+}
+
+/// The exception a PHP call left pending, rethrown as itself.
+fn thrown() -> PhpResult<()> {
     match ExecutorGlobals::take_exception() {
         Some(exception) => {
             let thrown = exception.into_zval(false).map_err(PhpException::from)?;
             Err(PhpException::from_message(String::new()).with_object(thrown))
         }
-        None => Ok(object),
+        None => Ok(()),
     }
 }
 
@@ -101,17 +107,26 @@ impl Clone for Email {
 }
 
 impl Email {
-    /// `$this->domainInstance->$method()`.
-    fn ask(&self, method: &str) -> Zval {
-        self.domain.object().and_then(|domain| domain.try_call_method(method, vec![]).ok()).unwrap_or_default()
+    /// `$this->domainInstance->$method()`: what it throws propagates, and a method the
+    /// object lacks is PHP's `Error`.
+    fn ask(&self, method: &str) -> PhpResult<Zval> {
+        let Some(domain) = self.domain.object() else {
+            return Err(PhpException::new(format!("Call to a member function {method}() on null"), 0, ce::error()));
+        };
+        let result = domain.try_call_method(method, vec![]).map_err(|_| {
+            let class = domain.get_class_name().unwrap_or_default();
+            PhpException::new(format!("Call to undefined method {class}::{method}()"), 0, ce::error())
+        })?;
+        thrown()?;
+        Ok(result)
     }
 
-    fn registerable(&self) -> Vec<u8> {
-        bytes(&self.ask("getRegisterable"))
+    fn registerable(&self) -> PhpResult<Vec<u8>> {
+        Ok(bytes(&self.ask("getRegisterable")?))
     }
 
-    fn sub(&self) -> Vec<u8> {
-        bytes(&self.ask("getSub"))
+    fn sub(&self) -> PhpResult<Vec<u8>> {
+        Ok(bytes(&self.ask("getSub")?))
     }
 }
 
@@ -184,43 +199,43 @@ impl Email {
     }
 
     #[php(name = "hasValidDomain")]
-    pub fn has_valid_domain(&self) -> bool {
-        self.email.has_valid_domain_syntax()
-            && (self.ask("isKnown").coerce_to_bool() || self.ask("isTest").coerce_to_bool())
+    pub fn has_valid_domain(&self) -> PhpResult<bool> {
+        Ok(self.email.has_valid_domain_syntax()
+            && (self.ask("isKnown")?.coerce_to_bool() || self.ask("isTest")?.coerce_to_bool()))
     }
 
     #[php(name = "isDisposable")]
-    pub fn is_disposable(&self) -> bool {
-        Lists::global().is_disposable(self.email.domain(), &self.registerable())
+    pub fn is_disposable(&self) -> PhpResult<bool> {
+        Ok(Lists::global().is_disposable(self.email.domain(), &self.registerable()?))
     }
 
     #[php(name = "isFree")]
-    pub fn is_free(&self) -> bool {
-        Lists::global().is_free(self.email.domain()) && !self.is_disposable()
+    pub fn is_free(&self) -> PhpResult<bool> {
+        Ok(Lists::global().is_on_free_list(self.email.domain()) && !self.is_disposable()?)
     }
 
     #[php(name = "isCorporate")]
-    pub fn is_corporate(&self) -> bool {
-        if self.is_free() && self.is_disposable() {
-            return false;
+    pub fn is_corporate(&self) -> PhpResult<bool> {
+        if self.is_free()? && self.is_disposable()? {
+            return Ok(false);
         }
-        !self.is_free() && !self.is_disposable()
+        Ok(!self.is_free()? && !self.is_disposable()?)
     }
 
     #[php(name = "getProvider")]
-    pub fn get_provider(&self) -> Text {
-        let registerable = self.registerable();
-        Text(if empty(&registerable) { self.email.domain().to_vec() } else { registerable })
+    pub fn get_provider(&self) -> PhpResult<Text> {
+        let registerable = self.registerable()?;
+        Ok(Text(if empty(&registerable) { self.email.domain().to_vec() } else { registerable }))
     }
 
     #[php(name = "getSubdomain")]
-    pub fn get_subdomain(&self) -> Text {
-        Text(self.sub())
+    pub fn get_subdomain(&self) -> PhpResult<Text> {
+        Ok(Text(self.sub()?))
     }
 
     #[php(name = "hasSubdomain")]
-    pub fn has_subdomain(&self) -> bool {
-        !empty(&self.sub())
+    pub fn has_subdomain(&self) -> PhpResult<bool> {
+        Ok(!empty(&self.sub()?))
     }
 
     #[php(name = "getCanonical")]
@@ -239,13 +254,13 @@ impl Email {
     }
 
     #[php(name = "getFormatted", defaults(format = "\"full\""))]
-    pub fn get_formatted(&self, format: PhpString<'_>) -> Text {
-        match format.bytes() {
+    pub fn get_formatted(&self, format: PhpString<'_>) -> PhpResult<Text> {
+        Ok(match format.bytes() {
             b"local" => Text(self.email.local().to_vec()),
             b"domain" => Text(self.email.domain().to_vec()),
-            b"provider" => self.get_provider(),
-            b"subdomain" => self.get_subdomain(),
+            b"provider" => self.get_provider()?,
+            b"subdomain" => self.get_subdomain()?,
             _ => Text(self.email.get().to_vec()),
-        }
+        })
     }
 }

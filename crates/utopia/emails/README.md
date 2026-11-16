@@ -52,7 +52,7 @@ use utopia_emails::Lists;
 
 let lists = Lists::global();
 
-assert!(lists.is_free(b"gmail.com"));
+assert!(lists.is_on_free_list(b"gmail.com"));
 assert!(lists.is_disposable(b"x.mailinator.com", b"mailinator.com"));
 assert!(!lists.is_disposable(b"appwrite.io", b"appwrite.io"));
 ```

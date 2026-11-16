@@ -8,7 +8,7 @@
 //! | `get()`, `getLocal()`, `getDomain()` | [`Email::get`], [`Email::local`], [`Email::domain`] |
 //! | `isValid()`, `hasValidLocal()` | [`Email::is_valid`], [`Email::has_valid_local`] |
 //! | `hasValidDomain()` | [`Email::has_valid_domain_syntax`], then the domain's known suffix (`utopia-domains`) |
-//! | `isDisposable()`, `isFree()` | [`Lists::is_disposable`], [`Lists::is_free`] |
+//! | `isDisposable()`, `isFree()` | [`Lists::is_disposable`], [`Lists::is_on_free_list`] (`isFree()` also needs it not disposable) |
 //! | `getCanonical()`, `isCanonicalSupported()`, `getCanonicalDomain()` | [`Email::canonical`], [`Email::is_canonical_supported`], [`Email::canonical_domain`] |
 //! | `Email::LOCAL_MAX_LENGTH`, `DOMAIN_MAX_LENGTH` | [`LOCAL_MAX_LENGTH`], [`DOMAIN_MAX_LENGTH`] |
 //! | `data/free-domains.php`, `data/disposable-domains.php` | [`Lists`] ([`Lists::FREE`], [`Lists::DISPOSABLE`]) |

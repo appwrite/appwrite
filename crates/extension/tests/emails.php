@@ -324,7 +324,11 @@ $expected = $internal ? [
     'protected helpers' => ['value' => [false, false, false]],
     'protected static properties' => ['value' => []],
     'subclass clone' => ['value' => [false, true, 'example.co.uk', false]],
-] : $waivers;
+] : [
+    'protected helpers' => ['value' => [true, true, true]],
+    'protected static properties' => ['value' => ['freeDomains', 'disposableDomains', 'providers']],
+    'subclass clone' => ['value' => [true, true, 'example.co.uk', true]],
+];
 foreach ($expected as $name => $outcome) {
     if ($waivers[$name] !== $outcome) {
         fwrite(STDERR, "Waiver changed: {$name}: " . json_encode(exported($waivers[$name])) . PHP_EOL);

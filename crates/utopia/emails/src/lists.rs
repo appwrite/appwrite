@@ -103,11 +103,12 @@ impl Lists {
         self.disposable.contains(domain) || (!registerable.is_empty() && self.disposable.contains(registerable))
     }
 
-    /// Whether the domain is on the free list.
+    /// Whether the domain is on the free list. Not PHP's `isFree()`, which is false
+    /// for a domain that is also disposable: that is this and not
+    /// [`Self::is_disposable`].
     ///
-    /// PHP: `in_array($this->domain, self::$freeDomains)`; `isFree()` is this
-    /// and not [`Self::is_disposable`].
-    pub fn is_free(&self, domain: &[u8]) -> bool {
+    /// PHP: `in_array($this->domain, self::$freeDomains)`.
+    pub fn is_on_free_list(&self, domain: &[u8]) -> bool {
         self.free.contains(domain)
     }
 }
@@ -134,6 +135,6 @@ mod tests {
             assert_eq!(list.len(), lines, "every line is one distinct domain");
             assert!(lines > 30_000, "the list has {lines} domains");
         }
-        assert!(lists.is_free(b"gmail.com") && lists.is_disposable(b"x.mailinator.com", b"mailinator.com"));
+        assert!(lists.is_on_free_list(b"gmail.com") && lists.is_disposable(b"x.mailinator.com", b"mailinator.com"));
     }
 }
