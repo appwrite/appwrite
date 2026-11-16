@@ -49,11 +49,11 @@
     ],
     "sql_find/join_side_search_uses_join_alias sqlite/plain": [
         "sql",
-        "SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid` FROM `namespace_collection` AS `table_main` LEFT JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`mainId` WHERE `meta`.`body` LIKE ? ESCAPE '\\' LIMIT ?"
+        "SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid` FROM `namespace_collection` AS `table_main` LEFT JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`mainId` WHERE (`meta`.`body` LIKE ? ESCAPE '\\') LIMIT ?"
     ],
     "sql_find/sqlite_main_search_quotes_main_alias sqlite/plain": [
         "sql",
-        "SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid` FROM `namespace_collection` AS `table_main` LEFT JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`mainId` WHERE `table_main`.`body` LIKE ? ESCAPE '\\' LIMIT ?"
+        "SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid` FROM `namespace_collection` AS `table_main` LEFT JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`mainId` WHERE (`table_main`.`body` LIKE ? ESCAPE '\\') LIMIT ?"
     ],
     "sql_find/emulates_full_outer_join_cursor_after_uses_join_qualified_order postgres/plain": [
         "sql",
@@ -129,23 +129,23 @@
     ],
     "postgres_vector_cursor/descending_after postgres/plain": [
         "sql",
-        "SELECT *, (\"table_main\".\"embedding\" <=> ?::vector)::text AS \"_distance\" FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE \"table_main\".\"embedding\" IS NOT NULL AND (((\"table_main\".\"embedding\" <=> ?::vector)) > ? OR (((\"table_main\".\"embedding\" <=> ?::vector)) = ? AND \"table_main\".\"rank\" < ?)) ORDER BY (\"table_main\".\"embedding\" <=> ?::vector), \"rank\" DESC LIMIT ?"
+        "SELECT *, (\"table_main\".\"embedding\" <=> ?::vector)::text AS \"_distance\" FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE (\"table_main\".\"embedding\" IS NOT NULL) AND ((((\"table_main\".\"embedding\" <=> ?::vector)) > ? OR (((\"table_main\".\"embedding\" <=> ?::vector)) = ? AND \"table_main\".\"rank\" < ?))) ORDER BY (\"table_main\".\"embedding\" <=> ?::vector), \"rank\" DESC LIMIT ?"
     ],
     "postgres_vector_cursor/descending_before postgres/plain": [
         "sql",
-        "SELECT *, (\"table_main\".\"embedding\" <=> ?::vector)::text AS \"_distance\" FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE \"table_main\".\"embedding\" IS NOT NULL AND (((\"table_main\".\"embedding\" <=> ?::vector)) < ? OR (((\"table_main\".\"embedding\" <=> ?::vector)) = ? AND \"table_main\".\"rank\" > ?)) ORDER BY (\"table_main\".\"embedding\" <=> ?::vector) DESC, \"rank\" ASC LIMIT ?"
+        "SELECT *, (\"table_main\".\"embedding\" <=> ?::vector)::text AS \"_distance\" FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE (\"table_main\".\"embedding\" IS NOT NULL) AND ((((\"table_main\".\"embedding\" <=> ?::vector)) < ? OR (((\"table_main\".\"embedding\" <=> ?::vector)) = ? AND \"table_main\".\"rank\" > ?))) ORDER BY (\"table_main\".\"embedding\" <=> ?::vector) DESC, \"rank\" ASC LIMIT ?"
     ],
     "postgres_vector_cursor/ascending_after postgres/plain": [
         "sql",
-        "SELECT *, (\"table_main\".\"embedding\" <=> ?::vector)::text AS \"_distance\" FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE \"table_main\".\"embedding\" IS NOT NULL AND (((\"table_main\".\"embedding\" <=> ?::vector)) > ? OR (((\"table_main\".\"embedding\" <=> ?::vector)) = ? AND \"table_main\".\"rank\" > ?)) ORDER BY (\"table_main\".\"embedding\" <=> ?::vector), \"rank\" ASC LIMIT ?"
+        "SELECT *, (\"table_main\".\"embedding\" <=> ?::vector)::text AS \"_distance\" FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE (\"table_main\".\"embedding\" IS NOT NULL) AND ((((\"table_main\".\"embedding\" <=> ?::vector)) > ? OR (((\"table_main\".\"embedding\" <=> ?::vector)) = ? AND \"table_main\".\"rank\" > ?))) ORDER BY (\"table_main\".\"embedding\" <=> ?::vector), \"rank\" ASC LIMIT ?"
     ],
     "postgres_vector_cursor/ascending_before postgres/plain": [
         "sql",
-        "SELECT *, (\"table_main\".\"embedding\" <=> ?::vector)::text AS \"_distance\" FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE \"table_main\".\"embedding\" IS NOT NULL AND (((\"table_main\".\"embedding\" <=> ?::vector)) < ? OR (((\"table_main\".\"embedding\" <=> ?::vector)) = ? AND \"table_main\".\"rank\" < ?)) ORDER BY (\"table_main\".\"embedding\" <=> ?::vector) DESC, \"rank\" DESC LIMIT ?"
+        "SELECT *, (\"table_main\".\"embedding\" <=> ?::vector)::text AS \"_distance\" FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE (\"table_main\".\"embedding\" IS NOT NULL) AND ((((\"table_main\".\"embedding\" <=> ?::vector)) < ? OR (((\"table_main\".\"embedding\" <=> ?::vector)) = ? AND \"table_main\".\"rank\" < ?))) ORDER BY (\"table_main\".\"embedding\" <=> ?::vector) DESC, \"rank\" DESC LIMIT ?"
     ],
     "postgres_vector_cursor/joined_nullable postgres/plain": [
         "sql",
-        "SELECT \"table_main\".*, \"j\".\"_uid\" AS \"j._uid\", \"j\".\"rank\" AS \"j.rank\", (\"table_main\".\"embedding\" <#> ?::vector)::text AS \"_distance\" FROM \"database\".\"namespace_items\" AS \"table_main\" LEFT JOIN \"database\".\"namespace_ranks\" AS \"j\" ON \"table_main\".\"_uid\" = \"j\".\"itemId\" WHERE \"table_main\".\"embedding\" IS NOT NULL AND (((\"table_main\".\"embedding\" <#> ?::vector)) > ? OR (((\"table_main\".\"embedding\" <#> ?::vector)) = ? AND \"j\".\"rank\" IS NOT NULL) OR (((\"table_main\".\"embedding\" <#> ?::vector)) = ? AND \"j\".\"rank\" IS NULL AND COALESCE(\"table_main\".\"_id\" > ?, TRUE))) ORDER BY (\"table_main\".\"embedding\" <#> ?::vector), \"j\".\"rank\" DESC, \"table_main\".\"_id\" ASC LIMIT ?"
+        "SELECT \"table_main\".*, \"j\".\"_uid\" AS \"j._uid\", \"j\".\"rank\" AS \"j.rank\", (\"table_main\".\"embedding\" <#> ?::vector)::text AS \"_distance\" FROM \"database\".\"namespace_items\" AS \"table_main\" LEFT JOIN \"database\".\"namespace_ranks\" AS \"j\" ON \"table_main\".\"_uid\" = \"j\".\"itemId\" WHERE (\"table_main\".\"embedding\" IS NOT NULL) AND ((((\"table_main\".\"embedding\" <#> ?::vector)) > ? OR (((\"table_main\".\"embedding\" <#> ?::vector)) = ? AND \"j\".\"rank\" IS NOT NULL) OR (((\"table_main\".\"embedding\" <#> ?::vector)) = ? AND \"j\".\"rank\" IS NULL AND COALESCE(\"table_main\".\"_id\" > ?, TRUE)))) ORDER BY (\"table_main\".\"embedding\" <#> ?::vector), \"j\".\"rank\" DESC, \"table_main\".\"_id\" ASC LIMIT ?"
     ],
     "sqlite_vector_query/vector_queries_are_left_out mariadb/plain": [
         "sql",
@@ -421,11 +421,11 @@
     ],
     "aggregate/count_join_search sqlite/plain": [
         "sql",
-        "SELECT COUNT(1) AS `sum` FROM (SELECT 1 FROM `namespace_items` AS `table_main` JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`itemId` AND `meta`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_meta_perms` WHERE _permission IN (?) AND _type = ?) WHERE `table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ?) AND `meta`.`body` LIKE ? ESCAPE '\\') AS `table_count`"
+        "SELECT COUNT(1) AS `sum` FROM (SELECT 1 FROM `namespace_items` AS `table_main` JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`itemId` AND `meta`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_meta_perms` WHERE _permission IN (?) AND _type = ?) WHERE `table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ?) AND (`meta`.`body` LIKE ? ESCAPE '\\')) AS `table_count`"
     ],
     "aggregate/count_join_search sqlite/shared": [
         "sql",
-        "SELECT COUNT(1) AS `sum` FROM (SELECT 1 FROM `namespace_items` AS `table_main` JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`itemId` AND `meta`._tenant IN (?) AND `meta`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_meta_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_meta_perms`._tenant IN (?)) WHERE `table_main`._tenant IN (?) AND `table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_items_perms`._tenant IN (?)) AND `meta`.`body` LIKE ? ESCAPE '\\') AS `table_count`"
+        "SELECT COUNT(1) AS `sum` FROM (SELECT 1 FROM `namespace_items` AS `table_main` JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`itemId` AND `meta`._tenant IN (?) AND `meta`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_meta_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_meta_perms`._tenant IN (?)) WHERE `table_main`._tenant IN (?) AND `table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_items_perms`._tenant IN (?)) AND (`meta`.`body` LIKE ? ESCAPE '\\')) AS `table_count`"
     ],
     "joins/bounded_sort postgres/plain": [
         "sql",
@@ -453,11 +453,11 @@
     ],
     "joins/bounded_sort sqlite/plain": [
         "sql",
-        "SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `meta`.`rank` AS `meta.rank` FROM `namespace_items` AS `table_main` LEFT JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`itemId` AND `meta`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_meta_perms` WHERE _permission IN (?) AND _type = ?) WHERE `table_main`.`label` IN (?) AND (`table_main`.`label` IS NOT NULL) AND ((`table_main`.`_createdAt` < ? OR `table_main`.`_createdAt` IS NULL) OR (`table_main`.`_createdAt` IN (?) AND `table_main`.`_uid` > ?) OR (`table_main`.`_createdAt` IN (?) AND `table_main`.`_uid` COLLATE NOCASE IN (?) AND `meta`.`rank` > ?)) AND `table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ?) AND `table_main`.`body` LIKE ? ESCAPE '\\' ORDER BY `table_main`.`_createdAt` DESC, `table_main`.`_uid` ASC, `meta`.`rank` ASC LIMIT ? OFFSET ?"
+        "SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `meta`.`rank` AS `meta.rank` FROM `namespace_items` AS `table_main` LEFT JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`itemId` AND `meta`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_meta_perms` WHERE _permission IN (?) AND _type = ?) WHERE `table_main`.`label` IN (?) AND (`table_main`.`label` IS NOT NULL) AND ((`table_main`.`_createdAt` < ? OR `table_main`.`_createdAt` IS NULL) OR (`table_main`.`_createdAt` IN (?) AND `table_main`.`_uid` > ?) OR (`table_main`.`_createdAt` IN (?) AND `table_main`.`_uid` COLLATE NOCASE IN (?) AND `meta`.`rank` > ?)) AND `table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ?) AND (`table_main`.`body` LIKE ? ESCAPE '\\') ORDER BY `table_main`.`_createdAt` DESC, `table_main`.`_uid` ASC, `meta`.`rank` ASC LIMIT ? OFFSET ?"
     ],
     "joins/bounded_sort sqlite/shared": [
         "sql",
-        "SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `meta`.`rank` AS `meta.rank` FROM `namespace_items` AS `table_main` LEFT JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`itemId` AND `meta`._tenant IN (?) AND `meta`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_meta_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_meta_perms`._tenant IN (?)) WHERE `table_main`.`label` IN (?) AND (`table_main`.`label` IS NOT NULL) AND ((`table_main`.`_createdAt` < ? OR `table_main`.`_createdAt` IS NULL) OR (`table_main`.`_createdAt` IN (?) AND `table_main`.`_uid` > ?) OR (`table_main`.`_createdAt` IN (?) AND `table_main`.`_uid` COLLATE NOCASE IN (?) AND `meta`.`rank` > ?)) AND `table_main`._tenant IN (?) AND `table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_items_perms`._tenant IN (?)) AND `table_main`.`body` LIKE ? ESCAPE '\\' ORDER BY `table_main`.`_createdAt` DESC, `table_main`.`_uid` ASC, `meta`.`rank` ASC LIMIT ? OFFSET ?"
+        "SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `meta`.`rank` AS `meta.rank` FROM `namespace_items` AS `table_main` LEFT JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`itemId` AND `meta`._tenant IN (?) AND `meta`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_meta_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_meta_perms`._tenant IN (?)) WHERE `table_main`.`label` IN (?) AND (`table_main`.`label` IS NOT NULL) AND ((`table_main`.`_createdAt` < ? OR `table_main`.`_createdAt` IS NULL) OR (`table_main`.`_createdAt` IN (?) AND `table_main`.`_uid` > ?) OR (`table_main`.`_createdAt` IN (?) AND `table_main`.`_uid` COLLATE NOCASE IN (?) AND `meta`.`rank` > ?)) AND `table_main`._tenant IN (?) AND `table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_items_perms`._tenant IN (?)) AND (`table_main`.`body` LIKE ? ESCAPE '\\') ORDER BY `table_main`.`_createdAt` DESC, `table_main`.`_uid` ASC, `meta`.`rank` ASC LIMIT ? OFFSET ?"
     ],
     "joins/bounded_sort_refused_by_joined_condition mariadb/plain": [
         "sql",
