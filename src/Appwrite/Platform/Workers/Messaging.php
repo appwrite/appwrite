@@ -901,7 +901,7 @@ class Messaging extends Action
         do {
             $queries = [
                 Query::equal('topicInternalId', $topicInternalIds),
-                Query::equal('userId', \array_map('strval', \array_keys($pending))),
+                Query::equal('userId', \array_map(strval(...), \array_keys($pending))),
                 Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
                 Query::select(['$sequence', 'targetInternalId']),
                 Query::orderAsc('$sequence'),
@@ -984,7 +984,7 @@ class Messaging extends Action
 
         do {
             $queries = [
-                Query::equal('userId', \array_map('strval', \array_keys($mqttUsers))),
+                Query::equal('userId', \array_map(strval(...), \array_keys($mqttUsers))),
                 Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
                 Query::select(['$sequence', 'providerId', 'identifier', 'expired']),
                 Query::orderAsc('$sequence'),
