@@ -84,7 +84,7 @@ export function TransferDomainInWizard({
     !!existingDomainQuery.data?.domains.some(
       (domain) => domain.domain === apexDomain,
     )
-  const isCheckingOrganization = !!apexDomain && existingDomainQuery.isFetching
+  const isCheckingOrganization = !!apexDomain && existingDomainQuery.isPending
 
   const priceQuery = useQuery(
     domainTransferPriceQueryOptions(
