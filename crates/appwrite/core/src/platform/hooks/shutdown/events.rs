@@ -28,7 +28,9 @@ const MEMBERSHIP_PRIVACY: [(&str, &str, bool); 6] = [
 impl Job {
     pub(super) async fn realtime(&self, events: &[String], user_id: Option<&str>, payload: &RawValue) {
         let Some(first) = events.first() else { return };
-        let member = serde_json::from_str::<Value>(payload.get())
+        // The member comes from the payload as rendered, before the fields
+        // realtime leaves out (`fromPayload()` reads the whole payload).
+        let member = serde_json::from_slice::<Value>(&self.payload)
             .ok()
             .and_then(|p| p.get("userId").and_then(Value::as_str).map(str::to_owned));
         let Some(target) = event::realtime_target(first, member.as_deref()) else { return };
