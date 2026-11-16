@@ -815,7 +815,7 @@ jobs:
         run: |
           ./dev/openldap/certs.sh
           docker compose up -d --wait openldap
-          docker compose --profile openldap-seed run --rm openldap-seed
+          COMPOSE_PROFILES="$COMPOSE_PROFILES,openldap-seed" docker compose run --rm openldap-seed
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
