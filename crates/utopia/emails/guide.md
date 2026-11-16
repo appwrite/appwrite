@@ -2,14 +2,15 @@ Utopia Emails parses email addresses and answers the questions an application as
 
 ## Validate an address from a sign-up form
 
-`EmailValidator` accepts a string that parses as a valid address. Surrounding spaces and upper case are fine, because the address is trimmed and lower-cased first.
+`EmailValidator` accepts a string that parses as a valid address. Upper case is fine, because the address is lower-cased first. Surrounding spaces and control characters are not: the parser would trim them, so the value stored would be a lookalike of the address checked.
 
 ```
 use utopia_emails::EmailValidator;
 
 let validator = EmailValidator::default();
 
-assert!(validator.is_valid_address("  Jane.Doe@Example.com "));
+assert!(validator.is_valid_address("Jane.Doe@Example.com"));
+assert!(!validator.is_valid_address("  Jane.Doe@Example.com "));
 assert!(!validator.is_valid_address("jane.doe"));
 assert!(!validator.is_valid_address("jane@doe@example.com"));
 assert!(!validator.is_valid_address(""));
@@ -23,7 +24,8 @@ use Utopia\Emails\Validator\Email;
 
 $validator = new Email();
 
-var_dump($validator->isValid('  Jane.Doe@Example.com ')); // bool(true)
+var_dump($validator->isValid('Jane.Doe@Example.com'));    // bool(true)
+var_dump($validator->isValid('  Jane.Doe@Example.com ')); // bool(false)
 var_dump($validator->isValid('jane.doe'));                // bool(false)
 var_dump($validator->isValid('jane@doe@example.com'));    // bool(false)
 var_dump($validator->isValid(''));                        // bool(false)
