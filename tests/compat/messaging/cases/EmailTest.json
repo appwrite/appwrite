@@ -111,7 +111,8 @@
         "attachments": null,
         "html": false,
         "headers": [],
-        "origin": null
+        "origin": null,
+        "template": null
       }
     },
     {
@@ -255,7 +256,8 @@
           "List-Unsubscribe": "<https://example.test/u?token=abc>",
           "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
         },
-        "origin": null
+        "origin": null,
+        "template": null
       }
     },
     {
@@ -481,7 +483,8 @@
         ],
         "html": true,
         "headers": [],
-        "origin": "internal"
+        "origin": "internal",
+        "template": null
       }
     },
     {
@@ -510,7 +513,8 @@
         "attachments": null,
         "html": false,
         "headers": [],
-        "origin": null
+        "origin": null,
+        "template": null
       }
     },
     {
@@ -539,7 +543,8 @@
         "attachments": null,
         "html": false,
         "headers": [],
-        "origin": null
+        "origin": null,
+        "template": null
       }
     },
     {
@@ -623,7 +628,8 @@
         "headers": {
           "X-Tag\n": "v"
         },
-        "origin": null
+        "origin": null,
+        "template": null
       }
     },
     {
@@ -704,7 +710,8 @@
         "attachments": null,
         "html": false,
         "headers": [],
-        "origin": null
+        "origin": null,
+        "template": null
       }
     },
     {
@@ -743,7 +750,8 @@
         "attachments": null,
         "html": false,
         "headers": [],
-        "origin": null
+        "origin": null,
+        "template": null
       }
     },
     {

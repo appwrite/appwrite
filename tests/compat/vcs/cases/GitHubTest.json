@@ -687,7 +687,7 @@
       ]
     },
     {
-      "name": "testUpdateCheckNamesTheStatusAfterItsSuite",
+      "name": "testGetEventIssueCommentOnPullRequest",
       "steps": [
         {
           "op": "vcs.new",
@@ -699,6 +699,203 @@
           "expect": {
             "$handle": "*"
           }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "issue_comment",
+            "payload": "{\"action\":\"created\",\"comment\":{\"id\":1001,\"body\":\"@reviewer why?\",\"html_url\":\"https://github.com/comment/1001\",\"author_association\":\"MEMBER\",\"user\":{\"login\":\"octocat\",\"type\":\"User\"}},\"repository\":{\"id\":123456789,\"name\":\"testing-fork\",\"owner\":{\"login\":\"vermakhushboo\"}},\"installation\":{\"id\":9876},\"issue\":{\"number\":42,\"pull_request\":{\"url\":\"https://api.github.com/pulls/42\"}}}"
+          },
+          "expect": [
+            {
+              "repositoryId": "123456789",
+              "repositoryName": "testing-fork",
+              "owner": "vermakhushboo",
+              "installationId": "9876",
+              "pullRequestNumber": 42,
+              "action": "created",
+              "commentId": 1001,
+              "commentKind": "issue",
+              "commentReplyToId": 0,
+              "commentBody": "@reviewer why?",
+              "commentUrl": "https://github.com/comment/1001",
+              "commentAuthor": "octocat",
+              "commentAuthorType": "User",
+              "commentAuthorAssociation": "MEMBER"
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventIssueCommentOnIssueIsIgnored",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "issue_comment",
+            "payload": "{\"action\":\"created\",\"comment\":{\"id\":1001,\"body\":\"@reviewer why?\",\"html_url\":\"https://github.com/comment/1001\",\"author_association\":\"MEMBER\",\"user\":{\"login\":\"octocat\",\"type\":\"User\"}},\"repository\":{\"id\":123456789,\"name\":\"testing-fork\",\"owner\":{\"login\":\"vermakhushboo\"}},\"installation\":{\"id\":9876},\"issue\":{\"number\":42}}"
+          },
+          "expect": []
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventReviewCommentReply",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pull_request_review_comment",
+            "payload": "{\"action\":\"created\",\"comment\":{\"id\":1001,\"body\":\"@reviewer why?\",\"html_url\":\"https://github.com/comment/1001\",\"author_association\":\"MEMBER\",\"user\":{\"login\":\"octocat\",\"type\":\"User\"},\"in_reply_to_id\":900},\"repository\":{\"id\":123456789,\"name\":\"testing-fork\",\"owner\":{\"login\":\"vermakhushboo\"}},\"installation\":{\"id\":9876},\"pull_request\":{\"number\":42}}"
+          },
+          "expect": [
+            {
+              "repositoryId": "123456789",
+              "repositoryName": "testing-fork",
+              "owner": "vermakhushboo",
+              "installationId": "9876",
+              "pullRequestNumber": 42,
+              "action": "created",
+              "commentId": 1001,
+              "commentKind": "review",
+              "commentReplyToId": 900,
+              "commentBody": "@reviewer why?",
+              "commentUrl": "https://github.com/comment/1001",
+              "commentAuthor": "octocat",
+              "commentAuthorType": "User",
+              "commentAuthorAssociation": "MEMBER"
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "issue and review comments with odd shapes",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "issue_comment",
+            "payload": "{\"comment\": \"nope\", \"repository\": {\"id\": \"r-1\", \"owner\": \"x\"}, \"issue\": {\"number\": \"42\", \"pull_request\": true}}"
+          },
+          "expect": [
+            {
+              "repositoryId": "r-1",
+              "repositoryName": "",
+              "owner": "",
+              "installationId": "",
+              "pullRequestNumber": 0,
+              "action": "",
+              "commentId": 0,
+              "commentKind": "issue",
+              "commentReplyToId": 0,
+              "commentBody": "",
+              "commentUrl": "",
+              "commentAuthor": "",
+              "commentAuthorType": "",
+              "commentAuthorAssociation": ""
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pull_request_review_comment",
+            "payload": "{\"pull_request\": \"nope\", \"repository\": {\"id\": 1.5}, \"comment\": {\"id\": \"7\", \"in_reply_to_id\": 3, \"user\": []}}"
+          },
+          "expect": [
+            {
+              "repositoryId": "",
+              "repositoryName": "",
+              "owner": "",
+              "installationId": "",
+              "pullRequestNumber": 0,
+              "action": "",
+              "commentId": 0,
+              "commentKind": "review",
+              "commentReplyToId": 3,
+              "commentBody": "",
+              "commentUrl": "",
+              "commentAuthor": "",
+              "commentAuthorType": "",
+              "commentAuthorAssociation": ""
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "issue_comment",
+            "payload": "{\"issue\": {\"pull_request\": {}}}"
+          },
+          "expect": []
         },
         {
           "op": "fixture.requests",

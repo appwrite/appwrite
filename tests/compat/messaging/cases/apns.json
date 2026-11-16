@@ -321,7 +321,7 @@
           "expect": {
             "error": {
               "class": "TypeError",
-              "message": "Utopia\\Messaging\\Response::addResult(): Argument #2 ($error) must be of type string, array given, called in /usr/src/code/packages/messaging/src/Adapter/Push/APNS.php on line 160"
+              "message": "Utopia\\Messaging\\Response::addResult(): Argument #2 ($error) must be of type string, array given, called in /usr/src/code/packages/messaging/src/Adapter/Push/APNS.php on line 167"
             },
             "requests": [
               {
@@ -527,7 +527,7 @@
                 {
                   "recipient": "bbb2",
                   "status": "failure",
-                  "error": "Unregistered",
+                  "error": "Expired device token",
                   "permanent": false,
                   "code": 0
                 },
@@ -975,7 +975,7 @@
           "expect": {
             "error": {
               "class": "TypeError",
-              "message": "Utopia\\Messaging\\Response::addResult(): Argument #2 ($error) must be of type string, array given, called in /usr/src/code/packages/messaging/src/Adapter/Push/APNS.php on line 160"
+              "message": "Utopia\\Messaging\\Response::addResult(): Argument #2 ($error) must be of type string, array given, called in /usr/src/code/packages/messaging/src/Adapter/Push/APNS.php on line 167"
             },
             "requests": [
               {

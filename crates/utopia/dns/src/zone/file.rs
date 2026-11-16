@@ -740,9 +740,21 @@ fn format_record(record: &Record, origin: &[u8]) -> Vec<u8> {
             out.extend_from_slice(&relativize(rdata, origin));
         }
         Record::TYPE_TXT => {
-            out.push(b'"');
-            out.extend_from_slice(&php_std::string::addcslashes(rdata, b"\"\\"));
-            out.push(b'"');
+            // Character-strings hold at most 255 bytes (RFC 1035): longer
+            // rdata is split on raw bytes into quoted chunks joined by a space.
+            let chunks: Vec<&[u8]> = if rdata.len() <= Record::MAX_TXT_CHUNK {
+                vec![rdata]
+            } else {
+                rdata.chunks(Record::MAX_TXT_CHUNK).collect()
+            };
+            for (i, chunk) in chunks.into_iter().enumerate() {
+                if i > 0 {
+                    out.push(b' ');
+                }
+                out.push(b'"');
+                out.extend_from_slice(&php_std::string::addcslashes(chunk, b"\"\\"));
+                out.push(b'"');
+            }
         }
         _ => out.extend_from_slice(rdata),
     }

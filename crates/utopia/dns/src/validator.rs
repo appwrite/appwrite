@@ -238,8 +238,13 @@ impl DnsCheck {
     }
 }
 
-const FAILURE_REASON_QUERY: &str = "DNS query failed.";
 const FAILURE_REASON_INTERNAL: &str = "Internal error occurred.";
+
+/// Seconds per query; kept short because verification runs several
+/// queries per request.
+///
+/// PHP: `DNS::TIMEOUT`.
+const TIMEOUT: Duration = Duration::from_secs(3);
 
 impl Dns {
     /// The default resolver.
@@ -261,8 +266,9 @@ impl Dns {
 
     /// Checks `value` (a domain); `None` is what PHP calls a non-string value.
     ///
-    /// Fails with [`Error::Exception`] when the server is not an IP address,
-    /// and with `utopia_domains`' error for a `CAA` domain it cannot parse.
+    /// A server that is not an IP address, like any failed query, makes the
+    /// check invalid with the reason `DNS <type> query to <server> failed.`.
+    /// Fails with `utopia_domains`' error for a `CAA` domain it cannot parse.
     ///
     /// PHP: `isValid()`.
     pub async fn check(&self, value: Option<&str>) -> Result<DnsCheck, Error> {
@@ -279,15 +285,25 @@ impl Dns {
         }
     }
 
+    /// Queries the resolver for records of the validated type.
+    ///
+    /// PHP: `query()` (private).
+    async fn query(&self, value: &str) -> Result<Vec<Record>, Error> {
+        let client = Client::new(&self.server, self.port, TIMEOUT, false)?;
+        let response = client.query(&Message::query(Question::new(value, self.ty), None, true)).await?;
+        // Some DNS servers return all records, not only the type asked for,
+        // likely when no records of that type are found.
+        Ok(response.answers().iter().filter(|r| r.ty() == self.ty).cloned().collect())
+    }
+
     async fn check_once(&self, value: &str) -> Result<Step, Error> {
         let mut check = DnsCheck { value: value.to_owned(), ..DnsCheck::default() };
-        let client = Client::new(&self.server, self.port, Duration::from_secs(5), false)?;
-        let query = Message::query(Question::new(value, self.ty), None, true);
-        let answers = match client.query(&query).await {
-            Ok(response) => response.answers().iter().filter(|r| r.ty() == self.ty).cloned().collect::<Vec<Record>>(),
+        let answers = match self.query(value).await {
+            Ok(answers) => answers,
             Err(Error::Value(message)) => return Err(Error::Value(message)),
             Err(_) => {
-                check.reason = FAILURE_REASON_QUERY.to_owned();
+                let ty = Record::type_code_to_name(self.ty).map_or_else(|| self.ty.to_string(), str::to_owned);
+                check.reason = format!("DNS {ty} query to {} failed.", self.server);
                 return Ok(Step::Done(check));
             }
         };

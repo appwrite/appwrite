@@ -1224,6 +1224,7 @@ fn read(log: &Log) -> Json {
         "resource": log.resource(),
         "sdk": opt_str(log.sdk()),
         "sdkVersion": opt_str(log.sdk_version()),
+        "reason": opt_str(log.reason()),
         "osCode": opt_str(log.os_code()),
         "osName": opt_str(log.os_name()),
         "osVersion": opt_str(log.os_version()),

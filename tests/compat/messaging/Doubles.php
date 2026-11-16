@@ -20,6 +20,8 @@ use Utopia\Messaging\Adapter\Email\Sendgrid;
 use Utopia\Messaging\Adapter\Email\SES;
 use Utopia\Messaging\Adapter\Push\APNS;
 use Utopia\Messaging\Adapter\Push\FCM;
+use Utopia\Messaging\Adapter\Push\Mock as MockPush;
+use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Messaging\Adapter\SMS\Bird;
 use Utopia\Messaging\Adapter\SMS\Clickatell;
@@ -37,6 +39,7 @@ use Utopia\Messaging\Adapter\SMS\TextMagic;
 use Utopia\Messaging\Adapter\SMS\Twilio;
 use Utopia\Messaging\Adapter\SMS\Vonage;
 use Utopia\Messaging\Adapter\SMS\WhatsApp;
+use Utopia\Messaging\Messages\Email;
 use Utopia\Messaging\Messages\SMS;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Counter;
@@ -330,6 +333,11 @@ final class RoutedInforu extends Inforu
 }
 
 final class RoutedMockSMS extends MockSMS
+{
+    use Routed;
+}
+
+final class RoutedMockPush extends MockPush
 {
     use Routed;
 }
@@ -690,5 +698,46 @@ final class Normal
         $mime = (string) preg_replace('/^Date: [^\r\n]*/m', 'Date: <date>', $mime);
 
         return (string) preg_replace('/^Message-ID: <[0-9a-f]{32}@/m', 'Message-ID: <<id>@', $mime);
+    }
+}
+
+/**
+ * An email adapter answering with a canned response (or failing), the
+ * email twin of ScriptedSMS: what Adapter\Email adds to a send's telemetry.
+ */
+final class ScriptedEmail extends EmailAdapter
+{
+    /**
+     * @param array<string, mixed>|null $response
+     */
+    public function __construct(
+        private readonly string $name,
+        private readonly int $max,
+        private readonly ?array $response,
+        private readonly ?string $error,
+    ) {
+        parent::__construct();
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function getMaxMessagesPerRequest(): int
+    {
+        return $this->max;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function process(Email $message): array
+    {
+        if ($this->error !== null) {
+            throw new \Exception($this->error);
+        }
+
+        return $this->response ?? ['deliveredTo' => 0, 'type' => 'email', 'results' => []];
     }
 }

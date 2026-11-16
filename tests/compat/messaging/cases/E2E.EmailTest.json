@@ -337,7 +337,8 @@
             "attachments": null,
             "html": false,
             "headers": [],
-            "origin": null
+            "origin": null,
+            "template": null
           }
         }
       ]
@@ -378,7 +379,8 @@
         "attachments": null,
         "html": false,
         "headers": [],
-        "origin": null
+        "origin": null,
+        "template": null
       }
     },
     {
@@ -417,7 +419,8 @@
         "attachments": null,
         "html": false,
         "headers": [],
-        "origin": null
+        "origin": null,
+        "template": null
       }
     },
     {
