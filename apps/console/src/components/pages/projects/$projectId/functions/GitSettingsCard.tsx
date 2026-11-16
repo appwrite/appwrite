@@ -46,9 +46,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   const [disconnectDialogOpen, setDisconnectDialogOpen] = useState(false)
 
   // Form state
-  const [selectedBranch, setSelectedBranch] = useState(
-    func.providerBranch || '',
-  )
   const [selectedDir, setSelectedDir] = useState(
     func.providerRootDirectory || '',
   )
