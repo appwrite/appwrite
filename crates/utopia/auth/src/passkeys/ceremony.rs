@@ -226,27 +226,23 @@ fn given(value: Option<&Value>) -> String {
 
 const DENORMALIZERS: &str = "/usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer";
 
-#[derive(Clone, Copy)]
-enum Decoder {
-    Lenient,
-    NoPadding,
-}
-
-/// A response field, or the `TypeError` webauthn-lib's denormalizers raise when it is not a string.
-fn string_field<'a>(a: &'a Array, name: &str, decoder: Decoder, file: &str, line: u32) -> Result<&'a [u8], Vec<u8>> {
-    match get(a, name) {
-        Some(Value::Str(s)) => Ok(s),
-        other => {
-            let (func, param) = match decoder {
-                Decoder::Lenient => ("Webauthn\\Util\\Base64::decode", "$data"),
-                Decoder::NoPadding => ("ParagonIE\\ConstantTime\\Base64::decodeNoPadding", "$encodedString"),
-            };
-            Err(format!(
-                "{func}(): Argument #1 ({param}) must be of type string, {} given, called in {DENORMALIZERS}/{file}.php on line {line}",
-                given(other)
-            ).into())
+/// The members a response denormalizer requires, in its order: `Missing <key>`
+/// when absent, and a string otherwise.
+fn require_strings(a: &Array, keys: &[&str]) -> Result<(), Vec<u8>> {
+    for key in keys {
+        match get(a, key) {
+            None => return Err(format!("Missing {key}").into()),
+            Some(Value::Str(_)) => {}
+            Some(_) => return Err(format!("Invalid parameter \"{key}\". Shall be a string.").into()),
         }
     }
+    Ok(())
+}
+
+/// `AuthenticatorAssertionResponseDenormalizer::decodeBase64Url()`: strict
+/// base64url (`Base64UrlSafe::decode($s, true)`), a correct padding tolerated.
+fn decode_url(s: &[u8], member: &str) -> Result<Vec<u8>, Vec<u8>> {
+    b64_decode(s, true, true).map_err(|_| format!("Invalid parameter \"{member}\". Shall be base64url encoded.").into())
 }
 
 /// webauthn-lib's `Util\Base64::decode()`: base64url, else standard base64.
@@ -319,6 +315,8 @@ struct Options {
     algorithms: Vec<i64>,
     allow: Vec<Descriptor>,
     user_id: Vec<u8>,
+    /// `PublicKeyCredentialCreationOptions` (a registration).
+    creation: bool,
 }
 
 fn descriptors(data: &Array, name: &str) -> Result<Vec<Descriptor>, Vec<u8>> {
@@ -392,7 +390,7 @@ fn decode_state(state: &[u8], creation: bool) -> Result<Options, Error> {
                 Some(_) => return Err("authenticatorSelection".into()),
                 None => None,
             };
-            Ok(Options { challenge, rp_id, user_verification, algorithms, allow, user_id })
+            Ok(Options { challenge, rp_id, user_verification, algorithms, allow, user_id, creation })
         } else {
             let rp_id = match get_set(&data, "rpId") {
                 None => None,
@@ -404,7 +402,7 @@ fn decode_state(state: &[u8], creation: bool) -> Result<Options, Error> {
                 Some(Value::Str(uv)) => Some(uv.to_vec()),
                 Some(_) => return Err("userVerification".into()),
             };
-            Ok(Options { challenge, rp_id, user_verification, algorithms: vec![], allow, user_id: vec![] })
+            Ok(Options { challenge, rp_id, user_verification, algorithms: vec![], allow, user_id: vec![], creation })
         }
     };
     parse().map_err(|_| invalid())
@@ -629,8 +627,32 @@ impl ClientData {
                 .into());
             }
         };
+        if let Some(token_binding) = get_set(&data, "tokenBinding") {
+            check_token_binding(token_binding)?;
+        }
         Ok(ClientData { raw, kind: kind.to_vec(), challenge, origin: origin.to_vec(), top_origin, cross_origin })
     }
+}
+
+/// `CollectedClientData::checkTokenBinding()`: the reserved `tokenBinding`
+/// member, when sent, is a `TokenBinding` dictionary; its value is not used.
+fn check_token_binding(token_binding: &Value) -> Result<(), Vec<u8>> {
+    let Value::Array(token_binding) = token_binding else {
+        return Err("Invalid parameter \"tokenBinding\". Shall be an object.".into());
+    };
+    let status = string(token_binding, "status");
+    if !matches!(status, Some(b"present" | b"supported" | b"not-supported")) {
+        return Err(
+            "Invalid parameter \"tokenBinding.status\". Shall be \"present\", \"supported\" or \"not-supported\"."
+                .into(),
+        );
+    }
+    if status == Some(b"present".as_slice()) && string(token_binding, "id").is_none_or(<[u8]>::is_empty) {
+        return Err(
+            "Invalid parameter \"tokenBinding.id\". Shall be a non-empty string when the status is \"present\".".into(),
+        );
+    }
+    Ok(())
 }
 
 /// `AuthenticatorData`.
@@ -782,6 +804,9 @@ fn decode_credential(credential: &Array) -> Result<(Vec<u8>, Response), Error> {
         return Err(passkey("Invalid credential: missing \"response\"."));
     };
     let parse = || -> Result<(Vec<u8>, Response), Vec<u8>> {
+        if string(credential, "type") != Some(b"public-key".as_slice()) {
+            return Err("Invalid parameter \"type\". Shall be \"public-key\".".into());
+        }
         let id = decode_no_padding(string(credential, "id").unwrap_or_default())?;
         let raw_id = decode_any(string(credential, "rawId").unwrap_or_default())?;
         if !hash_equals(&id, &raw_id) {
@@ -789,8 +814,9 @@ fn decode_credential(credential: &Array) -> Result<(Vec<u8>, Response), Error> {
         }
         let response = if get(response, "attestationObject").is_some() {
             let file = "AuthenticatorAttestationResponseDenormalizer";
-            let client = decode_no_padding(string_field(response, "clientDataJSON", Decoder::NoPadding, file, 27)?)?;
-            let object = decode_any(string_field(response, "attestationObject", Decoder::Lenient, file, 28)?)?;
+            require_strings(response, &["clientDataJSON", "attestationObject"])?;
+            let client = decode_no_padding(string(response, "clientDataJSON").unwrap_or_default())?;
+            let object = decode_any(string(response, "attestationObject").unwrap_or_default())?;
             let client = ClientData::parse(client)?;
             let (fmt, auth) = attestation_object(&object)?;
             let transports = match get_set(response, "transports") {
@@ -798,7 +824,7 @@ fn decode_credential(credential: &Array) -> Result<(Vec<u8>, Response), Error> {
                 Some(t @ Value::Array(_)) => t.clone(),
                 Some(other) => {
                     return Err(format!(
-                        "Webauthn\\AuthenticatorAttestationResponse::create(): Argument #3 ($transports) must be of type array, {} given, called in {DENORMALIZERS}/{file}.php on line 45",
+                        "Webauthn\\AuthenticatorAttestationResponse::create(): Argument #3 ($transports) must be of type array, {} given, called in {DENORMALIZERS}/{file}.php on line 61",
                         given(Some(other))
                     ).into());
                 }
@@ -806,16 +832,17 @@ fn decode_credential(credential: &Array) -> Result<(Vec<u8>, Response), Error> {
             Response::Attestation { client, auth: AuthData::parse(auth)?, fmt, transports }
         } else if get(response, "signature").is_some() {
             let file = "AuthenticatorAssertionResponseDenormalizer";
-            let auth = decode_any(string_field(response, "authenticatorData", Decoder::Lenient, file, 28)?)?;
-            let signature = decode_any(string_field(response, "signature", Decoder::Lenient, file, 29)?)?;
-            let client = decode_no_padding(string_field(response, "clientDataJSON", Decoder::NoPadding, file, 30)?)?;
+            require_strings(response, &["authenticatorData", "signature", "clientDataJSON"])?;
+            let auth = decode_url(string(response, "authenticatorData").unwrap_or_default(), "authenticatorData")?;
+            let signature = decode_url(string(response, "signature").unwrap_or_default(), "signature")?;
+            let client = decode_no_padding(string(response, "clientDataJSON").unwrap_or_default())?;
             let user_handle = match get_set(response, "userHandle") {
                 None => None,
                 Some(Value::Str(h)) if h.is_empty() => Some(vec![]),
-                Some(Value::Str(h)) => Some(decode_any(h)?),
+                Some(Value::Str(h)) => Some(decode_url(h, "userHandle")?),
                 Some(other) => {
                     return Err(format!(
-                        "Webauthn\\Util\\Base64::decode(): Argument #1 ($data) must be of type string, {} given, called in {DENORMALIZERS}/{file}.php on line 33",
+                        "Webauthn\\Denormalizer\\{file}::decodeBase64Url(): Argument #1 ($encoded) must be of type string, {} given, called in {DENORMALIZERS}/{file}.php on line 49",
                         given(Some(other))
                     ).into());
                 }
@@ -1201,13 +1228,18 @@ impl Ceremony {
         if !key.verify(&signed, signature)? {
             return Err("Invalid signature.".into());
         }
+        // CheckBackupEligibilityIsUnchanged: the BE flag is fixed at creation.
+        if record.backup_eligible.is_some_and(|eligible| eligible != auth.has(FLAG_BE)) {
+            return Err("The backup eligibility flag does not match the value recorded for the credential.".into());
+        }
         if auth.sign_count != 0 || record.counter != 0 {
             Counter
                 .check(record.counter, record.backup_eligible, auth.sign_count)
                 .map_err(|e| e.message().into_owned())?;
         }
         record.counter = auth.sign_count;
-        record.backup_eligible = Some(auth.has(FLAG_BE));
+        // Recorded only when the record has none yet, as stored before the flag was tracked.
+        record.backup_eligible = record.backup_eligible.or(Some(auth.has(FLAG_BE)));
         record.backup_status = Some(auth.has(FLAG_BS));
         if record.uv_initialized == Some(false) {
             record.uv_initialized = Some(auth.has(FLAG_UV));
@@ -1220,6 +1252,11 @@ impl Ceremony {
         let client = response.client();
         if client.kind != b"webauthn.get" && client.kind != b"webauthn.create" {
             return Err("No client data collector found.".into());
+        }
+        // WebauthnAuthenticationCollector: the type of the ceremony the options were created for.
+        let expected: &[u8] = if options.creation { b"webauthn.create" } else { b"webauthn.get" };
+        if client.kind != expected {
+            return Err([b"The client data type is not \"".as_slice(), expected, b"\"."].concat());
         }
         if options.challenge.is_empty() || !hash_equals(&options.challenge, &client.challenge) {
             return Err("Invalid challenge.".into());

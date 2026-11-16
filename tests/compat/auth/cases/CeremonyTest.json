@@ -2369,7 +2369,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Auth\\Passkeys\\Exception",
-              "message": "Backup eligibility changed."
+              "message": "Credential verification failed: The backup eligibility flag does not match the value recorded for the credential."
             }
           }
         }
@@ -5184,7 +5184,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Auth\\Passkeys\\Exception",
-              "message": "Invalid credential: Webauthn\\Util\\Base64::decode(): Argument #1 ($data) must be of type string, null given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AuthenticatorAssertionResponseDenormalizer.php on line 28"
+              "message": "Invalid credential: Missing authenticatorData"
             }
           }
         },
@@ -5384,7 +5384,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Auth\\Passkeys\\Exception",
-              "message": "Invalid credential: Webauthn\\Util\\Base64::decode(): Argument #1 ($data) must be of type string, null given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AuthenticatorAssertionResponseDenormalizer.php on line 28"
+              "message": "Invalid credential: Missing authenticatorData"
             }
           }
         },
@@ -5407,7 +5407,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Auth\\Passkeys\\Exception",
-              "message": "Invalid credential: Webauthn\\Util\\Base64::decode(): Argument #1 ($data) must be of type string, int given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AuthenticatorAssertionResponseDenormalizer.php on line 28"
+              "message": "Invalid credential: Invalid parameter \"authenticatorData\". Shall be a string."
             }
           }
         },
@@ -5430,7 +5430,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Auth\\Passkeys\\Exception",
-              "message": "Invalid credential: ParagonIE\\ConstantTime\\Base64::decodeNoPadding(): Argument #1 ($encodedString) must be of type string, null given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AuthenticatorAssertionResponseDenormalizer.php on line 30"
+              "message": "Invalid credential: Missing clientDataJSON"
             }
           }
         },
@@ -5454,7 +5454,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Auth\\Passkeys\\Exception",
-              "message": "Invalid credential: ParagonIE\\ConstantTime\\Base64::decodeNoPadding(): Argument #1 ($encodedString) must be of type string, array given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AuthenticatorAssertionResponseDenormalizer.php on line 30"
+              "message": "Invalid credential: Invalid parameter \"clientDataJSON\". Shall be a string."
             }
           }
         },
@@ -5476,7 +5476,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Auth\\Passkeys\\Exception",
-              "message": "Invalid credential: ParagonIE\\ConstantTime\\Base64::decodeNoPadding(): Argument #1 ($encodedString) must be of type string, null given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AuthenticatorAttestationResponseDenormalizer.php on line 27"
+              "message": "Invalid credential: Missing clientDataJSON"
             }
           }
         },
@@ -5522,7 +5522,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Auth\\Passkeys\\Exception",
-              "message": "Invalid credential: Webauthn\\Util\\Base64::decode(): Argument #1 ($data) must be of type string, true given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AuthenticatorAttestationResponseDenormalizer.php on line 28"
+              "message": "Invalid credential: Invalid parameter \"attestationObject\". Shall be a string."
             }
           }
         },
@@ -5546,7 +5546,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Auth\\Passkeys\\Exception",
-              "message": "Invalid credential: Invalid parameter \"type\". Shall be a non-empty string."
+              "message": "Invalid credential: Invalid parameter \"signature\". Shall be base64url encoded."
             }
           }
         },
@@ -5570,7 +5570,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Auth\\Passkeys\\Exception",
-              "message": "Invalid credential: Out of range. Expected: 32, read: 2."
+              "message": "Invalid credential: Invalid parameter \"signature\". Shall be base64url encoded."
             }
           }
         },
@@ -5594,7 +5594,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Auth\\Passkeys\\Exception",
-              "message": "Invalid credential: Cannot assign string to property Webauthn\\CollectedClientData::$crossOrigin of type bool"
+              "message": "Invalid credential: Invalid parameter \"signature\". Shall be base64url encoded."
             }
           }
         },
@@ -5618,7 +5618,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Auth\\Passkeys\\Exception",
-              "message": "Invalid credential: Invalid parameter \"type\". Shall be a non-empty string."
+              "message": "Invalid credential: Invalid parameter \"signature\". Shall be base64url encoded."
             }
           }
         },
@@ -5642,7 +5642,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Auth\\Passkeys\\Exception",
-              "message": "Invalid credential: Webauthn\\CollectedClientData::create(): Argument #2 ($data) must be of type array, int given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/CollectedClientDataDenormalizer.php on line 27"
+              "message": "Invalid credential: Invalid parameter \"signature\". Shall be base64url encoded."
             }
           }
         },
@@ -5666,7 +5666,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Auth\\Passkeys\\Exception",
-              "message": "Invalid credential: decodeNoPadding() doesn't tolerate padding"
+              "message": "Invalid credential: Invalid parameter \"signature\". Shall be base64url encoded."
             }
           }
         },
@@ -5690,7 +5690,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Auth\\Passkeys\\Exception",
-              "message": "Invalid credential: sodium_base642bin(): Argument #1 ($string) must be a valid base64 string"
+              "message": "Invalid credential: Invalid parameter \"signature\". Shall be base64url encoded."
             }
           }
         },
@@ -5714,7 +5714,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Auth\\Passkeys\\Exception",
-              "message": "Invalid credential: sodium_base642bin(): Argument #1 ($string) must be a valid base64 string"
+              "message": "Invalid credential: Invalid parameter \"signature\". Shall be base64url encoded."
             }
           }
         },
@@ -5738,7 +5738,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Auth\\Passkeys\\Exception",
-              "message": "Invalid credential: Invalid parameter \"type\". Shall be a non-empty string."
+              "message": "Invalid credential: Invalid parameter \"signature\". Shall be base64url encoded."
             }
           }
         },
@@ -5948,7 +5948,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Auth\\Passkeys\\Exception",
-              "message": "Invalid credential: Webauthn\\Util\\Base64::decode(): Argument #1 ($data) must be of type string, int given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AuthenticatorAssertionResponseDenormalizer.php on line 33"
+              "message": "Invalid credential: Invalid parameter \"signature\". Shall be base64url encoded."
             }
           }
         },
@@ -5970,7 +5970,12 @@
               }
             }
           },
-          "expect": "ce7c4f52106d5f03ccda1154a0af16baa95d222e354ca62e5f32e5e53e8180a7"
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"signature\". Shall be base64url encoded."
+            }
+          }
         },
         {
           "op": "passkeys.identify",
@@ -5992,7 +5997,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Auth\\Passkeys\\Exception",
-              "message": "Invalid credential: Invalid authentication data. Presence of extra bytes."
+              "message": "Invalid credential: Invalid parameter \"signature\". Shall be base64url encoded."
             }
           }
         },
@@ -6016,7 +6021,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Auth\\Passkeys\\Exception",
-              "message": "Invalid credential: Cannot assign int to property Webauthn\\CollectedClientData::$topOrigin of type ?string"
+              "message": "Invalid credential: Invalid parameter \"signature\". Shall be base64url encoded."
             }
           }
         }
@@ -30428,6 +30433,3214 @@
               "counter": 0,
               "backupEligible": true,
               "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects malformed members when identifying",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "localhost",
+            "name": "Test",
+            "origins": [
+              "http://localhost:3000"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "",
+              "response": {
+                "signature": "eA"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"type\". Shall be \"public-key\"."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "Public-Key",
+              "response": {
+                "signature": "eA"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"type\". Shall be \"public-key\"."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key ",
+              "response": {
+                "signature": "eA"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"type\". Shall be \"public-key\"."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "password",
+              "response": {
+                "signature": "eA"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"type\". Shall be \"public-key\"."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "attestationObject": "x",
+                "clientDataJSON": 5
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"clientDataJSON\". Shall be a string."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "attestationObject": null,
+                "clientDataJSON": "e30"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"attestationObject\". Shall be a string."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "attestationObject": [],
+                "clientDataJSON": null
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"clientDataJSON\". Shall be a string."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": null,
+                "authenticatorData": "abc",
+                "clientDataJSON": "e30"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"signature\". Shall be a string."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "abc",
+                "clientDataJSON": 1.5
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"clientDataJSON\". Shall be a string."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "abc"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Missing clientDataJSON"
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "clientDataJSON": "e30"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Missing authenticatorData"
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "a+c",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"authenticatorData\". Shall be base64url encoded."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "a/c",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"authenticatorData\". Shall be base64url encoded."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "abd",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"authenticatorData\". Shall be base64url encoded."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "x",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"authenticatorData\". Shall be base64url encoded."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "eA=",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"authenticatorData\". Shall be base64url encoded."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "eA==",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Out of range. Expected: 32, read: 1."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "eA===",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"authenticatorData\". Shall be base64url encoded."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "e A",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"authenticatorData\". Shall be base64url encoded."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "eA\n",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"authenticatorData\". Shall be base64url encoded."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "=eA",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"authenticatorData\". Shall be base64url encoded."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Out of range. Expected: 32, read: 0."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "a+c",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"signature\". Shall be base64url encoded."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "a/c",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"signature\". Shall be base64url encoded."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "abd",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"signature\". Shall be base64url encoded."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "x",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"signature\". Shall be base64url encoded."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA=",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"signature\". Shall be base64url encoded."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA==",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ"
+              }
+            }
+          },
+          "expect": "ce7c4f52106d5f03ccda1154a0af16baa95d222e354ca62e5f32e5e53e8180a7"
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA===",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"signature\". Shall be base64url encoded."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "e A",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"signature\". Shall be base64url encoded."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA\n",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"signature\". Shall be base64url encoded."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "=eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"signature\". Shall be base64url encoded."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ"
+              }
+            }
+          },
+          "expect": "ce7c4f52106d5f03ccda1154a0af16baa95d222e354ca62e5f32e5e53e8180a7"
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ",
+                "userHandle": 5
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\Denormalizer\\AuthenticatorAssertionResponseDenormalizer::decodeBase64Url(): Argument #1 ($encoded) must be of type string, int given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AuthenticatorAssertionResponseDenormalizer.php on line 49"
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ",
+                "userHandle": false
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\Denormalizer\\AuthenticatorAssertionResponseDenormalizer::decodeBase64Url(): Argument #1 ($encoded) must be of type string, false given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AuthenticatorAssertionResponseDenormalizer.php on line 49"
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ",
+                "userHandle": true
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\Denormalizer\\AuthenticatorAssertionResponseDenormalizer::decodeBase64Url(): Argument #1 ($encoded) must be of type string, true given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AuthenticatorAssertionResponseDenormalizer.php on line 49"
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ",
+                "userHandle": []
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\Denormalizer\\AuthenticatorAssertionResponseDenormalizer::decodeBase64Url(): Argument #1 ($encoded) must be of type string, array given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AuthenticatorAssertionResponseDenormalizer.php on line 49"
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ",
+                "userHandle": {
+                  "a": 1
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\Denormalizer\\AuthenticatorAssertionResponseDenormalizer::decodeBase64Url(): Argument #1 ($encoded) must be of type string, array given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AuthenticatorAssertionResponseDenormalizer.php on line 49"
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ",
+                "userHandle": 1.5
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\Denormalizer\\AuthenticatorAssertionResponseDenormalizer::decodeBase64Url(): Argument #1 ($encoded) must be of type string, float given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AuthenticatorAssertionResponseDenormalizer.php on line 49"
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ",
+                "userHandle": ""
+              }
+            }
+          },
+          "expect": "ce7c4f52106d5f03ccda1154a0af16baa95d222e354ca62e5f32e5e53e8180a7"
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ",
+                "userHandle": "YWJj"
+              }
+            }
+          },
+          "expect": "ce7c4f52106d5f03ccda1154a0af16baa95d222e354ca62e5f32e5e53e8180a7"
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ",
+                "userHandle": "YWJj=="
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"userHandle\". Shall be base64url encoded."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ",
+                "userHandle": "YWJj="
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"userHandle\". Shall be base64url encoded."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ",
+                "userHandle": "a+c"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"userHandle\". Shall be base64url encoded."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ",
+                "userHandle": "abd"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"userHandle\". Shall be base64url encoded."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ",
+                "userHandle": "x"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"userHandle\". Shall be base64url encoded."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "abc",
+                "clientDataJSON": "e30"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"type\". Shall be a non-empty string."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "e30"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"type\". Shall be a non-empty string."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "abc",
+                "clientDataJSON": "WzFd"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"type\". Shall be a non-empty string."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "WzFd"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"type\". Shall be a non-empty string."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "abc",
+                "clientDataJSON": "MQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\CollectedClientData::create(): Argument #2 ($data) must be of type array, int given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/CollectedClientDataDenormalizer.php on line 27"
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "MQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\CollectedClientData::create(): Argument #2 ($data) must be of type array, int given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/CollectedClientDataDenormalizer.php on line 27"
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "abc",
+                "clientDataJSON": "e30="
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: decodeNoPadding() doesn't tolerate padding"
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "e30="
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: decodeNoPadding() doesn't tolerate padding"
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "abc",
+                "clientDataJSON": "e3"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: sodium_base642bin(): Argument #1 ($string) must be a valid base64 string"
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "e3"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: sodium_base642bin(): Argument #1 ($string) must be a valid base64 string"
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "abc",
+                "clientDataJSON": "e3!x"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: sodium_base642bin(): Argument #1 ($string) must be a valid base64 string"
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "e3!x"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: sodium_base642bin(): Argument #1 ($string) must be a valid base64 string"
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "abc",
+                "clientDataJSON": "eyJ0eXBlIjoiIn0"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"type\". Shall be a non-empty string."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoiIn0"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"type\". Shall be a non-empty string."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "abc",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJjcm9zc09yaWdpbiI6InllcyJ9"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Cannot assign string to property Webauthn\\CollectedClientData::$crossOrigin of type bool"
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJjcm9zc09yaWdpbiI6InllcyJ9"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Cannot assign string to property Webauthn\\CollectedClientData::$crossOrigin of type bool"
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "abc",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJ0b3BPcmlnaW4iOjF9"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Cannot assign int to property Webauthn\\CollectedClientData::$topOrigin of type ?string"
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJ0b3BPcmlnaW4iOjF9"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Cannot assign int to property Webauthn\\CollectedClientData::$topOrigin of type ?string"
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQAAA",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"authenticatorData\". Shall be base64url encoded."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "response": {
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ",
+                "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUSZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2NdAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A",
+                "transports": "usb"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AuthenticatorAttestationResponse::create(): Argument #3 ($transports) must be of type array, string given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AuthenticatorAttestationResponseDenormalizer.php on line 61"
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "response": {
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ",
+                "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUSZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2NdAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A",
+                "transports": 5
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Webauthn\\AuthenticatorAttestationResponse::create(): Argument #3 ($transports) must be of type array, int given, called in /usr/src/code/vendor/web-auth/webauthn-lib/src/Denormalizer/AuthenticatorAttestationResponseDenormalizer.php on line 61"
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "response": {
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ",
+                "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUSZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2NdAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A"
+              }
+            }
+          },
+          "expect": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57"
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "response": {
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EifQ",
+                "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUSZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2NdAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A",
+                "transports": [
+                  "usb"
+                ]
+              }
+            }
+          },
+          "expect": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57"
+        }
+      ]
+    },
+    {
+      "name": "client data token binding",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "localhost",
+            "name": "Test",
+            "origins": [
+              "http://localhost:3000"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJ0b2tlbkJpbmRpbmciOm51bGx9"
+              }
+            }
+          },
+          "expect": "ce7c4f52106d5f03ccda1154a0af16baa95d222e354ca62e5f32e5e53e8180a7"
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJ0b2tlbkJpbmRpbmciOiJ4In0"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"tokenBinding\". Shall be an object."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJ0b2tlbkJpbmRpbmciOjV9"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"tokenBinding\". Shall be an object."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJ0b2tlbkJpbmRpbmciOnRydWV9"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"tokenBinding\". Shall be an object."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJ0b2tlbkJpbmRpbmciOltdfQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"tokenBinding.status\". Shall be \"present\", \"supported\" or \"not-supported\"."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJ0b2tlbkJpbmRpbmciOlsicHJlc2VudCJdfQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"tokenBinding.status\". Shall be \"present\", \"supported\" or \"not-supported\"."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJ0b2tlbkJpbmRpbmciOnt9fQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"tokenBinding.status\". Shall be \"present\", \"supported\" or \"not-supported\"."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJ0b2tlbkJpbmRpbmciOnsic3RhdHVzIjpudWxsfX0"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"tokenBinding.status\". Shall be \"present\", \"supported\" or \"not-supported\"."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJ0b2tlbkJpbmRpbmciOnsic3RhdHVzIjoiYWJzZW50In19"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"tokenBinding.status\". Shall be \"present\", \"supported\" or \"not-supported\"."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJ0b2tlbkJpbmRpbmciOnsic3RhdHVzIjoiUHJlc2VudCJ9fQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"tokenBinding.status\". Shall be \"present\", \"supported\" or \"not-supported\"."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJ0b2tlbkJpbmRpbmciOnsic3RhdHVzIjoxfX0"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"tokenBinding.status\". Shall be \"present\", \"supported\" or \"not-supported\"."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJ0b2tlbkJpbmRpbmciOnsic3RhdHVzIjoic3VwcG9ydGVkIn19"
+              }
+            }
+          },
+          "expect": "ce7c4f52106d5f03ccda1154a0af16baa95d222e354ca62e5f32e5e53e8180a7"
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJ0b2tlbkJpbmRpbmciOnsic3RhdHVzIjoibm90LXN1cHBvcnRlZCJ9fQ"
+              }
+            }
+          },
+          "expect": "ce7c4f52106d5f03ccda1154a0af16baa95d222e354ca62e5f32e5e53e8180a7"
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJ0b2tlbkJpbmRpbmciOnsic3RhdHVzIjoicHJlc2VudCJ9fQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"tokenBinding.id\". Shall be a non-empty string when the status is \"present\"."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJ0b2tlbkJpbmRpbmciOnsic3RhdHVzIjoicHJlc2VudCIsImlkIjoiIn19"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"tokenBinding.id\". Shall be a non-empty string when the status is \"present\"."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJ0b2tlbkJpbmRpbmciOnsic3RhdHVzIjoicHJlc2VudCIsImlkIjo1fX0"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"tokenBinding.id\". Shall be a non-empty string when the status is \"present\"."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJ0b2tlbkJpbmRpbmciOnsic3RhdHVzIjoicHJlc2VudCIsImlkIjoiYWJjIn19"
+              }
+            }
+          },
+          "expect": "ce7c4f52106d5f03ccda1154a0af16baa95d222e354ca62e5f32e5e53e8180a7"
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJ0b2tlbkJpbmRpbmciOnsic3RhdHVzIjoic3VwcG9ydGVkIiwiaWQiOjV9fQ"
+              }
+            }
+          },
+          "expect": "ce7c4f52106d5f03ccda1154a0af16baa95d222e354ca62e5f32e5e53e8180a7"
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJ0b2tlbkJpbmRpbmciOnsiaWQiOiJhYmMifX0"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"tokenBinding.status\". Shall be \"present\", \"supported\" or \"not-supported\"."
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJ0b3BPcmlnaW4iOjEsInRva2VuQmluZGluZyI6IngifQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Cannot assign int to property Webauthn\\CollectedClientData::$topOrigin of type ?string"
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "signature": "eA",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJjcm9zc09yaWdpbiI6InllcyIsInRva2VuQmluZGluZyI6IngifQ"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Cannot assign string to property Webauthn\\CollectedClientData::$crossOrigin of type bool"
+            }
+          }
+        },
+        {
+          "op": "passkeys.identify",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "credential": {
+              "id": "abc",
+              "rawId": "abc",
+              "type": "public-key",
+              "response": {
+                "attestationObject": "oA",
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2EiLCJ0b2tlbkJpbmRpbmciOiJ4In0"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Invalid credential: Invalid parameter \"tokenBinding\". Shall be an object."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "client data type matches the ceremony",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "localhost",
+            "name": "Test",
+            "origins": [
+              "http://localhost:3000"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.register",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "name": "user@example.com",
+            "display_name": "User"
+          },
+          "bind": "ch",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rp": {
+                "id": "localhost",
+                "name": "Test"
+              },
+              "user": {
+                "id": "<masked>",
+                "name": "user@example.com",
+                "displayName": "User"
+              },
+              "pubKeyCredParams": [
+                {
+                  "type": "public-key",
+                  "alg": -7
+                },
+                {
+                  "type": "public-key",
+                  "alg": -257
+                }
+              ],
+              "authenticatorSelection": {
+                "requireResidentKey": true,
+                "userVerification": "required",
+                "residentKey": "required"
+              },
+              "attestation": "none",
+              "excludeCredentials": []
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.verify_registration",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "ch",
+              "path": "/state"
+            },
+            "credential": {
+              "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "response": {
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2xvY2FsaG9zdDozMDAwIn0",
+                "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUSZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2NdAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Credential verification failed: The client data type is not \"webauthn.create\"."
+            }
+          }
+        },
+        {
+          "op": "passkeys.verify_registration",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "ch",
+              "path": "/state"
+            },
+            "credential": {
+              "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "response": {
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2xvY2FsaG9zdDozMDAwIn0",
+                "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUSZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2NdAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Credential verification failed: Invalid challenge."
+            }
+          }
+        },
+        {
+          "op": "passkeys.verify_registration",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "ch",
+              "path": "/state"
+            },
+            "credential": {
+              "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "response": {
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4ub3RoZXIiLCJjaGFsbGVuZ2UiOiJhYmMiLCJvcmlnaW4iOiJodHRwOi8vbG9jYWxob3N0OjMwMDAifQ",
+                "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUSZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2NdAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Credential verification failed: No client data collector found."
+            }
+          }
+        },
+        {
+          "op": "passkeys.authenticate",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            }
+          },
+          "bind": "au",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rpId": "localhost",
+              "allowCredentials": [],
+              "userVerification": "required"
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.verify_authentication",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "au",
+              "path": "/state"
+            },
+            "credential": {
+              "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "response": {
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2xvY2FsaG9zdDozMDAwIn0",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "signature": "eA"
+              }
+            },
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "dXNlcg",
+              "counter": 0,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Credential verification failed: The client data type is not \"webauthn.get\"."
+            }
+          }
+        },
+        {
+          "op": "passkeys.verify_authentication",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "au",
+              "path": "/state"
+            },
+            "credential": {
+              "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "response": {
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiYWJjIiwib3JpZ2luIjoiaHR0cDovL2xvY2FsaG9zdDozMDAwIn0",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "signature": "eA"
+              }
+            },
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "dXNlcg",
+              "counter": 0,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Credential verification failed: Invalid challenge."
+            }
+          }
+        },
+        {
+          "op": "passkeys.verify_authentication",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "au",
+              "path": "/state"
+            },
+            "credential": {
+              "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "response": {
+                "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4ub3RoZXIiLCJjaGFsbGVuZ2UiOiJhYmMiLCJvcmlnaW4iOiJodHRwOi8vbG9jYWxob3N0OjMwMDAifQ",
+                "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+                "signature": "eA"
+              }
+            },
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "dXNlcg",
+              "counter": 0,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Credential verification failed: No client data collector found."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "backup eligibility is recorded once (null)",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "localhost",
+            "name": "Test",
+            "origins": [
+              "http://localhost:3000"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.authenticate",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            }
+          },
+          "bind": "au0",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rpId": "localhost",
+              "allowCredentials": [],
+              "userVerification": "required"
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "authenticate",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "au0",
+              "path": "/options"
+            },
+            "origin": "http://localhost:3000",
+            "counter": 1,
+            "backup_eligible": true
+          },
+          "bind": "a0",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MdAAAAAQ",
+              "signature": "<masked>",
+              "userHandle": "<masked>"
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_authentication",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "au0",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "a0"
+            },
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "dXNlcg",
+              "counter": 0,
+              "backupEligible": null,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          },
+          "bind": "s0",
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 1,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        },
+        {
+          "op": "passkeys.authenticate",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            }
+          },
+          "bind": "au1",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rpId": "localhost",
+              "allowCredentials": [],
+              "userVerification": "required"
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "authenticate",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "au1",
+              "path": "/options"
+            },
+            "origin": "http://localhost:3000",
+            "counter": 2,
+            "backup_eligible": false
+          },
+          "bind": "a1",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAg",
+              "signature": "<masked>",
+              "userHandle": "<masked>"
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_authentication",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "au1",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "a1"
+            },
+            "record": {
+              "$ref": "s0",
+              "path": "/record"
+            }
+          },
+          "bind": "s1",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Credential verification failed: The backup eligibility flag does not match the value recorded for the credential."
+            }
+          }
+        },
+        {
+          "op": "passkeys.authenticate",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            }
+          },
+          "bind": "au2",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rpId": "localhost",
+              "allowCredentials": [],
+              "userVerification": "required"
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "authenticate",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "au2",
+              "path": "/options"
+            },
+            "origin": "http://localhost:3000",
+            "counter": 3,
+            "backup_eligible": true
+          },
+          "bind": "a2",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MdAAAAAw",
+              "signature": "<masked>",
+              "userHandle": "<masked>"
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_authentication",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "au2",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "a2"
+            },
+            "record": {
+              "$ref": "s0",
+              "path": "/record"
+            }
+          },
+          "bind": "s2",
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 3,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        },
+        {
+          "op": "passkeys.authenticate",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            }
+          },
+          "bind": "au9",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rpId": "localhost",
+              "allowCredentials": [],
+              "userVerification": "required"
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "authenticate",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "au9",
+              "path": "/options"
+            },
+            "origin": "http://localhost:3000",
+            "counter": 1,
+            "backup_eligible": false
+          },
+          "bind": "a9",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+              "signature": "<masked>",
+              "userHandle": "<masked>"
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_authentication",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "au9",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "a9"
+            },
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "dXNlcg",
+              "counter": 0,
+              "backupEligible": null,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          },
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 1,
+              "backupEligible": false,
+              "backupStatus": false,
+              "uvInitialized": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "backup eligibility is recorded once (absent)",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "localhost",
+            "name": "Test",
+            "origins": [
+              "http://localhost:3000"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.authenticate",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            }
+          },
+          "bind": "au0",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rpId": "localhost",
+              "allowCredentials": [],
+              "userVerification": "required"
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "authenticate",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "au0",
+              "path": "/options"
+            },
+            "origin": "http://localhost:3000",
+            "counter": 1,
+            "backup_eligible": true
+          },
+          "bind": "a0",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MdAAAAAQ",
+              "signature": "<masked>",
+              "userHandle": "<masked>"
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_authentication",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "au0",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "a0"
+            },
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "dXNlcg",
+              "counter": 0,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          },
+          "bind": "s0",
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 1,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        },
+        {
+          "op": "passkeys.authenticate",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            }
+          },
+          "bind": "au1",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rpId": "localhost",
+              "allowCredentials": [],
+              "userVerification": "required"
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "authenticate",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "au1",
+              "path": "/options"
+            },
+            "origin": "http://localhost:3000",
+            "counter": 2,
+            "backup_eligible": false
+          },
+          "bind": "a1",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAg",
+              "signature": "<masked>",
+              "userHandle": "<masked>"
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_authentication",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "au1",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "a1"
+            },
+            "record": {
+              "$ref": "s0",
+              "path": "/record"
+            }
+          },
+          "bind": "s1",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Credential verification failed: The backup eligibility flag does not match the value recorded for the credential."
+            }
+          }
+        },
+        {
+          "op": "passkeys.authenticate",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            }
+          },
+          "bind": "au2",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rpId": "localhost",
+              "allowCredentials": [],
+              "userVerification": "required"
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "authenticate",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "au2",
+              "path": "/options"
+            },
+            "origin": "http://localhost:3000",
+            "counter": 3,
+            "backup_eligible": true
+          },
+          "bind": "a2",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MdAAAAAw",
+              "signature": "<masked>",
+              "userHandle": "<masked>"
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_authentication",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "au2",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "a2"
+            },
+            "record": {
+              "$ref": "s0",
+              "path": "/record"
+            }
+          },
+          "bind": "s2",
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 3,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        },
+        {
+          "op": "passkeys.authenticate",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            }
+          },
+          "bind": "au9",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rpId": "localhost",
+              "allowCredentials": [],
+              "userVerification": "required"
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "authenticate",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "au9",
+              "path": "/options"
+            },
+            "origin": "http://localhost:3000",
+            "counter": 1,
+            "backup_eligible": false
+          },
+          "bind": "a9",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "authenticatorData": "SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAQ",
+              "signature": "<masked>",
+              "userHandle": "<masked>"
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_authentication",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "au9",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "a9"
+            },
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "dXNlcg",
+              "counter": 0,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          },
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 1,
+              "backupEligible": false,
+              "backupStatus": false,
               "uvInitialized": true
             }
           }
