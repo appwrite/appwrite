@@ -191,9 +191,9 @@ impl Tenant {
     }
 }
 
-/// `/^[a-zA-Z_][a-zA-Z0-9_.]*$/` (where `$` also matches before a final newline).
+/// `/^[a-zA-Z_][a-zA-Z0-9_.]*$/D`.
 pub(crate) fn is_column_name(name: &str) -> bool {
-    let bytes = name.strip_suffix('\n').unwrap_or(name).as_bytes();
+    let bytes = name.as_bytes();
     match bytes.split_first() {
         Some((first, rest)) => {
             (first.is_ascii_alphabetic() || *first == b'_')

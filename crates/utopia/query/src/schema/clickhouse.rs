@@ -81,7 +81,7 @@ impl ClickHouse {
                 .algorithm_args
                 .iter()
                 .map(|arg| match arg {
-                    Value::Str(s) => format!("'{}'", String::from_utf8_lossy(s.as_bytes()).replace('\'', "''")),
+                    Value::Str(s) => names::literal(&String::from_utf8_lossy(s.as_bytes())),
                     Value::Float(f) => names::fixed(*f),
                     other => crate::value::to_php_string(other),
                 })
@@ -112,7 +112,7 @@ impl ClickHouse {
                 format!("{name}({})", self.quote_literal(args.first().map(String::as_str).unwrap_or_default())?)
             }
             Engine::ReplicatedMergeTree => {
-                let at = |i: usize| args.get(i).map(|a| a.replace('\'', "''")).unwrap_or_default();
+                let at = |i: usize| args.get(i).map(|a| names::escape(a)).unwrap_or_default();
                 format!("{name}('{}', '{}')", at(0), at(1))
             }
             Engine::Memory | Engine::Log | Engine::TinyLog | Engine::StripeLog => name.to_owned(),

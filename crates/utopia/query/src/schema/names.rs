@@ -1,12 +1,7 @@
 //! What the schema builders accept as names, types and settings, and how
 //! they write string literals. Each check is the PHP pattern it ports,
-//! scanned natively: PHP's `$` (without `/D`) also matches before a final
-//! newline, so a value ending in one `"\n"` passes when the rest does.
-
-/// The value without one final newline, as PCRE's `$` sees its end.
-fn body(s: &str) -> &str {
-    s.strip_suffix('\n').unwrap_or(s)
-}
+//! scanned natively. Every pattern has `/D`, so `$` matches only at the
+//! very end: a value ending in `"\n"` is refused.
 
 fn word_byte(b: u8) -> bool {
     b.is_ascii_alphanumeric() || b == b'_'
@@ -23,25 +18,25 @@ fn space(b: u8) -> bool {
 
 /// `/^[A-Za-z_][A-Za-z0-9_]*$/`.
 pub(crate) fn is_identifier(s: &str) -> bool {
-    let b = body(s).as_bytes();
+    let b = s.as_bytes();
     !b.is_empty() && word_start(b[0]) && b[1..].iter().all(|&c| word_byte(c))
 }
 
 /// `/^[A-Za-z0-9_]+$/`.
 pub(crate) fn is_word(s: &str) -> bool {
-    let b = body(s).as_bytes();
+    let b = s.as_bytes();
     !b.is_empty() && b.iter().all(|&c| word_byte(c))
 }
 
 /// `/^[A-Za-z0-9_.]+$/`.
 pub(crate) fn is_dotted_word(s: &str) -> bool {
-    let b = body(s).as_bytes();
+    let b = s.as_bytes();
     !b.is_empty() && b.iter().all(|&c| word_byte(c) || c == b'.')
 }
 
 /// `/^[A-Za-z0-9_.\-+\/]+$/`.
 pub(crate) fn is_setting_value(s: &str) -> bool {
-    let b = body(s).as_bytes();
+    let b = s.as_bytes();
     !b.is_empty() && b.iter().all(|&c| word_byte(c) || matches!(c, b'.' | b'-' | b'+' | b'/'))
 }
 
@@ -81,8 +76,7 @@ pub(crate) fn is_type_declaration(s: &str) -> bool {
             return false;
         }
     }
-    let b = s.as_bytes();
-    full(b) || (b.last() == Some(&b'\n') && full(&b[..b.len() - 1]))
+    full(s.as_bytes())
 }
 
 /// A column name made safe for an index name: every run of characters
@@ -133,8 +127,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn patterns_allow_a_final_newline() {
-        assert!(is_identifier("abc\n"));
+    fn patterns_refuse_a_final_newline() {
+        assert!(!is_identifier("abc\n"));
         assert!(!is_identifier("abc\n\n"));
         assert!(!is_identifier("1abc"));
         assert!(is_word("utf8mb4_bin"));
@@ -148,7 +142,7 @@ mod tests {
         assert!(is_type_declaration("DOUBLE PRECISION"));
         assert!(is_type_declaration("DECIMAL(10, 2)"));
         assert!(is_type_declaration("VARCHAR (255)"));
-        assert!(is_type_declaration("INT\n"));
+        assert!(!is_type_declaration("INT\n"));
         assert!(!is_type_declaration("INT "));
         assert!(!is_type_declaration("INT()"));
         assert!(!is_type_declaration("INT; DROP"));

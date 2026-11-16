@@ -4,7 +4,7 @@
 //!
 //! PHP: `Utopia\Query\Builder\SQLite`.
 
-use crate::builder::core::{Builder, Dialect};
+use crate::builder::core::{Builder, Dialect, quote_bytes};
 use crate::builder::feature::{
     BitwiseAggregates, ConditionalAggregates, CrossJoins, InsertOrIgnore, Json, Locking, RawSql, StatisticalAggregates,
     StringAggregates, Transactions, Upsert, UpsertSelect,
@@ -70,6 +70,10 @@ fn json_each_conditions(b: &mut Builder<SqliteDialect>, attribute: &str, values:
 
 impl Dialect for SqliteDialect {
     const CLASS: &'static str = "Utopia\\Query\\Builder\\SQLite";
+
+    fn quote_string(value: &[u8]) -> Vec<u8> {
+        quote_bytes(value, false)
+    }
 
     fn compile_random(_b: &Builder<Self>) -> String {
         "RANDOM()".into()
