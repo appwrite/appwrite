@@ -102,7 +102,7 @@ final class GitAction
         self::deployment($status, $vcs, $commitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform);
 
         $commentId = $deployment->getAttribute('providerCommentId', '');
-        if (empty($commentId)) {
+        if (empty($commentId) || $resource->getAttribute('providerComments', true) === false) {
             return;
         }
 
