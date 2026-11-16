@@ -44,7 +44,6 @@
             "Utopia\\DI\\": "packages/di/src",
             "Utopia\\DNS\\": "packages/dns/src",
             "Utopia\\Domains\\": "packages/domains/src",
-            "Utopia\\DSN\\": "packages/dsn/src",
             "Utopia\\Emails\\": "packages/emails/src",
             "Utopia\\Http\\": "packages/http/src",
             "Utopia\\Image\\": "packages/image/src",
@@ -103,7 +102,6 @@
             "Utopia\\DI\\Tests\\": "packages/di/tests",
             "Utopia\\DNS\\Tests\\": "packages/dns/tests",
             "Utopia\\Domains\\Tests\\": "packages/domains/tests",
-            "Utopia\\DSN\\Tests\\": "packages/dsn/tests",
             "Utopia\\Emails\\Tests\\": "packages/emails/tests",
             "Utopia\\Http\\Tests\\": "packages/http/tests",
             "Utopia\\Image\\Tests\\": "packages/image/tests",
@@ -207,6 +205,7 @@
         }
     },
     "replace": {
+        "utopia-php/dsn": "*",
         "utopia-php/abuse": "*",
         "utopia-php/agents": "*",
         "utopia-php/audit": "*",
@@ -225,7 +224,6 @@
         "utopia-php/di": "*",
         "utopia-php/dns": "*",
         "utopia-php/domains": "*",
-        "utopia-php/dsn": "*",
         "utopia-php/emails": "*",
         "utopia-php/http": "*",
         "utopia-php/image": "*",

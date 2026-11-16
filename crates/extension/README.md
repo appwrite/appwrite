@@ -20,12 +20,14 @@ and libclang at build time.
 
 ## Switching a class on
 
-`Utopia\Image\Canvas` and `Utopia\Image\Font` are always registered: `packages/image` has no PHP
-implementation of them. Every other class is registered only when `_APP_EXTENSION_LIBRARIES` names
-its package. Otherwise Composer loads the package's PHP class as before:
+`Utopia\Image\Canvas`, `Utopia\Image\Font` and `Utopia\DSN\DSN` are always registered: they have
+no PHP implementation. Their signatures are in `stubs/` and `packages/image/stubs/` for PHPStan,
+which runs without the extension. Every other class is registered only when
+`_APP_EXTENSION_LIBRARIES` names its package. Otherwise Composer loads the package's PHP class as
+before:
 
 ```sh
-_APP_EXTENSION_LIBRARIES=dsn,locale,user-agent,domains   # Utopia\DSN\DSN, Utopia\Locale\Locale, Utopia\UserAgent\UserAgent and Utopia\Domains\Domain from the extension
+_APP_EXTENSION_LIBRARIES=locale,user-agent,domains   # Utopia\Locale\Locale, Utopia\UserAgent\UserAgent and Utopia\Domains\Domain from the extension
 ```
 
 The extension reads it once, when PHP loads the module, so changing it takes a restart and no
@@ -37,21 +39,29 @@ every library it runs `packages/<name>/tests` on the extension and diffs the cor
 implementations, first one library at a time, then with all of them on. A new library needs only
 its `enabled()` call, its corpus and its package tests; there is no CI step to add.
 
+Once a library has run on the extension everywhere, its PHP package is removed: the class is
+registered unconditionally, `tests/<name>.expected.jsonl` holds the output of the PHP class it
+replaced, and `run.sh` diffs the corpus against that file. The package stays published at its last
+release for projects outside this repository; the root `composer.json` keeps `replace`-ing it so it
+is never installed here.
+
 ## Utopia\DSN\DSN
 
-Over `crates/utopia/dsn` (`_APP_EXTENSION_LIBRARIES=dsn`). It declares the PHP class's protected
-properties, so `==`, `var_dump()` and `(array)` see what they see in PHP. The DSN, `from()`'s user
-and its password are `#[\SensitiveParameter]`, as in PHP, so exception traces never hold them.
+Over `crates/utopia/dsn`, always registered. Its PHP package, `packages/dsn`, was removed once the
+extension had served it in every Cloud region (appwrite-labs/cloud#7503); `utopia-php/dsn` stays
+published at 1.0.0 for other projects. It declares the PHP class's protected properties, so `==`,
+`var_dump()` and `(array)` see what they saw in PHP. The DSN, `from()`'s user and its password are
+`#[\SensitiveParameter]`, as in PHP, so exception traces never hold them.
 
 `crates/extension/tests/dsn.php` prints a corpus of results (#14308's `tests/compat/dsn` cases, plus
-edge cases) that must be identical on both implementations, and asserts these known differences on
-the extension:
+edge cases) that must match `dsn.expected.jsonl`, the output of the PHP class, and asserts the known
+differences from it:
 
-- A DSN that is not UTF-8 is refused as malformed, where `parse_url` takes any bytes.
-- `from()` takes string parameters; PHP also round-trips a list value (`['a' => ['b', 'c']]`).
+- A DSN that is not UTF-8 is refused as malformed, where `parse_url` took any bytes.
+- `from()` takes string parameters; PHP also round-tripped a list value (`['a' => ['b', 'c']]`).
 - `serialize()` refuses the object, as it does every class with Rust state.
-- PHP fills the protected `$params` with the parsed query on the first `getParam()`, which then
-  shows in `var_dump()` and `==`; it stays `null` here.
+- PHP filled the protected `$params` with the parsed query on the first `getParam()`, which then
+  showed in `var_dump()` and `==`; it stays `null` here.
 - A user, password or path that URL-decodes to bytes that are not UTF-8 (`%FF`) reads exactly
   through its getter and lossily through `var_dump()`.
 
@@ -136,7 +146,7 @@ times one implementation; `run.py` runs it on both, alternating, and prints the 
 
 ```sh
 cargo build --release -p utopia-extension
-python3 crates/extension/bench/run.py crates/extension/bench/dsn.php . target/release/libutopia.so 5
+python3 crates/extension/bench/run.py crates/extension/bench/locale.php . target/release/libutopia.so 5
 ```
 
 ## Utopia\Image\Canvas and Utopia\Image\Font

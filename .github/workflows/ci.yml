@@ -371,7 +371,7 @@ jobs:
             fi
           fi
           CHANGED=$(echo "$CHANGED" | tr ' ' '\n' | sort -u \
-            | while read -r package; do [ -d "packages/$package" ] && echo "$package"; done)
+            | while read -r package; do if [ -d "packages/$package" ]; then echo "$package"; fi; done)
 
           # docs-only change: no packages to test
           if [ -z "$CHANGED" ]; then
