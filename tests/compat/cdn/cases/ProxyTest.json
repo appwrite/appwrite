@@ -395,6 +395,19 @@
           }
         },
         {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "proxy"
+            },
+            "method": "getCertificateExpiry",
+            "domain": "Custom.EXAMPLE.com"
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
           "op": "log.take",
           "args": {
             "log": {
@@ -402,7 +415,8 @@
             }
           },
           "expect": [
-            "custom:issue:custom.example.com"
+            "custom:issue:custom.example.com",
+            "custom:expiry:custom.example.com"
           ]
         }
       ]
@@ -847,6 +861,212 @@
             "c:issue:x.example.com",
             "d:issue:x.example.com"
           ]
+        }
+      ]
+    },
+    {
+      "name": "reports the earliest expiry",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "calls",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "recorder",
+            "name": "app",
+            "log": {
+              "$ref": "calls"
+            },
+            "status": "issued",
+            "instant": false,
+            "renew": false,
+            "expiry": "2027-03-01 00:00:00.000"
+          },
+          "bind": "app",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "recorder",
+            "name": "cloudflare",
+            "log": {
+              "$ref": "calls"
+            },
+            "status": "unknown",
+            "instant": true,
+            "renew": false
+          },
+          "bind": "unknown",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "recorder",
+            "name": "fastly",
+            "log": {
+              "$ref": "calls"
+            },
+            "status": "issued",
+            "instant": false,
+            "renew": false,
+            "expiry": "2027-02-01 00:00:00.000"
+          },
+          "bind": "later",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "recorder",
+            "name": "cloudfront",
+            "log": {
+              "$ref": "calls"
+            },
+            "status": "issued",
+            "instant": false,
+            "renew": false,
+            "expiry": "2027-01-15 00:00:00.000"
+          },
+          "bind": "sooner",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "proxy",
+            "app_domain": "app.example.com",
+            "app": {
+              "$ref": "app"
+            },
+            "network": {
+              "$ref": "app"
+            },
+            "custom": [
+              {
+                "$ref": "unknown"
+              },
+              {
+                "$ref": "later"
+              },
+              {
+                "$ref": "sooner"
+              }
+            ]
+          },
+          "bind": "proxy",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "proxy"
+            },
+            "method": "getCertificateExpiry",
+            "domain": "custom.example.com"
+          },
+          "expect": {
+            "result": "2027-01-15 00:00:00.000"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "proxy"
+            },
+            "method": "getCertificateExpiry",
+            "domain": "app.example.com"
+          },
+          "expect": {
+            "result": "2027-03-01 00:00:00.000"
+          }
+        }
+      ]
+    },
+    {
+      "name": "expiry is unknown when no provider can tell",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "calls",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "recorder",
+            "name": "cloudflare",
+            "log": {
+              "$ref": "calls"
+            },
+            "status": "unknown",
+            "instant": true,
+            "renew": false
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "proxy",
+            "app_domain": "app.example.com",
+            "app": {
+              "$ref": "p"
+            },
+            "network": {
+              "$ref": "p"
+            },
+            "custom": [
+              {
+                "$ref": "p"
+              },
+              {
+                "$ref": "p"
+              }
+            ]
+          },
+          "bind": "proxy",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "proxy"
+            },
+            "method": "getCertificateExpiry",
+            "domain": "custom.example.com"
+          },
+          "expect": {
+            "result": null
+          }
         }
       ]
     }

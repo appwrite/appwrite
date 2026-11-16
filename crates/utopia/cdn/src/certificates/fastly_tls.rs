@@ -21,6 +21,13 @@ const SOURCE: &str = "/usr/src/code/packages/cdn/src/Certificates/Provider/Fastl
 /// PHP: `FastlyTls::RENEWAL_DEADLINE` (private).
 const RENEWAL_DEADLINE: i64 = 7 * 24 * 60 * 60;
 
+/// Seconds a subscription has to stay processing without an order before it
+/// counts as abandoned, so the moment between an order completing and Fastly
+/// reporting it issued is never mistaken for one.
+///
+/// PHP: `FastlyTls::ABANDONED_AFTER` (private).
+const ABANDONED_AFTER: i64 = 60 * 60;
+
 /// Certificates as Fastly TLS subscriptions, issued by a certificate
 /// authority Fastly works with (`certainly` by default).
 ///
@@ -166,8 +173,13 @@ impl<C: Client> FastlyTls<C> {
     pub(crate) async fn issue(&self, domain: &str) -> Result<Option<String>, Error> {
         let subscription = match self.find_subscription(domain).await? {
             None => self.create_subscription(domain).await?,
-            Some(subscription) if state(&subscription.resource, 50)? == Status::Failed => {
-                let id = argument(api::get(&subscription.resource, "id"), "retrySubscription", "subscriptionId", 51)?;
+            // Fastly refuses to retry a processing subscription, so start a new one.
+            Some(subscription) if is_abandoned(&subscription) => {
+                self.delete_subscription(&subscription).await?;
+                self.create_subscription(domain).await?
+            }
+            Some(subscription) if state(&subscription.resource, 61)? == Status::Failed || is_lapsed(&subscription) => {
+                let id = argument(api::get(&subscription.resource, "id"), "retrySubscription", "subscriptionId", 62)?;
                 self.retry_subscription(&id).await?
             }
             Some(subscription) => subscription,
@@ -183,7 +195,13 @@ impl<C: Client> FastlyTls<C> {
         let Some(subscription) = self.find_subscription(domain).await? else {
             return Ok(Status::Unknown);
         };
-        let status = state(&subscription.resource, 78)?;
+        // An expired certificate Fastly stopped renewing is not issued,
+        // whatever its state says.
+        let status = if is_abandoned(&subscription) || is_lapsed(&subscription) {
+            Status::Failed
+        } else {
+            state(&subscription.resource, 92)?
+        };
         if status == Status::Issued && !self.ensure_activated(&subscription, domain).await? {
             return Ok(Status::Processing);
         }
@@ -211,10 +229,27 @@ impl<C: Client> FastlyTls<C> {
         Err(Error::certificate(describe(domain, status, &challenges, &warnings), status, challenges, warnings))
     }
 
+    /// The newest certificate's expiry (`Y-m-d H:i:s.v`, UTC): the one
+    /// activated for the domain once Fastly has renewed it, and the old one,
+    /// until it is replaced, while a renewal is stuck.
+    ///
+    /// PHP: `getCertificateExpiry($domain, $domainType)`.
+    pub(crate) async fn expiry(&self, domain: &str) -> Result<Option<String>, Error> {
+        let Some(subscription) = self.find_subscription(domain).await? else {
+            return Ok(None);
+        };
+        let Some((_, expiry)) = newest_certificate(&subscription) else {
+            return Ok(None);
+        };
+        format_date(expiry).map(Some)
+    }
+
     pub(crate) async fn renew_required(&self, domain: &str) -> Result<bool, Error> {
         match self.find_subscription(domain).await? {
             None => Ok(true),
-            Some(subscription) => Ok(state(&subscription.resource, 122)? == Status::Failed),
+            Some(subscription) => Ok(is_abandoned(&subscription)
+                || is_lapsed(&subscription)
+                || state(&subscription.resource, 154)? == Status::Failed),
         }
     }
 
@@ -222,8 +257,16 @@ impl<C: Client> FastlyTls<C> {
         let Some(subscription) = self.find_subscription(domain).await? else {
             return Ok(());
         };
+        self.delete_subscription(&subscription).await
+    }
+
+    async fn delete_subscription(&self, subscription: &Subscription) -> Result<(), Error> {
         let id = api::get(&subscription.resource, "id").map(api::php_string).unwrap_or_default();
         let reply = self.request("DELETE", &format!("/tls/subscriptions/{id}?force=true"), None).await?;
+        // Already gone, for example removed by another worker at the same time.
+        if reply.status == 404 {
+            return Ok(());
+        }
         if !reply.is_2xx() {
             return Err(Error::Runtime(format_error("Failed to delete Fastly TLS subscription", &reply)));
         }
@@ -625,6 +668,11 @@ fn describe(domain: &str, status: Status, challenges: &[Challenge], warnings: &[
         message.push_str(warning.trim_end_matches('.'));
         message.push('.');
     }
+    // No ownership record helps while a CAA record refuses the certificate authority.
+    if warnings.iter().any(|w| w.contains("CAA")) {
+        message.push_str(" Update the CAA record, then retry.");
+        return message;
+    }
     match challenges {
         [] => {}
         [challenge] => message.push_str(&format!(
@@ -642,6 +690,60 @@ fn describe(domain: &str, status: Status, challenges: &[Challenge], warnings: &[
         }
     }
     message
+}
+
+/// The subscription's `attributes`, when they are an array.
+fn attributes(subscription: &Subscription) -> Option<&Value> {
+    api::get(&subscription.resource, "attributes").filter(|a| matches!(a, Value::Array(_)))
+}
+
+/// Whether `has_active_order` is exactly `false`.
+fn has_no_order(attributes: &Value) -> bool {
+    matches!(api::get(attributes, "has_active_order"), Some(Value::Bool(false)))
+}
+
+/// Whether the newest certificate has expired with no order left to renew
+/// it. Fastly then still reports the subscription issued, holding the old
+/// certificate.
+///
+/// PHP: `isLapsed($subscription)` (private).
+fn is_lapsed(subscription: &Subscription) -> bool {
+    if !attributes(subscription).is_some_and(has_no_order) {
+        return false;
+    }
+    newest_certificate(subscription).is_some_and(|(_, expiry)| expiry <= php_std::datetime::time())
+}
+
+/// Whether Fastly's order for a subscription that never issued a
+/// certificate has ended. Fastly then keeps it processing for good.
+///
+/// PHP: `isAbandoned($subscription)` (private).
+fn is_abandoned(subscription: &Subscription) -> bool {
+    let Some(attributes) = attributes(subscription) else {
+        return false;
+    };
+    let processing = match api::get(attributes, "state") {
+        Some(Value::Str(s)) => s.as_bytes().eq_ignore_ascii_case(b"processing"),
+        _ => false,
+    };
+    if !processing || !has_no_order(attributes) {
+        return false;
+    }
+    if !references(&subscription.resource, "tls_certificates").is_empty() {
+        return false;
+    }
+    let updated = match api::get(attributes, "updated_at") {
+        Some(Value::Str(s)) => timestamp(&String::from_utf8_lossy(s.as_bytes())),
+        _ => None,
+    };
+    updated.is_some_and(|updated| php_std::datetime::time() - updated >= ABANDONED_AFTER)
+}
+
+/// `new \DateTimeImmutable('@' . $timestamp)->format('Y-m-d H:i:s.v')`.
+fn format_date(timestamp: i64) -> Result<String, Error> {
+    let date = DateTime::new(format!("@{timestamp}").as_bytes(), None, &TzInfo::utc())
+        .map_err(|e| Error::Date { class: e.php_class(), message: e.message().into_owned() })?;
+    Ok(String::from_utf8_lossy(&date.format(b"Y-m-d H:i:s.v")).into_owned())
 }
 
 /// `strtotime()` of a date string, in UTC (PHP's `date.timezone`).
@@ -676,16 +778,14 @@ fn newest_certificate(subscription: &Subscription) -> Option<(String, i64)> {
 /// renewal deadline before the newest certificate expires, by when Fastly
 /// should have renewed it; when the subscription is issued or renewing.
 fn extract_renew_date(subscription: &Subscription) -> Result<Option<String>, Error> {
-    let state = state(&subscription.resource, 656)?;
+    let state = state(&subscription.resource, 756)?;
     if state != Status::Issued && state != Status::Renewing {
         return Ok(None);
     }
     let Some((_, expiry)) = newest_certificate(subscription) else {
         return Ok(None);
     };
-    let date = DateTime::new(format!("@{}", expiry - RENEWAL_DEADLINE).as_bytes(), None, &TzInfo::utc())
-        .map_err(|e| Error::Date { class: e.php_class(), message: e.message().into_owned() })?;
-    Ok(Some(String::from_utf8_lossy(&date.format(b"Y-m-d H:i:s.v")).into_owned()))
+    format_date(expiry - RENEWAL_DEADLINE).map(Some)
 }
 
 fn format_error(prefix: &str, reply: &Reply) -> String {
@@ -727,7 +827,18 @@ impl<C: Client> Provider for FastlyTls<C> {
         Box::pin(self.status(domain))
     }
 
-    /// Whether there is no subscription, or it failed.
+    /// The newest certificate's expiry; `None` without a subscription or a
+    /// certificate.
+    fn certificate_expiry<'a>(
+        &'a self,
+        domain: &'a str,
+        _domain_type: Option<&'a str>,
+    ) -> BoxFuture<'a, Result<Option<String>, Error>> {
+        Box::pin(self.expiry(domain))
+    }
+
+    /// Whether there is no subscription, it failed, its order was abandoned,
+    /// or its certificate lapsed with no order to renew it.
     fn is_renew_required<'a>(
         &'a self,
         domain: &'a str,

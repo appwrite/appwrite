@@ -3,6 +3,8 @@
 use std::fmt;
 use std::sync::Arc;
 
+use php_std::types::Value;
+
 use crate::certificates::{Provider, Status};
 use crate::{BoxFuture, Error, domain};
 
@@ -119,6 +121,24 @@ impl Proxy {
         Ok(Status::Issued)
     }
 
+    async fn expiry(&self, domain: &str, domain_type: Option<&str>) -> Result<Option<String>, Error> {
+        let domain = domain::validate(domain)?;
+        let mut expiry: Option<String> = None;
+        for provider in self.select(&domain, domain_type)? {
+            let Some(candidate) = provider.certificate_expiry(&domain, domain_type).await? else {
+                continue;
+            };
+            // PHP's `$candidate < $expiry` on two strings.
+            let sooner = expiry
+                .as_deref()
+                .is_none_or(|current| <Value>::from(candidate.as_str()).compare(&<Value>::from(current)) < 0);
+            if sooner {
+                expiry = Some(candidate);
+            }
+        }
+        Ok(expiry)
+    }
+
     async fn renew(&self, domain: &str, domain_type: Option<&str>) -> Result<bool, Error> {
         let domain = domain::validate(domain)?;
         for provider in self.select(&domain, domain_type)? {
@@ -177,6 +197,17 @@ impl Provider for Proxy {
         domain_type: Option<&'a str>,
     ) -> BoxFuture<'a, Result<Status, Error>> {
         Box::pin(self.status(domain, domain_type))
+    }
+
+    /// The earliest expiry among the responsible providers, so a
+    /// certificate about to lapse on one is not hidden by a newer one on
+    /// another.
+    fn certificate_expiry<'a>(
+        &'a self,
+        domain: &'a str,
+        domain_type: Option<&'a str>,
+    ) -> BoxFuture<'a, Result<Option<String>, Error>> {
+        Box::pin(self.expiry(domain, domain_type))
     }
 
     /// Whether any responsible provider needs a renewal.

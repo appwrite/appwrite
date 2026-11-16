@@ -343,6 +343,7 @@ final class Adapter implements Base, Benchmarks
                     $a['instant'] ?? false,
                     $a['date'] ?? null,
                     $a['renew'] ?? false,
+                    $a['expiry'] ?? null,
                 ), 'transport' => null];
             case 'proxy':
                 return ['provider' => new Proxy($a['app_domain'], $handle($a['app']), $handle($a['network']), array_map($handle, $a['custom'] ?? [])), 'transport' => null];
@@ -383,6 +384,7 @@ final class Adapter implements Base, Benchmarks
             'issueCertificate' => $provider->issueCertificate($a['cert_name'] ?? 'cert', $a['domain'], $type),
             'isInstantGeneration' => $provider->isInstantGeneration($a['domain'], $type),
             'getCertificateStatus' => $provider->getCertificateStatus($a['domain'], $type),
+            'getCertificateExpiry' => $provider->getCertificateExpiry($a['domain'], $type),
             'isRenewRequired' => $provider->isRenewRequired($a['domain'], $type),
             'deleteCertificate' => $provider->deleteCertificate($a['domain'], $type),
             'getValidationTokens' => $provider instanceof CloudFrontCertificates

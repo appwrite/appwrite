@@ -13782,7 +13782,7 @@
           "$value": "Builder\\Statement",
           "id": 6,
           "props": {
-            "query": "SELECT * FROM `customers` WHERE `active` IN (?) AND EXISTS (SELECT * FROM `orders` WHERE orders.customer_id = customers.id AND `total` > ?)",
+            "query": "SELECT * FROM `customers` WHERE `active` IN (?) AND EXISTS (SELECT * FROM `orders` WHERE (orders.customer_id = customers.id) AND `total` > ?)",
             "bindings": [
               1,
               500
@@ -13791,7 +13791,7 @@
             "namedBindings": null
           }
         },
-        "SELECT * FROM `customers` WHERE `active` IN (?) AND EXISTS (SELECT * FROM `orders` WHERE orders.customer_id = customers.id AND `total` > ?)",
+        "SELECT * FROM `customers` WHERE `active` IN (?) AND EXISTS (SELECT * FROM `orders` WHERE (orders.customer_id = customers.id) AND `total` > ?)",
         [
           1,
           500
@@ -13800,8 +13800,8 @@
           1,
           500
         ],
-        "SELECT * FROM `customers` WHERE `active` IN (?) AND EXISTS (SELECT * FROM `orders` WHERE orders.customer_id = customers.id AND `total` > ?)",
-        "SELECT * FROM `customers` WHERE `active` IN (?) AND EXISTS (SELECT * FROM `orders` WHERE orders.customer_id = customers.id AND `total` > ?)"
+        "SELECT * FROM `customers` WHERE `active` IN (?) AND EXISTS (SELECT * FROM `orders` WHERE (orders.customer_id = customers.id) AND `total` > ?)",
+        "SELECT * FROM `customers` WHERE `active` IN (?) AND EXISTS (SELECT * FROM `orders` WHERE (orders.customer_id = customers.id) AND `total` > ?)"
       ]
     },
     {
@@ -25700,7 +25700,7 @@
           "$value": "Builder\\Statement",
           "id": 2,
           "props": {
-            "query": "SELECT * FROM `users` WHERE a = ?",
+            "query": "SELECT * FROM `users` WHERE (a = ?)",
             "bindings": [
               1
             ],
@@ -25708,15 +25708,15 @@
             "namedBindings": null
           }
         },
-        "SELECT * FROM `users` WHERE a = ?",
+        "SELECT * FROM `users` WHERE (a = ?)",
         [
           1
         ],
         [
           1
         ],
-        "SELECT * FROM `users` WHERE a = ?",
-        "SELECT * FROM `users` WHERE a = ?",
+        "SELECT * FROM `users` WHERE (a = ?)",
+        "SELECT * FROM `users` WHERE (a = ?)",
         [
           1
         ]
@@ -25863,7 +25863,7 @@
           "$value": "Builder\\Statement",
           "id": 3,
           "props": {
-            "query": "SELECT * FROM `users` WHERE `b` IN (?) AND a = ?",
+            "query": "SELECT * FROM `users` WHERE `b` IN (?) AND (a = ?)",
             "bindings": [
               2,
               1
@@ -25872,7 +25872,7 @@
             "namedBindings": null
           }
         },
-        "SELECT * FROM `users` WHERE `b` IN (?) AND a = ?",
+        "SELECT * FROM `users` WHERE `b` IN (?) AND (a = ?)",
         [
           2,
           1
@@ -25881,8 +25881,8 @@
           2,
           1
         ],
-        "SELECT * FROM `users` WHERE `b` IN (?) AND a = ?",
-        "SELECT * FROM `users` WHERE `b` IN (?) AND a = ?",
+        "SELECT * FROM `users` WHERE `b` IN (?) AND (a = ?)",
+        "SELECT * FROM `users` WHERE `b` IN (?) AND (a = ?)",
         [
           2,
           1
