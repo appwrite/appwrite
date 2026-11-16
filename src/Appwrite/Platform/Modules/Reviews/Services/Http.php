@@ -9,6 +9,7 @@ use Appwrite\Platform\Modules\Reviews\Http\Repositories\Learnings\XList as ListR
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Pulls\Findings\Status\Update as UpdatePullFindingsStatus;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Pulls\Findings\XList as ListPullFindings;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Pulls\Reviews\XList as ListPullReviews;
+use Appwrite\Platform\Modules\Reviews\Http\Repositories\Strength\Update as UpdateRepositoryStrength;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Tokens\Create as CreateRepositoryToken;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Usage\Create as CreateRepositoryUsage;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\XList as ListRepositories;
@@ -29,6 +30,7 @@ class Http extends Service
 
         $this->addAction(CreateRepository::getName(), new CreateRepository());
         $this->addAction(ListRepositories::getName(), new ListRepositories());
+        $this->addAction(UpdateRepositoryStrength::getName(), new UpdateRepositoryStrength());
         $this->addAction(DeleteRepository::getName(), new DeleteRepository());
 
         $this->addAction(ListReviews::getName(), new ListReviews());

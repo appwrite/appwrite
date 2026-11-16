@@ -2523,6 +2523,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3a3b425286980a367278453f3b6d28cdcb134b574e5a35824a6ff5eebad50bb6"
 
 [[package]]
+name = "utopia-domains"
+version = "0.1.0"
+dependencies = [
+ "php-std",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "utopia-dsn"
 version = "0.1.0"
 dependencies = [
@@ -2537,9 +2545,11 @@ dependencies = [
  "ext-php-rs",
  "foldhash",
  "php-std",
+ "utopia-domains",
  "utopia-dsn",
  "utopia-image",
  "utopia-locale",
+ "utopia-user-agent",
 ]
 
 [[package]]
@@ -2570,6 +2580,15 @@ dependencies = [
  "php-std",
  "serde_json",
  "thiserror 2.0.21",
+]
+
+[[package]]
+name = "utopia-user-agent"
+version = "0.1.0"
+dependencies = [
+ "aho-corasick",
+ "memchr",
+ "php-std",
 ]
 
 [[package]]

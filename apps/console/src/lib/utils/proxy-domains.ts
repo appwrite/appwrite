@@ -73,6 +73,104 @@ export function isValidDomain(domain: string): boolean {
   return DOMAIN_REGEX.test(normalized)
 }
 
+type DomainFormatError =
+  | { code: 'url'; suggestion: string | null }
+  | { code: 'wildcard' }
+  | { code: 'trailing-dot' }
+  | { code: 'spaces' }
+  | { code: 'invalid' }
+
+function looksLikeUrl(value: string): boolean {
+  return value.includes('://') || value.includes('/')
+}
+
+/** Hostname of a pasted URL, without a trailing dot, or null when it has none. */
+function bareHost(value: string): string | null {
+  try {
+    const url =
+      value.includes('://') || value.startsWith('//')
+        ? new URL(value.startsWith('//') ? `https:${value}` : value)
+        : new URL(`https://${value}`)
+    let host = url.hostname.toLowerCase()
+    while (host.endsWith('.')) host = host.slice(0, -1)
+    return host || null
+  } catch {
+    return null
+  }
+}
+
+function hasWhitespace(value: string): boolean {
+  return (
+    value.includes(' ') ||
+    value.includes('\t') ||
+    value.includes('\n') ||
+    value.includes('\r')
+  )
+}
+
+/**
+ * Why a custom domain is rejected, or null when it is empty or acceptable.
+ * Acceptance stays `isValidDomain`, so uppercase is still valid (callers
+ * lowercase it on save) and a wildcard or a trailing dot stays rejected,
+ * matching Utopia's Domain validator.
+ */
+function getDomainFormatError(value: string): DomainFormatError | null {
+  const trimmed = value.trim()
+  if (!trimmed || isValidDomain(trimmed)) return null
+
+  if (looksLikeUrl(trimmed)) {
+    const host = bareHost(trimmed)
+    if (host?.includes('*') || (!host && trimmed.includes('*'))) {
+      return { code: 'wildcard' }
+    }
+    if (host && isValidDomain(host)) return { code: 'url', suggestion: host }
+    return { code: 'url', suggestion: null }
+  }
+
+  if (trimmed.includes('*')) return { code: 'wildcard' }
+  if (hasWhitespace(trimmed)) return { code: 'spaces' }
+  if (trimmed.endsWith('.')) return { code: 'trailing-dot' }
+  return { code: 'invalid' }
+}
+
+function domainFormatErrorMessage(
+  error: DomainFormatError,
+  t: (text: string) => string,
+): string {
+  switch (error.code) {
+    case 'url':
+      return error.suggestion
+        ? `${t('Enter the hostname only:')} ${error.suggestion}`
+        : t('Enter the hostname only, without https:// or a path.')
+    case 'wildcard':
+      return t('Wildcard domains are not supported. Enter a specific hostname.')
+    case 'trailing-dot':
+      return t('Remove the trailing dot.')
+    case 'spaces':
+      return t('Remove the spaces.')
+    case 'invalid':
+      return t('Please enter a valid domain')
+  }
+}
+
+/**
+ * Inline error for a custom-domain field.
+ *
+ * A non-empty invalid value is reported as it changes, so Add stays disabled
+ * with the reason in view. Blur (`touched`) reports an empty field. Callers
+ * still trim and lowercase a valid value before saving.
+ */
+export function domainFieldError(
+  value: string,
+  touched: boolean,
+  t: (text: string) => string = (text) => text,
+): string | null {
+  if (!value.trim()) return touched ? t('Required') : null
+  const error = getDomainFormatError(value)
+  if (!error) return null
+  return domainFormatErrorMessage(error, t)
+}
+
 /**
  * Get apex/root domain from a full domain (e.g. api.example.com → example.com)
  */
@@ -114,7 +212,8 @@ export function getVerificationMethods(input: {
   const apex = getRecordName(input.domain) === '@'
   const methods: VerificationMethod[] = []
   if (input.cname && !apex) methods.push('cname')
-  if (input.cloud && input.nameservers.length > 0) methods.push('nameservers')
+  if (input.cloud && apex && input.nameservers.length > 0)
+    methods.push('nameservers')
   if (input.a && (!input.cloud || apex)) methods.push('a')
   if (input.aaaa && (!input.cloud || apex)) methods.push('aaaa')
   if (input.cname && apex) methods.push('cname')
@@ -176,6 +275,54 @@ export function isCloud(): boolean {
 }
 
 /**
+ * Zones Appwrite serves itself. A hostname in one of these is not the
+ * organization's to register. Regional zones from console variables are
+ * passed in alongside these, so the check holds when the variables fail to
+ * load and still picks up any other zone they carry.
+ */
+const APPWRITE_SERVED_ZONES = [
+  'appwrite.network',
+  'appwrite.run',
+  'appwrite.site',
+  'appwrite.global',
+]
+
+export function isAppwriteServedDomain(
+  domain: string,
+  extraZones: readonly string[] = [],
+): boolean {
+  const normalized = domain.trim().toLowerCase()
+  if (!normalized) return false
+  return [...APPWRITE_SERVED_ZONES, ...extraZones].some(
+    (zone) =>
+      !!zone && (normalized === zone || normalized.endsWith(`.${zone}`)),
+  )
+}
+
+/**
+ * Whether adding this hostname would register a new organization apex while
+ * the organization is already at its Cloud domain cap. A subdomain of an apex
+ * the organization already has does not POST, and neither does a zone
+ * Appwrite serves. Unknown membership does not block: the create still runs,
+ * and the 402 toast stays the fallback.
+ */
+export function blocksNewOrganizationApex(input: {
+  cloud: boolean
+  atLimit: boolean
+  domain: string
+  extraZones?: readonly string[]
+  /** False once the apex lookup confirms it is missing. Null while unknown. */
+  apexRegistered: boolean | null
+}): boolean {
+  if (!input.cloud || !input.atLimit) return false
+  const normalized = input.domain.trim().toLowerCase()
+  if (!isValidDomain(normalized)) return false
+  if (isAppwriteServedDomain(normalized, input.extraZones)) return false
+  if (!getApexDomain(normalized)) return false
+  return input.apexRegistered === false
+}
+
+/**
  * Ensure apex domain exists in organization (Cloud only).
  * Call before creating proxy rules for custom domains.
  * Ignores domain_already_exists and domain_owned_by_different_organization
@@ -192,32 +339,19 @@ export async function ensureApexDomainInOrganization(
   // server's isAppwriteOwned holds. Cloud's zones are listed so the check holds
   // when the variables fail to load, and the variables, which carry only the
   // first sites and functions zone of the project's region, add any other.
-  const owned = [
-    'appwrite.network',
-    'appwrite.run',
-    'appwrite.site',
-    'appwrite.global',
-  ]
+  const extraZones: string[] = []
   try {
     const variables = await queryClient.fetchQuery(
       consoleVariablesQueryOptions(options?.region),
     )
-    owned.push(
+    extraZones.push(
       variables._APP_DOMAIN_SITES ?? '',
       variables._APP_DOMAIN_FUNCTIONS ?? '',
     )
   } catch {
     // Without the variables, still register a custom domain.
   }
-  const normalized = domain.trim().toLowerCase()
-  if (
-    owned.some(
-      (zone) =>
-        !!zone && (normalized === zone || normalized.endsWith(`.${zone}`)),
-    )
-  ) {
-    return
-  }
+  if (isAppwriteServedDomain(domain, extraZones)) return
 
   const apex = getApexDomain(domain)
   if (!apex) return
@@ -249,4 +383,10 @@ export async function ensureApexDomainInOrganization(
     if (e?.type === 'domain_owned_by_different_organization') return
     throw err
   }
+
+  // The add wizards read this list with refetchOnMount: false. Without a
+  // refresh, a subdomain of the apex just created still looks over the cap.
+  await queryClient.invalidateQueries({
+    queryKey: ['domains', 'organization', teamId],
+  })
 }

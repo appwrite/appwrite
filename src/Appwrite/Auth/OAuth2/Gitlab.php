@@ -31,6 +31,7 @@ class Gitlab extends OAuth2
      * Existing GitLab applications must allow these scopes. openid and email
      * are what /oauth/userinfo uses for the primary address. read_user remains
      * for grants issued before those scopes existed.
+     * VCS installs override this with setScopes().
      *
      * @var array
      */
@@ -46,6 +47,22 @@ class Gitlab extends OAuth2
     public function getName(): string
     {
         return 'gitlab';
+    }
+
+    /**
+     * Replaces every scope, including ones passed to the constructor.
+     *
+     * @param array<int, string> $scopes
+     */
+    public function setScopes(array $scopes): self
+    {
+        $this->scopes = [];
+
+        foreach ($scopes as $scope) {
+            $this->addScope($scope);
+        }
+
+        return $this;
     }
 
     /**

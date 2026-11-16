@@ -31,11 +31,36 @@ export const DOMAIN_SEARCH_PRELOAD_AHEAD = 20
 /** IntersectionObserver margin so prices load before cards enter the viewport. */
 export const DOMAIN_SEARCH_VISIBLE_ROOT_MARGIN = '480px'
 
+const DOMAIN_SEARCH_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789.-'
+
 export function normalizeDomainSearchInput(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9.-]/g, '')
+  let host = value.trim().toLowerCase()
+  const schemeEnd = host.indexOf('://')
+  if (schemeEnd >= 0) host = host.slice(schemeEnd + 3)
+  for (const separator of ['/', '?', '#', ':']) {
+    const index = host.indexOf(separator)
+    if (index >= 0) host = host.slice(0, index)
+  }
+  if (host.startsWith('www.')) host = host.slice(4)
+
+  let normalized = ''
+  for (const char of host) {
+    if (DOMAIN_SEARCH_CHARS.includes(char)) normalized += char
+  }
+  return normalized
+}
+
+/**
+ * Whether a normalized search can name a domain: every label is non-empty and
+ * does not start or end with a hyphen. A trailing dot is allowed while typing.
+ */
+export function isValidDomainSearch(normalizedSearch: string): boolean {
+  const labels = normalizedSearch.split('.')
+  if (labels.length > 1 && labels[labels.length - 1] === '') labels.pop()
+  return labels.every(
+    (label) =>
+      label.length > 0 && !label.startsWith('-') && !label.endsWith('-'),
+  )
 }
 
 export function parseDomainBaseName(normalizedSearch: string): string {
@@ -172,9 +197,15 @@ export function useDomainSearch(
     return exactTld ? [exactTld] : ['com', 'dev', 'app', 'io']
   }, [baseName, normalizedSearch])
 
+  const isValidSearch = useMemo(
+    () => isValidDomainSearch(normalizedSearch),
+    [normalizedSearch],
+  )
+
   const showSuggestions =
-    baseName.length >= 2 ||
-    (baseName.length === 1 && normalizedSearch.includes('.'))
+    isValidSearch &&
+    (baseName.length >= 2 ||
+      (baseName.length === 1 && normalizedSearch.includes('.')))
 
   const displayOrderTlds = useMemo(() => {
     if (!baseName || !showSuggestions) return []
@@ -330,6 +361,7 @@ export function useDomainSearch(
     isRetrying,
     showSuggestions,
     hasContent: searchValue.trim().length > 0,
+    isInvalid: searchValue.trim().length > 0 && !isValidSearch,
     baseName,
     addRequestedTld,
   }

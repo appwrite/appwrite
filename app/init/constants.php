@@ -147,6 +147,8 @@ const APP_STORAGE_SITES = '/storage/sites';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
 const APP_STORAGE_CACHE = '/storage/cache';
+const APP_STORAGE_VIDEOS = '/storage/videos'; // Durable transcoded output: renditions, captions, thumbnail timelines
+const APP_STORAGE_VIDEOS_TMP = '/storage/videos-tmp'; // Scratch: source download + ffmpeg workdir, wiped per job
 const APP_STORAGE_IMPORTS = '/storage/imports'; // Temporary storage for csv imports
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
 const APP_STORAGE_CONFIG = '/storage/config';
@@ -310,6 +312,11 @@ const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_REALTIME = 'realtime';
 const DELETE_TYPE_BUCKETS = 'buckets';
+// Must equal the collection id: the DELETE_TYPE_DOCUMENT branch of the
+// deletes worker dispatches on $document->getCollection().
+const DELETE_TYPE_VIDEOS = 'videos';
+const DELETE_TYPE_VIDEOS_RENDITIONS = 'videosRenditions';
+const DELETE_TYPE_VIDEOS_CAPTIONS = 'videosCaptions';
 const DELETE_TYPE_FILES = 'files';
 const DELETE_TYPE_INSTALLATIONS = 'installations';
 const DELETE_TYPE_RULES = 'rules';
@@ -454,6 +461,7 @@ const METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_DURATION = 'embeddings.text.{embeddingM
 const METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS = 'embeddings.text.totalTokens';
 const METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_TOKENS = 'embeddings.text.{embeddingModel}.totalTokens';
 const METRIC_REVIEWS = 'reviews'; // Completed code reviews, the billed unit
+const METRIC_REVIEWS_STRENGTH = 'reviews.{strength}'; // Completed code reviews at one strength, billed at its rate
 const METRIC_REVIEWS_FAILED = 'reviews.failed';
 const METRIC_REVIEWS_CHATS = 'reviews.chats'; // Comments the review service answered
 const METRIC_REVIEWS_TOKENS_INPUT = 'reviews.tokens.input'; // Model tokens behind reviews and chat answers
@@ -481,6 +489,12 @@ const METRIC_BUILDS_COMPUTE  = 'builds.compute';
 const METRIC_BUILDS_COMPUTE_SUCCESS  = 'builds.compute.success';
 const METRIC_BUILDS_COMPUTE_FAILED  = 'builds.compute.failed';
 const METRIC_BUILDS_MB_SECONDS = 'builds.mbSeconds';
+const METRIC_VIDEOS = 'videos';
+const METRIC_VIDEOS_STORAGE = 'videos.storage';
+const METRIC_RENDITIONS = 'renditions';
+const METRIC_RENDITIONS_SUCCESS = 'renditions.success';
+const METRIC_RENDITIONS_FAILED = 'renditions.failed';
+const METRIC_RENDITIONS_COMPUTE = 'renditions.compute';
 const METRIC_EXECUTIONS  = 'executions';
 const METRIC_EXECUTIONS_COMPUTE  = 'executions.compute';
 const METRIC_EXECUTIONS_MB_SECONDS = 'executions.mbSeconds';
@@ -547,6 +561,7 @@ const METRIC_REALTIME_OUTBOUND = 'realtime.outbound';
 // MQTT push broker metrics (cumulative per-project counters, summed by StatsUsage)
 const METRIC_MQTT_CONNECTIONS = 'mqtt.connections';
 const METRIC_MQTT_MESSAGES_DELIVERED = 'mqtt.messages.delivered';
+const METRIC_MQTT_MESSAGES_ACKED = 'mqtt.messages.acked';
 
 // Resource types
 const RESOURCE_TYPE_PROJECTS = 'projects';
@@ -565,6 +580,7 @@ const RESOURCE_TYPE_TEAMS = 'teams';
 const RESOURCE_TYPE_EMBEDDINGS_TEXT = 'embeddingsText';
 const RESOURCE_TYPE_INSIGHTS = 'insights';
 const RESOURCE_TYPE_REPORTS = 'reports';
+const RESOURCE_TYPE_VIDEOS = 'videos';
 const RESOURCE_TYPE_REVIEWS = 'reviews';
 const RESOURCE_TYPE_MONITORS = 'monitors';
 

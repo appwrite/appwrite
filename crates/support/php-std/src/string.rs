@@ -35,9 +35,6 @@
 //! | `escapeshellarg` | [`escapeshellarg`] |
 //! | `ctype_alnum`, `ctype_digit`, `ctype_xdigit` | [`ctype_alnum`], [`ctype_digit`], [`ctype_xdigit`] ([`Ctype`] for any value) |
 //! | `(string) $value` (`zval_get_string`) | [`to_php_string`] |
-//!
-//! Every function here is checked against the real PHP function by
-//! `bin/compat fuzz php-std` (operations `string.*`).
 
 use std::borrow::Cow;
 use std::fmt;
