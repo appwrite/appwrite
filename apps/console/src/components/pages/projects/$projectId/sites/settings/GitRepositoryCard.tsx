@@ -240,12 +240,8 @@ export function GitRepositoryCard({
     onSuccess: (updated) => {
       toast.success(t('Repository disconnected successfully'))
       setDisconnectDialogOpen(false)
-      setSelectedBranch('')
       setSelectedDir('')
-      queryClient.setQueryData(
-        ['site', 'project', projectId, siteId],
-        updated,
-      )
+      queryClient.setQueryData(['site', 'project', projectId, siteId], updated)
       queryClient.invalidateQueries({
         queryKey: ['sites', 'project', projectId],
       })
