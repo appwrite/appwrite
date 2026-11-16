@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-16T08:02:00Z",
+  "updated": "2026-11-16T12:09:00Z",
   "tasks": [
     {
       "id": "crate-layout",
@@ -725,17 +725,17 @@
       "id": "main-nov16-services",
       "title": "Users, Teams, Account and Storage: follow main's PHP after the Nov 16 merge",
       "area": "Services",
-      "status": "todo",
-      "updated": "2026-11-16T07:10:00Z",
-      "note": "Main brought 342 commits to the PHP of the services Rust serves and the shared API hooks: the abuse label rework (Limit::attempts), Environment in locationAuth, output=auto negotiation and Appwrite\\Storage\\Encryption in previews, and more. Not ported in the merge (time-boxed); the Users and Storage (Rust) parity lanes show what differs. JWTs and signatures verified against every accepted key (EncryptionKey::accepted) are part of it."
+      "status": "done",
+      "updated": "2026-11-16T12:09:00Z",
+      "note": "Nov 16. The parity diff is back to 2,160 of 2,160 identical (it was 15). Ported: CORS allows X-Appwrite-Environment and X-Appwrite-Reason, userName on sessions, JWTs signed with the current key and verified against every accepted one, the abuse label rework (Limit::attempts and failures, release on success), the public scope on every key, output=auto previews negotiated from Accept, segmented file encryption (Appwrite\\Storage\\Encryption), recovery tokens deleted on password update, Teams invite and ownership rules, X-Appwrite-Reason in audits, and realtime membership privacy. Users E2E through the proxy: 79 pass; Teams: 70 pass."
     },
     {
       "id": "main-nov16-libraries",
-      "title": "Utopia libraries: follow main's PHP after the Nov 16 merge",
+      "title": "Utopia libraries follow main's PHP after the Nov 16 merge",
       "area": "Libraries",
-      "status": "todo",
-      "updated": "2026-11-16T08:02:00Z",
-      "note": "Port first: utopia-php/query's security fixes, which utopia-query lacks: raw conditions enclosed in parentheses where they are ANDed (3d5172a7f4, af8f66bb57: a raw OR beside the tenant filter reached other tenants' rows), backslashes escaped in toRawSql() (f1c3657857), and a trailing newline refused in allowlisted names (f960d64abc). Main changed 22 absorbed packages (175 commits): vcs, migration, queue, agents, messaging, cache, http, storage, query, cdn, emails, dns, abuse and more. packages/agents was redesigned (models, tools and a step loop; its OpenRouter sync script is gone), so its compat cases no longer describe the PHP library. Each crate's php-sync marker shows what to port; the compat shards show the differences."
+      "status": "done",
+      "updated": "2026-11-16T12:09:00Z",
+      "note": "Nov 16. Every crate behind its package was ported and its php-sync marker moved: query (its four security fixes first: raw conditions enclosed where they are ANDed, toRawSql backslashes, trailing newlines in names; 5,986 cases, 0 differences), abuse, usage, storage, cache, platform, http, audit, messaging, emails, dns, console, vcs, compression, client (status lines as curl 8.23 reads them), nats, queue, cdn, migration, domains, and utopia-database 10.0.0 to 10.1.2. Each passes bin/compat check except vcs, whose two Redis token-cache interop cases could not run cleanly locally (CI decides). agents stays out of compat: utopia-php/agents was redesigned (models, tools and a step loop)."
     },
     {
       "id": "main-nov16-benchmarks",
@@ -744,6 +744,30 @@
       "status": "todo",
       "updated": "2026-11-16T07:10:00Z",
       "note": "The Nov 16 merge brought about 45 new endpoints: account devices and LDAP sessions, project LDAP, OAuth2 (Naver, Vipps) and the account-devices policy, proxy rule updates, console alert unsubscribes, and two new services, alerts and reviews. Each is listed in its tests/benchmarks/api script as skipped with 'its scenario is pending' until it gets a scenario. GET /versions moved from home to console."
+    },
+    {
+      "id": "nov16-library-gaps",
+      "title": "Small gaps left by the Nov 16 library ports",
+      "area": "Libraries",
+      "status": "todo",
+      "updated": "2026-11-16T12:09:00Z",
+      "note": "client: curl 8.23 checks a header line as soon as the next byte arrives, and writes a trailing partial header at the end of a transfer; Rust models neither, so a fuzz seed can still differ. nats: five consumer cases record 0 messages since settle() drops frames queued for fetch()'s predicted sid (the compat fake needs a rule that answers a SUB with its sid); HookedTimeoutTest and SwooleTransportPollTest need Swoole. abuse: TablesDBTest's setup requests not ported. cache: StorageTest's failing-device cases not ported. storage: Cipher::copy with a chunk size of 0 is InvalidArgument, PHP throws DivisionByZeroError. database: 10.1.2's three new tests recorded on six profiles, not all; testEstimateCount may be timing-sensitive."
+    },
+    {
+      "id": "agents-redesign",
+      "title": "utopia-agents: follow the redesigned utopia-php/agents",
+      "area": "Libraries",
+      "status": "todo",
+      "updated": "2026-11-16T12:09:00Z",
+      "note": "utopia-php/agents was rewritten around models, tools and a step loop (13 commits, about 3,000 lines in and 4,000 out). The Rust crate and its compat cases describe the old library; agents sits out of the compat shards and PHPStan until it is converted again."
+    },
+    {
+      "id": "nov16-services-gaps",
+      "title": "Storage: a stale preview right after an S3 overwrite",
+      "area": "Services",
+      "status": "todo",
+      "updated": "2026-11-16T12:09:00Z",
+      "note": "S3CustomServerTest::testS3OverwritePathsInvalidatePreviewCache fails through the Rust proxy (passes on PHP): about 5 ms after PHP's S3 PutObject or CopyObject commits a new path, a Rust preview that misses the cache re-reads the file document, still gets the old row, and caches the old rendering. Not ported yet, and not covered by the diff or the default E2E config: the response cache on a storage device (_APP_CONNECTIONS_STORAGE_CACHE), account-switching devices (the authDevice resource and device routes)."
     }
   ]
 }
