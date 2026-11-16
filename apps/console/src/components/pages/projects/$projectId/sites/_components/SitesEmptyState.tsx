@@ -3,6 +3,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { Check, Globe, Lock } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
+import { VcsProviderButtons } from '@/components/global/shared/VcsProviderButtons'
 import {
   ProductEmptyStateCreateButton,
   ProductEmptyStateHero,
@@ -29,7 +30,6 @@ import {
   GitHubIcon,
   buildVcsAuthUrl,
   getVisibleVcsOAuthProviders,
-  vcsProviderButtonIconClassName,
 } from '@/lib/vcs/providers'
 
 const FRAMEWORKS = [
@@ -174,50 +174,34 @@ function GitProviders({ projectId }: { projectId: string }) {
       : `${window.location.origin}/projects/${projectId}/sites/create`
 
   return (
-    <div className="mt-8">
+    <div className="mt-8 w-full">
       <p className="text-[13px] text-muted-foreground">
         {t('Connect a Git provider to deploy on every push.')}
       </p>
-      <div className="mt-3 flex flex-wrap items-center justify-center gap-2 @4xl:justify-start">
-        {providers.map((provider) => {
-          const label = (
-            <>
-              <provider.Icon className={vcsProviderButtonIconClassName} />
-              {provider.label}
-            </>
-          )
-          return (
-            <Button
-              key={provider.id}
-              size="sm"
-              variant="outline"
-              className="h-8 text-[13px]"
-              asChild
+      <VcsProviderButtons
+        providers={providers}
+        variant="outline"
+        className="mt-3 @4xl:justify-start"
+        link={(provider, content) =>
+          connected.has(provider.id) ? (
+            <Link to="/projects/$projectId/sites/create" params={{ projectId }}>
+              {content}
+            </Link>
+          ) : (
+            <a
+              href={buildVcsAuthUrl({
+                endpoint: getApiEndpoint(project?.region),
+                provider: provider.id,
+                projectId,
+                successUrl: createUrl,
+                failureUrl: createUrl,
+              })}
             >
-              {connected.has(provider.id) ? (
-                <Link
-                  to="/projects/$projectId/sites/create"
-                  params={{ projectId }}
-                >
-                  {label}
-                </Link>
-              ) : (
-                <a
-                  href={buildVcsAuthUrl({
-                    endpoint: getApiEndpoint(project?.region),
-                    provider: provider.id,
-                    projectId,
-                    successUrl: createUrl,
-                    failureUrl: createUrl,
-                  })}
-                >
-                  {label}
-                </a>
-              )}
-            </Button>
+              {content}
+            </a>
           )
-        })}
-      </div>
+        }
+      />
     </div>
   )
 }
