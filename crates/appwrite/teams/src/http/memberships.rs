@@ -104,6 +104,18 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     let (_, team) = base::team_or_404(&db, &team_id).await?;
     let team_name = team.name.clone().unwrap_or_default();
 
+    let owner = ctx.authorization.has_role(&format!("team:{}/owner", team.id));
+    // Same console rule as membership role updates: an organization
+    // developer is not privileged enough to invite with arbitrary roles.
+    // Checked before the invitee is looked up or created, so a caller who
+    // fails it never causes a user account to exist.
+    if !owner && !app && (ctx.project.is_console() || !privileged) {
+        return Err(Error::with_message(
+            ErrorType::UserUnauthorized,
+            "User is not allowed to send invitations for this team",
+        ));
+    }
+
     let mut invitee: Option<User> = None;
     if !user_id.is_empty() {
         let Some(found) = base::user(&db, &user_id).await? else {
@@ -156,16 +168,6 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
             create_invitee(ctx, &db, server, &email, &phone, &name).await?
         }
     };
-
-    let owner = ctx.authorization.has_role(&format!("team:{}/owner", team.id));
-    // Same console rule as membership role updates: an organization
-    // developer is not privileged enough to invite with arbitrary roles.
-    if !owner && !app && (ctx.project.is_console() || !privileged) {
-        return Err(Error::with_message(
-            ErrorType::UserUnauthorized,
-            "User is not allowed to send invitations for this team",
-        ));
-    }
 
     let existing = db
         .find_one(

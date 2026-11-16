@@ -107,6 +107,11 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
         if ctx.user.is_none() {
             return Err(Error::new(ErrorType::UserUnauthorized));
         }
+        // Refused before the lock too, so a refusal never waits on another
+        // request's creation.
+        if !db.authorization().skip(db.find_one("teams", Vec::new())).await?.is_empty() {
+            return Err(Error::new(ErrorType::OrganizationCreationProhibited));
+        }
         // Serialize the instance-wide check and commit across accounts.
         // Unlike best-effort request locks, failure must not bypass this limit.
         match ctx.state.lock.with_lock(ORGANIZATIONS_LOCK, 3.0, create).await? {
