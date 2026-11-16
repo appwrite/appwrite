@@ -47,6 +47,7 @@ pub const OPS: &[&str] = &[
     "database.delete_index",
     "database.delete_relationship",
     "database.encode",
+    "database.estimate_count",
     "database.exists",
     "database.find",
     "database.find_collection",

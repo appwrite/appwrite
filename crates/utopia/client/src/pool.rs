@@ -60,14 +60,53 @@ impl<A: Adapter + Resource, S: Store<A>> Pool<A, S> {
     ///
     /// PHP: `sendRequest($request)`.
     pub async fn send(&self, request: Request) -> Result<Response, Error> {
-        self.connections.with(async |adapter: &A| adapter.send(request).await).await
+        self.lease(async |adapter: &A| adapter.send(request).await).await
     }
 
     /// Streams a request on a borrowed adapter.
     ///
     /// PHP: `stream($request, $sink)`.
     pub async fn stream<K: Sink>(&self, request: Request, sink: &mut K) -> Result<Response, Error> {
-        self.connections.with(async |adapter: &A| adapter.stream(request, sink).await).await
+        self.lease(async |adapter: &A| adapter.stream(request, sink).await).await
+    }
+
+    /// Runs `work` on a borrowed adapter. A pool that has no adapter to lend
+    /// (a plain `Exception` in PHP) fails as [`Error::Connection`], so callers
+    /// can tell it from a failed request like any other client failure.
+    ///
+    /// PHP: the private `lease($request, $callback)`.
+    async fn lease(&self, work: impl AsyncFnOnce(&A) -> Result<Response, Error>) -> Result<Response, Error> {
+        match self.connections.with(async |adapter: &A| work(adapter).await.map_err(Lease::Client)).await {
+            Ok(response) => Ok(response),
+            Err(Lease::Client(error)) => Err(error),
+            Err(Lease::Pool(error)) => Err(leased(error)),
+        }
+    }
+}
+
+/// Why a lease failed: the request, or the pool lending the adapter.
+enum Lease {
+    Client(Error),
+    Pool(utopia_pools::Error),
+}
+
+impl From<utopia_pools::Error> for Lease {
+    fn from(error: utopia_pools::Error) -> Lease {
+        Lease::Pool(error)
+    }
+}
+
+/// A pool failure as `lease()` rethrows it: a plain `Exception` becomes a
+/// `ConnectionException` with its message; anything else is rethrown as is
+/// (`init`'s own client error keeps its class).
+fn leased(error: utopia_pools::Error) -> Error {
+    match error {
+        utopia_pools::Error::Init(init) => match init.downcast::<Error>() {
+            Ok(error) => *error,
+            Err(other) => Error::Connection(other.to_string()),
+        },
+        utopia_pools::Error::InvalidArgument(message) => Error::InvalidArgument(message),
+        other => Error::Connection(other.to_string()),
     }
 }
 

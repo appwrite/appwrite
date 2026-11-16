@@ -870,7 +870,7 @@
       "doc": "whether the fake answers PINGs"
     },
     "fake.fail_reads": {
-      "doc": "make every read fail with {class, message} (null: stop)"
+      "doc": "make every read fail with {class, message} (null: stop); with `until_connect`, only until the next connect (a server that closed the socket)"
     },
     "fake.count": {
       "doc": "substr_count of `needle` in what was written (from byte `from`)"

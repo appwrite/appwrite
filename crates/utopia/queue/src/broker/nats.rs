@@ -222,11 +222,21 @@ impl NatsConfig {
 /// Where the broker's connection comes from.
 #[derive(Clone)]
 enum Source {
-    /// A server URL: the broker connects, and reconnects after a failure.
-    Url(String),
+    /// A server URL: the broker connects, and reconnects after a failure,
+    /// with the client name and credentials of a DSN (see [`Nats::from_dsn`]).
+    Url(String, Login),
     /// A live client: the only connection the broker will ever have, and a
     /// process-unique number standing in for its account.
     Client(Client, i64),
+}
+
+/// The client name and credentials a broker connects with.
+#[derive(Clone, Default)]
+struct Login {
+    name: String,
+    user: Option<String>,
+    pass: Option<String>,
+    token: Option<String>,
 }
 
 #[derive(Default)]
@@ -362,7 +372,7 @@ fn not_found(e: &impl std::fmt::Display) -> bool {
 impl Nats {
     /// A broker that connects to `url` (and reconnects after a failure).
     pub fn new(url: impl Into<String>, config: NatsConfig) -> Result<Self> {
-        Self::build(Source::Url(url.into()), config)
+        Self::build(Source::Url(url.into(), Login::default()), config)
     }
 
     /// A broker on a live client, which it can never replace.
@@ -386,6 +396,237 @@ impl Nats {
         })
     }
 
+    /// How many times a message is delivered before it is dead-lettered.
+    ///
+    /// PHP: `getMaxDeliver()`.
+    pub fn max_deliver(&self) -> i64 {
+        self.config.max_deliver
+    }
+
+    /// Builds a broker from `nats://[user[:password]@]host[:port]?param=value&...`.
+    ///
+    /// The query string carries the queue's stream and consumer config
+    /// ([`Nats::dsn_arguments`]); anything it leaves out keeps the default.
+    /// Everything that is code rather than configuration (`on_error`,
+    /// `codec`, `message_id`, `provisioning`) comes in `config`, whose
+    /// DSN-owned settings must be left at their defaults: one set there is
+    /// refused, so a queue's config has one source. `name` is the client name
+    /// the server shows in `/connz`. The connection is opened on first use.
+    ///
+    /// PHP: `Nats::fromDSN(DSN $dsn, string $name = '', mixed ...$arguments)`.
+    pub fn from_dsn(dsn: &utopia_dsn::Dsn, name: &str, config: NatsConfig) -> Result<Self> {
+        let defaults = NatsConfig::default();
+        let owned: [(&str, bool); 13] = [
+            ("ackWait", config.ack_wait != defaults.ack_wait),
+            ("maxDeliver", config.max_deliver != defaults.max_deliver),
+            ("replicas", config.replicas != defaults.replicas),
+            ("backoff", config.backoff != defaults.backoff),
+            ("deadMaxAge", config.dead_max_age != defaults.dead_max_age),
+            ("duplicateWindow", config.duplicate_window != defaults.duplicate_window),
+            ("maxAge", config.max_age != defaults.max_age),
+            ("maxMsgSize", config.max_msg_size != defaults.max_msg_size),
+            ("maxMsgs", config.max_msgs != defaults.max_msgs),
+            ("maxBytes", config.max_bytes != defaults.max_bytes),
+            ("discard", config.discard_new != defaults.discard_new),
+            ("maxAckPending", config.max_ack_pending != defaults.max_ack_pending),
+            ("maxWaiting", config.max_waiting != defaults.max_waiting),
+        ];
+        if let Some((param, _)) = owned.iter().find(|(_, set)| *set) {
+            return Err(Error::InvalidArgument(format!("{param} is read from the DSN; set it there")));
+        }
+        let options = Self::connection_options(dsn, name);
+        let mut config = config;
+        for (param, argument) in Self::dsn_arguments(dsn)? {
+            match (param, argument) {
+                ("ackWait", DsnArgument::Float(f)) => config.ack_wait = f,
+                ("maxDeliver", DsnArgument::Int(i)) => config.max_deliver = i,
+                ("replicas", DsnArgument::Int(i)) => config.replicas = usize::try_from(i).unwrap_or(1),
+                ("backoff", DsnArgument::Floats(list)) => config.backoff = Some(list),
+                ("backoff", DsnArgument::Null) => config.backoff = None,
+                ("deadMaxAge", DsnArgument::Float(f)) => config.dead_max_age = Some(f),
+                ("deadMaxAge", DsnArgument::Null) => config.dead_max_age = None,
+                ("duplicateWindow", DsnArgument::Float(f)) => config.duplicate_window = f,
+                ("maxAge", DsnArgument::Float(f)) => config.max_age = Some(f),
+                ("maxMsgSize", DsnArgument::Int(i)) => config.max_msg_size = Some(i),
+                ("maxMsgs", DsnArgument::Int(i)) => config.max_msgs = i,
+                ("maxBytes", DsnArgument::Int(i)) => config.max_bytes = i,
+                ("discard", DsnArgument::Discard(policy)) => config.discard_new = policy == DiscardPolicy::New,
+                ("maxAckPending", DsnArgument::Int(i)) => config.max_ack_pending = Some(i),
+                ("maxWaiting", DsnArgument::Int(i)) => config.max_waiting = Some(i),
+                _ => {}
+            }
+        }
+        let login = Login { name: options.name, user: options.user, pass: options.pass, token: options.token };
+        let url = options.servers.into_iter().next().unwrap_or_default();
+        Self::build(Source::Url(url, login), config)
+    }
+
+    /// Query parameters a `nats://` broker DSN may set, and how each is read
+    /// (`float`, `int`, `list` or `discard`); see [`Nats::from_dsn`].
+    /// `inactiveThreshold` is deliberately absent: a durable JetStream
+    /// deletes while idle silences the worker.
+    ///
+    /// PHP: `Nats::DSN_PARAMS`.
+    pub const DSN_PARAMS: [(&'static str, &'static str); 13] = [
+        ("ackWait", "float"),
+        ("maxDeliver", "int"),
+        ("replicas", "int"),
+        ("backoff", "list"),
+        ("deadMaxAge", "float"),
+        ("duplicateWindow", "float"),
+        ("maxAge", "float"),
+        ("maxMsgSize", "int"),
+        ("maxMsgs", "int"),
+        ("maxBytes", "int"),
+        ("discard", "discard"),
+        ("maxAckPending", "int"),
+        ("maxWaiting", "int"),
+    ];
+
+    /// The constructor arguments a broker DSN's query string sets, validated
+    /// and cast, sorted by name.
+    ///
+    /// Strict: an unknown or repeated parameter, a unit, a fraction where a
+    /// count goes, a sign, whitespace, or a number that overflows or
+    /// underflows is refused. The redelivery knobs are reconciled: an
+    /// explicit `ackWait` rewrites the schedule's first step, otherwise the
+    /// first step is the ack wait, and a `maxDeliver` lowered into the
+    /// schedule trims it. Delays below a second are raised to one, and
+    /// `deadMaxAge=0` keeps dead letters forever ([`DsnArgument::Null`]).
+    ///
+    /// PHP: `Nats::dsnArguments(DSN $dsn)`.
+    pub fn dsn_arguments(dsn: &utopia_dsn::Dsn) -> Result<Vec<(&'static str, DsnArgument)>> {
+        let invalid = |m: String| Error::InvalidArgument(m);
+        if dsn.scheme() != "nats" {
+            return Err(invalid(format!("A NATS broker DSN must use the nats:// scheme, got {}://", dsn.scheme())));
+        }
+        let mut query: Vec<(String, String)> = Vec::new();
+        for pair in dsn.query().unwrap_or("").split('&') {
+            if pair.is_empty() {
+                continue;
+            }
+            let (name, value) = pair.split_once('=').unwrap_or((pair, ""));
+            let name = String::from_utf8_lossy(&php_std::encoding::urldecode(name.as_bytes())).into_owned();
+            if query.iter().any(|(n, _)| *n == name) {
+                return Err(invalid(format!("Parameter '{name}' is given more than once in the NATS broker DSN")));
+            }
+            let value = String::from_utf8_lossy(&php_std::encoding::urldecode(value.as_bytes())).into_owned();
+            query.push((name, value));
+        }
+
+        let mut counts: Vec<(&'static str, i64)> = Vec::new();
+        let mut seconds: Vec<(&'static str, f64)> = Vec::new();
+        let mut backoff: Option<Vec<f64>> = None;
+        let mut discard = None;
+        for (param, value) in &query {
+            let Some(&(param, kind)) = Self::DSN_PARAMS.iter().find(|(p, _)| p == param) else {
+                let allowed: Vec<&str> = Self::DSN_PARAMS.iter().map(|(p, _)| *p).collect();
+                return Err(invalid(format!(
+                    "Unknown parameter '{param}' in the NATS broker DSN; allowed: {}",
+                    allowed.join(", ")
+                )));
+            };
+            match kind {
+                "int" => {
+                    let signed = matches!(param, "maxMsgs" | "maxBytes") && value.starts_with('-');
+                    let digits = if signed { &value[1..] } else { value.as_str() };
+                    let whole = !digits.is_empty() && digits.bytes().all(|b| b.is_ascii_digit());
+                    let cast = php_std::format::str_to_int(value.as_bytes());
+                    if !whole || cast.to_string() != *value {
+                        return Err(invalid(format!("{param} must be a whole number, got \"{value}\"")));
+                    }
+                    counts.push((param, cast));
+                }
+                "float" => match dsn_seconds(value) {
+                    Some(s) => seconds.push((param, s)),
+                    None => {
+                        return Err(invalid(format!(
+                            "{param} must be a number of seconds, got \"{value}\" -- units and suffixes are not read"
+                        )));
+                    }
+                },
+                "list" => {
+                    let mut steps = Vec::new();
+                    for step in value.split(',') {
+                        let Some(delay) = dsn_seconds(step) else {
+                            return Err(invalid(format!(
+                                "{param} must be a comma-separated list of seconds, got \"{value}\""
+                            )));
+                        };
+                        steps.push(delay.max(1.0));
+                    }
+                    backoff = Some(steps);
+                }
+                _ => {
+                    discard = Some(match value.to_ascii_lowercase().as_str() {
+                        "old" => DiscardPolicy::Old,
+                        "new" => DiscardPolicy::New,
+                        _ => return Err(invalid(format!("discard must be 'old' or 'new', got \"{value}\""))),
+                    });
+                }
+            }
+        }
+
+        for (param, count) in &mut counts {
+            if matches!(*param, "maxDeliver" | "replicas") {
+                *count = (*count).max(1);
+            }
+        }
+        for (param, s) in &mut seconds {
+            if *param == "ackWait" {
+                *s = s.max(1.0);
+            }
+        }
+        let ack_wait = seconds.iter().find(|(p, _)| *p == "ackWait").map(|(_, s)| *s);
+        let max_deliver = counts.iter().find(|(p, _)| *p == "maxDeliver").map(|(_, c)| *c);
+        let mut arguments: Vec<(&'static str, DsnArgument)> = counts
+            .into_iter()
+            .map(|(p, c)| (p, DsnArgument::Int(c)))
+            .chain(seconds.into_iter().map(|(p, s)| {
+                // Exactly zero keeps dead letters forever; a negative typo still
+                // reaches the constructor's range check.
+                if p == "deadMaxAge" && s == 0.0 { (p, DsnArgument::Null) } else { (p, DsnArgument::Float(s)) }
+            }))
+            .collect();
+        if let Some(policy) = discard {
+            arguments.push(("discard", DsnArgument::Discard(policy)));
+        }
+        if let Some(mut steps) = backoff {
+            match ack_wait {
+                Some(wait) => steps[0] = wait,
+                None => arguments.push(("ackWait", DsnArgument::Float(steps[0]))),
+            }
+            // The constructor's own default when the DSN leaves maxDeliver out.
+            let max_deliver = max_deliver.unwrap_or(5);
+            let steps = if max_deliver <= steps.len() as i64 {
+                (max_deliver > 1).then(|| steps[..(max_deliver - 1) as usize].to_vec())
+            } else {
+                Some(steps)
+            };
+            arguments.push(("backoff", steps.map_or(DsnArgument::Null, DsnArgument::Floats)));
+        }
+        arguments.sort_by(|a, b| a.0.cmp(b.0));
+        Ok(arguments)
+    }
+
+    /// Connection options for a `nats://` DSN, for a caller that needs a raw
+    /// connection to the same server: `nats://host:port` (4222 by default),
+    /// the URL-decoded credentials, and a user with no password as a token.
+    ///
+    /// PHP: `Nats::connectionOptions(DSN $dsn, string $name = '')`.
+    pub fn connection_options(dsn: &utopia_dsn::Dsn, name: &str) -> utopia_nats::ConnectionOptions {
+        let user = String::from_utf8_lossy(dsn.user().unwrap_or_default()).into_owned();
+        let password = String::from_utf8_lossy(dsn.password().unwrap_or_default()).into_owned();
+        let port = dsn.port().map_or_else(|| "4222".to_owned(), |p| p.to_string());
+        let both = !user.is_empty() && !password.is_empty();
+        let mut options = utopia_nats::ConnectionOptions::new([format!("nats://{}:{port}", dsn.host())]);
+        options.name = name.to_owned();
+        options.user = both.then(|| user.clone());
+        options.pass = both.then(|| password.clone());
+        options.token = (!user.is_empty() && password.is_empty()).then_some(user);
+        options
+    }
+
     /// The clock and id source (tests pin it).
     pub fn with_clock(mut self, clock: Arc<dyn Clock>) -> Self {
         self.clock = clock;
@@ -403,9 +644,22 @@ impl Nats {
         }
         let client = match &self.source {
             Source::Client(c, _) => c.clone(),
-            Source::Url(url) => async_nats::connect(url.as_str())
-                .await
-                .map_err(|e| nats_error("Utopia\\NATS\\Exception\\ConnectionException", e))?,
+            Source::Url(url, login) => {
+                let mut options = async_nats::ConnectOptions::new();
+                if !login.name.is_empty() {
+                    options = options.name(&login.name);
+                }
+                if let (Some(user), Some(pass)) = (&login.user, &login.pass) {
+                    options = options.user_and_password(user.clone(), pass.clone());
+                }
+                if let Some(token) = &login.token {
+                    options = options.token(token.clone());
+                }
+                options
+                    .connect(url.as_str())
+                    .await
+                    .map_err(|e| nats_error("Utopia\\NATS\\Exception\\ConnectionException", e))?
+            }
         };
         *slot = Some(client.clone());
         Ok(client)
@@ -615,7 +869,7 @@ impl Nats {
     fn account(&self) -> String {
         use sha1::Digest;
         match &self.source {
-            Source::Url(url) => hex::encode(sha1::Sha1::digest(url.as_bytes())),
+            Source::Url(url, _) => hex::encode(sha1::Sha1::digest(url.as_bytes())),
             Source::Client(_, n) => format!("client:{n}"),
         }
     }
@@ -910,7 +1164,7 @@ impl Nats {
 
     async fn close_client(&self) {
         if let Some(c) = self.client.lock().await.take()
-            && matches!(self.source, Source::Url(_))
+            && matches!(self.source, Source::Url(..))
         {
             let _ = c.drain().await;
         }
@@ -1403,7 +1657,7 @@ impl Nats {
         F: FnMut() -> Fut,
         Fut: std::future::Future<Output = Result<T>>,
     {
-        let reconnect = matches!(self.source, Source::Url(_));
+        let reconnect = matches!(self.source, Source::Url(..));
         self.republishing(deadline, reconnect, || {
             let attempt = self.command().map(|()| command());
             async move { attempt?.await }
@@ -1418,6 +1672,44 @@ impl Nats {
             other => other,
         }
     }
+}
+
+/// One value [`Nats::dsn_arguments`] reads from a DSN, typed as the
+/// constructor parameter it sets.
+#[derive(Debug, Clone, PartialEq)]
+pub enum DsnArgument {
+    /// A count (`maxDeliver`, `replicas`, the limits).
+    Int(i64),
+    /// A number of seconds.
+    Float(f64),
+    /// The redelivery schedule, in seconds.
+    Floats(Vec<f64>),
+    /// `null`: no schedule, or dead letters kept forever.
+    Null,
+    /// The work stream's discard policy.
+    Discard(DiscardPolicy),
+}
+
+/// A number of seconds as a DSN writes one, or `None` for anything else:
+/// surrounding whitespace, a leading `+`, a value that overflows to infinity,
+/// and a non-zero value that underflows to zero are refused.
+///
+/// PHP: the private `Nats::seconds()`.
+fn dsn_seconds(value: &str) -> Option<f64> {
+    let (number, _) = php_std::value::numeric_bytes_ex(value.as_bytes())?;
+    if value.trim_matches([' ', '\t', '\n', '\r', '\0', '\x0B']) != value || value.starts_with('+') {
+        return None;
+    }
+    let seconds = number.as_f64();
+    if !seconds.is_finite() {
+        return None;
+    }
+    let lower = value.to_ascii_lowercase();
+    let mantissa = lower.split('e').next().unwrap_or_default();
+    if seconds == 0.0 && !mantissa.trim_matches(['0', '.']).is_empty() {
+        return None;
+    }
+    Some(seconds)
 }
 
 /// The spare delivery a work consumer's configuration allows, when marked.
@@ -1526,6 +1818,26 @@ impl Publisher for Nats {
             let stream = js.get_stream(work_stream(queue)).await.map_err(jetstream_error)?;
             let mut consumer: PullConsumer = stream.get_consumer(CONSUMER_WORK).await.map_err(jetstream_error)?;
             Ok(consumer.info().await.map_err(jetstream_error)?.num_pending as i64)
+        }))
+    }
+
+    /// The first message past what the consumer has delivered is the oldest
+    /// still waiting. One that cannot be read, or that was removed since the
+    /// consumer was read, reads as 0.
+    fn queue_age<'a>(&'a self, queue: &'a Queue) -> BoxFuture<'a, Result<i64>> {
+        Box::pin(self.count(async move {
+            let js = self.js().await?;
+            let stream = js.get_stream(work_stream(queue)).await.map_err(jetstream_error)?;
+            let mut consumer: PullConsumer = stream.get_consumer(CONSUMER_WORK).await.map_err(jetstream_error)?;
+            let info = consumer.info().await.map_err(jetstream_error)?;
+            if info.num_pending == 0 {
+                return Ok(0);
+            }
+            let stored = stream.get_raw_message(info.delivered.stream_sequence + 1).await.map_err(jetstream_error)?;
+            Ok(match self.config.codec.decode(&stored.payload) {
+                Ok(envelope) => super::envelope_age(&envelope, php_std::datetime::time()),
+                Err(_) => 0,
+            })
         }))
     }
 

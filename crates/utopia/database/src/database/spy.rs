@@ -493,6 +493,10 @@ impl Adapter for Spy {
         )
     }
 
+    async fn estimate_count(&self, collection: &str) -> Result<Option<i64>> {
+        call!(self, Seen::of("estimateCount").named(collection), self.inner.estimate_count(collection))
+    }
+
     fn attribute_width(&self, collection: &Collection) -> Result<i64> {
         self.inner.attribute_width(collection)
     }

@@ -225,6 +225,16 @@ impl<B: Publisher + Consumer + 'static> Publisher for Pool<B> {
         Box::pin(self.on_publisher("getQueueSize", "int", move |b| async move { b.pending_count(queue).await }))
     }
 
+    /// 0 without a publisher pool.
+    fn queue_age<'a>(&'a self, queue: &'a Queue) -> BoxFuture<'a, Result<i64>> {
+        Box::pin(async move {
+            match &self.publisher {
+                None => Ok(0),
+                Some(pool) => pool.lease(|b| async move { b.queue_age(queue).await }).await?,
+            }
+        })
+    }
+
     fn failed_count<'a>(&'a self, queue: &'a Queue) -> BoxFuture<'a, Result<i64>> {
         Box::pin(self.on_publisher("getFailedCount", "int", move |b| async move { b.failed_count(queue).await }))
     }

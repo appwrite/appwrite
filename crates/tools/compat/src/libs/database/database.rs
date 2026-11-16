@@ -618,6 +618,7 @@ fn section_collections<'a>(
             "listCollections" => ok(db.list_collections(a.int_or("limit", 25)?, a.int_or("offset", 0)?).await)?,
             "getSizeOfCollection" => ok(db.size_of_collection(&s("collection")?).await)?,
             "getSizeOfCollectionOnDisk" => ok(db.size_of_collection_on_disk(&s("collection")?).await)?,
+            "estimateCount" => ok(db.estimate_count(&s("collection")?).await)?,
             "analyzeCollection" => ok(db.analyze_collection(&s("collection")?).await)?,
             "deleteCollection" => void(db.delete_collection(&s("collection")?).await)?,
 

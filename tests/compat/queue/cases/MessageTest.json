@@ -982,6 +982,44 @@
         "size": 268435456
       },
       "expect": "Large queue message: 268435456 bytes on queue \"a \"dotted\".queue\""
+    },
+    {
+      "name": "skip marks the message skipped",
+      "op": "message.set",
+      "args": {
+        "envelope": {
+          "pid": "p",
+          "queue": "q",
+          "timestamp": 1,
+          "payload": {}
+        },
+        "skipped": true
+      },
+      "expect": {
+        "$error": {
+          "class": "TypeError",
+          "message": "Cannot assign stdClass to property Utopia\\Queue\\Message::$payload of type array"
+        }
+      }
+    },
+    {
+      "name": "skip(false) clears it",
+      "op": "message.set",
+      "args": {
+        "envelope": {
+          "pid": "p",
+          "queue": "q",
+          "timestamp": 1,
+          "payload": {}
+        },
+        "skipped": false
+      },
+      "expect": {
+        "$error": {
+          "class": "TypeError",
+          "message": "Cannot assign stdClass to property Utopia\\Queue\\Message::$payload of type array"
+        }
+      }
     }
   ]
 }

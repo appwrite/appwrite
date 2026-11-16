@@ -721,7 +721,7 @@
       "doc": "fixture: {sleeps, calls} of a client handle: the sleeps its Retry recorded and the requests its legacy adapter sent (null without one)"
     },
     "pool.send": {
-      "doc": "new Pool(new Connections(new Stack(), 'test', size, fn () => new Curl() (counted), 0.0)), then sendRequest (or stream, with `stream`) each of `requests`: {responses, created}",
+      "doc": "new Pool(new Connections(new Stack(), 'test', size, fn () => new Curl() (counted), 0.0)), `held` connections popped and kept, then sendRequest (or stream, with `stream`) each of `requests`: {responses, created}",
       "covers": [
         "Utopia\\Client\\Pool::__construct",
         "Utopia\\Client\\Pool::sendRequest",

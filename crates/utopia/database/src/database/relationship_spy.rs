@@ -266,6 +266,10 @@ impl Adapter for Spy {
         self.inner.size_of_collection_on_disk(collection).await
     }
 
+    async fn estimate_count(&self, collection: &str) -> Result<Option<i64>> {
+        self.inner.estimate_count(collection).await
+    }
+
     fn attribute_width(&self, collection: &Collection) -> Result<i64> {
         self.inner.attribute_width(collection)
     }

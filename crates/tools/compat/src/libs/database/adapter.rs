@@ -488,6 +488,7 @@ async fn call_method(adapter: &Arc<dyn Adapter>, method: &str, a: &Args, calls: 
         "analyzeCollection" => ok(adapter.analyze_collection(&s("collection")?).await)?,
         "getSizeOfCollection" => ok(adapter.size_of_collection(&s("collection")?).await)?,
         "getSizeOfCollectionOnDisk" => ok(adapter.size_of_collection_on_disk(&s("collection")?).await)?,
+        "estimateCount" => ok(adapter.estimate_count(&s("collection")?).await)?,
         "getAttributeWidth" => ok(adapter.attribute_width(&collection(a, "collection")?))?,
         "getCountOfAttributes" => ok(adapter.count_of_attributes(&collection(a, "collection")?))?,
         "getCountOfIndexes" => ok(adapter.count_of_indexes(&collection(a, "collection")?))?,

@@ -306,6 +306,17 @@ impl Database {
         self.inner.adapter.size_of_collection(definition.id()).await
     }
 
+    /// The documents in a collection, estimated from engine statistics
+    /// without scanning it (`estimateCount()`): `None` when the engine
+    /// keeps no usable estimate, so the caller counts instead.
+    ///
+    /// Fails ([`crate::Kind::NotFound`]) for a missing collection (or one
+    /// of another tenant under shared tables).
+    pub async fn estimate_count(&self, collection: &str) -> Result<Option<i64>> {
+        let definition = self.silent(self.get_own_collection(collection)).await?;
+        self.inner.adapter.estimate_count(definition.id()).await
+    }
+
     /// The size of a collection on disk (`getSizeOfCollectionOnDisk()`).
     ///
     /// Fails ([`crate::Kind::Database`]) under shared tables without a
