@@ -28,7 +28,11 @@ export function View() {
           keywords: ['git', 'github', 'branch', 'connect', 'deployment'],
         },
         node: (
-          <GitRepositoryCard projectId={projectId} siteId={siteId} site={site} />
+          <GitRepositoryCard
+            projectId={projectId}
+            siteId={siteId}
+            site={site}
+          />
         ),
       },
     ]
