@@ -361,8 +361,9 @@ fn document_json(document: &Document) -> Json {
 
 /// `DELETE_TYPE_SESSION_TARGETS`: the targets of a deleted session, queued
 /// now, as the action's publisher does (before the MQTT revoke).
-async fn delete_targets(ctx: &mut Context, mut session: Document, current: bool, country: &str) {
+async fn delete_targets(ctx: &mut Context, mut session: Document, user_name: &str, current: bool, country: &str) {
     session.put("current", Value::Bool(current));
+    session.put("userName", Value::from(user_name));
     session.put("countryName", Value::from(country));
     let message = appwrite_core::event::delete_message(
         &ctx.project.message_payload(),
@@ -404,7 +405,7 @@ pub async fn delete_all(ctx: &mut Context) -> Result<Response> {
                 base::session_payload(ctx, &session, user.name.as_deref().unwrap_or(""), true, &country, None);
             ctx.events.payload = Some(payload);
             ctx.events.sensitive = SESSION_SENSITIVE.to_vec();
-            delete_targets(ctx, document, true, &country).await;
+            delete_targets(ctx, document, user.name.as_deref().unwrap_or(""), true, &country).await;
             current_session = Some(session);
         }
     }
@@ -456,6 +457,7 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
     ctx.events.sensitive = SESSION_SENSITIVE.to_vec();
     let mut document = document;
     document.put("current", Value::Bool(is_current));
+    document.put("userName", Value::from(user.name.as_deref().unwrap_or("")));
     if is_current {
         document.put("countryName", Value::from(country.as_str()));
     }

@@ -406,7 +406,7 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
         headers: OtpToken::headers(&secret, ctx.request.header("origin").unwrap_or_default()),
         subject,
         template: "otp",
-        body_template: format!("{PHP_ROOT}/app/controllers/api/../../config/locale/templates/{template}.tpl"),
+        body_template: format!("{PHP_ROOT}/app/init/../config/locale/templates/{template}.tpl"),
         body,
         preview,
         smtp,

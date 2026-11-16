@@ -497,6 +497,10 @@ pub async fn new_session(
     session.put("$id", Value::from(appwrite_core::database::unique_id().as_str()));
     session.put("userId", Value::from(user.id.as_str()));
     session.put("userInternalId", documents::internal_id(user.sequence));
+    // The account switching device the session joins: account switching
+    // devices are not served here, so none.
+    session.put("deviceId", Value::from(""));
+    session.put("deviceInternalId", Value::from(""));
     session.put("provider", Value::from(provider));
     session.put("secret", Value::from(token_hash(secret)?.as_str()));
     session.put("userAgent", Value::from(user_agent.as_str()));
