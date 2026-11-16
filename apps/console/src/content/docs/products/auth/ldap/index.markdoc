@@ -180,7 +180,7 @@ The test uses the saved settings, so select **Update** before you test a change.
 
 Turn on **Enable LDAP sign-in** at the top of the LDAP settings and select **Update**, or turn on **LDAP** under **Auth** > **Settings**. You need at least one host and a base DN first.
 
-Turning on LDAP from its settings connects to your directory and binds as the service account, and fails if it can't. While LDAP is on, every change to its settings is checked the same way, so your project can't be left with a configuration that signs nobody in.
+Turning on LDAP from its settings connects to your directory, binds as the service account, and reads the base DN, and fails if any of those steps does. While LDAP is on, every change to its settings is checked the same way. This check doesn't look anyone up, so it can't catch a user filter that matches nobody, a wrong required group, or a missing ID attribute. [Test the connection](#test) with a real username, and a password, before you turn LDAP on. Turning on **LDAP** under **Auth** > **Settings** only checks that a host and a base DN are set.
 
 ## Configure with a server SDK {% #server-sdk %}
 
@@ -342,6 +342,12 @@ LDAP login is coming to self-hosted Appwrite soon. On a self-hosted instance, Ap
 ---
 * `general_invalid_email`
 * The directory entry's email address isn't a valid email address.
+---
+* `user_email_disposable`, `user_email_free`, `user_email_not_corporate`, `user_email_not_canonical`
+* The directory entry's email address breaks one of your [email policies](/docs/products/auth/email-policies), for a new account or when the address changes in the directory.
+---
+* `user_count_exceeded`
+* The sign-in would create an account, and the project already has as many users as its user limit allows.
 ---
 * `general_rate_limit_exceeded`
 * Too many failed sign-ins for this username or from this IP address in the last hour.

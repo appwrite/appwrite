@@ -65,7 +65,7 @@ Directory settings fail in specific ways: a firewall that drops the connection, 
 
 With no username, it connects, binds as your service account, and reads the base DN. Add a username to also find the user and check the required group, and a password to also check the password.
 
-When you turn LDAP on, Appwrite runs the same connection check first. While LDAP is on, every change to its settings is checked the same way, so a project can't be left with a directory that signs nobody in.
+When you turn LDAP on from its settings, Appwrite runs the first part of that check: it connects, binds as the service account, and reads the base DN, and it repeats the check on every change while LDAP is on. It doesn't look anyone up, so run the test with a real username and password before you turn LDAP on.
 
 # Sign in with one call
 
