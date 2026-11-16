@@ -729,6 +729,203 @@
           }
         }
       ]
+    },
+    {
+      "name": "a complete line is reported only once it has arrived",
+      "steps": [
+        {
+          "op": "parser.steps",
+          "args": {
+            "chunks": [
+              "PING\r\nPONG\r\nMSG foo 1"
+            ],
+            "calls": [
+              [
+                0.01,
+                null
+              ],
+              [
+                0.01,
+                null
+              ]
+            ]
+          },
+          "expect": {
+            "initial": {
+              "complete_line": false,
+              "poisoned": false,
+              "buffered": false
+            },
+            "steps": [
+              {
+                "result": [
+                  "PING",
+                  null
+                ],
+                "complete_line": true,
+                "poisoned": false,
+                "buffered": true
+              },
+              {
+                "result": [
+                  "PONG",
+                  null
+                ],
+                "complete_line": false,
+                "poisoned": false,
+                "buffered": true
+              }
+            ],
+            "timeouts": [
+              0.01
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a frame cut short poisons the parser",
+      "steps": [
+        {
+          "op": "parser.steps",
+          "args": {
+            "chunks": [
+              "MSG foo 1 10\r\nabc"
+            ],
+            "calls": [
+              [
+                0.01,
+                null
+              ],
+              [
+                0.01,
+                null
+              ]
+            ]
+          },
+          "expect": {
+            "initial": {
+              "complete_line": false,
+              "poisoned": false,
+              "buffered": false
+            },
+            "steps": [
+              {
+                "result": {
+                  "class": "Utopia\\NATS\\Exception\\ConnectionException",
+                  "message": "Failed mid-frame, parser desynced from the stream: Unexpected end of data while reading payload",
+                  "previous": "Utopia\\NATS\\Exception\\ProtocolException"
+                },
+                "complete_line": false,
+                "poisoned": true,
+                "buffered": false
+              },
+              {
+                "result": {
+                  "class": "Utopia\\NATS\\Exception\\ConnectionException",
+                  "message": "Parser desynced from the stream; the connection must be rebuilt"
+                },
+                "complete_line": false,
+                "poisoned": true,
+                "buffered": false
+              }
+            ],
+            "timeouts": [
+              0.01,
+              0.01
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "the header timeout bounds only the wait for the operation line",
+      "steps": [
+        {
+          "op": "parser.steps",
+          "args": {
+            "chunks": [
+              "MSG foo 1 5\r\n",
+              "hello\r\n"
+            ],
+            "calls": [
+              [
+                1.0,
+                0.05
+              ]
+            ]
+          },
+          "expect": {
+            "initial": {
+              "complete_line": false,
+              "poisoned": false,
+              "buffered": false
+            },
+            "steps": [
+              {
+                "result": [
+                  "MSG",
+                  [
+                    "foo",
+                    "1",
+                    null,
+                    "hello",
+                    null
+                  ]
+                ],
+                "complete_line": false,
+                "poisoned": false,
+                "buffered": false
+              }
+            ],
+            "timeouts": [
+              0.05,
+              1.0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "an empty read while waiting for a line times out",
+      "steps": [
+        {
+          "op": "parser.steps",
+          "args": {
+            "chunks": [
+              "PI"
+            ],
+            "calls": [
+              [
+                0.01,
+                null
+              ]
+            ]
+          },
+          "expect": {
+            "initial": {
+              "complete_line": false,
+              "poisoned": false,
+              "buffered": false
+            },
+            "steps": [
+              {
+                "result": {
+                  "class": "Utopia\\NATS\\Exception\\TimeoutException",
+                  "message": "Read timed out"
+                },
+                "complete_line": false,
+                "poisoned": false,
+                "buffered": true
+              }
+            ],
+            "timeouts": [
+              0.01,
+              0.01
+            ]
+          }
+        }
+      ]
     }
   ]
 }

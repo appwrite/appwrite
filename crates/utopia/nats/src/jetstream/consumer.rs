@@ -359,6 +359,7 @@ impl Consumer {
         request.opt("max_bytes", max_bytes);
         let payload = crate::json::encode(&request.build())?;
 
+        conn.settle(Some(Duration::from_secs_f64(timeout).min(Connection::SETTLE_TIMEOUT))).await?;
         let inbox = conn.new_inbox();
         let sub = conn.subscribe(&inbox, None, None).await?;
         let mut messages = MessageBatch::default();

@@ -221,6 +221,8 @@ struct Head {
     /// The status as cURL read it, which decides framing and redirects: 0
     /// when cURL did not parse the status line (a lowercase `http/`).
     code: u16,
+    /// The HTTP version as cURL read it (`10`, `11`).
+    version: u8,
     reason: String,
     headers: Headers,
     /// The header block exactly as received (interim responses included).
@@ -426,6 +428,7 @@ impl Http {
     ) -> Result<(Head, Option<Uri>), Retry> {
         let fresh = connection.requests == 0;
         connection.requests += 1;
+        connection.versioned = false;
         let retry = |error: Error| if fresh { Retry::Fail(error) } else { Retry::Fresh };
 
         clock
@@ -507,7 +510,7 @@ impl Http {
             }
             head.trailed = read.map_err(Retry::Fail)?;
         }
-        if head.headers.line("Connection").eq_ignore_ascii_case("close") || head.protocol == "1.0" {
+        if head.headers.line("Connection").eq_ignore_ascii_case("close") || head.version == 10 {
             connection.open = false;
         }
         Ok((head, location))
@@ -586,6 +589,7 @@ impl Http {
             buffer: BytesMut::with_capacity(16 * 1024),
             open: true,
             requests: 0,
+            versioned: false,
             capture: None,
         })
     }
@@ -965,6 +969,9 @@ struct Connection {
     buffer: BytesMut,
     open: bool,
     requests: u32,
+    /// Whether a status line of the current request has been read (an
+    /// interim response's): cURL knows the HTTP version from then on.
+    versioned: bool,
     /// Collects the raw lines read while reading a header block.
     capture: Option<Vec<u8>>,
 }
@@ -1029,7 +1036,13 @@ impl Connection {
         let prefix = self.buffer[..self.buffer.len().min(5)].to_ascii_lowercase();
         if !b"http/".starts_with(&prefix) || (prefix.len() < 5 && self.buffer.contains(&b'\n')) {
             self.open = false;
-            return Err(HeadError::Fail(Error::Protocol("Received HTTP/0.9 when not allowed".into())));
+            // Not HTTP/0.9 once the version is known, or on a reused connection.
+            let message = if self.versioned || self.requests > 1 {
+                "Invalid status line"
+            } else {
+                "Received HTTP/0.9 when not allowed"
+            };
+            return Err(HeadError::Fail(Error::Protocol(message.into())));
         }
         self.capture = Some(Vec::with_capacity(256));
         let incomplete = || {
@@ -1038,10 +1051,11 @@ impl Connection {
         // cURL counts header bytes by complete lines: a reply that ends inside
         // its status line got nothing.
         let status_line = self.line(clock).await.map_err(HeadError::Fail)?.ok_or(HeadError::Empty)?;
-        let (protocol, status, reason, code) = status(&status_line).map_err(|e| {
+        let StatusLine { protocol, status, reason, code, version } = status(&status_line).map_err(|e| {
             self.open = false;
             HeadError::Fail(e)
         })?;
+        self.versioned = true;
 
         // cURL reads no body for these, and so does not check their Content-Length.
         let bodyless = matches!(code, 100..=199 | 204 | 304);
@@ -1075,7 +1089,7 @@ impl Connection {
             };
             lines += 1;
             if line.contains(&0) {
-                return Err(fail(self, "Nul byte in header"));
+                return Err(fail(self, "NUL byte in header"));
             }
             let line = String::from_utf8_lossy(&line).into_owned();
             let Some((name, value)) = line.split_once(':') else {
@@ -1134,7 +1148,7 @@ impl Connection {
         // PHP trims the whole header text before splitting it: a status line
         // with no header after it loses its trailing whitespace.
         let reason = if lines == 0 { php_trim(&reason).to_owned() } else { reason };
-        Ok(Head { protocol, status, code, reason, headers, raw, trailed: false })
+        Ok(Head { protocol, status, code, version, reason, headers, raw, trailed: false })
     }
 
     /// Reads a body, decoding it when there is a decoder, into the sink.
@@ -1235,43 +1249,68 @@ fn php_trim(s: &str) -> &str {
     s.trim_matches([' ', '\t', '\n', '\r', '\0', '\x0B'])
 }
 
-/// Parses a status line as cURL accepts it, and as PHP's
-/// `parseHeaderBlock()` then splits it.
-fn status(line: &[u8]) -> Result<(String, u16, String, u16), Error> {
-    if !line.starts_with(b"HTTP/") {
-        // cURL takes a lowercase prefix for a status line without parsing it;
-        // PHP's case-insensitive pattern then reads it.
-        let (protocol, status, reason) = php_status(line);
-        return Ok((protocol, status, reason, 0));
-    }
-    let rest = &line[5.min(line.len())..];
-    let digits = |s: &[u8]| s.len() >= 3 && s[..3].iter().all(u8::is_ascii_digit);
-    let (protocol, after) =
-        if rest.len() >= 4 && rest[0] == b'1' && rest[1] == b'.' && rest[2].is_ascii_digit() && rest[3] == b' ' {
-            if !(rest[2] == b'0' || rest[2] == b'1') || !digits(&rest[4..]) {
-                return Err(Error::Protocol("Unsupported HTTP/1 subversion in response".into()));
-            }
-            (String::from_utf8_lossy(&rest[..3]).into_owned(), &rest[4..])
-        } else if rest.len() >= 2 && (rest[0] == b'2' || rest[0] == b'3') && rest[1] == b' ' {
-            if !digits(&rest[2..]) {
-                return Err(Error::Protocol("Unsupported HTTP version in response".into()));
-            }
-            (String::from_utf8_lossy(&rest[..1]).into_owned(), &rest[2..])
-        } else if rest.first() == Some(&b'1') {
-            return Err(Error::Protocol("Unsupported HTTP/1 subversion in response".into()));
-        } else {
-            return Err(Error::Protocol("Unsupported HTTP version in response".into()));
-        };
-    if after.len() > 3 && after[3] != b' ' {
-        return Err(Error::Protocol("Invalid status line".into()));
-    }
-    let code = std::str::from_utf8(&after[..3]).unwrap_or("0").parse::<u16>().unwrap_or(0);
-    let reason = if after.len() > 3 {
-        String::from_utf8_lossy(after[3..].trim_ascii_start()).into_owned()
-    } else {
-        String::new()
+/// A status line as cURL and then PHP read it.
+#[derive(Debug, PartialEq, Eq)]
+struct StatusLine {
+    /// PHP's `parseHeaderBlock()`: the protocol, status and reason it reports.
+    protocol: String,
+    status: u16,
+    reason: String,
+    /// cURL's status code (`0` when cURL took the line without parsing it,
+    /// where it assumes 200).
+    code: u16,
+    /// cURL's HTTP version (`10`, `11`): 1.0 closes the connection after the
+    /// response.
+    version: u8,
+}
+
+/// Parses a status line as cURL 8.23 accepts it (`http_rw_hd()`, then
+/// `http_statusline()` for the version), and as PHP's `parseHeaderBlock()`
+/// then splits it. The line comes without its line ending, which cURL reads
+/// as a byte that is not blank.
+fn status(line: &[u8]) -> Result<StatusLine, Error> {
+    let (protocol, status, reason) = php_status(line);
+    let parsed = |code: u16, version: u8| StatusLine { protocol, status, reason, code, version };
+    let blank = |b: Option<&u8>| matches!(b, Some(b' ' | b'\t'));
+    let digits = |s: &[u8]| {
+        (s.len() >= 3 && s[..3].iter().all(u8::is_ascii_digit))
+            .then(|| s[..3].iter().fold(0u16, |code, digit| code * 10 + u16::from(digit - b'0')))
     };
-    Ok((protocol, code, reason, code))
+    // A line that does not start with `HTTP/` exactly (a lowercase prefix)
+    // is taken without parsing it, as cURL takes an HTTP/1.0 200.
+    let Some(rest) = line.strip_prefix(b"HTTP/") else {
+        return Ok(parsed(0, 10));
+    };
+    match rest.first() {
+        Some(b'1') => {
+            // HTTP/1.0 or HTTP/1.1, a blank, then three digits; whatever
+            // follows them is fine.
+            let minor = rest.get(2).copied();
+            if rest.get(1) == Some(&b'.')
+                && matches!(minor, Some(b'0' | b'1'))
+                && blank(rest.get(3))
+                && let Some(code) = digits(&rest[4..])
+            {
+                return Ok(parsed(code, 10 + (minor.unwrap_or(b'1') - b'0')));
+            }
+            Err(Error::Protocol("Unsupported HTTP/1 subversion in response".into()))
+        }
+        Some(major @ (b'2' | b'3')) => {
+            // HTTP/2 or HTTP/3, a blank, three digits and a blank; any other
+            // shape is taken without parsing it.
+            if !(blank(rest.get(1)) && digits(&rest[2..]).is_some() && blank(rest.get(5))) {
+                return Ok(parsed(0, 10));
+            }
+            // A response cannot switch from the HTTP/1.1 request's major
+            // version, and this cURL is built without HTTP/3.
+            Err(Error::Protocol(if *major == b'2' {
+                "Version mismatch (from HTTP/1 to HTTP/2)".into()
+            } else {
+                "Unsupported HTTP version (3.0) in response".into()
+            }))
+        }
+        _ => Err(Error::Protocol("Unsupported HTTP version in response".into())),
+    }
 }
 
 /// PHP's `/^HTTP\/(?P<protocol>\d+(?:\.\d+)?)\s+(?P<status>\d{3})(?:\s+(?P<reason>.*))?$/i`
@@ -1551,12 +1590,22 @@ mod tests {
 
     #[test]
     fn status_lines_as_curl_reads_them() {
-        assert_eq!(status(b"HTTP/1.1 200 OK").unwrap(), ("1.1".into(), 200, "OK".into(), 200));
-        assert_eq!(status(b"HTTP/2 204").unwrap(), ("2".into(), 204, String::new(), 204));
-        assert_eq!(status(b"http/1.1 404 nope").unwrap(), ("1.1".into(), 404, "nope".into(), 0));
-        assert_eq!(status(b"HTTP/1.1 abc").unwrap_err().message(), "Unsupported HTTP/1 subversion in response");
-        assert_eq!(status(b"HTTP/1.1 1000 X").unwrap_err().message(), "Invalid status line");
-        assert_eq!(status(b"HTTP/4 200").unwrap_err().message(), "Unsupported HTTP version in response");
+        let read = |line: &[u8]| status(line).map(|s| (s.protocol, s.status, s.reason, s.code, s.version));
+        assert_eq!(read(b"HTTP/1.1 200 OK").unwrap(), ("1.1".into(), 200, "OK".into(), 200, 11));
+        assert_eq!(read(b"HTTP/1.0 204").unwrap(), ("1.0".into(), 204, String::new(), 204, 10));
+        assert_eq!(read(b"http/1.1 404 nope").unwrap(), ("1.1".into(), 404, "nope".into(), 0, 10));
+        // cURL 8.23 takes a tab after the version and anything after the code.
+        assert_eq!(read(b"HTTP/1.1\t201 Created").unwrap(), ("1.1".into(), 201, "Created".into(), 201, 11));
+        assert_eq!(read(b"HTTP/1.1 200\tOK").unwrap(), ("1.1".into(), 200, "OK".into(), 200, 11));
+        assert_eq!(read(b"HTTP/1.0 200P").unwrap(), ("1.1".into(), 0, String::new(), 200, 10));
+        assert_eq!(read(b"HTTP/1.1 1000 X").unwrap(), ("1.1".into(), 0, String::new(), 100, 11));
+        // HTTP/2 without a blank after the code is taken without parsing it.
+        assert_eq!(read(b"HTTP/2 204").unwrap(), ("2".into(), 204, String::new(), 0, 10));
+        assert_eq!(read(b"HTTP/2 204 ").unwrap_err().message(), "Version mismatch (from HTTP/1 to HTTP/2)");
+        assert_eq!(read(b"HTTP/3 200 OK").unwrap_err().message(), "Unsupported HTTP version (3.0) in response");
+        assert_eq!(read(b"HTTP/1.1 abc").unwrap_err().message(), "Unsupported HTTP/1 subversion in response");
+        assert_eq!(read(b"HTTP/1.2 200").unwrap_err().message(), "Unsupported HTTP/1 subversion in response");
+        assert_eq!(read(b"HTTP/4 200").unwrap_err().message(), "Unsupported HTTP version in response");
     }
 
     #[test]

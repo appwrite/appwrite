@@ -14,6 +14,18 @@ use crate::error::{Error, Result};
 
 const ACCEPT_GUID: &str = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
+/// How much one socket read takes.
+const READ_SIZE: usize = 65536;
+
+/// Where a whole frame sits in the raw bytes.
+struct Header {
+    opcode: u8,
+    /// Where the payload starts.
+    start: usize,
+    length: usize,
+    mask: Option<[u8; 4]>,
+}
+
 /// The NATS protocol inside binary WebSocket frames (RFC 6455). Frames the
 /// client sends are masked; reads serve the unframed byte stream, answering
 /// pings and failing on a close frame.
@@ -27,7 +39,7 @@ pub struct WebSocketTransport {
     timeout: Duration,
     /// Unframed bytes not consumed yet.
     buffer: Vec<u8>,
-    /// Raw bytes read from the socket but not yet parsed into frames.
+    /// Raw bytes from the socket that do not make up a whole frame yet.
     raw: Vec<u8>,
 }
 
@@ -60,22 +72,69 @@ impl WebSocketTransport {
             .map_err(|_| Error::Connection("Failed to write to WebSocket".into()))
     }
 
-    /// Exactly `length` raw bytes.
-    async fn raw_read(&mut self, length: usize) -> Result<Vec<u8>> {
-        self.stream()?;
-        while self.raw.len() < length {
-            let timeout = self.timeout;
-            let want = length - self.raw.len();
-            let mut raw = std::mem::take(&mut self.raw);
-            let read = self.stream()?.read(&mut raw, want, timeout).await;
-            self.raw = raw;
-            match read {
-                Ok(_) => {}
-                Err(IoFailure::Timeout) => return Err(Error::Timeout("Read timed out".into())),
-                Err(_) => return Err(Error::Connection("Connection closed by server".into())),
+    /// Appends one socket read to the raw bytes.
+    ///
+    /// PHP: the private `WebSocketTransport::receive()`.
+    async fn receive(&mut self) -> Result<()> {
+        let timeout = self.timeout;
+        let mut raw = std::mem::take(&mut self.raw);
+        let read = match self.stream() {
+            Ok(stream) => stream.read(&mut raw, READ_SIZE, timeout).await.map(|_| ()),
+            Err(error) => {
+                self.raw = raw;
+                return Err(error);
             }
+        };
+        self.raw = raw;
+        match read {
+            Ok(()) => Ok(()),
+            Err(IoFailure::Timeout) => Err(Error::Timeout("Read timed out".into())),
+            Err(_) => Err(Error::Connection("Connection closed by server".into())),
         }
-        Ok(self.raw.drain(..length).collect())
+    }
+
+    /// The next frame's header, once the whole frame is buffered.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Connection`] for a 64-bit length with its most significant
+    /// bit set.
+    ///
+    /// PHP: the private `WebSocketTransport::header()`.
+    fn header(&self) -> Result<Option<Header>> {
+        let raw = &self.raw;
+        if raw.len() < 2 {
+            return Ok(None);
+        }
+        let second = raw[1];
+        let mut length = u64::from(second & 0x7F);
+        let mut start = match length {
+            126 => 4,
+            127 => 10,
+            _ => 2,
+        };
+        if raw.len() < start {
+            return Ok(None);
+        }
+        if start == 10 && raw[2] & 0x80 != 0 {
+            return Err(Error::Connection("WebSocket frame length has its most significant bit set".into()));
+        }
+        if start > 2 {
+            length = raw[2..start].iter().fold(0u64, |acc, &b| (acc << 8) | u64::from(b));
+        }
+        let mut mask = None;
+        if second & 0x80 != 0 {
+            // PHP's substr() takes what there is of the key.
+            let mut key = [0u8; 4];
+            let end = raw.len().min(start + 4);
+            key[..end - start].copy_from_slice(&raw[start..end]);
+            mask = Some(key);
+            start += 4;
+        }
+        if (raw.len() as u64) < start as u64 + length {
+            return Ok(None);
+        }
+        Ok(Some(Header { opcode: raw[0] & 0x0F, start, length: length as usize, mask }))
     }
 
     async fn upgrade(&mut self, host: &str, port: u16) -> Result<()> {
@@ -88,10 +147,13 @@ impl WebSocketTransport {
         );
         self.raw_write(request.as_bytes()).await?;
 
-        let mut response = Vec::new();
-        while !response.windows(4).any(|w| w == b"\r\n\r\n") {
-            response.extend(self.raw_read(1).await?);
-        }
+        let end = loop {
+            if let Some(at) = self.raw.windows(4).position(|w| w == b"\r\n\r\n") {
+                break at + 4;
+            }
+            self.receive().await?;
+        };
+        let response: Vec<u8> = self.raw.drain(..end).collect();
         if response.len() < 12 || !response[..12].eq_ignore_ascii_case(b"HTTP/1.1 101") {
             let status = response.split(|&b| b == b'\r' || b == b'\n').find(|l| !l.is_empty()).unwrap_or_default();
             return Err(Error::Connection(format!("WebSocket upgrade failed: {}", String::from_utf8_lossy(status))));
@@ -103,27 +165,23 @@ impl WebSocketTransport {
         Ok(())
     }
 
-    /// Reads one frame: data frames append to the buffer, pings are answered.
+    /// Reads one frame: data frames append to the buffer, pings are
+    /// answered. A frame is decoded only once all of it has arrived, so a
+    /// read that times out mid-frame loses nothing.
     async fn read_frame(&mut self) -> Result<()> {
-        let header = self.raw_read(2).await?;
-        let opcode = header[0] & 0x0F;
-        let masked = header[1] & 0x80 != 0;
-        let mut len = u64::from(header[1] & 0x7F);
-        if len == 126 {
-            let ext = self.raw_read(2).await?;
-            len = u64::from(u16::from_be_bytes([ext[0], ext[1]]));
-        } else if len == 127 {
-            let ext = self.raw_read(8).await?;
-            len = ext.iter().fold(0u64, |acc, &b| (acc << 8) | u64::from(b));
-        }
-        let mask = if masked { self.raw_read(4).await? } else { Vec::new() };
-        let mut payload = if len > 0 { self.raw_read(len as usize).await? } else { Vec::new() };
-        if masked {
+        let header = loop {
+            if let Some(header) = self.header()? {
+                break header;
+            }
+            self.receive().await?;
+        };
+        let mut payload: Vec<u8> = self.raw.drain(..header.start + header.length).skip(header.start).collect();
+        if let Some(mask) = header.mask {
             for (i, b) in payload.iter_mut().enumerate() {
                 *b ^= mask[i % 4];
             }
         }
-        match opcode {
+        match header.opcode {
             0x0..=0x2 => {
                 self.buffer.extend_from_slice(&payload);
                 Ok(())
@@ -227,6 +285,13 @@ impl Transport for WebSocketTransport {
 
     fn is_connected(&self) -> bool {
         self.stream.as_ref().is_some_and(Stream::is_open)
+    }
+
+    fn poll(&mut self) -> Result<bool> {
+        if !self.buffer.is_empty() || self.header()?.is_some() {
+            return Ok(true);
+        }
+        Ok(self.stream.as_mut().is_none_or(Stream::ready))
     }
 
     async fn close(&mut self) {

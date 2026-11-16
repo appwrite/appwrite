@@ -31,6 +31,13 @@ const CLIENT_VERSION: &str = "0.1.0";
 const TICK_READ_TIMEOUT: Duration = Duration::from_millis(50);
 const TICK_MAX_READS: usize = 4;
 
+/// Budget for acting on what the server already sent before a request is
+/// written. What a parked connection holds (an INFO, a PING, an `-ERR`, the
+/// end of the stream) takes far less; the cap only bites under live
+/// subscription traffic, so that traffic cannot hold a request back past its
+/// own timeout.
+const SETTLE_TIMEOUT: Duration = Duration::from_millis(50);
+
 /// Server `-ERR` texts (lower case, matched as substrings) after which the
 /// server closes the connection.
 const CLOSING_ERRORS: [&str; 12] = [
@@ -191,6 +198,12 @@ impl std::fmt::Debug for Connection {
 }
 
 impl Connection {
+    /// How long [`Connection::settle`] acts on what the server already sent
+    /// before a request is written (50 ms).
+    ///
+    /// PHP: `Connection::SETTLE_TIMEOUT`.
+    pub const SETTLE_TIMEOUT: Duration = SETTLE_TIMEOUT;
+
     /// Connects to the first server of the pool that completes the
     /// handshake (`INFO`, `CONNECT`, `PING`/`PONG`).
     ///
@@ -519,6 +532,7 @@ impl Connection {
         if requests.is_empty() {
             return Ok(());
         }
+        self.settle(Some(timeout.min(SETTLE_TIMEOUT))).await?;
         let mut pending: IndexMap<String, usize> = IndexMap::with_capacity(requests.len());
         let mut publishing = false;
         let mut written = false;
@@ -639,9 +653,9 @@ impl Connection {
         data: impl AsRef<[u8]>,
         options: RequestMany,
     ) -> Result<Vec<Message>> {
-        self.assert_readable()?;
-        self.ensure_connected().await?;
         let timeout = options.timeout.unwrap_or(self.options.request_timeout);
+        self.settle(Some(timeout.min(SETTLE_TIMEOUT))).await?;
+        self.ensure_connected().await?;
         let inbox = Inbox::create(&self.options.inbox_prefix);
         let subscription = self.subscribe(&inbox, None, None).await?;
         self.publish(subject, data, Some(&inbox), None).await?;
@@ -722,12 +736,83 @@ impl Connection {
     }
 
     async fn read_message(&mut self, timeout: Option<Duration>, reconnect: bool) -> Result<Option<Message>> {
+        match self.receive(timeout, reconnect, None).await? {
+            Some(op) => self.dispatch(op).await,
+            None => Ok(None),
+        }
+    }
+
+    /// Acts on what the server has already sent, reconnecting if it closed
+    /// the socket. Returns once nothing is waiting, or after `timeout`
+    /// ([`SETTLE_TIMEOUT`] when `None`).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Logic`] while a batch collects, a closing `-ERR`'s error, a
+    /// lost connection that cannot be rebuilt, and a callback's error.
+    ///
+    /// PHP: `Connection::settle()`.
+    pub async fn settle(&mut self, timeout: Option<Duration>) -> Result<()> {
+        self.assert_readable()?;
+        self.absorb(timeout.unwrap_or(SETTLE_TIMEOUT)).await.map(|_| ())
+    }
+
+    /// Settles; returns the first `-ERR` read that left the connection
+    /// usable.
+    ///
+    /// PHP: the private `Connection::absorb()`.
+    async fn absorb(&mut self, timeout: Duration) -> Result<Option<Error>> {
+        let deadline = Instant::now() + timeout;
+        let mut kept = None;
+        while self.status == Status::Connected && self.pending()? {
+            let remaining = deadline.saturating_duration_since(Instant::now());
+            if remaining.is_zero() {
+                break;
+            }
+            let Some(op) = self.receive(Some(remaining), true, Some(remaining.min(TICK_READ_TIMEOUT))).await? else {
+                break;
+            };
+            let Op::Err(message) = op else {
+                self.dispatch(op).await?;
+                continue;
+            };
+            let error = self.server_error(message).await?;
+            if !self.is_connected() {
+                return Err(error);
+            }
+            kept.get_or_insert(error);
+        }
+        Ok(kept)
+    }
+
+    /// Whether the server has sent something a read would act on at once.
+    fn pending(&mut self) -> Result<bool> {
+        if self.parser.is_poisoned() || self.parser.has_complete_line() {
+            return Ok(true);
+        }
+        match self.transport.as_deref_mut() {
+            Some(transport) => transport.poll(),
+            None => Ok(false),
+        }
+    }
+
+    /// The next operation. A timeout returns `None` (when `reconnect`); a
+    /// lost connection reconnects (when allowed) and returns `None`.
+    /// `header_timeout` bounds the wait for the operation line.
+    ///
+    /// PHP: the private `Connection::receive()`.
+    async fn receive(
+        &mut self,
+        timeout: Option<Duration>,
+        reconnect: bool,
+        header_timeout: Option<Duration>,
+    ) -> Result<Option<Op>> {
         let next = match self.transport.as_deref_mut() {
-            Some(transport) => self.parser.next(transport, timeout).await,
+            Some(transport) => self.parser.next(transport, timeout, header_timeout).await,
             None => Err(Error::Connection("Not connected".into())),
         };
         match next {
-            Ok(op) => self.dispatch(op).await,
+            Ok(op) => Ok(Some(op)),
             Err(Error::Timeout(message)) => {
                 if reconnect {
                     Ok(None)
@@ -791,14 +876,17 @@ impl Connection {
     ///
     /// # Errors
     ///
-    /// [`Error::Timeout`] (`Flush timed out`) and the read errors.
+    /// [`Error::Timeout`] (`Flush timed out`), the read errors, and, once
+    /// the `PONG` is in, the first `-ERR` the server had sent before the
+    /// `PING` that left the connection usable.
     ///
     /// PHP: `Connection::flush()`.
     pub async fn flush(&mut self, timeout: Option<Duration>) -> Result<()> {
         self.assert_readable()?;
         self.send_queued().await?;
-        self.ensure_connected().await?;
         let timeout = timeout.unwrap_or(self.options.connect_timeout);
+        let error = self.absorb(timeout.min(SETTLE_TIMEOUT)).await?;
+        self.ensure_connected().await?;
         self.send(Writer::ping().to_vec()).await?;
         let deadline = Instant::now() + timeout;
         loop {
@@ -809,7 +897,10 @@ impl Connection {
             let op = self.next_op(remaining).await?;
             if op == Op::Pong {
                 self.outstanding_pings = 0;
-                return Ok(());
+                return match error {
+                    Some(error) => Err(error),
+                    None => Ok(()),
+                };
             }
             self.dispatch(op).await?;
         }
@@ -817,7 +908,7 @@ impl Connection {
 
     async fn next_op(&mut self, timeout: Duration) -> Result<Op> {
         match self.transport.as_deref_mut() {
-            Some(transport) => self.parser.next(transport, Some(timeout)).await,
+            Some(transport) => self.parser.next(transport, Some(timeout), None).await,
             None => Err(Error::Connection("Not connected".into())),
         }
     }
@@ -1090,7 +1181,7 @@ impl Connection {
                 self.outstanding_pings = (self.outstanding_pings - 1).max(0);
                 Ok(None)
             }
-            Op::Err(message) => Err(self.handle_error(message).await),
+            Op::Err(message) => Err(self.server_error(message).await.unwrap_or_else(|error| error)),
             Op::Ok => Ok(None),
             Op::Info(data) => {
                 self.handle_info(data).await?;
@@ -1153,21 +1244,20 @@ impl Connection {
     }
 
     /// The error for a server `-ERR`, after recycling the connection when
-    /// the server closes it, and calling `on_error`.
-    async fn handle_error(&mut self, message: String) -> Error {
+    /// the server closes it, and calling `on_error`. A failed recycle or
+    /// hook is the `Err`.
+    ///
+    /// PHP: the private `Connection::serverError()`.
+    async fn server_error(&mut self, message: String) -> Result<Error> {
         let error = Self::map_server_error(&message);
         if Self::closes_connection(&message) {
             let reconnect = !self.collecting && Self::reconnects_after(&message);
-            if let Err(e) = self.recycle_dead_connection(reconnect).await {
-                return e;
-            }
+            self.recycle_dead_connection(reconnect).await?;
         }
-        if let Some(hook) = &self.options.on_error
-            && let Err(e) = hook(&Error::Nats(message))
-        {
-            return Error::Callback(e.into());
+        if let Some(hook) = &self.options.on_error {
+            hook(&Error::Nats(message)).map_err(|e| Error::Callback(e.into()))?;
         }
-        error
+        Ok(error)
     }
 
     async fn recycle_dead_connection(&mut self, may_reconnect: bool) -> Result<()> {

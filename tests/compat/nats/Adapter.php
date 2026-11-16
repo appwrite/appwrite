@@ -5,6 +5,7 @@ namespace Tests\Compat\Nats;
 require_once __DIR__ . '/Fake.php';
 require_once __DIR__ . '/Errors.php';
 require_once __DIR__ . '/Late.php';
+require_once __DIR__ . '/Ready.php';
 
 use Tests\Compat\Adapter as Base;
 use Tests\Compat\Benchmarks;
@@ -214,6 +215,7 @@ final class Adapter implements Base, Benchmarks
             'writer.ping' => fn (array $a, Session $s) => (new Writer())->ping(),
             'writer.pong' => fn (array $a, Session $s) => (new Writer())->pong(),
             'parser.run' => fn (array $a, Session $s) => self::parse($a),
+            'parser.steps' => fn (array $a, Session $s) => self::parseSteps($a),
             'server_info.from_array' => fn (array $a, Session $s) => self::serverInfo(ServerInfo::fromArray(self::plain($a['data']))),
             'connection.closes_connection' => fn (array $a, Session $s) => Connection::closesConnection($a['message']),
             'connection.reconnects_after' => fn (array $a, Session $s) => Connection::reconnectsAfter($a['message']),
@@ -287,6 +289,9 @@ final class Adapter implements Base, Benchmarks
                 $conn = new Conn($fake);
                 $log = $conn->log;
                 $transport = ($a['late'] ?? false) ? $conn->late = new Late($fake) : $fake;
+                if ($a['ready'] ?? false) {
+                    $transport = new Ready($transport);
+                }
                 $options = self::options($a['options'] ?? [], $conn, ['transportFactory' => function (string $scheme) use ($transport, $log) {
                     $log[] = ['transport', $scheme];
 
@@ -304,6 +309,13 @@ final class Adapter implements Base, Benchmarks
             },
             'fake.answer_pings' => function (array $a, Session $s) {
                 self::fake($a, $s)->answerPings = $a['answer'];
+
+                return;
+            },
+            'fake.park' => function (array $a, Session $s) {
+                $fake = self::fake($a, $s);
+                $fake->push($a['data'] ?? '');
+                $fake->closedByServer = true;
 
                 return;
             },
@@ -485,6 +497,7 @@ final class Adapter implements Base, Benchmarks
             },
             'conn.close' => fn (array $a, Session $s) => self::conn($a, $s)->connection->close(),
             'conn.tick' => fn (array $a, Session $s) => self::conn($a, $s)->connection->tick(),
+            'conn.settle' => fn (array $a, Session $s) => self::conn($a, $s)->connection->settle(self::timeout($a)),
             'conn.state' => function (array $a, Session $s) {
                 $c = self::conn($a, $s)->connection;
 
@@ -507,6 +520,7 @@ final class Adapter implements Base, Benchmarks
 
             // --- Transports ---
             'transport.round_trip' => fn (array $a, Session $s) => self::roundTrip($a, $s),
+            'transport.poll' => fn (array $a, Session $s) => self::pollTrip($a, $s),
 
             // --- JetStream ---
             'js.new' => fn (array $a, Session $s) => $s->handle(self::conn($a, $s)->connection->jetStream($a['domain'] ?? null, $a['prefix'] ?? null)),
@@ -1149,6 +1163,136 @@ final class Adapter implements Base, Benchmarks
         }
 
         return ['ops' => $ops, 'error' => $error, 'then' => $then, 'buffered' => $parser->hasBufferedData()];
+    }
+
+    /**
+     * A parser over a transport serving `chunks` one per read ('' once they
+     * run out) and recording each read's timeout; next(timeout,
+     * headerTimeout) for each of `calls`, with the parser's state after it.
+     *
+     * @param array<string, mixed> $a
+     * @return array<string, mixed>
+     */
+    private static function parseSteps(array $a): array
+    {
+        $transport = new class ($a['chunks']) implements Transport {
+            /** @var list<?float> */
+            public array $timeouts = [];
+
+            /** @param list<string> $chunks */
+            public function __construct(private array $chunks)
+            {
+            }
+
+            public function connect(string $host, int $port, float $timeout): void
+            {
+            }
+
+            public function write(string $data): int
+            {
+                return \strlen($data);
+            }
+
+            public function read(int $maxBytes, ?float $timeout = null): string
+            {
+                $this->timeouts[] = $timeout;
+
+                return array_shift($this->chunks) ?? '';
+            }
+
+            public function readLine(?float $timeout = null): string
+            {
+                return '';
+            }
+
+            /** @param array<string, mixed> $options */
+            public function upgradeTls(array $options): void
+            {
+            }
+
+            public function isConnected(): bool
+            {
+                return true;
+            }
+
+            public function close(): void
+            {
+            }
+        };
+        $parser = new Parser($transport);
+        $state = fn (): array => ['complete_line' => $parser->hasCompleteLine(), 'poisoned' => $parser->isPoisoned(), 'buffered' => $parser->hasBufferedData()];
+        $initial = $state();
+        $steps = [];
+        foreach ($a['calls'] as [$timeout, $headerTimeout]) {
+            try {
+                [$op, $data] = $parser->next($timeout === null ? null : (float) $timeout, $headerTimeout === null ? null : (float) $headerTimeout);
+                $result = [$op->value, self::opData($op, $data)];
+            } catch (\Throwable $e) {
+                $result = self::error($e);
+            }
+            $steps[] = ['result' => $result] + $state();
+        }
+
+        return ['initial' => $initial, 'steps' => $steps, 'timeouts' => $transport->timeouts];
+    }
+
+    /**
+     * A transport (tcp, tls, ws) against a service, polled at each point:
+     * the INFO waiting, read, idle, the PONG waiting, read, and closed. Each
+     * step [name, result or error]; a wait polls for up to 2 s.
+     *
+     * @param array<string, mixed> $a
+     * @return list<array{0: string, 1: mixed}>
+     */
+    private static function pollTrip(array $a, Session $s): array
+    {
+        $kind = $a['kind'];
+        $url = parse_url($s->service($a['service']));
+        $tls = self::plain($a['tls'] ?? []);
+        $transport = match ($kind) {
+            'tcp' => new TcpTransport(),
+            'tls' => new TlsTransport($tls),
+            'ws' => new WebSocketTransport(false, $tls, $a['path'] ?? '/'),
+            default => throw new Fault("unknown transport {$kind}"),
+        };
+        $out = [];
+        $step = function (string $name, callable $fn) use (&$out): void {
+            try {
+                $out[] = [$name, $fn()];
+            } catch (\Throwable $e) {
+                $out[] = [$name, self::error($e)];
+            }
+        };
+        $wait = function () use ($transport): bool {
+            $deadline = microtime(true) + 2.0;
+            while (!$transport->poll()) {
+                if (microtime(true) > $deadline) {
+                    return false;
+                }
+                usleep(5_000);
+            }
+
+            return true;
+        };
+        $transport->connect($url['host'], $url['port'], 2.0);
+        $step('info_waiting', $wait);
+        $step('info', fn () => str_starts_with($transport->readLine(2.0), 'INFO '));
+        $step('idle', fn () => $transport->poll());
+        $transport->write("CONNECT {\"verbose\":false}\r\nPING\r\n");
+        $step('pong_waiting', $wait);
+        $step('pong', function () use ($transport) {
+            $line = $transport->readLine(2.0);
+            while (str_starts_with($line, 'INFO ') || $line === "+OK\r\n") {
+                $line = $transport->readLine(2.0);
+            }
+
+            return $line;
+        });
+        $step('idle_again', fn () => $transport->poll());
+        $transport->close();
+        $step('closed', fn () => $transport->poll());
+
+        return $out;
     }
 
     private static function opData(ServerOp $op, mixed $data): mixed

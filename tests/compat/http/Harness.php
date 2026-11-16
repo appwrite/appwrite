@@ -247,6 +247,7 @@ final class Harness
                 'no_content' => $env->response()->noContent(),
                 'abort' => $env->response() instanceof Capture ? $env->response()->abort() : throw new Fault('abort needs the capturing response'),
                 'chunk' => $env->response()->chunk((string) self::eval($a[0], $env), (bool) ($a[1] ?? false)),
+                'stream' => $env->response()->stream((string) self::eval($a[0], $env), (bool) ($a[1] ?? false)) ?: throw new \RuntimeException('stream() returned false'),
                 'status' => $env->response()->setStatusCode($a),
                 'content_type' => $env->response()->setContentType($a[0], $a[1] ?? ''),
                 'add_header' => $env->response()->addHeader($a[0], (string) self::eval($a[1], $env)),

@@ -80,6 +80,8 @@ pub struct Response {
     /// it, with its length.
     staged_body: Option<(Body, usize)>,
     stream: Option<Stream>,
+    /// The incremental encoder a streamed body was negotiated to.
+    encoder: Option<compression::Encoder>,
 }
 
 impl Clone for Response {
@@ -103,6 +105,7 @@ impl Clone for Response {
             staged: self.staged.clone(),
             staged_body: None,
             stream: None,
+            encoder: None,
         }
     }
 }
@@ -145,6 +148,7 @@ impl Response {
             staged: None,
             staged_body: None,
             stream: None,
+            encoder: None,
         }
     }
 
@@ -670,6 +674,103 @@ impl Response {
             self.out_end(None);
         }
         Ok(())
+    }
+
+    /// Streams a part of the body like [`Response::chunk`], but compressed
+    /// where [`Response::send`] would compress it, each part flushed so the
+    /// client can decode it on arrival. The headers wait for the first
+    /// bytes, so a stream that never carries any stays unencoded; `end`
+    /// closes the response.
+    ///
+    /// Returns `false` when the part cannot be sent: the response was sent,
+    /// the transport rejected it (the client went away), or the encoder
+    /// failed.
+    ///
+    /// PHP: `stream($body, $end)`.
+    pub fn stream(&mut self, body: &[u8], end: bool) -> bool {
+        if self.sent {
+            return false;
+        }
+        if body.is_empty() && !end {
+            return true;
+        }
+        if !self.headers_sent {
+            if !body.is_empty() {
+                self.negotiate();
+            }
+            self.debug_speed();
+            self.append_cookies();
+            self.append_headers();
+            self.size += self.headers_size();
+            self.headers_sent = true;
+        }
+        if self.disable_payload {
+            if end {
+                self.sent = true;
+                self.out_end(None);
+            }
+            return true;
+        }
+        let body = match &mut self.encoder {
+            Some(encoder) => match encoder.add(body, end) {
+                Some(encoded) => encoded,
+                None => return false,
+            },
+            None => body.to_vec(),
+        };
+        if end {
+            self.sent = true;
+            self.disable_payload = true;
+            self.size += body.len();
+            self.out_end(if body.is_empty() { None } else { Some(&body) });
+            return true;
+        }
+        if !self.out_write(&body) {
+            return false;
+        }
+        self.size += body.len();
+        true
+    }
+
+    /// Picks the encoding [`Response::send`] would, among those that compress
+    /// incrementally (gzip, deflate, Brotli; not zstd), without its minimum
+    /// size: a stream's length is unknown.
+    ///
+    /// PHP: `negotiate()`.
+    fn negotiate(&mut self) {
+        if self.has_header("Content-Encoding")
+            || self.accept_encoding.is_empty()
+            || !compression::compressible(&self.content_type)
+        {
+            return;
+        }
+        let accepted: Vec<&str> = self
+            .accept_encoding
+            .split(',')
+            .filter(|encoding| {
+                let name = encoding.split(';').next().unwrap_or_default();
+                let name = php_std::string::trim(name.as_bytes(), b" \t\n\r\0\x0B").to_ascii_lowercase();
+                name != b"zstd"
+            })
+            .collect();
+        let Some(algorithm) = compression::from_accept_encoding(&accepted.join(","), &self.compression_supported)
+        else {
+            return;
+        };
+        let encoder = match algorithm {
+            compression::Algorithm::Brotli => {
+                compression::Encoder::brotli(crate::COMPRESSION_BROTLI_LEVEL_DEFAULT as u32)
+            }
+            compression::Algorithm::Gzip => compression::Encoder::gzip(),
+            compression::Algorithm::Deflate => compression::Encoder::deflate(),
+            _ => None,
+        };
+        let Some(encoder) = encoder else { return };
+        self.encoder = Some(encoder);
+        self.remove_header("Content-Length");
+        self.add_header("Content-Encoding", algorithm.content_encoding());
+        self.add_header("X-Utopia-Compression", "true");
+        self.add_header("Vary", "Accept-Encoding");
     }
 
     /// Aborts a partial response without sending its terminal chunk: the
