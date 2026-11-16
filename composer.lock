@@ -280,7 +280,8 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-09-12T10:28:18+00:00"
+            "time": "2026-09-12T10:28:18+00:00",
+            "published-time": "2026-09-12T12:23:30+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -1813,7 +1814,8 @@
                 "issues": "https://github.com/opis/closure/issues",
                 "source": "https://github.com/opis/closure/tree/4.5.0"
             },
-            "time": "2026-03-05T13:32:42+00:00"
+            "time": "2026-03-05T13:32:42+00:00",
+            "published-time": "2026-03-05T13:34:38+00:00"
         },
         {
             "name": "paragonie/constant_time_encoding",
@@ -2626,7 +2628,8 @@
                 "issues": "https://github.com/ramsey/collection/issues",
                 "source": "https://github.com/ramsey/collection/tree/2.1.1"
             },
-            "time": "2025-03-22T05:38:12+00:00"
+            "time": "2025-03-22T05:38:12+00:00",
+            "published-time": "2025-03-22T05:39:22+00:00"
         },
         {
             "name": "ramsey/uuid",
@@ -2704,7 +2707,8 @@
                 "issues": "https://github.com/ramsey/uuid/issues",
                 "source": "https://github.com/ramsey/uuid/tree/4.9.4"
             },
-            "time": "2026-09-16T11:39:30+00:00"
+            "time": "2026-09-16T11:39:30+00:00",
+            "published-time": "2026-09-16T11:41:15+00:00"
         },
         {
             "name": "spomky-labs/cbor-php",
@@ -3370,7 +3374,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-04-10T16:19:22+00:00"
+            "time": "2026-04-10T16:19:22+00:00",
+            "published-time": "2026-04-26T14:44:50+00:00"
         },
         {
             "name": "symfony/polyfill-intl-grapheme",
@@ -3702,7 +3707,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-05-26T12:45:58+00:00"
+            "time": "2026-05-26T12:45:58+00:00",
+            "published-time": "2026-05-26T13:40:34+00:00"
         },
         {
             "name": "symfony/polyfill-php82",
@@ -4662,20 +4668,22 @@
                 "issues": "https://github.com/utopia-php/async/issues",
                 "source": "https://github.com/utopia-php/async/tree/0.2.0"
             },
-            "time": "2026-09-29T14:07:22+00:00"
+            "abandoned": true,
+            "time": "2026-09-29T14:07:22+00:00",
+            "published-time": "2026-09-29T14:07:43+00:00"
         },
         {
             "name": "utopia-php/database",
-            "version": "10.1.2",
+            "version": "10.1.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "0f136bb85cf69e8310db135b3fc2da1360dbf726"
+                "reference": "b494b761870f5af3e501ef4ef109c080b6b74512"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/0f136bb85cf69e8310db135b3fc2da1360dbf726",
-                "reference": "0f136bb85cf69e8310db135b3fc2da1360dbf726",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/b494b761870f5af3e501ef4ef109c080b6b74512",
+                "reference": "b494b761870f5af3e501ef4ef109c080b6b74512",
                 "shasum": ""
             },
             "require": {
@@ -4733,9 +4741,10 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/10.1.2"
+                "source": "https://github.com/utopia-php/database/tree/10.1.3"
             },
-            "time": "2026-11-11T13:40:42+00:00"
+            "time": "2026-11-12T12:59:05+00:00",
+            "published-time": "2026-11-16T06:37:50+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -4795,7 +4804,8 @@
                 "issues": "https://github.com/utopia-php/mongo/issues",
                 "source": "https://github.com/utopia-php/mongo/tree/1.5.4"
             },
-            "time": "2026-09-09T05:42:37+00:00"
+            "time": "2026-09-09T05:42:37+00:00",
+            "published-time": "2026-09-09T05:43:09+00:00"
         },
         {
             "name": "web-auth/cose-lib",
