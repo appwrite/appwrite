@@ -250,7 +250,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
     }
 
     updateFunctionMutation.mutate({
-      providerBranch: selectedBranch || undefined,
       providerRootDirectory: selectedDir || undefined,
     })
   }
