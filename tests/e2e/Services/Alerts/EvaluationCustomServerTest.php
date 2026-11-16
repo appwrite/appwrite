@@ -343,13 +343,15 @@ final class EvaluationCustomServerTest extends Scope
     {
         // The test stack denies 192.0.2.0/24 through _APP_MONITORS_DENIED_NETWORKS.
         $targets = [
-            'http' => ['url' => 'http://192.0.2.10/'],
-            'dns' => ['domain' => 'example.com', 'resolver' => '192.0.2.53'],
-            'tcp' => ['host' => '192.0.2.10', 'port' => 80],
-            'smtp' => ['host' => '192.0.2.10', 'port' => 25],
+            ['http', ['url' => 'http://192.0.2.10/']],
+            ['dns', ['domain' => 'example.com', 'resolver' => '192.0.2.53']],
+            ['tcp', ['host' => '192.0.2.10', 'port' => 80]],
+            // IPv4-compatible IPv6, checked as the IPv4 address it embeds.
+            ['tcp', ['host' => '::192.0.2.10', 'port' => 80]],
+            ['smtp', ['host' => '192.0.2.10', 'port' => 25]],
         ];
 
-        foreach ($targets as $type => $target) {
+        foreach ($targets as [$type, $target]) {
             $created = $this->client->call(Client::METHOD_POST, '/monitors/' . $type, $this->headers(), [
                 'monitorId' => 'unique()',
                 'name' => 'Denied ' . $type . ' ' . \uniqid(),

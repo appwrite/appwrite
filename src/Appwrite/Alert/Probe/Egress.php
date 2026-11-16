@@ -63,15 +63,18 @@ final readonly class Egress implements Destinations
 
     public function allows(string $address): bool
     {
+        $addresses = [$address];
         $packed = @\inet_pton($address);
-        // An IPv4-mapped IPv6 address reaches the IPv4 one, so it is checked as that.
-        if ($packed !== false && \strlen($packed) === 16 && \str_starts_with($packed, \str_repeat("\0", 10) . "\xff\xff")) {
-            $address = (string) \inet_ntop(\substr($packed, 12));
+        // An IPv4-mapped (::ffff:a.b.c.d) or IPv4-compatible (::a.b.c.d) address can reach the IPv4 one, so it is checked as that too.
+        if ($packed !== false && \strlen($packed) === 16 && (\str_starts_with($packed, \str_repeat("\0", 10) . "\xff\xff") || \str_starts_with($packed, \str_repeat("\0", 12)))) {
+            $addresses[] = (string) \inet_ntop(\substr($packed, 12));
         }
 
         foreach ($this->denied as $range) {
-            if ($range->contains($address)) {
-                return false;
+            foreach ($addresses as $candidate) {
+                if ($range->contains($candidate)) {
+                    return false;
+                }
             }
         }
 

@@ -361,6 +361,9 @@ trait MonitorsBase
         $this->assertSame('none', $smtp['body']['tlsMode']);
         $moved = $this->updateProbeMonitor('smtp', $smtp['body']['$id'], ['port' => 587, 'tlsMode' => '']);
         $this->assertSame('starttls', $moved['body']['tlsMode']);
+        // An explicit mode, then back to the stored port's: 587 implies starttls.
+        $this->assertSame('implicit', $this->updateProbeMonitor('smtp', $smtp['body']['$id'], ['tlsMode' => 'implicit'])['body']['tlsMode']);
+        $this->assertSame('starttls', $this->updateProbeMonitor('smtp', $smtp['body']['$id'], ['tlsMode' => ''])['body']['tlsMode']);
 
         foreach (['dns' => ['answer' => '93.184.215.14'], 'tcp' => ['port' => 8080]] as $type => $change) {
             $created = $this->createProbeMonitor($type, $type === 'dns' ? ['domain' => 'example.com'] : ['host' => 'example.com', 'port' => 80]);

@@ -97,9 +97,9 @@ class Update extends Base
         Database $dbForPlatform,
         Authorization $authorization,
     ): void {
-        // An empty mode takes the one the new port implies.
+        // An empty mode takes the one the port implies: the new port, else the stored one.
         if ($tlsMode === '') {
-            $tlsMode = $port === null ? null : SMTP::mode($port);
+            $tlsMode = SMTP::mode($port ?? (int) $this->getMonitor($dbForPlatform, $authorization, $project, $monitorId)->getAttribute('port'));
         }
 
         $target = ['host' => $host, 'port' => $port, 'tlsMode' => $tlsMode];

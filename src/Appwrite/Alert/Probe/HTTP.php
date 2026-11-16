@@ -32,7 +32,6 @@ final readonly class HTTP implements Probe
     public function check(Document $monitor, Egress $egress): Check
     {
         $timeout = (int) $monitor->getAttribute('timeout', 10);
-        $deadline = \microtime(true) + $timeout;
         $url = (string) $monitor->getAttribute('url');
 
         $request = (new RequestFactory())->createRequest((string) $monitor->getAttribute('method', 'GET'), $url);
@@ -80,9 +79,10 @@ final readonly class HTTP implements Probe
             return new Check(Result::Ok, $latency, $code);
         }
 
-        // The request already verified the chain; this reads the expiry of the certificate the host presents.
+        // The request already verified the chain; this reads the expiry of the certificate the host presents,
+        // with a timeout of its own so a slow but successful request does not leave it none.
         try {
-            $connection = Connection::open($uri->getHost(), $uri->getPort() ?? 443, true, false, $egress, $deadline);
+            $connection = Connection::open($uri->getHost(), $uri->getPort() ?? 443, true, false, $egress, \microtime(true) + $timeout);
             $expiry = $connection->certificateExpiresAt();
             $connection->close();
         } catch (Failure) {

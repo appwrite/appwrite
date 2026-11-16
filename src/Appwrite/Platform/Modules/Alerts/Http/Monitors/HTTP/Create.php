@@ -123,7 +123,11 @@ class Create extends Base
             }
         }
 
-        $encoded = (string) \json_encode((object) $headers);
+        try {
+            $encoded = \json_encode((object) $headers, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            throw new Exception(Exception::MONITOR_TARGET_INVALID, 'Headers must be valid UTF-8.');
+        }
         if (\strlen($encoded) > 16384) {
             throw new Exception(Exception::MONITOR_TARGET_INVALID, 'Headers must not exceed 16384 characters.');
         }
