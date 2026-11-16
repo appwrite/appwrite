@@ -69,6 +69,15 @@ const ONBOARDING: &[&str] = &[
     "sites.createTemplateDeployment",
     "sites.createVcsDeployment",
     "sites.updateSiteDeployment",
+    "videos.create",
+    "project.createVideoProfile",
+    "videos.createRendition",
+    "videos.createCaption",
+    "videos.getTimelines",
+    "videos.getHlsManifest",
+    "videos.getDashManifest",
+    "videos.getCmafHlsManifest",
+    "videos.getCmafDashManifest",
 ];
 
 impl Job {
