@@ -16,7 +16,7 @@ runs:
   steps:
     - name: Login to Docker Hub
       if: inputs.token != ''
-      uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+      uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
       with:
         username: ${{ inputs.username }}
         password: ${{ inputs.token }}
