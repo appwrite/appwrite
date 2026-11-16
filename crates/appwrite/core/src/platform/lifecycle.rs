@@ -118,7 +118,7 @@ pub(super) async fn finalize(mut ctx: Context, result: Result<Response>) -> Resp
         } else {
             sent.set("server", "swoole-http-server");
         }
-        return send(ctx, sent, true).await;
+        return send(ctx, sent, true, false).await;
     }
 
     let mut response = match result {
@@ -151,12 +151,13 @@ pub(super) async fn finalize(mut ctx: Context, result: Result<Response>) -> Resp
         response.set("expires", "0");
         response.set("pragma", "no-cache");
     }
-    send(ctx, response, api).await
+    send(ctx, response, api, true).await
 }
 
 /// `Response::send()`: compression, `X-Debug-Speed` (from the request
-/// start), then the body; and the shutdown hooks of a success.
-async fn send(ctx: Context, mut response: Response, api: bool) -> Response {
+/// start), then the body; and the shutdown hooks of a success. `action`:
+/// the action answered, rather than an init hook (`$response->send()`).
+async fn send(ctx: Context, mut response: Response, api: bool, action: bool) -> Response {
     let state = ctx.state.clone();
     let is_error = response.status().as_u16() >= 400;
     let body: Bytes = response.staged().cloned().unwrap_or_default();
@@ -173,7 +174,8 @@ async fn send(ctx: Context, mut response: Response, api: bool) -> Response {
     response.flush();
 
     if !is_error && api && !ctx.failed {
-        shutdown::schedule(ctx, response.status(), response.content_type().to_owned(), body, response.size()).await;
+        shutdown::schedule(ctx, response.status(), response.content_type().to_owned(), body, response.size(), action)
+            .await;
     }
     response
 }
