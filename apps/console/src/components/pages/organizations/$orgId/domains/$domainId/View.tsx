@@ -370,7 +370,7 @@ export function View({ initialData }: ViewProps = {}) {
     port?: number
     comment?: string
   }) => {
-    createRecordMutation.mutate(
+    return createRecordMutation.mutateAsync(
       {
         type: data.type,
         data: {
@@ -411,7 +411,7 @@ export function View({ initialData }: ViewProps = {}) {
       comment?: string
     },
   ) => {
-    updateRecordMutation.mutate(
+    return updateRecordMutation.mutateAsync(
       {
         recordId,
         type: data.type,
