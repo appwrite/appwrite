@@ -307,28 +307,22 @@ impl FormattedInsertStatement {
     }
 }
 
-/// `$` without `/D` also matches before a final newline: the text the
-/// pattern's body must cover.
-fn before_final_newline(text: &str) -> &str {
-    text.strip_suffix('\n').unwrap_or(text)
-}
-
 /// `/^[A-Za-z0-9_=., ]+$/`.
 fn is_hint(hint: &str) -> bool {
-    let bytes = before_final_newline(hint).as_bytes();
+    let bytes = hint.as_bytes();
     !bytes.is_empty()
         && bytes.iter().all(|&b| b.is_ascii_alphanumeric() || matches!(b, b'_' | b'=' | b'.' | b',' | b' '))
 }
 
 /// `/^[a-zA-Z0-9_.]+$/`.
 fn is_setting_value(text: &str) -> bool {
-    let bytes = before_final_newline(text).as_bytes();
+    let bytes = text.as_bytes();
     !bytes.is_empty() && bytes.iter().all(|&b| b.is_ascii_alphanumeric() || matches!(b, b'_' | b'.'))
 }
 
 /// `/^[A-Za-z][A-Za-z0-9_]*$/`.
 fn is_format_name(text: &str) -> bool {
-    let bytes = before_final_newline(text).as_bytes();
+    let bytes = text.as_bytes();
     bytes.first().is_some_and(u8::is_ascii_alphabetic) && bytes.iter().all(|&b| b.is_ascii_alphanumeric() || b == b'_')
 }
 
@@ -368,8 +362,7 @@ fn is_clickhouse_type(text: &str) -> bool {
         }
         false
     }
-    let bytes = text.as_bytes();
-    full(bytes) || bytes.strip_suffix(b"\n").is_some_and(full)
+    full(text.as_bytes())
 }
 
 /// The ClickHouse type of a binding without a registered type.
@@ -1306,7 +1299,7 @@ mod tests {
         assert!(is_clickhouse_type("Int64"));
         assert!(is_clickhouse_type("Nullable(DateTime64(3))"));
         assert!(is_clickhouse_type("Decimal(10, 2)"));
-        assert!(is_clickhouse_type("Int64\n"));
+        assert!(!is_clickhouse_type("Int64\n"));
         assert!(!is_clickhouse_type("DROP TABLE x; --"));
         assert!(!is_clickhouse_type("A(B(C(1)))"));
         assert!(!is_clickhouse_type("A(1))"));

@@ -8704,7 +8704,7 @@
           "$value": "Builder\\Statement",
           "id": 3,
           "props": {
-            "query": "SELECT * FROM `events` PREWHERE toDate(created) > ?",
+            "query": "SELECT * FROM `events` PREWHERE (toDate(created) > ?)",
             "bindings": [
               "2024-01-01"
             ],
@@ -8712,15 +8712,15 @@
             "namedBindings": null
           }
         },
-        "SELECT * FROM `events` PREWHERE toDate(created) > ?",
+        "SELECT * FROM `events` PREWHERE (toDate(created) > ?)",
         [
           "2024-01-01"
         ],
         [
           "2024-01-01"
         ],
-        "SELECT * FROM `events` PREWHERE toDate(created) > ?",
-        "SELECT * FROM `events` PREWHERE toDate(created) > ?",
+        "SELECT * FROM `events` PREWHERE (toDate(created) > ?)",
+        "SELECT * FROM `events` PREWHERE (toDate(created) > ?)",
         [
           "2024-01-01"
         ]
@@ -28088,7 +28088,7 @@
           "$value": "Builder\\Statement",
           "id": 3,
           "props": {
-            "query": "SELECT * FROM `t` WHERE x > ? AND y < ?",
+            "query": "SELECT * FROM `t` WHERE (x > ? AND y < ?)",
             "bindings": [
               1,
               2
@@ -28097,7 +28097,7 @@
             "namedBindings": null
           }
         },
-        "SELECT * FROM `t` WHERE x > ? AND y < ?",
+        "SELECT * FROM `t` WHERE (x > ? AND y < ?)",
         [
           1,
           2
@@ -28106,8 +28106,8 @@
           1,
           2
         ],
-        "SELECT * FROM `t` WHERE x > ? AND y < ?",
-        "SELECT * FROM `t` WHERE x > ? AND y < ?",
+        "SELECT * FROM `t` WHERE (x > ? AND y < ?)",
+        "SELECT * FROM `t` WHERE (x > ? AND y < ?)",
         [
           1,
           2
@@ -36918,7 +36918,7 @@
           "$object": "Builder\\ClickHouse",
           "id": 1
         },
-        "SELECT * FROM `events` WHERE x = NULL"
+        "SELECT * FROM `events` WHERE (x = NULL)"
       ]
     },
     {
@@ -58390,7 +58390,7 @@
           "$object": "Builder\\ClickHouse",
           "id": 1
         },
-        "SELECT * FROM `t` WHERE col = NULL"
+        "SELECT * FROM `t` WHERE (col = NULL)"
       ]
     },
     {
@@ -62093,7 +62093,7 @@
           "$value": "Builder\\Statement",
           "id": 7,
           "props": {
-            "query": "SELECT * FROM `t` WHERE (`x` > ? AND custom_func(y) > ?)",
+            "query": "SELECT * FROM `t` WHERE (`x` > ? AND (custom_func(y) > ?))",
             "bindings": [
               1,
               5
@@ -62102,7 +62102,7 @@
             "namedBindings": null
           }
         },
-        "SELECT * FROM `t` WHERE (`x` > ? AND custom_func(y) > ?)",
+        "SELECT * FROM `t` WHERE (`x` > ? AND (custom_func(y) > ?))",
         [
           1,
           5
@@ -62111,8 +62111,8 @@
           1,
           5
         ],
-        "SELECT * FROM `t` WHERE (`x` > ? AND custom_func(y) > ?)",
-        "SELECT * FROM `t` WHERE (`x` > ? AND custom_func(y) > ?)",
+        "SELECT * FROM `t` WHERE (`x` > ? AND (custom_func(y) > ?))",
+        "SELECT * FROM `t` WHERE (`x` > ? AND (custom_func(y) > ?))",
         [
           1,
           5
@@ -62319,7 +62319,7 @@
           "$value": "Builder\\Statement",
           "id": 7,
           "props": {
-            "query": "SELECT * FROM `t` WHERE (`a` IN (?) OR b IS NOT NULL)",
+            "query": "SELECT * FROM `t` WHERE (`a` IN (?) OR (b IS NOT NULL))",
             "bindings": [
               1
             ],
@@ -62327,15 +62327,15 @@
             "namedBindings": null
           }
         },
-        "SELECT * FROM `t` WHERE (`a` IN (?) OR b IS NOT NULL)",
+        "SELECT * FROM `t` WHERE (`a` IN (?) OR (b IS NOT NULL))",
         [
           1
         ],
         [
           1
         ],
-        "SELECT * FROM `t` WHERE (`a` IN (?) OR b IS NOT NULL)",
-        "SELECT * FROM `t` WHERE (`a` IN (?) OR b IS NOT NULL)",
+        "SELECT * FROM `t` WHERE (`a` IN (?) OR (b IS NOT NULL))",
+        "SELECT * FROM `t` WHERE (`a` IN (?) OR (b IS NOT NULL))",
         [
           1
         ]
@@ -75169,7 +75169,7 @@
           "$value": "Builder\\Statement",
           "id": 3,
           "props": {
-            "query": "SELECT * FROM `t` WHERE score > ?",
+            "query": "SELECT * FROM `t` WHERE (score > ?)",
             "bindings": [
               10
             ],
@@ -75177,15 +75177,15 @@
             "namedBindings": null
           }
         },
-        "SELECT * FROM `t` WHERE score > ?",
+        "SELECT * FROM `t` WHERE (score > ?)",
         [
           10
         ],
         [
           10
         ],
-        "SELECT * FROM `t` WHERE score > ?",
-        "SELECT * FROM `t` WHERE score > ?",
+        "SELECT * FROM `t` WHERE (score > ?)",
+        "SELECT * FROM `t` WHERE (score > ?)",
         [
           10
         ]
@@ -78526,17 +78526,17 @@
           "$value": "Builder\\Statement",
           "id": 4,
           "props": {
-            "query": "SELECT * FROM `users` WHERE EXISTS (SELECT `id` FROM `orders` WHERE `orders`.`user_id` = `users`.`id`)",
+            "query": "SELECT * FROM `users` WHERE EXISTS (SELECT `id` FROM `orders` WHERE (`orders`.`user_id` = `users`.`id`))",
             "bindings": [],
             "readOnly": true,
             "namedBindings": null
           }
         },
-        "SELECT * FROM `users` WHERE EXISTS (SELECT `id` FROM `orders` WHERE `orders`.`user_id` = `users`.`id`)",
+        "SELECT * FROM `users` WHERE EXISTS (SELECT `id` FROM `orders` WHERE (`orders`.`user_id` = `users`.`id`))",
         [],
         [],
-        "SELECT * FROM `users` WHERE EXISTS (SELECT `id` FROM `orders` WHERE `orders`.`user_id` = `users`.`id`)",
-        "SELECT * FROM `users` WHERE EXISTS (SELECT `id` FROM `orders` WHERE `orders`.`user_id` = `users`.`id`)"
+        "SELECT * FROM `users` WHERE EXISTS (SELECT `id` FROM `orders` WHERE (`orders`.`user_id` = `users`.`id`))",
+        "SELECT * FROM `users` WHERE EXISTS (SELECT `id` FROM `orders` WHERE (`orders`.`user_id` = `users`.`id`))"
       ]
     },
     {
@@ -79558,7 +79558,7 @@
           "$value": "Builder\\Statement",
           "id": 2,
           "props": {
-            "query": "SELECT COUNT(*) AS `cnt` FROM `events` GROUP BY `user_id` HAVING COUNT(*) > ?",
+            "query": "SELECT COUNT(*) AS `cnt` FROM `events` GROUP BY `user_id` HAVING (COUNT(*) > ?)",
             "bindings": [
               10
             ],
@@ -79566,15 +79566,15 @@
             "namedBindings": null
           }
         },
-        "SELECT COUNT(*) AS `cnt` FROM `events` GROUP BY `user_id` HAVING COUNT(*) > ?",
+        "SELECT COUNT(*) AS `cnt` FROM `events` GROUP BY `user_id` HAVING (COUNT(*) > ?)",
         [
           10
         ],
         [
           10
         ],
-        "SELECT COUNT(*) AS `cnt` FROM `events` GROUP BY `user_id` HAVING COUNT(*) > ?",
-        "SELECT COUNT(*) AS `cnt` FROM `events` GROUP BY `user_id` HAVING COUNT(*) > ?",
+        "SELECT COUNT(*) AS `cnt` FROM `events` GROUP BY `user_id` HAVING (COUNT(*) > ?)",
+        "SELECT COUNT(*) AS `cnt` FROM `events` GROUP BY `user_id` HAVING (COUNT(*) > ?)",
         [
           10
         ]
@@ -79672,7 +79672,7 @@
           "$value": "Builder\\Statement",
           "id": 2,
           "props": {
-            "query": "SELECT * FROM `events` WHERE a = ?",
+            "query": "SELECT * FROM `events` WHERE (a = ?)",
             "bindings": [
               1
             ],
@@ -79680,15 +79680,15 @@
             "namedBindings": null
           }
         },
-        "SELECT * FROM `events` WHERE a = ?",
+        "SELECT * FROM `events` WHERE (a = ?)",
         [
           1
         ],
         [
           1
         ],
-        "SELECT * FROM `events` WHERE a = ?",
-        "SELECT * FROM `events` WHERE a = ?",
+        "SELECT * FROM `events` WHERE (a = ?)",
+        "SELECT * FROM `events` WHERE (a = ?)",
         [
           1
         ]
@@ -79835,7 +79835,7 @@
           "$value": "Builder\\Statement",
           "id": 3,
           "props": {
-            "query": "SELECT * FROM `events` WHERE `b` IN (?) AND a = ?",
+            "query": "SELECT * FROM `events` WHERE `b` IN (?) AND (a = ?)",
             "bindings": [
               2,
               1
@@ -79844,7 +79844,7 @@
             "namedBindings": null
           }
         },
-        "SELECT * FROM `events` WHERE `b` IN (?) AND a = ?",
+        "SELECT * FROM `events` WHERE `b` IN (?) AND (a = ?)",
         [
           2,
           1
@@ -79853,8 +79853,8 @@
           2,
           1
         ],
-        "SELECT * FROM `events` WHERE `b` IN (?) AND a = ?",
-        "SELECT * FROM `events` WHERE `b` IN (?) AND a = ?",
+        "SELECT * FROM `events` WHERE `b` IN (?) AND (a = ?)",
+        "SELECT * FROM `events` WHERE `b` IN (?) AND (a = ?)",
         [
           2,
           1
@@ -84266,18 +84266,18 @@
           "$value": "Builder\\Statement",
           "id": 4,
           "props": {
-            "query": "SELECT `id`, `name` FROM `users` WHERE EXISTS (SELECT 1 FROM `orders` WHERE `orders`.`user_id` = `users`.`id`)",
+            "query": "SELECT `id`, `name` FROM `users` WHERE EXISTS (SELECT 1 FROM `orders` WHERE (`orders`.`user_id` = `users`.`id`))",
             "bindings": [],
             "readOnly": true,
             "namedBindings": null
           }
         },
-        "SELECT `id`, `name` FROM `users` WHERE EXISTS (SELECT 1 FROM `orders` WHERE `orders`.`user_id` = `users`.`id`)",
+        "SELECT `id`, `name` FROM `users` WHERE EXISTS (SELECT 1 FROM `orders` WHERE (`orders`.`user_id` = `users`.`id`))",
         [],
-        "SELECT `id`, `name` FROM `users` WHERE EXISTS (SELECT 1 FROM `orders` WHERE `orders`.`user_id` = `users`.`id`)",
+        "SELECT `id`, `name` FROM `users` WHERE EXISTS (SELECT 1 FROM `orders` WHERE (`orders`.`user_id` = `users`.`id`))",
         [],
         [],
-        "SELECT `id`, `name` FROM `users` WHERE EXISTS (SELECT 1 FROM `orders` WHERE `orders`.`user_id` = `users`.`id`)"
+        "SELECT `id`, `name` FROM `users` WHERE EXISTS (SELECT 1 FROM `orders` WHERE (`orders`.`user_id` = `users`.`id`))"
       ]
     },
     {
@@ -84684,18 +84684,18 @@
           "$value": "Builder\\Statement",
           "id": 4,
           "props": {
-            "query": "SELECT `id`, `name`, (SELECT COUNT(*) AS `cnt` FROM `orders` WHERE `orders`.`user_id` = `users`.`id`) AS `order_count` FROM `users`",
+            "query": "SELECT `id`, `name`, (SELECT COUNT(*) AS `cnt` FROM `orders` WHERE (`orders`.`user_id` = `users`.`id`)) AS `order_count` FROM `users`",
             "bindings": [],
             "readOnly": true,
             "namedBindings": null
           }
         },
-        "SELECT `id`, `name`, (SELECT COUNT(*) AS `cnt` FROM `orders` WHERE `orders`.`user_id` = `users`.`id`) AS `order_count` FROM `users`",
+        "SELECT `id`, `name`, (SELECT COUNT(*) AS `cnt` FROM `orders` WHERE (`orders`.`user_id` = `users`.`id`)) AS `order_count` FROM `users`",
         [],
-        "SELECT `id`, `name`, (SELECT COUNT(*) AS `cnt` FROM `orders` WHERE `orders`.`user_id` = `users`.`id`) AS `order_count` FROM `users`",
+        "SELECT `id`, `name`, (SELECT COUNT(*) AS `cnt` FROM `orders` WHERE (`orders`.`user_id` = `users`.`id`)) AS `order_count` FROM `users`",
         [],
         [],
-        "SELECT `id`, `name`, (SELECT COUNT(*) AS `cnt` FROM `orders` WHERE `orders`.`user_id` = `users`.`id`) AS `order_count` FROM `users`"
+        "SELECT `id`, `name`, (SELECT COUNT(*) AS `cnt` FROM `orders` WHERE (`orders`.`user_id` = `users`.`id`)) AS `order_count` FROM `users`"
       ]
     },
     {
@@ -96549,7 +96549,7 @@
           "$value": "Builder\\Statement",
           "id": 6,
           "props": {
-            "query": "SELECT * FROM `customers` WHERE `active` IN (?) AND EXISTS (SELECT * FROM `orders` WHERE orders.customer_id = customers.id AND `total` > ?)",
+            "query": "SELECT * FROM `customers` WHERE `active` IN (?) AND EXISTS (SELECT * FROM `orders` WHERE (orders.customer_id = customers.id) AND `total` > ?)",
             "bindings": [
               1,
               1000
@@ -96558,7 +96558,7 @@
             "namedBindings": null
           }
         },
-        "SELECT * FROM `customers` WHERE `active` IN (?) AND EXISTS (SELECT * FROM `orders` WHERE orders.customer_id = customers.id AND `total` > ?)",
+        "SELECT * FROM `customers` WHERE `active` IN (?) AND EXISTS (SELECT * FROM `orders` WHERE (orders.customer_id = customers.id) AND `total` > ?)",
         [
           1,
           1000
@@ -96567,8 +96567,8 @@
           1,
           1000
         ],
-        "SELECT * FROM `customers` WHERE `active` IN (?) AND EXISTS (SELECT * FROM `orders` WHERE orders.customer_id = customers.id AND `total` > ?)",
-        "SELECT * FROM `customers` WHERE `active` IN (?) AND EXISTS (SELECT * FROM `orders` WHERE orders.customer_id = customers.id AND `total` > ?)"
+        "SELECT * FROM `customers` WHERE `active` IN (?) AND EXISTS (SELECT * FROM `orders` WHERE (orders.customer_id = customers.id) AND `total` > ?)",
+        "SELECT * FROM `customers` WHERE `active` IN (?) AND EXISTS (SELECT * FROM `orders` WHERE (orders.customer_id = customers.id) AND `total` > ?)"
       ]
     },
     {
