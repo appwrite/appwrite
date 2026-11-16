@@ -8096,9 +8096,9 @@
           },
           "expect": {
             "$error": {
-              "class": "Exception",
-              "message": "Latest commit response failed with status code 404",
-              "code": 404
+              "class": "Utopia\\VCS\\Exception\\RepositoryNotFound",
+              "message": "Branch not found: non-existing-branch",
+              "code": 0
             }
           }
         },
