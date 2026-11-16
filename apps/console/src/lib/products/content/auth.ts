@@ -72,6 +72,12 @@ export const authProductContent: ProductPageContent = {
       links: [{ label: 'Passkeys', href: '/docs/products/auth/passkeys' }],
     },
     {
+      question: 'Can users sign in with Active Directory or LDAP?',
+      answer:
+        'Yes. Connect your project to an LDAP directory, such as Active Directory or OpenLDAP, under Settings > Identity servers, and users sign in with their directory username and password. The directory checks the password, so Appwrite never stores it. You can limit sign-in to one group, and each account keeps its name, email, and phone number in step with the directory.',
+      links: [{ label: 'LDAP login', href: '/docs/products/auth/ldap' }],
+    },
+    {
       question: 'Can I migrate users from another auth provider?',
       answer:
         'Yes. Import users through the Console or the Users API with the Server SDK. For email and password accounts, create users with plain-text passwords or import existing password hashes when your provider uses a supported algorithm: Argon2, bcrypt, scrypt, scrypt-modified (Firebase), SHA, MD5, or PHPass. New passwords are stored with Argon2. Hashes imported from other algorithms are upgraded to Argon2 after the user\'s first successful sign-in.',

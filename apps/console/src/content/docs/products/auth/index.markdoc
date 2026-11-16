@@ -44,6 +44,9 @@ Authenticate users in server-side rendered applications.
 {% cards_item href="/docs/products/auth/passkeys" title="Passkeys" %}
 Let users sign up and sign in with Face ID, Touch ID, or a fingerprint instead of a password, on the web, Android, and Apple platforms.
 {% /cards_item %}
+{% cards_item href="/docs/products/auth/ldap" title="LDAP" %}
+Let users sign in with the username and password from your LDAP directory, such as Active Directory or OpenLDAP.
+{% /cards_item %}
 {% cards_item href="/docs/products/auth/custom-token" title="Custom token" %}
 Implement custom authentication methods by generating custom tokens.
 {% /cards_item %}

@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-ldap-login",
+    "href": "/blog/post/announcing-ldap-login",
+    "title": "Announcing LDAP login: Sign in with your directory",
+    "description": "Appwrite Auth now supports LDAP login. Users sign in with their Active Directory or OpenLDAP username and password, with group access and synced accounts.",
+    "date": "2026-11-17",
+    "lastUpdated": "2026-11-17",
+    "timeToRead": 7,
+    "author": "aditya-oberai",
+    "category": "announcements, security",
+    "featured": false,
+    "cover": "/images/blog/announcing-ldap-login/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-activity-reasons",
     "href": "/blog/post/announcing-activity-reasons",
     "title": "Announcing reasons in Activity: see why every change was made",
