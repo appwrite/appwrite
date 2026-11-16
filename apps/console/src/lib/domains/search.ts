@@ -37,7 +37,7 @@ export function normalizeDomainSearchInput(value: string): string {
   let host = value.trim().toLowerCase()
   const schemeEnd = host.indexOf('://')
   if (schemeEnd >= 0) host = host.slice(schemeEnd + 3)
-  for (const separator of ['/', '?', '#']) {
+  for (const separator of ['/', '?', '#', ':']) {
     const index = host.indexOf(separator)
     if (index >= 0) host = host.slice(0, index)
   }

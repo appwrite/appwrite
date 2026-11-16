@@ -84,7 +84,10 @@ export function TransferDomainInWizard({
     !!existingDomainQuery.data?.domains.some(
       (domain) => domain.domain === apexDomain,
     )
-  const isCheckingOrganization = !!apexDomain && existingDomainQuery.isPending
+  // The list keeps the previous domain's result while the new one loads.
+  const isCheckingOrganization =
+    !!apexDomain &&
+    (existingDomainQuery.isPending || existingDomainQuery.isPlaceholderData)
 
   const priceQuery = useQuery(
     domainTransferPriceQueryOptions(
