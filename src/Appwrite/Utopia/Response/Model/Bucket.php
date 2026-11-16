@@ -98,6 +98,12 @@ class Bucket extends Model
                 'default' => true,
                 'example' => false,
             ])
+            ->addRule('stripMetadata', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Metadata such as location, device and capture time is removed from uploaded images.',
+                'default' => false,
+                'example' => true,
+            ])
             ->addRule('totalSize', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total size of this bucket in bytes.',

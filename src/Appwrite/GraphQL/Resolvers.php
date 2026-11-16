@@ -6,6 +6,7 @@ use Appwrite\GraphQL\Exception as GQLException;
 use Appwrite\Promises\Swoole;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Exception;
 use Utopia\Http\Http;
 use Utopia\Http\Route;
@@ -13,13 +14,6 @@ use Utopia\System\System;
 
 class Resolvers
 {
-    /**
-     * Request-scoped locks keyed by the per-request GraphQL Http instance.
-     *
-     * @var array<string, ResolverLock>
-     */
-    private static array $locks = [];
-
     /**
      * Preserve response side effects that callers depend on, such as session
      * cookies created by account auth routes.
@@ -51,20 +45,6 @@ class Resolvers
         foreach ((array) $fallbackCookies as $value) {
             $to->addHeader('X-Fallback-Cookies', $value);
         }
-    }
-
-    /**
-     * Get the request-scoped lock shared by GraphQL resolver coroutines
-     * for the current HTTP request.
-     */
-    private static function getLock(Http $utopia): ResolverLock
-    {
-        $key = \spl_object_hash($utopia);
-        if (!isset(self::$locks[$key])) {
-            self::$locks[$key] = new ResolverLock();
-        }
-
-        return self::$locks[$key];
     }
 
     /**
@@ -341,7 +321,10 @@ class Resolvers
         ?callable $beforeResolve = null,
         ?callable $prepareRequest = null,
     ): void {
-        $lock = self::getLock($utopia);
+        /** @var ResolverLock $lock */
+        $lock = $utopia->context()->get('resolverLock');
+        /** @var Authorization $authorization */
+        $authorization = $utopia->context()->get('authorization');
 
         $lock->acquire();
 
@@ -367,7 +350,11 @@ class Resolvers
 
             $request->setRoute($utopia->match($request)?->route);
 
-            $utopia->execute($request, $resolverResponse);
+            // Roles a field grants itself end with that field
+            $authorization->withRoles(
+                $authorization->getRoles(),
+                fn () => $utopia->execute($request, $resolverResponse)
+            );
 
             self::mergeResponseSideEffects($resolverResponse, $response);
 
@@ -387,7 +374,6 @@ class Resolvers
             return;
         } finally {
             $lock->release();
-            unset(self::$locks[\spl_object_hash($utopia)]);
         }
 
         if ($statusCode < 200 || $statusCode >= 400) {

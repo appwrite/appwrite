@@ -10,6 +10,7 @@ use Appwrite\Event\Message\Certificate as CertificateMessage;
 use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
+use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Platform\Workers\Certificates;
@@ -138,12 +139,14 @@ final class CertificatesDomainValidationTest extends TestCase
                 $message,
                 $dbForPlatform,
                 new MailPublisher(new MockPublisher(), new Queue('v1-mails')),
+                new NotificationPublisher(new MockPublisher(), new Queue('v1-notifications')),
                 $this->createStub(Event::class),
                 $this->createStub(Webhook::class),
                 new FunctionPublisher(new MockPublisher(), new Queue('v1-functions')),
                 $this->createStub(Realtime::class),
                 new CertificatePublisher(new MockPublisher(), new Queue('v1-certificates')),
                 $certificates,
+                [],
                 [],
                 $this->createStub(Authorization::class),
                 (new Bus())->setResolver(static fn (): null => null),

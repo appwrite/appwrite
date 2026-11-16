@@ -19,6 +19,7 @@ Config::setParam('console', include __DIR__ . '/../config/console.php');
 Config::setParam('collections', include __DIR__ . '/../config/collections.php');
 Config::setParam('frameworks', include __DIR__ . '/../config/frameworks.php');
 Config::setParam('usage', include __DIR__ . '/../config/usage.php');
+Config::setParam('alerts', include __DIR__ . '/../config/alerts.php'); // Alert rule resources and metrics
 Config::setParam('roles', include __DIR__ . '/../config/roles.php');  // User roles and scopes
 Config::setParam('projectScopes', include __DIR__ . '/../config/scopes/project.php');
 Config::setParam('organizationScopes', include __DIR__ . '/../config/scopes/organization.php');
@@ -44,6 +45,7 @@ Config::setParam('storage-logos', include __DIR__ . '/../config/storage/logos.ph
 Config::setParam('storage-mimes', include __DIR__ . '/../config/storage/mimes.php');
 Config::setParam('storage-inputs', include __DIR__ . '/../config/storage/inputs.php');
 Config::setParam('storage-outputs', include __DIR__ . '/../config/storage/outputs.php');
+Config::setParam('storage-outputs-auto', include __DIR__ . '/../config/storage/outputs-auto.php');
 Config::setParam('storage-formats', include __DIR__ . '/../config/storage/formats.php');
 Config::setParam('specifications', include __DIR__ . '/../config/specifications.php');
 Config::setParam('templates-function', include __DIR__ . '/../config/templates/function.php');

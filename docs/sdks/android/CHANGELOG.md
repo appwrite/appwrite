@@ -1,5 +1,38 @@
 # Change Log
 
+## 31.0.1
+
+* Fixed: realtime connections, subscriptions, presence and reconnect state are isolated between clients
+* Fixed: realtime wrappers sharing a client reuse its connection and keep independent cancellation scopes
+* Fixed: realtime WebSocket handshakes send the configured JWT
+* Fixed: Java and Kotlin examples omit unset optional strings instead of sending empty values, and preserve explicit `"0"` examples
+* Updated: generated API metadata and response-format header to `2.6.1`; client service signatures and model shapes are unchanged
+
+## 31.0.0
+
+* Breaking: every service method declares `@Throws(AppwriteException::class)`; Java callers must catch `AppwriteException`
+* Added: `account.listMemberships` to list the current user's team memberships
+* Added: `createQuery` on `Databases`, `DocumentsDB` and `TablesDB` to send list queries in the request body
+* Added: `bundleId` and `environment` params on `account.createPushTarget` and `updatePushTarget`
+* Added: `@JvmStatic` on `ID`, `Permission`, `Role`, `Query`, `Operator`, `Channel` and `InputFile` helpers for Java
+* Fixed: `row.data` keeps null-valued columns instead of dropping them
+* Updated: Java examples catch `AppwriteException` and import `List` and `Map`
+
+## 30.0.0
+
+* Breaking: requests send `x-appwrite-response-format: 2.5.0`; responses follow the 2.5 shapes
+* Breaking: missing response fields map to their documented defaults
+* Breaking: `oauth2` `resource` params now take `List<String>` on the authorize, PAR, device and token methods
+* Breaking: `Push.subscribe` takes `notifyInForeground` before the callback; Java callers must pass it
+* Breaking: removed the `Topic.any()` and `Topic.all()` wildcard builders and `ResolvedTopic`; `Push.subscribe` takes strings or `Topic`
+* Added: `notifyInForeground` option on `Push.subscribe`
+* Added: `PushOpenActivity` for opening notifications
+* Added: `Query` aggregates (`count`, `countDistinct`, `sum`, `avg`, `min`, `max` and more), `groupBy`, `having`, `distinct`, joins, `relationship`, `covers`, `spatialEquals` and `page`
+* Added: `Query.builder()` to chain queries; `build()` returns the query list
+* Added: `ExecutionTrigger.EMAIL`
+* Updated: `Topic.path` rejects levels containing a NUL character
+* Fixed: a file exactly `CHUNK_SIZE` bytes long uploads in a single request
+
 ## 29.2.0
 
 * Added: `analytics.createEvent` in a new `Analytics` service to send tracking events

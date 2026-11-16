@@ -70,6 +70,8 @@ type SettingsLayoutShellProps = {
    * (for in-surface hosts like the agent right pane).
    */
   useRouteLinks?: boolean
+  /** Shown under the desktop nav items. */
+  navFooter?: ReactNode
 }
 
 function SettingsSearchInput({
@@ -119,6 +121,7 @@ function SettingsLayoutShellContent({
   desktopNavAriaLabel = 'Settings navigation',
   navWidthClassName = SETTINGS_LAYOUT_NAV_WIDTH_CLASS,
   useRouteLinks = true,
+  navFooter,
 }: Omit<SettingsLayoutShellProps, 'searchQuery' | 'onSearchQueryChange'>) {
   const t = useT()
   const { query, setQuery } = useSettingsSearch()
@@ -264,6 +267,7 @@ function SettingsLayoutShellContent({
               </Link>
             )
           })}
+          {navFooter}
         </nav>
 
         <DeferEmptyResultsProvider deferEmptyResults={deferEmptyResults}>

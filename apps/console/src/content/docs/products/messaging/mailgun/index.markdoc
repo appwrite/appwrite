@@ -43,7 +43,7 @@ You will need to provide the following information from your **Mailgun dashboard
 ---
 * Domain
 * Head to Sending -> Domains -> Add new domain.
-Follow [Mailgun's instructions](https://help.mailgun.com/hc/en-us/articles/360026833053-Domain-Verification-Walkthrough) to verify the domain name.
+Follow [Mailgun's instructions](https://documentation.mailgun.com/docs/mailgun/user-manual/domains/domains-verify) to verify the domain name.
 ---
 * EU region
 * Enable the EU region setting if your domain is within the European Union.

@@ -82,7 +82,11 @@ export function isPreLaunchHeavyContentPath(
     '/og/image.png',
     '/og/image',
   ]
-  if (heavyPrefixes.some((prefix) => normalized === prefix || normalized.startsWith(`${prefix}/`))) {
+  if (
+    heavyPrefixes.some(
+      (prefix) => normalized === prefix || normalized.startsWith(`${prefix}/`),
+    )
+  ) {
     return true
   }
 
@@ -97,6 +101,7 @@ export function isPreLaunchHeavyContentPath(
     '/for-agents.md',
     '/blog/rss.xml',
     '/changelog/rss.xml',
+    '/changelog.json',
     '/robots.txt',
   ])
   if (heavyExact.has(normalized)) return true
@@ -124,9 +129,7 @@ export function clearLegacyPreLaunchDebugOverride(): void {
 }
 
 /** Whether pre-launch lock is active (env only: `VITE_CONSOLE_PRE_LAUNCH`). */
-export function isPreLaunchModeEnabled(
-  _cookieHeader?: string | null,
-): boolean {
+export function isPreLaunchModeEnabled(_cookieHeader?: string | null): boolean {
   return getPreLaunchDefault()
 }
 

@@ -8,9 +8,11 @@ use Appwrite\Models\Project as GeneratedProject;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V28;
 use Appwrite\Utopia\Response\Filters\V29;
+use Appwrite\Utopia\Response\Filters\V30;
 use Appwrite\Utopia\Response\Model\Project as ProjectModel;
 use Appwrite\Utopia\Response\Model\Provider as ProviderModel;
 use Exception;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
 use Swoole\Http\Response as SwooleResponse;
@@ -120,7 +122,8 @@ final class ResponseTest extends TestCase
         $this->response->setModel(new ProjectModel());
         $this->response->setModel(new ProviderModel());
 
-        // The generated PHP SDK sends a response format older than 2.3.0, so its responses pass through V29 and V28.
+        // The generated PHP SDK sends a response format older than 2.3.0, so its responses pass through V30, V29 and V28.
+        $this->response->addFilter(new V30());
         $this->response->addFilter(new V29());
         $this->response->addFilter(new V28());
 
@@ -377,5 +380,25 @@ final class ResponseTest extends TestCase
 
         $this->assertSame('integer', $output['columns'][0]['type']);
         $this->assertSame('bigint', $output['columns'][1]['type']);
+    }
+
+    /**
+     * @return \Iterator<string, array{string, string}>
+     */
+    public static function dispositionNames(): \Iterator
+    {
+        yield 'plain' => ['logo.png', 'attachment; filename="logo.png"; filename*=UTF-8\'\'logo.png'];
+        yield 'quotes and separators' => ['a"b\\c;d.txt', 'attachment; filename="abcd.txt"; filename*=UTF-8\'\'a%22b%5Cc%3Bd.txt'];
+        yield 'control characters' => ["a\r\nb\tc.html", 'attachment; filename="abc.html"; filename*=UTF-8\'\'a%0D%0Ab%09c.html'];
+        yield 'unicode' => ['café.txt', 'attachment; filename="caf_.txt"; filename*=UTF-8\'\'caf%C3%A9.txt'];
+        yield 'empty' => ['', 'attachment; filename="download"; filename*=UTF-8\'\'download'];
+    }
+
+    #[DataProvider('dispositionNames')]
+    public function testSetContentDisposition(string $name, string $expected): void
+    {
+        $this->response->setContentDisposition(Response::DISPOSITION_ATTACHMENT, $name);
+
+        $this->assertSame([$expected], $this->response->getHeaders()['content-disposition']);
     }
 }

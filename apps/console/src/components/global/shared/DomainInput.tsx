@@ -24,6 +24,8 @@ export interface DomainInputProps {
   placeholder?: string
   disabled?: boolean
   className?: string
+  /** Called when the user types in the field. */
+  onEdit?: () => void
 }
 
 type ValidationStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid'
@@ -45,6 +47,7 @@ export function DomainInput({
   placeholder = 'my-site',
   disabled = false,
   className,
+  onEdit,
 }: DomainInputProps) {
   const t = useT()
   const [localValue, setLocalValue] = useState('')
@@ -152,6 +155,7 @@ export function DomainInput({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')
     isUserEditedRef.current = true
+    onEdit?.()
     hasTriedSuffixRef.current = null
     setLocalValue(newValue)
   }

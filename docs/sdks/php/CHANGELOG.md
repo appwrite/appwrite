@@ -1,5 +1,81 @@
 # Change Log
 
+## 32.3.0
+
+* Updated: `Project::listEnvironments`, `Project::createEnvironment`, `Project::getEnvironment`, `Project::updateEnvironment` return `Environment` models instead of `Project`
+* Added: `Account::createDevice`, `Account::getDevice`, `Account::deleteDevice` and `Account::updateDeviceSession`, and the `Device` model
+* Added: `Project::updateAccountDevicesPolicy`, `ProjectPolicyId::ACCOUNTDEVICES()` and the `PolicyAccountDevices` model
+* Added: `Project::updateOAuth2Vipps`, `Project::updateOAuth2VippsSandbox` and the `OAuth2Vipps` model
+* Added: `OAuthProvider::VIPPS()` and `OAuthProvider::VIPPSSANDBOX()`
+* Added: `Proxy::updateFunctionRule`, `Proxy::updateRedirectRule` and `Proxy::updateSiteRule`
+* Added: optional `schedule` on `waf` rule create and update methods and on `WafRule*` models
+* Added: `ProjectKeyScopes::ALERTSWRITE()`
+* Added: `Organization::$budgetCritical`
+* Added: `Project::$environmentId`, `Session::$userName` and `ActivityEvent::$reason`
+* Added: `ProxyRule::$expireAt` and `certificateStatus`
+* Updated: requests send response format `2.7.1`
+
+## 32.2.0
+
+* Added: `Project::getPrefs` and `Project::updatePrefs` for project preferences, and `Project::$prefs`
+* Added: `AppwriteMigrationResource::PROJECTPREFERENCES()` to migrate project preferences
+* Added: `Client::setEnvironment` to act in a project environment
+* Added: `monitors.read`, `monitors.write`, `alerts.read`, `reviews.read` and `reviews.write` to `ProjectKeyScopes`
+* Added: `Organization::$budgetNotify` and `Organization::$educationExpiresAt`
+* Updated: requests send `X-Appwrite-Response-Format: 2.7.0`; README targets Appwrite 2.7.x
+
+## 32.1.0
+
+* Updated: protected `Client::getHttpClient()` and `createHttpClient()` drop their `bool` argument; `$httpClientNoRedirect` removed
+* Updated: redirects are no longer followed; a 3xx throws `AppwriteException` naming the `Location`
+* Added: `Migrations` service to run Appwrite, Firebase, NHost, Supabase, CSV and JSON migrations, plus retries and listing
+* Added: `Migration`, `MigrationList` and `MigrationReport` models and the `AppwriteMigrationResource`, `FirebaseMigrationResource`, `NHostMigrationResource`, `SupabaseMigrationResource` and `OnDuplicate` enums
+* Added: `Project::updateDenyRealtimeGuestsPolicy`, the `PolicyDenyRealtimeGuests` model and `ProjectPolicyId::DENYREALTIMEGUESTS()`
+* Added: `Project::deleteSessions` to sign out every user in the project
+* Added: `BillingPlan::$deploymentRetention`, `$deploymentRetentionMax` and `$deploymentsRetentionCount`
+* Added: `python-3.15`, `deno-2.9`, `go-1.27` and `rust-1.99` to `Runtime` and `BuildRuntime`
+* Updated: requests send `X-Appwrite-Response-Format: 2.6.2`; README targets Appwrite 2.6.x
+* Fixed: small (≤ 5 MB) uploads send `X-Appwrite-Project` and the other method headers instead of failing with 401
+* Fixed: path parameters are percent-encoded as one segment; `.` and `..` throw `AppwriteException`
+* Fixed: header names or values containing CR, LF or NUL throw `AppwriteException` instead of being sent
+* Fixed: enum values are sent in GET query strings instead of being dropped, e.g. `avatars->getBrowser` `code`
+
+## 32.0.0
+
+* Breaking: `TablesDB`, `DocumentsDB` and `VectorsDB` `create` and `update` take `$description` before `$specification`
+* Breaking: `Functions::update` takes `$description` before `$emailEnabled`
+* Added: `createQuery` on `Databases`, `DocumentsDB` and `TablesDB` to send list queries in the request body
+* Added: `Account::listMemberships`
+* Added: optional `$description` on create and update for databases, collections, tables, attributes, columns, indexes, buckets, functions, sites, variables, topics, webhooks and keys
+* Added: `$description` on the matching models
+* Added: `$total` on list methods in `Activities`, `Backups`, `Domains`, `Mongo`, `Mysql` and `Postgresql`
+* Added: `$emails` on `Messaging::createEmail` and `Messaging::updateEmail`
+* Added: `$denyList` on `Project::updatePasswordDictionaryPolicy`, `updatePasswordPersonalDataPolicy` and their policy models
+* Added: `BillingPlan::$functionsAllowCron`
+* Added: `$stripMetadata` on `Storage::createBucket`, `updateBucket` and the `Bucket` model
+
+## 31.0.0
+
+* Breaking: requests send `X-Appwrite-Response-Format: 2.5.0`; responses follow the 2.5 shapes
+* Breaking: removed `Account::listLogs`, `Users::listLogs` and the `Log`/`LogList` models
+* Breaking: removed `Organization::createKey`, `getKey`, `listKeys`, `updateKey` and `deleteKey`, and `OrganizationKeyScopes`; use `Organization::listProjectKeys`, `getProjectKey`, `updateProjectKey` and `deleteProjectKey` instead
+* Breaking: removed `Client::setDevKey`, the `DevKey` model and `Project::$devKeys`
+* Breaking: removed `BillingPlanGroup::STARTER()`; use `BillingPlanGroup::FREE()`
+* Breaking: `listSpecifications` returns each specification's prices and overage rates on the row itself. Removed the list-level `$pricing` field and the `DedicatedDatabaseSpecificationPricing` model
+* Breaking: removed `Block` fields `reason`, `projectName`, `region`, `organizationName`, `organizationId` and `billingPlan`
+* Breaking: OAuth2 `resource` params now take `?array`
+* Breaking: `Project::updateOAuth2Kakao` takes `$enabled` before `$prompt`
+* Breaking: `BackupRestoration::$options` is now an array
+* Breaking: some response fields became nullable, such as `BillingPlan::$usage` and `DedicatedDatabase::$engine`
+* Breaking: the protected `Client::flatten` is renamed `flattenForm`; subclasses that override it must rename it
+* Added: `Topic` helper to build MQTT topics for push messages
+* Added: `Mongo`, `Mysql` and `Postgresql` `promoteRestoration`, `$restoreMode`, `$targetName` and `$autoPromote` on `createRestoration`, and `DedicatedDatabaseRestoration::$restoreMode`
+* Added: `Proxy::createSMTPRule`, the `ProxyRuleProtocol` enum and `ProxyRule::$protocol`
+* Added: `$emailEnabled` on `Functions::update` and `FunctionModel`, and `ExecutionTrigger::EMAIL()`
+* Added: `Query` aggregates (`count`, `countDistinct`, `sum`, `avg`, `min`, `max` and more), `groupBy`, `having`, `distinct`, joins, `relationship`, `covers`, `spatialEquals` and `page`
+* Added: `Query::builder()` to chain queries; `build()` returns the query list
+* Fixed: OAuth2 models wrap a single `prompt` value in a list
+
 ## 30.4.0
 
 * Added: `domains` service to manage domains, DNS records, email presets, prices, transfer status and zones

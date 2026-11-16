@@ -76,8 +76,13 @@ class Get extends Action
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
-        // Secrets are only for callers that could replace the key anyway
-        if (\array_intersect(['organization.projects.keys.write', 'keys.write'], $request->getScopes()) === []) {
+        // Secrets are only for callers that could have created the key: a session with the
+        // keys write scope, or a key whose grant covers it. A JWT never sees them.
+        if (
+            \array_intersect(['organization.projects.keys.write', 'keys.write'], $request->getScopes()) === []
+            || $request->getHeaderLine('x-appwrite-jwt', '') !== ''
+            || ($apiKey !== null && !$apiKey->mayCreate(API_KEY_STANDARD, $key->getAttribute('scopes', []), $key->getAttribute('expire')))
+        ) {
             $key->setAttribute('secret', '');
         }
 

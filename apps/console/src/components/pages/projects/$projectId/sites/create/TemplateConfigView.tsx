@@ -5,7 +5,7 @@
  * Handles site details, Git connection options, and template variables.
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
@@ -45,6 +45,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
 import { resolveTemplatePlaceholder } from '@/lib/template-placeholders'
+import { isTemplateVariableSecret } from '@/lib/template-variables'
 import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
 import {
@@ -135,6 +136,8 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
   const [gitConnection, setGitConnection] = useState<'now' | 'later'>('later')
   const [variables, setVariables] = useState(formData.variables || [])
   const [domain, setDomain] = useState(formData.domain || '')
+  // Domain follows the site name until the user edits it
+  const domainEditedRef = useRef(!!formData.domain)
   const [domainValid, setDomainValid] = useState(formData.domainValid || false)
   const [isDeploying, setIsDeploying] = useState(false)
 
@@ -181,12 +184,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
   // Determine theme for screenshots
   const isDark = useMemo(() => {
     if (typeof window === 'undefined') return true
-    return (
-      resolvedTheme === 'dark' ||
-      (resolvedTheme === 'system' &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches) ||
-      theme === 'dark'
-    )
+    return (resolvedTheme ?? theme ?? 'dark') !== 'light'
   }, [theme, resolvedTheme])
 
   // Initialize form from template
@@ -207,7 +205,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         const templateVars = template.variables.map((v) => ({
           key: v.name,
           value: resolveTemplatePlaceholder(v.value || '', context),
-          secret: v.secret || false,
+          secret: isTemplateVariableSecret(v),
         }))
         setVariables(templateVars)
       }
@@ -217,7 +215,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
 
   // Generate domain when site name changes
   useEffect(() => {
-    if (siteName && !domain) {
+    if (siteName && !domainEditedRef.current) {
       setDomain(generateDomain(siteName))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -311,6 +309,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         buildRuntime: defaults.buildRuntime ?? 'node-22',
         adapter: defaults.adapter ?? '',
         fallbackFile: defaults.fallbackFile ?? '',
+        scopes: template.scopes?.length ? template.scopes : undefined,
         ...(connectNow && {
           installationId: formData.installationId,
           providerRepositoryId: formData.providerRepositoryId,
@@ -595,7 +594,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
           <p className="text-muted-foreground">{t('Template not found')}</p>
           <Button variant="outline" className="mt-4" asChild>
             <Link
-              to="/projects/$projectId/sites/create/templates"
+              to="/projects/$projectId/sites/create"
               params={{ projectId: projectId! }}
             >
               {t('Browse templates')}
@@ -721,6 +720,9 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
             value={domain}
             onChange={setDomain}
             onValidChange={setDomainValid}
+            onEdit={() => {
+              domainEditedRef.current = true
+            }}
           />
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/20">
@@ -852,7 +854,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
                       <span className="text-destructive ms-1">*</span>
                     )}
                   </Label>
-                  {templateVar?.secret && (
+                  {variable.secret && (
                     <span className="text-[10px] text-muted-foreground">
                       {t('Secret')}
                     </span>
@@ -879,7 +881,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
                   placeholder={
                     templateVar?.placeholder || `Enter ${variable.key}`
                   }
-                  type={templateVar?.secret ? 'password' : 'text'}
+                  type={variable.secret ? 'password' : 'text'}
                   className="h-9 text-[13px] font-mono"
                 />
               </div>
@@ -925,6 +927,33 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
             </div>
           )
         })()}
+
+      {/* Template scopes section (read-only) */}
+      {template.scopes && template.scopes.length > 0 && (
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {t('Scopes')}
+            </h3>
+            <p className="text-[12px] text-muted-foreground mt-1">
+              {t(
+                'This template grants these scopes to the ephemeral key generated for every site build and SSR execution. You can change them in the site settings.',
+              )}
+            </p>
+          </div>
+          <div className="border-t border-border" />
+          <div className="px-6 py-4 flex flex-wrap gap-2">
+            {template.scopes.map((scope) => (
+              <code
+                key={scope}
+                className="text-[12px] font-mono text-foreground bg-muted/50 px-2 py-0.5 rounded"
+              >
+                {scope}
+              </code>
+            ))}
+          </div>
+        </div>
+      )}
     </WizardLayout>
   )
 }

@@ -39,7 +39,7 @@ final class CloneCommandTest extends TestCase
         $this->directory = $this->workspace . '/clone';
         $source = $this->workspace . '/source';
 
-        // The clone command sets init.defaultBranch globally; keep that off the host
+        // Keep the host's global git config out of every clone
         $this->gitConfigGlobal = getenv('GIT_CONFIG_GLOBAL');
         putenv('GIT_CONFIG_GLOBAL=' . $this->workspace . '/gitconfig');
 
@@ -114,6 +114,18 @@ final class CloneCommandTest extends TestCase
         $this->assertFileDoesNotExist($this->directory . '/README.md');
         $this->assertFileDoesNotExist($this->workspace . '/pwned');
         $this->assertFileDoesNotExist($this->directory . '/pwned');
+    }
+
+    public function testCloneLeavesTheGlobalConfigAlone(): void
+    {
+        // Concurrent clones in one worker would fail on each other's global
+        // config lock; a global config that cannot be written proves none is
+        putenv('GIT_CONFIG_GLOBAL=' . $this->workspace . '/missing/gitconfig');
+
+        $this->assertSame(0, $this->clone('docs'));
+
+        $this->assertFileExists($this->directory . '/docs/guide.md');
+        $this->assertFileDoesNotExist($this->workspace . '/missing');
     }
 
     public function testCloneChecksOutATagStartingWithADash(): void

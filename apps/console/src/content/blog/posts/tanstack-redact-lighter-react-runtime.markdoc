@@ -1,0 +1,178 @@
+---
+layout: post
+title: "TanStack Redact brings a lighter React runtime"
+description: TanStack Redact 0.2.0 swaps React's browser runtime at build time, cutting bundles by up to 70.5% across TanStack Start, Vite, Vinext, and Next.js.
+date: 2026-10-27
+cover: /images/blog/tanstack-redact-lighter-react-runtime/cover.avif
+timeToRead: 6
+author: atharva
+category: news
+featured: false
+faqs:
+  - question: "What is TanStack Redact?"
+    answer: "TanStack Redact is an alternative implementation of React's runtime APIs for the browser. It replaces React and React DOM at build time, so existing components, hooks, and imports keep working while the app ships less JavaScript."
+  - question: "How much smaller are bundles with TanStack Redact?"
+    answer: "In TanStack's benchmarks, gzip bundle size dropped by 70.5% on Vite, 43.0% on TanStack Start, 28.5% on Vinext, and 20.4% on Next.js. These figures come from specific benchmark apps and are not guaranteed for every React project."
+  - question: "Which frameworks does TanStack Redact support?"
+    answer: "TanStack Redact 0.2.0 has stable browser integrations for TanStack Start, Vite, Vinext, and Next.js (App Router and Pages Router). On Next.js and Vinext, React still handles server rendering and React Server Components, while Redact handles hydration and rendering in the browser."
+  - question: "Does TanStack Redact support concurrent rendering?"
+    answer: "No. Redact renders synchronously and leaves out React's concurrent features such as time slicing and interruptible renders. That keeps the runtime smaller, but expensive updates can block user input until rendering finishes."
+  - question: "Can I deploy a TanStack Start app that uses Redact on Appwrite Sites?"
+    answer: "Yes. TanStack Start apps that use Redact build and run on Appwrite Sites with server-side rendering, server functions, and API routes. Add Redact as described in its Start guide and keep the build settings Appwrite detects: `./dist` as the output directory, or `./.output` if your app uses the Nitro plugin."
+---
+
+TanStack has released version 0.2.0 of TanStack Redact, a smaller alternative to React and React DOM in the browser. The release brings stable integrations for TanStack Start, Vite, Vinext, and Next.js, with bundle size reductions of up to 70.5% in TanStack's benchmarks, without requiring changes to existing React application code.
+
+[Announced on October 26, 2026](https://tanstack.com/blog/introducing-tanstack-redact), Redact now includes stable browser integrations for TanStack Start, Vite, Vinext, and Next.js. Developers can keep their existing components, hooks, and dependencies while replacing the React runtime through build configuration.
+
+For teams looking to reduce frontend JavaScript without migrating to a different framework, that's a significant change. Here's how TanStack Redact works, what the benchmarks show, and the tradeoffs developers should consider.
+
+# What is TanStack Redact?
+
+TanStack Redact is an alternative implementation of React's runtime APIs, designed to reduce the amount of JavaScript applications ship to browsers.
+
+Instead of introducing a new component model or requiring changes to application code, Redact replaces the React runtime at build time.
+
+Developers can continue using familiar React APIs, including hooks, context, Suspense, and hydration, while Redact handles rendering and UI updates.
+
+Redact originally started as an experiment for Tanner Linsley's personal website and tanstack.com. After expanding its production usage and compatibility coverage, TanStack released version 0.2.0 with stable browser integrations.
+
+The main benefits include:
+
+- **Smaller JavaScript bundles.** Redact reduces runtime overhead without requiring application rewrites.
+- **React API compatibility.** Existing components, hooks, and imports can continue working with Redact.
+- **Framework support.** Redact integrates with TanStack Start, Vite, Vinext, and Next.js.
+- **Configurable features.** Developers can disable optional runtime functionality to reduce bundle sizes further.
+
+However, Redact takes a different approach to rendering, which introduces compatibility and performance tradeoffs.
+
+# TanStack Redact vs React: Bundle size benchmarks
+
+The biggest improvement reported by TanStack is in bundle size.
+
+TanStack built equivalent small applications using React and Redact across four frameworks, measuring the gzip size of all emitted client-side JavaScript and CSS.
+
+Here are the results:
+
+| Framework | React | Redact | Reduction |
+| --- | ---: | ---: | ---: |
+| TanStack Start | 109.3 KB | 62.3 KB | 43.0% |
+| Vite | 68.3 KB | 20.1 KB | 70.5% |
+| Vinext | 138.1 KB | 98.8 KB | 28.5% |
+| Next.js | 175.6 KB | 139.9 KB | 20.4% |
+
+*Source: [TanStack's official Redact announcement](https://tanstack.com/blog/introducing-tanstack-redact). Results include all emitted client JavaScript and CSS, including lazy chunks.*
+
+Three results stand out:
+
+- **Vite saw the largest reduction.** Bundle size dropped from 68.3 KB to 20.1 KB, a 70.5% reduction.
+- **TanStack Start saved 47 KB.** Its bundle shrank from 109.3 KB to 62.3 KB, a 43% reduction.
+- **Next.js and Vinext also saw savings.** Client bundle sizes decreased by 20.4% and 28.5%, respectively.
+
+TanStack also tested disabling optional Redact features that weren't needed by its benchmark applications. With those changes, the TanStack Start bundle dropped further to 59.8 KB, while the Vite application reached 12.6 KB.
+
+These figures represent specific benchmark applications, not guaranteed improvements across all React projects.
+
+Developers can review the [benchmark measurements and source code](https://github.com/TanStack/redact) to understand the tests and reproduce the results.
+
+# How does TanStack Redact reduce React bundle size?
+
+Redact achieves smaller bundles by implementing React's APIs through a more compact runtime.
+
+Developers add Redact to their framework's build configuration, which redirects supported React imports to Redact's implementation.
+
+Existing components can continue using React imports without requiring application-level changes.
+
+The key architectural difference is **synchronous rendering**.
+
+React supports concurrent rendering, including time slicing and interruptible component renders. Redact doesn't include these scheduling capabilities, reducing the complexity and size of its runtime.
+
+This approach allows Redact to support familiar React development patterns while shipping less browser JavaScript.
+
+However, synchronous rendering means expensive component updates can block user input until rendering finishes.
+
+# Which frameworks support TanStack Redact?
+
+TanStack Redact 0.2.0 supports four framework and build environments.
+
+- **TanStack Start.** Redact handles server rendering and hydration, while Start keeps routing and server functions.
+- **Vite.** Redact's plugin redirects supported React imports to Redact.
+- **Vinext.** React handles server rendering, and Redact runs in the browser.
+- **Next.js.** Redact handles client rendering for both the App Router and the Pages Router.
+
+For Next.js and Vinext, React continues handling server rendering and React Server Components, while Redact takes over hydration and rendering in the browser.
+
+The underlying frameworks still manage routing, caching, and server actions.
+
+Developers can explore the setup instructions in the [TanStack Redact documentation](https://tanstack.com/redact/latest).
+
+# TanStack Redact performance and compatibility tradeoffs
+
+Smaller bundles can reduce JavaScript download and processing overhead, but that doesn't automatically translate into faster rendering or better responsiveness.
+
+TanStack also tested Redact with Vinext across six benchmark runs. The application shrank from 154.9 KB to 115.5 KB, while production build times remained effectively unchanged and development startup improved slightly.
+
+However, that benchmark didn't measure browser rendering or hydration speed.
+
+There are several considerations before switching:
+
+- **Rendering behavior.** Redact renders synchronously, so expensive updates may delay interactions.
+- **API compatibility.** Although Redact supports a broad range of React APIs, some scheduling and runtime behaviors differ.
+- **Third-party dependencies.** Libraries that rely on specific React behaviors need compatibility testing.
+- **Application performance.** Bundle-size improvements don't guarantee faster hydration or interactions.
+
+TanStack recommends testing Redact against an application's busiest screens rather than relying on bundle-size comparisons alone.
+
+The [Redact compatibility guide](https://tanstack.com/redact/latest/docs/compatibility) documents supported features and known differences.
+
+# How to get started with TanStack Redact
+
+Developers can add Redact to an existing supported application through its build configuration.
+
+For a TanStack Start application, the process involves:
+
+1. Installing the `@tanstack/redact` package.
+2. Adding Redact after the existing TanStack Start and React plugins in the Vite configuration.
+3. Keeping React and React DOM installed, along with existing React imports.
+4. Running a production build and testing hydration, navigation, forms, and third-party components.
+
+For TanStack Start, the official configuration also sets `ssr: { noExternal: true }` so Vite can redirect React imports within server dependencies.
+
+Other frameworks have their own integration instructions.
+
+See the [TanStack Start integration guide](https://tanstack.com/redact/latest/docs/start) for the complete setup.
+
+# Should you use TanStack Redact instead of React?
+
+TanStack Redact is worth evaluating if reducing JavaScript bundle size is a priority and your application already uses a supported framework.
+
+It may be particularly useful for applications where framework overhead represents a meaningful portion of the JavaScript delivered to users.
+
+However, React remains a strong choice for applications that depend on concurrent rendering or require established compatibility across complex libraries.
+
+The practical recommendation is to compare both runtimes using your actual application. Measure bundle size, hydration, responsiveness, and compatibility before changing production deployments.
+
+Redact offers developers another option for reducing frontend overhead without abandoning their existing React applications.
+
+# Build and deploy TanStack applications with Appwrite
+
+Reducing frontend JavaScript is one part of optimizing a web application. Developers still need reliable infrastructure for authentication, application data, and deployment.
+
+[Appwrite](/) provides an open source backend and hosting platform with [Auth](/products/auth), [Databases](/products/databases), [Storage](/products/storage), and [Sites](/products/sites).
+
+Appwrite Sites already supports **TanStack Start 1.0**, including server-side rendering, server functions, and API routes. Developers can connect their Git repository, configure their build, and deploy a TanStack Start application on Appwrite.
+
+TanStack Start apps that use Redact deploy to Appwrite Sites with no extra configuration. Redact renders pages on the server and in the browser, and server functions and API routes keep working. Add Redact to `vite.config.ts` as described in its [Start guide](https://tanstack.com/redact/latest/docs/start), and keep the build settings Appwrite detects: `./dist` as the output directory, or `./.output` if your app uses the Nitro plugin.
+
+Read our [TanStack Start announcement](/blog/post/tanstack-start-stable-appwrite-sites) for more details, or [create a free Appwrite project](/sign-up) to start building and deploying your application.
+
+# Resources
+
+- [TanStack Redact announcement](https://tanstack.com/blog/introducing-tanstack-redact)
+- [TanStack Redact documentation](https://tanstack.com/redact/latest)
+- [TanStack Redact GitHub repository](https://github.com/TanStack/redact)
+- [TanStack Start on Appwrite Sites](/blog/post/tanstack-start-stable-appwrite-sites)
+- [Appwrite Sites documentation](/docs/products/sites)
+- [Appwrite TanStack Start quickstart](/docs/quick-starts/tanstack-start)
+- [Appwrite documentation](/docs)
+- [Join the Appwrite Discord](/discord)

@@ -47,7 +47,7 @@ type CreateDatabaseSummaryProps = {
   monthlyCost?: DedicatedDatabaseMonthlyCost | null
   showBackupPolicies?: boolean
   backupPoliciesLabel?: string | null
-  backupsEnabled?: boolean
+  backupsEnabled?: boolean | null
   canCreate: boolean
   computeCreditsUsd?: number | null
   organizationPlan?: Models.BillingPlan | null

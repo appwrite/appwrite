@@ -31,6 +31,7 @@ use Utopia\Storage\Device\S3\Response as S3Response;
 use Utopia\Storage\Device\S3\RetryStrategy;
 use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Exception\NotFoundException;
+use Utopia\Storage\Exception\NotModifiedException;
 use Utopia\Storage\Exception\PreconditionFailedException;
 use Utopia\Storage\Exception\RemoteException;
 use Utopia\Storage\Exception\StorageException;
@@ -1061,20 +1062,83 @@ final class S3Test extends TestCase
         $this->device($client)->read('/root/file.txt', 0, 5, 'abc');
     }
 
+    public function testReadSinceATimeSendsIfModifiedSince(): void
+    {
+        $client = new ScriptedClient([new Response(200, body: new Stream('Hello'))]);
+
+        $this->assertSame('Hello', (string) $this->device($client)->read('/root/file.txt', modifiedSince: new \DateTimeImmutable('2026-01-02 03:04:05', new \DateTimeZone('+02:00'))));
+
+        $this->assertCount(1, $client->requests);
+        $this->assertSame('GET', $client->requests[0]->getMethod());
+        $this->assertSame('Fri, 02 Jan 2026 01:04:05 GMT', $client->requests[0]->getHeaderLine('if-modified-since'));
+        $this->assertStringContainsString('if-modified-since', $client->requests[0]->getHeaderLine('authorization'));
+    }
+
+    public function testReadOfAnUnmodifiedObjectIsRefusedInOneRequest(): void
+    {
+        $client = new ScriptedClient([new Response(304)]);
+
+        try {
+            $this->device($client)->read('/root/file.txt', modifiedSince: new \DateTimeImmutable());
+            $this->fail('A 304 must not read as an empty file');
+        } catch (NotModifiedException) {
+            $this->assertCount(1, $client->requests);
+        }
+    }
+
+    public function testReadCannotBeConditionalOnBothAnEtagAndATime(): void
+    {
+        $client = new ScriptedClient([]);
+
+        try {
+            $this->device($client)->read('/root/file.txt', etag: 'abc', modifiedSince: new \DateTimeImmutable());
+            $this->fail('Services disagree on which condition wins');
+        } catch (\InvalidArgumentException) {
+            $this->assertSame([], $client->requests);
+        }
+    }
+
     public function testGetFileInfoReadsTheHeaders(): void
     {
         $client = new ScriptedClient([new Response(200)
             ->withHeader('etag', '"abc123"')
             ->withHeader('content-length', '11')
+            ->withHeader('content-type', 'text/plain')
             ->withHeader('last-modified', 'Fri, 18 Sep 2026 08:41:25 GMT')]);
 
         $info = $this->device($client)->getFileInfo('/root/file.txt');
 
         $this->assertSame('HEAD', $client->requests[0]->getMethod());
         $this->assertSame('/root/file.txt', $info->path);
+        $this->assertSame('text/plain', $info->mimeType);
         $this->assertSame(11, $info->size);
         $this->assertSame('abc123', $info->etag, 'without the quotes, like every other ETag the library hands out');
         $this->assertSame('2026-09-18T08:41:25+00:00', $info->modifiedAt?->format(DATE_ATOM));
+    }
+
+    #[DataProvider('fileInfoContentTypes')]
+    public function testFileInfoNormalizesOptionalContentType(?string $header, ?string $expected): void
+    {
+        $response = new Response(200);
+        if ($header !== null) {
+            $response = $response->withHeader('content-type', $header);
+        }
+        $client = new ScriptedClient([$response]);
+        $info = $this->device($client)->getFileInfo('/root/file.bin');
+        $this->assertSame($expected, $info->mimeType);
+        $this->assertCount(1, $client->requests);
+        $this->assertSame('HEAD', $client->requests[0]->getMethod());
+    }
+
+    /** @return array<string, array{?string, ?string}> */
+    public static function fileInfoContentTypes(): array
+    {
+        return [
+            'missing' => [null, null],
+            'empty' => ['', null],
+            'parameters' => ['application/octet-stream; charset=utf-8', 'application/octet-stream'],
+            'whitespace' => [' text/plain ; charset=utf-8', 'text/plain'],
+        ];
     }
 
     public function testGetFileInfoOfAMissingObjectThrowsNotFound(): void

@@ -1,8 +1,11 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { View } from '@/components/pages/projects/$projectId/realtime/View'
-import { pageTitle } from '@/lib/utils/page-title'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_public/projects/$projectId/realtime/')({
-  head: () => ({ meta: [{ title: pageTitle('Realtime') }] }),
-  component: View,
+  beforeLoad: ({ params }) => {
+    throw redirect({
+      to: '/projects/$projectId/playground',
+      params: { projectId: params.projectId },
+      replace: true,
+    })
+  },
 })

@@ -3,7 +3,7 @@ import { formatPaymentCardBrand } from '@/components/pages/organizations/$orgId/
 import { cn } from '@/lib/utils'
 
 interface PaymentMethodBrandAvatarProps {
-  brand?: string
+  brand?: string | null
   className?: string
 }
 

@@ -17,8 +17,12 @@ export type ResourceMutationCounts = {
   deleted: number
 }
 
+// The Appwrite MCP server runs reads through appwrite_call_tool and every
+// mutation through appwrite_call_write_tool; both wrap a catalog tool name.
+const CALL_TOOLS = new Set(['appwrite_call_tool', 'appwrite_call_write_tool'])
+
 const META_TOOLS = new Set([
-  'appwrite_call_tool',
+  ...CALL_TOOLS,
   'appwrite_search_tools',
   'appwrite_get_context',
   'appwrite_search_docs',
@@ -148,10 +152,10 @@ function extractCatalogNameFromInput(input: unknown): string | undefined {
 function isCallToolWrapper(name: string): boolean {
   const normalized = name.trim().toLowerCase()
   return (
-    normalized === 'appwrite_call_tool' ||
+    CALL_TOOLS.has(normalized) ||
     normalized.endsWith('_call_tool') ||
     normalized.endsWith('.call_tool') ||
-    normalized.includes('appwrite_call_tool')
+    [...CALL_TOOLS].some((name) => normalized.includes(name))
   )
 }
 

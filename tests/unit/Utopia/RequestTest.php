@@ -66,6 +66,42 @@ final class RequestTest extends TestCase
         }
     }
 
+    public function testGetHostnameIgnoresForwardedHostFromUntrustedClient(): void
+    {
+        $previous = getenv('_APP_TRUSTED_PROXIES');
+        putenv('_APP_TRUSTED_PROXIES=10.0.0.0/8');
+
+        try {
+            $swoole = new SwooleRequest();
+            $swoole->server = ['remote_addr' => '203.0.113.10'];
+            $swoole->header = ['host' => 'api.example.com', 'x-forwarded-host' => 'other.example.com:8443', 'x-forwarded-port' => '8443'];
+            $request = new Request($swoole);
+
+            $this->assertSame('api.example.com', $request->getHostname());
+            $this->assertSame('', $request->getPort());
+        } finally {
+            putenv($previous === false ? '_APP_TRUSTED_PROXIES' : '_APP_TRUSTED_PROXIES=' . $previous);
+        }
+    }
+
+    public function testGetHostnameHonorsForwardedHostFromTrustedProxy(): void
+    {
+        $previous = getenv('_APP_TRUSTED_PROXIES');
+        putenv('_APP_TRUSTED_PROXIES=10.0.0.0/8');
+
+        try {
+            $swoole = new SwooleRequest();
+            $swoole->server = ['remote_addr' => '10.0.0.2'];
+            $swoole->header = ['host' => 'api.example.com', 'x-forwarded-host' => 'other.example.com', 'x-forwarded-port' => '8443'];
+            $request = new Request($swoole);
+
+            $this->assertSame('other.example.com', $request->getHostname());
+            $this->assertSame('8443', $request->getPort());
+        } finally {
+            putenv($previous === false ? '_APP_TRUSTED_PROXIES' : '_APP_TRUSTED_PROXIES=' . $previous);
+        }
+    }
+
     /**
      * @return \Iterator<string, array{0: string, 1: string}>
      */
@@ -219,6 +255,87 @@ final class RequestTest extends TestCase
         $this->assertSame($secondRoute, $secondRequest->getRoute());
     }
 
+    #[DataProvider('acceptedTypeCases')]
+    public function testGetAcceptedType(string $accept, ?string $expected): void
+    {
+        $this->request->addHeader('accept', $accept);
+
+        $this->assertSame($expected, $this->request->getAcceptedType(['image/avif', 'image/webp']));
+    }
+
+    public static function acceptedTypeCases(): \Iterator
+    {
+        yield 'browser with avif' => ['image/avif,image/webp,image/apng,image/*,*/*;q=0.8', 'image/avif'];
+        yield 'server preference wins over header order' => ['image/webp, image/avif', 'image/avif'];
+        yield 'webp only' => ['image/webp,*/*', 'image/webp'];
+        yield 'refused with zero quality' => ['image/avif;q=0, image/webp;q=0.5', 'image/webp'];
+        yield 'case and spacing' => [' IMAGE/AVIF ; Q=1 ', 'image/avif'];
+        yield 'wildcards do not count' => ['image/*,*/*', null];
+        yield 'empty' => ['', null];
+    }
+
+    public function testGetNegotiatedParamsResolvesAuto(): void
+    {
+        $this->setupNegotiatedRoute();
+        $this->request->addHeader('accept', 'image/webp,*/*');
+        $this->request->setQueryString(['output' => 'auto']);
+
+        $this->assertSame(['output' => 'webp'], $this->request->getNegotiatedParams());
+    }
+
+    public function testGetNegotiatedParamsFallsBackToEmpty(): void
+    {
+        $this->setupNegotiatedRoute();
+        $this->request->addHeader('accept', '*/*');
+        $this->request->setQueryString(['output' => 'auto']);
+
+        $this->assertSame(['output' => ''], $this->request->getNegotiatedParams());
+    }
+
+    public function testGetNegotiatedParamsIgnoresExplicitValues(): void
+    {
+        $this->setupNegotiatedRoute();
+        $this->request->addHeader('accept', 'image/avif');
+        $this->request->setQueryString(['output' => 'png']);
+
+        $this->assertSame([], $this->request->getNegotiatedParams());
+    }
+
+    public function testCacheIdentifierKeysAutoByNegotiatedValue(): void
+    {
+        $avif = $this->negotiatedRequest('image/avif,image/webp', ['output' => 'auto', 'width' => '100']);
+        $webp = $this->negotiatedRequest('image/webp', ['output' => 'auto', 'width' => '100']);
+        $none = $this->negotiatedRequest('*/*', ['output' => 'auto', 'width' => '100']);
+
+        $this->assertNotSame($avif->cacheIdentifier(), $webp->cacheIdentifier());
+        $this->assertSame($avif->cacheIdentifier(), $this->negotiatedRequest('*/*', ['output' => 'avif', 'width' => '100'])->cacheIdentifier());
+        $this->assertSame($webp->cacheIdentifier(), $this->negotiatedRequest('image/avif', ['output' => 'webp', 'width' => '100'])->cacheIdentifier());
+        $this->assertSame($none->cacheIdentifier(), $this->negotiatedRequest('image/avif', ['width' => '100'])->cacheIdentifier());
+    }
+
+    public function testCacheIdentifierNegotiatesWithoutCacheParams(): void
+    {
+        // Routes without a `cache.params` allowlist (like avatars screenshots) key every param
+        $route = new Route(Request::METHOD_GET, '/screenshots');
+        $route->label('cache.negotiate', ['output' => ['avif' => 'image/avif', 'webp' => 'image/webp']]);
+        $url = 'https://example.com';
+
+        $avif = $this->negotiatedRequest('image/avif', ['url' => $url, 'output' => 'auto'], $route);
+        $none = $this->negotiatedRequest('*/*', ['url' => $url, 'output' => 'auto'], $route);
+
+        $this->assertSame($avif->cacheIdentifier(), $this->negotiatedRequest('*/*', ['url' => $url, 'output' => 'avif'], $route)->cacheIdentifier());
+        $this->assertSame($none->cacheIdentifier(), $this->negotiatedRequest('image/avif', ['url' => $url], $route)->cacheIdentifier());
+        $this->assertNotSame($avif->cacheIdentifier(), $none->cacheIdentifier());
+    }
+
+    public function testCacheIdentifierIgnoresAcceptForExplicitValues(): void
+    {
+        $first = $this->negotiatedRequest('image/avif', ['output' => 'png']);
+        $second = $this->negotiatedRequest('*/*', ['output' => 'png']);
+
+        $this->assertSame($first->cacheIdentifier(), $second->cacheIdentifier());
+    }
+
     public function testGetHeaderLineReturnsStringValue(): void
     {
         $this->request->addHeader('referer', 'https://example.com');
@@ -263,6 +380,60 @@ final class RequestTest extends TestCase
         $request = new Request($swoole);
 
         $this->assertArrayNotHasKey('cookie', $request->getHeaders());
+    }
+
+    public function testGetHeadersWithoutCookiesLeavesNamedCookiesOut(): void
+    {
+        $swoole = new SwooleRequest();
+        $swoole->header = ['host' => 'example.com'];
+        $swoole->cookie = ['a_jwt_console' => 'jwt', 'theme' => 'dark', 'a_session_console' => 'secret'];
+        $request = new Request($swoole);
+
+        $headers = $request->getHeadersWithoutCookies(['a_jwt_console', 'a_session_console']);
+
+        $this->assertSame(['theme=dark'], $headers['cookie']);
+        $this->assertSame(['example.com'], $headers['host']);
+    }
+
+    public function testGetHeadersWithoutCookiesOmitsCookieHeaderWhenAllLeftOut(): void
+    {
+        $swoole = new SwooleRequest();
+        $swoole->header = ['host' => 'example.com', 'cookie' => 'a_jwt_console=jwt'];
+        $swoole->cookie = ['a_jwt_console' => 'jwt'];
+        $request = new Request($swoole);
+
+        $this->assertArrayNotHasKey('cookie', $request->getHeadersWithoutCookies(['a_jwt_console']));
+    }
+
+    #[DataProvider('contentRangeCases')]
+    public function testGetContentRangeChunk(string $contentRange, ?int $start, int $chunk): void
+    {
+        $swoole = new SwooleRequest();
+        $swoole->header = ['content-range' => $contentRange];
+        $request = new Request($swoole);
+
+        $this->assertSame($start, $request->getContentRangeStart());
+        $this->assertSame($chunk, $request->getContentRangeChunk(5242880));
+    }
+
+    /**
+     * @return \Iterator<string, array{0: string, 1: ?int, 2: int}>
+     */
+    public static function contentRangeCases(): \Iterator
+    {
+        yield 'first chunk' => ['bytes 0-5242879/12582912', 0, 0];
+        yield 'second chunk' => ['bytes 5242880-10485759/12582912', 5242880, 1];
+        yield 'last chunk shorter than the rest' => ['bytes 10485760-12582911/12582912', 10485760, 2];
+        yield 'short range inside a chunk' => ['bytes 5242881-5242881/12582912', 5242881, 1];
+        yield 'end equal to size' => ['bytes 0-10/10', 0, 0];
+        yield 'bounds at the integer limit' => ['bytes 9223372036854775807-9223372036854775807/9223372036854775807', null, 0];
+        yield 'bounds past the integer limit' => ['bytes 0-99999999999999999999/99999999999999999999', null, 0];
+        yield 'size past the integer limit' => ['bytes 0-9/99999999999999999999', null, 0];
+        yield 'start after end' => ['bytes 10-5/20', null, 0];
+        yield 'end past size' => ['bytes 0-20/10', null, 0];
+        yield 'negative start' => ['bytes -1-5/10', null, 0];
+        yield 'missing size' => ['bytes 0-5', null, 0];
+        yield 'missing unit' => ['0-5/10', null, 0];
     }
 
     public function testGetParamsCachesRawParamsWhenFilterThrows4xx(): void
@@ -404,5 +575,33 @@ final class RequestTest extends TestCase
         $this->request->addFilter(new First());
         $this->request->addFilter(new Second());
         $this->request->setRoute($route);
+    }
+
+    /**
+     * @param array<string, string> $query
+     */
+    private function negotiatedRequest(string $accept, array $query, ?Route $route = null): Request
+    {
+        $swoole = new SwooleRequest();
+        $swoole->header = ['accept' => $accept];
+        $request = new Request($swoole);
+        $request->setQueryString($query);
+        $request->setRoute($route ?? $this->negotiatedRoute());
+
+        return $request;
+    }
+
+    private function setupNegotiatedRoute(): void
+    {
+        $this->request->setRoute($this->negotiatedRoute());
+    }
+
+    private function negotiatedRoute(): Route
+    {
+        $route = new Route(Request::METHOD_GET, '/preview');
+        $route->label('cache.params', ['output', 'width']);
+        $route->label('cache.negotiate', ['output' => ['avif' => 'image/avif', 'webp' => 'image/webp']]);
+
+        return $route;
     }
 }

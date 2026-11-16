@@ -5,7 +5,7 @@ export const Route = createFileRoute(
 )({
   beforeLoad: ({ params }) => {
     throw redirect({
-      to: '/projects/$projectId/realtime/',
+      to: '/projects/$projectId/playground',
       params: { projectId: params.projectId },
       replace: true,
     })

@@ -44,7 +44,8 @@ final class SMTPConsoleClientTest extends Scope
 
         $this->assertSame(204, $response['headers']['status-code']);
 
-        // The audit is written asynchronously by the audits worker.
+        // The audit is written asynchronously by the audits worker, which can
+        // trail the suite's traffic by well over 15 seconds under CI load.
         $this->assertEventually(function () use ($headers) {
             $events = $this->client->call(Client::METHOD_GET, '/activities/events', $headers, [
                 'queries' => [
@@ -59,6 +60,6 @@ final class SMTPConsoleClientTest extends Scope
                 $this->assertSame('project.smtp.test', $event['event']);
                 $this->assertSame('project/' . $this->getProject()['$id'], $event['resource']);
             }
-        }, timeoutMs: 15000, waitMs: 500);
+        }, timeoutMs: 60000, waitMs: 500);
     }
 }

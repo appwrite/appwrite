@@ -36,7 +36,6 @@ function assert(response, checkName, condition) {
     if (!result) {
         console.error(`Assertion failed: ${checkName}`);
         console.error(`Response status: ${response.status}`);
-        console.error(`Response body: ${response.body}`);
         throw new Error(`Assertion failed: ${checkName}`);
     }
 }

@@ -153,6 +153,123 @@ class DSNTest extends TestCase
         $this->assertEquals('us-east-2', $dsn->getParam('region', 'us-east-2'));
     }
 
+    public function testFromEncodesEachPart(): void
+    {
+        $dsn = DSN::from(
+            scheme: 's3',
+            host: 'minio.example.com',
+            user: 'admin@example.com',
+            password: 'sl/sh+$@no:her',
+            port: 9000,
+            path: 'b?url=http://169.254.169.254/latest&insecure=true#',
+            params: ['region' => 'us-east-1', 'value' => 'a&b=c'],
+        );
+
+        $this->assertSame('s3', $dsn->getScheme());
+        $this->assertSame('admin@example.com', $dsn->getUser());
+        $this->assertSame('sl/sh+$@no:her', $dsn->getPassword());
+        $this->assertSame('minio.example.com', $dsn->getHost());
+        $this->assertSame('9000', $dsn->getPort());
+        $this->assertSame('b?url=http://169.254.169.254/latest&insecure=true#', $dsn->getPath());
+        $this->assertSame('us-east-1', $dsn->getParam('region'));
+        $this->assertSame('a&b=c', $dsn->getParam('value'));
+        $this->assertSame('', $dsn->getParam('url'));
+        $this->assertSame('', $dsn->getParam('insecure'));
+    }
+
+    public function testFromKeepsPathSegments(): void
+    {
+        $dsn = DSN::from(scheme: 's3', host: 'localhost', path: 'bucket/prefix');
+
+        $this->assertSame('bucket/prefix', $dsn->getPath());
+        $this->assertSame('s3://localhost/bucket/prefix', (string) $dsn);
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function provideReshapingHosts(): array
+    {
+        return [
+            'path' => ['minio.example.com/other'],
+            'query' => ['minio.example.com?url=http://10.0.0.1'],
+            'fragment' => ['minio.example.com#x'],
+            'userinfo' => ['user@minio.example.com'],
+            'port' => ['minio.example.com:9000'],
+        ];
+    }
+
+    #[DataProvider('provideReshapingHosts')]
+    public function testFromRefusesAHostThatReshapesTheDSN(string $host): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        DSN::from(scheme: 's3', host: $host, path: 'bucket');
+    }
+
+    public function testFromRefusesAPasswordWithoutAUser(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        DSN::from(scheme: 's3', host: 'localhost', password: 'secret');
+    }
+
+    /**
+     * @return array<string, array{array<string, string>}>
+     */
+    public static function provideParamsParseStrRewrites(): array
+    {
+        return [
+            'brackets' => [['x[y]' => 'z']],
+            'dot' => [['a.b' => 'c']],
+            'space' => [['a b' => 'c']],
+        ];
+    }
+
+    /**
+     * @param  array<string, string>  $params
+     */
+    #[DataProvider('provideParamsParseStrRewrites')]
+    public function testFromRefusesParamsGetParamCannotReadBack(array $params): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        DSN::from(scheme: 's3', host: 'localhost', params: $params);
+    }
+
+    public function testFromParamsReadBack(): void
+    {
+        $dsn = DSN::from(scheme: 's3', host: 'localhost', params: ['region' => 'eu central', 'url' => 'https://x?y=1&z']);
+
+        $this->assertSame('eu central', $dsn->getParam('region'));
+        $this->assertSame('https://x?y=1&z', $dsn->getParam('url'));
+    }
+
+    public function testToStringRoundTrips(): void
+    {
+        $dsn = DSN::from(
+            scheme: 'mariadb',
+            host: 'localhost',
+            user: 'user',
+            password: 'p@ss/word',
+            port: 3306,
+            path: 'data base',
+            params: ['charset' => 'utf8'],
+        );
+
+        $parsed = new DSN((string) $dsn);
+
+        $this->assertSame('mariadb://user:p%40ss%2Fword@localhost:3306/data%20base?charset=utf8', (string) $dsn);
+        $this->assertSame('p@ss/word', $parsed->getPassword());
+        $this->assertSame('data base', $parsed->getPath());
+        $this->assertSame('utf8', $parsed->getParam('charset'));
+    }
+
+    public function testPathIsDecoded(): void
+    {
+        $dsn = new DSN('s3://localhost/b%3Furl%3Dx');
+
+        $this->assertSame('b?url=x', $dsn->getPath());
+        $this->assertSame('', $dsn->getParam('url'));
+    }
+
     public function testFail(): void
     {
         $this->expectException(\InvalidArgumentException::class);

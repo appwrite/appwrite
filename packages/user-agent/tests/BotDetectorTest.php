@@ -31,6 +31,14 @@ final class BotDetectorTest extends TestCase
             'Sogou spider' => ['Sogou web spider/4.0(+http://www.sogou.com/docs/help/webmasters.htm)', 'Sogou Spider'],
             'generic crawler' => ['Acme-Crawler/1.0', 'Acme-Crawler'],
             'generic bot suffix' => ['CustomBot/1.0', 'CustomBot'],
+            'word inside parentheses' => ['Mozilla/5.0 (compatible; my_spider-x/1.0)', 'my_spider'],
+            'later word' => ['foo-bar-scraperish crawler-thing', 'crawler'],
+            'underscores around the word' => ['Agent_(x)__Bot_', 'Bot'],
+            'after a plus' => ['Something +FeedCrawler', 'FeedCrawler'],
+            'longest word' => ['prefix-bot-bot-tail/2', 'prefix-bot-bot'],
+            'whole agent' => ['ABCbot', 'ABCbot'],
+            'before a semicolon' => ['a_b-c_scraper;', 'a_b-c_scraper'],
+            'after a dot and dash' => ['abc.def-bot', 'bot'],
         ];
     }
 
@@ -52,6 +60,7 @@ final class BotDetectorTest extends TestCase
             'Chrome' => ['Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/126.0.0.0 Safari/537.36'],
             'robotics product' => ['AcmeRobotics/2.0'],
             'bot substring' => ['BottomNavigationClient/1.0'],
+            'word after a dot' => ['x.examplebot/1.0'],
             'Sogou browser' => ['Mozilla/5.0 (Linux; Android 12) AppleWebKit/537.36 SogouMobileBrowser/5.28.0'],
             'Pinterest app' => ['Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) Pinterest/11.20 (iPhone; iOS 16.0)'],
             'WhatsApp in-app browser' => ['Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36 WhatsApp/2.24.6'],
@@ -63,5 +72,17 @@ final class BotDetectorTest extends TestCase
     public function testHumans(string $userAgent): void
     {
         $this->assertFalse(UserAgent::parse($userAgent)->isBot());
+    }
+
+    public function testLongAgentWithoutABotIsScannedInLinearTime(): void
+    {
+        $userAgent = \str_repeat('_', 32_768);
+
+        $start = \microtime(true);
+        $bot = UserAgent::parse($userAgent)->bot();
+        $elapsed = \microtime(true) - $start;
+
+        $this->assertNull($bot);
+        $this->assertLessThan(0.5, $elapsed);
     }
 }

@@ -47,7 +47,7 @@ Separately from MCP API calls, the Agent can emit Console actions that the UI ap
 | Open dialog | Open system dialogs such as invite member, create project, connect MCP, shortcuts, docs search, feedback, or support |
 | Toast | Show success, error, info, or warning notifications |
 | Refresh | Refetch lists for databases, tables, buckets, files, users, teams, functions, sites, messaging, deployments, domains, keys, project, organization, and related Console data |
-| Theme | Switch light, dark, or system theme |
+| Theme | Switch light or dark theme |
 | Show pane | Open or close the Agent or docs pane |
 | Toggle terminal | Open or close the Console terminal where available |
 | Resource cards | Render resource or list cards in chat with deep links |

@@ -1098,6 +1098,215 @@ html:not([lang='en']):not([lang='he']) {
   }
 }
 
+/* Halloween: header cobwebs, sidebar graveyard scene, and terminal caution tape */
+@keyframes halloween-twinkle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes halloween-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  12% {
+    opacity: 0.7;
+  }
+  24% {
+    opacity: 0.95;
+  }
+  38% {
+    opacity: 0.65;
+  }
+  55% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes halloween-flap {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.4);
+  }
+}
+
+@keyframes halloween-fly {
+  0% {
+    transform: translate(0, 0);
+  }
+  15% {
+    transform: translate(-70px, -12px);
+  }
+  30% {
+    transform: translate(-140px, 6px);
+  }
+  45% {
+    transform: translate(-210px, -8px);
+  }
+  60%,
+  100% {
+    transform: translate(-290px, 0);
+  }
+}
+
+@keyframes halloween-orbit {
+  0%,
+  100% {
+    transform: translate(34px, 0);
+  }
+  12.5% {
+    transform: translate(24px, -10px);
+  }
+  25% {
+    transform: translate(0, -14px);
+  }
+  37.5% {
+    transform: translate(-24px, -10px);
+  }
+  50% {
+    transform: translate(-34px, 0);
+  }
+  62.5% {
+    transform: translate(-24px, 10px);
+  }
+  75% {
+    transform: translate(0, 14px);
+  }
+  87.5% {
+    transform: translate(24px, 10px);
+  }
+}
+
+@keyframes halloween-float {
+  from {
+    transform: translateY(0) rotate(-3deg);
+    opacity: 0.95;
+  }
+  to {
+    transform: translateY(-8px) rotate(3deg);
+    opacity: 0.6;
+  }
+}
+
+@keyframes halloween-thread {
+  from {
+    transform: scaleY(1);
+  }
+  to {
+    transform: scaleY(1.4);
+  }
+}
+
+@keyframes halloween-spider {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(10px);
+  }
+}
+
+@keyframes halloween-drift {
+  from {
+    transform: translateX(-14px);
+  }
+  to {
+    transform: translateX(14px);
+  }
+}
+
+@keyframes halloween-scene-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes halloween-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.halloween-marquee {
+  animation: halloween-marquee 40s linear infinite;
+}
+
+.halloween-scene-in {
+  animation: halloween-scene-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.halloween-scene-twinkle {
+  animation: halloween-twinkle 3s ease-in-out infinite;
+}
+
+.halloween-scene-flicker {
+  animation: halloween-flicker 2.4s linear infinite;
+}
+
+.halloween-scene-flap {
+  animation: halloween-flap 0.32s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.halloween-scene-fly {
+  animation: halloween-fly 16s linear infinite;
+}
+
+.halloween-scene-fly-late {
+  animation-delay: -7s;
+  animation-duration: 21s;
+}
+
+.halloween-scene-orbit {
+  animation: halloween-orbit 7s linear infinite;
+}
+
+.halloween-scene-ghost {
+  animation: halloween-float 3.6s ease-in-out infinite alternate;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.halloween-scene-thread {
+  animation: halloween-thread 5s ease-in-out infinite alternate;
+  transform-box: fill-box;
+  transform-origin: center top;
+}
+
+.halloween-scene-spider {
+  animation: halloween-spider 5s ease-in-out infinite alternate;
+}
+
+.halloween-scene-fog {
+  animation: halloween-drift 10s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [class*='halloween-'] {
+    animation: none !important;
+  }
+}
+
 .upgrade-button-wrapper {
   position: relative;
   padding: 1px;
@@ -2089,6 +2298,79 @@ html[data-init-ticket-video-capturing] [data-init-ticket-export-control] * {
   .home-ai-chat-spacer,
   .home-ai-composer-grow-ready {
     transition: none;
+  }
+}
+
+/* Repeated home page markup: one short class keeps the prerendered HTML lean (Ora content-no-js ratio). */
+@layer components {
+  .sprite-icon {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .product-avatar {
+    @apply flex size-9 items-center justify-center rounded-full border border-muted-foreground/6 bg-muted-foreground/[0.025] shadow-none ring-1 ring-background backdrop-blur-sm transition-[border-color,opacity,transform] duration-300 hover:z-10 hover:scale-105 hover:border-muted-foreground/10 hover:bg-muted-foreground/[0.04] sm:size-10 dark:bg-muted/10;
+  }
+
+  .product-bento-spotlight {
+    @apply pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(520px_circle_at_var(--spot-x,50%)_var(--spot-y,0%),rgba(133,219,216,0.14)_0%,rgba(133,219,216,0.05)_35%,transparent_65%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100 dark:bg-[radial-gradient(520px_circle_at_var(--spot-x,50%)_var(--spot-y,0%),rgba(133,219,216,0.06)_0%,rgba(133,219,216,0.02)_35%,transparent_65%)];
+  }
+
+  .product-bento-soft-light {
+    @apply pointer-events-none absolute inset-0 z-0 transition-opacity duration-300 group-hover:opacity-70 motion-reduce:transition-none motion-reduce:group-hover:opacity-100;
+  }
+
+  .product-bento-link {
+    @apply absolute inset-0 z-[1] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none;
+  }
+
+  .product-bento-icon {
+    @apply flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40 shadow-[inset_0_1px_0_0_color-mix(in_srgb,var(--foreground)_6%,transparent)] transition-colors duration-300 group-hover:border-[color-mix(in_srgb,var(--brand-cta)_35%,var(--border))];
+  }
+
+  .product-bento-arrow {
+    @apply ms-auto size-4 shrink-0 translate-y-1 text-muted-foreground opacity-0 transition-[opacity,translate] duration-300 group-hover:translate-y-0 group-hover:opacity-100 motion-reduce:transition-none rtl:-scale-x-100;
+  }
+
+  .product-bento-title {
+    @apply text-[17px] font-normal tracking-[-0.01em] text-foreground;
+  }
+
+  .product-bento-description {
+    @apply mt-2.5 min-h-10 max-w-xl text-pretty text-[13px] leading-5 text-muted-foreground;
+  }
+
+  .home-security-card {
+    @apply border-b border-border p-5 transition-colors duration-300 hover:bg-accent/15 sm:border-e sm:[&:nth-child(2n)]:border-e-0 sm:[&:nth-child(n+7)]:border-b-0 lg:[&:nth-child(2n)]:border-e lg:[&:nth-child(4n)]:border-e-0 lg:[&:nth-child(n+5)]:border-b-0;
+  }
+
+  .home-security-icon {
+    @apply flex size-7 items-center justify-center rounded-md border border-border bg-muted/40 transition-colors duration-300 group-hover:border-[color-mix(in_srgb,var(--brand-cta)_35%,var(--border))] group-hover:bg-[var(--brand-cta)]/10;
+  }
+
+  .home-stat {
+    @apply flex h-full min-w-0 flex-col justify-center rounded-xl border border-border/80 bg-card/45 px-3 py-3 transition-colors duration-300 hover:bg-accent/15 sm:px-3.5 sm:py-3.5;
+  }
+
+  .home-stat-value {
+    @apply text-[20px] leading-none tracking-tight text-foreground tabular-nums sm:text-[22px] lg:text-[24px];
+  }
+
+  .home-stat-label {
+    @apply mt-1.5 text-[10px] leading-snug text-muted-foreground sm:text-[11px];
+  }
+
+  .home-tool-link {
+    @apply flex size-9 items-center justify-center transition-transform duration-200 hover:scale-110;
+  }
+
+  .home-tool-logo {
+    @apply size-8 object-contain opacity-45 transition-opacity duration-200 group-hover:opacity-100 dark:opacity-40 dark:group-hover:opacity-100;
   }
 }
 

@@ -65,6 +65,47 @@ class StdoutTest extends TestCase
         $this->assertTrue(true);
     }
 
+    public function testExportKeepsRecordWithInvalidUtf8Attribute(): void
+    {
+        $stdout = fopen('php://memory', 'r+');
+        $exporter = new Stdout(stdout: $stdout);
+
+        $span = new Span('http.request');
+        $span->set('http.locale', "en\xB1\x31");
+        $span->set('level', 'error');
+
+        $exporter->export($span);
+
+        rewind($stdout);
+        $line = stream_get_contents($stdout);
+        $record = json_decode($line, true);
+
+        $this->assertIsArray($record);
+        $this->assertSame('http.request', $record['action']);
+        $this->assertSame('error', $record['level']);
+        $this->assertArrayHasKey('http.locale', $record);
+    }
+
+    public function testExportWritesErrorSpanWithInvalidUtf8ToStderrStream(): void
+    {
+        $stderr = fopen('php://memory', 'r+');
+        $exporter = new Stdout(stderr: $stderr);
+
+        $span = new Span('http.request');
+        $span->set('http.locale', "\xB1");
+        $span->setError(new \RuntimeException('boom'));
+
+        $exporter->export($span);
+
+        rewind($stderr);
+        $record = json_decode(stream_get_contents($stderr), true);
+
+        $this->assertIsArray($record);
+        $this->assertSame('http.request', $record['action']);
+        $this->assertSame(\RuntimeException::class, $record['error.type']);
+        $this->assertSame('boom', $record['error.message']);
+    }
+
     public function testExportIncludesSpanMetadata(): void
     {
         new Stdout();

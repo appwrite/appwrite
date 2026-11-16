@@ -57,6 +57,59 @@ class PrettyTest extends TestCase
         $this->assertTrue(true);
     }
 
+    public function testExportEscapesControlCharacters(): void
+    {
+        $stderr = fopen('php://memory', 'r+');
+        if ($stderr === false) {
+            $this->fail('Could not open memory stream');
+        }
+
+        $exporter = new Pretty(stderr: $stderr);
+
+        $span = new Span("http.request\n");
+        $span->set("http.locale\r", "en\nFORGED\033[31m\x7F");
+        $span->setError(new \RuntimeException("boom\r\nINJECTED"));
+
+        $exporter->export($span);
+
+        rewind($stderr);
+        $output = stream_get_contents($stderr);
+
+        $this->assertIsString($output);
+        $this->assertStringContainsString('http.request\\x0a', $output);
+        $this->assertStringContainsString('http.locale\\x0d', $output);
+        $this->assertStringContainsString('en\\x0aFORGED\\x1b[31m\\x7f', $output);
+        $this->assertStringContainsString('boom\\x0d\\x0aINJECTED', $output);
+        $this->assertStringNotContainsString("en\nFORGED", $output);
+        $this->assertStringNotContainsString("boom\r\nINJECTED", $output);
+        $this->assertStringNotContainsString("http.request\n", $output);
+    }
+
+    public function testExportLeavesPlainValuesUntouched(): void
+    {
+        $stdout = fopen('php://memory', 'r+');
+        if ($stdout === false) {
+            $this->fail('Could not open memory stream');
+        }
+
+        $exporter = new Pretty(stdout: $stdout);
+
+        $span = new Span('http.request');
+        $span->set('http.locale', 'en');
+        $span->set('count', 2);
+
+        $exporter->export($span);
+
+        rewind($stdout);
+        $output = stream_get_contents($stdout);
+
+        $this->assertIsString($output);
+        $this->assertStringContainsString('http.request', $output);
+        $this->assertStringContainsString('http.locale', $output);
+        $this->assertStringContainsString('en', $output);
+        $this->assertStringContainsString('2', $output);
+    }
+
     public function testExportIncludesSpanMetadata(): void
     {
         new Pretty();

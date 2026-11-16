@@ -355,12 +355,6 @@ parameters:
 			path: src/Response.php
 
 		-
-			message: '#^Parameter \#2 \$supported of static method Utopia\\Compression\\Compression\:\:fromAcceptEncoding\(\) expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Response.php
-
-		-
 			message: '#^Parameter \#2 \$value of method Utopia\\Http\\Response\:\:sendCookie\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -615,7 +609,7 @@ parameters:
 		-
 			message: '#^Cannot call method execute\(\) on Utopia\\Http\\Http\|null\.$#'
 			identifier: method.nonObject
-			count: 28
+			count: 29
 			path: tests/HttpTest.php
 
 		-

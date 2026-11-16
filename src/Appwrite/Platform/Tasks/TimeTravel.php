@@ -33,7 +33,7 @@ class TimeTravel extends Action
 
     public function action(string $projectId, string $resourceType, string $resourceId, string $createdAt, callable $getProjectDB, Database $dbForPlatform): void
     {
-        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+        $isDevelopment = System::getEnv('_APP_ENV', 'production') === 'development';
 
         if (!$isDevelopment) {
             Console::error('This task is only available in development mode.');

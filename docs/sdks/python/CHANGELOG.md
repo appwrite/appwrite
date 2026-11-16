@@ -1,5 +1,87 @@
 # Change Log
 
+## 27.2.0
+
+* Updated: `project.list_environments`, `project.create_environment`, `project.get_environment`, `project.update_environment` return `Environment` models instead of `Project`
+* Added: `account.create_device`, `account.get_device`, `account.delete_device` and `account.update_device_session`, and the `Device` model
+* Added: `project.update_account_devices_policy`, `ProjectPolicyId.ACCOUNT_DEVICES` and the `PolicyAccountDevices` model
+* Added: `project.update_o_auth2_vipps`, `project.update_o_auth2_vipps_sandbox` and the `OAuth2Vipps` model
+* Added: `OAuthProvider.VIPPS` and `OAuthProvider.VIPPSSANDBOX`
+* Added: `proxy.update_function_rule`, `proxy.update_redirect_rule` and `proxy.update_site_rule`
+* Added: optional `schedule` on `waf` rule create and update methods and on `WafRule*` models
+* Added: `project.get_prefs` and `project.update_prefs` for project preferences
+* Added: `Client.set_environment` to act in a project environment
+* Added: `AppwriteMigrationResource.PROJECT_PREFERENCES` to migrate project preferences
+* Added: `monitors.read`, `monitors.write`, `alerts.read`, `alerts.write`, `reviews.read` and `reviews.write` to `ProjectKeyScopes`
+* Added: `Organization.budgetnotify`, `budgetcritical` and `educationexpiresat`
+* Added: `Project.environmentid`, `Session.username` and `ActivityEvent.reason`
+* Added: `ProxyRule.expireat` and `certificatestatus`
+* Updated: requests send response format `2.7.1`; README targets Appwrite 2.7.x
+
+## 27.1.0
+
+* Added: `migrations` service to run Appwrite, Firebase, NHost, Supabase, CSV and JSON migrations, plus retries and listing
+* Added: `Migration`, `MigrationList` and `MigrationReport` models and the `AppwriteMigrationResource`, `FirebaseMigrationResource`, `NHostMigrationResource`, `SupabaseMigrationResource` and `OnDuplicate` enums
+* Added: `project.update_deny_realtime_guests_policy`, the `PolicyDenyRealtimeGuests` model and `ProjectPolicyId.DENY_REALTIME_GUESTS`
+* Added: `project.delete_sessions` to sign out every user in the project
+* Added: `BillingPlan.deploymentretention`, `deploymentretentionmax` and `deploymentsretentioncount`
+* Added: `python-3.15`, `deno-2.9`, `go-1.27` and `rust-1.99` to `Runtime` and `BuildRuntime`
+* Updated: requests send `X-Appwrite-Response-Format: 2.6.2`; README targets Appwrite 2.6.x
+* Updated: redirects are no longer followed; a 3xx raises `AppwriteException` naming the `Location`
+* Fixed: path parameters are percent-encoded as one segment; `.` and `..` raise `AppwriteException`
+* Fixed: the chunked-upload resume lookup encodes the file ID
+
+## 27.0.0
+
+This release updates the HTTP dependency requirements and raises the minimum supported Python version.
+
+* **Breaking:** Python 3.9 is no longer supported. Upgrade to Python 3.10 or later before installing this release.
+* **Security:** required `requests>=2.34.2,<3` and `urllib3>=2.8.0,<3` to exclude older dependency versions with known advisories. Update application dependency pins or constraints that prevent these versions from being installed.
+* **Compatibility:** service methods, models, and response format `2.5.0` are unchanged from SDK 26.0.0. The SDK continues to target Appwrite 2.5.x.
+
+To upgrade, activate a Python 3.10+ environment and run:
+
+```sh
+python -m pip install --upgrade "appwrite==27.0.0"
+```
+
+## 26.0.0
+
+* Breaking: `tables_db`, `documents_db` and `vectors_db` `create` and `update` take `description` before `specification`
+* Breaking: `functions.update` takes `description` before `email_enabled`
+* Added: `create_query` on `databases`, `documents_db` and `tables_db` to send list queries in the request body
+* Added: `account.list_memberships`
+* Added: optional `description` on create and update for databases, collections, tables, attributes, columns, indexes, buckets, functions, sites, variables, topics, webhooks and keys
+* Added: `description` on the matching models
+* Added: `total` on list methods in `activities`, `backups`, `domains`, `mongo`, `mysql` and `postgresql`
+* Added: `emails` on `messaging.create_email` and `messaging.update_email`
+* Added: `deny_list` on `project.update_password_dictionary_policy`, `update_password_personal_data_policy` and their policy models
+* Added: `BillingPlan.functions_allow_cron`
+* Added: `strip_metadata` on `storage.create_bucket`, `update_bucket` and the `Bucket` model
+* Updated: package classifiers list Python 3.13
+
+## 25.0.0
+
+* Breaking: requests send `X-Appwrite-Response-Format: 2.5.0`; responses follow the 2.5 shapes
+* Breaking: removed `account.list_logs`, `users.list_logs` and the `Log`/`LogList` models
+* Breaking: removed `organization.create_key`, `get_key`, `list_keys`, `update_key` and `delete_key`, and `OrganizationKeyScopes`; use `organization.list_project_keys`, `get_project_key`, `update_project_key` and `delete_project_key` instead
+* Breaking: removed `Client.set_dev_key`, the `DevKey` model and `Project.dev_keys`
+* Breaking: removed `BillingPlanGroup.STARTER`; use `BillingPlanGroup.FREE`
+* Breaking: `list_specifications` returns each specification's prices and overage rates on the row itself. Removed the list-level `pricing` field and the `DedicatedDatabaseSpecificationPricing` model
+* Breaking: removed `Block` fields `reason`, `project_name`, `region`, `organization_name`, `organization_id` and `billing_plan`
+* Breaking: OAuth2 `resource` params now take `List[str]`
+* Breaking: `project.update_o_auth2_kakao` takes `enabled` before `prompt`
+* Breaking: `BackupRestoration.options` is now a dict
+* Breaking: some response fields became `Optional`, such as `BillingPlan.usage` and `DedicatedDatabase.engine`
+* Added: `Topic` helper to build MQTT topics for push messages
+* Added: `mongo`, `mysql` and `postgresql` `promote_restoration`, `restore_mode`, `target_name` and `auto_promote` on `create_restoration`, and `DedicatedDatabaseRestoration.restore_mode`
+* Added: `proxy.create_smtp_rule`, the `ProxyRuleProtocol` enum and `ProxyRule.protocol`
+* Added: `email_enabled` on `functions.update` and `Function`, and `ExecutionTrigger.EMAIL`
+* Added: `Query` aggregates (`count`, `count_distinct`, `sum`, `avg`, `min`, `max` and more), `group_by`, `having`, `distinct`, joins, `relationship`, `covers`, `spatial_equals` and `page`
+* Added: `Query.builder()` to chain queries; `build()` returns the query list
+* Updated: missing response fields fall back to their documented defaults
+* Fixed: map fields missing from a response default to `{}` instead of `[]`
+
 ## 24.4.0
 
 * Added: `domains` service to manage domains, DNS records, email presets, prices, transfer status and zones

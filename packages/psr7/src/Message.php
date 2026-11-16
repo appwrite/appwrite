@@ -150,7 +150,13 @@ abstract class Message implements MessageInterface
 
         foreach ($values as $singleValue) {
             if (\is_scalar($singleValue) || $singleValue instanceof \Stringable) {
-                $normalized[] = (string) $singleValue;
+                $singleValue = (string) $singleValue;
+
+                if (strpbrk($singleValue, "\r\n\0") !== false) {
+                    throw new InvalidArgumentException('Header values must not contain CR, LF or NUL characters.');
+                }
+
+                $normalized[] = $singleValue;
 
                 continue;
             }

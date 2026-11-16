@@ -1,7 +1,10 @@
+import { PROJECT_ID_MAX_LENGTH } from '@/lib/project-id'
+
 /**
- * A row in the environment switcher: either the project itself (the default
- * environment, which has no environment document of its own) or one of the
- * environments listed under it. Every row is a project the Console can open.
+ * A row in the environment switcher: either the project itself (production,
+ * which has no environment document of its own and is always labeled
+ * Production) or one of the environments listed under it. Every row is a
+ * project the Console can open.
  */
 export interface ProjectEnvironmentOption {
   id: string
@@ -11,32 +14,402 @@ export interface ProjectEnvironmentOption {
 }
 
 /**
- * Dot colors for the switcher. The project itself always takes the first one;
- * every other environment keeps the same color between renders because the
- * color is derived from its id (an environment has no type to key on).
+ * Dot colors for the switcher. The project itself is production and shows green;
+ * every environment shows purple, whatever its name or id, so the two kinds are
+ * told apart at a glance and nothing else is read into the color.
  */
-const PROJECT_ENVIRONMENT_DOT_CLASSES = [
-  'bg-emerald-500',
-  'bg-amber-500',
-  'bg-sky-500',
-  'bg-violet-500',
-  'bg-rose-500',
-  'bg-cyan-500',
-] as const
-
-function hashEnvironmentId(environmentId: string): number {
-  let hash = 0
-  for (let index = 0; index < environmentId.length; index += 1) {
-    hash = (hash << 5) - hash + environmentId.charCodeAt(index)
-    hash |= 0
-  }
-  return Math.abs(hash)
-}
+export const PROJECT_ENVIRONMENT_DOT_CLASS_PRODUCTION = 'bg-emerald-500'
+export const PROJECT_ENVIRONMENT_DOT_CLASS = 'bg-purple-500'
 
 export function projectEnvironmentDotClass(
-  environment: ProjectEnvironmentOption,
+  environment: Pick<ProjectEnvironmentOption, 'isDefault'>,
 ): string {
-  if (environment.isDefault) return PROJECT_ENVIRONMENT_DOT_CLASSES[0]
-  const palette = PROJECT_ENVIRONMENT_DOT_CLASSES.slice(1)
-  return palette[hashEnvironmentId(environment.id) % palette.length]!
+  return environment.isDefault
+    ? PROJECT_ENVIRONMENT_DOT_CLASS_PRODUCTION
+    : PROJECT_ENVIRONMENT_DOT_CLASS
+}
+
+/**
+ * Environments in the order the project saved in its prefs. An environment the
+ * saved order does not know, created since it was saved, keeps its place after
+ * the known ones; with no saved order the list is returned as given.
+ */
+export function sortProjectEnvironments<T extends { $id: string }>(
+  environments: readonly T[],
+  order: readonly string[],
+): T[] {
+  if (order.length === 0) return [...environments]
+  const rank = new Map(order.map((id, index) => [id, index]))
+  return [...environments].sort((a, b) => {
+    const rankA = rank.get(a.$id)
+    const rankB = rank.get(b.$id)
+    if (rankA === undefined && rankB === undefined) return 0
+    if (rankA === undefined) return 1
+    if (rankB === undefined) return -1
+    return rankA - rankB
+  })
+}
+
+/**
+ * Names offered when creating an environment, in order. A suggestion is
+ * skipped when any of its aliases is already used (case-insensitive). After
+ * the list is exhausted the field stays empty.
+ */
+const PROJECT_ENVIRONMENT_NAME_SUGGESTIONS: readonly {
+  name: string
+  aliases: readonly string[]
+}[] = [
+  { name: 'Stage', aliases: ['stage', 'staging'] },
+  { name: 'Dev', aliases: ['dev', 'development'] },
+  { name: 'QA', aliases: ['qa', 'quality assurance'] },
+  { name: 'Preview', aliases: ['preview'] },
+  { name: 'Test', aliases: ['test', 'testing'] },
+  { name: 'Sandbox', aliases: ['sandbox'] },
+  { name: 'Demo', aliases: ['demo'] },
+  { name: 'UAT', aliases: ['uat'] },
+  { name: 'Beta', aliases: ['beta'] },
+]
+
+/**
+ * The next unused environment name, or an empty string when every suggestion
+ * is already taken. `takenNames` are existing environment names and the
+ * project's own name.
+ */
+export function suggestProjectEnvironmentName(
+  takenNames: readonly string[],
+): string {
+  const taken = new Set(
+    takenNames.map((name) => name.trim().toLowerCase()).filter(Boolean),
+  )
+
+  for (const suggestion of PROJECT_ENVIRONMENT_NAME_SUGGESTIONS) {
+    if (suggestion.aliases.some((alias) => taken.has(alias))) continue
+    return suggestion.name
+  }
+
+  return ''
+}
+
+/**
+ * Where a project stands against its organization's plan for environments. The
+ * plan caps environments per project, and a cap of 0 is a plan without them
+ * (Free and Start), not one without a cap. `unknown` until both the plan and the
+ * project's environments have loaded, so nothing is offered or refused on a guess.
+ * The self-hosted plan is `unknown` too: environments are Cloud's, and there it
+ * is the fallback for a plan request that failed (as `isCronAllowed` reads it),
+ * so it says nothing about what the plan offers. The API still refuses what the
+ * plan does not allow.
+ */
+export type ProjectEnvironmentsAllowance =
+  | { status: 'unknown' }
+  | { status: 'not-offered' }
+  | { status: 'available'; limit: number }
+  | { status: 'at-limit'; limit: number }
+
+export function projectEnvironmentsAllowance(
+  plan: { $id?: string; environments?: number | null } | null | undefined,
+  environmentCount: number | undefined,
+): ProjectEnvironmentsAllowance {
+  if (!plan || plan.$id === 'self-hosted' || environmentCount === undefined) {
+    return { status: 'unknown' }
+  }
+  const limit = Number(plan.environments ?? 0)
+  if (!Number.isFinite(limit) || limit <= 0) return { status: 'not-offered' }
+  return environmentCount >= limit
+    ? { status: 'at-limit', limit }
+    : { status: 'available', limit }
+}
+
+/**
+ * The environment a project document answers as, or null for production: while
+ * the Console is in an environment, the project answers as that environment.
+ * The pinned Console SDK's `Models.Project` does not carry `environmentId` yet.
+ */
+export function projectEnvironmentId(
+  project: object | null | undefined,
+): string | null {
+  return (
+    (project as { environmentId?: string | null } | null | undefined)
+      ?.environmentId || null
+  )
+}
+
+/**
+ * The environment ID to offer for a name, as the ID the environment is addressed
+ * by in `X-Appwrite-Environment`: the name lowercased, with everything that is
+ * not a letter or a digit folded into single hyphens, no hyphen at either end
+ * and at most the project ID length. 'Stage' gives 'stage', 'QA / Beta 2'
+ * gives 'qa-beta-2', a name of symbols alone gives '' and leaves generation to
+ * the server.
+ */
+export function suggestProjectEnvironmentId(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, PROJECT_ID_MAX_LENGTH)
+    .replace(/-+$/g, '')
+}
+
+/**
+ * What an environment can copy from its project, as the Console offers it. A
+ * group copies its structure and settings; the ones that hold data can copy
+ * that too. The API takes resource types, listed here per group; the labels
+ * are wrapped in t() where they render.
+ */
+export type ProjectEnvironmentCopyGroupId =
+  | 'databases'
+  | 'storage'
+  | 'auth'
+  | 'functions'
+  | 'sites'
+  | 'messaging'
+  | 'settings'
+
+export interface ProjectEnvironmentCopyGroup {
+  id: ProjectEnvironmentCopyGroupId
+  label: string
+  /** What the structure copy brings */
+  description: string
+  resources: readonly string[]
+  /** What the group holds, copied only on request */
+  data?: {
+    label: string
+    description?: string
+    resources: readonly string[]
+  }
+}
+
+export const PROJECT_ENVIRONMENT_COPY_GROUPS: readonly ProjectEnvironmentCopyGroup[] =
+  [
+    {
+      id: 'databases',
+      label: 'Databases',
+      description: 'Databases, tables, columns and indexes',
+      resources: [
+        'database',
+        'documentsdb',
+        'vectorsdb',
+        'table',
+        'collection',
+        'column',
+        'attribute',
+        'index',
+      ],
+      data: {
+        label: 'Rows and documents',
+        resources: ['row', 'document'],
+      },
+    },
+    {
+      id: 'storage',
+      label: 'Storage',
+      description: 'Buckets and their settings',
+      resources: ['bucket'],
+      data: {
+        label: 'Files',
+        resources: ['file'],
+      },
+    },
+    {
+      id: 'auth',
+      label: 'Auth',
+      description:
+        'Teams, auth settings, security policies and OAuth2 providers',
+      resources: ['team', 'auth-methods', 'policies', 'oauth2-provider'],
+      data: {
+        label: 'Users and memberships',
+        description:
+          'The newest 90 users, with their passwords. An environment holds 100 users at most, so 10 places stay free for test accounts.',
+        resources: ['user', 'membership'],
+      },
+    },
+    {
+      id: 'functions',
+      label: 'Functions',
+      description: 'Functions, their variables and their active deployment',
+      resources: ['function', 'environment-variable'],
+      data: {
+        label: 'Every deployment',
+        resources: ['deployment'],
+      },
+    },
+    {
+      id: 'sites',
+      label: 'Sites',
+      description: 'Sites, their variables and their active deployment',
+      resources: ['site', 'site-variable'],
+      data: {
+        label: 'Every deployment',
+        resources: ['site-deployment'],
+      },
+    },
+    {
+      id: 'messaging',
+      label: 'Messaging',
+      description: 'Providers and topics',
+      resources: ['provider', 'topic'],
+    },
+    {
+      id: 'settings',
+      label: 'Settings',
+      description:
+        'Platforms, SMTP, enabled services, project variables and email templates',
+      resources: [
+        'platform',
+        'smtp',
+        'project-variable',
+        'project-protocols',
+        'project-labels',
+        'project-services',
+        'project-email-template',
+      ],
+    },
+  ]
+
+export type ProjectEnvironmentCopySelection = Record<
+  ProjectEnvironmentCopyGroupId,
+  { structure: boolean; data: boolean }
+>
+
+/** Every group's structure, none of its data: a project-shaped environment without the data. */
+export function defaultProjectEnvironmentCopySelection(): ProjectEnvironmentCopySelection {
+  return Object.fromEntries(
+    PROJECT_ENVIRONMENT_COPY_GROUPS.map((group) => [
+      group.id,
+      { structure: true, data: false },
+    ]),
+  ) as ProjectEnvironmentCopySelection
+}
+
+/** No group is copied. */
+export function emptyProjectEnvironmentCopySelection(): ProjectEnvironmentCopySelection {
+  return Object.fromEntries(
+    PROJECT_ENVIRONMENT_COPY_GROUPS.map((group) => [
+      group.id,
+      { structure: false, data: false },
+    ]),
+  ) as ProjectEnvironmentCopySelection
+}
+
+/** Every group and, where it has one, its data. */
+export function fullProjectEnvironmentCopySelection(): ProjectEnvironmentCopySelection {
+  return Object.fromEntries(
+    PROJECT_ENVIRONMENT_COPY_GROUPS.map((group) => [
+      group.id,
+      { structure: true, data: Boolean(group.data) },
+    ]),
+  ) as ProjectEnvironmentCopySelection
+}
+
+/**
+ * The resource types to send for a selection, in group order. Data follows its
+ * group: a group that is not copied brings no data, whatever its data flag says.
+ */
+export function projectEnvironmentCopyResources(
+  selection: ProjectEnvironmentCopySelection,
+): string[] {
+  const resources: string[] = []
+
+  for (const group of PROJECT_ENVIRONMENT_COPY_GROUPS) {
+    const picked = selection[group.id]
+    if (!picked?.structure) continue
+    resources.push(...group.resources)
+    if (picked.data && group.data) {
+      resources.push(...group.data.resources)
+    }
+  }
+
+  return Array.from(new Set(resources))
+}
+
+/**
+ * How far a migration got, from its status counters: one object per resource
+ * type with how many are pending, processing, succeeded, failed, skipped or
+ * warned. Everything counted but pending and processing is done. The API and
+ * realtime deliver the counters as a JSON string, whatever the model says.
+ */
+export function migrationProgress(statusCounters: unknown): number {
+  if (typeof statusCounters === 'string') {
+    try {
+      statusCounters = JSON.parse(statusCounters)
+    } catch {
+      return 0
+    }
+  }
+  if (!statusCounters || typeof statusCounters !== 'object') return 0
+
+  let done = 0
+  let total = 0
+
+  for (const counters of Object.values(
+    statusCounters as Record<string, unknown>,
+  )) {
+    if (!counters || typeof counters !== 'object') continue
+    for (const [status, count] of Object.entries(
+      counters as Record<string, unknown>,
+    )) {
+      if (typeof count !== 'number') continue
+      total += count
+      if (status !== 'pending' && status !== 'processing') done += count
+    }
+  }
+
+  return total === 0 ? 0 : Math.round((done / total) * 100)
+}
+
+/**
+ * Failed copies whose card was dismissed, kept across reloads: a failed copy
+ * is shown again on every visit until then, and never after. Local storage,
+ * since the card is this browser's reminder, not project state.
+ */
+const DISMISSED_FAILED_COPIES_KEY = 'console:environment-copy:dismissed'
+const DISMISSED_FAILED_COPIES_LIMIT = 50
+
+export function readDismissedFailedCopies(): string[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const stored = JSON.parse(
+      window.localStorage.getItem(DISMISSED_FAILED_COPIES_KEY) ?? '[]',
+    )
+    return Array.isArray(stored)
+      ? stored.filter((id): id is string => typeof id === 'string')
+      : []
+  } catch {
+    return []
+  }
+}
+
+export function rememberDismissedFailedCopy(migrationId: string): void {
+  if (typeof window === 'undefined') return
+  try {
+    const dismissed = readDismissedFailedCopies().filter(
+      (id) => id !== migrationId,
+    )
+    dismissed.push(migrationId)
+    window.localStorage.setItem(
+      DISMISSED_FAILED_COPIES_KEY,
+      JSON.stringify(dismissed.slice(-DISMISSED_FAILED_COPIES_LIMIT)),
+    )
+  } catch {
+    /* private mode / storage disabled */
+  }
+}
+
+/**
+ * Whether the copy found when an environment is opened gets its card back:
+ * one still under way always, one that failed until its card is dismissed.
+ * A completed copy has nothing left to say.
+ */
+export function showsCopyAfterReload(
+  migration: { $id: string; status: string },
+  dismissedFailedCopies: readonly string[],
+): boolean {
+  if (migration.status === 'pending' || migration.status === 'processing') {
+    return true
+  }
+  return (
+    migration.status === 'failed' &&
+    !dismissedFailedCopies.includes(migration.$id)
+  )
 }

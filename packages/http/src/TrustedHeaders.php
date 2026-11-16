@@ -24,13 +24,27 @@ final readonly class TrustedHeaders
     public array $proto;
 
     /**
+     * @var array<int, string>
+     */
+    public array $host;
+
+    /**
+     * @var array<int, string>
+     */
+    public array $port;
+
+    /**
      * @param  array<int, string>  $ip  Headers naming the client address.
      * @param  array<int, string>  $proto  Headers naming the scheme the client used.
+     * @param  array<int, string>  $host  Headers naming the host the client asked for.
+     * @param  array<int, string>  $port  Headers naming the port the client connected to.
      */
-    public function __construct(array $ip = [], array $proto = ['x-forwarded-proto'])
+    public function __construct(array $ip = [], array $proto = ['x-forwarded-proto'], array $host = [], array $port = [])
     {
         $this->ip = $this->normalize($ip);
         $this->proto = $this->normalize($proto);
+        $this->host = $this->normalize($host);
+        $this->port = $this->normalize($port);
     }
 
     /**

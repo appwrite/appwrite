@@ -39,11 +39,7 @@ import {
 } from './constants'
 import { Dependencies } from './dependencies'
 import { keepNewerLatestDeployment } from '@/lib/utils/deployment-status'
-import { isFeatureEnabled } from '@/lib/console-profiles'
-import {
-  proxyRuleProtocolQuery,
-  type SmtpProxyRule,
-} from '@/lib/function-smtp-domain'
+import type { SmtpProxyRule } from '@/lib/function-smtp-domain'
 
 const EMPTY_PROXY_RULES: Models.ProxyRule[] = []
 
@@ -562,26 +558,31 @@ export async function fetchFunctionDomains(
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const trimmedSearch = search?.trim() || ''
+
+  // The SDK's listRules has no text `search` param; match domain or `$id` in queries.
+  const searchQueries = trimmedSearch
+    ? [
+        Query.or([
+          Query.contains('domain', trimmedSearch.toLowerCase()),
+          Query.startsWith('$id', trimmedSearch),
+        ]),
+      ]
+    : []
+
   const fixedQueries = [
     Query.equal('type', ['deployment', 'redirect']),
     Query.equal('deploymentResourceType', 'function'),
     Query.equal('deploymentResourceId', functionId),
     Query.equal('trigger', 'manual'),
-    // SMTP rules share type=deployment; filter them out on the server so
-    // pagination and totals stay correct (see proxyRuleProtocolQuery).
-    ...(isFeatureEnabled('functionEmailDomains')
-      ? [proxyRuleProtocolQuery('http')]
-      : []),
     ...(filterQueries ?? []),
+    ...searchQueries,
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
   ]
 
-  const response = await projectSdk.proxy.listRules({
-    queries: fixedQueries,
-    search: search?.trim() || undefined,
-  })
+  const response = await projectSdk.proxy.listRules({ queries: fixedQueries })
 
   return {
     rules: response.rules || [],
@@ -852,8 +853,6 @@ export function functionDomainsQueryOptions(
   filterQueries?: string[],
 ) {
   const hasFilters = filterQueries !== undefined && filterQueries.length > 0
-  // The email domains flag adds a protocol filter, so toggling it must refetch.
-  const emailDomains = isFeatureEnabled('functionEmailDomains')
   return queryOptions({
     queryKey: [
       'proxy-rules',
@@ -864,7 +863,6 @@ export function functionDomainsQueryOptions(
       limit,
       search,
       ...(hasFilters ? [filterQueries] : []),
-      ...(emailDomains ? ['email-domains'] : []),
     ],
     queryFn: () =>
       fetchFunctionDomains(
@@ -1553,92 +1551,18 @@ export function useCreateFunctionDomainRule(
         functionId,
       })
     },
-    onSuccess: () => {
+    onSuccess: async (_rule, { functionId }) => {
+      // Refetch, not invalidate: the domains list is unmounted behind the
+      // add route and uses refetchOnMount: false, so it would stay stale
+      // when the wizard is left on its verify step.
+      await queryClient.refetchQueries({
+        queryKey: ['proxy-rules', 'function', projectId, functionId],
+      })
       queryClient.invalidateQueries({
         queryKey: ['proxy-rules'],
       })
     },
   })
-}
-
-/**
- * Query function to fetch SMTP (inbound email) proxy rules for a function.
- * Only `protocol=smtp` rows, not HTTP function domains.
- */
-export async function fetchFunctionSmtpDomains(
-  projectId: string,
-  functionId: string,
-  page: number = 0,
-  limit: number = DEFAULT_PAGE_SIZE,
-) {
-  if (!projectId || !functionId) {
-    return { rules: [] as SmtpProxyRule[], total: 0 }
-  }
-
-  const projectSdk = sdk.forProject(projectId)
-  // Filter on `protocol` server-side so pagination and totals only count SMTP
-  // rules (see proxyRuleProtocolQuery).
-  const queries = [
-    Query.equal('type', ['deployment']),
-    Query.equal('deploymentResourceType', 'function'),
-    Query.equal('deploymentResourceId', functionId),
-    Query.equal('trigger', 'manual'),
-    proxyRuleProtocolQuery('smtp'),
-    Query.orderDesc('$createdAt'),
-    Query.limit(limit),
-    Query.offset(page * limit),
-  ]
-
-  const response = await projectSdk.proxy.listRules({ queries })
-
-  return {
-    rules: (response.rules || []) as SmtpProxyRule[],
-    total: response.total || 0,
-  }
-}
-
-export function functionSmtpDomainsQueryOptions(
-  projectId: string | null | undefined,
-  functionId: string | null | undefined,
-  page: number = 0,
-  limit: number = DEFAULT_PAGE_SIZE,
-) {
-  return queryOptions({
-    queryKey: [
-      'proxy-rules',
-      'smtp',
-      'function',
-      projectId,
-      functionId,
-      page,
-      limit,
-    ],
-    queryFn: () =>
-      fetchFunctionSmtpDomains(projectId!, functionId!, page, limit),
-    enabled:
-      !!projectId && !!functionId && isFeatureEnabled('functionEmailDomains'),
-    staleTime: DEFAULT_STALE_TIME,
-    retry: false,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    gcTime: projectId && functionId ? 5 * 60 * 1000 : 0,
-    placeholderData: keepPreviousData,
-  })
-}
-
-/**
- * Hook to fetch inbound email (SMTP) domains for a function.
- */
-export function useFunctionSmtpDomains(
-  projectId: string | null | undefined,
-  functionId: string | null | undefined,
-  page: number = 0,
-  limit: number = DEFAULT_PAGE_SIZE,
-) {
-  return useQuery(
-    functionSmtpDomainsQueryOptions(projectId, functionId, page, limit),
-  )
 }
 
 /**
@@ -1696,7 +1620,13 @@ export function useCreateSmtpDomainRule(projectId: string | null | undefined) {
       }
       return await createSmtpDomainRule(projectId, params)
     },
-    onSuccess: () => {
+    onSuccess: async (_rule, { functionId }) => {
+      // Refetch, not invalidate: the domains list is unmounted behind the
+      // add route and uses refetchOnMount: false, so it would stay stale
+      // when the wizard is left on its verify step.
+      await queryClient.refetchQueries({
+        queryKey: ['proxy-rules', 'function', projectId, functionId],
+      })
       queryClient.invalidateQueries({
         queryKey: ['proxy-rules'],
       })

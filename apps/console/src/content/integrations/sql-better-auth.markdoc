@@ -1,0 +1,159 @@
+---
+layout: integration
+title: Better Auth with managed PostgreSQL and MySQL
+description: Keep Better Auth users, sessions, and accounts in an Appwrite native PostgreSQL or MySQL database
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/sql-better-auth/cover.avif
+category: databases
+product:
+    vendor: Better Auth
+    description: 'Better Auth is a framework-agnostic authentication library for TypeScript that keeps users, sessions, and accounts in a database you own.'
+platform:
+    - 'Cloud'
+---
+
+[Better Auth](https://www.better-auth.com/) is a framework-agnostic authentication library for TypeScript. It stores its state, including users, sessions, accounts, and verification records, in a database you own, and ships a CLI that generates and applies the schema for you.
+
+# How does the integration work?
+
+Appwrite native PostgreSQL and MySQL databases are managed engines that Appwrite provisions in your project's region, each with its own hostname, credentials, and TLS. Better Auth connects to them like any other PostgreSQL or MySQL server: you pass it a driver pool, which it drives through its built-in Kysely adapter, or an ORM adapter such as Prisma or Drizzle.
+
+Auth workloads are short transactions, so your runtime connects through the database's connection pooler, while the Better Auth CLI creates tables over a direct connection to the engine.
+
+{% info title="Available on Appwrite Cloud" %}
+Native PostgreSQL and MySQL databases run in every Appwrite Cloud region and are available on paid plans.
+{% /info %}
+
+# How to implement
+
+To store Better Auth data in an Appwrite native database, there are several steps you must complete:
+
+## Step 1: Create a native database
+
+[Create an account on Appwrite Cloud](/sign-up) if you haven't already. In your project, go to **Databases**, click **Create database**, and select **PostgreSQL** or **MySQL** from the **Native databases** group. Pick a specification and click **Create database**. The database becomes `ready` within a few minutes.
+
+For PostgreSQL, open the database and click **Credentials** to copy the connection string from the **DSN** or **.env** tab. For MySQL, read `connectionString` from the database object with `mysql.get()` and an API key that has the `databases.read` scope.
+
+## Step 2: Set the connection strings
+
+Use the pooler URL for application traffic and the direct engine URL for schema work:
+
+{% tabs %}
+{% tabsitem #env-postgresql title="PostgreSQL" %}
+```env
+# Runtime: pooler, transaction mode
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?sslmode=require"
+
+# Schema generation and migrations: direct connection
+DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+```
+{% /tabsitem %}
+
+{% tabsitem #env-mysql title="MySQL" %}
+```env
+# Runtime: pooler, transaction mode
+DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default"
+
+# Schema generation and migrations: direct connection
+DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
+
+MYSQL_SSL="true"
+BETTER_AUTH_URL="https://example.com"
+BETTER_AUTH_SECRET="replace-with-a-long-random-secret"
+```
+{% /tabsitem %}
+{% /tabs %}
+
+## Step 3: Configure Better Auth
+
+Install `better-auth` with the driver for your engine (`pg` or `mysql2`), then pass Better Auth a pool pointed at the pooled `DATABASE_URL`. Appwrite Cloud encrypts connections with TLS, so set `rejectUnauthorized: true` to verify the certificate:
+
+{% tabs %}
+{% tabsitem #config-postgresql title="PostgreSQL" %}
+```ts
+import { betterAuth } from 'better-auth';
+import { Pool } from 'pg';
+
+export const auth = betterAuth({
+    database: new Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: true }
+    }),
+    emailAndPassword: { enabled: true }
+});
+```
+{% /tabsitem %}
+
+{% tabsitem #config-mysql title="MySQL" %}
+```ts
+import { betterAuth } from 'better-auth';
+import { createPool } from 'mysql2/promise';
+
+export const auth = betterAuth({
+    baseURL: process.env.BETTER_AUTH_URL,
+    secret: process.env.BETTER_AUTH_SECRET,
+    database: createPool({
+        uri: process.env.DATABASE_URL,
+        timezone: 'Z',
+        ssl: process.env.MYSQL_SSL === 'true' ? { rejectUnauthorized: true } : undefined
+    }),
+    emailAndPassword: { enabled: true }
+});
+```
+
+`timezone: 'Z'` keeps timestamps consistent between your app and MySQL.
+{% /tabsitem %}
+{% /tabs %}
+
+If you already use Prisma or Drizzle, pass Better Auth that ORM's adapter instead, for example `drizzleAdapter(db, { provider: 'pg' })`. With Prisma on PostgreSQL, add `pgbouncer=true` to the pooled URL, and with `postgres.js`, set `prepare: false`, because the pooler's transaction mode does not support server-side prepared statements.
+
+## Step 4: Generate and migrate the schema
+
+Run the Better Auth CLI with the direct URL so DDL runs over a session connection:
+
+{% tabs %}
+{% tabsitem #migrate-postgresql title="PostgreSQL" %}
+```bash
+DATABASE_URL="$DIRECT_URL" npx @better-auth/cli@latest generate
+DATABASE_URL="$DIRECT_URL" npx @better-auth/cli@latest migrate
+```
+{% /tabsitem %}
+
+{% tabsitem #migrate-mysql title="MySQL" %}
+```bash
+DATABASE_URL="$DIRECT_URL" npx auth@latest generate --config ./auth.ts --yes
+DATABASE_URL="$DIRECT_URL" npx auth@latest migrate --config ./auth.ts --yes
+```
+{% /tabsitem %}
+{% /tabs %}
+
+`migrate` only works with the built-in Kysely adapter. With a Prisma or Drizzle adapter, run `generate` to produce that ORM's schema, then apply it with `prisma migrate deploy` or `drizzle-kit migrate` over `DIRECT_URL`.
+
+## Step 5: Test the integration
+
+Mount Better Auth's handler in your framework and create a user from your server code:
+
+```ts
+import { auth } from './auth';
+
+const result = await auth.api.signUpEmail({
+    body: { email: 'ada@example.com', password: 'a-strong-password', name: 'Ada Lovelace' }
+});
+
+console.log(result.user.id);
+```
+
+Create the `auth` instance once at module scope so warm serverless invocations reuse the pool, and let the pooler absorb cold-start connections.
+
+# Read more about Better Auth and Appwrite Databases
+
+If you would like to learn more about Better Auth and Appwrite Databases, we have some resources that you should visit:
+
+- [Use Better Auth with a native PostgreSQL database](/docs/products/databases/postgresql/integrations/better-auth)
+- [Use Better Auth with a native MySQL database](/docs/products/databases/mysql/integrations/better-auth)
+- [Managed PostgreSQL on Appwrite](/docs/products/databases/postgresql)
+- [Native MySQL databases on Appwrite](/docs/products/databases/mysql)
+- [Better Auth CLI documentation](https://www.better-auth.com/docs/concepts/cli)

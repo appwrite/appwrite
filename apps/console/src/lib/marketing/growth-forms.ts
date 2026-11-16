@@ -41,34 +41,6 @@ export async function submitPartnerApplication(
   })
 }
 
-export type StartupsApplicationPayload = {
-  name: string
-  email: string
-  companyName: string
-  companyUrl: string
-}
-
-/**
- * Sent without the console session, like partner applications.
- *
- * @throws GrowthError when the server rejects the request.
- */
-export async function submitStartupsApplication(
-  payload: StartupsApplicationPayload,
-): Promise<void> {
-  await createConversation({
-    type: ConversationType.Startup,
-    session: false,
-    name: payload.name,
-    email: payload.email,
-    attributes: {
-      companyName: payload.companyName,
-      companyUrl: withProtocol(payload.companyUrl),
-      ...getReferrerAndUtmSource(),
-    },
-  })
-}
-
 export type EnterpriseApplicationPayload = {
   firstName: string
   lastName: string

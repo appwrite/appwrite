@@ -235,6 +235,72 @@ final class ParserTest extends TestCase
         $resolver->resolveObject('#/a');
     }
 
+    public function testHeaderReachingItselfThroughEncodingIsCircular(): void
+    {
+        $this->expectException(CircularReference::class);
+        $this->expectExceptionMessage('Circular reference: #/components/headers/Loop -> #/components/headers/Loop');
+
+        Parser::parse(self::headerDocument([
+            'Loop' => self::headerWithEncodedHeaders(['X-Loop' => '#/components/headers/Loop']),
+        ], '#/components/headers/Loop'));
+    }
+
+    public function testHeaderCycleThroughAnotherHeaderIsCircular(): void
+    {
+        $this->expectException(CircularReference::class);
+        $this->expectExceptionMessage('Circular reference: #/components/headers/A -> #/components/headers/B -> #/components/headers/A');
+
+        Parser::parse(self::headerDocument([
+            'A' => self::headerWithEncodedHeaders(['X-B' => '#/components/headers/B']),
+            'B' => self::headerWithEncodedHeaders(['X-A' => '#/components/headers/A']),
+        ], '#/components/headers/A'));
+    }
+
+    public function testReferencedHeaderIsExpandedOnce(): void
+    {
+        $spec = Parser::parse(self::headerDocument([
+            'Fan' => self::headerWithEncodedHeaders(['X-One' => '#/components/headers/Leaf', 'X-Two' => '#/components/headers/Leaf']),
+            'Leaf' => ['schema' => ['type' => 'string']],
+        ], '#/components/headers/Fan'));
+
+        $fan = $spec->paths['/upload']->operation(HttpMethod::POST)?->responses['200']->headers['X-Fan'];
+        self::assertNotNull($fan);
+        $encoding = $fan->content['multipart/form-data']->encoding['file'];
+        self::assertInstanceOf(StringSchema::class, $encoding->headers['X-One']->schema);
+        self::assertSame($encoding->headers['X-One'], $encoding->headers['X-Two']);
+    }
+
+    /**
+     * @param  array<string, mixed>  $headers
+     * @return array<string, mixed>
+     */
+    private static function headerDocument(array $headers, string $responseHeader): array
+    {
+        return [
+            'openapi' => '3.1.0',
+            'info' => ['title' => 'Headers', 'version' => '1'],
+            'paths' => ['/upload' => ['post' => ['responses' => ['200' => [
+                'description' => 'OK',
+                'headers' => ['X-Fan' => ['$ref' => $responseHeader]],
+            ]]]]],
+            'components' => ['headers' => $headers],
+        ];
+    }
+
+    /**
+     * @param  array<string, string>  $references
+     * @return array<string, mixed>
+     */
+    private static function headerWithEncodedHeaders(array $references): array
+    {
+        return [
+            'schema' => ['type' => 'string'],
+            'content' => ['multipart/form-data' => ['encoding' => ['file' => [
+                'headers' => array_map(static fn (string $reference): array => ['$ref' => $reference], $references),
+            ]]]],
+        ];
+    }
+
     public function testEmptyJsonObjectsAreNotConfusedWithLists(): void
     {
         $spec = Parser::parse('{"openapi":"3.1.0","info":{"title":"Empty","version":"1"},"paths":{},"components":{"schemas":{"Anything":{}}}}');

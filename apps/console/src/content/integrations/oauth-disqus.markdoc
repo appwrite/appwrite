@@ -1,0 +1,75 @@
+---
+layout: integration
+title: OAuth with Disqus
+description: Authenticate users with an existing Disqus account
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-disqus/cover.avif
+category: auth
+product:
+    vendor: Disqus
+    description: 'Disqus is a commenting platform that websites embed to host discussions and engage their communities.'
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+[Disqus](https://disqus.com/) is a commenting platform that publishers and communities embed on their websites to host discussions. Many readers already have a Disqus account from commenting across the sites that use it.
+
+# How does the integration work?
+
+You can use the Disqus OAuth adapter in Appwrite Auth to let users sign in with their Disqus account. This fits blogs, publications, and community sites that already use Disqus for comments and want readers to use the same account in the rest of the app.
+
+Appwrite requests the `read` and `email` scopes and stores the user's name, email, and avatar. Disqus doesn't report whether the email is verified, so Appwrite stores it as unverified. If another user in your project already has that email, Appwrite redirects to your failure URL instead of signing the user in. To connect Disqus to that account, have the user sign in first and then start the OAuth flow from the browser, which links Disqus as a new [identity](/docs/products/auth/identities).
+
+# How to implement
+
+To implement the Disqus OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Register an application on Disqus
+
+Log in to Disqus and [register a new application](https://disqus.com/api/applications/register/) for the Disqus API. Disqus applications come with a public key, also called the API key, and a secret key, also called the API secret. Save both values for later use.
+
+Open the application's settings and make sure OAuth is enabled for the application's API key, which Disqus requires before users can authorize your app. You'll set the callback URL and trusted domain after you configure Appwrite in the next step.
+
+## Step 2: Add Disqus OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **Disqus** under the **OAuth2 Providers** section.
+
+Paste the application's keys into the **Public Key, also known as API Key** and **Secret Key, also known as API Secret** fields, turn the provider on, and click **Update**.
+
+Copy the **Redirect URI** shown in the form. On Appwrite Cloud it looks like `https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/disqus/<PROJECT_ID>`, but always copy the exact value from the Console. In your Disqus application's settings, set the callback URL to this URI and add its domain, for example `<REGION>.cloud.appwrite.io`, to the application's trusted domains. Disqus only redirects to URIs on a trusted domain.
+
+## Step 3: Test the provider
+
+Start a session from your app with the `OAuthProvider.Disqus` value. With the Web SDK:
+
+```js
+import { Client, Account, OAuthProvider } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+account.createOAuth2Session({
+    provider: OAuthProvider.Disqus,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failed',
+});
+```
+
+Add your app's domain as a web platform in your Appwrite project so Appwrite accepts the `success` and `failure` URLs. Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow for other platforms and for server-side sign-in.
+
+# Read more about Disqus and Appwrite Auth
+
+If you would like to learn more about Disqus and Appwrite Auth, we have some resources that you should visit:
+
+- [Disqus API authentication](https://disqus.com/api/docs/auth/)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Link multiple sign-in methods with identities](/docs/products/auth/identities)
+- [Understanding OAuth and OpenID Connect](/blog/post/oauth-openid)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)

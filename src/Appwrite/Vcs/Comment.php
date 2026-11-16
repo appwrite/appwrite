@@ -163,7 +163,7 @@ class Comment
 
                     if ($site['action']['type'] === 'logs') {
                         $logsUrl = ($this->platform['consoleUrl'] ?? '') . "/projects/{$projectId}/sites/{$siteId}/deployments/{$site['deploymentId']}";
-                        $action = "[View Logs]({$logsUrl})";
+                        $action = $site['deploymentId'] === '' ? '' : "[View Logs]({$logsUrl})";
                     } else {
                         $action = '[Authorize](' . $site['action']['url'] . ')';
                     }
@@ -214,7 +214,7 @@ class Comment
 
                     if ($function['action']['type'] === 'logs') {
                         $logsUrl = ($this->platform['consoleUrl'] ?? '') . "/projects/{$projectId}/functions/{$functionId}/deployments/{$function['deploymentId']}";
-                        $action = "[View Logs]({$logsUrl})";
+                        $action = $function['deploymentId'] === '' ? '' : "[View Logs]({$logsUrl})";
                     } else {
                         $action = '[Authorize](' . $function['action']['url'] . ')';
                     }
@@ -228,8 +228,6 @@ class Comment
 
                 $text .= "</details>\n\n";
             }
-
-            $text .= "</details>\n\n";
 
             $isLast = $i === \count($projects) - 1;
 

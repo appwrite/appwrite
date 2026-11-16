@@ -15,6 +15,7 @@
     },
     "require": {
         "php": ">=8.4",
+        "ext-mbstring": "*",
         "psr/http-client": "^1.0",
         "utopia-php/client": "^0.6",
         "utopia-php/psr7": "^0.1 || ^0.2"

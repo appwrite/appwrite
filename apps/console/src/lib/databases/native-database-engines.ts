@@ -11,27 +11,27 @@ export const NATIVE_DATABASE_ENGINE_LABELS: Record<
   mongo: 'MongoDB',
 }
 
-function normalizeDatabaseEngine(engine: string | undefined): string {
+function normalizeDatabaseEngine(engine: string | null | undefined): string {
   return coerceTrimmedString(engine).toLowerCase()
 }
 
-export function isPostgresEngine(engine: string | undefined): boolean {
+export function isPostgresEngine(engine: string | null | undefined): boolean {
   const normalized = normalizeDatabaseEngine(engine)
   return normalized === 'postgres' || normalized === 'postgresql'
 }
 
-export function isMysqlEngine(engine: string | undefined): boolean {
+export function isMysqlEngine(engine: string | null | undefined): boolean {
   const normalized = normalizeDatabaseEngine(engine)
   return normalized === 'mysql' || normalized === 'mariadb'
 }
 
-export function isMongoEngine(engine: string | undefined): boolean {
+export function isMongoEngine(engine: string | null | undefined): boolean {
   const normalized = normalizeDatabaseEngine(engine)
   return normalized === 'mongodb' || normalized === 'mongo'
 }
 
 export function matchesNativeEngine(
-  engine: string | undefined,
+  engine: string | null | undefined,
   nativeEngine: NativeDatabaseEngine,
 ): boolean {
   if (nativeEngine === 'postgres') return isPostgresEngine(engine)

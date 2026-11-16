@@ -99,6 +99,7 @@ import {
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { CreateUserDrawer } from './CreateUserDrawer'
 import { CreateTeamDrawer } from './CreateTeamDrawer'
+import { Overview } from './Overview'
 import { AuthSettings } from './Settings'
 import { SocialProviders } from './SocialProviders'
 import { Templates } from './Templates'
@@ -107,6 +108,7 @@ import { PoliciesLayout, type PoliciesSubTab } from './policies/Layout'
 import { UsersPolicies } from './policies/Users'
 import { SessionsPolicies } from './policies/Sessions'
 import { MembershipsPolicies } from './policies/Memberships'
+import { RealtimePolicies } from './policies/Realtime'
 import { EmailsPolicies } from './policies/Emails'
 import { PasswordsPolicies } from './policies/Passwords'
 import { PasskeysPolicies } from './policies/Passkeys'
@@ -237,6 +239,7 @@ export function View({
         const tabFromPath = pathParts[authIndex + 1]
         if (
           [
+            'users',
             'teams',
             'policies',
             'social-providers',
@@ -250,8 +253,8 @@ export function View({
       }
     }
 
-    // Default to users for index route (/projects/:projectId/auth or /projects/:projectId/auth/)
-    return 'users'
+    // Default to the overview for the index route (/projects/:projectId/auth)
+    return 'overview'
   }, [location.pathname])
 
   const policiesSubTab = useMemo((): PoliciesSubTab => {
@@ -264,6 +267,7 @@ export function View({
       if (subTab === 'memberships') return 'memberships'
       if (subTab === 'passwords') return 'passwords'
       if (subTab === 'passkeys') return 'passkeys'
+      if (subTab === 'realtime') return 'realtime'
       if (subTab === 'sessions') return 'sessions'
       return 'sessions'
     }
@@ -367,7 +371,7 @@ export function View({
       if (trimmed === (urlSearch ?? '')) return
       if (trimmed.length > 0 && trimmed.length < MIN_SEARCH_LENGTH) return
       navigate({
-        to: '/projects/$projectId/auth/',
+        to: '/projects/$projectId/auth/users',
         params: { projectId: projectId! },
         search: (prev: Record<string, unknown>) => {
           const next = {
@@ -683,7 +687,7 @@ export function View({
     newMap.set(compactKey, queryStr)
     const queryEncoded = mapToQueryParam(newMap)
     navigate({
-      to: '/projects/$projectId/auth/',
+      to: '/projects/$projectId/auth/users',
       params: { projectId: projectId! },
       search: (prev: Record<string, unknown>) => ({
         ...prev,
@@ -703,7 +707,7 @@ export function View({
     const newMap = new Map(usersFilterMap)
     newMap.delete(key)
     navigate({
-      to: '/projects/$projectId/auth/',
+      to: '/projects/$projectId/auth/users',
       params: { projectId: projectId! },
       search: (prev: Record<string, unknown>) => {
         const next = {
@@ -725,7 +729,7 @@ export function View({
 
   const clearAllUsersFilters = () => {
     navigate({
-      to: '/projects/$projectId/auth/',
+      to: '/projects/$projectId/auth/users',
       params: { projectId: projectId! },
       search: (prev: Record<string, unknown>) => {
         const next = {
@@ -748,7 +752,7 @@ export function View({
   const handleUsersSortChange = (sortBy: string, sortOrder: 'asc' | 'desc') => {
     const sortParam = encodeSort(sortBy, sortOrder)
     navigate({
-      to: '/projects/$projectId/auth/',
+      to: '/projects/$projectId/auth/users',
       params: { projectId: projectId! },
       search: (prev: Record<string, unknown>) => ({
         ...prev,
@@ -888,7 +892,7 @@ export function View({
 
   const handleUsersPageChange = (page: number) => {
     navigate({
-      to: '/projects/$projectId/auth/',
+      to: '/projects/$projectId/auth/users',
       params: { projectId: projectId! },
       search: (prev: Record<string, unknown>) => {
         const next = {
@@ -915,7 +919,7 @@ export function View({
 
   const handleUsersPageSizeChange = (newPageSize: number) => {
     navigate({
-      to: '/projects/$projectId/auth/',
+      to: '/projects/$projectId/auth/users',
       params: { projectId: projectId! },
       search: (prev: Record<string, unknown>) => {
         const next = {
@@ -1119,9 +1123,15 @@ export function View({
   const tabs: Tab[] = useMemo(
     () => [
       {
+        id: 'overview',
+        label: t('Overview'),
+        to: '/projects/$projectId/auth',
+        params: { projectId: projectId as string },
+      },
+      {
         id: 'users',
         label: t('Users'),
-        to: '/projects/$projectId/auth/',
+        to: '/projects/$projectId/auth/users',
         params: { projectId: projectId as string },
       },
       {
@@ -1183,7 +1193,7 @@ export function View({
         activeTab === 'templates')
     ) {
       navigate({
-        to: '/projects/$projectId/auth/',
+        to: '/projects/$projectId/auth',
         params: { projectId },
         replace: true,
       })
@@ -1191,7 +1201,7 @@ export function View({
     }
     if (activeTab === 'oauth2-server' && !showOAuth2Server) {
       navigate({
-        to: '/projects/$projectId/auth/',
+        to: '/projects/$projectId/auth',
         params: { projectId },
         replace: true,
       })
@@ -1371,15 +1381,11 @@ export function View({
         activeTab={activeTab}
         hideToolbar={showsFirstRunEmptyState}
         searchPlaceholder={
-          activeTab === 'policies' ||
-          activeTab === 'social-providers' ||
-          activeTab === 'oauth2-server' ||
-          activeTab === 'settings' ||
-          activeTab === 'templates'
-            ? undefined
+          activeTab === 'users'
+            ? t('Search users...')
             : activeTab === 'teams'
               ? t('Search teams...')
-              : t('Search users...')
+              : undefined
         }
         searchValue={
           activeTab === 'users'
@@ -1421,7 +1427,7 @@ export function View({
               filterScope="auth.users"
               onApplyQuery={(queryParam, sortParam) => {
                 navigate({
-                  to: '/projects/$projectId/auth/',
+                  to: '/projects/$projectId/auth/users',
                   params: { projectId: projectId! },
                   search: (prev: Record<string, unknown>) => ({
                     ...prev,
@@ -1446,7 +1452,7 @@ export function View({
               )}
               onReset={() => {
                 navigate({
-                  to: '/projects/$projectId/auth/',
+                  to: '/projects/$projectId/auth/users',
                   params: { projectId: projectId! },
                   search: { page: 1, limit: urlLimit },
                   replace: true,
@@ -1492,7 +1498,8 @@ export function View({
       <div
         className={cn(
           'mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6',
-          (activeTab === 'policies' ||
+          (activeTab === 'overview' ||
+            activeTab === 'policies' ||
             activeTab === 'social-providers' ||
             activeTab === 'oauth2-server' ||
             activeTab === 'templates' ||
@@ -2273,6 +2280,13 @@ export function View({
           </>
         )}
 
+        {activeTab === 'overview' && projectId && (
+          <Overview
+            projectId={projectId}
+            onCreateUser={() => setCreateUserDialogOpen(true)}
+          />
+        )}
+
         {activeTab === 'policies' && projectId && (
           <PoliciesLayout projectId={projectId} activeSubTab={policiesSubTab}>
             {policiesSubTab === 'users' ? (
@@ -2285,6 +2299,8 @@ export function View({
               <PasswordsPolicies projectId={projectId} />
             ) : policiesSubTab === 'passkeys' ? (
               <PasskeysPolicies projectId={projectId} />
+            ) : policiesSubTab === 'realtime' ? (
+              <RealtimePolicies projectId={projectId} />
             ) : (
               <SessionsPolicies projectId={projectId} />
             )}

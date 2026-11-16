@@ -21,3 +21,9 @@ When working with Realtime subscriptions and authentication, keep the following 
 1. **Create session first** - Always authenticate the user before creating subscriptions that require access to protected resources.
 2. **Re-subscribe on session change** - If a user logs out and a new user logs in, call `realtime.disconnect()` and then create new subscriptions for the new session.
 3. **Handle session expiry** - If a session expires, subscriptions tied to that session will stop receiving updates. Listen for session-related errors and re-authenticate when needed.
+
+# Android client isolation {% #android-client-isolation %}
+
+With Android SDK 31.0.1 and later, each `Client` owns its realtime connection. Separate clients keep subscriptions, presence, lifecycle callbacks, and reconnect state independent, including when they use the same endpoint and project with different JWTs. Set the JWT on the client before subscribing.
+
+Multiple `Realtime` objects using the same client share its connection. Calling `disconnect()` affects that client's realtime subscriptions. Close an individual subscription when you want to stop only that subscription, or use separate clients when connections need independent lifecycles.

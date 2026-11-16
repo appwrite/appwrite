@@ -17,6 +17,12 @@ If you build for WebGL, add a **Web** platform to your project with the hostname
 
 Then create an `AppwriteConfig` asset with **Appwrite > Create Configuration**, or click **Setup Current Scene** in the Setup Assistant to create the asset and add an `AppwriteManager` to the open scene. Set the endpoint (for example `https://<REGION>.cloud.appwrite.io/v1`), your project ID, and the services you want `AppwriteManager` to create.
 
+### Session cookies and HTTPS
+
+Use SDK 0.11.1 or later. Cookies marked `Secure` are sent only to HTTPS endpoints. Allowing a self-signed certificate does not allow these cookies over HTTP, regardless of the port. Use an HTTPS endpoint when authenticating with Secure session cookies.
+
+Cookies skipped for an HTTP request remain available for later HTTPS requests and after persistence. If you integrate with the cookie container directly, use its URI overloads so cookie selection can check the request scheme. The legacy host/path overloads omit Secure cookies because they do not know the transport.
+
 ### Make your first request with AppwriteManager
 
 `AppwriteManager` creates the client and the services selected in your configuration, and can open the realtime connection.

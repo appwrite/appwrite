@@ -7,6 +7,7 @@ use Swoole\Http\Request;
 use Swoole\Http\Response;
 use Swoole\Server;
 use Swoole\Server\Port;
+use Utopia\DNS\Message;
 use Utopia\DNS\Protocol;
 
 /**
@@ -117,7 +118,7 @@ class Http extends Transport
             }
 
             $body = $request->rawContent();
-            return \is_string($body) && $body !== '' ? $body : null;
+            return \is_string($body) && $body !== '' && \strlen($body) <= Message::MAX_SIZE ? $body : null;
         }
 
         return null;

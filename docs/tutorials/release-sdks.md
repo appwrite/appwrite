@@ -6,7 +6,7 @@ This document is part of the Appwrite contributors' guide. Before you continue r
 
 ### Agenda
 
-This tutorial will cover how to properly release one or multiple Appwrite SDKs. The SDK release process involves updating the SDK generator, configuring Docker secrets, and running the release script.
+This tutorial will cover how to properly release one or multiple Appwrite SDKs. The SDK release process involves updating the SDK generator, authenticating the release environment, and running the release script.
 
 ### Prerequisites
 
@@ -17,43 +17,16 @@ Before releasing SDKs, you need to:
 2. **Update the SDK generator dependency**
    - Update composer dependencies to use the new SDK generator version:
       ```bash
-      docker run --rm --interactive --tty --volume "$(pwd)":/app composer update --ignore-platform-reqs --optimize-autoloader --no-scripts
+      docker run --rm --interactive --tty --volume "$(pwd)":/app composer update appwrite/sdk-generator --ignore-platform-reqs --optimize-autoloader --no-scripts
       ```
 
    - Verify that `composer.lock` reflects the new SDK generator version
 
-### Configure Docker Secrets
+### Authenticate the release environment
 
-To enable SDK releases via GitHub, you need to mount SSH keys and configure GitHub authentication in your Docker environment.
+Install Git and the GitHub CLI in the environment that runs the release command. Authenticate with `gh auth login` or supply `GH_TOKEN` through the runtime environment or your CI secret store. Configure Git's commit identity and verify SSH access to the target repositories before pushing.
 
-#### Update Dockerfile
-
-Add the following configuration to your `Dockerfile`:
-
-```dockerfile
-ARG GH_TOKEN
-ENV GH_TOKEN=your_github_token_here
-RUN git config --global user.email "your-email@example.com"
-RUN apk add --update --no-cache openssh-client github-cli
-```
-
-Replace:
-- `your_github_token_here` with your GitHub personal access token (with appropriate permissions)
-- `your-email@example.com` with your Git email address
-
-#### Update docker-compose.yml
-
-Add the SSH key volume mount to the `appwrite` service in `docker-compose.yml`:
-
-```yaml
-services:
-  appwrite:
-    volumes:
-      - ~/.ssh:/root/.ssh
-      # ... other volumes
-```
-
-This mounts your SSH keys from the host machine, allowing the container to authenticate with GitHub.
+Do not put a token in a Dockerfile, image build argument, committed environment file, or command copied into shell history. If you run releases in Docker, pass credentials only at runtime and use an SSH agent or a dedicated read-only key mount instead of copying keys into the image.
 
 ### Updating Specs
 
@@ -71,12 +44,20 @@ Also generate specs for the current stable Appwrite version:
 docker compose exec appwrite specs --version=1.8.x
 ```
 
+### Keep documentation examples aligned
+
+Regenerate examples with the released generator and the intended server specification. Review the generated API and response-format changes against the published SDK before pushing. A security-only release should preserve the existing API contract; do not replace a released spec with an unreleased server snapshot.
+
+Publish the reviewed specs and examples to `appwrite/specs` before updating the `@appwrite.io/specs` commit in `apps/console/package.json`. A newer generator lock alone does not update the website's reference snippets: `apps/console/scripts/generate-specs.ts` copies examples from that pinned package. After updating the package and Bun lockfile, run `bun run generate:specs` in `apps/console` and build the website to copy its reference artifacts.
+
+Keep human quick starts and their `prompt.md` AI instructions synchronized. Check supported interpreter versions, dependency pins, SDK catalog entries, and upgrade instructions. Preserve historical self-hosted compatibility rows unless the replacement SDK was validated against that server version.
+
 ### Running the SDK Release Script
 
 Before running the SDK release script, ensure you update the following for each SDK you plan to release:
 
 1. **Update the changelog** - Add release notes to the SDK's `CHANGELOG.md` file (located in `docs/sdks/<sdk-name>/CHANGELOG.md`)
-2. **Bump the version** - Update the version number (patch, minor, or major) in `app/config/platforms.php`
+2. **Bump the version** - Update the version number (patch, minor, or major) in `app/config/sdks.php`
 
 Once you have completed these updates, run the SDK release script:
 
@@ -153,7 +134,7 @@ docker compose exec appwrite sdks --release=yes --commit=yes
 
 SDK configurations are defined in the following files:
 
-- **`app/config/platforms.php`** - Platform and SDK definitions, including metadata, Git repository URLs, versions, and enabled/disabled status
+- **`app/config/sdks.php`** - Platform and SDK definitions, including metadata, Git repository URLs, versions, and enabled/disabled status
 - **`src/Appwrite/Platform/Tasks/SDKs.php`** - SDK generation and release logic
 - **`docs/sdks/<sdk-name>/CHANGELOG.md`** - Changelog files for each SDK
 
@@ -164,7 +145,7 @@ SDK configurations are defined in the following files:
 If you encounter authentication problems:
 - **GitHub token** - Verify your token has the correct permissions (repo access, workflow permissions)
 - **SSH keys** - Ensure your SSH keys are properly configured in `~/.ssh/` and added to your GitHub account
-- **Git configuration** - Check that the Git email in the Dockerfile matches your GitHub account
+- **Git configuration** - Configure Git's name and email in the release environment before committing
 
 ### Common Issues
 
@@ -177,9 +158,9 @@ If you encounter authentication problems:
 Congrats! You've successfully learned how to release Appwrite SDKs. Remember to:
 
 1. Update SDK generator and run `composer update`
-2. Configure Docker secrets (GitHub token and SSH keys)
+2. Authenticate GitHub CLI and SSH in the release environment
 3. Update specs for both latest and stable versions
-4. Update changelogs and bump versions in `platforms.php`
+4. Update changelogs and bump versions in `app/config/sdks.php`
 5. Run the SDK script and create PRs
 6. (Maintainers only) Create GitHub releases after PR approval
 

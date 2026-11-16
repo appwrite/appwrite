@@ -88,6 +88,8 @@ class SignatureV4
             throw new Exception(Exception::USER_UNAUTHORIZED, 'Incomplete AWS Signature V4 authentication.');
         }
 
+        $this->verifySignedAmzHeaders($request, $normalizedSignedHeaders);
+
         if ($presigned) {
             $this->validatePresignedDate($date, $credential[1], (string) $expires);
         } else {
@@ -133,6 +135,25 @@ class SignatureV4
         }
 
         throw new Exception(Exception::USER_UNAUTHORIZED, 'Signature does not match.');
+    }
+
+    /**
+     * x-amz-content-sha256 may stay unsigned: the canonical payload line binds it, and presigned requests ignore it.
+     *
+     * @param array<string> $signedHeaders
+     */
+    private function verifySignedAmzHeaders(Request $request, array $signedHeaders): void
+    {
+        foreach (\array_keys($request->getHeaders()) as $header) {
+            $header = \strtolower((string) $header);
+            if (
+                \str_starts_with($header, 'x-amz-')
+                && $header !== 'x-amz-content-sha256'
+                && !\in_array($header, $signedHeaders, true)
+            ) {
+                throw new Exception(Exception::USER_UNAUTHORIZED, 'There were headers present in the request which were not signed.');
+            }
+        }
     }
 
     private function verifyPayload(Request $request, bool $presigned): void

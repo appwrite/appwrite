@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: "Deny guests from subscribing to Realtime"
+date: 2026-10-29
+tags: realtime, auth, security
+---
+
+A new **Deny guests** policy lets you require a session before anyone subscribes to [**Realtime**](/docs/apis/realtime) channels in your project.
+
+When the policy is on, guest connections that list channels are refused. Other guests can still connect and sign in over the connection, but they cannot subscribe until they do. Channels readable by `Role.any()` stop sending updates to signed-out users. The policy applies to new subscriptions.
+
+To turn it on, open **Auth** > **Policies** > **Realtime** in the Appwrite Console.
+
+{% arrow_link href="/docs/apis/realtime/authentication" %}
+Read the Realtime authentication docs
+{% /arrow_link %}

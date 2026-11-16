@@ -6,13 +6,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import {
-  useVerifyDomain,
-  useDeleteDomain,
-} from '@/lib/react-query/hooks/project-domains'
+import { useVerifyDomain } from '@/lib/react-query/hooks/project-domains'
 import {
   VerifyDomainContent,
   dnsPendingVerificationError,
+  domainVerificationError,
   type DomainVerificationError,
 } from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
 import { toast } from 'sonner'
@@ -27,7 +25,6 @@ interface VerifyDomainProps {
   rule: Models.ProxyRule
   organizationDomainId?: string
   onVerifySuccess: () => void
-  onReconfigure?: () => void
 }
 
 export function VerifyDomain({
@@ -38,27 +35,15 @@ export function VerifyDomain({
   rule,
   organizationDomainId,
   onVerifySuccess,
-  onReconfigure,
 }: VerifyDomainProps) {
   const t = useT()
   const verifyMutation = useVerifyDomain(projectId, region)
-  const deleteMutation = useDeleteDomain(projectId, region)
   const [verificationError, setVerificationError] =
     useState<DomainVerificationError | null>(null)
 
   useEffect(() => {
     if (open) setVerificationError(null)
   }, [open])
-
-  const handleChange = async () => {
-    try {
-      await deleteMutation.mutateAsync(rule.$id)
-      onOpenChange(false)
-      onReconfigure?.()
-    } catch {
-      toast.error(t('Failed to remove domain'))
-    }
-  }
 
   const handleVerify = async () => {
     setVerificationError(null)
@@ -68,7 +53,11 @@ export function VerifyDomain({
         organizationDomainId,
       })
       if (updated.status === 'verified') {
-        toast.success(t('Domain verified'))
+        toast.success(
+          rule.status === 'verified'
+            ? t('Certificate renewal started')
+            : t('Domain verified'),
+        )
         onOpenChange(false)
         onVerifySuccess()
       } else if (
@@ -81,8 +70,8 @@ export function VerifyDomain({
         onOpenChange(false)
         onVerifySuccess()
       }
-    } catch {
-      setVerificationError(dnsPendingVerificationError(t))
+    } catch (err) {
+      setVerificationError(domainVerificationError(t, err))
     }
   }
 
@@ -104,21 +93,17 @@ export function VerifyDomain({
             verificationError={verificationError}
           />
         </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end gap-2">
-          {onReconfigure && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleChange}
-              disabled={verifyMutation.isPending || deleteMutation.isPending}
-            >
-              {t('Change')}
-            </Button>
-          )}
+        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button
             type="button"
-            size="sm"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={verifyMutation.isPending}
+          >
+            {t('Cancel')}
+          </Button>
+          <Button
+            type="button"
             onClick={handleVerify}
             disabled={verifyMutation.isPending}
           >

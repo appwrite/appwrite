@@ -135,15 +135,14 @@ class Locale
 
         $translation = $default === self::DEFAULT_DYNAMIC_KEY ? '{{'.$key.'}}' : $default;
 
-        if ($fallbackExists) {
-            $translation = self::$language[$this->fallback ?? ''][$key];
-        }
+        $defaultValue = $defaultExists ? self::$language[$this->default][$key] : null;
+        $fallbackValue = $fallbackExists ? self::$language[$this->fallback ?? ''][$key] : null;
 
-        if ($defaultExists) {
-            $translation = self::$language[$this->default][$key];
-        }
-
-        if (! $defaultExists && ! $fallbackExists && self::$exceptions) {
+        if ($defaultExists && $defaultValue !== '' && $defaultValue !== null) {
+            $translation = $defaultValue;
+        } elseif ($fallbackExists && $fallbackValue !== '' && $fallbackValue !== null) {
+            $translation = $fallbackValue;
+        } elseif (! $defaultExists && ! $fallbackExists && self::$exceptions) {
             throw new Exception('Key named "'.$key.'" not found');
         }
 

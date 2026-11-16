@@ -231,8 +231,19 @@ export function FunctionExecutionsChartPreview({
     enabled,
   )
 
-  const executionsPoints = executionsQuery.data?.chartPoints ?? []
-  const gbHoursPoints = gbHoursQuery.data?.chartPoints ?? []
+  const usageReady =
+    !enabled ||
+    ((executionsQuery.isFetched || executionsQuery.isError) &&
+      (gbHoursQuery.isFetched || gbHoursQuery.isError))
+
+  const executionsPoints = useMemo(
+    () => (usageReady ? (executionsQuery.data?.chartPoints ?? []) : []),
+    [executionsQuery.data?.chartPoints, usageReady],
+  )
+  const gbHoursPoints = useMemo(
+    () => (usageReady ? (gbHoursQuery.data?.chartPoints ?? []) : []),
+    [gbHoursQuery.data?.chartPoints, usageReady],
+  )
   const hasPoints = executionsPoints.length > 0 || gbHoursPoints.length > 0
 
   const chartData = useMemo((): ChartPoint[] => {
@@ -276,10 +287,6 @@ export function FunctionExecutionsChartPreview({
     [gbHoursPoints],
   )
 
-  const usageReady =
-    !enabled ||
-    ((executionsQuery.isFetched || executionsQuery.isError) &&
-      (gbHoursQuery.isFetched || gbHoursQuery.isError))
   const fadeKey = usageReady ? 'data' : 'loading'
   const fadeClassName = usageReady && enabled && USAGE_CHART_FADE_IN_CLASS_NAME
 

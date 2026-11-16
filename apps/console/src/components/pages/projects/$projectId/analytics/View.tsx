@@ -24,6 +24,10 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Badge } from '@/components/ui/badge'
+import {
+  ANALYTICS_PROPERTY_TYPE_META,
+  propertyType,
+} from '@/lib/analytics-wizard/property-types'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -99,9 +103,9 @@ function StatHighlight({
  * property created mid-window would otherwise show a meaningless +100%.
  */
 function trendFor(
-  current: number,
+  current: number | null | undefined,
   previous: Models.AnalyticsMetric | undefined,
-  pick: (stats: Models.AnalyticsMetric) => number,
+  pick: (stats: Models.AnalyticsMetric) => number | null | undefined,
 ): number | undefined {
   if (!previous || !hasTraffic(previous)) return undefined
   return analyticsChangePercent(current, pick(previous))
@@ -109,7 +113,7 @@ function trendFor(
 
 /** A property only has data once it has received at least one event. */
 function hasTraffic(stats: Models.AnalyticsMetric): boolean {
-  return stats.events > 0 || stats.visitors > 0 || stats.pageviews > 0
+  return stats.events > 0 || stats.visitors > 0 || (stats.pageviews ?? 0) > 0
 }
 
 export function View() {
@@ -332,6 +336,12 @@ export function View() {
                             <h3 className="truncate text-[14px] font-medium text-foreground">
                               {property.name}
                             </h3>
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] shrink-0"
+                            >
+                              {t(ANALYTICS_PROPERTY_TYPE_META[propertyType(property)].label)}
+                            </Badge>
                             {!property.enabled && (
                               <Badge
                                 variant="warning"
@@ -525,6 +535,12 @@ export function View() {
                                   <p className="truncate text-[13px] font-medium text-foreground">
                                     {property.name}
                                   </p>
+                                  <Badge
+                                    variant="outline"
+                                    className="text-[10px] shrink-0"
+                                  >
+                                    {t(ANALYTICS_PROPERTY_TYPE_META[propertyType(property)].label)}
+                                  </Badge>
                                   {!property.enabled && (
                                     <Badge
                                       variant="warning"

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -34,6 +35,7 @@ class Create extends Action
             ->groups(['api', 'database', 'transactions'])
             ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT * 2, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: 'databases',
                 group: 'transactions',
@@ -81,6 +83,7 @@ class Create extends Action
             'status' => 'pending',
             'operations' => 0,
             'expiresAt' => DateTime::addSeconds(new \DateTime(), $ttl),
+            'type' => $this->getDatabaseType(),
         ])));
 
         $response

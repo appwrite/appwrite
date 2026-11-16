@@ -113,7 +113,11 @@ abstract class Adapter
         try {
             $response = $this->process($message);
         } catch (\Throwable $error) {
-            $this->recordSend($message, method_exists($message, 'getTo') ? \count($message->getTo()) : 1, 0);
+            $recipients = method_exists($message, 'getTo') ? $message->getTo() : [null];
+            $this->recordSend($message, array_map(
+                fn (mixed $recipient): array => [\is_string($recipient) ? $recipient : null, false],
+                $recipients,
+            ));
             throw $error;
         }
 
@@ -127,27 +131,50 @@ abstract class Adapter
         $this->sendCounter = $telemetry->createCounter('messaging.send');
     }
 
-    private function recordSend(Message $message, int $recipients, int $delivered): void
+    /**
+     * Count each attempt once, grouped by the attributes its recipient adds, so
+     * a message to several recipients splits its successes and failures between them.
+     *
+     * @param  array<array{0: ?string, 1: bool}>  $outcomes Recipient and whether it was delivered.
+     */
+    private function recordSend(Message $message, array $outcomes): void
     {
-        if ($delivered > 0) {
-            $this->sendCounter->add($delivered, $this->telemetryAttributes($message, [
-                'result' => 'success',
-            ]));
+        $groups = [];
+
+        foreach ($outcomes as [$recipient, $delivered]) {
+            $attributes = $this->recipientAttributes($recipient);
+            $key = json_encode($attributes, JSON_THROW_ON_ERROR);
+            $groups[$key] ??= ['attributes' => $attributes, 'success' => 0, 'failure' => 0];
+            $groups[$key][$delivered ? 'success' : 'failure']++;
         }
 
-        $failed = $recipients - $delivered;
-        if ($failed > 0) {
-            $this->sendCounter->add($failed, $this->telemetryAttributes($message, [
-                'result' => 'failure',
-            ]));
+        foreach ($groups as $group) {
+            foreach (['success', 'failure'] as $result) {
+                if ($group[$result] > 0) {
+                    $this->sendCounter->add($group[$result], $this->telemetryAttributes($message, [
+                        'result' => $result,
+                    ]) + $group['attributes']);
+                }
+            }
         }
+    }
+
+    /**
+     * Attributes describing one recipient, recorded with each attempt to it. They
+     * must stay low-cardinality: derive a bounded value, never return the recipient.
+     *
+     * @return array<string, string>
+     */
+    protected function recipientAttributes(?string $recipient): array
+    {
+        return [];
     }
 
     /**
      * @param  array<string, mixed>  $attributes
      * @return array<string, mixed>
      */
-    private function telemetryAttributes(Message $message, array $attributes = []): array
+    protected function telemetryAttributes(Message $message, array $attributes = []): array
     {
         if ($message->getOrigin() !== null) {
             $attributes['origin'] = $message->getOrigin();
@@ -169,14 +196,14 @@ abstract class Adapter
             return;
         }
 
-        $delivered = 0;
-        $failed = 0;
+        $outcomes = [];
 
         foreach ($results as $result) {
-            ($result['status'] ?? '') === 'success' ? $delivered++ : $failed++;
+            $recipient = $result['recipient'] ?? null;
+            $outcomes[] = [\is_string($recipient) ? $recipient : null, ($result['status'] ?? '') === 'success'];
         }
 
-        $this->recordSend($message, $delivered + $failed, $delivered);
+        $this->recordSend($message, $outcomes);
     }
 
     /**

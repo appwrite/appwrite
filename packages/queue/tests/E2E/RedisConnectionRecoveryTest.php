@@ -87,6 +87,33 @@ final class RedisConnectionRecoveryTest extends TestCase
         $connection->remove($queue);
     }
 
+    public function testScriptReplyThatArrivesAfterTheReadTimeoutIsNotReadByTheNextCommand(): void
+    {
+        $connection = new Redis($this->redisHost, $this->redisPort, readTimeout: 0.1);
+        $key = 'tests.recovery.late.' . uniqid();
+        $counter = "{$key}.spin";
+        $slow = "for i = 1, 3000000 do redis.call('INCR', KEYS[1]) end return {'late', 'reply'}";
+
+        $this->assertTrue($connection->set($key, 'value'));
+
+        try {
+            $connection->execute($slow, [$counter], []);
+            $this->fail('a script that outlives the read timeout must fail');
+        } catch (\RedisException) {
+        }
+
+        $observer = new Redis($this->redisHost, $this->redisPort);
+        $this->assertTrue($observer->ping(), 'the slow script must have finished, leaving its reply on the first socket');
+
+        $this->assertSame(['fresh'], $connection->execute("return {'fresh'}", [], []), 'a script must read its own reply, not the one that timed out');
+        $this->assertTrue($connection->leftPush("{$key}.list", 'item'), 'a push must read its own reply');
+        $this->assertSame('value', $connection->get($key), 'a read must read its own reply');
+
+        $observer->remove($key);
+        $observer->remove("{$key}.list");
+        $observer->remove($counter);
+    }
+
     /**
      * Make the proxy forward the next client chunk and then close the client
      * socket before the reply: the server executes the command, the client
