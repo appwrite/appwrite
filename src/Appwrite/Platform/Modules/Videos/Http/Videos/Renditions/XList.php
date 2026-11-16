@@ -16,6 +16,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\WhiteList;
 
@@ -42,6 +43,8 @@ class XList extends Base
                 namespace: 'videos',
                 group: 'renditions',
                 name: 'listRenditions',
+                // Hidden until videos is generally available; preview SDK builds show it.
+                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/list-renditions.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [

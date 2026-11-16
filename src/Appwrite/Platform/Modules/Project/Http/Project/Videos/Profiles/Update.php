@@ -16,6 +16,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 
@@ -44,6 +45,8 @@ class Update extends Base
                 namespace: 'project',
                 group: 'profiles',
                 name: 'updateVideoProfile',
+                // Hidden until videos is generally available; preview SDK builds show it.
+                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/project/update-video-profile.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
