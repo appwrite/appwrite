@@ -851,7 +851,10 @@ Foreground mode is opt-in, because Google Play asks every app that declares a `r
 1. In the Play Console, complete the foreground service declaration for remote messaging, under **App content** > **Foreground service permissions**.
 1. Call `push.setForeground(true)` while the app is on screen.
 
-Without the permissions, `setForeground(true)` reports an error to `onError`, and `backgroundStatus()` reports `foregroundService` as `false`. Delivery continues through the scheduled wake-ups. This applies from Android SDK 31.3.0, Flutter SDK 28.4.0, and React Native SDK 3.3.0. Earlier versions declare both permissions for every app, and an app that doesn't use foreground mode can remove them, and the push service, from its merged manifest with `tools:node="remove"`.
+Without the permissions, `setForeground(true)` reports an error to `onError`, and `backgroundStatus()` reports `foregroundService` as `false`. Delivery continues through the scheduled wake-ups. This applies from Android SDK 31.3.0, Flutter SDK 28.4.0, and React Native SDK 3.3.0. Earlier versions declare both permissions for every app. An app on an earlier version that doesn't use foreground mode can remove these from its merged manifest with `tools:node="remove"`:
+
+- the push service: `io.appwrite.services.PushService` on Android, `io.appwrite.flutter.services.PushService` on Flutter, or `io.appwrite.reactnative.services.PushService` on React Native
+- the `FOREGROUND_SERVICE_REMOTE_MESSAGING` permission
 
 ## iOS {% #background-ios %}
 
