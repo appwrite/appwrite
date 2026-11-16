@@ -81,10 +81,8 @@ class Local extends Device
 
         $chunkFilePath = $tmp . DIRECTORY_SEPARATOR . pathinfo($path, PATHINFO_FILENAME) . '.part.' . $chunk;
 
-        // skip writing chunk if the chunk was re-uploaded
-        if (! file_exists($chunkFilePath)) {
-            $this->writeFile($chunkFilePath, $data);
-        }
+        // A resent chunk replaces the stored one, as S3 does with a resent part.
+        $this->writeAtomic($chunkFilePath, $data);
 
         $chunksReceived = $this->countChunks($tmp, $path);
         $metadata['parts'][$chunk] = true;

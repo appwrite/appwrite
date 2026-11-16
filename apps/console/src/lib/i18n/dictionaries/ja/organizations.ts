@@ -304,6 +304,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Failed to load logo files': 'ロゴファイルの読み込みに失敗しました',
   'Failed to load members': 'メンバーの読み込みに失敗しました',
   'Failed to load page': 'ページの読み込みに失敗しました',
+  'Failed to load preset records':
+    'プリセットの DNS レコードの読み込みに失敗しました',
   'Failed to load projects': 'プロジェクトの読み込みに失敗しました',
   'Failed to load regions': 'リージョンの読み込みに失敗しました',
   'Failed to read file. Please try again.':
@@ -659,6 +661,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'このアプリは無効で、ユーザーを認可できません。',
   'This organization has no projects.':
     'この組織にはプロジェクトがありません。',
+  'These DNS records will be added. Records this domain already has are left unchanged. Nothing is created until you confirm.':
+    'これらの DNS レコードが追加されます。このドメインに既にあるレコードは変更されません。確認するまで何も作成されません。',
   'This will add': 'これにより次が追加されます',
   'Ticket submitted': 'チケットを送信しました',
   'Total due': '合計支払額',
@@ -821,6 +825,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'チーム管理と請求の書き込みを除くすべてのリソース。',
   'Allow OAuth2 Device Authorization Grant (RFC 8628).':
     'OAuth2 Device Authorization Grant (RFC 8628) を許可します。',
+  'Already in this organization': 'すでにこの組織にあります',
   'Apply Appwrite credits to your organization. Credits expire after a set period and do not roll over.':
     '組織に Appwrite クレジットを適用します。クレジットは一定期間後に失効し、繰り越されません。',
   'Apps published by your organization.': '組織が公開しているアプリ。',
@@ -836,6 +841,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     '次から請求先住所を削除してもよろしいですか',
   'Auto renewal is available for domains registered with Appwrite.':
     '自動更新は Appwrite で登録したドメインで利用できます。',
+  'Registered with another registrar': '別のレジストラで登録されています',
+  'Renew this domain with its current registrar.':
+    'このドメインは現在のレジストラで更新してください。',
   'Billing address has been created and set for your organization':
     '請求先住所を作成し、組織に設定しました',
   'Billing, team, cross-project. One key for the whole org.':
@@ -912,6 +920,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'プランの上限を超えた追加使用による予期しない課金を防ぐには、予算上限を有効にしてください。支出上限に達すると、サービスは自動的に一時停止されます。',
   'Enter a coupon code to update your estimated total. Applied credits expire after a set period and do not roll over.':
     'クーポンコードを入力すると見積合計が更新されます。適用したクレジットは一定期間後に失効し、繰り越されません。',
+  'Enter a domain like example.com':
+    'example.com のようにドメインを入力してください',
   'Enter a full domain name (e.g. example.com)':
     'ドメイン名をすべて入力してください (例: example.com)',
   'Enter tax ID (e.g., VAT, GST, EIN)':
@@ -920,6 +930,13 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'プロトコルを除いたドメイン名を入力してください (例: example.com)',
   'Enter the domain name you want to add to your organization.':
     '組織に追加したいドメイン名を入力してください。',
+  'Enter the hostname only, without https:// or a path.':
+    'https:// やパスを含めず、ホスト名のみを入力してください。',
+  'Enter the hostname only:': 'ホスト名のみを入力してください:',
+  'Remove the spaces.': 'スペースを削除してください。',
+  'Remove the trailing dot.': '末尾のドットを削除してください。',
+  'Wildcard domains are not supported. Enter a specific hostname.':
+    'ワイルドカードドメインには対応していません。特定のホスト名を入力してください。',
   'Enter your card details to add a new payment method.':
     '新しい支払い方法を追加するには、カード情報を入力してください。',
   'Enter your full domain name to load a price quote.':
@@ -1110,6 +1127,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'この組織に参加できなくなります。',
   'This app may have been deleted or you do not have access.':
     'このアプリは削除されたか、アクセス権がない可能性があります。',
+  "This domain can't be transferred. Check the name and try again.":
+    'このドメインは移管できません。名前を確認して、もう一度お試しください。',
   'This entire organization will be deleted, including all of its projects and resources.':
     'この組織全体と、そのすべてのプロジェクトおよびリソースが削除されます。',
   'This invoice is missing authentication details.':
@@ -1574,9 +1593,11 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'プラン変更時にどのバックアップポリシーが停止するかを読み込めませんでした。',
   'Could not load which dedicated databases are spun down when your plan changes.':
     'プラン変更時にどの専用データベースが停止されるかを読み込めませんでした。',
-  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.': 'このアプリをインストールした組織は、以下のスコープをアプリに付与します。インストールの作成または更新後、ユーザーはリダイレクト URL に戻ります。',
+  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.':
+    'このアプリをインストールした組織は、以下のスコープをアプリに付与します。インストールの作成または更新後、ユーザーはリダイレクト URL に戻ります。',
   'Installation settings updated': 'インストール設定を更新しました',
-  'No installation scopes are available.': '利用できるインストールスコープはありません。',
+  'No installation scopes are available.':
+    '利用できるインストールスコープはありません。',
   'Choose a new plan': '新しいプランを選択',
   'Plans could not be loaded. Refresh and try again.':
     'プランを読み込めませんでした。更新してやり直してください。',
@@ -1642,7 +1663,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Failed to set up auto-pay': '自動支払いの設定に失敗しました',
   'The bank asks for an OTP on automatic payments with this card. Set up auto-pay so payments up to $150 go through without one.':
     'このカードでは、自動支払いのたびに銀行が OTP を求めます。自動支払いを設定すると、$150 までの支払いは OTP なしで処理されます。',
-  'Only the card owner can set up auto-pay': 'カードの所有者のみが自動支払いを設定できます',
+  'Only the card owner can set up auto-pay':
+    'カードの所有者のみが自動支払いを設定できます',
   'Check nameservers': 'ネームサーバーを確認',
   'Nameservers changed': 'ネームサーバーが変更されました',
   'The nameservers for this domain no longer point to Appwrite. The domain status has been updated.':

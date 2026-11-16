@@ -497,14 +497,14 @@ class Create extends Action
                     }
                 }
 
-                // The stored bytes of an encrypted file say nothing about its type, so use the first chunk's.
-                $mimeType = $cipher === null ? ($info->mimeType ?? $deviceForFiles->getFileMimeType($path)) : ($metadata['content_type'] ?? '');
+                // Use chunk 1's type: encrypted bytes say nothing, and S3 keeps the type of whichever chunk arrived first.
+                $mimeType = $cipher === null ? (($metadata['content_type'] ?? '') ?: ($info->mimeType ?? $deviceForFiles->getFileMimeType($path))) : ($metadata['content_type'] ?? '');
                 $formats = Config::getParam('storage-formats');
 
                 $allowed = $bucket->getAttribute('allowedFileExtensions', []);
                 $signed = isset($formats['signatures'][\strtolower(\pathinfo($fileName, PATHINFO_EXTENSION))]);
                 $types = \array_merge(...\array_map(fn (string $extension): array => $formats['signatures'][\strtolower($extension)] ?? [], $allowed));
-                if (!empty($allowed) && $signed && !\in_array($mimeType, $formats['ambiguous'], true) && !\in_array($mimeType, $types, true)) {
+                if (!empty($allowed) && $signed && !\in_array($mimeType, $types, true)) {
                     $removed = $deviceForFiles->delete($path);
 
                     if ($removed && !$file->isEmpty() && !$authorization->skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId))) {

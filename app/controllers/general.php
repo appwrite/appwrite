@@ -56,6 +56,7 @@ use Appwrite\Utopia\Response\Filters\V26 as ResponseV26;
 use Appwrite\Utopia\Response\Filters\V27 as ResponseV27;
 use Appwrite\Utopia\Response\Filters\V28 as ResponseV28;
 use Appwrite\Utopia\Response\Filters\V29 as ResponseV29;
+use Appwrite\Utopia\Response\Filters\V30 as ResponseV30;
 use Appwrite\Utopia\View;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
@@ -834,13 +835,10 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
             $execution
                 ->setAttribute('duration', \microtime(true) - $durationStart)
-                ->setAttribute('responseStatusCode', 500);
+                ->setAttribute('responseStatusCode', 500)
+                ->setAttribute('status', 'failed')
+                ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
 
-            if ($type === 'function') {
-                $execution
-                    ->setAttribute('status', 'failed')
-                    ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
-            }
             Console::error($th->getMessage());
 
             if ($th instanceof AppwriteException) {
@@ -1124,6 +1122,9 @@ Http::init()
          */
         $responseFormat = $request->getHeaderLine('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
+            if (version_compare($responseFormat, '2.8.0', '<')) {
+                $response->addFilter(new ResponseV30());
+            }
             if (version_compare($responseFormat, '2.4.0', '<')) {
                 $response->addFilter(new ResponseV29());
             }
@@ -1514,6 +1515,7 @@ Http::error()
             case 412: // Error allowed publicly
             case 416: // Error allowed publicly
             case 422: // Error allowed publicly
+            case 424: // Error allowed publicly
             case 429: // Error allowed publicly
             case 451: // Error allowed publicly
             case 501: // Error allowed publicly

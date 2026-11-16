@@ -114,6 +114,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'כל המשאבים מלבד ניהול הצוות ופעולות כתיבה בחיוב.',
   'Allow OAuth2 Device Authorization Grant (RFC 8628).':
     'אפשרו OAuth2 Device Authorization Grant (RFC 8628).',
+  'Already in this organization': 'כבר נמצא בארגון הזה',
   Amount: 'סכום',
   'Amount due': 'סכום לתשלום',
   'An error occurred': 'אירעה שגיאה',
@@ -173,6 +174,9 @@ export const heOrganizationsDictionary: Record<string, string> = {
   // pragma: allowlist secret
   'Auto renewal is available for domains registered with Appwrite.':
     'חידוש אוטומטי זמין לדומיינים שנרשמו דרך Appwrite.', // pragma: allowlist secret
+  'Registered with another registrar': 'רשום אצל רשם אחר',
+  'Renew this domain with its current registrar.':
+    'חדשו את הדומיין אצל הרשם הנוכחי שלו.',
   'Available balance': 'יתרה זמינה',
   'Available credits': 'קרדיטים זמינים',
   Avatars: 'אווטארים',
@@ -458,6 +462,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Enabled: 'מופעל',
   'Enter a coupon code to update your estimated total. Applied credits expire after a set period and do not roll over.':
     'הזינו קוד קופון לעדכון הסכום המשוער. קרדיטים שהוחלו פגים לאחר תקופה מוגדרת ואינם נצברים.',
+  'Enter a domain like example.com': 'הזינו דומיין כמו example.com',
   'Enter a full domain name (e.g. example.com)':
     'הזינו שם דומיין מלא (למשל example.com)',
   'Enter coupon code': 'הזינו קוד קופון',
@@ -472,6 +477,13 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'הזינו את שם הדומיין ללא פרוטוקול (למשל example.com)',
   'Enter the domain name you want to add to your organization.':
     'הזינו את שם הדומיין שברצונכם להוסיף לארגון שלכם.',
+  'Enter the hostname only, without https:// or a path.':
+    'הזינו את שם המארח בלבד, בלי https:// או נתיב.',
+  'Enter the hostname only:': 'הזינו את שם המארח בלבד:',
+  'Remove the spaces.': 'הסירו את הרווחים.',
+  'Remove the trailing dot.': 'הסירו את הנקודה בסוף.',
+  'Wildcard domains are not supported. Enter a specific hostname.':
+    'דומיינים עם תו כללי אינם נתמכים. הזינו שם מארח מסוים.',
   'Enter your card details to add a new payment method.':
     'הזינו את פרטי הכרטיס שלכם להוספת אמצעי תשלום חדש.',
   'Enter your full domain name to load a price quote.':
@@ -522,6 +534,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Failed to load logo files': 'טעינת קובצי הלוגו נכשלה',
   'Failed to load members': 'טעינת החברים נכשלה',
   'Failed to load page': 'טעינת הדף נכשלה',
+  'Failed to load preset records': 'טעינת רשומות ה-DNS של התבנית נכשלה',
   'Failed to load projects': 'טעינת הפרויקטים נכשלה',
   'Failed to load regions': 'טעינת האזורים נכשלה',
   'Failed to mount payment form. Please try again.':
@@ -1135,6 +1148,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'האפליקציה מושבתת ואינה יכולה לאמת משתמשים.',
   'This app may have been deleted or you do not have access.':
     'ייתכן שהאפליקציה נמחקה או שאין לכם גישה.',
+  "This domain can't be transferred. Check the name and try again.":
+    'לא ניתן להעביר את הדומיין הזה. בדקו את השם ונסו שוב.',
   'This entire organization will be deleted, including all of its projects and resources.':
     'כל הארגון הזה יימחק, כולל כל הפרויקטים והמשאבים שלו.',
   'Downgrading to the Free plan is temporarily unavailable here while we refine the experience. You can complete this change in the old console.':
@@ -1148,6 +1163,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'זה בדרך כלל לוקח כמה שניות. השאירו את החלון הזה פתוח.',
   'This usually takes a few seconds to a couple of minutes. Please keep this window open.':
     'זה בדרך כלל לוקח בין כמה שניות לכמה דקות. השאירו את החלון הזה פתוח.',
+  'These DNS records will be added. Records this domain already has are left unchanged. Nothing is created until you confirm.':
+    'רשומות ה-DNS האלה יתווספו. רשומות שכבר קיימות בדומיין נשארות ללא שינוי. לא נוצר שום דבר עד שתאשרו.',
   'This will add': 'פעולה זו תוסיף',
   'This will generate a transfer authorization code for your domain. Keep it private until you use it at the receiving registrar.':
     'פעולה זו תיצור קוד הרשאה להעברת הדומיין שלכם. שמרו אותו בסוד עד לשימוש אצל הרשם הקולט.',
@@ -1560,7 +1577,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'לא ניתן היה לטעון אילו מדיניות גיבוי יפסיקו לפעול כשהתוכנית תשתנה.',
   'Could not load which dedicated databases are spun down when your plan changes.':
     'לא ניתן היה לטעון אילו מסדי נתונים ייעודיים יושבתו כשהתוכנית תשתנה.',
-  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.': 'ארגונים שמתקינים את האפליקציה מעניקים לה את הרשאות הגישה שלמטה. משתמשים חוזרים לכתובת ההפניה אחרי התקנה או עדכון של ההתקנה.',
+  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.':
+    'ארגונים שמתקינים את האפליקציה מעניקים לה את הרשאות הגישה שלמטה. משתמשים חוזרים לכתובת ההפניה אחרי התקנה או עדכון של ההתקנה.',
   'Installation settings updated': 'הגדרות ההתקנה עודכנו',
   'No installation scopes are available.': 'אין הרשאות גישה להתקנה זמינות.',
   'Choose a new plan': 'בחירת תוכנית חדשה',
@@ -1627,7 +1645,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Failed to set up auto-pay': 'הגדרת התשלום האוטומטי נכשלה',
   'The bank asks for an OTP on automatic payments with this card. Set up auto-pay so payments up to $150 go through without one.':
     'הבנק מבקש OTP בתשלומים אוטומטיים בכרטיס הזה. הגדירו תשלום אוטומטי כדי שתשלומים של עד $150 יעברו בלי OTP.',
-  'Only the card owner can set up auto-pay': 'רק בעל הכרטיס יכול להגדיר תשלום אוטומטי',
+  'Only the card owner can set up auto-pay':
+    'רק בעל הכרטיס יכול להגדיר תשלום אוטומטי',
   'Check nameservers': 'בדיקת שרתי שמות',
   'Nameservers changed': 'שרתי השמות השתנו',
   'The nameservers for this domain no longer point to Appwrite. The domain status has been updated.':

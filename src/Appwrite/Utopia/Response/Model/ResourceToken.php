@@ -45,6 +45,7 @@ class ResourceToken extends Model
             ])
             ->addRule('secret', [
                 'type' => self::TYPE_STRING,
+                'format' => 'password',
                 'description' => 'JWT encoded string.',
                 'default' => '',
                 // this is a secret but is converted to a JWT token when sent back to the client after filter.

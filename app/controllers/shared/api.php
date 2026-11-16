@@ -20,6 +20,7 @@ use Appwrite\Locking\Lock;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Modules\Storage\Config\CacheControl;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
+use Appwrite\Platform\Modules\Videos\Base as VideosBase;
 use Appwrite\Reference\Renderer;
 use Appwrite\SDK\Method;
 use Appwrite\Usage\Context;
@@ -602,9 +603,11 @@ Http::init()
         $request->setUser($user);
 
         $roles = $authorization->getRoles();
-        $shouldCheckAbuse = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled'
-            && ! $user->isKey($roles)
-            && ! $user->isPrivileged($roles);
+        $abuseEnabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+        // A key or a privileged console caller is trusted with throughput, so the limits that only pace legitimate
+        // work are read for its headers and never counted. A limit declared for everyone still counts for it:
+        // being trusted to call an endpoint is not the same as being trusted to guess the secret it takes.
+        $trusted = $user->isKey($roles) || $user->isPrivileged($roles);
 
         $increasedLimitProjects = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS', ''))));
         $multiplier = \in_array($project->getId(), $increasedLimitProjects, true) ? 100 : 1;
@@ -617,6 +620,7 @@ Http::init()
 
         foreach ($limits as $limit) {
             $max = $limit->limit * $multiplier;
+            $shouldCheckAbuse = $abuseEnabled && $limit->counts($trusted);
 
             try {
                 $isRateLimited = $timelimit($limit->key($values), $max, $limit->seconds, function (TimeLimit $timeLimit) use ($response, $shouldCheckAbuse, &$closestLimit): bool {
@@ -750,6 +754,8 @@ Http::init()
             $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && ! $rolesSource->isPrivileged($roles);
 
             $key = $request->cacheIdentifier();
+            // `auto` params resolved from the Accept header: the response varies by Accept
+            $negotiated = ! empty($request->getNegotiatedParams());
             Span::add('storage.cache.key', $key);
             $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
             [$cache, $fallback] = $responseCache($key);
@@ -833,8 +839,16 @@ Http::init()
                             fileSecurity: $fileSecurity,
                             cacheLog: $cacheLog,
                             route: $route,
+                            negotiated: $negotiated,
                         ));
                     }
+                } elseif ($type === 'video') {
+                    // Thumbnail previews inherit access from the video document's
+                    // `$permissions` — re-check that before serving cached bytes.
+                    $videoId = $parts[1] ?? null;
+                    VideosBase::getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
+
+                    Span::add('video.id', $videoId);
                 }
 
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
@@ -853,6 +867,24 @@ Http::init()
                     ->addHeader('Cache-Control', $cacheControl)
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'));
+
+                // The action that sets Vary never runs on a hit. Repeat the
+                // route's cache.vary headers so a private cache does not reuse
+                // negotiated bytes for a different Accept. Negotiated `auto`
+                // params vary on Accept even when the route lists no headers.
+                $vary = $route->getLabel('cache.vary', []);
+                if (! \is_array($vary)) {
+                    $vary = [];
+                }
+                if ($negotiated && ! \in_array('accept', \array_map('strtolower', $vary), true)) {
+                    $vary[] = 'accept';
+                }
+                if ($vary !== []) {
+                    $response->addHeader('Vary', \implode(', ', \array_map(
+                        static fn (string $header): string => \ucwords($header, '-'),
+                        $vary
+                    )));
+                }
                 $storageCacheOperationsCounter->add(1, ['result' => 'hit']);
                 if (! $isImageTransformation || ! $isDisabled) {
                     Span::add('storage.cache.hit', true);
@@ -1027,13 +1059,16 @@ Http::shutdown()
     ->action(function (Route $route, Request $request, Document $project, User $user, callable $timelimit, Authorization $authorization, array $pathParams) {
         // Shutdown hooks run only when the request did not throw, so it is not a failure: give back the hits its
         // failure limits reserved on arrival. A request that failed never gets here and keeps them.
-        $roles = $authorization->getRoles();
-        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'disabled' || $user->isKey($roles) || $user->isPrivileged($roles)) {
+        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'disabled') {
             return;
         }
 
+        $roles = $authorization->getRoles();
+        $trusted = $user->isKey($roles) || $user->isPrivileged($roles);
+
+        // Only the limits init counted for this caller reserved anything, so only those have a hit to give back.
         /** @var list<Limit> $limits */
-        $limits = \array_filter($route->getLabel('abuse', []), fn (Limit $limit): bool => $limit->failures);
+        $limits = \array_filter($route->getLabel('abuse', []), fn (Limit $limit): bool => $limit->failures && $limit->counts($trusted));
         if ($limits === []) {
             return;
         }

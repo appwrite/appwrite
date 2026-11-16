@@ -11,6 +11,7 @@ import {
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import {
   ProductEmptyStateCreateButton,
+  ProductEmptyStateHero,
   ProductEmptyStateSteps,
   ProductEmptyStateVisual,
   type ProductEmptyStateStep,
@@ -211,21 +212,17 @@ export function FunctionsEmptyState({
   ]
 
   return (
-    <div className="@container py-6 sm:py-10">
-      <div className="grid items-center gap-12 @3xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] @3xl:gap-12">
-        <div className="text-start">
-          <span className="flex h-11 w-11 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground">
-            <Zap className="h-5 w-5" />
-          </span>
-          <h2 className="mt-6 text-[28px] font-semibold leading-tight tracking-tight text-foreground">
-            {t('Create your first function')}
-          </h2>
-          <p className="mt-3 max-w-md text-[14px] leading-relaxed text-muted-foreground">
-            {t(
-              'Run backend code without managing servers. Respond to HTTP requests, events in your project, and schedules.',
-            )}
-          </p>
-          <div className="mt-7 flex flex-wrap items-center gap-2">
+    <div className="py-6 sm:py-10">
+      <ProductEmptyStateHero
+        layout="columns"
+        visual={<EditorVisual />}
+        icon={Zap}
+        title={t('Create your first function')}
+        description={t(
+          'Run backend code without managing servers. Respond to HTTP requests, events in your project, and schedules.',
+        )}
+        actions={
+          <>
             <ProductEmptyStateCreateButton
               onClick={onCreate}
               disabled={createDisabled}
@@ -241,12 +238,9 @@ export function FunctionsEmptyState({
                 {t('Browse templates')}
               </Link>
             </Button>
-          </div>
-        </div>
-        <div className="order-first w-full max-w-lg @3xl:order-none @3xl:max-w-none">
-          <EditorVisual />
-        </div>
-      </div>
+          </>
+        }
+      />
       <ProductEmptyStateSteps steps={steps} />
     </div>
   )

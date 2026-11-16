@@ -1972,14 +1972,22 @@ class Nats implements Synchronous, Consumer, Bounded
      */
     public function maintain(): void
     {
+        // Neither a failed tick nor one queue failing may leave the other queues'
+        // stranded messages where they are; the first failure is raised once they are
+        // swept, for the adapter's error callback. A tick that could not reconnect
+        // leaves the connection disconnected, and command() drops it, so the reaps
+        // below run on a freshly built one rather than failing on the same corpse.
+        $failure = null;
+
         if ($this->commandsConnection instanceof NatsConnection && $this->commandsConnection !== $this->connection) {
             $commands = $this->commandsConnection;
-            $this->command(fn () => $commands->tick());
+            try {
+                $this->command(fn () => $commands->tick());
+            } catch (\Throwable $error) {
+                $failure = $error;
+            }
         }
 
-        // One queue failing must not leave the others' stranded messages where they are,
-        // and is raised once they are swept, for the adapter's error callback.
-        $failure = null;
         foreach ($this->served as $queue) {
             try {
                 $this->reap($queue, limit: self::REAP_LIMIT);

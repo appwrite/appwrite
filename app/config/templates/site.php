@@ -1149,6 +1149,7 @@ return [
                 'value' => 'disabled',
                 'placeholder' => 'sk_.....',
                 'required' => false,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1482,6 +1483,7 @@ return [
                 'value' => '',
                 'placeholder' => 'sk_.....',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
         ]
@@ -1529,6 +1531,7 @@ return [
                 'value' => '',
                 'placeholder' => 'a0b1...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [

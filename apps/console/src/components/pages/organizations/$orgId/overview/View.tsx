@@ -271,6 +271,7 @@ function DomainsPlanLimitAlert({ orgId }: { orgId: string | undefined }) {
       limit={limit}
       planName={planName}
       resourceName="domains"
+      resourceNameSingular="domain"
       orgId={orgId}
       fullWidth={false}
     />

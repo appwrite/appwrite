@@ -98,6 +98,7 @@ class AppwriteSdkCoverageTest extends TestCase
      * Policy update methods whose policy Policies carries.
      */
     private const array POLICIES = [
+        'updateAccountDevicesPolicy',
         'updateDenyAliasedEmailPolicy',
         'updateDenyCorporateEmailPolicy',
         'updateDenyDisposableEmailPolicy',

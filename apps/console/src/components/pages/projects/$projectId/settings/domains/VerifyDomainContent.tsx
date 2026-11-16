@@ -9,10 +9,7 @@ import {
   isDomainClaimError,
   type VerificationMethod,
 } from '@/lib/utils/proxy-domains'
-import {
-  getAppwriteErrorInfo,
-  getErrorMessage,
-} from '@/lib/utils/error-formatting'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
 import { Loader2, ExternalLink, Info, AlertCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -62,19 +59,16 @@ export function dnsPendingVerificationError(
 
 /**
  * Alert for a failed verify call. A failed DNS check or a refused ownership
- * claim keeps the amber pending style and leads with the API's reason;
- * anything else is a hard failure.
+ * claim keeps the amber pending style; the claim step's own copy and record
+ * table explain what to add, so the API's message is not repeated. Anything
+ * else is a hard failure.
  */
 export function domainVerificationError(
   t: (text: string) => string,
   error: unknown,
 ): DomainVerificationError {
-  const pending = dnsPendingVerificationError(t)
   if (isDomainClaimError(error)) {
-    const { message } = getAppwriteErrorInfo(error)
-    return message
-      ? { ...pending, message: `${message} ${pending.message}` }
-      : pending
+    return dnsPendingVerificationError(t)
   }
   return {
     title: t('Verification failed'),
@@ -421,7 +415,7 @@ export function VerifyDomainContent({
   }
 
   const getNameserverRecords = (): DnsRecord[] =>
-    nameservers.map((ns) => ({ type: 'NS', name: '', value: ns, ttl: null }))
+    nameservers.map((ns) => ({ type: 'NS', name: '@', value: ns, ttl: null }))
 
   const cardClassName =
     'rounded-xl border border-border bg-card/50 overflow-hidden'

@@ -5,8 +5,8 @@
 import type { FilterColumn } from '../types'
 
 export const domainsFilterColumns: FilterColumn[] = [
-  { id: '$id', title: '$id', type: 'string' },
+  { id: '$id', title: 'ID', type: 'string' },
   { id: 'domain', title: 'Domain', type: 'string' },
-  { id: '$createdAt', title: '$createdAt', type: 'datetime' },
-  { id: '$updatedAt', title: '$updatedAt', type: 'datetime' },
+  { id: '$createdAt', title: 'Created', type: 'datetime' },
+  { id: '$updatedAt', title: 'Updated', type: 'datetime' },
 ]

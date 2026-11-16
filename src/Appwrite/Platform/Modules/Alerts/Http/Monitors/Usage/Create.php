@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Alerts\Http\Monitors\Usage;
 
+use Appwrite\Alert\Severity;
 use Appwrite\Platform\Modules\Alerts\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -61,7 +62,7 @@ class Create extends Base
             ->param('cooldown', 3600, new Range(300, 2592000), 'Minimum seconds between two team notifications of this monitor firing, between 300 and 2592000. Events fire on every change between firing and resolved regardless.', true)
             ->param('enabled', true, new Boolean(), 'Set to false to create the monitor without evaluating it.', true)
             ->param('notify', ['owner'], fn () => new ArrayList(new WhiteList(Config::getParam('alerts', [])['roles'] ?? [], true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Organization roles whose confirmed members get an email and a console notification when the monitor fires and resolves. Each must be an organization role, such as `owner` or `developer`. Defaults to owners; pass an empty list to rely on the alert events alone.', true)
-            ->param('critical', false, new Boolean(), 'Set to true to mark the monitor critical: its alerts may be delivered with higher urgency by the notification channels that support it.', true)
+            ->param('severity', Severity::Warning->value, new WhiteList(Severity::values(), true), 'How urgent the monitor\'s alerts are: `info`, `warning`, `error` or `critical`. Critical alerts may be delivered with higher urgency by the notification channels that support it, such as a push that rings through silent mode.', true)
             ->inject('response')
             ->inject('project')
             ->inject('dbForPlatform')
@@ -82,13 +83,13 @@ class Create extends Base
         int $cooldown,
         bool $enabled,
         array $notify,
-        bool $critical,
+        string $severity,
         Response $response,
         Document $project,
         Database $dbForPlatform,
         Database $dbForProject,
         Authorization $authorization,
     ): void {
-        $this->createMonitor(MONITOR_TYPE_USAGE, $monitorId, $name, $rules, $window, $cooldown, $enabled, $notify, $response, $project, $dbForPlatform, $dbForProject, $authorization, $critical);
+        $this->createMonitor(MONITOR_TYPE_USAGE, $monitorId, $name, $rules, $window, $cooldown, $enabled, $notify, $response, $project, $dbForPlatform, $dbForProject, $authorization, Severity::from($severity));
     }
 }

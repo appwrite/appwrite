@@ -33,9 +33,9 @@ final class ExtensionsTest extends TestCase
         $this->assertEquals(true, extension_loaded('PDO'));
     }
 
-    public function testImagick(): void
+    public function testUtopia(): void
     {
-        $this->assertEquals(true, extension_loaded('imagick'));
+        $this->assertEquals(true, extension_loaded('utopia'));
     }
 
     public function testJSON(): void

@@ -101,6 +101,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "advanced/billing/project-transfers",
+    "title": "Project transfers",
+    "description": "Move an Appwrite Cloud project to another organization, directly or with a single-use transfer link that an owner of the other organization claims.",
+    "layout": "article",
+    "readingTimeMinutes": 6
+  },
+  {
     "slug": "advanced/billing/refund-policy",
     "title": "Refund policy",
     "description": "Learn about Appwrite's refund policy for services, including eligibility criteria and the request process.",
@@ -1323,14 +1330,14 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Email OTP",
     "description": "Seamless sign in with Email OTP authentication in Appwrite. Learn how to provide simple and secure passwordless user accounts.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/auth/email-password",
     "title": "Email and password login",
     "description": "Implement email and password authentication with Appwrite. Securely register and authenticate users in your applications using Appwrite's robust email-based authentication system.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/auth/email-policies",
@@ -1386,7 +1393,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Multi-factor authentication",
     "description": "Add multiple layers of authentication to your applications powered by Appwrite Authentication.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/auth/multi-tenancy",
@@ -1677,7 +1684,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Verify user",
     "description": "Learn about Appwrite's email and phone verification system, including verification flows and role-based access control.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/avatars",
@@ -3343,7 +3350,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Deploy from Git",
     "description": "Learn to version and update your Appwrite Sites' code with deployments.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/sites/deploy-manually",
@@ -3406,7 +3413,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Migrating from Vercel to Appwrite Sites",
     "description": "A step-by-step guide to migrate your web applications from Vercel to Appwrite Sites.",
     "layout": "article",
-    "readingTimeMinutes": 7
+    "readingTimeMinutes": 8
   },
   {
     "slug": "products/sites/previews",
@@ -3964,7 +3971,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
       },
       {
         "question": "Is there more than one Appwrite MCP server?",
-        "answer": "No. Cloud uses one hosted server at https://mcp.appwrite.io. It covers API actions and docs search. Self-hosted Appwrite uses a local stdio server with an API key. Do not add separate appwrite-api and appwrite-docs servers."
+        "answer": "No. Cloud uses one hosted server at https://mcp.appwrite.io. It covers API actions and docs search. Self-hosted Appwrite uses a local stdio server with an API key. Do not add separate appwrite-api and appwrite-docs servers. Only an agent that cannot sign in should use https://mcp.appwrite.io/docs/mcp, which serves the same docs search without the API."
       }
     ]
   },

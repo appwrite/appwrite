@@ -1158,6 +1158,62 @@ trait MessagingBase
         $this->assertCount(0, $message['body']['deliveryErrors']);
     }
 
+    public function testSendPushViaAppwriteProviderToNumericUserId(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/appwrite', $headers, [
+            'providerId' => Id::unique(),
+            'name' => 'Appwrite-numeric-user',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        // PHP turns an all-digit string array key into an int.
+        $userId = (string) \random_int(100000000000000000, 999999999999999999);
+        $user = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => $userId,
+            'email' => 'appwrite-push-numeric-' . Id::unique() . '@mail.org',
+            'password' => 'password',
+            'name' => 'Numeric Push User',
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+        $this->assertSame($userId, $user['body']['$id']);
+
+        $target = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/targets', $headers, [
+            'targetId' => Id::unique(),
+            'providerType' => 'push',
+            'providerId' => $provider['body']['$id'],
+            'identifier' => Id::unique(),
+        ]);
+        $this->assertEquals(201, $target['headers']['status-code']);
+
+        $push = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', $headers, [
+            'messageId' => Id::unique(),
+            'users' => [$userId],
+            'title' => 'Order shipped',
+            'body' => 'Your order is on the way',
+        ]);
+        $this->assertEquals(201, $push['headers']['status-code']);
+        $pushMessageId = $push['body']['$id'];
+
+        // Test for SUCCESS
+        $this->assertEventually(function () use ($pushMessageId, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $pushMessageId, $headers);
+            $this->assertContains($response['body']['status'], [MessageStatus::SENT, MessageStatus::FAILED]);
+        }, 30000, 500);
+
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $pushMessageId, $headers);
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SENT, $message['body']['status']);
+        $this->assertEquals(1, $message['body']['deliveredTotal']);
+        $this->assertCount(0, $message['body']['deliveryErrors']);
+    }
+
     public function testUpdateProviders(): void
     {
         $providers = $this->setupCreatedProviders();
@@ -2156,6 +2212,55 @@ trait MessagingBase
 
         $this->assertEquals(200, $topic['headers']['status-code']);
         $this->assertEquals('android-app', $topic['body']['name']);
+
+        // A subscriber whose target was deleted: the deletes worker removes it on its own, so
+        // reads right after the delete may find it with no target or already gone, never fail.
+        $orphanTarget = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/targets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'targetId' => Id::unique(),
+            'providerType' => 'email',
+            'providerId' => $provider['body']['$id'],
+            'identifier' => 'random-email-orphan@mail.org',
+        ]);
+        $this->assertEquals(201, $orphanTarget['headers']['status-code']);
+
+        $orphan = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topics['public']['$id'] . '/subscribers', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'subscriberId' => Id::unique(),
+            'targetId' => $orphanTarget['body']['$id'],
+        ]);
+        $this->assertEquals(201, $orphan['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId . '/targets/' . $orphanTarget['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topics['public']['$id'] . '/subscribers/' . $orphan['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertContains($response['headers']['status-code'], [200, 404]);
+        if ($response['headers']['status-code'] === 200) {
+            $this->assertSame('', $response['body']['userName']);
+        }
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topics['public']['$id'] . '/subscribers', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => [Query::equal('targetId', [$orphanTarget['body']['$id']])->toString()],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
     }
 
     public function testDeleteTopic(): void
@@ -2651,11 +2756,12 @@ trait MessagingBase
         $this->assertSame($fileId, $list['body']['messages'][0]['data']['image']['fileId']);
         $this->assertArrayNotHasKey('url', $list['body']['messages'][0]['data']['image']);
 
-        // The email and SMS update routes accept any message ID and echo the message back.
+        // The email and SMS update routes must not reach a push message at all: they would carry its
+        // stored image forward without the files.read its own route demands.
         foreach (['email', 'sms'] as $type) {
             $patched = $this->client->call(Client::METHOD_PATCH, "/messaging/messages/{$type}/" . $message['$id'], $headers + $writeKey, ['draft' => true]);
-            $this->assertSame(200, $patched['headers']['status-code']);
-            $this->assertArrayNotHasKey('url', $patched['body']['data']['image']);
+            $this->assertSame(404, $patched['headers']['status-code']);
+            $this->assertSame('message_not_found', $patched['body']['type']);
         }
 
         $fileReader = ['x-appwrite-key' => $this->getNewKey(['messages.read', 'files.read'])];

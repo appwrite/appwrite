@@ -25,6 +25,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,6 +48,7 @@ import {
 } from '@/lib/active-environment'
 import {
   projectEnvironmentDotClass,
+  projectEnvironmentsAllowance,
   sortProjectEnvironments,
   type ProjectEnvironmentOption,
 } from '@/lib/project-environments'
@@ -56,6 +58,7 @@ import {
 } from '@/lib/project-prefs-keys'
 import {
   useDeleteProjectEnvironment,
+  useOrganizationPlan,
   useProject,
   useProjectEnvironments,
   useProjectPrefs,
@@ -241,10 +244,15 @@ export function EnvironmentSwitcher({
   const { project } = useProject(projectId)
   const activeEnvironmentId = useActiveEnvironmentId(projectId)
   const region = project?.region
-  const { environments, error, refetch } = useProjectEnvironments(
-    projectId,
-    region,
-    environmentsEnabled,
+  const { environments, total, isLoading, error, refetch } =
+    useProjectEnvironments(projectId, region, environmentsEnabled)
+  // Environments are offered on Pro and above. Free and Start still see the
+  // switcher, with the environments a project kept, and creating one leads to
+  // the upgrade.
+  const { plan } = useOrganizationPlan(project?.teamId)
+  const allowance = projectEnvironmentsAllowance(
+    plan,
+    isLoading || error ? undefined : total,
   )
   // The order members gave the list, kept in the project's prefs
   const { prefs } = useProjectPrefs(projectId, region, environmentsEnabled)
@@ -440,8 +448,11 @@ export function EnvironmentSwitcher({
               : 'w-[var(--radix-dropdown-menu-trigger-width)] min-w-[220px]',
           )}
         >
-          <DropdownMenuLabel className="text-[11px] font-medium text-muted-foreground">
+          <DropdownMenuLabel className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
             {t('Environments')}
+            <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
+              {t('Beta')}
+            </Badge>
           </DropdownMenuLabel>
           <DropdownMenuItem
             className={cn(
@@ -489,8 +500,24 @@ export function EnvironmentSwitcher({
               params={{ projectId }}
               onClick={() => setActiveEnvironment(projectId, null)}
             >
-              <MenuItemContent icon={Plus}>
+              <MenuItemContent
+                icon={Plus}
+                className="flex items-center justify-between gap-2"
+              >
                 {t('Create environment')}
+                {/* The create page explains either one and offers the upgrade */}
+                {allowance.status === 'not-offered' ? (
+                  <Badge
+                    variant="processing"
+                    className="px-1.5 py-0 text-[10px]"
+                  >
+                    {t('Pro')}
+                  </Badge>
+                ) : allowance.status === 'at-limit' ? (
+                  <span className="text-[11px] tabular-nums text-muted-foreground">
+                    {total}/{allowance.limit}
+                  </span>
+                ) : null}
               </MenuItemContent>
             </Link>
           </DropdownMenuItem>
