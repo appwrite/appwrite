@@ -141,12 +141,14 @@ class Serializer
         // Operators are left-associative, so an equal-precedence right subtree
         // keeps its grouping: `a * (b / c)` is not `a * b / c` under integer
         // division, nor `a - (b - c)` `a - b - c`. Only the same associative
-        // operator may drop it: `a + (b + c)` is `a + b + c`.
+        // operator may drop it: `a + (b + c)` is `a + b + c`. Raw SQL is not
+        // regrouped; it takes the operator's own precedence, which is how
+        // serializeBinaryChild() knows to enclose it as an operand of AND.
         $right = $expression->right;
         $associative = $right instanceof Binary
             && strtoupper($right->operator) === strtoupper($expression->operator)
             && in_array(strtoupper($expression->operator), ['+', '*', '||', 'AND', 'OR'], true);
-        $rightPrec = $associative ? $prec : $prec + 1;
+        $rightPrec = $associative || $right instanceof Raw ? $prec : $prec + 1;
 
         $left = $this->serializeBinaryChild($expression->left, $prec);
         $right = $this->serializeBinaryChild($expression->right, $rightPrec);
