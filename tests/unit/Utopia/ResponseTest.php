@@ -13,6 +13,7 @@ use Appwrite\Utopia\Response\Model\Project as ProjectModel;
 use Appwrite\Utopia\Response\Model\Provider as ProviderModel;
 use Exception;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
 use Swoole\Coroutine;
@@ -454,6 +455,7 @@ final class ResponseTest extends TestCase
         }
     }
 
+    #[RunInSeparateProcess]
     public function testWriteDoesNotAskTheServerUntilTheLimitIsWritten(): void
     {
         $this->inCoroutine(function (): void {
@@ -464,6 +466,7 @@ final class ResponseTest extends TestCase
         });
     }
 
+    #[RunInSeparateProcess]
     public function testWriteWaitsForAClientToDrainItsQueue(): void
     {
         $interval = Response::$sendPollInterval;
@@ -485,6 +488,7 @@ final class ResponseTest extends TestCase
         }
     }
 
+    #[RunInSeparateProcess]
     public function testWriteClosesAConnectionThatStopsReading(): void
     {
         $interval = Response::$sendPollInterval;
@@ -506,6 +510,7 @@ final class ResponseTest extends TestCase
         }
     }
 
+    #[RunInSeparateProcess]
     public function testWriteKeepsWaitingWhileTheClientReadsSlowly(): void
     {
         $interval = Response::$sendPollInterval;
@@ -530,6 +535,7 @@ final class ResponseTest extends TestCase
         }
     }
 
+    #[RunInSeparateProcess]
     public function testWriteReportsAConnectionThatIsGone(): void
     {
         $interval = Response::$sendPollInterval;
@@ -545,6 +551,7 @@ final class ResponseTest extends TestCase
         }
     }
 
+    #[RunInSeparateProcess]
     public function testWriteWithoutAServerToAskDoesNotWait(): void
     {
         $this->inCoroutine(function (): void {
