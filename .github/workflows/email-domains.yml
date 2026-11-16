@@ -1,4 +1,4 @@
-name: Emails
+name: Email domains
 
 # Refreshes the disposable and free email domain lists in packages/emails/data
 # from their upstream sources and keeps one pull request open with the result.
@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: emails
+  group: email-domains
   cancel-in-progress: false
 
 permissions:
@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
-      BRANCH: chore/emails-domains
+      BRANCH: chore/email-domains
       DATA: packages/emails/data
     steps:
       - name: Checkout repository
@@ -106,7 +106,7 @@ jobs:
             fi
 
             echo
-            echo "Opened by the [Emails workflow]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)."
+            echo "Opened by the [Email domains workflow]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)."
           } > "$body"
 
           cat "$body" >> "$GITHUB_STEP_SUMMARY"
@@ -118,8 +118,8 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
-          client-id: ${{ vars.EMAILS_APP_ID }}
-          private-key: ${{ secrets.EMAILS_APP_PRIVATE_KEY }}
+          client-id: ${{ vars.EMAIL_DOMAINS_APP_ID }}
+          private-key: ${{ secrets.EMAIL_DOMAINS_APP_PRIVATE_KEY }}
           permission-contents: write
           permission-pull-requests: write
 
