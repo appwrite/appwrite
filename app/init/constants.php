@@ -560,6 +560,7 @@ const METRIC_REALTIME_OUTBOUND = 'realtime.outbound';
 // MQTT push broker metrics (cumulative per-project counters, summed by StatsUsage)
 const METRIC_MQTT_CONNECTIONS = 'mqtt.connections';
 const METRIC_MQTT_MESSAGES_DELIVERED = 'mqtt.messages.delivered';
+const METRIC_MQTT_MESSAGES_ACKED = 'mqtt.messages.acked';
 
 // Resource types
 const RESOURCE_TYPE_PROJECTS = 'projects';

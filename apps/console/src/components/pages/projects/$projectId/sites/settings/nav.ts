@@ -41,6 +41,7 @@ export const SITE_SETTINGS_NAV: ResourceSettingsNavItem[] = [
       'vcs',
       'silent',
       'silent mode',
+      'automation',
       'comments',
       'commits',
       'pull request',
