@@ -166,6 +166,10 @@ pub(in crate::platform) async fn schedule(
         response_size,
     };
     job.onboarding().await;
+    // The response cache is written before the response goes out, as PHP's
+    // shutdown writes it in the request: a purge that follows the response
+    // (an overwrite's) must not be undone by a write still pending.
+    job.cache_write().await;
     utopia_async::spawn(job.run());
 }
 
@@ -182,7 +186,6 @@ impl Job {
         let trimmed = project_payload.clone();
 
         abuse_reset::abuse_reset(&self.state, self.route.labels, self.abuse_trusted, &self.abuse_params).await;
-        self.cache_write().await;
         // The session limit only deletes rows and purges their cache, which
         // the work below neither reads nor orders against: it runs alongside.
         utopia_async::join!(self.session_limit(), self.dispatch(&project_payload, &trimmed));
