@@ -3,6 +3,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { useT } from '@/lib/i18n/translate'
 import {
@@ -106,6 +111,22 @@ export function UpdateRecordDialog({
 
   const requiresPriority = record.type === 'MX' || record.type === 'SRV'
   const requiresSRVFields = record.type === 'SRV'
+  const nameMissing = !name.trim()
+  const valueMissing = !value.trim()
+  const submitDisabledReason =
+    nameMissing && valueMissing
+      ? t('Enter a name (use @ for the root domain) and a value')
+      : nameMissing
+        ? t('Enter a name (use @ for the root domain)')
+        : valueMissing
+          ? t('Enter a value')
+          : null
+
+  const submitButton = (
+    <Button type="submit" disabled={isLoading || submitDisabledReason !== null}>
+      {t('Update Record')}
+    </Button>
+  )
 
   return (
     <BaseDrawer
@@ -239,12 +260,18 @@ export function UpdateRecordDialog({
           </div>
 
           <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
-            <Button
-              type="submit"
-              disabled={isLoading || !name.trim() || !value.trim()}
-            >
-              {t('Update Record')}
-            </Button>
+            {submitDisabledReason ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span tabIndex={0}>{submitButton}</span>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs text-[12px]">
+                  {submitDisabledReason}
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              submitButton
+            )}
             <Button
               type="button"
               variant="outline"

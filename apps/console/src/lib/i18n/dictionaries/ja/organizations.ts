@@ -917,6 +917,11 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'クーポンコードを入力すると見積合計が更新されます。適用したクレジットは一定期間後に失効し、繰り越されません。',
   'Enter a full domain name (e.g. example.com)':
     'ドメイン名をすべて入力してください (例: example.com)',
+  'Enter a name (use @ for the root domain)':
+    '名前を入力してください (ルートドメインには @ を使用)',
+  'Enter a name (use @ for the root domain) and a value':
+    '名前 (ルートドメインには @ を使用) と値を入力してください',
+  'Enter a value': '値を入力してください',
   'Enter tax ID (e.g., VAT, GST, EIN)':
     '税務 ID を入力してください (例: VAT、GST、EIN)',
   'Enter the domain name without protocol (e.g., example.com)':

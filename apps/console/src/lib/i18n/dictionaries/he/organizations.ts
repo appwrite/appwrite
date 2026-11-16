@@ -463,6 +463,11 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'הזינו קוד קופון לעדכון הסכום המשוער. קרדיטים שהוחלו פגים לאחר תקופה מוגדרת ואינם נצברים.',
   'Enter a full domain name (e.g. example.com)':
     'הזינו שם דומיין מלא (למשל example.com)',
+  'Enter a name (use @ for the root domain)':
+    'הזינו שם (השתמשו ב-@ עבור הדומיין הראשי)',
+  'Enter a name (use @ for the root domain) and a value':
+    'הזינו שם (השתמשו ב-@ עבור הדומיין הראשי) וערך',
+  'Enter a value': 'הזינו ערך',
   'Enter coupon code': 'הזינו קוד קופון',
   'Enter domain name': 'הזינו שם דומיין',
   'Enter organization name': 'הזינו שם ארגון',
