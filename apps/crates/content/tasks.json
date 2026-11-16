@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-16T07:10:00Z",
+  "updated": "2026-11-16T08:02:00Z",
   "tasks": [
     {
       "id": "crate-layout",
@@ -734,8 +734,8 @@
       "title": "Utopia libraries: follow main's PHP after the Nov 16 merge",
       "area": "Libraries",
       "status": "todo",
-      "updated": "2026-11-16T07:10:00Z",
-      "note": "Main changed 22 absorbed packages (175 commits): vcs, migration, queue, agents, messaging, cache, http, storage, query, cdn, emails, dns, abuse and more. packages/agents was redesigned (models, tools and a step loop; its OpenRouter sync script is gone), so its compat cases no longer describe the PHP library. Each crate's php-sync marker shows what to port; the compat shards show the differences."
+      "updated": "2026-11-16T08:02:00Z",
+      "note": "Port first: utopia-php/query's security fixes, which utopia-query lacks: raw conditions enclosed in parentheses where they are ANDed (3d5172a7f4, af8f66bb57: a raw OR beside the tenant filter reached other tenants' rows), backslashes escaped in toRawSql() (f1c3657857), and a trailing newline refused in allowlisted names (f960d64abc). Main changed 22 absorbed packages (175 commits): vcs, migration, queue, agents, messaging, cache, http, storage, query, cdn, emails, dns, abuse and more. packages/agents was redesigned (models, tools and a step loop; its OpenRouter sync script is gone), so its compat cases no longer describe the PHP library. Each crate's php-sync marker shows what to port; the compat shards show the differences."
     },
     {
       "id": "main-nov16-benchmarks",
