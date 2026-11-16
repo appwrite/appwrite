@@ -1,0 +1,149 @@
+name: Emails
+
+# Refreshes the disposable and free email domain lists in packages/emails/data
+# from their upstream sources and keeps one pull request open with the result.
+# Appwrite autoloads packages/emails directly and Cloud takes it through
+# appwrite/server-ce, so merging that pull request is what ships new domains;
+# a release of the utopia-php/emails mirror is not needed for either.
+
+on:
+  schedule:
+    - cron: '17 4 * * *'  # 4:17am UTC daily
+  workflow_dispatch:
+
+concurrency:
+  group: emails
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  domains:
+    name: Refresh domains
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      BRANCH: chore/emails-domains
+      DATA: packages/emails/data
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: '8.5'
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        working-directory: packages/emails
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      # Fails the job when any source is unreachable or empty, so a partial
+      # list never reaches the pull request.
+      - name: Import domains
+        working-directory: packages/emails
+        run: php import.php all --commit=true
+
+      # Skip the push when main already has these lists, or when the open pull
+      # request already carries them, so its CI only reruns on new domains.
+      - name: Compare
+        id: compare
+        env:
+          REMOTE: ${{ github.server_url }}/${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet -- "$DATA"; then
+            echo "Lists match main."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if git fetch --depth=1 "$REMOTE" "refs/heads/$BRANCH" 2>/dev/null \
+            && git diff --quiet FETCH_HEAD -- "$DATA"; then
+            echo "Lists match $BRANCH."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Summarize
+        if: steps.compare.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+
+          body="$RUNNER_TEMP/body.md"
+          {
+            echo "Refreshes \`$DATA\` from the upstream sources in \`packages/emails/import.php\`."
+            echo
+            echo "| List | Added | Removed |"
+            echo "|------|------:|--------:|"
+            for list in disposable free; do
+              diff=$(git diff -U0 -- "$DATA/$list-domains.php")
+              added=$(grep -c "^+    '" <<< "$diff" || true)
+              removed=$(grep -c "^-    '" <<< "$diff" || true)
+              echo "| $list | $added | $removed |"
+            done
+
+            # Removals unblock domains, so list them for review.
+            removed=$(git diff -U0 -- "$DATA/disposable-domains.php" | sed -n "s/^-    '\(.*\)',$/\1/p")
+            if [ -n "$removed" ]; then
+              echo
+              echo "<details><summary>Domains no longer treated as disposable</summary>"
+              echo
+              echo '```'
+              head -n 500 <<< "$removed"
+              [ "$(wc -l <<< "$removed")" -le 500 ] || echo "… and $(( $(wc -l <<< "$removed") - 500 )) more"
+              echo '```'
+              echo
+              echo "</details>"
+            fi
+
+            echo
+            echo "Opened by the [Emails workflow]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)."
+          } > "$body"
+
+          cat "$body" >> "$GITHUB_STEP_SUMMARY"
+
+      # A GitHub App token, not GITHUB_TOKEN: pushes and pull requests made with
+      # GITHUB_TOKEN do not trigger CI.
+      - name: Get token
+        if: steps.compare.outputs.changed == 'true'
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.EMAILS_APP_ID }}
+          private-key: ${{ secrets.EMAILS_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Open pull request
+        if: steps.compare.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+          REMOTE: https://x-access-token:${{ steps.app-token.outputs.token }}@github.com/${{ github.repository }}.git
+          TITLE: 'chore(emails): refresh disposable and free domains'
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -- "$DATA"
+          git commit --quiet --message "$TITLE"
+
+          # The branch is regenerated from main on every run.
+          git push --force "$REMOTE" "HEAD:refs/heads/$BRANCH"
+
+          number=$(gh pr list --head "$BRANCH" --base main --state open --json number --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            gh pr edit "$number" --body-file "$RUNNER_TEMP/body.md"
+          else
+            gh pr create --base main --head "$BRANCH" --title "$TITLE" --body-file "$RUNNER_TEMP/body.md"
+          fi

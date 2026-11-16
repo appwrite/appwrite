@@ -92,7 +92,8 @@ function updateDisposableDomains(bool $commit, bool $force, string $source): voi
 
         if (! $force && isConfigUpToDate($currentDomains, $allDomains)) {
             Console::success('Disposable email domains are already up to date');
-            Console::exit(0);
+
+            return;
         }
 
         Console::info('Changes detected:');
@@ -144,7 +145,8 @@ function updateFreeDomains(bool $commit, bool $force, string $source): void
 
         if (! $force && isConfigUpToDate($currentDomains, $allDomains)) {
             Console::success('Free email domains are already up to date');
-            Console::exit(0);
+
+            return;
         }
 
         Console::info('Changes detected:');
@@ -237,20 +239,26 @@ function fetchAllSources(array $sources, string $type): array
         $processedSources++;
         Console::info("[{$processedSources}/{$totalSources}] Processing {$sourceConfig['name']}...");
 
+        // A source that fails or comes back empty aborts the run: saving the
+        // rest would drop every domain that source contributes.
         try {
             $domains = fetchSource($sourceKey, $sourceConfig, $type);
-            $totalFetched += count($domains);
-
-            // Add domains to the collection, avoiding duplicates
-            foreach ($domains as $domain) {
-                $allDomains[$domain] = true; // Use associative array to avoid duplicates
-            }
-
-            Console::info('✓ Fetched '.count($domains)." domains from {$sourceConfig['name']}");
         } catch (\Exception $e) {
-            Console::warning("⚠ Failed to fetch from {$sourceConfig['name']}: ".$e->getMessage());
-            // Continue with other sources even if one fails
+            throw new \Exception("Failed to fetch from {$sourceConfig['name']}: ".$e->getMessage(), previous: $e);
         }
+
+        if (empty($domains)) {
+            throw new \Exception("No domains fetched from {$sourceConfig['name']}");
+        }
+
+        $totalFetched += count($domains);
+
+        // Add domains to the collection, avoiding duplicates
+        foreach ($domains as $domain) {
+            $allDomains[$domain] = true; // Use associative array to avoid duplicates
+        }
+
+        Console::info('✓ Fetched '.count($domains)." domains from {$sourceConfig['name']}");
     }
 
     // Convert back to indexed array and sort
