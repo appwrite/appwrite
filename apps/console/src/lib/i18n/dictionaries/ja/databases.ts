@@ -932,7 +932,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'One Relation column within this table': 'このテーブル内の 1 つのリレーション列',
   'One Relation column within this table and another within the related table': 'このテーブル内の 1 つのリレーション列と、関連テーブル内の別のリレーション列',
   'One-way relationship': '一方向リレーション',
-  'Only applicable to string and varchar columns': 'string 列と varchar 列にのみ適用可能',
+  'Only applicable to string, varchar and text columns': 'string 列と varchar 列にのみ適用可能',
   'Only CSV files can be imported': 'インポートできるのは CSV ファイルのみです',
   'only if they have collection permissions': 'コレクション権限を持っている場合のみ',
   'only if they have table permissions': 'テーブル権限を持っている場合のみ',

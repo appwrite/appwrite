@@ -68,8 +68,9 @@ export function AddDomainWizard() {
   const [redirectUrl, setRedirectUrl] = useState('')
   const [statusCode, setStatusCode] = useState('302')
   const [domainTouched, setDomainTouched] = useState(false)
-  const domainError = domainFieldError(domain, domainTouched, t)
-  const [error, setError] = useState('')
+  // The server's reason the last add failed, such as a domain that exists already
+  const [submitError, setSubmitError] = useState('')
+  const domainError = domainFieldError(domain, domainTouched, t) || submitError
   const [rule, setRule] = useState<Models.ProxyRule | null>(null)
   // Set while the create waits for the domain's ownership TXT record
   const [claimDomain, setClaimDomain] = useState<string | null>(null)
@@ -171,7 +172,7 @@ export function AddDomainWizard() {
         return
       }
       const message = getErrorMessage(err, 'Failed to add domain')
-      setError(message)
+      setSubmitError(message)
       toast.error(message)
     }
   }
@@ -342,7 +343,7 @@ export function AddDomainWizard() {
               value={domain}
               onChange={(e) => {
                 setDomain(e.target.value)
-                setError('')
+                setSubmitError('')
               }}
               onBlur={() => setDomainTouched(true)}
               aria-invalid={domainError ? true : undefined}
@@ -351,8 +352,6 @@ export function AddDomainWizard() {
             />
             {domainError ? (
               <p className="text-[11px] text-destructive mt-1">{domainError}</p>
-            ) : error ? (
-              <p className="text-[11px] text-destructive mt-1">{error}</p>
             ) : null}
             {apexPlanBlocked ? (
               <DomainPlanLimitNotice
