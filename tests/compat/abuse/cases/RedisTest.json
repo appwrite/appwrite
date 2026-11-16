@@ -2306,150 +2306,6 @@
       ]
     },
     {
-      "name": "cleanup",
-      "steps": [
-        {
-          "op": "limit.new",
-          "args": {
-            "algo": "time_limit",
-            "store": "redis",
-            "key": "${ns}-cleanup",
-            "limit": 1,
-            "seconds": 60
-          },
-          "bind": "l",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "limit.cleanup",
-          "args": {
-            "handle": {
-              "$ref": "l"
-            },
-            "timestamp": 1700000000
-          },
-          "expect": true
-        }
-      ]
-    },
-    {
-      "name": "seconds must be positive",
-      "steps": [
-        {
-          "op": "limit.new",
-          "args": {
-            "algo": "time_limit",
-            "store": "redis",
-            "key": "${ns}-guard",
-            "limit": 1,
-            "seconds": 0
-          },
-          "bind": "l",
-          "expect": {
-            "$error": {
-              "class": "InvalidArgumentException",
-              "message": "seconds must be greater than 0"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "getLogs scans once, without an offset",
-      "steps": [
-        {
-          "op": "redis.clear",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "limit.new",
-          "args": {
-            "algo": "time_limit",
-            "store": "redis",
-            "key": "${ns}-logs",
-            "limit": 1,
-            "seconds": 60
-          },
-          "bind": "l",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "redis.set",
-          "args": {
-            "key": "abuse__${ns}-logs__1",
-            "value": "7"
-          },
-          "expect": true
-        },
-        {
-          "op": "limit.logs",
-          "args": {
-            "handle": {
-              "$ref": "l"
-            }
-          },
-          "expect": {
-            "abuse__${ns}-logs__1": "7"
-          }
-        },
-        {
-          "op": "limit.logs",
-          "args": {
-            "handle": {
-              "$ref": "l"
-            },
-            "offset": 9,
-            "count": null
-          },
-          "expect": {
-            "abuse__${ns}-logs__1": "7"
-          }
-        },
-        {
-          "op": "limit.logs",
-          "args": {
-            "handle": {
-              "$ref": "l"
-            },
-            "count": 0
-          },
-          "expect": {
-            "abuse__${ns}-logs__1": "7"
-          }
-        },
-        {
-          "op": "limit.logs",
-          "args": {
-            "handle": {
-              "$ref": "l"
-            },
-            "count": -1
-          },
-          "expect": []
-        },
-        {
-          "op": "redis.clear",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "limit.logs",
-          "args": {
-            "handle": {
-              "$ref": "l"
-            }
-          },
-          "expect": []
-        }
-      ],
-      "state": []
-    },
-    {
       "name": "release gives back one hit",
       "steps": [
         {
@@ -2473,7 +2329,7 @@
               "$ref": "b"
             },
             "params": {
-              "{{ip}}": "u1"
+              "{{ip}}": "r1"
             }
           },
           "bind": "l",
@@ -2627,6 +2483,150 @@
           }
         }
       ]
+    },
+    {
+      "name": "cleanup",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "redis",
+            "key": "${ns}-cleanup",
+            "limit": 1,
+            "seconds": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.cleanup",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "timestamp": 1700000000
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "seconds must be positive",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "redis",
+            "key": "${ns}-guard",
+            "limit": 1,
+            "seconds": 0
+          },
+          "bind": "l",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "seconds must be greater than 0"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "getLogs scans once, without an offset",
+      "steps": [
+        {
+          "op": "redis.clear",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "redis",
+            "key": "${ns}-logs",
+            "limit": 1,
+            "seconds": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.set",
+          "args": {
+            "key": "abuse__${ns}-logs__1",
+            "value": "7"
+          },
+          "expect": true
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "abuse__${ns}-logs__1": "7"
+          }
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "offset": 9,
+            "count": null
+          },
+          "expect": {
+            "abuse__${ns}-logs__1": "7"
+          }
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "count": 0
+          },
+          "expect": {
+            "abuse__${ns}-logs__1": "7"
+          }
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "count": -1
+          },
+          "expect": []
+        },
+        {
+          "op": "redis.clear",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": []
+        }
+      ],
+      "state": []
     }
   ]
 }

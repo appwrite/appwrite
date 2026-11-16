@@ -23,6 +23,29 @@ pub const APP_JWT_EXPIRY: i64 = 60 * 9;
 /// The class PHP names in errors about this adapter's state.
 const CLASS: &str = "Utopia\\VCS\\Adapter\\Git\\GitHub";
 
+/// A comment on a pull request's conversation (or an issue's, which
+/// [`Adapter::events`] skips).
+///
+/// PHP: `GitHub::EVENT_ISSUE_COMMENT`.
+pub const EVENT_ISSUE_COMMENT: &str = "issue_comment";
+
+/// A comment on a pull request's diff, in a review thread.
+///
+/// PHP: `GitHub::EVENT_PULL_REQUEST_REVIEW_COMMENT`.
+pub const EVENT_PULL_REQUEST_REVIEW_COMMENT: &str = "pull_request_review_comment";
+
+/// An installation access token made for a service acting on the
+/// installation's repositories itself.
+///
+/// PHP: the array `createAccessToken()` returns, `{token, expiresAt}`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AccessToken {
+    /// The token.
+    pub token: String,
+    /// When it expires (ISO 8601, as GitHub gives it).
+    pub expires_at: String,
+}
+
 /// The GitHub adapter: a GitHub App installation authenticates with an
 /// RS256 app JWT exchanged for an installation access token, both cached
 /// under the installation id for a minute less than the JWT lives.
@@ -126,6 +149,84 @@ impl GitHub {
         }
         self.access_token = assign_string(or(at(&body, "token"), ""), "accessToken")?;
         Ok(())
+    }
+
+    /// Creates an installation access token for a service that acts on the
+    /// installation's repositories itself, limited to `repository_ids` and
+    /// `permissions` (GitHub permission name to access level, such as
+    /// `contents` => `read`) when any are named.
+    ///
+    /// Fails with GitHub's status as the code when no token comes back; the
+    /// message quotes only GitHub's `message` and `documentation_url`.
+    ///
+    /// PHP: `createAccessToken($repositoryIds, $permissions)`.
+    pub async fn create_access_token(
+        &self,
+        repository_ids: &[i64],
+        permissions: &[(&str, &str)],
+    ) -> Result<AccessToken> {
+        let mut params = Value::Array(Array::new());
+        if !repository_ids.is_empty() {
+            php::set(
+                &mut params,
+                "repository_ids",
+                php::list(repository_ids.iter().map(|&id| Value::Int(id)).collect()),
+            );
+        }
+        if !permissions.is_empty() {
+            let mut levels = Value::Array(Array::new());
+            for &(name, level) in permissions {
+                php::set(&mut levels, name, s(level));
+            }
+            php::set(&mut params, "permissions", levels);
+        }
+
+        let installation = self.installation()?;
+        let call = Call::post(format!("/app/installations/{installation}/access_tokens"))
+            .auth(format!("Bearer {}", self.jwt()?))
+            .params(params);
+        let response = self.transport.call(call).await?;
+        let body = response.body;
+        let (Value::Str(token), Value::Str(expires_at)) = (at(&body, "token"), at(&body, "expires_at")) else {
+            let safe = match &body {
+                Value::Array(fields) => {
+                    let safe: Array = fields
+                        .iter()
+                        .filter(|(k, _)| matches!(k, php_std::types::KeyRef::Str(b"message" | b"documentation_url")))
+                        .map(|(k, v)| (k.to_owned(), v.clone()))
+                        .collect();
+                    php::json_encode(&Value::Array(safe)).unwrap_or_default()
+                }
+                _ => String::new(),
+            };
+            return Err(Error::exception(
+                format!("Failed to create access token from GitHub API. Status: {}. Response: {safe}", response.status),
+                response.status,
+            ));
+        };
+        Ok(AccessToken { token: php::text(token.as_bytes()), expires_at: php::text(expires_at.as_bytes()) })
+    }
+
+    /// A user's permission on a repository: `admin`, `write`, `read` or
+    /// `none`; `none` also for a user GitHub does not know.
+    ///
+    /// PHP: `getCollaboratorPermission()`.
+    pub async fn collaborator_permission(&self, owner: &str, repository_name: &str, username: &str) -> Result<String> {
+        let response =
+            self.get(format!("/repos/{owner}/{repository_name}/collaborators/{username}/permission")).await?;
+        if response.status == 404 {
+            return Ok("none".into());
+        }
+        if response.status >= 400 {
+            return Err(failed(
+                format!("Failed to get collaborator permission: HTTP {}", response.status),
+                response.status,
+            ));
+        }
+        Ok(match at(&response.body, "permission") {
+            Value::Str(permission) => php::text(permission.as_bytes()),
+            _ => "none".into(),
+        })
     }
 
     /// The branch names of a repository, a page at a time, optionally only
@@ -687,6 +788,55 @@ impl Adapter for GitHub {
                     ("action", or(at(&payload, "action"), "")),
                 ])])
             }
+            EVENT_ISSUE_COMMENT | EVENT_PULL_REQUEST_REVIEW_COMMENT => {
+                let as_array = |v: Value| if php::is_array(&v) { v } else { Value::Array(Array::new()) };
+                let repository = as_array(or(at(&payload, "repository"), Value::Array(Array::new())));
+                let repository_owner = as_array(or(at(&repository, "owner"), Value::Array(Array::new())));
+                let comment = as_array(or(at(&payload, "comment"), Value::Array(Array::new())));
+                let comment_user = as_array(or(at(&comment, "user"), Value::Array(Array::new())));
+
+                let pull_request_number = if event == EVENT_ISSUE_COMMENT {
+                    let issue = as_array(or(at(&payload, "issue"), Value::Array(Array::new())));
+                    // Issues and pull requests share the conversation; only pull requests are of interest.
+                    if empty(&at(&issue, "pull_request")) {
+                        return Ok(Vec::new());
+                    }
+                    or(at(&issue, "number"), Value::Int(0))
+                } else {
+                    let pull_request = or(at(&payload, "pull_request"), Value::Array(Array::new()));
+                    if php::is_array(&pull_request) {
+                        or(at(&pull_request, "number"), Value::Int(0))
+                    } else {
+                        Value::Int(0)
+                    }
+                };
+                let int_or_zero = |v: Value| if matches!(v, Value::Int(_)) { v } else { Value::Int(0) };
+
+                let repository_id = or(at(&repository, "id"), "");
+                let repository_id = if matches!(repository_id, Value::Int(_) | Value::Str(_)) {
+                    Value::Str(php::string(&repository_id))
+                } else {
+                    s("")
+                };
+
+                Ok(vec![object([
+                    ("repositoryId", repository_id),
+                    ("repositoryName", or(at(&repository, "name"), "")),
+                    ("owner", or(at(&repository_owner, "login"), "")),
+                    ("installationId", installation_id),
+                    ("pullRequestNumber", int_or_zero(pull_request_number)),
+                    ("action", or(at(&payload, "action"), "")),
+                    ("commentId", int_or_zero(or(at(&comment, "id"), Value::Int(0)))),
+                    ("commentKind", s(if event == EVENT_ISSUE_COMMENT { "issue" } else { "review" })),
+                    // The first comment of a review thread; 0 for a thread's first comment.
+                    ("commentReplyToId", int_or_zero(or(at(&comment, "in_reply_to_id"), Value::Int(0)))),
+                    ("commentBody", or(at(&comment, "body"), "")),
+                    ("commentUrl", or(at(&comment, "html_url"), "")),
+                    ("commentAuthor", or(at(&comment_user, "login"), "")),
+                    ("commentAuthorType", or(at(&comment_user, "type"), "")),
+                    ("commentAuthorAssociation", or(at(&comment, "author_association"), "")),
+                ])])
+            }
             "installation" | "installation_repositories" => {
                 let account = or(at(&installation, "account"), Value::Array(Array::new()));
                 Ok(vec![object([
@@ -788,6 +938,98 @@ impl Adapter for GitHub {
             return Err(failed(format!("Failed to update commit status: HTTP {}", response.status), response.status));
         }
         Ok(())
+    }
+
+    /// GitHub reports a build as a check run, so it shows queued and running
+    /// apart. A run cannot be named into a suite, so the suite joins the name
+    /// as it does for a commit status, and the key finds the run again as its
+    /// external id. A rebuild starts a new run instead of reopening a
+    /// finished one. An installation that has not granted checks keeps
+    /// getting commit statuses; one whose runs cannot be listed fails, since
+    /// an unread list would start a second run beside the existing one.
+    ///
+    /// PHP: `GitHub::updateCheck()`.
+    #[allow(clippy::too_many_arguments)]
+    async fn update_check(
+        &self,
+        owner: &str,
+        repository_name: &str,
+        sha: &str,
+        state: &str,
+        name: &str,
+        title: &str,
+        summary: &str,
+        details_url: &str,
+        suite: &str,
+        key: &str,
+        suite_key: &str,
+    ) -> Result<()> {
+        let _ = suite_key;
+        let name = if suite.is_empty() { name.to_owned() } else { format!("{name} ({suite})") };
+        let key = if key.is_empty() { name.as_str() } else { key };
+        let (status, conclusion) = match state {
+            "queued" => ("queued", ""),
+            "pending" => ("in_progress", ""),
+            "success" => ("completed", "success"),
+            "cancelled" => ("completed", "cancelled"),
+            _ => ("completed", "failure"),
+        };
+        // `parent::updateCheck()` with the joined name and no suite: a commit status.
+        let fallback = || {
+            let state = if state == "queued" { "pending" } else { state };
+            self.update_commit_status(repository_name, sha, owner, state, title, details_url, &name)
+        };
+
+        let response = self
+            .transport
+            .call(
+                Call::get(format!("/repos/{owner}/{repository_name}/commits/{sha}/check-runs"))
+                    .auth(self.bearer())
+                    .params(object([("check_name", s(&name)), ("filter", s("latest"))])),
+            )
+            .await?;
+        if response.status == 403 {
+            return fallback().await;
+        }
+        if response.status >= 400 {
+            return Err(failed(format!("Failed to list check runs: HTTP {}", response.status), response.status));
+        }
+
+        let body = if php::is_array(&response.body) { response.body } else { Value::Array(Array::new()) };
+        let mut check_run_id = String::new();
+        for run in each(&at(&body, "check_runs")) {
+            if php::is_array(&run) && php::is_str(&or(at(&run, "external_id"), ""), key) {
+                let id = at(&run, "id");
+                if matches!(id, Value::Int(_) | Value::Float(_) | Value::Str(_) | Value::Bool(_)) {
+                    if !php::is_str(&or(at(&run, "status"), ""), "completed") || status == "completed" {
+                        check_run_id = php::text(php::string(&id).as_bytes());
+                    }
+                    break;
+                }
+            }
+        }
+
+        let run = CheckRun {
+            name: name.clone(),
+            status: status.to_owned(),
+            conclusion: conclusion.to_owned(),
+            title: title.to_owned(),
+            summary: summary.to_owned(),
+            details_url: details_url.to_owned(),
+            external_id: key.to_owned(),
+            ..CheckRun::default()
+        };
+        let result = if check_run_id.is_empty() {
+            self.create_check_run(owner, repository_name, sha, &run).await
+        } else {
+            self.update_check_run(owner, repository_name, &check_run_id, &run).await
+        };
+        match result {
+            Ok(_) => Ok(()),
+            // Read access to checks lists runs but cannot write them
+            Err(e) if e.code() == 403 => fallback().await,
+            Err(e) => Err(e),
+        }
     }
 
     async fn create_check_run(

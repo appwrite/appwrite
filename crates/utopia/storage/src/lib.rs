@@ -37,7 +37,7 @@
 #![warn(missing_docs)]
 
 mod body;
-pub mod cipher;
+mod cipher;
 mod device;
 mod error;
 mod local;

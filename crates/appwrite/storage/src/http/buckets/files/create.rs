@@ -28,7 +28,7 @@ use super::meta;
 use crate::encryption;
 use md5::{Digest, Md5};
 use utopia_storage::Cipher;
-use utopia_storage::cipher::SEGMENT;
+const SEGMENT: i64 = Cipher::SEGMENT;
 
 pub async fn create(ctx: &mut Context) -> Result<Response> {
     let bucket_id = ctx.required_str("bucketId", &uid())?;
@@ -389,7 +389,7 @@ async fn finish(
         };
         let stored_size = device.file_size(path).await? as i64;
         // A chunk can carry more or fewer bytes than its range announces.
-        let expected = if cipher.is_none() { file_size } else { utopia_storage::cipher::size(file_size) };
+        let expected = if cipher.is_none() { file_size } else { Cipher::size(file_size) };
         if ranged && stored_size != expected {
             discard(db, device, &collection, file_id, path, file.is_empty()).await?;
             return Err(Error::new(ErrorType::StorageInvalidContentRange));
@@ -641,7 +641,7 @@ fn put_cipher(document: &mut Document, sealed: Option<&Sealed>) {
     match sealed {
         Some(sealed) => {
             document.put("openSSLVersion", Value::from(sealed.version.as_str()));
-            document.put("openSSLCipher", Value::from(utopia_storage::cipher::NAME));
+            document.put("openSSLCipher", Value::from(Cipher::NAME));
             document.put("openSSLTag", Value::Null);
             document.put("openSSLIV", Value::Null);
         }

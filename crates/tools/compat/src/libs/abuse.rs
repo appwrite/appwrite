@@ -501,7 +501,7 @@ impl time_limit::Tables for FakeTables {
         Ok(row.clone())
     }
 
-    async fn decrement(&self, _database: &str, id: &str, min: Option<i64>) -> utopia_abuse::Result<time_limit::Row> {
+    async fn decrement(&self, _database: &str, id: &str, min: Option<i64>) -> utopia_abuse::Result<()> {
         let mut s = self.call("decrementRowColumn");
         let row =
             s.rows.iter_mut().find(|r| r.id == id).ok_or_else(|| appwrite("Row not found", 404, "row_not_found"))?;
@@ -512,7 +512,7 @@ impl time_limit::Tables for FakeTables {
             return Err(appwrite(&message, 400, "column_limit_exceeded"));
         }
         row.count -= 1;
-        Ok(row.clone())
+        Ok(())
     }
 
     async fn update_row(&self, _database: &str, id: &str, count: i64) -> utopia_abuse::Result<()> {
@@ -592,7 +592,7 @@ impl time_limit::Documents for Racing {
         self.memory.increase(id, max).await
     }
 
-    async fn decrease(&self, id: &str, min: Option<i64>) -> utopia_abuse::Result<time_limit::Entry> {
+    async fn decrease(&self, id: &str, min: Option<i64>) -> utopia_abuse::Result<()> {
         self.memory.decrease(id, min).await
     }
 
@@ -934,7 +934,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                 (AnyLimit::TlDatabase(l), _) => l.release().await,
                 (AnyLimit::TlMemory(l), _) => l.release().await,
                 (AnyLimit::TlTables(l), _) => l.release().await,
-                _ => return Err(Fault::new("release is a time limit's")),
+                _ => return Err(Fault::new("release() is a TimeLimit method")),
             };
             match r {
                 Ok(()) => Outcome::Ok(Value::Null),

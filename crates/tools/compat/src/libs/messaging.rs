@@ -25,7 +25,7 @@ use utopia_async::net::{TcpListener, TcpStream};
 use utopia_client::{Anywhere, Client as HttpClient, Http as Transfer};
 use utopia_messaging::chat::DiscordWebhook;
 use utopia_messaging::email::{self, Mailgun, Resend, Sendgrid, Ses, Smtp};
-use utopia_messaging::push::{Apns, Fcm};
+use utopia_messaging::push::{self, Apns, Fcm};
 use utopia_messaging::sms::{
     self, App, Bird, Category, Clickatell, Fast2Sms, GeoSms, Infobip, Inforu, Msg91, Msg91Parameter, OtpType, Plivo,
     Seven, Sinch, Telesign, Telnyx, TextMagic, Twilio, Vonage, WhatsApp, WhatsAppParameter,
@@ -342,7 +342,16 @@ fn build_email(value: &Value) -> Result<Result<Email, Error>, Fault> {
         }
     }
     Ok(builder.build().map(|email| {
-        if value.get("origin").is_some() { email.with_origin(opt_text(&a, "origin").ok().flatten()) } else { email }
+        let email = if value.get("origin").is_some() {
+            email.with_origin(opt_text(&a, "origin").ok().flatten())
+        } else {
+            email
+        };
+        if value.get("template").is_some() {
+            email.with_template(opt_text(&a, "template").ok().flatten())
+        } else {
+            email
+        }
     }))
 }
 
@@ -531,6 +540,7 @@ fn email_out(e: &Email) -> Value {
         "html": e.is_html(),
         "headers": if headers.is_empty() { json!([]) } else { Value::Object(headers) },
         "origin": e.origin(),
+        "template": e.template(),
     })
 }
 
@@ -1123,6 +1133,8 @@ struct Scripted {
     max: i64,
     response: Option<Value>,
     error: Option<String>,
+    /// An email adapter (PHP: `ScriptedEmail`) instead of an SMS one.
+    email: bool,
     messages: Mutex<Vec<Sms>>,
     base: Base,
 }
@@ -1133,11 +1145,11 @@ impl Adapter for Scripted {
     }
 
     fn kind(&self) -> &str {
-        sms::TYPE
+        if self.email { email::TYPE } else { sms::TYPE }
     }
 
     fn message_type(&self) -> utopia_messaging::MessageType {
-        utopia_messaging::MessageType::Sms
+        if self.email { utopia_messaging::MessageType::Email } else { utopia_messaging::MessageType::Sms }
     }
 
     fn max_messages_per_request(&self) -> i64 {
@@ -1156,8 +1168,9 @@ impl Adapter for Scripted {
             if let Some(error) = &self.error {
                 return Err(Error::Exception(error.clone()));
             }
+            let kind = if self.email { "email" } else { "sms" };
             let canned =
-                self.response.clone().unwrap_or_else(|| json!({"deliveredTo": 0, "type": "sms", "results": []}));
+                self.response.clone().unwrap_or_else(|| json!({"deliveredTo": 0, "type": kind, "results": []}));
             let mut response = Response::new(canned["type"].as_str().unwrap_or("sms"));
             response.set_delivered_to(canned["deliveredTo"].as_i64().unwrap_or(0));
             for result in canned["results"].as_array().into_iter().flatten() {
@@ -1282,6 +1295,7 @@ enum Special {
     None,
     Smtp(Arc<Smtp>),
     MockSms(Arc<sms::Mock>),
+    MockPush(Arc<push::Mock>),
     WhatsApp(Arc<WhatsApp>),
     Geo(Arc<GeoSms>),
     Scripted(Arc<Scripted>),
@@ -1408,6 +1422,10 @@ async fn build_adapter(
                 Arc::new(routed(sms::Mock::new(req_str(args, "user")?, req_str(args, "secret")?), &router, mode));
             Entry { adapter: mock.clone(), special: Special::MockSms(mock), router: router.clone(), ports: Vec::new() }
         }
+        "mock_push" => {
+            let mock = Arc::new(routed(push::Mock::new(), &router, mode));
+            Entry { adapter: mock.clone(), special: Special::MockPush(mock), router: router.clone(), ports: Vec::new() }
+        }
         "msg91" => {
             plain!(Msg91::new(req_str(args, "senderId")?, req_str(args, "authKey")?, req_str(args, "templateId")?))
         }
@@ -1488,6 +1506,19 @@ async fn build_adapter(
                 max: args.get("max").and_then(Value::as_i64).unwrap_or(100),
                 response: args.get("response").filter(|v| !v.is_null()).cloned(),
                 error: arg_str(args, "error")?,
+                email: false,
+                messages: Mutex::default(),
+                base: Base::new(Http::new("Test")),
+            });
+            Entry { adapter: scripted.clone(), special: Special::Scripted(scripted), router: None, ports: Vec::new() }
+        }
+        "scripted_email" => {
+            let scripted = Arc::new(Scripted {
+                name: arg_str(args, "name")?.unwrap_or_else(|| "Test".into()),
+                max: args.get("max").and_then(Value::as_i64).unwrap_or(100),
+                response: args.get("response").filter(|v| !v.is_null()).cloned(),
+                error: arg_str(args, "error")?,
+                email: true,
                 messages: Mutex::default(),
                 base: Base::new(Http::new("Test")),
             });
@@ -1601,6 +1632,12 @@ async fn adapter_call(entry: &Entry, method: &str, args: &Value, s: &Session) ->
         }
         ("get_endpoint", Special::MockSms(mock)) => Ok(json!(mock.endpoint())),
         ("set_endpoint", Special::MockSms(mock)) => {
+            let url = a.str("url")?.replace("{fixture}", &format!("{}/{}", s.service("messaging-http")?, s.ns));
+            mock.set_endpoint(url);
+            Ok(json!(true))
+        }
+        ("get_endpoint", Special::MockPush(mock)) => Ok(json!(mock.endpoint())),
+        ("set_endpoint", Special::MockPush(mock)) => {
             let url = a.str("url")?.replace("{fixture}", &format!("{}/{}", s.service("messaging-http")?, s.ns));
             mock.set_endpoint(url);
             Ok(json!(true))

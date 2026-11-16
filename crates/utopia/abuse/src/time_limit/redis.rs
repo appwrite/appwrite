@@ -27,10 +27,8 @@ return c",
     )
 });
 
-/// KEYS[1] window counter. Takes one back, never below zero; returns the
-/// count before this call.
-///
-/// PHP: `RedisBase::UNHIT_SCRIPT`.
+/// KEYS[1] window counter. Takes one away unless it is at zero; returns the
+/// count before.
 static UNHIT: LazyLock<Script> = LazyLock::new(|| {
     Script::new(
         "local c = tonumber(redis.call('GET', KEYS[1]) or '0') or 0

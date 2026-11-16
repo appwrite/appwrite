@@ -289,7 +289,7 @@ impl Database {
     /// this call dropped it, `false` when the schema no longer held it.
     ///
     /// Fails ([`crate::Kind::Refused`]) when the adapter does not drop it.
-    async fn delete_index_from_schema(&self, collection: &str, key: &str) -> Result<bool> {
+    pub(super) async fn delete_index_from_schema(&self, collection: &str, key: &str) -> Result<bool> {
         match self.inner.adapter.delete_index(collection, key).await {
             Ok(true) => Ok(true),
             Ok(false) => Err(Error::refused("Failed to delete index")),

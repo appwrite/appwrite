@@ -29,4 +29,4 @@ webpki-roots.workspace = true
 
 [package.metadata.utopia]
 category = "transport"
-php-sync = "d96fb5605ced25ab59e4d1b6082101a05bda785a"
+php-sync = "8298eba42874c82e53967a6d1c7faf9aea325a9c"

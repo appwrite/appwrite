@@ -487,10 +487,7 @@
             ]
           },
           "expect": {
-            "error": {
-              "class": "RuntimeException",
-              "message": "Failed to delete Fastly TLS subscription with status 404: Not Found"
-            },
+            "result": null,
             "requests": [
               {
                 "method": "GET",
@@ -1376,7 +1373,7 @@
           "expect": {
             "error": {
               "class": "TypeError",
-              "message": "Utopia\\Cdn\\Certificates\\Provider\\FastlyTls::retrySubscription(): Argument #1 ($subscriptionId) must be of type string, null given, called in /usr/src/code/packages/cdn/src/Certificates/Provider/FastlyTls.php on line 51"
+              "message": "Utopia\\Cdn\\Certificates\\Provider\\FastlyTls::retrySubscription(): Argument #1 ($subscriptionId) must be of type string, null given, called in /usr/src/code/packages/cdn/src/Certificates/Provider/FastlyTls.php on line 62"
             },
             "requests": [
               {
@@ -1411,7 +1408,7 @@
           "expect": {
             "error": {
               "class": "TypeError",
-              "message": "Utopia\\Cdn\\Certificates\\Provider\\FastlyTls::retrySubscription(): Argument #1 ($subscriptionId) must be of type string, array given, called in /usr/src/code/packages/cdn/src/Certificates/Provider/FastlyTls.php on line 51"
+              "message": "Utopia\\Cdn\\Certificates\\Provider\\FastlyTls::retrySubscription(): Argument #1 ($subscriptionId) must be of type string, array given, called in /usr/src/code/packages/cdn/src/Certificates/Provider/FastlyTls.php on line 62"
             },
             "requests": [
               {
@@ -1446,7 +1443,7 @@
           "expect": {
             "error": {
               "class": "TypeError",
-              "message": "Utopia\\Cdn\\Certificates\\Provider\\FastlyTls::mapStatus(): Argument #1 ($state) must be of type string, array given, called in /usr/src/code/packages/cdn/src/Certificates/Provider/FastlyTls.php on line 78"
+              "message": "Utopia\\Cdn\\Certificates\\Provider\\FastlyTls::mapStatus(): Argument #1 ($state) must be of type string, array given, called in /usr/src/code/packages/cdn/src/Certificates/Provider/FastlyTls.php on line 92"
             },
             "requests": [
               {
@@ -1481,7 +1478,7 @@
           "expect": {
             "error": {
               "class": "TypeError",
-              "message": "Utopia\\Cdn\\Certificates\\Provider\\FastlyTls::mapStatus(): Argument #1 ($state) must be of type string, array given, called in /usr/src/code/packages/cdn/src/Certificates/Provider/FastlyTls.php on line 122"
+              "message": "Utopia\\Cdn\\Certificates\\Provider\\FastlyTls::mapStatus(): Argument #1 ($state) must be of type string, array given, called in /usr/src/code/packages/cdn/src/Certificates/Provider/FastlyTls.php on line 154"
             },
             "requests": [
               {
@@ -5759,6 +5756,3124 @@
           }
         ]
       }
+    },
+    {
+      "name": "lapsed certificate is reported as failed",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly_tls",
+            "token": "token",
+            "tls_config": "",
+            "ca": "certainly"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "getCertificateStatus",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "issued",
+                        "has_active_order": false
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": [
+                            {
+                              "type": "tls_certificate",
+                              "id": "cert_1"
+                            }
+                          ]
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "failed",
+                        "warnings": [
+                          {
+                            "type": "caa",
+                            "instructions": "Found conflicting CAA record(s). Expected certainly.com."
+                          }
+                        ]
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "id": "cert_1",
+                      "type": "tls_certificate",
+                      "attributes": {
+                        "not_after": "@days:-3"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Cdn\\Exception\\Certificate",
+              "message": "Fastly stopped trying to issue a certificate for example.com. Found conflicting CAA record(s). Expected certainly.com. Update the CAA record, then retry.",
+              "status": "failed",
+              "blocked": false,
+              "challenges": [
+                {
+                  "type": "managed-dns",
+                  "record_type": "CNAME",
+                  "record_name": "_acme-challenge.example.com",
+                  "values": [
+                    "token.fastly-validations.com"
+                  ]
+                }
+              ],
+              "warnings": [
+                "Found conflicting CAA record(s). Expected certainly.com."
+              ]
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "issued",
+                        "has_active_order": false
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": [
+                            {
+                              "type": "tls_certificate",
+                              "id": "cert_1"
+                            }
+                          ]
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "failed",
+                        "warnings": [
+                          {
+                            "type": "caa",
+                            "instructions": "Found conflicting CAA record(s). Expected certainly.com."
+                          }
+                        ]
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "id": "cert_1",
+                      "type": "tls_certificate",
+                      "attributes": {
+                        "not_after": "@days:-3"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": true,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "lapsed certificate is retried",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly_tls",
+            "token": "token",
+            "tls_config": "config",
+            "ca": "certainly"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "cert_name": "cert",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "issued",
+                        "has_active_order": false
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": [
+                            {
+                              "type": "tls_certificate",
+                              "id": "cert_1"
+                            }
+                          ]
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "passing",
+                        "warnings": []
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "id": "cert_1",
+                      "type": "tls_certificate",
+                      "attributes": {
+                        "not_after": "@days:-3"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "status": 200,
+                "body": "{\"data\":{\"id\":\"sub_123\",\"attributes\":{\"state\":\"pending\"}}}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "PATCH",
+                "url": "https://api.fastly.com/tls/subscriptions/sub_123?force=true",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": "{\"data\":{\"id\":\"sub_123\",\"type\":\"tls_subscription\",\"attributes\":{\"state\":\"retry\"}}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "certificate expiry is the newest certificates",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly_tls",
+            "token": "token",
+            "tls_config": "tls-config-id",
+            "ca": "certainly"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "getCertificateExpiry",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "attributes": {
+                        "state": "renewing"
+                      },
+                      "relationships": {
+                        "tls_certificates": {
+                          "data": [
+                            {
+                              "type": "tls_certificate",
+                              "id": "cert_new"
+                            },
+                            {
+                              "type": "tls_certificate",
+                              "id": "cert_old"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "type": "tls_certificate",
+                      "id": "cert_new",
+                      "attributes": {
+                        "not_after": "2027-06-01T00:00:00Z"
+                      }
+                    },
+                    {
+                      "type": "tls_certificate",
+                      "id": "cert_old",
+                      "attributes": {
+                        "not_after": "2026-01-01T00:00:00Z"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": "2027-06-01 00:00:00.000",
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "certificate expiry of a stuck renewal is in the past",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly_tls",
+            "token": "token",
+            "tls_config": "",
+            "ca": "certainly"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "getCertificateExpiry",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "pending",
+                        "has_active_order": true
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": [
+                            {
+                              "type": "tls_certificate",
+                              "id": "cert_1"
+                            }
+                          ]
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "passing",
+                        "warnings": []
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "id": "cert_1",
+                      "type": "tls_certificate",
+                      "attributes": {
+                        "not_after": "2026-01-01T00:00:00Z"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": "2026-01-01 00:00:00.000",
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "certificate expiry is unknown without a certificate",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly_tls",
+            "token": "token",
+            "tls_config": "tls-config-id",
+            "ca": "certainly"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "getCertificateExpiry",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "getCertificateExpiry",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "pending",
+                        "has_active_order": true
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": []
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "blocked",
+                        "warnings": []
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "abandoned order is reported as failed",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly_tls",
+            "token": "token",
+            "tls_config": "",
+            "ca": "certainly"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "getCertificateStatus",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "processing",
+                        "has_active_order": false,
+                        "updated_at": "@hours:-2"
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": []
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "passing",
+                        "warnings": []
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Cdn\\Exception\\Certificate",
+              "message": "Fastly stopped trying to issue a certificate for example.com. Create a CNAME record for _acme-challenge.example.com pointing to token.fastly-validations.com.",
+              "status": "failed",
+              "blocked": false,
+              "challenges": [
+                {
+                  "type": "managed-dns",
+                  "record_type": "CNAME",
+                  "record_name": "_acme-challenge.example.com",
+                  "values": [
+                    "token.fastly-validations.com"
+                  ]
+                }
+              ],
+              "warnings": []
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "processing",
+                        "has_active_order": false,
+                        "updated_at": "@hours:-2"
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": []
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "passing",
+                        "warnings": []
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": true,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "abandoned order is replaced",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly_tls",
+            "token": "token",
+            "tls_config": "config",
+            "ca": "certainly"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "cert_name": "cert",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "processing",
+                        "has_active_order": false,
+                        "updated_at": "@hours:-2"
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": []
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "passing",
+                        "warnings": []
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "status": 204,
+                "body": ""
+              },
+              {
+                "status": 201,
+                "body": "{\"data\":{\"id\":\"sub_456\",\"attributes\":{\"state\":\"pending\"}}}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "DELETE",
+                "url": "https://api.fastly.com/tls/subscriptions/sub_123?force=true",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/tls/subscriptions",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": "{\"data\":{\"type\":\"tls_subscription\",\"attributes\":{\"certificate_authority\":\"certainly\"},\"relationships\":{\"tls_domains\":{\"data\":[{\"type\":\"tls_domain\",\"id\":\"example.com\"}]},\"common_name\":{\"data\":{\"type\":\"tls_domain\",\"id\":\"example.com\"}},\"tls_configuration\":{\"data\":{\"type\":\"tls_configuration\",\"id\":\"config\"}}}}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "abandoned order already deleted is still replaced",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly_tls",
+            "token": "token",
+            "tls_config": "config",
+            "ca": "certainly"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "cert_name": "cert",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "processing",
+                        "has_active_order": false,
+                        "updated_at": "@hours:-2"
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": []
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "passing",
+                        "warnings": []
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "status": 404,
+                "body": ""
+              },
+              {
+                "status": 201,
+                "body": "{\"data\":{\"id\":\"sub_456\",\"attributes\":{\"state\":\"pending\"}}}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "DELETE",
+                "url": "https://api.fastly.com/tls/subscriptions/sub_123?force=true",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/tls/subscriptions",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": "{\"data\":{\"type\":\"tls_subscription\",\"attributes\":{\"certificate_authority\":\"certainly\"},\"relationships\":{\"tls_domains\":{\"data\":[{\"type\":\"tls_domain\",\"id\":\"example.com\"}]},\"common_name\":{\"data\":{\"type\":\"tls_domain\",\"id\":\"example.com\"}},\"tls_configuration\":{\"data\":{\"type\":\"tls_configuration\",\"id\":\"config\"}}}}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "subscription with an order or a certificate is kept: processing with an order",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly_tls",
+            "token": "token",
+            "tls_config": "",
+            "ca": "certainly"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "processing",
+                        "has_active_order": true,
+                        "updated_at": "@hours:-2"
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": []
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "passing",
+                        "warnings": []
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": false,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "cert_name": "cert",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "processing",
+                        "has_active_order": true,
+                        "updated_at": "@hours:-2"
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": []
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "passing",
+                        "warnings": []
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "subscription with an order or a certificate is kept: processing without the attribute",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly_tls",
+            "token": "token",
+            "tls_config": "",
+            "ca": "certainly"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "processing",
+                        "updated_at": "@hours:-2"
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": []
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "passing",
+                        "warnings": []
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": false,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "cert_name": "cert",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "processing",
+                        "updated_at": "@hours:-2"
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": []
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "passing",
+                        "warnings": []
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "subscription with an order or a certificate is kept: processing, updated recently",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly_tls",
+            "token": "token",
+            "tls_config": "",
+            "ca": "certainly"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "processing",
+                        "has_active_order": false,
+                        "updated_at": "@hours:0"
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": []
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "passing",
+                        "warnings": []
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": false,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "cert_name": "cert",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "processing",
+                        "has_active_order": false,
+                        "updated_at": "@hours:0"
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": []
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "passing",
+                        "warnings": []
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "subscription with an order or a certificate is kept: processing without an update date",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly_tls",
+            "token": "token",
+            "tls_config": "",
+            "ca": "certainly"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "processing",
+                        "has_active_order": false
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": []
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "passing",
+                        "warnings": []
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": false,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "cert_name": "cert",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "processing",
+                        "has_active_order": false
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": []
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "passing",
+                        "warnings": []
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "subscription with an order or a certificate is kept: processing with a certificate",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly_tls",
+            "token": "token",
+            "tls_config": "",
+            "ca": "certainly"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "processing",
+                        "has_active_order": false,
+                        "updated_at": "@hours:-2"
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": [
+                            {
+                              "type": "tls_certificate",
+                              "id": "cert_1"
+                            }
+                          ]
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "passing",
+                        "warnings": []
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "id": "cert_1",
+                      "type": "tls_certificate",
+                      "attributes": {
+                        "not_after": "2030-01-01T00:00:00Z"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": false,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "cert_name": "cert",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "processing",
+                        "has_active_order": false,
+                        "updated_at": "@hours:-2"
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": [
+                            {
+                              "type": "tls_certificate",
+                              "id": "cert_1"
+                            }
+                          ]
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "passing",
+                        "warnings": []
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "id": "cert_1",
+                      "type": "tls_certificate",
+                      "attributes": {
+                        "not_after": "2030-01-01T00:00:00Z"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "subscription with an order or a certificate is kept: issued without an order",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly_tls",
+            "token": "token",
+            "tls_config": "",
+            "ca": "certainly"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "issued",
+                        "has_active_order": false,
+                        "updated_at": "@hours:-2"
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": [
+                            {
+                              "type": "tls_certificate",
+                              "id": "cert_1"
+                            }
+                          ]
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "passing",
+                        "warnings": []
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "id": "cert_1",
+                      "type": "tls_certificate",
+                      "attributes": {
+                        "not_after": "2030-01-01T00:00:00Z"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": false,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "cert_name": "cert",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "issued",
+                        "has_active_order": false,
+                        "updated_at": "@hours:-2"
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": [
+                            {
+                              "type": "tls_certificate",
+                              "id": "cert_1"
+                            }
+                          ]
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "passing",
+                        "warnings": []
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "id": "cert_1",
+                      "type": "tls_certificate",
+                      "attributes": {
+                        "not_after": "2030-01-01T00:00:00Z"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": "2029-12-25 00:00:00.000",
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "subscription with an order or a certificate is kept: renewing without an order",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly_tls",
+            "token": "token",
+            "tls_config": "",
+            "ca": "certainly"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "renewing",
+                        "has_active_order": false,
+                        "updated_at": "@hours:-2"
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": [
+                            {
+                              "type": "tls_certificate",
+                              "id": "cert_1"
+                            }
+                          ]
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "passing",
+                        "warnings": []
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "id": "cert_1",
+                      "type": "tls_certificate",
+                      "attributes": {
+                        "not_after": "2030-01-01T00:00:00Z"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": false,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "cert_name": "cert",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "renewing",
+                        "has_active_order": false,
+                        "updated_at": "@hours:-2"
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": [
+                            {
+                              "type": "tls_certificate",
+                              "id": "cert_1"
+                            }
+                          ]
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "passing",
+                        "warnings": []
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "id": "cert_1",
+                      "type": "tls_certificate",
+                      "attributes": {
+                        "not_after": "2030-01-01T00:00:00Z"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": "2029-12-25 00:00:00.000",
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "subscription with an order or a certificate is kept: pending without an order",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly_tls",
+            "token": "token",
+            "tls_config": "",
+            "ca": "certainly"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "pending",
+                        "has_active_order": false,
+                        "updated_at": "@hours:-2"
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": []
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "passing",
+                        "warnings": []
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": false,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "cert_name": "cert",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "pending",
+                        "has_active_order": false,
+                        "updated_at": "@hours:-2"
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": []
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "passing",
+                        "warnings": []
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "caa conflict asks for the caa record only",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly_tls",
+            "token": "token",
+            "tls_config": "tls-config-id",
+            "ca": "certainly"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "getCertificateStatus",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "sub_123",
+                      "type": "tls_subscription",
+                      "attributes": {
+                        "certificate_authority": "certainly",
+                        "state": "failed",
+                        "has_active_order": true
+                      },
+                      "relationships": {
+                        "tls_authorizations": {
+                          "data": [
+                            {
+                              "id": "auth_1",
+                              "type": "tls_authorization"
+                            }
+                          ]
+                        },
+                        "tls_certificates": {
+                          "data": []
+                        },
+                        "tls_domains": {
+                          "data": [
+                            {
+                              "id": "example.com",
+                              "type": "tls_domain"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "included": [
+                    {
+                      "id": "auth_1",
+                      "type": "tls_authorization",
+                      "attributes": {
+                        "challenges": [
+                          {
+                            "type": "managed-dns",
+                            "record_type": "CNAME",
+                            "record_name": "_acme-challenge.example.com",
+                            "values": [
+                              "token.fastly-validations.com"
+                            ]
+                          }
+                        ],
+                        "state": "blocked",
+                        "warnings": [
+                          {
+                            "type": "caa",
+                            "instructions": "Found conflicting CAA record(s). Expected certainly.com."
+                          }
+                        ]
+                      },
+                      "relationships": {
+                        "tls_domain": {
+                          "data": {
+                            "id": "example.com",
+                            "type": "tls_domain"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Cdn\\Exception\\Certificate",
+              "message": "Fastly stopped trying to issue a certificate for example.com. Found conflicting CAA record(s). Expected certainly.com. Update the CAA record, then retry.",
+              "status": "failed",
+              "blocked": false,
+              "challenges": [
+                {
+                  "type": "managed-dns",
+                  "record_type": "CNAME",
+                  "record_name": "_acme-challenge.example.com",
+                  "values": [
+                    "token.fastly-validations.com"
+                  ]
+                }
+              ],
+              "warnings": [
+                "Found conflicting CAA record(s). Expected certainly.com."
+              ]
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

@@ -59,6 +59,7 @@ const SUPPORTED: &[&str] = &[
     types::POLICIES,
     types::PROJECT_PROTOCOLS,
     types::PROJECT_LABELS,
+    types::PROJECT_PREFERENCES,
     types::PROJECT_SERVICES,
     types::PROJECT_EMAIL_TEMPLATE,
     types::PROJECT_ENVIRONMENT,

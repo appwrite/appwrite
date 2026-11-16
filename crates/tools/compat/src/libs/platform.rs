@@ -6,8 +6,8 @@ use std::sync::{Arc, Mutex};
 use serde_json::{Map, Value, json};
 use utopia_cli::Cli;
 use utopia_platform::{
-    Action, ActionType, Callback, Declaration, Enum, Init, JobConfig, Module, Param, Platform, Service, ServiceType,
-    WorkerParams,
+    Action, ActionSource, ActionType, Callback, Declaration, Enum, Init, JobConfig, Module, Param, Platform, Service,
+    ServiceType, WorkerParams,
 };
 use utopia_queue::adapter::{Adapter as QueueAdapter, ConsumerFactory, Runtime};
 use utopia_queue::connection::BoxFuture;
@@ -421,8 +421,9 @@ fn service_of(spec: &Value, ctx: &Ctx) -> Result<Service, Fault> {
     Ok(service)
 }
 
-fn service(a: &Args<'_>) -> Result<Value, Fault> {
+fn service(a: &Args<'_>) -> Result<Result<Value, utopia_platform::Error>, Fault> {
     let ctx = Ctx { out: Arc::new(Mutex::new(Vec::new())), calls: Arc::new(Mutex::new(Vec::new())) };
+    LAZY_BUILT.store(0, std::sync::atomic::Ordering::SeqCst);
     let mut service = Service::new(ServiceType::new(a.opt_str("type")?.unwrap_or("http").to_owned()));
     let mut results = Vec::new();
     for step in a.opt("steps").and_then(Value::as_array).into_iter().flatten() {
@@ -434,21 +435,50 @@ fn service(a: &Args<'_>) -> Result<Value, Fault> {
             }
             "type" => json!(service.kind().as_str()),
             "add_action" => {
-                let kind = service.kind().as_str().to_owned();
-                let action = build(&kind, x.get("action").unwrap_or(&Value::Null), &ctx)?;
-                service.add_action(x["key"].as_str().unwrap_or_default(), action);
+                let key = x["key"].as_str().unwrap_or_default();
+                match x.get("lazy").and_then(Value::as_str) {
+                    Some("plain") => service.add_action(
+                        key,
+                        ActionSource::Lazy {
+                            class: "Tests\\Compat\\Platform\\LazyAction",
+                            name: None,
+                            make: lazy_action,
+                        },
+                    ),
+                    Some("named") => service.add_action(
+                        key,
+                        ActionSource::Lazy {
+                            class: "Tests\\Compat\\Platform\\NamedLazyAction",
+                            name: Some("named"),
+                            make: named_lazy_action,
+                        },
+                    ),
+                    _ => {
+                        let kind = service.kind().as_str().to_owned();
+                        let action = build(&kind, x.get("action").unwrap_or(&Value::Null), &ctx)?;
+                        service.add_action(key, action)
+                    }
+                };
                 json!(true)
             }
+            "built" => json!(LAZY_BUILT.load(std::sync::atomic::Ordering::SeqCst)),
             "remove_action" => {
                 service.remove_action(x.as_str().unwrap_or_default());
                 json!(true)
             }
-            "action" => service.action(x.as_str().unwrap_or_default()).map(describe).unwrap_or(Value::Null),
-            "actions" => json!(service.actions().keys().collect::<Vec<_>>()),
+            // A lazily registered action that fails to resolve throws out of the op, as in PHP.
+            "action" => match service.action(x.as_str().unwrap_or_default()) {
+                Ok(action) => action.map(describe).unwrap_or(Value::Null),
+                Err(e) => return Ok(Err(e)),
+            },
+            "actions" => match service.actions() {
+                Ok(actions) => json!(actions.keys().collect::<Vec<_>>()),
+                Err(e) => return Ok(Err(e)),
+            },
             other => return Err(Fault::new(format!("unknown step {other}"))),
         });
     }
-    Ok(Value::Array(results))
+    Ok(Ok(Value::Array(results)))
 }
 
 fn module(spec: &Value, ctx: &Ctx) -> Result<Module, Fault> {
@@ -530,7 +560,10 @@ async fn platform(a: &Args<'_>) -> Result<Value, Fault> {
                 json!(true)
             }
             "service" => match platform.service(x.as_str().unwrap_or_default()) {
-                Ok(s) => json!({"type": s.kind().as_str(), "actions": s.actions().keys().collect::<Vec<_>>()}),
+                Ok(s) => match s.actions() {
+                    Ok(actions) => json!({"type": s.kind().as_str(), "actions": actions.keys().collect::<Vec<_>>()}),
+                    Err(e) => error(&e),
+                },
                 Err(e) => error(&e),
             },
             "services" => json!(platform.services().keys().collect::<Vec<_>>()),
@@ -657,7 +690,10 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
     let a = Args(args);
     let value = match op {
         "action.run" => action(&a)?,
-        "service.run" => service(&a)?,
+        "service.run" => match service(&a)? {
+            Ok(value) => value,
+            Err(e) => return Ok(Outcome::err(e.php_class(), e.to_string())),
+        },
         "platform.run" => platform(&a).await?,
         _ => return Err(Fault::new(format!("unknown op {op}"))),
     };
@@ -710,4 +746,23 @@ pub async fn bench(name: &str, _session: &mut Session) -> Result<Bench, Fault> {
         }
         _ => return Err(Fault::new(format!("unknown benchmark {name}"))),
     })
+}
+
+/// Lazy actions built since the current `service.run` began.
+static LAZY_BUILT: std::sync::atomic::AtomicI64 = std::sync::atomic::AtomicI64::new(0);
+
+/// `new LazyAction()`: an action registered by its class name.
+fn lazy_action() -> Action {
+    LAZY_BUILT.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    let mut action = Action::new();
+    action.desc("lazy");
+    action
+}
+
+/// `new NamedLazyAction()`: a lazily registered action named `named`.
+fn named_lazy_action() -> Action {
+    LAZY_BUILT.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    let mut action = Action::new();
+    action.desc("named");
+    action
 }

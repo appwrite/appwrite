@@ -75,10 +75,10 @@ final class Adapter implements Base, Benchmarks
 {
     /** The adapter methods, as `vcs.<snake_case>` operations. */
     private const array METHODS = [
-        'batchGetRepositoryContents', 'batchUpsertCheckRuns', 'compareCommits', 'compareFiles', 'createBranch', 'createCheckRun', 'createComment',
+        'batchGetRepositoryContents', 'batchUpsertCheckRuns', 'compareCommits', 'compareFiles', 'createAccessToken', 'createBranch', 'createCheckRun', 'createComment',
         'createFile', 'createOrganization', 'createPullRequest', 'createPullRequestReview', 'createRepository', 'createTag',
         'createWebhook', 'deleteInstallation', 'deleteRepository', 'dismissPullRequestReview', 'generateCloneCommand', 'generatePushCommand',
-        'getAuthenticatedApp', 'getBlob', 'getBranchUrl', 'getCheckRun', 'getCheckSuite', 'getComment', 'getCommit',
+        'getAuthenticatedApp', 'getBlob', 'getBranchUrl', 'getCheckRun', 'getCheckSuite', 'getCollaboratorPermission', 'getComment', 'getCommit',
         'getCommitStatuses', 'getCommitUrl', 'getEventHeaderName', 'getEventType', 'getEvents', 'getFileUrl', 'getInstallUrl',
         'getInstallationRepository', 'getLatestCommit', 'getMergeBase', 'getName', 'getOrganizationUrl', 'getOwnerName', 'getPullRequest',
         'getPullRequestFiles', 'getPullRequestFromBranch', 'getPullRequestUrl', 'getRateLimit', 'getRepository', 'getRepositoryCloneHeaders',

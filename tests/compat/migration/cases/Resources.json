@@ -1236,6 +1236,7 @@
           },
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\Policies",
+            "getAccountDevices": null,
             "getCreatedAt": "",
             "getDenyAliasedEmail": true,
             "getDenyCorporateEmail": false,
@@ -1314,6 +1315,7 @@
             "passwordRotation": null,
             "passkeyRpId": null,
             "denyRealtimeGuests": null,
+            "accountDevices": null,
             "createdAt": "",
             "updatedAt": ""
           }

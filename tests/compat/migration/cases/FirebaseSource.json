@@ -1444,7 +1444,7 @@
           },
           "expect": [
             {
-              "key": "_<uniqid>_<uniqid>",
+              "key": "_default_<uniqid>",
               "entry": {
                 "$resource": "table",
                 "id": "firestore",

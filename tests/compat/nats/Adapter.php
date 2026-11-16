@@ -308,7 +308,9 @@ final class Adapter implements Base, Benchmarks
                 return;
             },
             'fake.fail_reads' => function (array $a, Session $s) {
-                self::fake($a, $s)->failReads = $a['error'] ?? null;
+                $fake = self::fake($a, $s);
+                $fake->failReads = $a['error'] ?? null;
+                $fake->failReadsUntilConnect = $a['until_connect'] ?? false;
 
                 return;
             },

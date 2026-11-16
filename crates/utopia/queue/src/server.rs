@@ -387,7 +387,7 @@ impl Server {
             Box::pin(async move {
                 let job = Self::job_for(&server.jobs, &server.default, &message);
                 context.set("message", message.clone());
-                server.around(&server.shutdown, job, &context, &message).await
+                server.around(&server.shutdown, job, &context, &message, false).await.map(|_| ())
             })
         });
         let server = self.clone();
@@ -406,24 +406,43 @@ impl Server {
     }
 
     /// The `*` hooks (when the job runs them), then those of the job's groups.
-    async fn around(&self, hooks: &[Hook], job: &Job, context: &Arc<Resources>, message: &Message) -> Result<()> {
+    /// With `skippable` (the init hooks), stops after the hook that marked the
+    /// message skipped and returns `true`.
+    async fn around(
+        &self,
+        hooks: &[Hook],
+        job: &Job,
+        context: &Arc<Resources>,
+        message: &Message,
+        skippable: bool,
+    ) -> Result<bool> {
         if job.runs_hooks() {
             for hook in hooks.iter().filter(|h| h.group_names().contains(&"*")) {
                 hook.run(context, message.payload()).await?;
+                if skippable && message.is_skipped() {
+                    return Ok(true);
+                }
             }
         }
         for group in job.group_names() {
             for hook in hooks.iter().filter(|h| h.group_names().contains(&group)) {
                 hook.run(context, message.payload()).await?;
+                if skippable && message.is_skipped() {
+                    return Ok(true);
+                }
             }
         }
-        Ok(())
+        Ok(false)
     }
 
+    /// The init hooks, then the job, unless an init hook skipped the message:
+    /// it is then acknowledged without running the job.
     async fn handle(&self, message: &Arc<Message>, context: &Arc<Resources>) -> Result<()> {
         let job = Self::job_for(&self.jobs, &self.default, message);
         context.set("message", message.clone());
-        self.around(&self.init, job, context, message).await?;
+        if self.around(&self.init, job, context, message, true).await? {
+            return Ok(());
+        }
         job.run(context, message.payload()).await
     }
 }

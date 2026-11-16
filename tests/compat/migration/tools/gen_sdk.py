@@ -22,7 +22,7 @@ import sys
 # API reader), as `Service::method`.
 METHODS = [
     "Functions::create", "Functions::createVariable", "Functions::getDeployment", "Functions::list",
-    "Functions::listDeployments", "Functions::listVariables",
+    "Functions::listDeployments", "Functions::listSpecifications", "Functions::listVariables",
     "Messaging::createAPNSProvider", "Messaging::createEmail", "Messaging::createFCMProvider",
     "Messaging::createMailgunProvider", "Messaging::createMsg91Provider", "Messaging::createPush",
     "Messaging::createResendProvider", "Messaging::createSMS", "Messaging::createSMTPProvider",
@@ -35,7 +35,7 @@ METHODS = [
     "Project::listOAuth2Providers", "Project::listPlatforms", "Project::listVariables",
     "Proxy::createAPIRule", "Proxy::createFunctionRule", "Proxy::createRedirectRule", "Proxy::createSiteRule",
     "Proxy::listRules",
-    "Sites::create", "Sites::createVariable", "Sites::getDeployment", "Sites::list", "Sites::listDeployments",
+    "Sites::create", "Sites::createVariable", "Sites::getDeployment", "Sites::list", "Sites::listDeployments", "Sites::listSpecifications",
     "Sites::listVariables",
     "Storage::createBucket", "Storage::createFile", "Storage::listBuckets", "Storage::listFiles",
     "TablesDB::getRow", "TablesDB::list", "TablesDB::listColumns", "TablesDB::listIndexes", "TablesDB::listRows",

@@ -279,6 +279,10 @@ impl<P: Publisher + 'static> Publisher for Background<P> {
         self.publisher.queue_size(queue, failed)
     }
 
+    fn queue_age<'a>(&'a self, queue: &'a Queue) -> BoxFuture<'a, Result<i64>> {
+        self.publisher.queue_age(queue)
+    }
+
     fn pending_count<'a>(&'a self, queue: &'a Queue) -> BoxFuture<'a, Result<i64>> {
         self.publisher.pending_count(queue)
     }

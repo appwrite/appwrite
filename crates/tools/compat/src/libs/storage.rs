@@ -10,8 +10,8 @@ use serde_json::{Map, Value, json};
 use utopia_storage::s3::{Client, Method, Payload, Request, Response, Retry, RetryStrategy, TransportError};
 use utopia_storage::validator::{FileExt, FileName, FileSize, FileType, Upload};
 use utopia_storage::{
-    Acl, Body, COPY_CHUNK_SIZE, Device, Error, FileInfo, FileList, Local, Metadata, Part, S3, Source, Telemetry,
-    UploadList,
+    Acl, Body, COPY_CHUNK_SIZE, Cipher, Device, Error, FileInfo, FileList, Local, Metadata, Part, S3, Source,
+    Telemetry, UploadList,
 };
 use utopia_telemetry::{Kind, MemoryTelemetry};
 use utopia_validators::Validator;
@@ -20,6 +20,21 @@ use crate::adapter::{Args, Fault, OpResult, Outcome, Session, bytes, bytes_value
 
 pub const OPS: &[&str] = &[
     "local.new",
+    "cipher.new",
+    "cipher.generate",
+    "cipher.encrypt",
+    "cipher.decrypt",
+    "cipher.wrap",
+    "cipher.unwrap",
+    "cipher.range",
+    "cipher.stream",
+    "cipher.copy",
+    "cipher.sizes",
+    "blob.size",
+    "blob.slice",
+    "blob.concat",
+    "blob.flip",
+    "blob.store",
     "s3.new",
     "provider.new",
     "telemetry.new",
@@ -123,7 +138,7 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<crate::bench::Be
             Bench::future(move || {
                 let (device, path) = (device.clone(), path.clone());
                 async move {
-                    let body = device.read(&path, 0, None, None).await.ok();
+                    let body = device.read(&path, 0, None, None, None).await.ok();
                     if let Some(body) = body {
                         black_box(body.bytes().await.ok());
                     }
@@ -137,7 +152,7 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<crate::bench::Be
             Bench::future(move || {
                 let (device, path) = (device.clone(), path.clone());
                 async move {
-                    let body = device.read(&path, 30000, Some(4096), None).await.ok();
+                    let body = device.read(&path, 30000, Some(4096), None, None).await.ok();
                     if let Some(body) = body {
                         black_box(body.bytes().await.ok());
                     }
@@ -611,6 +626,122 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         "device.root" => Outcome::ok(device(session)?.root()),
         "device.path" => Outcome::ok(device(session)?.path(a.str("filename")?)),
         "device.absolute_path" => Outcome::ok(utopia_storage::absolute_path(path()?)),
+        "cipher.new" => {
+            return Ok(match Cipher::new(&a.bytes("key")?) {
+                Ok(c) => Outcome::Ok(session.handle(c)),
+                Err(e) => err(e),
+            });
+        }
+        "cipher.generate" => return Ok(Outcome::Ok(session.handle(Cipher::generate()))),
+        "cipher.encrypt" => {
+            let data = plain(&a)?;
+            let r = cipher(&a, session)?.encrypt(&data, a.i64("index")?, a.bool("last")?);
+            return Ok(match r {
+                Ok(b) => Outcome::Ok(session.handle(CipherBlob(b))),
+                Err(e) => err(e),
+            });
+        }
+        "cipher.decrypt" => {
+            let data = blob(a.value("data")?, session)?;
+            let r = cipher(&a, session)?.decrypt(&data, a.i64("index")?, a.bool("last")?);
+            return Ok(match r {
+                Ok(b) => Outcome::Ok(digest(&a, &b)?),
+                Err(e) => err(e),
+            });
+        }
+        "cipher.wrap" => {
+            let r = cipher(&a, session)?.wrap(&a.bytes("master")?);
+            return Ok(match r {
+                Ok(b) => Outcome::Ok(session.handle(CipherBlob(b))),
+                Err(e) => err(e),
+            });
+        }
+        "cipher.unwrap" => {
+            let wrapped = blob(a.value("wrapped")?, session)?;
+            return Ok(match Cipher::unwrap(&wrapped, &a.bytes("master")?) {
+                Ok(c) => Outcome::Ok(session.handle(c)),
+                Err(e) => err(e),
+            });
+        }
+        "cipher.range" => {
+            let (c, d) = (cipher(&a, session)?, device(session)?);
+            let r = c.range(&*d, a.str("path")?, a.i64("size")?, a.i64("start")?, a.i64("end")?).await;
+            return Ok(match r {
+                Ok(b) => Outcome::Ok(digest(&a, &b)?),
+                Err(e) => err(e),
+            });
+        }
+        "cipher.stream" => {
+            let (c, d) = (cipher(&a, session)?, device(session)?);
+            let mut received = Vec::new();
+            let mut sink = |chunk: Bytes| {
+                received.extend_from_slice(&chunk);
+                Ok(())
+            };
+            let r = c.stream(&*d, a.str("path")?, a.i64("size")?, &mut sink).await;
+            return Ok(match r {
+                Ok(()) => Outcome::Ok(digest(&a, &received)?),
+                Err(e) => err(e),
+            });
+        }
+        "cipher.copy" => {
+            let (c, from) = (cipher(&a, session)?, device(session)?);
+            let to = session.get::<Handle>(a.value("to")?)?.device.clone();
+            let r = c
+                .copy(
+                    &*from,
+                    a.str("path")?,
+                    a.i64("size")?,
+                    &*to,
+                    a.str("target")?,
+                    a.str("content_type")?,
+                    a.i64("chunk")?,
+                )
+                .await;
+            return Ok(match r {
+                Ok(()) => Outcome::Ok(Value::Null),
+                Err(e) => err(e),
+            });
+        }
+        "cipher.sizes" => {
+            let (size, index) = (a.i64("size")?, a.i64("index")?);
+            return Ok(Outcome::Ok(json!({
+                "segments": Cipher::segments(size),
+                "size": Cipher::size(size),
+                "offset": Cipher::offset(index),
+                "name": Cipher::NAME,
+                "segment": Cipher::SEGMENT,
+                "overhead": Cipher::OVERHEAD,
+            })));
+        }
+        "blob.size" => return Ok(Outcome::Ok(Value::from(blob(a.value("blob")?, session)?.len()))),
+        "blob.slice" => {
+            let data = blob(a.value("blob")?, session)?;
+            let part = php_std::string::substr(&data, a.i64("from")?, a.opt_i64("length")?).to_vec();
+            return Ok(Outcome::Ok(session.handle(CipherBlob(part))));
+        }
+        "blob.concat" => {
+            let mut out = Vec::new();
+            for b in a.value("blobs")?.as_array().ok_or_else(|| Fault::new("blobs must be a list"))? {
+                out.extend_from_slice(&blob(b, session)?);
+            }
+            return Ok(Outcome::Ok(session.handle(CipherBlob(out))));
+        }
+        "blob.flip" => {
+            let mut data = blob(a.value("blob")?, session)?;
+            let at = a.i64("at")? as usize;
+            let byte = data.get_mut(at).ok_or_else(|| Fault::new("flip past the end"))?;
+            *byte = if *byte == b'a' { b'b' } else { b'a' };
+            return Ok(Outcome::Ok(session.handle(CipherBlob(data))));
+        }
+        "blob.store" => {
+            let data = blob(a.value("blob")?, session)?;
+            let r = device(session)?.write(a.str("path")?, Body::from(data), "application/octet-stream").await;
+            return Ok(match r {
+                Ok(_) => Outcome::Ok(Value::Null),
+                Err(e) => err(e),
+            });
+        }
         "local.write_read" => {
             let device = Local::new(format!("/tmp/compat-fs/{}", session.ns));
             let p = device.path(a.str("path")?);
@@ -618,7 +749,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                 let etag =
                     device.write(&p, Body::from(a.bytes("data")?), "").await.map_err(|e| Fault::new(e.to_string()))?;
                 let read = device
-                    .read(&p, a.i64("offset")?.max(0) as u64, a.opt_i64("length")?.map(|l| l.max(0) as u64), None)
+                    .read(&p, a.i64("offset")?.max(0) as u64, a.opt_i64("length")?.map(|l| l.max(0) as u64), None, None)
                     .await
                     .map_err(|e| Fault::new(e.to_string()))?
                     .bytes()
@@ -643,7 +774,13 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             let result = match a.str("call")? {
                 "write" => device.write(p, Body::from(a.bytes("data")?), a.str("content_type")?).await.map(Value::from),
                 "read" => match device
-                    .read(p, a.i64("offset")?.max(0) as u64, a.opt_i64("length")?.map(|l| l.max(0) as u64), None)
+                    .read(
+                        p,
+                        a.i64("offset")?.max(0) as u64,
+                        a.opt_i64("length")?.map(|l| l.max(0) as u64),
+                        None,
+                        modified_since(&a)?,
+                    )
                     .await
                 {
                     Ok(body) => body.bytes().await.map(|b| bytes_value(&b)).map_err(Error::Body),
@@ -711,6 +848,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                     a.opt_i64("offset")?.unwrap_or(0).max(0) as u64,
                     a.opt_i64("length")?.map(|l| l.max(0) as u64),
                     a.opt_str("etag")?,
+                    modified_since(&a)?,
                 )
                 .await;
             if op == "device.read_stream" {
@@ -954,4 +1092,47 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         "fs.unlink" => Outcome::ok(std::fs::remove_file(path()?).is_ok()),
         _ => return Err(Fault::new(format!("storage: unknown operation `{op}`"))),
     })
+}
+
+/// The time a read is conditional on: `modified_since` (Unix seconds), or
+/// `modified_since_in` seconds from now.
+fn modified_since(a: &Args) -> Result<Option<chrono::DateTime<chrono::FixedOffset>>, Fault> {
+    let at = match (a.opt_i64("modified_since")?, a.opt_i64("modified_since_in")?) {
+        (Some(at), _) => at,
+        (None, Some(delta)) => php_std::datetime::time() + delta,
+        (None, None) => return Ok(None),
+    };
+    Ok(chrono::DateTime::from_timestamp(at, 0).map(|d| d.fixed_offset()))
+}
+
+/// Ciphertext or a wrapped key held for later steps.
+struct CipherBlob(Vec<u8>);
+
+fn cipher(a: &Args, session: &Session) -> Result<Cipher, Fault> {
+    session.get::<Cipher>(a.value("cipher")?).cloned()
+}
+
+/// Bytes a cipher op takes: a blob handle, or bytes.
+fn blob(value: &Value, session: &Session) -> Result<Vec<u8>, Fault> {
+    if value.get("$handle").is_some() {
+        return Ok(session.get::<CipherBlob>(value)?.0.clone());
+    }
+    bytes(value).ok_or_else(|| Fault::new("expected bytes"))
+}
+
+/// The plaintext of an encrypt: `data`, or `pattern` bytes of
+/// `(i * 31 + 7) % 256`.
+fn plain(a: &Args) -> Result<Vec<u8>, Fault> {
+    if let Some(n) = a.opt_i64("pattern")? {
+        return Ok((0..n).map(|i| ((i * 31 + 7) % 256) as u8).collect());
+    }
+    a.bytes("data")
+}
+
+/// Bytes as they are, or with `digest` their size and MD5.
+fn digest(a: &Args, data: &[u8]) -> Result<Value, Fault> {
+    if a.opt_bool("digest")?.unwrap_or(false) {
+        return Ok(json!({ "size": data.len(), "md5": php_std::string::hash(b"md5", data) }));
+    }
+    Ok(bytes_value(data))
 }

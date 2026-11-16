@@ -47,10 +47,23 @@
         "Utopia\\Cache\\Adapter\\Filesystem::getPath"
       ]
     },
+    "storage.new": {
+      "doc": "new Storage(new Local(root))",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Storage::__construct"
+      ]
+    },
+    "storage.path": {
+      "doc": "new Storage(new Local(root))->getPath(key)",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Storage::getPath"
+      ]
+    },
     "filesystem.stream": {
       "doc": "new Filesystem(path, streaming: true)->load(key, ttl), read to the end (false on a miss)",
       "covers": [
-        "Utopia\\Cache\\Adapter\\Filesystem::load"
+        "Utopia\\Cache\\Adapter\\Filesystem::load",
+        "Utopia\\Cache\\Adapter\\Storage::load"
       ]
     },
     "redis.new": {
@@ -205,6 +218,7 @@
         "Utopia\\Cache\\Adapter\\Memory::getName",
         "Utopia\\Cache\\Adapter\\None::getName",
         "Utopia\\Cache\\Adapter\\Filesystem::getName",
+        "Utopia\\Cache\\Adapter\\Storage::getName",
         "Utopia\\Cache\\Adapter\\Redis::getName",
         "Utopia\\Cache\\Adapter\\Hazelcast::getName",
         "Utopia\\Cache\\Adapter\\Memcached::getName",
@@ -546,6 +560,7 @@
         "Utopia\\Cache\\Adapter\\Memory::load",
         "Utopia\\Cache\\Adapter\\None::load",
         "Utopia\\Cache\\Adapter\\Filesystem::load",
+        "Utopia\\Cache\\Adapter\\Storage::load",
         "Utopia\\Cache\\Adapter\\Redis::load",
         "Utopia\\Cache\\Adapter\\Hazelcast::load",
         "Utopia\\Cache\\Adapter\\Memcached::load",
@@ -569,6 +584,7 @@
         "Utopia\\Cache\\Adapter\\Memory::save",
         "Utopia\\Cache\\Adapter\\None::save",
         "Utopia\\Cache\\Adapter\\Filesystem::save",
+        "Utopia\\Cache\\Adapter\\Storage::save",
         "Utopia\\Cache\\Adapter\\Redis::save",
         "Utopia\\Cache\\Adapter\\Hazelcast::save",
         "Utopia\\Cache\\Adapter\\Memcached::save",
@@ -590,6 +606,7 @@
         "Utopia\\Cache\\Adapter\\Memory::touch",
         "Utopia\\Cache\\Adapter\\None::touch",
         "Utopia\\Cache\\Adapter\\Filesystem::touch",
+        "Utopia\\Cache\\Adapter\\Storage::touch",
         "Utopia\\Cache\\Adapter\\Redis::touch",
         "Utopia\\Cache\\Adapter\\Hazelcast::touch",
         "Utopia\\Cache\\Adapter\\Memcached::touch",
@@ -611,6 +628,7 @@
         "Utopia\\Cache\\Adapter\\Memory::list",
         "Utopia\\Cache\\Adapter\\None::list",
         "Utopia\\Cache\\Adapter\\Filesystem::list",
+        "Utopia\\Cache\\Adapter\\Storage::list",
         "Utopia\\Cache\\Adapter\\Redis::list",
         "Utopia\\Cache\\Adapter\\Hazelcast::list",
         "Utopia\\Cache\\Adapter\\Memcached::list",
@@ -638,6 +656,7 @@
         "Utopia\\Cache\\Adapter\\Memory::purge",
         "Utopia\\Cache\\Adapter\\None::purge",
         "Utopia\\Cache\\Adapter\\Filesystem::purge",
+        "Utopia\\Cache\\Adapter\\Storage::purge",
         "Utopia\\Cache\\Adapter\\Hazelcast::purge",
         "Utopia\\Cache\\Adapter\\Memcached::purge",
         "Utopia\\Cache\\Adapter\\Sharding::purge",
@@ -659,6 +678,7 @@
         "Utopia\\Cache\\Adapter\\Memory::flush",
         "Utopia\\Cache\\Adapter\\None::flush",
         "Utopia\\Cache\\Adapter\\Filesystem::flush",
+        "Utopia\\Cache\\Adapter\\Storage::flush",
         "Utopia\\Cache\\Adapter\\Redis::flush",
         "Utopia\\Cache\\Adapter\\Hazelcast::flush",
         "Utopia\\Cache\\Adapter\\Memcached::flush",
@@ -680,6 +700,7 @@
         "Utopia\\Cache\\Adapter\\Memory::ping",
         "Utopia\\Cache\\Adapter\\None::ping",
         "Utopia\\Cache\\Adapter\\Filesystem::ping",
+        "Utopia\\Cache\\Adapter\\Storage::ping",
         "Utopia\\Cache\\Adapter\\Redis::ping",
         "Utopia\\Cache\\Adapter\\Hazelcast::ping",
         "Utopia\\Cache\\Adapter\\Memcached::ping",
@@ -701,6 +722,7 @@
         "Utopia\\Cache\\Adapter\\Memory::getSize",
         "Utopia\\Cache\\Adapter\\None::getSize",
         "Utopia\\Cache\\Adapter\\Filesystem::getSize",
+        "Utopia\\Cache\\Adapter\\Storage::getSize",
         "Utopia\\Cache\\Adapter\\Redis::getSize",
         "Utopia\\Cache\\Adapter\\Hazelcast::getSize",
         "Utopia\\Cache\\Adapter\\Memcached::getSize",

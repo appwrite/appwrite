@@ -1066,7 +1066,7 @@ impl Adapter for Gitea {
             // Gogs ignores the sha parameter: check the branch exists first.
             let branches = self.list_branches(owner, repository_name).await?;
             if !branches.iter().any(|b| php::is_str(b, branch)) {
-                return Err(Error::exception(format!("Branch '{branch}' not found"), 0));
+                return Err(Error::RepositoryNotFound(format!("Branch not found: {branch}")));
             }
         }
         let query = php_std::encoding::http_build_query(
@@ -1077,6 +1077,21 @@ impl Adapter for Gitea {
         );
         let response =
             self.get(format!("/repos/{owner}/{repository_name}/commits?{}", String::from_utf8_lossy(&query))).await?;
+        if response.status == 404 {
+            return Err(Error::RepositoryNotFound(format!("Branch not found: {branch}")));
+        }
+        if response.status >= 500 {
+            // Some versions answer a missing branch with a server error, so the branch itself is checked.
+            let path = branch
+                .split('/')
+                .map(|segment| php_std::encoding::rawurlencode(segment.as_bytes()))
+                .collect::<Vec<_>>()
+                .join("/");
+            let lookup = self.get(format!("/repos/{owner}/{repository_name}/branches/{path}")).await?;
+            if lookup.status == 404 {
+                return Err(Error::RepositoryNotFound(format!("Branch not found: {branch}")));
+            }
+        }
         if response.status >= 400 {
             return Err(Error::exception(
                 format!("Latest commit response failed with status code {}", response.status),

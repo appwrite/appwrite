@@ -10,6 +10,8 @@ use Tests\Compat\Session;
 use Utopia\Cache\Adapter as CacheAdapter;
 use Utopia\Cache\Adapter\CircuitBreaker;
 use Utopia\Cache\Adapter\Filesystem;
+use Utopia\Cache\Adapter\Storage;
+use Utopia\Storage\Device\Local;
 use Utopia\Cache\Adapter\Hazelcast;
 use Utopia\Cache\Adapter\Memcached;
 use Utopia\Cache\Adapter\Memory;
@@ -138,6 +140,8 @@ final class Adapter implements Base, Benchmarks
             'none.new' => fn (array $a, Session $s) => $s->handle(new None()),
             'filesystem.new' => fn (array $a, Session $s) => $s->handle(new Filesystem($a['path'])),
             'filesystem.path' => fn (array $a, Session $s) => (new Filesystem($a['path']))->getPath($a['key']),
+            'storage.new' => fn (array $a, Session $s) => $s->handle(new Storage(new Local($a['root']))),
+            'storage.path' => fn (array $a, Session $s) => (new Storage(new Local($a['root'])))->getPath($a['key']),
             'filesystem.stream' => function (array $a, Session $s) {
                 $stream = (new Filesystem($a['path'], true))->load($a['key'], $a['ttl']);
                 if (!\is_resource($stream)) {

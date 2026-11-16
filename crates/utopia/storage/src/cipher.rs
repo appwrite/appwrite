@@ -1,145 +1,280 @@
-//! Segmented AES-256-GCM: a file is split into segments of [`SEGMENT`]
-//! bytes, each sealed on its own with a fresh nonce, so any range of the file
-//! can be read and decrypted without the rest of it. Each segment's
-//! additional data binds its index and whether it is the last one, so
-//! segments cannot be reordered or the file truncated unnoticed.
-//!
-//! A stored segment is `nonce (12) | ciphertext | tag (16)`.
-//!
-//! PHP: `Utopia\Storage\Cipher`.
+//! Segmented AES-256-GCM: a file encrypted in fixed 64 KiB segments, so it
+//! can be encrypted in parts and any range read back without the rest.
 
-use aes_gcm::aead::{Aead, KeyInit, Payload};
-use aes_gcm::{Aes256Gcm, Nonce};
+use std::io;
+
+use aes_gcm::aead::{AeadInPlace, KeyInit};
+use aes_gcm::{Aes256Gcm, Nonce, Tag};
+use async_trait::async_trait;
+use bytes::Bytes;
 use sha2::{Digest, Sha256};
 
-use crate::error::{Error, Result};
-
-/// The cipher's name, as stored with a file (`openSSLCipher`).
-pub const NAME: &str = "aes-256-gcm-segmented";
-
-/// Plaintext bytes per segment.
-pub const SEGMENT: i64 = 65536;
+use crate::device::{Device, Metadata, Sink};
+use crate::{Body, Error, Result};
 
 const NONCE: usize = 12;
 const TAG: usize = 16;
-
-/// Bytes each segment adds: its nonce and its tag.
-pub const OVERHEAD: i64 = (NONCE + TAG) as i64;
-
 const VERSION: u8 = 1;
 
-/// A file key.
+/// AES-256-GCM over fixed 64 KiB segments. Each segment is stored as
+/// `nonce | ciphertext | tag`, and authenticated with its index and whether
+/// it is the last one, so segments cannot be swapped, reordered or cut off.
+///
+/// ```
+/// use utopia_storage::Cipher;
+///
+/// let cipher = Cipher::new(&[7; 32])?;
+/// let sealed = cipher.encrypt(b"Hello", 0, true)?;
+/// assert_eq!(sealed.len() as i64, Cipher::size(5));
+/// assert_eq!(cipher.decrypt(&sealed, 0, true)?, b"Hello");
+/// # Ok::<(), utopia_storage::Error>(())
+/// ```
+///
+/// ```php
+/// use Utopia\Storage\Cipher;
+///
+/// $cipher = new Cipher(\str_repeat("\x07", 32));
+/// $sealed = $cipher->encrypt('Hello', 0, true);
+/// var_dump(\strlen($sealed) === Cipher::size(5)); // bool(true)
+/// echo $cipher->decrypt($sealed, 0, true), "\n";   // Hello
+/// ```
+///
+/// PHP: `Utopia\Storage\Cipher`.
 #[derive(Clone)]
 pub struct Cipher {
     key: [u8; 32],
 }
 
 impl std::fmt::Debug for Cipher {
-    /// Never prints the key.
+    /// Writes the type's name, never the key.
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str("Cipher")
     }
 }
 
-fn random<const N: usize>() -> [u8; N] {
-    let mut bytes = [0u8; N];
-    getrandom::fill(&mut bytes).expect("the system random source is available");
-    bytes
-}
-
-/// `hash('sha256', $master, true)`: the key a master secret wraps with.
-fn master(master: &[u8]) -> Result<[u8; 32]> {
-    if master.is_empty() {
-        return Err(Error::Storage("Master key must not be empty".into()));
-    }
-    Ok(Sha256::digest(master).into())
-}
-
 impl Cipher {
-    /// A cipher for a 32-byte key.
-    pub fn new(key: &[u8]) -> Result<Cipher> {
-        let key: [u8; 32] = key.try_into().map_err(|_| Error::Storage("Key must be 32 bytes".into()))?;
+    /// The scheme's name, also the additional data a wrapped key is sealed
+    /// with.
+    ///
+    /// PHP: `Cipher::NAME`.
+    pub const NAME: &'static str = "aes-256-gcm-segmented";
+
+    /// Plaintext bytes per segment: 64 KiB.
+    ///
+    /// PHP: `Cipher::SEGMENT`.
+    pub const SEGMENT: i64 = 65536;
+
+    /// Bytes each segment adds: its nonce and tag.
+    ///
+    /// PHP: `Cipher::OVERHEAD`.
+    pub const OVERHEAD: i64 = (NONCE + TAG) as i64;
+
+    /// A cipher with `key`, which must be 32 bytes ([`Error::InvalidArgument`]
+    /// otherwise).
+    ///
+    /// PHP: `new Cipher($key)`.
+    pub fn new(key: &[u8]) -> Result<Self> {
+        let key: [u8; 32] = key.try_into().map_err(|_| Error::InvalidArgument("Key must be 32 bytes".into()))?;
         Ok(Cipher { key })
     }
 
     /// A cipher with a new random key.
-    pub fn generate() -> Cipher {
+    ///
+    /// PHP: `Cipher::generate()`.
+    pub fn generate() -> Self {
         Cipher { key: random() }
     }
 
-    /// The key `wrapped` holds, sealed with `master` by [`Cipher::wrap`].
-    pub fn unwrap(wrapped: &[u8], master_key: &[u8]) -> Result<Cipher> {
+    /// Restores a cipher from a key wrapped with `master` by [`Cipher::wrap`].
+    /// Fails with [`Error::Storage`] when it does not unwrap, and with
+    /// [`Error::InvalidArgument`] for an empty master key.
+    ///
+    /// PHP: `Cipher::unwrap($wrapped, $master)`.
+    pub fn unwrap(wrapped: &[u8], master: &[u8]) -> Result<Self> {
         let failed = || Error::Storage("Unable to unwrap the key".into());
         if wrapped.len() != NONCE + 32 + TAG {
             return Err(failed());
         }
-        let aes = Aes256Gcm::new(&master(master_key)?.into());
-        let key = aes
-            .decrypt(Nonce::from_slice(&wrapped[..NONCE]), Payload { msg: &wrapped[NONCE..], aad: NAME.as_bytes() })
+        let aead = Aes256Gcm::new_from_slice(&master_key(master)?).map_err(|_| failed())?;
+        let (nonce, rest) = wrapped.split_at(NONCE);
+        let (sealed, tag) = rest.split_at(32);
+        let mut key = sealed.to_vec();
+        aead.decrypt_in_place_detached(Nonce::from_slice(nonce), Self::NAME.as_bytes(), &mut key, Tag::from_slice(tag))
             .map_err(|_| failed())?;
-        Cipher::new(&key)
+        Self::new(&key)
     }
 
-    /// The key sealed with the SHA-256 of `master`: `nonce | ciphertext | tag`.
-    pub fn wrap(&self, master_key: &[u8]) -> Result<Vec<u8>> {
-        let aes = Aes256Gcm::new(&master(master_key)?.into());
+    /// This cipher's key, encrypted with `master`, to store beside the file.
+    /// Fails with [`Error::InvalidArgument`] for an empty master key.
+    ///
+    /// PHP: `wrap($master)`.
+    pub fn wrap(&self, master: &[u8]) -> Result<Vec<u8>> {
+        let aead = Aes256Gcm::new_from_slice(&master_key(master)?)
+            .map_err(|_| Error::Storage("Failed to wrap the key".into()))?;
         let nonce: [u8; NONCE] = random();
-        let sealed = aes
-            .encrypt(Nonce::from_slice(&nonce), Payload { msg: &self.key, aad: NAME.as_bytes() })
+        let mut sealed = self.key.to_vec();
+        let tag = aead
+            .encrypt_in_place_detached(Nonce::from_slice(&nonce), Self::NAME.as_bytes(), &mut sealed)
             .map_err(|_| Error::Storage("Failed to wrap the key".into()))?;
         let mut out = nonce.to_vec();
         out.extend_from_slice(&sealed);
+        out.extend_from_slice(&tag);
         Ok(out)
     }
 
-    /// Seals `data`, which starts at segment `index` of the file; `last` when
-    /// it ends the file. Every segment but the last must be full.
+    /// Encrypts `data` that starts at segment `index`; `last` marks its final
+    /// segment as the end of the file.
+    ///
+    /// PHP: `encrypt($data, $index, $last)`.
     pub fn encrypt(&self, data: &[u8], index: i64, last: bool) -> Result<Vec<u8>> {
-        let aes = Aes256Gcm::new(&self.key.into());
-        let count = segments(data.len() as i64);
-        let mut output = Vec::with_capacity(data.len() + (count * OVERHEAD) as usize);
+        let aead = self.aead();
+        let count = Self::segments(data.len() as i64);
+        let mut out = Vec::with_capacity(Self::size(data.len() as i64) as usize);
         for segment in 0..count {
-            let start = ((segment * SEGMENT) as usize).min(data.len());
-            let end = (start + SEGMENT as usize).min(data.len());
+            let start = (segment * Self::SEGMENT) as usize;
+            let end = (start + Self::SEGMENT as usize).min(data.len());
+            let mut block = data.get(start..end).unwrap_or_default().to_vec();
             let nonce: [u8; NONCE] = random();
             let aad = aad(index + segment, last && segment == count - 1);
-            let sealed = aes
-                .encrypt(Nonce::from_slice(&nonce), Payload { msg: &data[start..end], aad: &aad })
+            let tag = aead
+                .encrypt_in_place_detached(Nonce::from_slice(&nonce), &aad, &mut block)
                 .map_err(|_| Error::Storage(format!("Failed to encrypt segment {}", index + segment)))?;
-            output.extend_from_slice(&nonce);
-            output.extend_from_slice(&sealed);
+            out.extend_from_slice(&nonce);
+            out.extend_from_slice(&block);
+            out.extend_from_slice(&tag);
         }
-        Ok(output)
+        Ok(out)
     }
 
-    /// Opens the segments in `data`, the first being segment `index` of the
-    /// file; `last` when they end the file.
+    /// Decrypts whole segments that start at segment `index`; `last` says the
+    /// data ends with the final segment of the file. Fails with
+    /// [`Error::Storage`] for a truncated segment or one that does not
+    /// authenticate.
+    ///
+    /// PHP: `decrypt($data, $index, $last)`.
     pub fn decrypt(&self, data: &[u8], index: i64, last: bool) -> Result<Vec<u8>> {
-        let aes = Aes256Gcm::new(&self.key.into());
-        let size = (SEGMENT + OVERHEAD) as usize;
-        let count = (data.len().div_ceil(size)).max(1);
-        let mut output = Vec::with_capacity(data.len());
+        let aead = self.aead();
+        let size = (Self::SEGMENT + Self::OVERHEAD) as usize;
+        let count = data.len().div_ceil(size).max(1);
+        let mut out = Vec::with_capacity(data.len());
         for segment in 0..count {
-            let start = (segment * size).min(data.len());
-            let end = (start + size).min(data.len());
-            let block = &data[start..end];
-            let final_ = segment == count - 1;
-            let at = index + segment as i64;
-            if block.len() < OVERHEAD as usize || ((!final_ || !last) && block.len() != size) {
-                return Err(Error::Storage(format!("Segment {at} is truncated")));
+            let start = segment * size;
+            let block = data.get(start..(start + size).min(data.len())).unwrap_or_default();
+            let fin = segment == count - 1;
+            let number = index + segment as i64;
+            if block.len() < Self::OVERHEAD as usize || ((!fin || !last) && block.len() != size) {
+                return Err(Error::Storage(format!("Segment {number} is truncated")));
             }
-            let aad = aad(at, last && final_);
-            let opened = aes
-                .decrypt(Nonce::from_slice(&block[..NONCE]), Payload { msg: &block[NONCE..], aad: &aad })
-                .map_err(|_| Error::Storage(format!("Segment {at} failed authentication")))?;
-            output.extend_from_slice(&opened);
+            let (nonce, rest) = block.split_at(NONCE);
+            let (sealed, tag) = rest.split_at(rest.len() - TAG);
+            let mut plain = sealed.to_vec();
+            aead.decrypt_in_place_detached(
+                Nonce::from_slice(nonce),
+                &aad(number, last && fin),
+                &mut plain,
+                Tag::from_slice(tag),
+            )
+            .map_err(|_| Error::Storage(format!("Segment {number} failed authentication")))?;
+            out.extend_from_slice(&plain);
         }
-        Ok(output)
+        Ok(out)
+    }
+
+    /// Plaintext bytes `start` to `end` of the file at `path`, which holds
+    /// `size` bytes of plaintext. Reads only the segments the range falls in.
+    ///
+    /// PHP: `range($device, $path, $size, $start, $end)`.
+    pub async fn range(&self, device: &dyn Device, path: &str, size: i64, start: i64, end: i64) -> Result<Vec<u8>> {
+        let first = start / Self::SEGMENT;
+        let last = end / Self::SEGMENT;
+        let offset = Self::offset(first);
+        let length = Self::offset(last - first + 1);
+        if offset < 0 || length <= 0 {
+            return Err(Error::InvalidArgument(format!("Invalid range {start}-{end}")));
+        }
+        let data = device.read(path, offset as u64, Some(length as u64), None, None).await?.bytes().await;
+        let data = data.map_err(Error::Body)?;
+        let fin = last == Self::segments(size) - 1;
+        let plain = self.decrypt(&data, first, fin)?;
+        Ok(php_std::string::substr(&plain, start - first * Self::SEGMENT, Some(end - start + 1)).to_vec())
+    }
+
+    /// Sends the file at `path`, which holds `size` bytes of plaintext, to
+    /// `sink` as plaintext. Keeps one device read and one segment in memory
+    /// at a time.
+    ///
+    /// PHP: `stream($device, $path, $size, $sink)`.
+    pub async fn stream(&self, device: &dyn Device, path: &str, size: i64, sink: &mut dyn Sink) -> Result<()> {
+        let mut segments =
+            Segments { cipher: self, sink, total: Self::segments(size), buffer: Vec::new(), index: 0, error: None };
+        if let Err(e) = device.stream(path, &mut segments, 0, None, None).await {
+            return Err(segments.error.take().unwrap_or(e));
+        }
+        if segments.index != segments.total - 1 {
+            return Err(Error::Storage("Incomplete file read".into()));
+        }
+        let plain = self.decrypt(&segments.buffer, segments.index, true)?;
+        segments.sink.write(Bytes::from(plain)).await.map_err(Error::Body)
+    }
+
+    /// Copies the file at `path`, which holds `size` bytes of plaintext, to
+    /// `target` on `to` as plaintext, uploading `chunk` bytes at a time.
+    ///
+    /// PHP: `copy($from, $path, $size, $to, $target, $contentType, $chunk)`.
+    #[allow(clippy::too_many_arguments)]
+    pub async fn copy(
+        &self,
+        from: &dyn Device,
+        path: &str,
+        size: i64,
+        to: &dyn Device,
+        target: &str,
+        content_type: &str,
+        chunk: i64,
+    ) -> Result<()> {
+        if chunk == 0 {
+            return Err(Error::InvalidArgument("Division by zero".into()));
+        }
+        let chunks = ((size + chunk - 1) / chunk).max(1);
+        let mut metadata = Metadata { content_type: Some(content_type.to_owned()), ..Metadata::default() };
+        for index in 0..chunks {
+            let start = index * chunk;
+            let end = size.min(start + chunk) - 1;
+            let data = if size == 0 { Vec::new() } else { self.range(from, path, size, start, end).await? };
+            to.upload(Body::from(data), target, content_type, index + 1, chunks, &mut metadata).await?;
+        }
+        Ok(())
+    }
+
+    /// Number of segments for `size` bytes of plaintext. An empty file is one
+    /// empty segment.
+    ///
+    /// PHP: `Cipher::segments($size)`.
+    pub fn segments(size: i64) -> i64 {
+        ((size + Self::SEGMENT - 1) / Self::SEGMENT).max(1)
+    }
+
+    /// Encrypted size of `size` bytes of plaintext.
+    ///
+    /// PHP: `Cipher::size($size)`.
+    pub fn size(size: i64) -> i64 {
+        size + Self::segments(size) * Self::OVERHEAD
+    }
+
+    /// Encrypted offset of segment `index`.
+    ///
+    /// PHP: `Cipher::offset($index)`.
+    pub fn offset(index: i64) -> i64 {
+        index * (Self::SEGMENT + Self::OVERHEAD)
+    }
+
+    fn aead(&self) -> Aes256Gcm {
+        Aes256Gcm::new((&self.key).into())
     }
 }
 
-/// `pack('CJC', VERSION, $index, $last)`: the version, the segment index
-/// (unsigned 64-bit big-endian) and whether it is the last segment.
+/// `pack('CJC', VERSION, $index, $last)`: the version, the index as an
+/// unsigned 64-bit big-endian integer, and whether the segment is the last.
 fn aad(index: i64, last: bool) -> [u8; 10] {
     let mut out = [0u8; 10];
     out[0] = VERSION;
@@ -148,80 +283,54 @@ fn aad(index: i64, last: bool) -> [u8; 10] {
     out
 }
 
-/// How many segments a file of `size` bytes takes (at least one).
-pub fn segments(size: i64) -> i64 {
-    ((size + SEGMENT - 1) / SEGMENT).max(1)
+/// The SHA-256 of a non-empty master key.
+fn master_key(master: &[u8]) -> Result<[u8; 32]> {
+    if master.is_empty() {
+        return Err(Error::InvalidArgument("Master key must not be empty".into()));
+    }
+    Ok(Sha256::digest(master).into())
 }
 
-/// The stored size of a file of `size` bytes.
-pub fn size(size: i64) -> i64 {
-    size + segments(size) * OVERHEAD
+fn random<const N: usize>() -> [u8; N] {
+    let mut out = [0u8; N];
+    // The operating system's generator, as PHP's random_bytes().
+    getrandom::fill(&mut out).expect("the operating system's random number generator failed");
+    out
 }
 
-/// Where segment `index` starts in the stored file.
-pub fn offset(index: i64) -> i64 {
-    index * (SEGMENT + OVERHEAD)
+/// The sink [`Cipher::stream`] hands the device: buffers the file and
+/// passes every whole segment but the final one on as plaintext.
+struct Segments<'a> {
+    cipher: &'a Cipher,
+    sink: &'a mut dyn Sink,
+    total: i64,
+    buffer: Vec<u8>,
+    index: i64,
+    error: Option<Error>,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn round_trips_across_segments() {
-        let cipher = Cipher::generate();
-        let data: Vec<u8> = (0..(SEGMENT as usize * 2 + 5)).map(|i| (i % 251) as u8).collect();
-        let sealed = cipher.encrypt(&data, 0, true).unwrap();
-        assert_eq!(sealed.len() as i64, size(data.len() as i64));
-        assert_eq!(cipher.decrypt(&sealed, 0, true).unwrap(), data);
-        // The middle segment alone, by its index.
-        let start = offset(1) as usize;
-        let middle = &sealed[start..start + (SEGMENT + OVERHEAD) as usize];
-        assert_eq!(cipher.decrypt(middle, 1, false).unwrap(), &data[SEGMENT as usize..2 * SEGMENT as usize]);
-        // Out of place, or read as the last, it fails.
-        assert!(cipher.decrypt(middle, 0, false).is_err());
-        assert!(cipher.decrypt(middle, 1, true).is_err());
-    }
-
-    #[test]
-    fn an_empty_file_is_one_segment() {
-        let cipher = Cipher::generate();
-        let sealed = cipher.encrypt(b"", 0, true).unwrap();
-        assert_eq!(sealed.len() as i64, OVERHEAD);
-        assert_eq!(cipher.decrypt(&sealed, 0, true).unwrap(), b"");
-    }
-
-    #[test]
-    fn keys_wrap_with_the_master() {
-        let cipher = Cipher::generate();
-        let wrapped = cipher.wrap(b"secret").unwrap();
-        assert_eq!(wrapped.len(), NONCE + 32 + TAG);
-        let unwrapped = Cipher::unwrap(&wrapped, b"secret").unwrap();
-        let sealed = cipher.encrypt(b"hello", 0, true).unwrap();
-        assert_eq!(unwrapped.decrypt(&sealed, 0, true).unwrap(), b"hello");
-        assert!(Cipher::unwrap(&wrapped, b"other").is_err());
-        assert!(cipher.wrap(b"").is_err());
-    }
-
-    /// A key wrapped and a segment sealed by PHP's `Cipher`
-    /// (`wrap('your-secret-key')`, `encrypt('hello segmented world', 3, true)`).
-    #[test]
-    fn opens_what_php_seals() {
-        use base64::Engine as _;
-        let b64 = |s: &str| base64::engine::general_purpose::STANDARD.decode(s).unwrap();
-        let wrapped = b64("NubhfyBOuiSVA5Korf9qFjiw73P+5iADs0Ha1VIKhLd+Xnl7L0b3gG2FC+sRvk6VWGBgDHMWhRXRHz6R");
-        let sealed = b64("iwUkpYZwIUH3M1qe4OgyjNDma4BsOQiCOsAFiNwG5l8uS86h7AJJmTX9amTfdi7fuw==");
-        let cipher = Cipher::unwrap(&wrapped, b"your-secret-key").unwrap();
-        assert_eq!(cipher.decrypt(&sealed, 3, true).unwrap(), b"hello segmented world");
-        assert!(cipher.decrypt(&sealed, 2, true).is_err());
-    }
-
-    #[test]
-    fn sizes_as_php() {
-        assert_eq!(segments(0), 1);
-        assert_eq!(segments(SEGMENT), 1);
-        assert_eq!(segments(SEGMENT + 1), 2);
-        assert_eq!(size(10), 10 + OVERHEAD);
-        assert_eq!(offset(2), 2 * (SEGMENT + OVERHEAD));
+#[async_trait]
+impl Sink for Segments<'_> {
+    async fn write(&mut self, chunk: Bytes) -> io::Result<()> {
+        let length = (Cipher::SEGMENT + Cipher::OVERHEAD) as usize;
+        self.buffer.extend_from_slice(&chunk);
+        // The final segment waits for the end of the file, where it is checked as the last one.
+        let count = ((self.buffer.len() / length) as i64).min(self.total - 1 - self.index);
+        if count <= 0 {
+            return Ok(());
+        }
+        let take = count as usize * length;
+        let plain = match self.cipher.decrypt(&self.buffer[..take], self.index, false) {
+            Ok(plain) => plain,
+            Err(e) => {
+                let message = e.to_string();
+                self.error = Some(e);
+                return Err(io::Error::other(message));
+            }
+        };
+        self.sink.write(Bytes::from(plain)).await?;
+        self.buffer.drain(..take);
+        self.index += count;
+        Ok(())
     }
 }

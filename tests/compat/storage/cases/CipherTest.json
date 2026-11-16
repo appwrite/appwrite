@@ -1,0 +1,1951 @@
+{
+  "source": "packages/storage/tests/CipherTest.php",
+  "cases": [
+    {
+      "name": "round trip: empty",
+      "steps": [
+        {
+          "op": "cipher.new",
+          "args": {
+            "key": {
+              "$bytes": "a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.encrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "pattern": 0,
+            "index": 0,
+            "last": true
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "blob.size",
+          "args": {
+            "blob": {
+              "$ref": "e"
+            }
+          },
+          "expect": 28
+        },
+        {
+          "op": "cipher.sizes",
+          "args": {
+            "size": 0,
+            "index": 1
+          },
+          "expect": {
+            "segments": 1,
+            "size": 28,
+            "offset": 65564,
+            "name": "aes-256-gcm-segmented",
+            "segment": 65536,
+            "overhead": 28
+          }
+        },
+        {
+          "op": "cipher.decrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "data": {
+              "$ref": "e"
+            },
+            "index": 0,
+            "last": true,
+            "digest": true
+          },
+          "expect": {
+            "size": 0,
+            "md5": "d41d8cd98f00b204e9800998ecf8427e"
+          }
+        }
+      ]
+    },
+    {
+      "name": "round trip: one byte",
+      "steps": [
+        {
+          "op": "cipher.new",
+          "args": {
+            "key": {
+              "$bytes": "a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.encrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "pattern": 1,
+            "index": 0,
+            "last": true
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "blob.size",
+          "args": {
+            "blob": {
+              "$ref": "e"
+            }
+          },
+          "expect": 29
+        },
+        {
+          "op": "cipher.sizes",
+          "args": {
+            "size": 1,
+            "index": 1
+          },
+          "expect": {
+            "segments": 1,
+            "size": 29,
+            "offset": 65564,
+            "name": "aes-256-gcm-segmented",
+            "segment": 65536,
+            "overhead": 28
+          }
+        },
+        {
+          "op": "cipher.decrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "data": {
+              "$ref": "e"
+            },
+            "index": 0,
+            "last": true,
+            "digest": true
+          },
+          "expect": {
+            "size": 1,
+            "md5": "89e74e640b8c46257a29de0616794d5d"
+          }
+        }
+      ]
+    },
+    {
+      "name": "round trip: one segment",
+      "steps": [
+        {
+          "op": "cipher.new",
+          "args": {
+            "key": {
+              "$bytes": "a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.encrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "pattern": 65536,
+            "index": 0,
+            "last": true
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "blob.size",
+          "args": {
+            "blob": {
+              "$ref": "e"
+            }
+          },
+          "expect": 65564
+        },
+        {
+          "op": "cipher.sizes",
+          "args": {
+            "size": 65536,
+            "index": 1
+          },
+          "expect": {
+            "segments": 1,
+            "size": 65564,
+            "offset": 65564,
+            "name": "aes-256-gcm-segmented",
+            "segment": 65536,
+            "overhead": 28
+          }
+        },
+        {
+          "op": "cipher.decrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "data": {
+              "$ref": "e"
+            },
+            "index": 0,
+            "last": true,
+            "digest": true
+          },
+          "expect": {
+            "size": 65536,
+            "md5": "f19c01fa0371e3c9070b45a85c696c48"
+          }
+        }
+      ]
+    },
+    {
+      "name": "round trip: segment and a byte",
+      "steps": [
+        {
+          "op": "cipher.new",
+          "args": {
+            "key": {
+              "$bytes": "a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.encrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "pattern": 65537,
+            "index": 0,
+            "last": true
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "blob.size",
+          "args": {
+            "blob": {
+              "$ref": "e"
+            }
+          },
+          "expect": 65593
+        },
+        {
+          "op": "cipher.sizes",
+          "args": {
+            "size": 65537,
+            "index": 1
+          },
+          "expect": {
+            "segments": 2,
+            "size": 65593,
+            "offset": 65564,
+            "name": "aes-256-gcm-segmented",
+            "segment": 65536,
+            "overhead": 28
+          }
+        },
+        {
+          "op": "cipher.decrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "data": {
+              "$ref": "e"
+            },
+            "index": 0,
+            "last": true,
+            "digest": true
+          },
+          "expect": {
+            "size": 65537,
+            "md5": "4a350bec80793ccdb466fb6d631ff062"
+          }
+        }
+      ]
+    },
+    {
+      "name": "round trip: many segments",
+      "steps": [
+        {
+          "op": "cipher.new",
+          "args": {
+            "key": {
+              "$bytes": "a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.encrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "pattern": 196708,
+            "index": 0,
+            "last": true
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "blob.size",
+          "args": {
+            "blob": {
+              "$ref": "e"
+            }
+          },
+          "expect": 196820
+        },
+        {
+          "op": "cipher.sizes",
+          "args": {
+            "size": 196708,
+            "index": 1
+          },
+          "expect": {
+            "segments": 4,
+            "size": 196820,
+            "offset": 65564,
+            "name": "aes-256-gcm-segmented",
+            "segment": 65536,
+            "overhead": 28
+          }
+        },
+        {
+          "op": "cipher.decrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "data": {
+              "$ref": "e"
+            },
+            "index": 0,
+            "last": true,
+            "digest": true
+          },
+          "expect": {
+            "size": 196708,
+            "md5": "3ad778c6d582b93327376890b730d075"
+          }
+        }
+      ]
+    },
+    {
+      "name": "parts join into one file",
+      "steps": [
+        {
+          "op": "cipher.new",
+          "args": {
+            "key": {
+              "$bytes": "a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.encrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "pattern": 131072,
+            "index": 0,
+            "last": false
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.encrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "data": "the second part",
+            "index": 2,
+            "last": true
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "blob.concat",
+          "args": {
+            "blobs": [
+              {
+                "$ref": "a"
+              },
+              {
+                "$ref": "b"
+              }
+            ]
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.decrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "data": {
+              "$ref": "e"
+            },
+            "index": 0,
+            "last": true,
+            "digest": true
+          },
+          "expect": {
+            "size": 131087,
+            "md5": "5423ba7d4c0ce8dc7aede2193482f4b8"
+          }
+        }
+      ]
+    },
+    {
+      "name": "range",
+      "steps": [
+        {
+          "op": "cipher.new",
+          "args": {
+            "key": {
+              "$bytes": "a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.encrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "pattern": 196618,
+            "index": 0,
+            "last": true
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "blob.slice",
+          "args": {
+            "blob": {
+              "$ref": "e"
+            },
+            "from": 65564,
+            "length": 65564
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.decrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "data": {
+              "$ref": "m"
+            },
+            "index": 1,
+            "last": false,
+            "digest": true
+          },
+          "expect": {
+            "size": 65536,
+            "md5": "f19c01fa0371e3c9070b45a85c696c48"
+          }
+        },
+        {
+          "op": "blob.slice",
+          "args": {
+            "blob": {
+              "$ref": "e"
+            },
+            "from": 196692
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.decrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "data": {
+              "$ref": "t"
+            },
+            "index": 3,
+            "last": true
+          },
+          "expect": {
+            "$bytes": "ByZFZIOiweD/Hg=="
+          }
+        },
+        {
+          "op": "cipher.decrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "data": {
+              "$ref": "m"
+            },
+            "index": 1,
+            "last": true
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\StorageException",
+              "message": "Segment 1 failed authentication"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "tampered segment fails",
+      "steps": [
+        {
+          "op": "cipher.new",
+          "args": {
+            "key": {
+              "$bytes": "a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.encrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "pattern": 100,
+            "index": 0,
+            "last": true
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "blob.flip",
+          "args": {
+            "blob": {
+              "$ref": "e"
+            },
+            "at": 20
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.decrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "data": {
+              "$ref": "t"
+            },
+            "index": 0,
+            "last": true
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\StorageException",
+              "message": "Segment 0 failed authentication"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "reordered segments fail",
+      "steps": [
+        {
+          "op": "cipher.new",
+          "args": {
+            "key": {
+              "$bytes": "a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.encrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "pattern": 131072,
+            "index": 0,
+            "last": true
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "blob.slice",
+          "args": {
+            "blob": {
+              "$ref": "e"
+            },
+            "from": 65564
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "blob.slice",
+          "args": {
+            "blob": {
+              "$ref": "e"
+            },
+            "from": 0,
+            "length": 65564
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "blob.concat",
+          "args": {
+            "blobs": [
+              {
+                "$ref": "b"
+              },
+              {
+                "$ref": "a"
+              }
+            ]
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.decrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "data": {
+              "$ref": "s"
+            },
+            "index": 0,
+            "last": true
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\StorageException",
+              "message": "Segment 0 failed authentication"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "cut off file fails",
+      "steps": [
+        {
+          "op": "cipher.new",
+          "args": {
+            "key": {
+              "$bytes": "a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.encrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "pattern": 131072,
+            "index": 0,
+            "last": true
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "blob.slice",
+          "args": {
+            "blob": {
+              "$ref": "e"
+            },
+            "from": 0,
+            "length": 65564
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.decrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "data": {
+              "$ref": "a"
+            },
+            "index": 0,
+            "last": true
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\StorageException",
+              "message": "Segment 0 failed authentication"
+            }
+          }
+        },
+        {
+          "op": "cipher.decrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "data": "",
+            "index": 4,
+            "last": true
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\StorageException",
+              "message": "Segment 4 is truncated"
+            }
+          }
+        },
+        {
+          "op": "cipher.decrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "data": "short",
+            "index": 0,
+            "last": true
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\StorageException",
+              "message": "Segment 0 is truncated"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "wrong key fails",
+      "steps": [
+        {
+          "op": "cipher.new",
+          "args": {
+            "key": {
+              "$bytes": "a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.encrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "data": "secret",
+            "index": 0,
+            "last": true
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.new",
+          "args": {
+            "key": {
+              "$bytes": "eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg="
+            }
+          },
+          "bind": "x",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.decrypt",
+          "args": {
+            "cipher": {
+              "$ref": "x"
+            },
+            "data": {
+              "$ref": "e"
+            },
+            "index": 0,
+            "last": true
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\StorageException",
+              "message": "Segment 0 failed authentication"
+            }
+          }
+        },
+        {
+          "op": "cipher.new",
+          "args": {
+            "key": "short"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Key must be 32 bytes"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "wrapped key restores cipher",
+      "steps": [
+        {
+          "op": "cipher.new",
+          "args": {
+            "key": {
+              "$bytes": "a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.encrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "data": "secret",
+            "index": 0,
+            "last": true
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.wrap",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "master": "master"
+          },
+          "bind": "w",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "blob.size",
+          "args": {
+            "blob": {
+              "$ref": "w"
+            }
+          },
+          "expect": 60
+        },
+        {
+          "op": "cipher.unwrap",
+          "args": {
+            "wrapped": {
+              "$ref": "w"
+            },
+            "master": "master"
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.decrypt",
+          "args": {
+            "cipher": {
+              "$ref": "u"
+            },
+            "data": {
+              "$ref": "e"
+            },
+            "index": 0,
+            "last": true
+          },
+          "expect": "secret"
+        },
+        {
+          "op": "cipher.wrap",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "master": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Master key must not be empty"
+            }
+          }
+        },
+        {
+          "op": "cipher.unwrap",
+          "args": {
+            "wrapped": {
+              "$ref": "w"
+            },
+            "master": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Master key must not be empty"
+            }
+          }
+        },
+        {
+          "op": "cipher.unwrap",
+          "args": {
+            "wrapped": "too short",
+            "master": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\StorageException",
+              "message": "Unable to unwrap the key"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "wrong master fails",
+      "steps": [
+        {
+          "op": "cipher.generate",
+          "args": {},
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.wrap",
+          "args": {
+            "cipher": {
+              "$ref": "g"
+            },
+            "master": "master"
+          },
+          "bind": "w",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.unwrap",
+          "args": {
+            "wrapped": {
+              "$ref": "w"
+            },
+            "master": "other"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\StorageException",
+              "message": "Unable to unwrap the key"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "stored file: empty",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.new",
+          "args": {
+            "key": {
+              "$bytes": "a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.encrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "pattern": 0,
+            "index": 0,
+            "last": true
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "blob.store",
+          "args": {
+            "blob": {
+              "$ref": "e"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-0"
+          },
+          "expect": null
+        },
+        {
+          "op": "cipher.stream",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-0",
+            "size": 0,
+            "digest": true
+          },
+          "expect": {
+            "size": 0,
+            "md5": "d41d8cd98f00b204e9800998ecf8427e"
+          }
+        },
+        {
+          "op": "cipher.copy",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-0",
+            "size": 0,
+            "to": {
+              "$ref": "d"
+            },
+            "target": "/tmp/compat-fs/${ns}/disk/cipher-0-copy",
+            "content_type": "application/octet-stream",
+            "chunk": 131072
+          },
+          "expect": null
+        },
+        {
+          "op": "device.read_digest",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-0-copy"
+          },
+          "expect": {
+            "size": 0,
+            "md5": "d41d8cd98f00b204e9800998ecf8427e"
+          }
+        },
+        {
+          "op": "cipher.stream",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-0",
+            "size": 131072
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\StorageException",
+              "message": "Incomplete file read"
+            }
+          }
+        },
+        {
+          "op": "cipher.range",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-0",
+            "size": 0,
+            "start": -131072,
+            "end": 5
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid range -131072-5"
+            }
+          }
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-0"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-0-copy"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "stored file: one byte",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.new",
+          "args": {
+            "key": {
+              "$bytes": "a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.encrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "pattern": 1,
+            "index": 0,
+            "last": true
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "blob.store",
+          "args": {
+            "blob": {
+              "$ref": "e"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-1"
+          },
+          "expect": null
+        },
+        {
+          "op": "cipher.stream",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-1",
+            "size": 1,
+            "digest": true
+          },
+          "expect": {
+            "size": 1,
+            "md5": "89e74e640b8c46257a29de0616794d5d"
+          }
+        },
+        {
+          "op": "cipher.copy",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-1",
+            "size": 1,
+            "to": {
+              "$ref": "d"
+            },
+            "target": "/tmp/compat-fs/${ns}/disk/cipher-1-copy",
+            "content_type": "application/octet-stream",
+            "chunk": 131072
+          },
+          "expect": null
+        },
+        {
+          "op": "device.read_digest",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-1-copy"
+          },
+          "expect": {
+            "size": 1,
+            "md5": "89e74e640b8c46257a29de0616794d5d"
+          }
+        },
+        {
+          "op": "cipher.stream",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-1",
+            "size": 131073
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\StorageException",
+              "message": "Incomplete file read"
+            }
+          }
+        },
+        {
+          "op": "cipher.range",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-1",
+            "size": 1,
+            "start": -131072,
+            "end": 5
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid range -131072-5"
+            }
+          }
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-1"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-1-copy"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "stored file: one segment",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.new",
+          "args": {
+            "key": {
+              "$bytes": "a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.encrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "pattern": 65536,
+            "index": 0,
+            "last": true
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "blob.store",
+          "args": {
+            "blob": {
+              "$ref": "e"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-65536"
+          },
+          "expect": null
+        },
+        {
+          "op": "cipher.stream",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-65536",
+            "size": 65536,
+            "digest": true
+          },
+          "expect": {
+            "size": 65536,
+            "md5": "f19c01fa0371e3c9070b45a85c696c48"
+          }
+        },
+        {
+          "op": "cipher.range",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-65536",
+            "size": 65536,
+            "start": 32758,
+            "end": 32777
+          },
+          "expect": {
+            "$bytes": "0fAPLk1si6rJ6AcmRWSDosHg/x4="
+          }
+        },
+        {
+          "op": "cipher.copy",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-65536",
+            "size": 65536,
+            "to": {
+              "$ref": "d"
+            },
+            "target": "/tmp/compat-fs/${ns}/disk/cipher-65536-copy",
+            "content_type": "application/octet-stream",
+            "chunk": 131072
+          },
+          "expect": null
+        },
+        {
+          "op": "device.read_digest",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-65536-copy"
+          },
+          "expect": {
+            "size": 65536,
+            "md5": "f19c01fa0371e3c9070b45a85c696c48"
+          }
+        },
+        {
+          "op": "cipher.stream",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-65536",
+            "size": 196608
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\StorageException",
+              "message": "Segment 0 failed authentication"
+            }
+          }
+        },
+        {
+          "op": "cipher.range",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-65536",
+            "size": 65536,
+            "start": -131072,
+            "end": 5
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid range -131072-5"
+            }
+          }
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-65536"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-65536-copy"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "stored file: segment and a byte",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.new",
+          "args": {
+            "key": {
+              "$bytes": "a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.encrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "pattern": 65537,
+            "index": 0,
+            "last": true
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "blob.store",
+          "args": {
+            "blob": {
+              "$ref": "e"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-65537"
+          },
+          "expect": null
+        },
+        {
+          "op": "cipher.stream",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-65537",
+            "size": 65537,
+            "digest": true
+          },
+          "expect": {
+            "size": 65537,
+            "md5": "4a350bec80793ccdb466fb6d631ff062"
+          }
+        },
+        {
+          "op": "cipher.range",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-65537",
+            "size": 65537,
+            "start": 32758,
+            "end": 32777
+          },
+          "expect": {
+            "$bytes": "0fAPLk1si6rJ6AcmRWSDosHg/x4="
+          }
+        },
+        {
+          "op": "cipher.copy",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-65537",
+            "size": 65537,
+            "to": {
+              "$ref": "d"
+            },
+            "target": "/tmp/compat-fs/${ns}/disk/cipher-65537-copy",
+            "content_type": "application/octet-stream",
+            "chunk": 131072
+          },
+          "expect": null
+        },
+        {
+          "op": "device.read_digest",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-65537-copy"
+          },
+          "expect": {
+            "size": 65537,
+            "md5": "4a350bec80793ccdb466fb6d631ff062"
+          }
+        },
+        {
+          "op": "cipher.stream",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-65537",
+            "size": 196609
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\StorageException",
+              "message": "Incomplete file read"
+            }
+          }
+        },
+        {
+          "op": "cipher.range",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-65537",
+            "size": 65537,
+            "start": -131072,
+            "end": 5
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid range -131072-5"
+            }
+          }
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-65537"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-65537-copy"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "stored file: many segments",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.new",
+          "args": {
+            "key": {
+              "$bytes": "a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cipher.encrypt",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "pattern": 196708,
+            "index": 0,
+            "last": true
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "blob.store",
+          "args": {
+            "blob": {
+              "$ref": "e"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-196708"
+          },
+          "expect": null
+        },
+        {
+          "op": "cipher.stream",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-196708",
+            "size": 196708,
+            "digest": true
+          },
+          "expect": {
+            "size": 196708,
+            "md5": "3ad778c6d582b93327376890b730d075"
+          }
+        },
+        {
+          "op": "cipher.range",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-196708",
+            "size": 196708,
+            "start": 98344,
+            "end": 98363
+          },
+          "expect": {
+            "$bytes": "3/4dPFt6mbjX9hU0U3KRsM/uDSw="
+          }
+        },
+        {
+          "op": "cipher.copy",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-196708",
+            "size": 196708,
+            "to": {
+              "$ref": "d"
+            },
+            "target": "/tmp/compat-fs/${ns}/disk/cipher-196708-copy",
+            "content_type": "application/octet-stream",
+            "chunk": 131072
+          },
+          "expect": null
+        },
+        {
+          "op": "device.read_digest",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-196708-copy"
+          },
+          "expect": {
+            "size": 196708,
+            "md5": "3ad778c6d582b93327376890b730d075"
+          }
+        },
+        {
+          "op": "cipher.stream",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-196708",
+            "size": 327780
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\StorageException",
+              "message": "Incomplete file read"
+            }
+          }
+        },
+        {
+          "op": "cipher.range",
+          "args": {
+            "cipher": {
+              "$ref": "c"
+            },
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-196708",
+            "size": 196708,
+            "start": -131072,
+            "end": 5
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid range -131072-5"
+            }
+          }
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-196708"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/cipher-196708-copy"
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

@@ -2221,6 +2221,664 @@
           "expect": null
         }
       ]
+    },
+    {
+      "name": "SchemaReconciliationTests::testDeletingAnAttributeDropsItsOnlyIndexFromTheSchema",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::SchemaIntrospection"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "reconcileDroppedAttributeIndex"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "reconcileDroppedAttributeIndex",
+                "name": "reconcileDroppedAttributeIndex",
+                "attributes": [
+                  {
+                    "$id": "status",
+                    "key": "status",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "reconcileDroppedAttributeIndex",
+              "name": "reconcileDroppedAttributeIndex",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "status",
+                    "key": "status",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "reconcileDroppedAttributeIndex",
+            "index": {
+              "$value": "Index",
+              "fields": {
+                "key": "status_index",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "status"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "status_index",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "status"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "reconcileDroppedAttributeIndex",
+            "index": {
+              "$value": "Index",
+              "fields": {
+                "key": "status_name",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "status",
+                  "name"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "status_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "status",
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "database.delete_attribute",
+          "args": {
+            "collection": "reconcileDroppedAttributeIndex",
+            "key": "status"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.get_schema_indexes",
+          "args": {
+            "collection": "reconcileDroppedAttributeIndex"
+          },
+          "expect": [
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "_created_at",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "columns": [
+                  "_tenant",
+                  "_createdAt"
+                ],
+                "lengths": [
+                  null,
+                  null
+                ]
+              }
+            },
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "_tenant_id",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "columns": [
+                  "_tenant",
+                  "_id"
+                ],
+                "lengths": [
+                  null,
+                  null
+                ]
+              }
+            },
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "_uid",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Unique"
+                },
+                "columns": [
+                  "_uid",
+                  "_tenant"
+                ],
+                "lengths": [
+                  null,
+                  null
+                ]
+              }
+            },
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "_updated_at",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "columns": [
+                  "_tenant",
+                  "_updatedAt"
+                ],
+                "lengths": [
+                  null,
+                  null
+                ]
+              }
+            },
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "PRIMARY",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Unique"
+                },
+                "columns": [
+                  "_id"
+                ],
+                "lengths": [
+                  null
+                ]
+              }
+            },
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "status_name",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "columns": [
+                  "_tenant",
+                  "name"
+                ],
+                "lengths": [
+                  null,
+                  null
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.get_schema_indexes",
+          "args": {
+            "collection": "reconcileDroppedAttributeIndex"
+          },
+          "expect": [
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "_created_at",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "columns": [
+                  "_tenant",
+                  "_createdAt"
+                ],
+                "lengths": [
+                  null,
+                  null
+                ]
+              }
+            },
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "_tenant_id",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "columns": [
+                  "_tenant",
+                  "_id"
+                ],
+                "lengths": [
+                  null,
+                  null
+                ]
+              }
+            },
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "_uid",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Unique"
+                },
+                "columns": [
+                  "_uid",
+                  "_tenant"
+                ],
+                "lengths": [
+                  null,
+                  null
+                ]
+              }
+            },
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "_updated_at",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "columns": [
+                  "_tenant",
+                  "_updatedAt"
+                ],
+                "lengths": [
+                  null,
+                  null
+                ]
+              }
+            },
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "PRIMARY",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Unique"
+                },
+                "columns": [
+                  "_id"
+                ],
+                "lengths": [
+                  null
+                ]
+              }
+            },
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "status_name",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "columns": [
+                  "_tenant",
+                  "name"
+                ],
+                "lengths": [
+                  null,
+                  null
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "reconcileDroppedAttributeIndex",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "status",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "status",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "reconcileDroppedAttributeIndex",
+            "index": {
+              "$value": "Index",
+              "fields": {
+                "key": "status_index",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "status"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "status_index",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "status"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "reconcileDroppedAttributeIndex"
+          },
+          "expect": null
+        }
+      ]
     }
   ]
 }

@@ -6,7 +6,7 @@ mod api;
 mod project;
 mod schema;
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use async_trait::async_trait;
@@ -65,6 +65,9 @@ pub struct Appwrite {
     /// Whether the source of the current run manages database status
     /// (`None`: no source yet, PHP's uninitialized `$source`).
     source_status: Option<bool>,
+    /// Specifications the destination offers, by service and type, listed
+    /// once per run; `None` where they could not be listed.
+    specifications: HashMap<String, Option<Vec<String>>>,
 }
 
 impl std::fmt::Debug for Appwrite {
@@ -138,6 +141,7 @@ impl Appwrite {
             provisioning_databases: IndexMap::new(),
             database_status_supported: None,
             source_status: None,
+            specifications: HashMap::new(),
         })
     }
 
@@ -313,6 +317,7 @@ impl Destination for Appwrite {
             types::PROJECT_VARIABLE,
             types::PROJECT_PROTOCOLS,
             types::PROJECT_LABELS,
+            types::PROJECT_PREFERENCES,
             types::PROJECT_SERVICES,
             types::PROJECT_EMAIL_TEMPLATE,
             types::PROJECT_ENVIRONMENT,

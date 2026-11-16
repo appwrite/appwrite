@@ -38,6 +38,9 @@ final class Fake implements Transport
     /** @var array{class: string, message: string}|null */
     public ?array $failReads = null;
 
+    /** Whether the next connect() stops failing reads: a server that closed the socket, served again after a reconnect */
+    public bool $failReadsUntilConnect = false;
+
     public int $connects = 0;
 
     /** @var array{class: string, message: string}|null thrown by connect() when set */
@@ -72,6 +75,10 @@ final class Fake implements Transport
         }
         $this->connected = true;
         $this->connects++;
+        if ($this->failReadsUntilConnect) {
+            $this->failReads = null;
+            $this->failReadsUntilConnect = false;
+        }
         $this->inbound .= 'INFO ' . json_encode(array_merge([
             'server_id' => 'FAKE',
             'server_name' => 'fake',

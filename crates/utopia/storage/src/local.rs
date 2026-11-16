@@ -44,7 +44,7 @@ const WHOLE_READ_SIZE: u64 = 1 << 20;
 ///
 /// let etag = device.write(&path, Body::from("Hello World"), "text/plain").await?;
 /// assert_eq!(etag, "b10a8db164e0754105b7a99be72e3fe5");
-/// assert_eq!(&device.read(&path, 0, None, None).await?.bytes().await.unwrap()[..], b"Hello World");
+/// assert_eq!(&device.read(&path, 0, None, None, None).await?.bytes().await.unwrap()[..], b"Hello World");
 /// assert!(device.delete(&path, false).await?);
 /// # Ok::<(), utopia_storage::Error>(())
 /// # }).unwrap();
@@ -302,13 +302,8 @@ impl Device for Local {
         let tmp = format!("{dir}/tmp_{}", basename(path));
         create_directory(&tmp).await;
         let part = format!("{tmp}/{}.part.{chunk}", filename(path));
-        // A chunk uploaded again is not written twice.
-        if !exists(&part).await {
-            let file = utopia_async::fs::File::create(&part)
-                .await
-                .map_err(|_| Error::Storage(format!("Can't write file {part}")))?;
-            pipe(file, &part, data).await?;
-        }
+        // A resent chunk replaces the stored one, as S3 does with a resent part.
+        self.write_atomic(&part, data, false).await?;
         let received = self.count_chunks(&tmp, path).await;
         metadata.parts_mut().insert(chunk, Part::Received);
         metadata.chunks = Some(received);
@@ -361,9 +356,20 @@ impl Device for Local {
         Ok(utopia_async::fs::remove_dir(&tmp).await.is_ok())
     }
 
-    async fn read(&self, path: &str, offset: u64, length: Option<u64>, etag: Option<&str>) -> Result<Body> {
+    async fn read(
+        &self,
+        path: &str,
+        offset: u64,
+        length: Option<u64>,
+        etag: Option<&str>,
+        modified_since: Option<DateTime<FixedOffset>>,
+    ) -> Result<Body> {
+        if etag.is_some() && modified_since.is_some() {
+            return Err(Error::InvalidArgument("A read cannot be conditional on both an ETag and a time".into()));
+        }
         let (path, etag) = (path.to_owned(), etag.map(str::to_owned));
-        blocking(move || read_file(&path, offset, length, etag.as_deref())).await
+        let since = modified_since.map(|t| t.timestamp());
+        blocking(move || read_file(&path, offset, length, etag.as_deref(), since)).await
     }
 
     async fn write(&self, path: &str, data: Body, _content_type: &str) -> Result<String> {
@@ -663,7 +669,7 @@ async fn pipe(mut file: utopia_async::fs::File, path: &str, mut data: Body) -> R
 
 /// `read()`, in one blocking call: open, check the ETag, seek,
 /// and read the range when there is one (or the rest of a small file).
-fn read_file(path: &str, offset: u64, length: Option<u64>, etag: Option<&str>) -> Result<Body> {
+fn read_file(path: &str, offset: u64, length: Option<u64>, etag: Option<&str>, since: Option<i64>) -> Result<Body> {
     use std::io::{Read, Seek};
 
     let failed = || Error::Storage(format!("Failed to read file {path}"));
@@ -676,6 +682,12 @@ fn read_file(path: &str, offset: u64, length: Option<u64>, etag: Option<&str>) -
         }
         Err(_) => return Err(failed()),
     };
+    if let Some(since) = since
+        && let Ok(meta) = file.metadata()
+        && std::os::unix::fs::MetadataExt::mtime(&meta) <= since
+    {
+        return Err(Error::NotModified(format!("File {path} has not been modified")));
+    }
     if let Some(etag) = etag {
         let mut hash = Md5::new();
         let mut buffer = vec![0; 1 << 16];
@@ -821,11 +833,11 @@ mod tests {
             let path = device.path(&format!("nested/{size}.bin"));
             let etag = device.write(&path, Body::from(data.clone()), "").await.unwrap();
             assert_eq!(etag, hex::encode(Md5::digest(&data)));
-            let read = device.read(&path, 0, None, Some(&etag)).await.unwrap().bytes().await.unwrap();
+            let read = device.read(&path, 0, None, Some(&etag), None).await.unwrap().bytes().await.unwrap();
             assert_eq!(read.len(), size);
             assert!(read[..] == data[..]);
             if size > 20 {
-                let range = device.read(&path, 5, Some(10), None).await.unwrap().bytes().await.unwrap();
+                let range = device.read(&path, 5, Some(10), None, None).await.unwrap().bytes().await.unwrap();
                 assert_eq!(&range[..], &data[5..15]);
             }
         }

@@ -213,7 +213,7 @@ async fn the_http_client_streams_a_download() {
     });
     let device = S3::new("root", "key", "secret", &format!("http://{address}/bucket"), "us-east-1").unwrap();
 
-    let mut body = utopia_async::timeout(Duration::from_secs(10), device.read("root/large.bin", 0, None, None))
+    let mut body = utopia_async::timeout(Duration::from_secs(10), device.read("root/large.bin", 0, None, None, None))
         .await
         .expect("read() waited for the whole response")
         .unwrap();
@@ -246,7 +246,7 @@ async fn a_download_rewinds_from_what_it_kept() {
         socket.write_all(&data).await.unwrap();
     });
     let device = S3::new("root", "key", "secret", &format!("http://{address}/bucket"), "us-east-1").unwrap();
-    let mut body = device.read("root/large.bin", 0, None, None).await.unwrap();
+    let mut body = device.read("root/large.bin", 0, None, None, None).await.unwrap();
     assert!(body.is_seekable());
 
     let mut first = Vec::new();
@@ -273,7 +273,7 @@ async fn the_http_client_reads_a_streamed_error() {
     });
     let device = S3::new("root", "key", "secret", &format!("http://{address}/bucket"), "us-east-1").unwrap();
 
-    let error = device.read("root/missing.bin", 0, None, None).await.unwrap_err();
+    let error = device.read("root/missing.bin", 0, None, None, None).await.unwrap_err();
 
     assert!(error.is_not_found());
     assert_eq!(error.to_string(), "Gone.");

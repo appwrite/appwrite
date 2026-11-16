@@ -2739,7 +2739,7 @@
             },
             "sql": "SELECT projections FROM system.query_log WHERE query_id = '${ns}-q' AND type = 'QueryFinish' ORDER BY event_time DESC LIMIT 1"
           },
-          "expect": "['${ns}.utopia_usage_window_split_usage_events.p_by_path']\n"
+          "expect": "['${ns}.utopia_usage_window_split_usage_events.p_by_resourceType']\n"
         },
         {
           "op": "clickhouse.query",
@@ -2963,7 +2963,7 @@
             },
             "sql": "SELECT projections FROM system.query_log WHERE query_id = '${ns}-q' AND type = 'QueryFinish' ORDER BY event_time DESC LIMIT 1"
           },
-          "expect": "['${ns}.utopia_usage_window_split_usage_events.p_by_path']\n"
+          "expect": "['${ns}.utopia_usage_window_split_usage_events.p_by_resourceType']\n"
         },
         {
           "op": "clickhouse.query",
@@ -3169,7 +3169,7 @@
             },
             "sql": "SELECT projections FROM system.query_log WHERE query_id = '${ns}-q' AND type = 'QueryFinish' ORDER BY event_time DESC LIMIT 1"
           },
-          "expect": "['${ns}.utopia_usage_window_split_usage_events.p_by_path']\n"
+          "expect": "['${ns}.utopia_usage_window_split_usage_events.p_by_resourceType']\n"
         },
         {
           "op": "clickhouse.query",
@@ -3375,7 +3375,7 @@
             },
             "sql": "SELECT projections FROM system.query_log WHERE query_id = '${ns}-q' AND type = 'QueryFinish' ORDER BY event_time DESC LIMIT 1"
           },
-          "expect": "['${ns}.utopia_usage_window_split_usage_events.p_by_path']\n"
+          "expect": "['${ns}.utopia_usage_window_split_usage_events.p_by_resourceType']\n"
         },
         {
           "op": "clickhouse.query",

@@ -10,7 +10,8 @@ use crate::Compression;
 ///
 /// PHP: the body of `Compression::fromAcceptEncoding()`: `explode(',')`,
 /// `trim`, `strtolower`, `explode(';')`, the `br` alias, `floatval` of the
-/// second part without `q=`, then a stable `usort` by descending quality.
+/// second part without `q=`, dropping a quality that is not above zero (the
+/// client refuses it), then a stable `usort` by descending quality.
 pub(crate) fn choose(accept: &str, supported: impl Fn(&str) -> bool) -> Option<Compression> {
     if accept.is_empty() || accept == "0" {
         return None;
@@ -29,7 +30,8 @@ pub(crate) fn choose(accept: &str, supported: impl Fn(&str) -> bool) -> Option<C
         let Ok(name) = std::str::from_utf8(name) else {
             continue;
         };
-        if !supported(name) {
+        // q=0 means the client refuses that encoding.
+        if quality <= 0.0 || quality.is_nan() || !supported(name) {
             continue;
         }
         if best.as_ref().is_none_or(|(q, _)| quality > *q) {

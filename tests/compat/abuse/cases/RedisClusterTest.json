@@ -2315,154 +2315,6 @@
       "state": []
     },
     {
-      "name": "cleanup",
-      "steps": [
-        {
-          "op": "limit.new",
-          "args": {
-            "algo": "time_limit",
-            "store": "cluster",
-            "key": "${ns}-cleanup",
-            "limit": 1,
-            "seconds": 60
-          },
-          "bind": "l",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "limit.cleanup",
-          "args": {
-            "handle": {
-              "$ref": "l"
-            },
-            "timestamp": 1700000000
-          },
-          "expect": true
-        }
-      ],
-      "state": []
-    },
-    {
-      "name": "seconds must be positive",
-      "steps": [
-        {
-          "op": "limit.new",
-          "args": {
-            "algo": "time_limit",
-            "store": "cluster",
-            "key": "${ns}-guard",
-            "limit": 1,
-            "seconds": 0
-          },
-          "bind": "l",
-          "expect": {
-            "$error": {
-              "class": "InvalidArgumentException",
-              "message": "seconds must be greater than 0"
-            }
-          }
-        }
-      ],
-      "state": []
-    },
-    {
-      "name": "getLogs of every primary",
-      "steps": [
-        {
-          "op": "cluster.clear",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "limit.new",
-          "args": {
-            "algo": "time_limit",
-            "store": "cluster",
-            "key": "${ns}-logs",
-            "limit": 1,
-            "seconds": 60
-          },
-          "bind": "l",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "cluster.set",
-          "args": {
-            "key": "abuse__${ns}-a__1",
-            "value": "1"
-          },
-          "expect": true
-        },
-        {
-          "op": "cluster.set",
-          "args": {
-            "key": "abuse__${ns}-b__1",
-            "value": "2"
-          },
-          "expect": true
-        },
-        {
-          "op": "cluster.set",
-          "args": {
-            "key": "abuse__${ns}-c__1",
-            "value": "3"
-          },
-          "expect": true
-        },
-        {
-          "op": "limit.logs",
-          "args": {
-            "handle": {
-              "$ref": "l"
-            }
-          },
-          "expect": {
-            "abuse__${ns}-a__1": "1",
-            "abuse__${ns}-b__1": "2",
-            "abuse__${ns}-c__1": "3"
-          }
-        },
-        {
-          "op": "limit.logs",
-          "args": {
-            "handle": {
-              "$ref": "l"
-            },
-            "offset": 1,
-            "count": 1
-          },
-          "expect": {
-            "abuse__${ns}-b__1": "2"
-          }
-        },
-        {
-          "op": "limit.logs",
-          "args": {
-            "handle": {
-              "$ref": "l"
-            },
-            "offset": null,
-            "count": null
-          },
-          "expect": {
-            "abuse__${ns}-a__1": "1",
-            "abuse__${ns}-b__1": "2",
-            "abuse__${ns}-c__1": "3"
-          }
-        },
-        {
-          "op": "cluster.clear",
-          "args": {},
-          "expect": null
-        }
-      ],
-      "state": []
-    },
-    {
       "name": "release gives back one hit",
       "steps": [
         {
@@ -2486,7 +2338,7 @@
               "$ref": "b"
             },
             "params": {
-              "{{ip}}": "u1"
+              "{{ip}}": "r1"
             }
           },
           "bind": "l",
@@ -2638,6 +2490,153 @@
             "remaining": 0,
             "reset": "<masked>"
           }
+        }
+      ]
+    },
+    {
+      "name": "cleanup",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "cluster",
+            "key": "${ns}-cleanup",
+            "limit": 1,
+            "seconds": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.cleanup",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "timestamp": 1700000000
+          },
+          "expect": true
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "seconds must be positive",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "cluster",
+            "key": "${ns}-guard",
+            "limit": 1,
+            "seconds": 0
+          },
+          "bind": "l",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "seconds must be greater than 0"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "getLogs of every primary",
+      "steps": [
+        {
+          "op": "cluster.clear",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "cluster",
+            "key": "${ns}-logs",
+            "limit": 1,
+            "seconds": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cluster.set",
+          "args": {
+            "key": "abuse__${ns}-a__1",
+            "value": "1"
+          },
+          "expect": true
+        },
+        {
+          "op": "cluster.set",
+          "args": {
+            "key": "abuse__${ns}-b__1",
+            "value": "2"
+          },
+          "expect": true
+        },
+        {
+          "op": "cluster.set",
+          "args": {
+            "key": "abuse__${ns}-c__1",
+            "value": "3"
+          },
+          "expect": true
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "abuse__${ns}-a__1": "1",
+            "abuse__${ns}-b__1": "2",
+            "abuse__${ns}-c__1": "3"
+          }
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "offset": 1,
+            "count": 1
+          },
+          "expect": {
+            "abuse__${ns}-b__1": "2"
+          }
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "offset": null,
+            "count": null
+          },
+          "expect": {
+            "abuse__${ns}-a__1": "1",
+            "abuse__${ns}-b__1": "2",
+            "abuse__${ns}-c__1": "3"
+          }
+        },
+        {
+          "op": "cluster.clear",
+          "args": {},
+          "expect": null
         }
       ],
       "state": []

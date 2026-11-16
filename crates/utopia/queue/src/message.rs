@@ -45,6 +45,8 @@ pub struct Message {
     size: Option<i64>,
     // Shared by clones of one delivery, so a handler holding a copy can mark it.
     terminal: Arc<AtomicBool>,
+    // Shared like `terminal`, so an init hook holding a copy can skip the job.
+    skipped: Arc<AtomicBool>,
 }
 
 impl PartialEq for Message {
@@ -59,6 +61,7 @@ impl PartialEq for Message {
             && self.receipt == o.receipt
             && self.size == o.size
             && self.is_terminal() == o.is_terminal()
+            && self.is_skipped() == o.is_skipped()
     }
 }
 
@@ -80,6 +83,7 @@ impl Message {
             receipt: None,
             size: None,
             terminal: Arc::default(),
+            skipped: Arc::default(),
         }
     }
 
@@ -117,6 +121,7 @@ impl Message {
             receipt: None,
             size: None,
             terminal: Arc::default(),
+            skipped: Arc::default(),
         })
     }
 
@@ -261,6 +266,22 @@ impl Message {
     pub fn terminal(&self, terminal: bool) -> &Self {
         self.terminal.store(terminal, Ordering::SeqCst);
         self
+    }
+
+    /// Set from an init hook to acknowledge the message without running its
+    /// job. Shutdown hooks still run; error hooks do not.
+    ///
+    /// PHP: `skip(bool $skipped = true)`.
+    pub fn skip(&self, skipped: bool) -> &Self {
+        self.skipped.store(skipped, Ordering::SeqCst);
+        self
+    }
+
+    /// Whether an init hook skipped this message's job.
+    ///
+    /// PHP: `isSkipped()`.
+    pub fn is_skipped(&self) -> bool {
+        self.skipped.load(Ordering::SeqCst)
     }
 
     /// `asArray()`: `pid`, `queue`, `timestamp`, `payload`, `attempts`, `sequence`.

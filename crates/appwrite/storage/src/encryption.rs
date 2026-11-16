@@ -9,7 +9,9 @@ use base64::engine::general_purpose::STANDARD;
 use serde_json::{Value as Json, json};
 use utopia_database::Document;
 use utopia_storage::Cipher;
-use utopia_storage::cipher::{self, NAME, OVERHEAD, SEGMENT};
+const NAME: &str = Cipher::NAME;
+const OVERHEAD: i64 = Cipher::OVERHEAD;
+const SEGMENT: i64 = Cipher::SEGMENT;
 
 use appwrite_core::Result;
 use appwrite_core::database::documents::Attributes;
@@ -106,8 +108,8 @@ pub async fn range(device: &Stored, file: &Document, start: i64, end: i64) -> Re
     let size = base::long(file, "sizeOriginal");
     let first = start / SEGMENT;
     let last = end / SEGMENT;
-    let offset = cipher::offset(first);
-    let length = cipher::offset(last - first + 1);
+    let offset = Cipher::offset(first);
+    let length = Cipher::offset(last - first + 1);
     if offset < 0 || length <= 0 {
         return Err(Error::with_message(ErrorType::GeneralServerError, format!("Invalid range {start}-{end}")));
     }
@@ -115,7 +117,7 @@ pub async fn range(device: &Stored, file: &Document, start: i64, end: i64) -> Re
     let body = device.read(&path, offset as u64, Some(length as u64)).await?;
     let data = body.bytes().await.map_err(|e| Error::with_message(ErrorType::GeneralServerError, e.to_string()))?;
     let plain = cipher
-        .decrypt(&data, first, last == cipher::segments(size) - 1)
+        .decrypt(&data, first, last == Cipher::segments(size) - 1)
         .map_err(|e| Error::with_message(ErrorType::GeneralServerError, e.to_string()))?;
     let from = usize::try_from(start - first * SEGMENT).unwrap_or(0).min(plain.len());
     let to = (from + usize::try_from(end - start + 1).unwrap_or(0)).min(plain.len());
@@ -127,7 +129,7 @@ pub async fn range(device: &Stored, file: &Document, start: i64, end: i64) -> Re
 /// last one.
 pub async fn stream(device: &Stored, file: &Document, mut sink: impl FnMut(Vec<u8>) -> Result<()>) -> Result<()> {
     let cipher = open(file)?;
-    let total = cipher::segments(base::long(file, "sizeOriginal"));
+    let total = Cipher::segments(base::long(file, "sizeOriginal"));
     let length = (SEGMENT + OVERHEAD) as usize;
     let mut body = device.read(&file.string_or_empty("path"), 0, None).await?;
     let failed = |e: utopia_storage::Error| Error::with_message(ErrorType::GeneralServerError, e.to_string());

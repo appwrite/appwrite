@@ -111,9 +111,9 @@ pub trait Tables: Send + Sync {
     /// `incrementRowColumn` of `count` by 1, up to `max` (the API refuses an
     /// increment past it with `column_limit_exceeded`): the row after it.
     fn increment(&self, database: &str, id: &str, max: Option<i64>) -> impl Future<Output = Result<Row>> + Send;
-    /// `decrementRowColumn` of `count` by 1, down to `min` (the API refuses
-    /// a decrement past it with `column_limit_exceeded`): the row after it.
-    fn decrement(&self, database: &str, id: &str, min: Option<i64>) -> impl Future<Output = Result<Row>> + Send;
+    /// `decrementRowColumn` of `count` by 1, down to `min` (the API refuses a
+    /// decrement past it with `column_limit_exceeded`).
+    fn decrement(&self, database: &str, id: &str, min: Option<i64>) -> impl Future<Output = Result<()>> + Send;
     /// `updateRow` of `count`.
     fn update_row(&self, database: &str, id: &str, count: i64) -> impl Future<Output = Result<()>> + Send;
     /// `listRows`, newest first, `limit` from `offset`.
@@ -250,14 +250,14 @@ impl<T: Tables> Store for TablesDb<T> {
         Ok(())
     }
 
-    /// Decrements the window's row, bounded at zero; nothing without a row
-    /// or when its count is already zero.
+    /// Takes one from the window's row, never below zero; nothing without a
+    /// row.
     async fn unhit(&self, key: &str, window: i64) -> Result<()> {
         let Some(row) = self.tables.find_row(&self.database, key, &datetime(window)).await? else {
             return Ok(());
         };
         match self.tables.decrement(&self.database, &row.id, Some(0)).await {
-            Ok(_) => Ok(()),
+            Ok(()) => Ok(()),
             Err(Error::Appwrite { kind, .. }) if kind == LIMIT_EXCEEDED => Ok(()),
             Err(e) => Err(e),
         }

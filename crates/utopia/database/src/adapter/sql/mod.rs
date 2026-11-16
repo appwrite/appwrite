@@ -326,6 +326,10 @@ impl Adapter for Sql {
         Sql::size_of_collection_on_disk(self, collection).await
     }
 
+    async fn estimate_count(&self, collection: &str) -> Result<Option<i64>> {
+        Sql::estimate_count(self, collection).await
+    }
+
     fn attribute_width(&self, collection: &Collection) -> Result<i64> {
         Sql::attribute_width(self, collection)
     }

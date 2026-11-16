@@ -14,7 +14,9 @@ use utopia_migration::resources::domains::Rule;
 use utopia_migration::resources::functions::{Deployment, EnvVar, Func};
 use utopia_migration::resources::integrations::{ApiKey, Platform};
 use utopia_migration::resources::messaging::{Message, Provider, Subscriber, Topic};
-use utopia_migration::resources::settings::{Environment, Labels, ProjectVariable, Protocols, Services, Smtp, Webhook};
+use utopia_migration::resources::settings::{
+    Environment, Labels, Preferences, ProjectVariable, Protocols, Services, Smtp, Webhook,
+};
 use utopia_migration::resources::sites::{Site, SiteDeployment, SiteEnvVar};
 use utopia_migration::resources::storage::{Bucket, File};
 use utopia_migration::resources::templates::EmailTemplate;
@@ -245,6 +247,7 @@ pub fn construct(class: &str, args: &Json, session: &Session) -> Result<Resource
                 password_rotation: n.opt_array("passwordRotation")?,
                 passkey_rp_id: n.opt_string("passkeyRpId", None)?,
                 deny_realtime_guests: n.opt_bool("denyRealtimeGuests")?,
+                account_devices: n.opt_bool("accountDevices")?,
             };
             Resource::new(Kind::Policies(p), dated(&n, id(&n)?)?)
         }
@@ -453,6 +456,9 @@ pub fn construct(class: &str, args: &Json, session: &Session) -> Result<Resource
             Resource::new(Kind::Environment(Environment { name: n.required_string("name")? }), dated(&n, id(&n)?)?)
         }
         "Settings\\Labels" => Resource::new(Kind::Labels(Labels { labels: n.array("labels")? }), dated(&n, id(&n)?)?),
+        "Settings\\Preferences" => {
+            Resource::new(Kind::Preferences(Preferences { preferences: n.array("preferences")? }), dated(&n, id(&n)?)?)
+        }
         "Settings\\ProjectVariable" => Resource::new(
             Kind::ProjectVariable(ProjectVariable {
                 key: n.required_string("key")?,
@@ -697,6 +703,7 @@ pub fn from_array(class: &str, array: &Array, provider: Option<&str>) -> utopia_
         "Messaging\\Subscriber" => Subscriber::from_array(array),
         "Messaging\\Topic" => Topic::from_array(array),
         "Settings\\Labels" => Labels::from_array(array),
+        "Settings\\Preferences" => Preferences::from_array(array),
         "Settings\\ProjectVariable" => ProjectVariable::from_array(array),
         "Settings\\Protocols" => Protocols::from_array(array),
         "Settings\\Services" => Services::from_array(array),
@@ -820,6 +827,7 @@ pub fn describe(r: &ResourceRef) -> Json {
             ("getPasswordPwned", p.password_pwned.as_ref().map_or(Json::Null, arr)),
             ("getPasswordRotation", p.password_rotation.as_ref().map_or(Json::Null, arr)),
             ("getDenyRealtimeGuests", p.deny_realtime_guests.map_or(Json::Null, Json::from)),
+            ("getAccountDevices", p.account_devices.map_or(Json::Null, Json::from)),
         ]),
         Kind::Team(t) => g.extend([
             ("getMembers", arr(&t.members)),
@@ -1026,6 +1034,7 @@ pub fn describe(r: &ResourceRef) -> Json {
         ]),
         Kind::Environment(e) => g.push(("getEnvironmentName", s(&e.name))),
         Kind::Labels(l) => g.push(("getLabels", arr(&l.labels))),
+        Kind::Preferences(p) => g.push(("getPreferences", arr(&p.preferences))),
         Kind::ProjectVariable(v) => {
             g.extend([("getKey", s(&v.key)), ("getValue", s(&v.value)), ("isSecret", bool(v.secret))])
         }

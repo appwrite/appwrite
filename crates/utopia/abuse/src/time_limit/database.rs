@@ -63,10 +63,10 @@ pub trait Documents: Send + Sync {
     fn increase(&self, id: &str, max: Option<i64>) -> impl Future<Output = Result<Entry>> + Send;
 
     /// Takes one from the count of document `id`, unless that takes it
-    /// below `min` ([`Error::Limit`]): the document after the decrement.
+    /// below `min` ([`Error::Limit`]).
     ///
     /// PHP: `decreaseDocumentAttribute($collection, $id, 'count', 1, $min)`.
-    fn decrease(&self, id: &str, min: Option<i64>) -> impl Future<Output = Result<Entry>> + Send;
+    fn decrease(&self, id: &str, min: Option<i64>) -> impl Future<Output = Result<()>> + Send;
 
     /// Sets the count of document `id`.
     fn update(&self, id: &str, count: i64) -> impl Future<Output = Result<()>> + Send;
@@ -115,7 +115,7 @@ impl<D: Documents + ?Sized> Documents for std::sync::Arc<D> {
         (**self).increase(id, max)
     }
 
-    fn decrease(&self, id: &str, min: Option<i64>) -> impl Future<Output = Result<Entry>> + Send {
+    fn decrease(&self, id: &str, min: Option<i64>) -> impl Future<Output = Result<()>> + Send {
         (**self).decrease(id, min)
     }
 
@@ -318,15 +318,15 @@ impl<D: Documents> Store for Database<D> {
         Ok(())
     }
 
-    /// Takes one from the window's count, bounded at zero; nothing without
-    /// a document or when the count is already zero.
+    /// Takes one from the window's document, never below zero; nothing
+    /// without a document.
     async fn unhit(&self, key: &str, window: i64) -> Result<()> {
         let Some(entry) = self.db.find_one(key, &datetime(window)).await? else {
             return Ok(());
         };
         match self.db.decrease(&entry.id, Some(0)).await {
             // Already at zero.
-            Ok(_) | Err(Error::Limit(_)) => Ok(()),
+            Ok(()) | Err(Error::Limit(_)) => Ok(()),
             Err(e) => Err(e),
         }
     }
@@ -437,7 +437,7 @@ impl Documents for Memory {
         Ok(entry.clone())
     }
 
-    async fn decrease(&self, id: &str, min: Option<i64>) -> Result<Entry> {
+    async fn decrease(&self, id: &str, min: Option<i64>) -> Result<()> {
         let mut state = self.state();
         Self::collection(&state)?;
         let entry = state
@@ -451,7 +451,7 @@ impl Documents for Memory {
             return Err(Error::Limit(format!("Attribute value exceeds minimum limit: {min}")));
         }
         entry.count -= 1;
-        Ok(entry.clone())
+        Ok(())
     }
 
     async fn update(&self, id: &str, count: i64) -> Result<()> {

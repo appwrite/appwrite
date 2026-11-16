@@ -110,6 +110,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -194,6 +195,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -278,6 +280,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -362,6 +365,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -505,6 +509,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -589,6 +594,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -673,6 +679,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -757,6 +764,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -819,6 +827,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -870,6 +879,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -921,6 +931,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -995,6 +1006,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -1059,6 +1071,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -1194,6 +1207,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -1278,6 +1292,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -1362,6 +1377,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -1446,6 +1462,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -1510,6 +1527,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -1561,6 +1579,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -1627,6 +1646,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -1678,6 +1698,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -1729,6 +1750,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -1824,6 +1846,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -1959,6 +1982,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -2043,6 +2067,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -2127,6 +2152,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -2211,6 +2237,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -2275,6 +2302,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -2341,6 +2369,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -2392,6 +2421,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -2487,6 +2517,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -2622,6 +2653,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -2706,6 +2738,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -2790,6 +2823,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -2874,6 +2908,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -2935,6 +2970,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -2997,6 +3033,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -3048,6 +3085,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -3132,6 +3170,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -3194,6 +3233,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -3329,6 +3369,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -3413,6 +3454,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -3497,6 +3539,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -3581,6 +3624,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -3658,6 +3702,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "test": "getById"
             },
@@ -3720,6 +3765,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "test": "getById"
             },
@@ -3863,6 +3909,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -3947,6 +3994,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -4031,6 +4079,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -4115,6 +4164,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -4289,6 +4339,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key": "value3"
               },
@@ -4339,6 +4390,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key": "value2"
               },
@@ -4389,6 +4441,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key": "value1"
               },
@@ -4450,6 +4503,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key": "value2"
               },
@@ -4511,6 +4565,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key": "value4"
               },
@@ -4576,6 +4631,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key": "value3"
               },
@@ -4626,6 +4682,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key": "value1"
               },
@@ -4760,6 +4817,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -4844,6 +4902,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -4928,6 +4987,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -5012,6 +5072,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -5074,6 +5135,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -5125,6 +5187,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -5176,6 +5239,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -5311,6 +5375,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -5395,6 +5460,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -5479,6 +5545,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -5563,6 +5630,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -5625,6 +5693,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -5676,6 +5745,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -5727,6 +5797,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -5790,6 +5861,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -5841,6 +5913,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -5892,6 +5965,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -6027,6 +6101,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -6111,6 +6186,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -6195,6 +6271,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -6279,6 +6356,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -7642,6 +7720,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -7726,6 +7805,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -7810,6 +7890,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -7894,6 +7975,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -8004,6 +8086,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": [],
               "$id": "<uniqid>",
               "userId": "timerangeuser",
@@ -8052,6 +8135,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": [],
               "$id": "<uniqid>",
               "userId": "timerangeuser",
@@ -8112,6 +8196,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": [],
               "$id": "<uniqid>",
               "userId": "timerangeuser",
@@ -8160,6 +8245,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": [],
               "$id": "<uniqid>",
               "userId": "timerangeuser",
@@ -8292,6 +8378,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -8376,6 +8463,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -8460,6 +8548,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -8544,6 +8633,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -8646,6 +8736,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -8728,6 +8819,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -8810,6 +8902,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -8881,6 +8974,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -8932,6 +9026,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -9067,6 +9162,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -9151,6 +9247,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -9235,6 +9332,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -9319,6 +9417,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -9502,6 +9601,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 4
               },
@@ -9552,6 +9652,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 3
               },
@@ -9614,6 +9715,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 4
               },
@@ -9664,6 +9766,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 3
               },
@@ -9714,6 +9817,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 2
               },
@@ -9777,6 +9881,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 4
               },
@@ -9827,6 +9932,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 3
               },
@@ -9877,6 +9983,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 2
               },
@@ -9927,6 +10034,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 1
               },
@@ -9977,6 +10085,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 0
               },
@@ -10040,6 +10149,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 2
               },
@@ -10090,6 +10200,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 1
               },
@@ -10140,6 +10251,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 0
               },
@@ -10203,6 +10315,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 0
               },
@@ -10265,6 +10378,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 4
               },
@@ -10315,6 +10429,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 3
               },
@@ -10365,6 +10480,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 2
               },
@@ -10415,6 +10531,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 1
               },
@@ -10465,6 +10582,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 0
               },
@@ -10527,6 +10645,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 0
               },
@@ -10577,6 +10696,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 1
               },
@@ -10627,6 +10747,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 2
               },
@@ -10677,6 +10798,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 3
               },
@@ -10727,6 +10849,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 4
               },
@@ -10789,6 +10912,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 4
               },
@@ -10851,6 +10975,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 1
               },
@@ -10901,6 +11026,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 0
               },
@@ -10964,6 +11090,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 4
               },
@@ -11014,6 +11141,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 3
               },
@@ -11077,6 +11205,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 2
               },
@@ -11127,6 +11256,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 1
               },
@@ -11190,6 +11320,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 0
               },
@@ -11253,6 +11384,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 0
               },
@@ -11303,6 +11435,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 1
               },
@@ -11366,6 +11499,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 4
               },
@@ -11416,6 +11550,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 3
               },
@@ -11466,6 +11601,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 2
               },
@@ -11516,6 +11652,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 1
               },
@@ -11579,6 +11716,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 0
               },
@@ -11647,6 +11785,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 2
               },
@@ -11823,6 +11962,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 1
               },
@@ -11957,6 +12097,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -12041,6 +12182,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -12125,6 +12267,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -12209,6 +12352,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -12363,6 +12507,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 0
               },
@@ -12413,6 +12558,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 1
               },
@@ -12463,6 +12609,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 2
               },
@@ -12542,6 +12689,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 0
               },
@@ -12592,6 +12740,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 1
               },
@@ -12677,6 +12826,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 1
               },
@@ -12727,6 +12877,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 2
               },
@@ -12807,6 +12958,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 0
               },
@@ -12880,6 +13032,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 2
               },
@@ -12930,6 +13083,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 1
               },
@@ -12980,6 +13134,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 0
               },
@@ -13053,6 +13208,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 0
               },
@@ -13103,6 +13259,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 1
               },
@@ -13153,6 +13310,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 2
               },
@@ -13227,6 +13385,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 0
               },
@@ -13277,6 +13436,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 1
               },
@@ -13350,6 +13510,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 0
               },
@@ -13431,6 +13592,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 1
               },
@@ -13481,6 +13643,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 2
               },
@@ -13590,6 +13753,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 0
               },
@@ -13640,6 +13804,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 1
               },
@@ -13690,6 +13855,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "sequence": 2
               },
@@ -13824,6 +13990,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -13908,6 +14075,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -13992,6 +14160,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -14076,6 +14245,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -15776,6 +15946,19 @@
               "format": null,
               "formatOptions": [],
               "filters": []
+            },
+            {
+              "$id": "reason",
+              "key": "reason",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
             }
           ]
         }
@@ -16492,6 +16675,19 @@
               "format": null,
               "formatOptions": [],
               "filters": []
+            },
+            {
+              "$id": "reason",
+              "key": "reason",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
             }
           ]
         }
@@ -16895,7 +17091,8 @@
             "clientEngineVersion Nullable(String)",
             "deviceName LowCardinality(Nullable(String))",
             "deviceBrand LowCardinality(Nullable(String))",
-            "deviceModel Nullable(String)"
+            "deviceModel Nullable(String)",
+            "reason Nullable(String)"
           ]
         },
         {
@@ -17502,6 +17699,19 @@
               "format": null,
               "formatOptions": [],
               "filters": []
+            },
+            {
+              "$id": "reason",
+              "key": "reason",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
             }
           ]
         },
@@ -17787,6 +17997,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -17871,6 +18082,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -17955,6 +18167,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -18039,6 +18252,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -18134,6 +18348,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "special": "data with 'quotes'"
               },
@@ -18268,6 +18483,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -18352,6 +18568,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -18436,6 +18653,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -18520,6 +18738,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -18622,6 +18841,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": [],
               "$id": "<uniqid>",
               "userId": "geo-actor-1",
@@ -18754,6 +18974,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -18838,6 +19059,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -18922,6 +19144,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -19006,6 +19229,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -19112,6 +19336,7 @@
               "deviceName": "smartphone",
               "deviceBrand": "Apple",
               "deviceModel": "iPhone",
+              "reason": null,
               "data": [],
               "$id": "<uniqid>",
               "userId": "ua-actor-1",
@@ -19138,6 +19363,7 @@
             "resource": "document/ua-1",
             "sdk": null,
             "sdkVersion": null,
+            "reason": null,
             "osCode": "IOS",
             "osName": "iOS",
             "osVersion": "17.4",
@@ -19197,9 +19423,405 @@
               "deviceName": "smartphone",
               "deviceBrand": "Apple",
               "deviceModel": "iPhone",
+              "reason": null,
               "data": [],
               "$id": "<uniqid>",
               "userId": "ua-actor-1",
+              "userType": "member",
+              "userInternalId": null
+            }
+          }
+        },
+        {
+          "op": "audit.cleanup",
+          "args": {
+            "audit": {
+              "$ref": "audit"
+            },
+            "datetime": "now"
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@audit-clickhouse"
+      ]
+    },
+    {
+      "name": "testReasonRoundTrip",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {},
+          "bind": "adapter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "audit.new",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "bind": "audit",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "audit.setup",
+          "args": {
+            "audit": {
+              "$ref": "audit"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "audit.cleanup",
+          "args": {
+            "audit": {
+              "$ref": "audit"
+            },
+            "datetime": "now"
+          },
+          "expect": true
+        },
+        {
+          "op": "audit.log_batch",
+          "args": {
+            "audit": {
+              "$ref": "audit"
+            },
+            "events": [
+              {
+                "actorId": "reason-actor-1",
+                "event": "reason.given",
+                "resource": "document/reason-1",
+                "userAgent": "RoundTrip/1.0",
+                "ip": "8.8.8.8",
+                "data": [],
+                "time": {
+                  "$now": 0,
+                  "format": "tz"
+                },
+                "reason": "Tým podpory — replaced by the sessions table",
+                "actorType": "member",
+                "resourceType": "document",
+                "resourceId": "res-1",
+                "projectId": "proj-1",
+                "projectInternalId": "proj-int-1",
+                "teamId": "team-1",
+                "teamInternalId": "team-int-1",
+                "hostname": "example.org",
+                "country": "us"
+              },
+              {
+                "actorId": "reason-actor-1",
+                "event": "reason.missing",
+                "resource": "document/reason-2",
+                "userAgent": "RoundTrip/1.0",
+                "ip": "8.8.8.8",
+                "data": [],
+                "time": {
+                  "$now": -1,
+                  "format": "tz"
+                },
+                "actorType": "member",
+                "resourceType": "document",
+                "resourceId": "res-1",
+                "projectId": "proj-1",
+                "projectInternalId": "proj-int-1",
+                "teamId": "team-1",
+                "teamInternalId": "team-int-1",
+                "hostname": "example.org",
+                "country": "us"
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "audit.get_logs_by_user",
+          "args": {
+            "audit": {
+              "$ref": "audit"
+            },
+            "user_id": "reason-actor-1"
+          },
+          "bind": "logs",
+          "expect": [
+            {
+              "actorId": "reason-actor-1",
+              "event": "reason.given",
+              "resource": "document/reason-1",
+              "userAgent": "RoundTrip/1.0",
+              "ip": "8.8.8.8",
+              "time": "<now>",
+              "actorType": "member",
+              "actorInternalId": null,
+              "resourceParent": "",
+              "resourceType": "document",
+              "resourceId": "res-1",
+              "resourceInternalId": null,
+              "country": "us",
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "projectId": "proj-1",
+              "projectInternalId": "proj-int-1",
+              "teamId": "team-1",
+              "teamInternalId": "team-int-1",
+              "hostname": "example.org",
+              "sdk": null,
+              "sdkVersion": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "reason": "Tým podpory — replaced by the sessions table",
+              "data": [],
+              "$id": "<uniqid>",
+              "userId": "reason-actor-1",
+              "userType": "member",
+              "userInternalId": null
+            },
+            {
+              "actorId": "reason-actor-1",
+              "event": "reason.missing",
+              "resource": "document/reason-2",
+              "userAgent": "RoundTrip/1.0",
+              "ip": "8.8.8.8",
+              "time": "<now>",
+              "actorType": "member",
+              "actorInternalId": null,
+              "resourceParent": "",
+              "resourceType": "document",
+              "resourceId": "res-1",
+              "resourceInternalId": null,
+              "country": "us",
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "projectId": "proj-1",
+              "projectInternalId": "proj-int-1",
+              "teamId": "team-1",
+              "teamInternalId": "team-int-1",
+              "hostname": "example.org",
+              "sdk": null,
+              "sdkVersion": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "reason": null,
+              "data": [],
+              "$id": "<uniqid>",
+              "userId": "reason-actor-1",
+              "userType": "member",
+              "userInternalId": null
+            }
+          ]
+        },
+        {
+          "op": "log.read",
+          "args": {
+            "attributes": {
+              "$ref": "logs",
+              "path": "/0"
+            }
+          },
+          "expect": {
+            "id": "<uniqid>",
+            "userId": "reason-actor-1",
+            "actorId": "reason-actor-1",
+            "actorType": "member",
+            "actorInternalId": null,
+            "event": "reason.given",
+            "resource": "document/reason-1",
+            "sdk": null,
+            "sdkVersion": null,
+            "reason": "Tým podpory — replaced by the sessions table",
+            "osCode": null,
+            "osName": null,
+            "osVersion": null,
+            "clientType": null,
+            "clientCode": null,
+            "clientName": null,
+            "clientVersion": null,
+            "clientEngine": null,
+            "clientEngineVersion": null,
+            "deviceName": null,
+            "deviceBrand": null,
+            "deviceModel": null,
+            "userAgent": "RoundTrip/1.0",
+            "ip": "8.8.8.8",
+            "time": "<now>",
+            "data": [],
+            "tenant": null,
+            "array": {
+              "actorId": "reason-actor-1",
+              "event": "reason.given",
+              "resource": "document/reason-1",
+              "userAgent": "RoundTrip/1.0",
+              "ip": "8.8.8.8",
+              "time": "<now>",
+              "actorType": "member",
+              "actorInternalId": null,
+              "resourceParent": "",
+              "resourceType": "document",
+              "resourceId": "res-1",
+              "resourceInternalId": null,
+              "country": "us",
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "projectId": "proj-1",
+              "projectInternalId": "proj-int-1",
+              "teamId": "team-1",
+              "teamInternalId": "team-int-1",
+              "hostname": "example.org",
+              "sdk": null,
+              "sdkVersion": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "reason": "Tým podpory — replaced by the sessions table",
+              "data": [],
+              "$id": "<uniqid>",
+              "userId": "reason-actor-1",
+              "userType": "member",
+              "userInternalId": null
+            }
+          }
+        },
+        {
+          "op": "log.read",
+          "args": {
+            "attributes": {
+              "$ref": "logs",
+              "path": "/1"
+            }
+          },
+          "expect": {
+            "id": "<uniqid>",
+            "userId": "reason-actor-1",
+            "actorId": "reason-actor-1",
+            "actorType": "member",
+            "actorInternalId": null,
+            "event": "reason.missing",
+            "resource": "document/reason-2",
+            "sdk": null,
+            "sdkVersion": null,
+            "reason": null,
+            "osCode": null,
+            "osName": null,
+            "osVersion": null,
+            "clientType": null,
+            "clientCode": null,
+            "clientName": null,
+            "clientVersion": null,
+            "clientEngine": null,
+            "clientEngineVersion": null,
+            "deviceName": null,
+            "deviceBrand": null,
+            "deviceModel": null,
+            "userAgent": "RoundTrip/1.0",
+            "ip": "8.8.8.8",
+            "time": "<now>",
+            "data": [],
+            "tenant": null,
+            "array": {
+              "actorId": "reason-actor-1",
+              "event": "reason.missing",
+              "resource": "document/reason-2",
+              "userAgent": "RoundTrip/1.0",
+              "ip": "8.8.8.8",
+              "time": "<now>",
+              "actorType": "member",
+              "actorInternalId": null,
+              "resourceParent": "",
+              "resourceType": "document",
+              "resourceId": "res-1",
+              "resourceInternalId": null,
+              "country": "us",
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "projectId": "proj-1",
+              "projectInternalId": "proj-int-1",
+              "teamId": "team-1",
+              "teamInternalId": "team-int-1",
+              "hostname": "example.org",
+              "sdk": null,
+              "sdkVersion": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "reason": null,
+              "data": [],
+              "$id": "<uniqid>",
+              "userId": "reason-actor-1",
               "userType": "member",
               "userInternalId": null
             }
@@ -19329,6 +19951,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -19413,6 +20036,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -19497,6 +20121,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -19581,6 +20206,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -19655,6 +20281,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "example": "value"
             },
@@ -19788,6 +20415,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -19872,6 +20500,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -19956,6 +20585,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -20040,6 +20670,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -20113,6 +20744,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -20164,6 +20796,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -20248,6 +20881,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -20299,6 +20933,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -20434,6 +21069,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -20518,6 +21154,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -20602,6 +21239,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -20686,6 +21324,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -20759,6 +21398,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -20810,6 +21450,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -20861,6 +21502,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -20912,6 +21554,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -20996,6 +21639,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -21047,6 +21691,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -21182,6 +21827,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -21266,6 +21912,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -21350,6 +21997,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -21434,6 +22082,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -21507,6 +22156,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -21558,6 +22208,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -21609,6 +22260,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -21660,6 +22312,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -21744,6 +22397,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -21795,6 +22449,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -21846,6 +22501,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -21981,6 +22637,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -22065,6 +22722,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -22149,6 +22807,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -22233,6 +22892,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -22396,6 +23056,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -22480,6 +23141,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -22564,6 +23226,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -22648,6 +23311,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -22803,6 +23467,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -22887,6 +23552,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -22971,6 +23637,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -23055,6 +23722,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -23128,6 +23796,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -23179,6 +23848,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -23314,6 +23984,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -23398,6 +24069,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -23482,6 +24154,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -23566,6 +24239,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -23639,6 +24313,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -23690,6 +24365,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -23765,6 +24441,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -23816,6 +24493,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -23867,6 +24545,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -24002,6 +24681,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -24086,6 +24766,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -24170,6 +24851,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -24254,6 +24936,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -24432,6 +25115,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -24516,6 +25200,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -24600,6 +25285,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -24684,6 +25370,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -24758,6 +25445,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -24832,6 +25520,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -24883,6 +25572,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -25018,6 +25708,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -25102,6 +25793,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -25186,6 +25878,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -25270,6 +25963,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -25345,6 +26039,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -25396,6 +26091,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -25447,6 +26143,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -25498,6 +26195,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -25598,6 +26296,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -25649,6 +26348,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -25700,6 +26400,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -25751,6 +26452,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -25886,6 +26588,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -25970,6 +26673,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -26054,6 +26758,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -26138,6 +26843,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -26216,6 +26922,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -26267,6 +26974,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -26318,6 +27026,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -26369,6 +27078,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -26504,6 +27214,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -26588,6 +27299,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -26672,6 +27384,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -26756,6 +27469,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -26826,6 +27540,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -26897,6 +27612,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -26948,6 +27664,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -26999,6 +27716,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -27134,6 +27852,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -27218,6 +27937,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -27302,6 +28022,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -27386,6 +28107,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -27459,6 +28181,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -27510,6 +28233,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -27561,6 +28285,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -27635,6 +28360,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -27770,6 +28496,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -27854,6 +28581,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -27938,6 +28666,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -28022,6 +28751,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -28181,6 +28911,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -28265,6 +28996,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -28349,6 +29081,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -28433,6 +29166,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -28592,6 +29326,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -28676,6 +29411,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -28760,6 +29496,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -28844,6 +29581,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -29003,6 +29741,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -29087,6 +29826,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -29171,6 +29911,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -29255,6 +29996,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -29452,6 +30194,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": [],
             "tenant": 7,
             "$id": "<uniqid>",
@@ -29605,6 +30348,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -29689,6 +30433,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -29773,6 +30518,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -29857,6 +30603,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -30017,6 +30764,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -30101,6 +30849,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -30185,6 +30934,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -30269,6 +31019,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -30427,6 +31178,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -30511,6 +31263,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -30595,6 +31348,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -30679,6 +31433,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -30752,6 +31507,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -30887,6 +31643,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -30971,6 +31728,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -31055,6 +31813,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -31139,6 +31898,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -31212,6 +31972,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -31263,6 +32024,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -31314,6 +32076,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -31449,6 +32212,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -31533,6 +32297,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -31617,6 +32382,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -31701,6 +32467,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -31774,6 +32541,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -31825,6 +32593,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -31876,6 +32645,7 @@
               "deviceName": null,
               "deviceBrand": null,
               "deviceModel": null,
+              "reason": null,
               "data": {
                 "key1": "value1",
                 "key2": "value2"
@@ -32011,6 +32781,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -32095,6 +32866,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -32179,6 +32951,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -32263,6 +33036,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -32426,6 +33200,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -32510,6 +33285,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -32594,6 +33370,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -32678,6 +33455,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -32839,6 +33617,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -32923,6 +33702,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -33007,6 +33787,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"
@@ -33091,6 +33872,7 @@
             "deviceName": null,
             "deviceBrand": null,
             "deviceModel": null,
+            "reason": null,
             "data": {
               "key1": "value1",
               "key2": "value2"

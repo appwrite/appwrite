@@ -831,6 +831,38 @@
           }
         }
       ]
+    },
+    {
+      "name": "certificate expiry is unknown without any request",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "cloudflare",
+            "zone": "zone",
+            "token": "token"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "getCertificateExpiry",
+            "domain": "example.com",
+            "responses": []
+          },
+          "expect": {
+            "result": null,
+            "requests": []
+          }
+        }
+      ]
     }
   ]
 }

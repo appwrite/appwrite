@@ -960,6 +960,48 @@
           "expect": null
         }
       ]
+    },
+    {
+      "name": "age asks the publisher",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.new",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "capacity": 2,
+            "coroutines": 1
+          },
+          "bind": "bg",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.age",
+          "args": {
+            "background": {
+              "$ref": "bg"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 0
+        }
+      ]
     }
   ]
 }

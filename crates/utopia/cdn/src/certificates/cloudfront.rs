@@ -531,6 +531,16 @@ impl<C: Client> Provider for CloudFront<C> {
         Box::pin(self.status(domain))
     }
 
+    /// Unknown: managed certificate details carry no expiry, and reading it
+    /// needs an ACM call this provider is not granted.
+    fn certificate_expiry<'a>(
+        &'a self,
+        _domain: &'a str,
+        _domain_type: Option<&'a str>,
+    ) -> BoxFuture<'a, Result<Option<String>, Error>> {
+        Box::pin(async { Ok(None) })
+    }
+
     /// Whether the domain has no tenant, no certificate, or a failed one.
     fn is_renew_required<'a>(
         &'a self,

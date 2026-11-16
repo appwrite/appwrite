@@ -70,7 +70,7 @@
       ]
     },
     "limit.release": {
-      "doc": "$limit->release() on a time limit, at `now` (a clocked pool limit) or on the real clock",
+      "doc": "$limit->release() (TimeLimit only)",
       "covers": [
         "Utopia\\Abuse\\Adapter\\TimeLimit::release"
       ]
