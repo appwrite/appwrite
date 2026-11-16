@@ -212,7 +212,8 @@ export function getVerificationMethods(input: {
   const apex = getRecordName(input.domain) === '@'
   const methods: VerificationMethod[] = []
   if (input.cname && !apex) methods.push('cname')
-  if (input.cloud && input.nameservers.length > 0) methods.push('nameservers')
+  if (input.cloud && apex && input.nameservers.length > 0)
+    methods.push('nameservers')
   if (input.a && (!input.cloud || apex)) methods.push('a')
   if (input.aaaa && (!input.cloud || apex)) methods.push('aaaa')
   if (input.cname && apex) methods.push('cname')

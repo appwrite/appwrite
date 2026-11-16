@@ -145,7 +145,9 @@ export function AddDomainWizard() {
     } catch (err: unknown) {
       const e = err as { type?: string }
       if (e?.type !== 'domain_already_exists') {
-        toast.error(getErrorMessage(err, 'Failed to register domain'))
+        const message = getErrorMessage(err, 'Failed to register domain')
+        setSubmitError(message)
+        toast.error(message)
         return
       }
     } finally {
