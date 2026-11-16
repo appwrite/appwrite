@@ -8,6 +8,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -67,11 +68,14 @@ class Get extends Action
         }
 
         $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
-        $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+        // The deletes worker removes a deleted target's subscribers after the target is gone.
+        $user = $target->isEmpty()
+            ? new Document()
+            : $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
         $subscriber
             ->setAttribute('target', $target)
-            ->setAttribute('userName', $user->getAttribute('name'));
+            ->setAttribute('userName', $user->getAttribute('name', ''));
 
         $response
             ->dynamic($subscriber, Response::MODEL_SUBSCRIBER);

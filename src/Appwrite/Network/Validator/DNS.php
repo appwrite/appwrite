@@ -2,6 +2,7 @@
 
 namespace Appwrite\Network\Validator;
 
+use Swoole\Coroutine;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\DNS\Message\Record;
 use Utopia\DNS\Validator\DNS as BaseDNS;
@@ -34,25 +35,36 @@ class DNS extends BaseDNS
     {
         $wg = new WaitGroup();
         $failedValidator = null;
+        // Outside a coroutine (CLI, tests) go() would leave a reactor running, so query in turn
+        $parallel = Coroutine::getCid() > 0;
 
         foreach ($this->dnsServers as $dnsServer) {
+            $check = function () use ($value, $dnsServer, &$failedValidator): void {
+                $validator = new BaseDNS($this->target, $this->type, $dnsServer);
+
+                if (!$validator->isValid($value)) {
+                    $failedValidator = $validator;
+                }
+            };
+
+            if (!$parallel) {
+                $check();
+                continue;
+            }
+
             $wg->add();
-
-            \go(function () use ($value, $dnsServer, $wg, &$failedValidator) {
+            \go(function () use ($check, $wg) {
                 try {
-                    $validator = new BaseDNS($this->target, $this->type, $dnsServer);
-                    $isValid = $validator->isValid($value);
-
-                    if (!$isValid) {
-                        $failedValidator = $validator;
-                    }
+                    $check();
                 } finally {
                     $wg->done();
                 }
             });
         }
 
-        $wg->wait();
+        if ($parallel) {
+            $wg->wait();
+        }
 
         if (!\is_null($failedValidator)) {
             $this->count = $failedValidator->count;

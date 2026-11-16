@@ -146,6 +146,7 @@ use Appwrite\Utopia\Response\Model\OAuth2Keycloak;
 use Appwrite\Utopia\Response\Model\OAuth2Kick;
 use Appwrite\Utopia\Response\Model\OAuth2Linkedin;
 use Appwrite\Utopia\Response\Model\OAuth2Microsoft;
+use Appwrite\Utopia\Response\Model\OAuth2Naver;
 use Appwrite\Utopia\Response\Model\OAuth2Notion;
 use Appwrite\Utopia\Response\Model\OAuth2Oidc;
 use Appwrite\Utopia\Response\Model\OAuth2Okta;
@@ -251,6 +252,11 @@ use Appwrite\Utopia\Response\Model\Variable;
 use Appwrite\Utopia\Response\Model\VcsContent;
 use Appwrite\Utopia\Response\Model\VcsNamespace;
 use Appwrite\Utopia\Response\Model\VectorsDBCollection;
+use Appwrite\Utopia\Response\Model\Video;
+use Appwrite\Utopia\Response\Model\VideoCaption;
+use Appwrite\Utopia\Response\Model\VideoCodec;
+use Appwrite\Utopia\Response\Model\VideoProfile;
+use Appwrite\Utopia\Response\Model\VideoRendition;
 use Appwrite\Utopia\Response\Model\Webhook;
 
 // General
@@ -276,6 +282,11 @@ Response::setModel(new BaseList('Logs List', Response::MODEL_LOG_LIST, 'logs', R
 Response::setModel(new BaseList('Files List', Response::MODEL_FILE_LIST, 'files', Response::MODEL_FILE));
 Response::setModel(new BaseList('Buckets List', Response::MODEL_BUCKET_LIST, 'buckets', Response::MODEL_BUCKET));
 Response::setModel(new BaseList('Resource Tokens List', Response::MODEL_RESOURCE_TOKEN_LIST, 'tokens', Response::MODEL_RESOURCE_TOKEN));
+Response::setModel(new BaseList('Videos List', Response::MODEL_VIDEO_LIST, 'videos', Response::MODEL_VIDEO));
+Response::setModel(new BaseList('Video Codecs List', Response::MODEL_VIDEO_CODEC_LIST, 'codecs', Response::MODEL_VIDEO_CODEC));
+Response::setModel(new BaseList('Video Profiles List', Response::MODEL_VIDEO_PROFILE_LIST, 'profiles', Response::MODEL_VIDEO_PROFILE));
+Response::setModel(new BaseList('Video Renditions List', Response::MODEL_VIDEO_RENDITION_LIST, 'renditions', Response::MODEL_VIDEO_RENDITION));
+Response::setModel(new BaseList('Video Captions List', Response::MODEL_VIDEO_CAPTION_LIST, 'captions', Response::MODEL_VIDEO_CAPTION));
 Response::setModel(new BaseList('Teams List', Response::MODEL_TEAM_LIST, 'teams', Response::MODEL_TEAM));
 Response::setModel(new BaseList('Memberships List', Response::MODEL_MEMBERSHIP_LIST, 'memberships', Response::MODEL_MEMBERSHIP));
 Response::setModel(new BaseList('Sites List', Response::MODEL_SITE_LIST, 'sites', Response::MODEL_SITE));
@@ -495,6 +506,7 @@ Response::setModel(new OAuth2Microsoft());
 Response::setModel(new OAuth2Resend());
 Response::setModel(new OAuth2TikTok());
 Response::setModel(new OAuth2Kakao());
+Response::setModel(new OAuth2Naver());
 Response::setModel(new OAuth2ProviderList());
 Response::setModel(new PolicyPasswordDictionary());
 Response::setModel(new PolicyPasswordHistory());
@@ -581,6 +593,13 @@ Response::setModel(new Review());
 Response::setModel(new ReviewEvent());
 Response::setModel(new ReviewFinding());
 Response::setModel(new ReviewRepository());
+
+// Videos
+Response::setModel(new Video());
+Response::setModel(new VideoCodec());
+Response::setModel(new VideoProfile());
+Response::setModel(new VideoRendition());
+Response::setModel(new VideoCaption());
 
 // Tests (keep last)
 Response::setModel(new Mock());

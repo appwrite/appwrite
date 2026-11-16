@@ -2,6 +2,7 @@
 
 namespace Appwrite\Migration\Version;
 
+use Appwrite\Alert\Severity;
 use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Migration\Migration;
 use Exception;
@@ -81,6 +82,12 @@ class V25 extends Migration
                             $this->createAttributeFromCollection($this->dbForProject, $id, 'prefs');
                         } catch (Throwable $th) {
                             Console::warning("Failed to create attribute \"prefs\" in collection {$id}: {$th->getMessage()}");
+                        }
+
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'ldap');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"ldap\" in collection {$id}: {$th->getMessage()}");
                         }
 
                         try {
@@ -554,17 +561,15 @@ class V25 extends Migration
                 case 'videosProfiles':
                 case 'videosCaptions':
                 case 'videosCaptionsSegments':
-                    // New in 2.6.0. The document pass visits these collections even when video APIs are disabled.
-                    $this->createCollection($id);
-                    break;
-
                 case 'reviews':
                 case 'reviewFindings':
                 case 'reviewEvents':
                 case 'reviewChats':
                 case 'reviewLearnings':
                 case 'reviewUsage':
-                    // New in 2.7.0. Created even with reviews disabled, so turning them on later needs no migration.
+                    // Videos are new in 2.6.0, reviews in 2.7.0. Both are created even when the
+                    // feature is disabled, so turning it on later needs no migration, and the
+                    // document pass visits them regardless.
                     // On shared tables the collection is global: created with a project's tenant, its
                     // metadata row would belong to that project only and be missing for every other one.
                     $tenant = $this->dbForProject->getTenant();
@@ -582,10 +587,13 @@ class V25 extends Migration
                 case 'monitorAlerts':
                     // New in 2.7.0. Platform collections, so only the console project visits them.
                     $this->createCollection($id);
-                    // Created before monitors could be critical.
-                    try {
-                        $this->createAttributeFromCollection($this->dbForProject, $id, 'critical');
-                    } catch (Duplicate) {
+                    // Created before monitors had a severity, or alerts were acknowledged.
+                    $attributes = $id === 'monitorAlerts' ? ['severity', 'acknowledgedAt', 'acknowledgedBy', 'acknowledgedByName'] : ['severity'];
+                    foreach ($attributes as $attribute) {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                        } catch (Duplicate) {
+                        }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
@@ -716,6 +724,15 @@ class V25 extends Migration
 
     protected function migrateDocument(Document $document): Document
     {
+        // A column added to existing rows leaves them null, not at its default.
+        if (\in_array($document->getCollection(), ['monitors', 'monitorAlerts'], true)) {
+            if (empty($document->getAttribute('severity'))) {
+                $document->setAttribute('severity', Severity::Warning->value);
+            }
+
+            return $document;
+        }
+
         if (\in_array($document->getCollection(), ['keys', 'functions', 'sites'], true)) {
             $retired = ['devKeys.read', 'devKeys.write', 'assistant.read'];
             $scopes = $document->getAttribute('scopes', []);

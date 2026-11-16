@@ -1,65 +1,81 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { z } from 'zod'
-import { projectQueryOptions, usersQueryOptions } from '@/lib/react-query/hooks'
 import {
-  USERS_DEFAULT_SORT_BY,
-  USERS_DEFAULT_SORT_ORDER,
-} from '@/lib/react-query/hooks/users'
+  projectQueryOptions,
+  teamsQueryOptions,
+  usersQueryOptions,
+  authMauChartQueryOptions,
+  authSignupsChartQueryOptions,
+} from '@/lib/react-query/hooks'
+import { projectOAuth2ProvidersQueryOptions } from '@/lib/react-query/hooks/oauth2-providers'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { projectAuthSecurityQueryOptions } from '@/lib/project-settings'
+import { canAccessAuthSecuritySettings } from '@/lib/console-rbac-loader'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { getStableUsageChartDateRange } from '@/lib/usage/usage-date-range'
+import { DEFAULT_USAGE_LOG_RETENTION_HOURS } from '@/lib/usage/usage-log-retention'
 import { pageTitle } from '@/lib/utils/page-title'
-import { listSearchSchema, parseListSearch } from '@/lib/table-filters'
-
-const DEFAULT_PAGE = 1
-
-const authSearchSchema = listSearchSchema.extend({
-  create: z.string().optional().catch(undefined),
-  // Teams list params (when on auth/teams tab)
-  teamsSearch: z.string().optional().catch(undefined),
-  teamsQuery: z.string().optional().catch(undefined),
-  teamsPage: z.coerce.number().int().min(1).optional().catch(undefined),
-  teamsLimit: z.coerce
-    .number()
-    .int()
-    .min(1)
-    .max(100)
-    .optional()
-    .catch(undefined),
-})
 
 export const Route = createFileRoute('/_public/projects/$projectId/auth/')({
-  head: () => ({ meta: [{ title: pageTitle('Users', 'Auth') }] }),
-  validateSearch: authSearchSchema,
-  loader: async ({ params, context, search: routeSearch }) => {
-    if (typeof window === 'undefined') {
-      return
-    }
+  head: () => ({ meta: [{ title: pageTitle('Overview', 'Auth') }] }),
+  loader: async ({ params, context }) => {
+    if (typeof window === 'undefined') return
 
     const { projectId } = params
     const { queryClient } = context
-
     if (!projectId) return
 
-    const { search, page, limit, filterQueries, sort } = parseListSearch(
-      routeSearch,
-      {
-        page: DEFAULT_PAGE,
-        limit: GRID_DEFAULT_PAGE_SIZE,
-      },
+    const project = await queryClient.ensureQueryData(
+      projectQueryOptions(projectId),
     )
-    const sortBy = sort?.sortBy ?? USERS_DEFAULT_SORT_BY
-    const sortOrder = sort?.sortOrder ?? USERS_DEFAULT_SORT_ORDER
+    const canSeeSettings = await canAccessAuthSecuritySettings(
+      queryClient,
+      projectId,
+    )
 
-    await queryClient.ensureQueryData(projectQueryOptions(projectId))
-    await queryClient.ensureQueryData(
-      usersQueryOptions(
-        projectId,
-        page - 1,
-        limit,
-        search ?? undefined,
-        filterQueries,
-        sortBy,
-        sortOrder,
+    // Same pages the Users and Teams tabs open on, so the overview and those
+    // tabs share one request each.
+    await Promise.all([
+      queryClient.ensureQueryData(
+        usersQueryOptions(projectId, 0, GRID_DEFAULT_PAGE_SIZE),
       ),
-    )
+      queryClient.ensureQueryData(
+        teamsQueryOptions(projectId, 0, GRID_DEFAULT_PAGE_SIZE),
+      ),
+      canSeeSettings
+        ? Promise.all([
+            queryClient.ensureQueryData(
+              projectAuthSecurityQueryOptions(projectId, project?.region),
+            ),
+            // The sign-in methods card still renders without providers.
+            queryClient
+              .ensureQueryData(projectOAuth2ProvidersQueryOptions(projectId))
+              .catch(() => undefined),
+          ])
+        : Promise.resolve(),
+    ])
+
+    // Usage fills in after navigation, so a slow usage API never delays the
+    // overview.
+    if (getActiveProfileFeatures().usageStats) {
+      const usageDateRange = getStableUsageChartDateRange()
+      void queryClient.prefetchQuery(
+        authMauChartQueryOptions(
+          projectId,
+          usageDateRange,
+          undefined,
+          undefined,
+          DEFAULT_USAGE_LOG_RETENTION_HOURS,
+        ),
+      )
+      void queryClient.prefetchQuery(
+        authSignupsChartQueryOptions(
+          projectId,
+          usageDateRange,
+          undefined,
+          undefined,
+          DEFAULT_USAGE_LOG_RETENTION_HOURS,
+        ),
+      )
+    }
   },
 })

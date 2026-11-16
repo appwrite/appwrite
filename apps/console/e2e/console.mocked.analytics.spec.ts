@@ -104,6 +104,15 @@ type MockOptions = {
   type?: AnalyticsPropertyType
   /** Prop keys an agent sends with its model_called and tool_called events. */
   agentProps?: boolean
+  /** Install and push events from the mobile tracking SDKs. */
+  mobileEvents?: boolean
+}
+
+const MOBILE_EVENT_COUNTS: Record<string, number> = {
+  first_open: 1200,
+  app_updated: 300,
+  push_received: 5000,
+  push_opened: 640,
 }
 
 type Mock = { metrics: URL[]; patches: Request[] }
@@ -131,6 +140,21 @@ function listParam(url: URL, name: string): string[] {
 function metricsFor(url: URL, options: MockOptions): Models.AnalyticsMetric[] {
   const dimension = listParam(url, 'dimensions')[0]
   const users = options.hasUsers ? 37 : 0
+  const eventName = listParam(url, 'queries')
+    .map((query) => JSON.parse(query))
+    .find((query) => query.attribute === 'eventName')?.values[0]
+  if (eventName in MOBILE_EVENT_COUNTS) {
+    if (!options.mobileEvents) return []
+    if (url.searchParams.get('interval'))
+      return [
+        { ...row(null, 1), date: NOW, events: MOBILE_EVENT_COUNTS[eventName] },
+      ]
+    // Ranked by visitors, as the API does; opens disagree with that order.
+    return [
+      row('msg-launch', 9, { events: 90 }),
+      row('msg-sale', 5, { events: 500 }),
+    ]
+  }
   if (url.searchParams.get('interval')) {
     return [
       { ...row(null, 120, { pageviews: 900, users }), date: NOW, events: 4321 },
@@ -435,6 +459,42 @@ test.describe('analytics property (mocked API)', () => {
     await expect(
       technology.getByRole('button', { name: /Versions/ }),
     ).toHaveCount(0)
+  })
+
+  test('counts installs and push opens on a mobile property', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, {
+      type: AnalyticsPropertyType.Mobile,
+      mobileEvents: true,
+    })
+    await openProperty(page)
+
+    const installs = card(page, 'Installs and push')
+    await expect(installs).toContainText('1.2K', { timeout: 30_000 })
+    for (const label of ['Installs', 'Updates', 'Push received', 'Push opened'])
+      await expect(installs.getByText(label, { exact: true })).toBeVisible()
+    await expect(installs.getByText(/^msg-(launch|sale)$/)).toHaveText([
+      'msg-sale',
+      'msg-launch',
+    ])
+    await installs.scrollIntoViewIfNeeded()
+    await attachScreenshot(page, 'property-mobile-installs-push')
+  })
+
+  test('asks for the tracking SDK before the first install', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, { type: AnalyticsPropertyType.Mobile })
+    await openProperty(page)
+
+    const installs = card(page, 'Installs and push')
+    await expect(installs.getByText('No installs tracked yet')).toBeVisible({
+      timeout: 30_000,
+    })
+    await expect(
+      installs.getByRole('button', { name: 'Add the tracking SDK' }),
+    ).toBeVisible()
   })
 
   test('leads with events on an agent property', async ({ page }) => {

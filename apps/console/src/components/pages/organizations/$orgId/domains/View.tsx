@@ -425,9 +425,11 @@ export function View() {
     limit: domainsLimit,
     isAtLimit: isDomainLimitReached,
   } = useOrganizationDomainsPlanLimit(orgId)
-  const domainLimitTooltip = isDomainLimitReached
-    ? `${t('Your current plan includes up to')} ${domainsLimit} ${t('domains')}.`
-    : undefined
+  const domainsLimitCount = Number(domainsLimit)
+  const domainLimitCopy = `${t('Your current plan includes up to')} ${domainsLimitCount} ${
+    domainsLimitCount !== 1 ? t('domains') : t('domain')
+  }.`
+  const domainLimitTooltip = isDomainLimitReached ? domainLimitCopy : undefined
 
   useEffect(() => {
     setSelectedDomains(new Set())
@@ -519,9 +521,7 @@ export function View() {
   const handleCreateDomain = async (domain: string) => {
     if (!orgId) return
     if (isDomainLimitReached) {
-      toast.error(
-        `${t('Your current plan includes up to')} ${domainsLimit} ${t('domains')}.`,
-      )
+      toast.error(domainLimitCopy)
       return
     }
     setIsCreateDomainSubmitting(true)

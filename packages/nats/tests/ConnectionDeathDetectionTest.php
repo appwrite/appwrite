@@ -13,6 +13,7 @@ use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\PermissionException;
 use Utopia\NATS\Exception\ProtocolException;
 use Utopia\NATS\Tests\Support\FakeTransport;
+use Utopia\NATS\Tests\Support\ShortWriteStream;
 use Utopia\NATS\Transport\TcpTransport;
 use Utopia\NATS\Transport\TlsTransport;
 use Utopia\NATS\Transport\WebSocketTransport;
@@ -51,7 +52,6 @@ final class ConnectionDeathDetectionTest extends TestCase
         ], $extra)));
     }
 
-    // --- -ERR classification (pure) ---
     /**
      * @return \Iterator<int<0, max>, array{string, bool}>
      */
@@ -107,8 +107,6 @@ final class ConnectionDeathDetectionTest extends TestCase
     {
         $this->assertSame($expected, Connection::reconnectsAfter($message));
     }
-
-    // --- Finding: reconnect on a connection-closing -ERR ---
 
     public function testConnectionClosingErrorTriggersReconnect(): void
     {
@@ -219,8 +217,6 @@ final class ConnectionDeathDetectionTest extends TestCase
 
         $conn->close();
     }
-
-    // --- Finding: keepalive independent of the caller ---
 
     public function testTickSendsKeepalivePingWhenDue(): void
     {
@@ -333,7 +329,6 @@ final class ConnectionDeathDetectionTest extends TestCase
         $conn->close();
     }
 
-
     public function testTickCollectsItsOwnPongsSoAHealthyConnectionSurvives(): void
     {
         $fake = new FakeTransport();
@@ -362,6 +357,100 @@ final class ConnectionDeathDetectionTest extends TestCase
         // And it is still usable rather than merely un-recycled.
         $conn->publish('subject', 'payload');
         $this->assertStringContainsString('PUB subject', $fake->written);
+
+        $conn->close();
+    }
+
+    /**
+     * A server that goes away between calls is only discovered by a read, and
+     * on a parked connection tick() is the only read there is.
+     *
+     * It did not take one unless it happened to owe itself a PONG, so a
+     * restarted, evicted or intermediary-reaped socket stayed at status
+     * connected with no outstanding pings -- invisible to the keepalive -- and
+     * the close was instead found by the next request, whose mid-collection
+     * read refuses to reconnect by design. A recoverable server event reached
+     * the caller as "Connection closed by server" instead.
+     */
+    public function testTickReconnectsAfterTheServerClosedTheSocket(): void
+    {
+        $reconnected = false;
+        $fake = new FakeTransport();
+        $conn = $this->connect($fake, [
+            // Nothing is due, so the keepalive has no PONG of its own to
+            // collect: the tick has to read anyway.
+            'pingInterval' => 300.0,
+            'onReconnect' => function () use (&$reconnected): void {
+                $reconnected = true;
+            },
+        ]);
+
+        $handshakes = fn (): int => substr_count($fake->written, 'CONNECT ');
+        $this->assertSame(1, $handshakes());
+
+        $fake->closedByServer = true;
+        $conn->tick();
+
+        $this->assertTrue($reconnected, 'A tick must discover a socket the server has closed');
+        $this->assertSame(2, $handshakes(), 'Discovering the close must rebuild the connection');
+        $this->assertTrue($conn->isConnected());
+
+        $conn->close();
+    }
+
+    /**
+     * With reconnect off, the tick cannot rebuild the connection, but it has
+     * still seen the socket go. Leaving the status at connected would let the
+     * next publish write into the dead socket and return success.
+     */
+    public function testTickMarksAClosedSocketDeadWhenReconnectIsOff(): void
+    {
+        $fake = new FakeTransport();
+        $conn = $this->connect($fake, ['pingInterval' => 300.0, 'allowReconnect' => false]);
+
+        $fake->closedByServer = true;
+
+        try {
+            $conn->tick();
+            $this->fail('A tick that cannot reconnect must report the close');
+        } catch (ConnectionException) {
+        }
+
+        $this->assertFalse($conn->isConnected());
+        $this->assertSame(1, substr_count($fake->written, 'CONNECT '), 'Reconnect is off');
+
+        $this->expectException(ConnectionException::class);
+        $this->expectExceptionMessage('Not connected');
+        $conn->publish('orders', 'lost');
+    }
+
+    /**
+     * The payoff, and the reported failure: a JetStream command on a connection
+     * the server closed while it was parked. The write lands in a kernel buffer
+     * and succeeds, so the close surfaces on the reply read -- inside a request
+     * batch, which must not replay an ambiguous write and so could only raise.
+     * Maintenance ticking the connection first is what makes the command run on
+     * a live socket.
+     */
+    public function testCommandAfterTickSurvivesAServerThatWentAwayWhileParked(): void
+    {
+        $fake = new FakeTransport();
+        $fake->onWrite = static function (string $wire, FakeTransport $fake): void {
+            if (!str_starts_with($wire, 'PUB ')) {
+                return;
+            }
+
+            // PUB <subject> <reply-to> <bytes>: answer on the inbox it names.
+            $inbox = explode(' ', (string) strstr($wire, "\r\n", true))[2] ?? '';
+            $fake->pushInbound("MSG {$inbox} 1 2\r\nok\r\n");
+        };
+        $conn = $this->connect($fake, ['pingInterval' => 300.0]);
+
+        $fake->closedByServer = true;
+        $conn->tick();
+
+        $this->assertSame('ok', $conn->request('$JS.API.CONSUMER.INFO', timeout: 1.0)->data);
+        $this->assertTrue($conn->isConnected());
 
         $conn->close();
     }
@@ -423,7 +512,6 @@ final class ConnectionDeathDetectionTest extends TestCase
         );
     }
 
-    // --- Finding: transports must not raise TypeError on a closed stream ---
     /**
      * @return \Iterator<int<0, max>, array{class-string}>
      */
@@ -551,65 +639,5 @@ final class ConnectionDeathDetectionTest extends TestCase
         fclose($stream);
 
         return $transport;
-    }
-}
-
-/**
- * A stream that accepts one byte per write, so a transport's short-write loop is
- * guaranteed more than one pass, and that runs a callback after the first of
- * them -- the seam a concurrent close() would land in.
- */
-final class ShortWriteStream
-{
-    /** Fired once, after the first write, to stand in for the racing close(). */
-    public static ?\Closure $afterFirstWrite = null;
-
-    /** @var resource|null Set by PHP for stream context; unused here. */
-    public $context;
-
-    private int $writes = 0;
-
-    public function stream_open(): bool
-    {
-        return true;
-    }
-
-    public function stream_write(string $data): int
-    {
-        $this->writes++;
-
-        // PHP drives stream_write() in a loop inside one fwrite() call until
-        // everything is accepted, so accepting a byte and then refusing is what
-        // makes fwrite() itself return short -- which is the only thing the
-        // transport's own loop responds to.
-        if ($this->writes > 1) {
-            return 0;
-        }
-
-        if (self::$afterFirstWrite instanceof \Closure) {
-            $callback = self::$afterFirstWrite;
-            self::$afterFirstWrite = null;
-            $callback();
-        }
-
-        return min(1, \strlen($data));
-    }
-
-    public function stream_eof(): bool
-    {
-        return false;
-    }
-
-    /** @return array<int|string, int> */
-    public function stream_stat(): array
-    {
-        return [];
-    }
-
-    // PHP passes three arguments; none of them matter to a stream that only has
-    // to accept a timeout being set on it.
-    public function stream_set_option(): bool
-    {
-        return true;
     }
 }

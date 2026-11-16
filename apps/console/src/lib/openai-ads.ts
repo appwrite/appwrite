@@ -25,6 +25,11 @@ const LEAD_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
 const LEAD_MIN_AREAS = 3
 /** Navigation re-checks the lead signal at most this often. */
 const LEAD_CHECK_INTERVAL_MS = 2 * 60 * 1000
+/**
+ * The Console adds a web platform to every project it creates, right after the
+ * project. A web platform stage the Console stamped this soon is that default.
+ */
+const DEFAULT_PLATFORM_WINDOW_MS = 60 * 1000
 
 type OpenAiAdsQueue = ((...args: unknown[]) => void) & {
   q: unknown[][]
@@ -424,10 +429,11 @@ function parseOpenAiAdsStageTime(at: string | undefined): number {
 /**
  * True when the projects completed stages in three or more product areas since
  * the account registered. Stages from before registration (a project shared
- * with an invited member) and backfilled stages (`hidden` actor) don't count.
+ * with an invited member), backfilled stages (`hidden` actor) and the web
+ * platform the Console adds to a new project don't count.
  */
 export function isOpenAiAdsLead(
-  projects: ReadonlyArray<{ onboarding?: object }>,
+  projects: ReadonlyArray<{ $createdAt?: string; onboarding?: object }>,
   registration: string,
 ): boolean {
   const since = Date.parse(registration)
@@ -435,6 +441,7 @@ export function isOpenAiAdsLead(
 
   const areas = new Set<string>()
   for (const project of projects) {
+    const created = parseOpenAiAdsStageTime(project.$createdAt)
     const stages = (project.onboarding ?? {}) as Record<
       string,
       OpenAiAdsOnboardingStage | undefined
@@ -442,7 +449,15 @@ export function isOpenAiAdsLead(
     for (const [stage, progress] of Object.entries(stages)) {
       if (progress?.status !== 'completed') continue
       if (progress.actorType === 'hidden') continue
-      if (!(parseOpenAiAdsStageTime(progress.at) >= since)) continue
+      const at = parseOpenAiAdsStageTime(progress.at)
+      if (!(at >= since)) continue
+      if (
+        stage === 'project.createWebPlatform' &&
+        progress.actorType === 'admin' &&
+        at - created < DEFAULT_PLATFORM_WINDOW_MS
+      ) {
+        continue
+      }
       const area = getOpenAiAdsLeadArea(stage)
       if (area) areas.add(area)
     }
