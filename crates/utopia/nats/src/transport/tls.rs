@@ -114,6 +114,13 @@ impl Transport for TlsTransport {
         self.stream.as_ref().is_some_and(Stream::is_open)
     }
 
+    fn poll(&mut self) -> Result<bool> {
+        if !self.pending.is_empty() {
+            return Ok(true);
+        }
+        Ok(self.stream.as_mut().is_none_or(Stream::ready))
+    }
+
     async fn close(&mut self) {
         if let Some(mut stream) = self.stream.take() {
             stream.shutdown().await;

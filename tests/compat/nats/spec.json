@@ -358,6 +358,14 @@
         }
       ]
     },
+    "parser.steps": {
+      "doc": "new Parser(transport) over a transport serving `chunks` one per read ('' once they run out) and recording each read's timeout; next(timeout, headerTimeout) for each of `calls` ([timeout, headerTimeout]): {initial, steps: [{result: [op, data] or error, complete_line (hasCompleteLine), poisoned (isPoisoned), buffered (hasBufferedData)}], timeouts}",
+      "covers": [
+        "Utopia\\NATS\\Protocol\\Parser::hasCompleteLine",
+        "Utopia\\NATS\\Protocol\\Parser::isPoisoned",
+        "Utopia\\NATS\\Protocol\\Parser::next"
+      ]
+    },
     "server_info.from_array": {
       "doc": "ServerInfo::fromArray(data), every property",
       "covers": [
@@ -855,7 +863,7 @@
       ]
     },
     "fake.connect": {
-      "doc": "Connection::connect(new ConnectionOptions(...options, transportFactory: the fake transport (Fake.php) serving INFO merged with `info`, with `rules`)); with `late`, wrapped in Late.php",
+      "doc": "Connection::connect(new ConnectionOptions(...options, transportFactory: the fake transport (Fake.php) serving INFO merged with `info`, with `rules`)); with `late`, wrapped in Late.php; with `ready`, wrapped in Ready.php (the PHP tests' ReadyTransport: always pollable, a read with nothing to return waits out its timeout)",
       "covers": [
         "Utopia\\NATS\\Connection::connect"
       ]
@@ -871,6 +879,10 @@
     },
     "fake.fail_reads": {
       "doc": "make every read fail with {class, message} (null: stop); with `until_connect`, only until the next connect (a server that closed the socket)"
+    },
+    "fake.park": {
+      "doc": "queue `data`, then the server closes the socket (FakeTransport::$closedByServer in the PHP tests): reads serve what was queued and then raise ConnectionException('Connection closed by server'), writes are recorded and go nowhere, poll() reports readable; the next connect() clears it",
+      "covers": []
     },
     "fake.count": {
       "doc": "substr_count of `needle` in what was written (from byte `from`)"
@@ -1017,6 +1029,12 @@
         "Utopia\\NATS\\Connection::tick"
       ]
     },
+    "conn.settle": {
+      "doc": "$connection->settle(timeout?)",
+      "covers": [
+        "Utopia\\NATS\\Connection::settle"
+      ]
+    },
     "conn.state": {
       "doc": "{connected: isConnected(), closed: isClosed(), reconnecting: isReconnecting(), status: getStatus(), subscriptions (count, by reflection)}",
       "covers": [
@@ -1072,6 +1090,16 @@
         "Utopia\\NATS\\Transport\\WebSocketTransport::isConnected",
         "Utopia\\NATS\\Transport\\WebSocketTransport::close",
         "Utopia\\NATS\\Transport\\WebSocketTransport::__construct"
+      ]
+    },
+    "transport.poll": {
+      "doc": "A transport (tcp, tls, ws) against a service, polled at each point: poll() until the INFO is waiting (up to 2 s), readLine (INFO), poll() idle, write (CONNECT + PING), poll() until the PONG is waiting, readLine (PONG), poll() idle, close, poll() closed; each step [name, result or error]",
+      "covers": [
+        "Utopia\\NATS\\Transport\\TcpTransport::poll",
+        "Utopia\\NATS\\Transport\\TlsTransport::poll",
+        "Utopia\\NATS\\Transport\\WebSocketTransport::poll",
+        "Utopia\\NATS\\Transport\\Probe::__construct",
+        "Utopia\\NATS\\Transport\\Probe::ready"
       ]
     },
     "js.new": {
@@ -4440,7 +4468,11 @@
     "Utopia\\NATS\\Internal\\CallbackException::__construct": "PHP runtime plumbing: an @internal wrapper marking exceptions raised by callbacks while a request batch collects, so the batch rethrows them instead of reporting them as request outcomes. Rust carries the same distinction in Error::Callback; the behaviour is covered by the RequestsTest cases.",
     "Utopia\\NATS\\Subscription::setConnection": "Accessor subsumed by Rust types: PHP links a Subscription back to its Connection after constructing it; a Rust subscription belongs to the connection that created it (Connection::subscribe), and the methods that need the connection are Connection methods."
   },
-  "tests_waived": {},
+  "tests_waived": {
+    "packages/nats/tests/HookedTimeoutTest.php": "Requires ext-swoole with its runtime hooks: how PHP stream reads report a timeout under Swoole coroutine hooks (an empty string rather than false). The Rust transports are async on utopia-async with one timeout path; the parser's empty-read timeout and settle()'s bound are covered by ParserTest.json (parser.steps) and ParkedConnectionTest.json.",
+    "packages/nats/tests/Transport/SwooleTransportPollTest.php": "Requires ext-swoole: SwooleTransport::poll() over Swoole\\Coroutine\\Client::peek(). The Rust TcpTransport is the coroutine transport too; its poll() is covered by TcpTransportPollTest.json.",
+    "packages/nats/tests/E2E/ServerCloseTest.php": "Needs a NATS server with a system account to kick a client (the compat services have none). The same server-side close of an idle connection, then a request or flush that must reconnect before writing, is ported over the fake transport in ParkedConnectionTest.json (fake.park)."
+  },
   "quirks": [],
   "deviations": [
     {

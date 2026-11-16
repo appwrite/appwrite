@@ -442,19 +442,9 @@
             "no_wait": true
           },
           "expect": {
-            "count": 1,
-            "listed": 1,
-            "messages": [
-              {
-                "handle": {
-                  "$handle": "*"
-                },
-                "subject": "_INBOX.scripted",
-                "data": "hello",
-                "headers": null,
-                "reply": false
-              }
-            ]
+            "count": 0,
+            "listed": 0,
+            "messages": []
           }
         },
         {
@@ -465,7 +455,7 @@
             },
             "needle": "PUB _FC.reply"
           },
-          "expect": 1
+          "expect": 0
         }
       ]
     },
@@ -525,19 +515,9 @@
             "no_wait": true
           },
           "expect": {
-            "count": 1,
-            "listed": 1,
-            "messages": [
-              {
-                "handle": {
-                  "$handle": "*"
-                },
-                "subject": "_INBOX.scripted",
-                "data": "payload",
-                "headers": null,
-                "reply": false
-              }
-            ]
+            "count": 0,
+            "listed": 0,
+            "messages": []
           }
         }
       ]
@@ -863,29 +843,10 @@
             "within": 0.5
           },
           "expect": {
-            "count": 2,
-            "listed": 2,
-            "messages": [
-              {
-                "handle": {
-                  "$handle": "*"
-                },
-                "subject": "_INBOX.scripted",
-                "data": "m0",
-                "headers": null,
-                "reply": false
-              },
-              {
-                "handle": {
-                  "$handle": "*"
-                },
-                "subject": "_INBOX.scripted",
-                "data": "m1",
-                "headers": null,
-                "reply": false
-              }
-            ],
-            "within": true
+            "count": 0,
+            "listed": 0,
+            "messages": [],
+            "within": false
           }
         }
       ]

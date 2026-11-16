@@ -47,6 +47,7 @@ pub const OPS: &[&str] = &[
     "writer.ping",
     "writer.pong",
     "parser.run",
+    "parser.steps",
     "server_info.from_array",
     "connection.closes_connection",
     "connection.reconnects_after",
@@ -76,6 +77,7 @@ pub const OPS: &[&str] = &[
     "fake.rules",
     "fake.answer_pings",
     "fake.fail_reads",
+    "fake.park",
     "fake.count",
     "fake.mark",
     "fake.written",
@@ -106,12 +108,14 @@ pub const OPS: &[&str] = &[
     "conn.drain",
     "conn.close",
     "conn.tick",
+    "conn.settle",
     "conn.state",
     "conn.server_info",
     "conn.new_inbox",
     "conn.options",
     "conn.log",
     "transport.round_trip",
+    "transport.poll",
     "js.new",
     "js.create_stream",
     "js.update_stream",
@@ -241,7 +245,7 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
                 async move {
                     fake.push(&frame);
                     let mut transport = fake.clone();
-                    black_box(parser.lock().await.next(&mut transport, Some(Duration::from_secs(1))).await.ok());
+                    black_box(parser.lock().await.next(&mut transport, Some(Duration::from_secs(1)), None).await.ok());
                 }
             })
         }
@@ -256,7 +260,7 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
                 async move {
                     fake.push(&frame);
                     let mut transport = fake.clone();
-                    black_box(parser.lock().await.next(&mut transport, Some(Duration::from_secs(1))).await.ok());
+                    black_box(parser.lock().await.next(&mut transport, Some(Duration::from_secs(1)), None).await.ok());
                 }
             })
         }
@@ -340,6 +344,9 @@ struct FakeState {
     rules: Arc<Vec<Value>>,
     fail_reads: Option<Value>,
     fail_reads_until_connect: bool,
+    /// The server closed the socket: reads serve what was sent, then fail;
+    /// writes go nowhere. The next connect clears it.
+    closed_by_server: bool,
     connects: i64,
     inbound: Vec<u8>,
     connected: bool,
@@ -497,6 +504,7 @@ impl Transport for Fake {
         }
         state.connected = true;
         state.connects += 1;
+        state.closed_by_server = false;
         if state.fail_reads_until_connect {
             state.fail_reads = None;
             state.fail_reads_until_connect = false;
@@ -531,6 +539,9 @@ impl Transport for Fake {
             let mut state = self.lock();
             state.written.extend_from_slice(data);
             state.writes.push(data.to_vec());
+            if state.closed_by_server {
+                return Ok(data.len());
+            }
             state.rules.clone()
         };
         for rule in rules.iter() {
@@ -558,7 +569,11 @@ impl Transport for Fake {
             return Err(scripted_error(error));
         }
         if state.inbound.is_empty() {
-            return Err(Error::Timeout("No inbound data".into()));
+            return Err(if state.closed_by_server {
+                Error::Connection("Connection closed by server".into())
+            } else {
+                Error::Timeout("No inbound data".into())
+            });
         }
         let n = max.min(state.inbound.len());
         buf.extend(state.inbound.drain(..n));
@@ -569,6 +584,7 @@ impl Transport for Fake {
         let mut state = self.lock();
         match state.inbound.iter().position(|&b| b == b'\n') {
             Some(at) => Ok(state.inbound.drain(..=at).collect()),
+            None if state.closed_by_server => Err(Error::Connection("Connection closed by server".into())),
             None => Err(Error::Timeout("No inbound line".into())),
         }
     }
@@ -580,6 +596,11 @@ impl Transport for Fake {
 
     fn is_connected(&self) -> bool {
         self.lock().connected
+    }
+
+    fn poll(&mut self) -> utopia_nats::Result<bool> {
+        let state = self.lock();
+        Ok(!state.inbound.is_empty() || state.closed_by_server || state.fail_reads.is_some())
     }
 
     async fn close(&mut self) {
@@ -646,9 +667,192 @@ impl Transport for Late {
         self.inner.is_connected()
     }
 
+    fn poll(&mut self) -> utopia_nats::Result<bool> {
+        let state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if !state.delay.is_zero() || state.arrival.is_some_and(|at| Instant::now() < at) {
+            return Ok(false);
+        }
+        drop(state);
+        self.inner.poll()
+    }
+
     async fn close(&mut self) {
         self.inner.close().await;
     }
+}
+
+/// The twin of `tests/compat/nats/Ready.php` (the PHP tests'
+/// ReadyTransport): a socket that always looks readable yet has no NATS
+/// bytes; a read with nothing to return waits out its timeout.
+struct Ready {
+    inner: Box<dyn Transport>,
+}
+
+#[async_trait]
+impl Transport for Ready {
+    async fn connect(&mut self, host: &str, port: u16, timeout: Duration) -> utopia_nats::Result<()> {
+        self.inner.connect(host, port, timeout).await
+    }
+
+    async fn write(&mut self, data: &[u8]) -> utopia_nats::Result<usize> {
+        self.inner.write(data).await
+    }
+
+    async fn read(&mut self, buf: &mut Vec<u8>, max: usize, timeout: Option<Duration>) -> utopia_nats::Result<usize> {
+        match self.inner.read(buf, max, timeout).await {
+            Err(Error::Timeout(message)) => {
+                utopia_async::sleep(timeout.unwrap_or_default()).await;
+                Err(Error::Timeout(message))
+            }
+            other => other,
+        }
+    }
+
+    async fn read_line(&mut self, timeout: Option<Duration>) -> utopia_nats::Result<Vec<u8>> {
+        self.inner.read_line(timeout).await
+    }
+
+    async fn upgrade_tls(&mut self, options: &TlsOptions) -> utopia_nats::Result<()> {
+        self.inner.upgrade_tls(options).await
+    }
+
+    fn is_connected(&self) -> bool {
+        self.inner.is_connected()
+    }
+
+    fn poll(&mut self) -> utopia_nats::Result<bool> {
+        Ok(true)
+    }
+
+    async fn close(&mut self) {
+        self.inner.close().await;
+    }
+}
+
+/// A transport serving `chunks` one per read (nothing once they run out)
+/// and recording each read's timeout, for `parser.steps`.
+struct Chunks {
+    chunks: std::collections::VecDeque<Vec<u8>>,
+    timeouts: Vec<Value>,
+}
+
+#[async_trait]
+impl Transport for Chunks {
+    async fn connect(&mut self, _host: &str, _port: u16, _timeout: Duration) -> utopia_nats::Result<()> {
+        Ok(())
+    }
+
+    async fn write(&mut self, data: &[u8]) -> utopia_nats::Result<usize> {
+        Ok(data.len())
+    }
+
+    async fn read(&mut self, buf: &mut Vec<u8>, _max: usize, timeout: Option<Duration>) -> utopia_nats::Result<usize> {
+        self.timeouts.push(timeout.map_or(Value::Null, |t| json!(t.as_secs_f64())));
+        let chunk = self.chunks.pop_front().unwrap_or_default();
+        buf.extend_from_slice(&chunk);
+        Ok(chunk.len())
+    }
+
+    async fn read_line(&mut self, _timeout: Option<Duration>) -> utopia_nats::Result<Vec<u8>> {
+        Ok(Vec::new())
+    }
+
+    async fn upgrade_tls(&mut self, _options: &TlsOptions) -> utopia_nats::Result<()> {
+        Ok(())
+    }
+
+    fn is_connected(&self) -> bool {
+        true
+    }
+
+    async fn close(&mut self) {}
+}
+
+/// `parser.steps`: next(timeout, header_timeout) for each of `calls` over
+/// [`Chunks`], with the parser's state after each.
+async fn parse_steps(args: &Args<'_>) -> OpResult {
+    let seconds = |v: &Value| v.as_f64().map(Duration::from_secs_f64);
+    let mut transport = Chunks {
+        chunks: args
+            .array("chunks")?
+            .iter()
+            .map(|c| bytes(c).ok_or_else(|| Fault::new("chunk is not bytes")))
+            .collect::<Result<_, _>>()?,
+        timeouts: Vec::new(),
+    };
+    let mut parser = Parser::new();
+    let state = |parser: &Parser| json!({"complete_line": parser.has_complete_line(), "poisoned": parser.is_poisoned(), "buffered": parser.has_buffered_data()});
+    let initial = state(&parser);
+    let mut steps = Vec::new();
+    for call in args.array("calls")? {
+        let (timeout, header) = (seconds(&call[0]), seconds(&call[1]));
+        let result = match parser.next(&mut transport, timeout, header).await {
+            Ok(op) => op_value(&op),
+            Err(e) => error_value(&e),
+        };
+        let mut step = state(&parser);
+        let mut entry = Map::new();
+        entry.insert("result".into(), result);
+        for (k, v) in step.as_object_mut().map(std::mem::take).unwrap_or_default() {
+            entry.insert(k, v);
+        }
+        steps.push(Value::Object(entry));
+    }
+    Ok(Outcome::ok(json!({"initial": initial, "steps": steps, "timeouts": transport.timeouts})))
+}
+
+/// `transport.poll`: a transport against a service, polled while the INFO
+/// waits, once it is read, while the PONG waits, once it is read, and once
+/// closed.
+async fn poll_trip(args: &Args<'_>, session: &Session) -> OpResult {
+    let url = session.service(args.str("service")?)?.to_owned();
+    let parsed = php_std::url::parse_url(url.as_bytes()).ok_or_else(|| Fault::new("bad service URL"))?;
+    let host = String::from_utf8_lossy(&parsed.host().unwrap_or_default()).into_owned();
+    let port = parsed.port().unwrap_or(4222);
+    let tls = tls_options(args.opt("tls"));
+    let mut transport: Box<dyn Transport> = match args.str("kind")? {
+        "tcp" => Box::new(TcpTransport::new()),
+        "tls" => Box::new(TlsTransport::new(tls.clone())),
+        "ws" => Box::new(WebSocketTransport::new(false, tls.clone(), args.opt_str("path")?.unwrap_or("/"))),
+        other => return Err(Fault::new(format!("unknown transport {other}"))),
+    };
+    let mut out = Vec::new();
+    let mut step = |name: &str, result: utopia_nats::Result<Value>| {
+        out.push(match result {
+            Ok(v) => json!([name, v]),
+            Err(e) => json!([name, error_value(&e)]),
+        })
+    };
+    async fn wait(transport: &mut Box<dyn Transport>) -> utopia_nats::Result<Value> {
+        let deadline = Instant::now() + Duration::from_secs(2);
+        while !transport.poll()? {
+            if Instant::now() > deadline {
+                return Ok(json!(false));
+            }
+            utopia_async::sleep(Duration::from_millis(5)).await;
+        }
+        Ok(json!(true))
+    }
+    let t = Some(Duration::from_secs(2));
+    transport.connect(&host, port, Duration::from_secs(2)).await.map_err(|e| Fault::new(e.to_string()))?;
+    step("info_waiting", wait(&mut transport).await);
+    step("info", transport.read_line(t).await.map(|l| json!(l.starts_with(b"INFO "))));
+    step("idle", transport.poll().map(|r| json!(r)));
+    transport.write(b"CONNECT {\"verbose\":false}\r\nPING\r\n").await.map_err(|e| Fault::new(e.to_string()))?;
+    step("pong_waiting", wait(&mut transport).await);
+    let pong = async {
+        let mut line = transport.read_line(t).await?;
+        while line.starts_with(b"INFO ") || line == b"+OK\r\n" {
+            line = transport.read_line(t).await?;
+        }
+        Ok(bytes_value(&line))
+    }
+    .await;
+    step("pong", pong);
+    step("idle_again", transport.poll().map(|r| json!(r)));
+    transport.close().await;
+    step("closed", transport.poll().map(|r| json!(r)));
+    Ok(Outcome::ok(Value::Array(out)))
 }
 
 /// An error a scripted fixture raises: {"class": short name, "message"}.
@@ -1700,7 +1904,7 @@ async fn parse_run(args: &Args<'_>) -> OpResult {
         let mut ops = Vec::new();
         let mut error = Value::Null;
         for _ in 0..limit {
-            match parser.next(&mut fake, Some(Duration::from_millis(10))).await {
+            match parser.next(&mut fake, Some(Duration::from_millis(10)), None).await {
                 Ok(op) => ops.push(op_value(&op)),
                 Err(e) => {
                     error = error_value(&e);
@@ -1711,7 +1915,7 @@ async fn parse_run(args: &Args<'_>) -> OpResult {
         let mut then_value = Value::Null;
         if let Some(then) = then {
             fake.push(&then);
-            then_value = match parser.next(&mut fake, Some(Duration::from_millis(10))).await {
+            then_value = match parser.next(&mut fake, Some(Duration::from_millis(10)), None).await {
                 Ok(op) => op_value(&op),
                 Err(e) => error_value(&e),
             };
@@ -2088,6 +2292,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         "writer.ping" => Ok(Outcome::ok(bytes_value(Writer::ping()))),
         "writer.pong" => Ok(Outcome::ok(bytes_value(Writer::pong()))),
         "parser.run" => parse_run(&a).await,
+        "parser.steps" => parse_steps(&a).await,
         "server_info.from_array" => Ok(Outcome::ok(server_info(&ServerInfo::from_value(a.value("data")?)))),
         "connection.closes_connection" => Ok(Outcome::ok(Connection::closes_connection(a.str("message")?))),
         "connection.reconnects_after" => Ok(Outcome::ok(Connection::reconnects_after(a.str("message")?))),
@@ -2214,14 +2419,16 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             let factory_log = log.clone();
             let late = a.opt("late").and_then(Value::as_bool).unwrap_or(false).then(Arc::<Mutex<LateState>>::default);
             let factory_late = late.clone();
+            let ready = a.opt("ready").and_then(Value::as_bool).unwrap_or(false);
             let options = ConnectionOptions {
                 transport_factory: Some(Arc::new(move |scheme: &str| {
                     record(&factory_log, json!(["transport", scheme]));
-                    Ok(match &factory_late {
+                    let inner = match &factory_late {
                         Some(state) => Box::new(Late { state: state.clone(), inner: Box::new(transport.clone()) })
                             as Box<dyn Transport>,
                         None => Box::new(transport.clone()) as Box<dyn Transport>,
-                    })
+                    };
+                    Ok(if ready { Box::new(Ready { inner }) as Box<dyn Transport> } else { inner })
                 })),
                 ..options
             };
@@ -2252,6 +2459,14 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             if let Some(after) = a.opt("arrive_after").and_then(Value::as_f64) {
                 state.arrival = Some(Instant::now() + Duration::from_secs_f64(after.max(0.0)));
             }
+            Ok(Outcome::ok(Value::Null))
+        }
+        "fake.park" => {
+            let fake = fake_of(session, &a).await?;
+            let data = if a.opt("data").is_some() { a.bytes("data")? } else { Vec::new() };
+            let mut state = fake.lock();
+            state.inbound.extend_from_slice(&data);
+            state.closed_by_server = true;
             Ok(Outcome::ok(Value::Null))
         }
         "fake.fail_reads" => {
@@ -2483,6 +2698,11 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             try_lib!(conn.lock().await.conn.tick().await);
             Ok(Outcome::ok(Value::Null))
         }
+        "conn.settle" => {
+            let conn = get::<Conn>(session, &a, "conn")?;
+            try_lib!(conn.lock().await.conn.settle(timeout(&a)?).await);
+            Ok(Outcome::ok(Value::Null))
+        }
         "conn.state" => {
             let conn = get::<Conn>(session, &a, "conn")?;
             let conn = conn.lock().await;
@@ -2517,6 +2737,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         }
 
         "transport.round_trip" => round_trip(&a, session).await,
+        "transport.poll" => poll_trip(&a, session).await,
         "fake.connect_passes" => connect_passes(&a).await,
         "fake.discovered" => discovered(&a).await,
         "transport.tls_failure" => tls_failure(&a).await,

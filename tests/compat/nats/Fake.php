@@ -2,7 +2,9 @@
 
 namespace Tests\Compat\Nats;
 
+use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\TimeoutException;
+use Utopia\NATS\Transport\Pollable;
 use Utopia\NATS\Transport\Transport;
 
 /**
@@ -20,7 +22,7 @@ use Utopia\NATS\Transport\Transport;
  * {"capture": subject} (keep the reply subjects of PUBs to it) and
  * {"reply_captured": payload}.
  */
-final class Fake implements Transport
+final class Fake implements Pollable, Transport
 {
     public string $written = '';
 
@@ -42,6 +44,13 @@ final class Fake implements Transport
     public bool $failReadsUntilConnect = false;
 
     public int $connects = 0;
+
+    /**
+     * Whether the server has closed the socket (the PHP tests' FakeTransport
+     * closedByServer): reads serve what was already sent and then raise,
+     * writes are recorded and go nowhere. The next connect() clears it.
+     */
+    public bool $closedByServer = false;
 
     /** @var array{class: string, message: string}|null thrown by connect() when set */
     public ?array $refuse = null;
@@ -75,6 +84,7 @@ final class Fake implements Transport
         }
         $this->connected = true;
         $this->connects++;
+        $this->closedByServer = false;
         if ($this->failReadsUntilConnect) {
             $this->failReads = null;
             $this->failReadsUntilConnect = false;
@@ -99,6 +109,9 @@ final class Fake implements Transport
     {
         $this->written .= $data;
         $this->writes[] = $data;
+        if ($this->closedByServer) {
+            return \strlen($data);
+        }
         foreach ($this->rules as $rule) {
             if (self::matches($rule['when'] ?? [], $data)) {
                 foreach ($rule['do'] ?? [] as $action) {
@@ -119,7 +132,9 @@ final class Fake implements Transport
             throw Errors::make($this->failReads);
         }
         if ($this->inbound === '') {
-            throw new TimeoutException('No inbound data');
+            throw $this->closedByServer
+                ? new ConnectionException('Connection closed by server')
+                : new TimeoutException('No inbound data');
         }
         $chunk = substr($this->inbound, 0, $maxBytes);
         $this->inbound = substr($this->inbound, \strlen($chunk));
@@ -131,7 +146,9 @@ final class Fake implements Transport
     {
         $pos = strpos($this->inbound, "\n");
         if ($pos === false) {
-            throw new TimeoutException('No inbound line');
+            throw $this->closedByServer
+                ? new ConnectionException('Connection closed by server')
+                : new TimeoutException('No inbound line');
         }
         $line = substr($this->inbound, 0, $pos + 1);
         $this->inbound = substr($this->inbound, $pos + 1);
@@ -147,6 +164,12 @@ final class Fake implements Transport
     public function isConnected(): bool
     {
         return $this->connected;
+    }
+
+    /** A read returns at once: data is waiting, the server closed the socket, or reads fail. */
+    public function poll(): bool
+    {
+        return $this->inbound !== '' || $this->closedByServer || $this->failReads !== null;
     }
 
     public function close(): void

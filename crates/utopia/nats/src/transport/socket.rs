@@ -89,6 +89,33 @@ impl Stream {
         !matches!(futures_util::FutureExt::now_or_never(tcp.peek(&mut byte)), Some(Ok(0) | Err(_)))
     }
 
+    /// Whether a read would return at once: data has arrived (decrypted
+    /// already, or still on the socket), or the peer has closed or reset the
+    /// stream. A non-blocking peek, so nothing is consumed.
+    ///
+    /// PHP: `Utopia\NATS\Transport\Probe::ready()`.
+    pub(crate) fn ready(&mut self) -> bool {
+        let tcp = match self {
+            Stream::Plain(s) => &*s,
+            Stream::Tls(s) => {
+                let (tcp, tls) = s.get_mut();
+                // Records already received but not read yet, as PHP's
+                // `unread_bytes`.
+                match tls.process_new_packets() {
+                    Ok(state) if state.plaintext_bytes_to_read() > 0 || state.peer_has_closed() => return true,
+                    Ok(_) => &*tcp,
+                    Err(_) => return true,
+                }
+            }
+        };
+        let mut byte = [0u8; 1];
+        match futures_util::FutureExt::now_or_never(tcp.peek(&mut byte)) {
+            None => false,
+            Some(Ok(_)) => true,
+            Some(Err(e)) => e.kind() != std::io::ErrorKind::WouldBlock,
+        }
+    }
+
     pub(crate) async fn shutdown(&mut self) {
         match self {
             Stream::Plain(s) => {

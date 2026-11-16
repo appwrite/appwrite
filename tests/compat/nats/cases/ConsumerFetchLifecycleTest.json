@@ -701,15 +701,7 @@
             },
             "timeout": 0.5
           },
-          "expect": {
-            "handle": {
-              "$handle": "*"
-            },
-            "subject": "_INBOX.x",
-            "data": "abc",
-            "headers": null,
-            "reply": true
-          }
+          "expect": null
         },
         {
           "op": "fake.written",

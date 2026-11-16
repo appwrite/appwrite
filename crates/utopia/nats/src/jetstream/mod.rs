@@ -481,6 +481,8 @@ impl JetStream {
         start: usize,
         timeout: Option<Duration>,
     ) -> Result<Vec<(i64, PubAck)>> {
+        let timeout = timeout.unwrap_or(conn.options().request_timeout);
+        conn.settle(Some(timeout.min(Connection::SETTLE_TIMEOUT))).await?;
         let inbox = Inbox::create(&conn.options().inbox_prefix);
         let sub = conn.subscribe(&format!("{inbox}.*"), None, None).await?;
         let collected = async {
@@ -489,7 +491,7 @@ impl JetStream {
                 let headers = publish_headers(message.options.clone());
                 conn.publish(&message.subject, &message.data, Some(&reply), headers.as_ref()).await?;
             }
-            let deadline = Instant::now() + timeout.unwrap_or(conn.options().request_timeout);
+            let deadline = Instant::now() + timeout;
             let mut acks: IndexMap<i64, PubAck> = IndexMap::with_capacity(chunk.len());
             while acks.len() < chunk.len() {
                 let remaining = deadline.saturating_duration_since(Instant::now());

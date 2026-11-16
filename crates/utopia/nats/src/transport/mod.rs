@@ -62,6 +62,25 @@ pub trait Transport: Send {
     /// PHP: `Transport::isConnected()`.
     fn is_connected(&self) -> bool;
 
+    /// Whether a read would return at once, without waiting and without
+    /// consuming anything: data has arrived, or the peer has closed or reset
+    /// the stream. A closed transport is readable (its read fails at once).
+    /// The connection acts on what a readable transport holds before it
+    /// writes a request.
+    ///
+    /// The default is `false`: a transport that cannot tell, which PHP's
+    /// connection treats as one not implementing `Pollable`.
+    ///
+    /// # Errors
+    ///
+    /// What the transport finds wrong with what it holds (a WebSocket frame
+    /// it cannot decode).
+    ///
+    /// PHP: `Utopia\NATS\Transport\Pollable::poll()`.
+    fn poll(&mut self) -> Result<bool> {
+        Ok(false)
+    }
+
     /// Closes the stream. Closing twice is harmless.
     ///
     /// PHP: `Transport::close()`.

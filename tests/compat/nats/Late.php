@@ -3,6 +3,7 @@
 namespace Tests\Compat\Nats;
 
 use Utopia\NATS\Exception\TimeoutException;
+use Utopia\NATS\Transport\Pollable;
 use Utopia\NATS\Transport\Transport;
 
 /**
@@ -12,7 +13,7 @@ use Utopia\NATS\Transport\Transport;
  * `arrive_after` makes nothing readable until then, as a reply still in
  * transit. The twin of `Late` in crates/tools/compat/src/libs/nats.rs.
  */
-final class Late implements Transport
+final class Late implements Pollable, Transport
 {
     private float $delay = 0.0;
 
@@ -65,6 +66,15 @@ final class Late implements Transport
     public function isConnected(): bool
     {
         return $this->inner->isConnected();
+    }
+
+    public function poll(): bool
+    {
+        if ($this->delay > 0 || microtime(true) < $this->arrival) {
+            return false;
+        }
+
+        return $this->inner instanceof Pollable && $this->inner->poll();
     }
 
     public function close(): void

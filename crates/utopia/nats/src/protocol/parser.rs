@@ -87,8 +87,8 @@ pub struct RawMessage {
 /// # }
 /// let mut transport = Script(b"PING\r\nMSG orders.new 1 5\r\nhello\r\n".to_vec());
 /// let mut parser = Parser::new();
-/// assert_eq!(parser.next(&mut transport, None).await?, Op::Ping);
-/// let Op::Msg(msg) = parser.next(&mut transport, None).await? else { unreachable!() };
+/// assert_eq!(parser.next(&mut transport, None, None).await?, Op::Ping);
+/// let Op::Msg(msg) = parser.next(&mut transport, None, None).await? else { unreachable!() };
 /// assert_eq!((msg.subject.as_str(), msg.payload.as_slice()), ("orders.new", &b"hello"[..]));
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// # })?;
@@ -141,22 +141,46 @@ impl Parser {
         self.start < self.buffer.len()
     }
 
-    /// Reads and decodes the next operation. `timeout` applies to each read
-    /// of the transport; `None` keeps the transport's current timeout.
+    /// Whether a whole protocol line is buffered, so the next operation can
+    /// start without a transport read.
+    ///
+    /// PHP: `Parser::hasCompleteLine()`.
+    pub fn has_complete_line(&self) -> bool {
+        self.buffer[self.start..].contains(&b'\n')
+    }
+
+    /// Whether a failed frame read has left the stream unparseable, so the
+    /// next read fails at once.
+    ///
+    /// PHP: `Parser::isPoisoned()`.
+    pub fn is_poisoned(&self) -> bool {
+        self.poisoned
+    }
+
+    /// Reads and decodes the next operation. `header_timeout` bounds the
+    /// wait for the operation line (`timeout` when `None`), and `timeout`
+    /// every read of a frame body; `None` keeps the transport's current
+    /// timeout.
     ///
     /// # Errors
     ///
     /// [`Error::Protocol`] for an empty or unknown line, [`Error::Json`] for
     /// an `INFO` that is not JSON, [`Error::Desynced`] when a frame body
-    /// fails (and [`Error::Connection`] on every call after that), and the
-    /// transport's errors while waiting for a line.
+    /// fails (and [`Error::Connection`] on every call after that),
+    /// [`Error::Timeout`] (`Read timed out`) when the transport returns
+    /// nothing while waiting for a line, and the transport's errors.
     ///
     /// PHP: `Parser::next()`.
-    pub async fn next(&mut self, transport: &mut (dyn Transport + '_), timeout: Option<Duration>) -> Result<Op> {
+    pub async fn next(
+        &mut self,
+        transport: &mut (dyn Transport + '_),
+        timeout: Option<Duration>,
+        header_timeout: Option<Duration>,
+    ) -> Result<Op> {
         if self.poisoned {
             return Err(Error::Connection("Parser desynced from the stream; the connection must be rebuilt".into()));
         }
-        let line = self.read_line(transport, timeout).await?;
+        let line = self.read_line(transport, header_timeout.or(timeout)).await?;
         let mut end = line.len();
         while end > 0 && matches!(line[end - 1], b'\r' | b'\n') {
             end -= 1;
@@ -276,7 +300,9 @@ impl Parser {
             }
             scanned = self.buffer.len() - self.start;
             self.compact();
-            transport.read(&mut self.buffer, 65536, timeout).await?;
+            if transport.read(&mut self.buffer, 65536, timeout).await? == 0 {
+                return Err(Error::Timeout("Read timed out".into()));
+            }
         }
     }
 
