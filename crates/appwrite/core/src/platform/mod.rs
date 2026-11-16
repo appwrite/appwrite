@@ -70,14 +70,8 @@ pub struct Route {
 /// The labels the generic hooks read.
 #[derive(Debug, Clone, Copy)]
 pub struct Labels {
-    /// `abuse-key`: key templates (`url:{url},ip:{ip}` by default).
-    pub abuse_key: &'static [&'static str],
-    /// `abuse-limit`: requests per window, `0` for none.
-    pub abuse_limit: i64,
-    /// `abuse-time`: the window, in seconds.
-    pub abuse_time: i64,
-    /// `abuse-reset`: response statuses that reset the limits.
-    pub abuse_reset: &'static [u16],
+    /// `abuse`: the route's rate limits, each counted on its own.
+    pub abuse: &'static [Limit],
     /// `auth.type`: the authentication method the route uses.
     pub auth_type: &'static str,
     /// `session.allowActive`: the route may create a session for a caller
@@ -102,15 +96,15 @@ pub struct Labels {
     pub cache_resource_type: &'static str,
     /// `cache.params`: the params that key the entry, `None` for all.
     pub cache_params: Option<&'static [&'static str]>,
+    /// `cache.negotiate`: params that, set to `auto`, are picked from the
+    /// `Accept` header: `(param, [(value, MIME type)])` in preference order.
+    pub cache_negotiate: &'static [(&'static str, &'static [(&'static str, &'static str)])],
 }
 
 impl Labels {
     /// PHP's defaults for a route that sets none of them.
     pub const NONE: Labels = Labels {
-        abuse_key: &["url:{url},ip:{ip}"],
-        abuse_limit: 0,
-        abuse_time: 3600,
-        abuse_reset: &[],
+        abuse: &[],
         auth_type: "",
         session_allow_active: false,
         impersonation: "",
@@ -120,7 +114,62 @@ impl Labels {
         cache_resource: "",
         cache_resource_type: "",
         cache_params: None,
+        cache_negotiate: &[],
     };
+}
+
+/// One rate limit a route declares in its `abuse` label (PHP:
+/// `Appwrite\Abuse\Limit`): what the count is kept per, how many hits it
+/// may take in a window, what counts as a hit, and who it counts for.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Limit {
+    /// The parts the count is kept per (`projectId`, `userId`, `userAgent`,
+    /// `ip`, `url`, `method`, `chunkId` or `param.<name>`).
+    pub by: &'static [&'static str],
+    /// Hits per window.
+    pub limit: i64,
+    /// The window, in seconds.
+    pub seconds: i64,
+    /// Only failed requests count: each reserves its hit on arrival and a
+    /// request that does not fail gives it back.
+    pub failures: bool,
+    /// Counts for trusted callers (keys, privileged users) too.
+    pub everyone: bool,
+}
+
+impl Limit {
+    /// `Limit::attempts($by, $limit, $seconds)`: every request counts.
+    pub const fn attempts(by: &'static [&'static str], limit: i64, seconds: i64) -> Limit {
+        Limit { by, limit, seconds, failures: false, everyone: false }
+    }
+
+    /// `Limit::failures($by, $limit, $seconds)`: only failed requests count.
+    pub const fn failures(by: &'static [&'static str], limit: i64, seconds: i64) -> Limit {
+        Limit { by, limit, seconds, failures: true, everyone: false }
+    }
+
+    /// `everyone: true`: the limit counts for trusted callers too.
+    pub const fn everyone(self) -> Limit {
+        Limit { everyone: true, ..self }
+    }
+
+    /// `Limit::counts($trusted)`.
+    pub fn counts(&self, trusted: bool) -> bool {
+        !trusted || self.everyone
+    }
+
+    /// `Limit::key($values)`: `part:value` for each part, comma-separated; a
+    /// part the request does not carry is empty.
+    pub fn key(&self, values: &[(String, String)]) -> String {
+        self.by
+            .iter()
+            .map(|part| {
+                let value = values.iter().find(|(k, _)| k == part).map(|(_, v)| v.as_str()).unwrap_or("");
+                format!("{part}:{value}")
+            })
+            .collect::<Vec<_>>()
+            .join(",")
+    }
 }
 
 impl Route {

@@ -231,6 +231,14 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
                         ))
                         .await?;
                     if count == 0 {
+                        authorization
+                            .skip(db.delete_documents(
+                                "targets",
+                                vec![Query::equal("userInternalId", [invitee.sequence.to_string()])],
+                                utopia_database::database::BATCH_SIZE,
+                                None,
+                            ))
+                            .await?;
                         authorization.skip(db.delete_document("users", &invitee.id)).await?;
                     }
                 }
@@ -448,11 +456,69 @@ async fn create_invitee(
     user.put("emailIsDisposable", flag(is_disposable));
     user.put("emailIsFree", flag(is_free));
 
-    match db.authorization().skip(db.create_document("users", user)).await {
-        Ok(created) => Ok(User::from(&created)),
-        Err(e) if e.is_a(Kind::Duplicate) => Err(Error::new(ErrorType::UserAlreadyExists)),
-        Err(e) => Err(e.into()),
+    let invitee = match db.authorization().skip(db.create_document("users", user)).await {
+        Ok(created) => User::from(&created),
+        Err(e) if e.is_a(Kind::Duplicate) => return Err(Error::new(ErrorType::UserAlreadyExists)),
+        Err(e) => return Err(e.into()),
+    };
+    // The invitee's messaging targets, as a sign-up creates them.
+    for (provider_type, identifier) in [("email", email), ("sms", phone)] {
+        if identifier.is_empty() {
+            continue;
+        }
+        let permissions = base::permissions(&[
+            ("read", Role::user(&invitee.id, "")),
+            ("update", Role::user(&invitee.id, "")),
+            ("delete", Role::user(&invitee.id, "")),
+        ]);
+        let mut target = Document::default();
+        target.put("$permissions", permissions.clone());
+        target.put("userId", Value::from(invitee.id.as_str()));
+        target.put("userInternalId", documents::internal_id(invitee.sequence));
+        target.put("providerType", Value::from(provider_type));
+        target.put("identifier", Value::from(identifier));
+        match db.authorization().skip(db.create_document("targets", target)).await {
+            Ok(_) => {}
+            Err(e) if e.is_a(Kind::Duplicate) => {
+                // A deleted user's target lingers until the deletes worker removes it.
+                let authorization = db.authorization();
+                let existing =
+                    authorization.skip(db.find_one("targets", vec![Query::equal("identifier", [identifier])])).await?;
+                let owner = authorization
+                    .skip(db.get_document("users", &existing.string_or_empty("userId"), Vec::new(), false))
+                    .await?;
+                if !existing.is_empty() && owner.is_empty() {
+                    let mut updates = Document::default();
+                    updates.put("$permissions", permissions);
+                    updates.put("userId", Value::from(invitee.id.as_str()));
+                    updates.put("userInternalId", documents::internal_id(invitee.sequence));
+                    updates.put("providerType", Value::from(provider_type));
+                    authorization.skip(db.update_document("targets", existing.id(), updates)).await?;
+                }
+            }
+            Err(e) => return Err(e.into()),
+        }
     }
+    db.purge_cached_document("users", &invitee.id).await?;
+    Ok(invitee)
+}
+
+/// The marker of a change that would leave an organization without a
+/// confirmed owner, raised inside the transaction so it rolls back.
+const LAST_OWNER: &str = "There must be at least one owner in the organization.";
+
+/// Up to one confirmed owner of the team (`count(..., max: 1)`).
+async fn confirmed_owners(db: &Database, team_sequence: &str) -> utopia_database::Result<i64> {
+    db.count(
+        "memberships",
+        vec![
+            Query::contains("roles", ["owner"]),
+            Query::equal("teamInternalId", [team_sequence]),
+            Query::equal("confirm", [true]),
+        ],
+        Some(1),
+    )
+    .await
 }
 
 /// Hashes a password on the blocking pool.
@@ -716,23 +782,6 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
     let privileged = ctx.is_privileged();
     let app = ctx.is_key();
     let owner = ctx.authorization.has_role(&format!("team:{}/owner", team.id));
-    if ctx.project.is_console() {
-        // Up to 2 owners tell whether only one exists.
-        let owners = db
-            .count(
-                "memberships",
-                vec![Query::contains("roles", ["owner"]), Query::equal("teamInternalId", [team.sequence.to_string()])],
-                Some(2),
-            )
-            .await?;
-        let own = ctx.user.as_ref().is_some_and(|u| u.sequence.to_string() == membership.user_internal_id);
-        if owners == 1 && owner && own && !roles.iter().any(|r| r == "owner") {
-            return Err(Error::with_message(
-                ErrorType::MembershipDowngradeProhibited,
-                "There must be at least one owner in the organization.",
-            ));
-        }
-    }
     // Console organization developers and admins are bare privileged roles
     // under `X-Appwrite-Organization`: only the team owner or a key may
     // change roles.
@@ -740,9 +789,44 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
         return Err(Error::with_message(ErrorType::UserUnauthorized, "User is not allowed to modify roles"));
     }
 
-    let mut updates = Document::default();
-    updates.put("roles", documents::strings(&roles));
-    let membership = Membership::from(&db.update_document("memberships", &membership.id, updates).await?);
+    // An organization must keep a confirmed owner, whoever makes the change.
+    // Locking the team first serializes concurrent changes to its owners;
+    // counting after the update, in the same transaction, sees this change
+    // and refuses it as a whole.
+    let demoting = ctx.project.is_console()
+        && membership.confirm == Some(true)
+        && membership.roles.iter().any(|r| r == "owner")
+        && !roles.iter().any(|r| r == "owner");
+    let updated = Box::pin(db.with_transaction(|| {
+        let db = db.clone();
+        let team_id = team.id.clone();
+        let team_sequence = team.sequence.to_string();
+        let membership_id = membership.id.clone();
+        let roles = roles.clone();
+        async move {
+            if demoting {
+                db.get_document("teams", &team_id, Vec::new(), true).await?;
+            }
+            let mut updates = Document::default();
+            updates.put("roles", documents::strings(&roles));
+            let updated = db.update_document("memberships", &membership_id, updates).await?;
+            if demoting && confirmed_owners(&db, &team_sequence).await? == 0 {
+                return Err(utopia_database::Error::new(Kind::Exception, LAST_OWNER));
+            }
+            Ok(updated)
+        }
+    }))
+    .await;
+    let membership = match updated {
+        Ok(updated) => Membership::from(&updated),
+        Err(e) if e.to_string() == LAST_OWNER => {
+            return Err(Error::with_message(
+                ErrorType::MembershipDowngradeProhibited,
+                "There must be at least one owner in the organization.",
+            ));
+        }
+        Err(e) => return Err(e.into()),
+    };
     db.purge_cached_document("users", &profile.id).await?;
 
     ctx.event_param("userId", profile.id.clone());
@@ -773,29 +857,40 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
         return Err(Error::new(ErrorType::TeamMembershipMismatch));
     }
 
-    if ctx.project.is_console() {
-        // Up to 2 owners tell whether only one exists.
-        let owners = db
-            .count(
-                "memberships",
-                vec![Query::contains("roles", ["owner"]), Query::equal("teamInternalId", [team.sequence.to_string()])],
-                Some(2),
-            )
-            .await?;
-        let own = ctx.user.as_ref().is_some_and(|u| u.sequence.to_string() == membership.user_internal_id);
-        // The only owner cannot leave: no other role can add an owner or
-        // delete the organization.
-        if owners == 1 && own && membership.roles.iter().any(|r| r == "owner") {
+    // An organization must keep a confirmed owner, whoever deletes the
+    // membership. Locking the team first serializes concurrent changes to
+    // its owners; counting after the delete, in the same transaction, keeps
+    // an unauthorized caller on the 401 path.
+    let confirmed_owner =
+        ctx.project.is_console() && membership.confirm == Some(true) && membership.roles.iter().any(|r| r == "owner");
+    let deleted = Box::pin(db.with_transaction(|| {
+        let db = db.clone();
+        let team_id = team.id.clone();
+        let team_sequence = team.sequence.to_string();
+        let membership_id = membership.id.clone();
+        async move {
+            if confirmed_owner {
+                db.get_document("teams", &team_id, Vec::new(), true).await?;
+            }
+            db.delete_document("memberships", &membership_id).await?;
+            // Other roles can neither add an owner nor delete the
+            // organization, so it would be left unmanageable.
+            if confirmed_owner && confirmed_owners(&db, &team_sequence).await? == 0 {
+                return Err(utopia_database::Error::new(Kind::Exception, LAST_OWNER));
+            }
+            Ok(())
+        }
+    }))
+    .await;
+    match deleted {
+        Ok(()) => {}
+        Err(e) if e.is_a(Kind::Authorization) => return Err(Error::new(ErrorType::UserUnauthorized)),
+        Err(e) if e.to_string() == LAST_OWNER => {
             return Err(Error::with_message(
                 ErrorType::MembershipDeletionProhibited,
                 "There must be at least one owner in the organization.",
             ));
         }
-    }
-
-    match db.delete_document("memberships", &membership.id).await {
-        Ok(_) => {}
-        Err(e) if e.is_a(Kind::Authorization) => return Err(Error::new(ErrorType::UserUnauthorized)),
         Err(e) => return Err(e.into()),
     }
     db.purge_cached_document("users", &profile.id).await?;

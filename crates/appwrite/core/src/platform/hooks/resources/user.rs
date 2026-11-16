@@ -98,7 +98,7 @@ async fn load(ctx: &mut Context) -> Result<()> {
         if ctx.user.is_some() {
             return Err(Error::new(ErrorType::UserJwtAndCookieSet));
         }
-        let claims = auth::jwt::decode(&state.config.openssl_key_v1, &jwt, 3600)
+        let claims = auth::jwt::decode_accepted(&state.config.openssl_keys, &jwt, 3600, 0)
             .map_err(|e| Error::with_message(ErrorType::UserJwtInvalid, format!("Failed to verify JWT. {e}")))?;
         let claim = |k: &str| claims.get(k).and_then(Value::as_str).unwrap_or("").to_owned();
         let expected = if ctx.mode == Mode::Admin { Project::CONSOLE.to_owned() } else { ctx.project.id.clone() };

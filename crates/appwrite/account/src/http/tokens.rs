@@ -9,7 +9,7 @@ use utopia_validators::Boolean;
 use appwrite_core::auth::otp_token::OtpToken;
 use appwrite_core::database::documents::{self, Token, User};
 use appwrite_core::datetime;
-use appwrite_core::platform::{Audit, Context, Labels, Route};
+use appwrite_core::platform::{Audit, Context, Labels, Limit, Route};
 use appwrite_core::response::TokenModel;
 use appwrite_core::validators::{CustomId, Phone};
 use appwrite_core::{Error, ErrorType, Result};
@@ -22,14 +22,22 @@ const AUDIT_SESSION: Option<Audit> = Some(Audit { event: "session.create", resou
 
 pub fn routes() -> Vec<Route> {
     let magic_labels = Labels {
-        abuse_limit: 60,
-        abuse_key: &["url:{url},email:{param-email}", "url:{url},ip:{ip}"],
+        abuse: const {
+            &[
+                Limit::attempts(&["projectId", "url", "param.email"], 60, 3600),
+                Limit::attempts(&["url", "ip"], 60, 3600),
+            ]
+        },
         auth_type: "magic-url",
         ..Labels::NONE
     };
     let phone_labels = Labels {
-        abuse_limit: 10,
-        abuse_key: &["url:{url},phone:{param-phone}", "url:{url},ip:{ip}"],
+        abuse: const {
+            &[
+                Limit::attempts(&["projectId", "url", "param.phone"], 10, 3600),
+                Limit::attempts(&["url", "ip"], 10, 3600),
+            ]
+        },
         auth_type: "phone",
         ..Labels::NONE
     };
@@ -68,8 +76,12 @@ pub fn routes() -> Vec<Route> {
             AUDIT_SESSION,
             GROUPS_AUTH,
             Labels {
-                abuse_limit: 10,
-                abuse_key: &["url:{url},email:{param-email}", "url:{url},ip:{ip}"],
+                abuse: const {
+                    &[
+                        Limit::attempts(&["projectId", "url", "param.email"], 10, 3600),
+                        Limit::attempts(&["url", "ip"], 10, 3600),
+                    ]
+                },
                 auth_type: "email-otp",
                 ..Labels::NONE
             },
@@ -108,7 +120,7 @@ pub fn routes() -> Vec<Route> {
             None,
             None,
             GROUPS,
-            Labels { abuse_limit: 50, abuse_key: &["ip:{ip}"], error_page: true, ..Labels::NONE },
+            Labels { abuse: const { &[Limit::attempts(&["ip"], 50, 3600)] }, error_page: true, ..Labels::NONE },
             crate::oauth2::create_token
         ),
         route!(
@@ -120,7 +132,11 @@ pub fn routes() -> Vec<Route> {
             None,
             None,
             GROUPS_AUTH,
-            Labels { abuse_limit: 10, abuse_key: &["url:{url},ip:{ip}"], auth_type: "passkey", ..Labels::NONE },
+            Labels {
+                abuse: const { &[Limit::attempts(&["url", "ip"], 10, 3600)] },
+                auth_type: "passkey",
+                ..Labels::NONE
+            },
             crate::http::passkeys::create_token
         ),
         route!(
@@ -132,7 +148,7 @@ pub fn routes() -> Vec<Route> {
             None,
             Some(Audit { event: "passkey.token.create", resource: "user/{response.userId}" }),
             GROUPS,
-            Labels { abuse_limit: 10, abuse_key: &["url:{url},ip:{ip}"], ..Labels::NONE },
+            Labels { abuse: const { &[Limit::attempts(&["url", "ip"], 10, 3600)] }, ..Labels::NONE },
             crate::http::passkeys::update_token
         ),
     ]
@@ -390,7 +406,7 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
         headers: OtpToken::headers(&secret, ctx.request.header("origin").unwrap_or_default()),
         subject,
         template: "otp",
-        body_template: format!("{PHP_ROOT}/app/controllers/api/../../config/locale/templates/{template}.tpl"),
+        body_template: format!("{PHP_ROOT}/app/init/../config/locale/templates/{template}.tpl"),
         body,
         preview,
         smtp,

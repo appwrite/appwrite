@@ -184,6 +184,8 @@ pub const SESSION_SENSITIVE: &[&str] = &["secret", "providerAccessToken", "provi
 /// `session` model.
 pub struct SessionModel<'a> {
     pub session: &'a Session,
+    /// The name of the user the session belongs to.
+    pub user_name: &'a str,
     pub country_name: &'a str,
     pub current: bool,
     /// Overrides the stored secret (the encoded store on creation).
@@ -200,6 +202,7 @@ impl Serialize for SessionModel<'_> {
         m.serialize_entry("$createdAt", &dt(&x.created_at))?;
         m.serialize_entry("$updatedAt", &dt(&x.updated_at))?;
         m.serialize_entry("userId", &x.user_id)?;
+        m.serialize_entry("userName", self.user_name)?;
         m.serialize_entry("expire", &dt(&x.expire))?;
         m.serialize_entry("provider", s(&x.provider))?;
         m.serialize_entry("providerUid", s(&x.provider_uid))?;

@@ -8,7 +8,7 @@ mod base;
 mod http;
 
 use appwrite_core::action;
-use appwrite_core::platform::{Audit, Labels, Module, Route};
+use appwrite_core::platform::{Audit, Labels, Limit, Module, Route};
 use utopia_http::Method;
 
 /// The Teams module.
@@ -23,11 +23,12 @@ const fn audit(event: &'static str, resource: &'static str) -> Option<Audit> {
 }
 
 /// `createMembership`: `groups(['api', 'teams', 'auth'])`, `auth.type`
-/// `invites`, `abuse-limit` 10.
-const INVITES: Labels = Labels { abuse_limit: 10, auth_type: "invites", ..Labels::NONE };
+/// `invites`, 10 attempts per `url` and `ip`.
+const INVITES: Labels =
+    Labels { abuse: &[Limit::attempts(&["url", "ip"], 10, 3600)], auth_type: "invites", ..Labels::NONE };
 
-/// `updateMembershipStatus`: `abuse-limit` 10 on `ip:{ip},url:{url}`.
-const STATUS: Labels = Labels { abuse_limit: 10, abuse_key: &["ip:{ip},url:{url}"], ..Labels::NONE };
+/// `updateMembershipStatus`: 10 attempts per `ip` and `url`.
+const STATUS: Labels = Labels { abuse: &[Limit::attempts(&["ip", "url"], 10, 3600)], ..Labels::NONE };
 
 macro_rules! route {
     ($method:ident, $path:literal, $name:literal, $sdk:literal, $scopes:expr, $event:expr, $audit:expr, $action:path) => {
@@ -194,11 +195,10 @@ mod tests {
         let invite = routes.iter().find(|r| r.name == "createTeamMembership").unwrap();
         assert!(invite.has_group("auth"));
         assert_eq!(invite.labels.auth_type, "invites");
-        assert_eq!(invite.labels.abuse_limit, 10);
-        assert_eq!(invite.labels.abuse_key, &["url:{url},ip:{ip}"]);
+        assert_eq!(invite.labels.abuse, &[Limit::attempts(&["url", "ip"], 10, 3600)]);
         let status = routes.iter().find(|r| r.name == "updateTeamMembershipStatus").unwrap();
         assert_eq!(status.scopes, &["public"]);
-        assert_eq!(status.labels.abuse_key, &["ip:{ip},url:{url}"]);
+        assert_eq!(status.labels.abuse, &[Limit::attempts(&["ip", "url"], 10, 3600)]);
         assert!(!status.has_group("auth"));
     }
 }

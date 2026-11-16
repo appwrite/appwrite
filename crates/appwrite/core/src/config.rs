@@ -52,6 +52,33 @@ impl RedisDsn {
     }
 }
 
+/// `EncryptionKey::get($version)`: `_APP_OPENSSL_KEY_V<version>`, empty when unset.
+fn openssl_key(version: &str) -> String {
+    env_raw(&format!("_APP_OPENSSL_KEY_V{version}")).unwrap_or_default()
+}
+
+/// `EncryptionKey::accepted()`.
+fn openssl_keys() -> Vec<String> {
+    let mut keys = vec![openssl_key(&env_or("_APP_OPENSSL_KEY_CURRENT", "1"))];
+    // `(int)` of the variable: a non-numeric value starts at 0.
+    let mut version: i64 = php_std::format::str_to_int(env_or("_APP_OPENSSL_KEY_OLDEST", "1").as_bytes());
+    loop {
+        let key = openssl_key(&version.to_string());
+        if key.is_empty() {
+            break;
+        }
+        keys.push(key);
+        version += 1;
+    }
+    let mut accepted: Vec<String> = Vec::new();
+    for key in keys {
+        if !key.is_empty() && !accepted.contains(&key) {
+            accepted.push(key);
+        }
+    }
+    accepted
+}
+
 /// All configuration used by the Rust API.
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -60,6 +87,13 @@ pub struct Config {
     pub locale: String,
     pub region: String,
     pub openssl_key_v1: String,
+    /// `EncryptionKey::current()`: `_APP_OPENSSL_KEY_V<_APP_OPENSSL_KEY_CURRENT>`,
+    /// the key new tokens are signed with.
+    pub openssl_key: String,
+    /// `EncryptionKey::accepted()`: the current key, then every key from
+    /// `_APP_OPENSSL_KEY_OLDEST` up to the first missing one, without
+    /// duplicates or empty ones. Tokens are verified against each.
+    pub openssl_keys: Vec<String>,
     pub domain: String,
     pub console_domain: String,
     pub migration_host: Option<String>,
@@ -184,6 +218,8 @@ impl Config {
             locale: env_or("_APP_LOCALE", "en").into_owned(),
             region: env_or("_APP_REGION", "default").into_owned(),
             openssl_key_v1: env_raw("_APP_OPENSSL_KEY_V1").unwrap_or_default(),
+            openssl_key: openssl_key(&env_or("_APP_OPENSSL_KEY_CURRENT", "1")),
+            openssl_keys: openssl_keys(),
             migration_host: env("_APP_MIGRATION_HOST"),
             platform: platform(),
             console_url,

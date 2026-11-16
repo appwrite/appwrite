@@ -62,7 +62,10 @@ pub(in crate::platform) async fn auth(
             return Err(Error::new(ErrorType::ProjectKeyExpired));
         }
         role = key.role.clone();
+        // Every key also holds `public`, which guests already have, so
+        // endpoints open to anyone stay open to keys.
         scopes = key.scopes.clone();
+        scopes.push("public".to_owned());
         if key.role == roles::KEYS {
             if matches!(key.kind, KeyType::Standard | KeyType::Ephemeral | KeyType::Dynamic)
                 && key.project_id == ctx.project.id

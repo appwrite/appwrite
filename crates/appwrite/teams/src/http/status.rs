@@ -39,6 +39,12 @@ fn mismatch(user: &User) -> Error {
 enum Accept {
     AlreadyConfirmed,
     InvalidSecret,
+    /// MFA is in force and the holder is signed out: an address never stands
+    /// in for a second factor.
+    Guarded,
+    /// Both an email and a phone are on file: the invite cannot tell which it
+    /// proved, so the holder signs in.
+    SignIn,
     /// The confirmed membership, whether a session was created and the user
     /// whose account the acceptance claimed.
     Confirmed {
@@ -159,12 +165,6 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
             if current.string_or_empty("secret") != secret_hash {
                 return Ok(Accept::InvalidSecret);
             }
-            let mut updates = Document::default();
-            updates.put("joined", joined);
-            updates.put("confirm", Value::Bool(true));
-            let confirmed = db.update_document("memberships", &membership_id, updates).await?;
-            authorization.skip(db.increase_document_attribute("teams", &team_id, "total", Value::Int(1), None)).await?;
-
             // The invite proves the address it was sent to, and only one
             // address on file tells which that was.
             let mut user = User::from(&locked);
@@ -178,14 +178,23 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
             let phone_proof = verification == Some("phoneVerification");
             // Accepting while signed out proves an unverified email or
             // phone, so whoever registered it keeps no other way in. MFA in
-            // force is left alone: the address alone must not discard a
-            // second factor.
-            let guarded = !has_session && user.minimum_factors() > 1;
+            // force is left alone: an address, verified or not, never stands
+            // in for a second factor, so the holder signs in to accept.
+            if !has_session && user.minimum_factors() > 1 {
+                return Ok(Accept::Guarded);
+            }
+            if !has_session && verification.is_none() {
+                return Ok(Accept::SignIn);
+            }
+            let mut updates = Document::default();
+            updates.put("joined", joined);
+            updates.put("confirm", Value::Bool(true));
+            let confirmed = db.update_document("memberships", &membership_id, updates).await?;
+            authorization.skip(db.increase_document_attribute("teams", &team_id, "total", Value::Int(1), None)).await?;
             let mut claimed = None;
             if let Some(attribute) = verification
                 && !has_session
                 && !matches!(locked.get(attribute), Some(Value::Bool(true)))
-                && !guarded
             {
                 let proven = if phone_proof { "sms" } else { "email" };
                 authorization
@@ -194,9 +203,7 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
                     .map_err(|e| utopia_database::Error::new(Kind::Exception, e.message.into_owned()))?;
                 claimed = Some(user.id.clone());
             }
-            if let Some(attribute) = verification
-                && !guarded
-            {
+            if let Some(attribute) = verification {
                 let mut verified = Document::default();
                 verified.put(attribute, Value::Bool(true));
                 authorization.skip(db.update_document("users", &target_id, verified)).await?;
@@ -219,6 +226,10 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
     let (confirmed, created, claimed) = match outcome {
         Accept::AlreadyConfirmed => return Err(Error::new(ErrorType::MembershipAlreadyConfirmed)),
         Accept::InvalidSecret => return Err(Error::new(ErrorType::TeamInvalidSecret)),
+        Accept::Guarded => return Err(Error::new(ErrorType::UserMoreFactorsRequired)),
+        Accept::SignIn => {
+            return Err(Error::with_message(ErrorType::UserUnauthorized, "Sign in to accept this invitation."));
+        }
         Accept::Confirmed { membership, created, claimed } => (membership, created, claimed),
     };
 

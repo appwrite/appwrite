@@ -8,7 +8,7 @@ use utopia_http::{Cookie, Response};
 use utopia_validators::{AllOf, Assoc, Text, Validator};
 
 use appwrite_core::database::documents::{Attributes, User};
-use appwrite_core::platform::{Context, Route};
+use appwrite_core::platform::{Context, Limit, Route};
 use appwrite_core::response::{UserModel, prefs_value};
 use appwrite_core::validators::{Password, PasswordDictionary, PasswordStrength, Phone};
 use appwrite_core::{Error, ErrorType, Result};
@@ -59,7 +59,7 @@ pub fn routes() -> Vec<Route> {
             audit("user.update", "user/{response.$id}"),
             password,
             crate::GROUPS,
-            abuse(&["url:{url},ip:{ip}"])
+            abuse(const { &[Limit::attempts(&["url", "ip"], 10, 3600)] })
         ),
         profile_route!(
             PATCH,

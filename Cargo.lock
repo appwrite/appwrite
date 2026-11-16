@@ -221,10 +221,12 @@ name = "appwrite-storage"
 version = "0.1.0"
 dependencies = [
  "appwrite-core",
+ "base64 0.22.1",
  "bytes",
  "futures-util",
  "hex",
  "indexmap",
+ "md-5 0.10.6",
  "php-std",
  "serde",
  "serde_json",

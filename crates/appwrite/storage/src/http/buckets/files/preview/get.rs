@@ -17,12 +17,12 @@ use appwrite_core::{Error, ErrorType, Result};
 use crate::base::{self, PREVIEW_MAX_AGE, PROJECT_ACCESS, READ_BUFFER};
 use crate::device::Stored;
 
-use super::super::send::{decompress, decrypt, ids, load_file};
+use super::super::send::{decompress, ids, load_file};
 
 const INPUTS: &[&str] = &["image/jpeg", "image/gif", "image/png", "image/heic", "image/webp"];
 const GRAVITY: &[&str] =
     &["auto", "center", "top-left", "top", "top-right", "left", "right", "bottom-left", "bottom", "bottom-right"];
-const OUTPUTS: &[&str] = &["jpg", "jpeg", "png", "webp", "heic", "avif", "gif"];
+const OUTPUTS: &[&str] = &["jpg", "jpeg", "png", "webp", "heic", "avif", "gif", "auto"];
 
 pub async fn get(ctx: &mut Context) -> Result<Response> {
     let (bucket_id, file_id) = ids(ctx)?;
@@ -37,7 +37,13 @@ pub async fn get(ctx: &mut Context) -> Result<Response> {
     let opacity = optional_opacity(ctx)?;
     let rotation = optional_i64(ctx, "rotation", 0, -360, 360)?;
     let mut background = ctx.optional_str("background", "", &HexColor)?.unwrap_or_default();
-    let output = ctx.optional_str("output", "", &WhiteList::strict(OUTPUTS))?.unwrap_or_default();
+    let mut output = ctx.optional_str("output", "", &WhiteList::strict(OUTPUTS))?.unwrap_or_default();
+    // `output=auto`: resolved the same way as the cache key, so cached and fresh responses match.
+    let negotiated = output == "auto";
+    if negotiated {
+        output =
+            ctx.negotiated_params().into_iter().find(|(name, _)| name == "output").map(|(_, v)| v).unwrap_or_default();
+    }
 
     let db = ctx.db()?;
     let bucket = crate::http::visible_bucket(ctx, &db, &bucket_id).await?;
@@ -66,7 +72,7 @@ pub async fn get(ctx: &mut Context) -> Result<Response> {
     }
     let mut source = base::read_all(&device, &path).await?;
     if !cipher.is_empty() {
-        source = decrypt(&ctx.state.config.openssl_key_v1, &file, &source)?;
+        source = crate::encryption::decrypt(&file, &source)?;
     }
     source = decompress(&algorithm, source)?;
     let focal = focal_point(&gravity, width, height, &source).await?;
@@ -105,6 +111,9 @@ pub async fn get(ctx: &mut Context) -> Result<Response> {
             let collection = base::bucket_collection(&bucket);
             db.authorization().skip(db.update_document(&collection, file.id(), updates)).await.map_err(base::map_db)?;
         }
+    }
+    if negotiated {
+        ctx.response_headers.push(("vary", "Accept".to_owned()));
     }
     ctx.response_headers.push(("cache-control", format!("private, max-age={PREVIEW_MAX_AGE}")));
     Ok(Response::with_body(StatusCode::OK, &content_type, rendered))

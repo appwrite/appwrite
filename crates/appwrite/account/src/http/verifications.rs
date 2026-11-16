@@ -10,7 +10,7 @@ use utopia_validators::{Boolean, Text, php};
 use appwrite_core::auth::otp_token::OtpToken;
 use appwrite_core::database::documents::{self, Attributes, Token, User};
 use appwrite_core::datetime;
-use appwrite_core::platform::{Context, Labels, Route};
+use appwrite_core::platform::{Context, Labels, Limit, Route};
 use appwrite_core::response::TokenModel;
 use appwrite_core::validators::uid;
 use appwrite_core::{Error, ErrorType, Result};
@@ -34,7 +34,7 @@ pub fn routes() -> Vec<Route> {
             audit("verification.create", "user/{response.userId}"),
             create_email,
             crate::GROUPS,
-            abuse(&["url:{url},userId:{userId}"])
+            abuse(const { &[Limit::attempts(&["projectId", "url", "userId"], 10, 3600)] })
         ),
         profile_route!(
             PUT,
@@ -46,7 +46,7 @@ pub fn routes() -> Vec<Route> {
             audit("verification.update", "user/{response.userId}"),
             update_email,
             crate::GROUPS,
-            abuse(&["url:{url},userId:{param-userId}"])
+            abuse(const { &[Limit::attempts(&["projectId", "url", "param.userId"], 10, 3600).everyone()] })
         ),
         profile_route!(
             POST,
@@ -58,7 +58,7 @@ pub fn routes() -> Vec<Route> {
             audit("verification.create", "user/{response.userId}"),
             create_email_otp,
             crate::GROUPS,
-            abuse(&["url:{url},userId:{userId}"])
+            abuse(const { &[Limit::attempts(&["projectId", "url", "userId"], 10, 3600)] })
         ),
         profile_route!(
             PUT,
@@ -70,7 +70,7 @@ pub fn routes() -> Vec<Route> {
             audit("verification.update", "user/{response.userId}"),
             update_email_otp,
             crate::GROUPS,
-            abuse(&["url:{url},userId:{param-userId}"])
+            abuse(const { &[Limit::attempts(&["projectId", "url", "param.userId"], 10, 3600).everyone()] })
         ),
         profile_route!(
             POST,
@@ -82,7 +82,17 @@ pub fn routes() -> Vec<Route> {
             audit("verification.create", "user/{response.userId}"),
             create_phone,
             AUTH_GROUPS,
-            Labels { auth_type: "phone", ..abuse(&["url:{url},userId:{userId}", "url:{url},ip:{ip}"]) }
+            Labels {
+                auth_type: "phone",
+                ..abuse(
+                    const {
+                        &[
+                            Limit::attempts(&["projectId", "url", "userId"], 10, 3600),
+                            Limit::attempts(&["url", "ip"], 10, 3600),
+                        ]
+                    }
+                )
+            }
         ),
         profile_route!(
             PUT,
@@ -94,7 +104,7 @@ pub fn routes() -> Vec<Route> {
             audit("verification.update", "user/{response.userId}"),
             update_phone,
             crate::GROUPS,
-            abuse(&["userId:{param-userId}"])
+            abuse(const { &[Limit::attempts(&["projectId", "url", "param.userId"], 10, 3600).everyone()] })
         ),
     ]
 }

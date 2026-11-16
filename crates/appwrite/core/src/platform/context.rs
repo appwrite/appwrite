@@ -108,8 +108,8 @@ pub struct Context {
     /// The domain of the custom domain rule the request comes from, when it
     /// serves the project (the `rule` resource).
     pub rule: Option<hostnames::Rule>,
-    /// The abuse keys' parameters (`{projectId}`, `{ip}`, ...), for the
-    /// limits' reset after the action.
+    /// What the abuse limits are kept per (`Limit::values()`), for the
+    /// release of the failure limits after the action.
     pub abuse_params: Vec<(String, String)>,
     /// The keys of the account API key's user (see the `user` resource).
     pub account_keys: Vec<crate::database::project::Key>,
@@ -132,6 +132,20 @@ pub struct Context {
 }
 
 impl Context {
+    /// `$request->getNegotiatedParams()`: the route's `cache.negotiate`
+    /// params set to `auto`, resolved from the `Accept` header (empty when
+    /// the client accepts none of their types).
+    pub fn negotiated_params(&self) -> Vec<(String, String)> {
+        if self.route.labels.cache_negotiate.is_empty() {
+            return Vec::new();
+        }
+        crate::platform::hooks::shutdown::cache_write::negotiated(
+            self.request.params(),
+            self.route.labels.cache_negotiate,
+            &self.request.header_line_or("accept", ""),
+        )
+    }
+
     pub(crate) fn new(
         state: Arc<State>,
         request: Request,

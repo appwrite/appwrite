@@ -41,7 +41,7 @@ pub const LIMIT_SUBQUERY: i64 = 1000;
 
 /// Where PHP's mail templates live in its image (`__DIR__` of the account
 /// controller): the mails worker reads `bodyTemplate` from this path.
-const TEMPLATES_PHP: &str = "/usr/src/code/app/controllers/api/../../config/locale/templates/";
+const TEMPLATES_PHP: &str = "/usr/src/code/app/init/../config/locale/templates/";
 
 // ---- passwords --------------------------------------------------------------
 

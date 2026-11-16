@@ -19,7 +19,7 @@ pub async fn get(ctx: &mut Context) -> Result<Response> {
     let bucket_id = ctx.required_str("bucketId", &uid())?;
     let file_id = ctx.required_str("fileId", &uid())?;
     let jwt = ctx.optional_str("jwt", "", &Text::with_min(2048, 0))?.unwrap_or_default();
-    let claims = appwrite_core::auth::jwt::decode(&ctx.state.config.openssl_key_v1, &jwt, 3600)
+    let claims = appwrite_core::auth::jwt::decode_accepted(&ctx.state.config.openssl_keys, &jwt, 3600, 0)
         .map_err(|_| Error::new(ErrorType::UserUnauthorized))?;
     if claim(&claims, "projectId") != ctx.project.id
         || claim(&claims, "bucketId") != bucket_id

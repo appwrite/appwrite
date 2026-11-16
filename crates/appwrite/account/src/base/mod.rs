@@ -497,6 +497,10 @@ pub async fn new_session(
     session.put("$id", Value::from(appwrite_core::database::unique_id().as_str()));
     session.put("userId", Value::from(user.id.as_str()));
     session.put("userInternalId", documents::internal_id(user.sequence));
+    // The account switching device the session joins: account switching
+    // devices are not served here, so none.
+    session.put("deviceId", Value::from(""));
+    session.put("deviceInternalId", Value::from(""));
     session.put("provider", Value::from(provider));
     session.put("secret", Value::from(token_hash(secret)?.as_str()));
     session.put("userAgent", Value::from(user_agent.as_str()));
@@ -542,8 +546,15 @@ pub fn country_name(ctx: &Context, code: &str) -> String {
 }
 
 /// JSON of a session as the latest format renders it (an event payload).
-pub fn session_payload(ctx: &Context, session: &Session, current: bool, country: &str, secret: Option<&str>) -> Bytes {
-    let model = SessionModel { session, country_name: country, current, secret, render: ctx.render() };
+pub fn session_payload(
+    ctx: &Context,
+    session: &Session,
+    user_name: &str,
+    current: bool,
+    country: &str,
+    secret: Option<&str>,
+) -> Bytes {
+    let model = SessionModel { session, user_name, country_name: country, current, secret, render: ctx.render() };
     Bytes::from(appwrite_core::response::current(&model))
 }
 
