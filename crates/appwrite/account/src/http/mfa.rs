@@ -676,8 +676,14 @@ pub async fn update_challenge(ctx: &mut Context) -> Result<Response> {
     add_factor(ctx, &mut session, factors, Some(datetime::now())).await?;
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("sessionId", session.id.clone());
-    let model =
-        SessionModel { session: &session, country_name: "", current: false, secret: None, render: ctx.render() };
+    let model = SessionModel {
+        session: &session,
+        user_name: user.name.as_deref().unwrap_or(""),
+        country_name: "",
+        current: false,
+        secret: None,
+        render: ctx.render(),
+    };
     ctx.event_payload_sensitive(&model, SESSION_SENSITIVE);
     Ok(ctx.ok(&model))
 }

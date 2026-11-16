@@ -288,6 +288,7 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
         .zip(names.iter())
         .map(|(s, n)| SessionModel {
             session: s,
+            user_name: user.name.as_deref().unwrap_or(""),
             country_name: n,
             current: current.as_deref() == Some(s.id.as_str()),
             secret: None,
@@ -309,6 +310,7 @@ pub async fn get(ctx: &mut Context) -> Result<Response> {
     let country = base::country_name(ctx, session.country_code.as_deref().unwrap_or(""));
     Ok(ctx.ok(&SessionModel {
         session,
+        user_name: user.name.as_deref().unwrap_or(""),
         country_name: &country,
         current: current.as_deref() == Some(session.id.as_str()),
         secret: None,
@@ -375,7 +377,8 @@ pub async fn delete_all(ctx: &mut Context) -> Result<Response> {
         let country = base::country_name(ctx, session.country_code.as_deref().unwrap_or(""));
         if base::token_matches(&ctx.store.secret, session.secret.as_deref().unwrap_or("")) {
             base::clear_session_cookies(ctx, &mut response);
-            let payload = base::session_payload(ctx, &session, true, &country, None);
+            let payload =
+                base::session_payload(ctx, &session, user.name.as_deref().unwrap_or(""), true, &country, None);
             ctx.events.payload = Some(payload);
             ctx.events.sensitive = SESSION_SENSITIVE.to_vec();
             delete_targets(ctx, document, true, &country).await;
@@ -425,7 +428,8 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
     ctx.mqtt_revoke(&user.id).await;
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("sessionId", session.id.clone());
-    ctx.events.payload = Some(base::session_payload(ctx, &session, is_current, &country, None));
+    ctx.events.payload =
+        Some(base::session_payload(ctx, &session, user.name.as_deref().unwrap_or(""), is_current, &country, None));
     ctx.events.sensitive = SESSION_SENSITIVE.to_vec();
     let mut document = document;
     document.put("current", Value::Bool(is_current));
@@ -489,10 +493,12 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
     db.purge_cached_document("users", &user.id).await?;
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("sessionId", session.id.clone());
-    ctx.events.payload = Some(base::session_payload(ctx, &session, false, "", None));
+    ctx.events.payload =
+        Some(base::session_payload(ctx, &session, user.name.as_deref().unwrap_or(""), false, "", None));
     ctx.events.sensitive = SESSION_SENSITIVE.to_vec();
     Ok(ctx.ok(&SessionModel {
         session: &session,
+        user_name: user.name.as_deref().unwrap_or(""),
         country_name: "",
         current: false,
         secret: None,
@@ -582,7 +588,7 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
     let encoded = base::encode_store(&user.id, &secret)?;
     // The response keeps the stored expiry; only the cookies use this one.
     let cookie_expire = datetime::add_seconds(datetime::now(), duration);
-    let response = created_response(ctx, &session, &encoded, &cookie_expire, false);
+    let response = created_response(ctx, &session, user.name.as_deref().unwrap_or(""), &encoded, &cookie_expire, false);
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("sessionId", session.id.clone());
     if let Err(e) = base::session_alert(ctx, &user, &session).await {
@@ -597,6 +603,7 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
 fn created_response(
     ctx: &mut Context,
     session: &Session,
+    user_name: &str,
     encoded: &str,
     cookie_expire: &chrono::NaiveDateTime,
     override_expire: bool,
@@ -608,6 +615,7 @@ fn created_response(
     let country = base::country_name(ctx, session.country_code.as_deref().unwrap_or(""));
     let model = SessionModel {
         session: &shown,
+        user_name,
         country_name: &country,
         current: true,
         secret: Some(encoded),
@@ -672,7 +680,7 @@ pub async fn anonymous(ctx: &mut Context) -> Result<Response> {
     ctx.event_param("sessionId", session.id.clone());
     let encoded = base::encode_store(&user.id, &secret)?;
     let cookie_expire = datetime::add_seconds(datetime::now(), duration);
-    Ok(created_response(ctx, &session, &encoded, &cookie_expire, false))
+    Ok(created_response(ctx, &session, user.name.as_deref().unwrap_or(""), &encoded, &cookie_expire, false))
 }
 
 /// `POST /v1/account/sessions/token` and `PUT /v1/account/sessions/phone`.
@@ -693,7 +701,7 @@ async fn exchange(ctx: &mut Context, secret_length: i64) -> Result<Response> {
 
     // An OAuth2 token flow's secret is a JWT carrying the provider.
     let mut oauth_provider: Option<String> = None;
-    if let Ok(claims) = appwrite_core::auth::jwt::decode(&ctx.state.config.openssl_key_v1, &secret, 60) {
+    if let Ok(claims) = appwrite_core::auth::jwt::decode_accepted(&ctx.state.config.openssl_keys, &secret, 60, 0) {
         let provider = claims.get("provider").and_then(Json::as_str).unwrap_or("").to_owned();
         if provider.is_empty() {
             return Err(Error::new(ErrorType::UserInvalidToken));
@@ -857,5 +865,5 @@ async fn exchange(ctx: &mut Context, secret_length: i64) -> Result<Response> {
     ctx.event_param("sessionId", session.id.clone());
     let encoded = base::encode_store(&user.id, &session_secret)?;
     let cookie_expire = datetime::add_seconds(datetime::now(), duration);
-    Ok(created_response(ctx, &session, &encoded, &cookie_expire, true))
+    Ok(created_response(ctx, &session, user.name.as_deref().unwrap_or(""), &encoded, &cookie_expire, true))
 }

@@ -542,8 +542,15 @@ pub fn country_name(ctx: &Context, code: &str) -> String {
 }
 
 /// JSON of a session as the latest format renders it (an event payload).
-pub fn session_payload(ctx: &Context, session: &Session, current: bool, country: &str, secret: Option<&str>) -> Bytes {
-    let model = SessionModel { session, country_name: country, current, secret, render: ctx.render() };
+pub fn session_payload(
+    ctx: &Context,
+    session: &Session,
+    user_name: &str,
+    current: bool,
+    country: &str,
+    secret: Option<&str>,
+) -> Bytes {
+    let model = SessionModel { session, user_name, country_name: country, current, secret, render: ctx.render() };
     Bytes::from(appwrite_core::response::current(&model))
 }
 
