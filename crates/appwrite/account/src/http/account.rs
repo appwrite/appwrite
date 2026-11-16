@@ -36,8 +36,9 @@ pub fn routes() -> Vec<Route> {
 
 /// `EmailWhitelist`: the address is listed, or its domain as `*@domain`.
 fn whitelisted(list: &[String], email: &str) -> bool {
-    let Ok(parsed) = utopia_emails::Email::new(email) else { return false };
-    let (address, domain) = (parsed.get().to_lowercase(), parsed.domain().to_lowercase());
+    let Ok(parsed) = utopia_emails::Address::new(email) else { return false };
+    let (address, domain) = (String::from_utf8_lossy(parsed.get()), String::from_utf8_lossy(parsed.domain()));
+    let (address, domain) = (address.to_lowercase(), domain.to_lowercase());
     list.iter().map(|entry| entry.trim()).any(|entry| {
         if !entry.contains('*') {
             return entry.to_lowercase() == address;

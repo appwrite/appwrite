@@ -10,7 +10,7 @@ use utopia_database::database::Callback;
 use utopia_database::validator::query::cursor::Cursor as CursorValidator;
 use utopia_database::value::{from_plain, list, to_text};
 use utopia_database::{Database, Document, Kind, Query, Value};
-use utopia_emails::Email;
+use utopia_emails::Address;
 use utopia_query::Method;
 
 use appwrite_core::database::documents::{self, Attributes, Target, User, text};
@@ -216,15 +216,15 @@ impl Metadata {
     /// Computes the metadata the way `Users\Base::createUser` does: all
     /// `None` when the address cannot be parsed or has no canonical form.
     pub fn of(email: Option<&str>) -> Self {
-        let Ok(parsed) = Email::new(email.unwrap_or("")) else {
+        let Ok(parsed) = Address::new(email.unwrap_or("")) else {
             return Self::default();
         };
-        let Ok(canonical) = parsed.canonical() else {
+        let Ok(canonical) = parsed.canonical().map(|canonical| canonical.address()) else {
             return Self::default();
         };
         Self {
-            is_canonical: Some(parsed.get() == canonical),
-            canonical: Some(canonical),
+            is_canonical: Some(parsed.get() == canonical.as_slice()),
+            canonical: Some(String::from_utf8_lossy(&canonical).into_owned()),
             is_corporate: Some(parsed.is_corporate()),
             is_disposable: Some(parsed.is_disposable()),
             is_free: Some(parsed.is_free()),

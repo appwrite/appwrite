@@ -1772,8 +1772,9 @@ enum Resolved {
 /// The provider email as stored, the emails it may match, its metadata and
 /// whether it was canonicalized (`parseEmail()`).
 fn parse_email(ctx: &Context, provider_email: &str, verified: bool) -> Result<(String, Vec<String>, Metadata, bool)> {
-    let parsed = utopia_emails::Email::new(provider_email).map_err(|_| Error::new(ErrorType::GeneralInvalidEmail))?;
-    let canonical = parsed.canonical().map_err(|_| Error::new(ErrorType::GeneralInvalidEmail))?;
+    let parsed = utopia_emails::Address::new(provider_email).map_err(|_| Error::new(ErrorType::GeneralInvalidEmail))?;
+    let canonical = parsed.canonical().map_err(|_| Error::new(ErrorType::GeneralInvalidEmail))?.address();
+    let canonical = String::from_utf8_lossy(&canonical).into_owned();
     let canonicalize = ctx.plan_allows("supportsCanonicalEmailValidation")
         && ctx.project.auth_bool("canonicalEmails", false)
         && verified;
@@ -1926,7 +1927,7 @@ async fn resolve_user(
                     // Sent before the request's own event, which would otherwise reach the registrant with the claimant's data.
                     ctx.realtime_sessions_deleted(&found.id).await;
                 }
-                let domain = |e: &str| utopia_emails::Email::new(e).map(|p| p.domain().to_owned()).unwrap_or_default();
+                let domain = |e: &str| utopia_emails::Address::new(e).map(|p| p.domain().to_vec()).unwrap_or_default();
                 if domain(found.email.as_deref().unwrap_or("")) == domain(provider_email) {
                     found.email_verification = Some(true);
                 }
@@ -2446,7 +2447,7 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
                     // Sent before the request's own event, which would otherwise reach the registrant with the claimant's data.
                     ctx.realtime_sessions_deleted(&found.id).await;
                 }
-                let domain = |e: &str| utopia_emails::Email::new(e).map(|p| p.domain().to_owned()).unwrap_or_default();
+                let domain = |e: &str| utopia_emails::Address::new(e).map(|p| p.domain().to_vec()).unwrap_or_default();
                 if domain(found.email.as_deref().unwrap_or("")) == domain(&provider_email) {
                     found.email_verification = Some(true);
                 }

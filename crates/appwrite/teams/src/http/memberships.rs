@@ -8,7 +8,7 @@ use utopia_database::PermissionType;
 use utopia_database::Role;
 use utopia_database::value::from_plain;
 use utopia_database::{Database, Document, Kind, Query, Value};
-use utopia_emails::{Email, EmailValidator};
+use utopia_emails::{Address, EmailValidator};
 use utopia_http::Response;
 use utopia_validators::Text;
 
@@ -138,12 +138,11 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
         // Aliased emails are denied at sign-up, so the account holds the
         // unaliased address. Keep the typed domain as OAuth does.
         if invitee.is_none() && canonical_emails {
-            let unaliased = Email::new(&email)
+            let unaliased = Address::new(&email)
                 .ok()
                 .and_then(|parsed| {
                     let canonical = parsed.canonical().ok()?;
-                    let local = canonical.split('@').next().unwrap_or("").to_owned();
-                    Some(format!("{local}@{}", parsed.domain()))
+                    Some(String::from_utf8_lossy(&[&canonical.local[..], b"@", parsed.domain()].concat()).into_owned())
                 })
                 .unwrap_or_else(|| email.clone());
             if unaliased != email {
@@ -384,12 +383,16 @@ async fn create_invitee(
         return Err(Error::new(ErrorType::UserEmailAlreadyExists));
     }
 
-    let parsed = Email::new(email).ok();
-    let canonical = parsed.as_ref().and_then(|p| p.canonical().ok());
+    let parsed = Address::new(email).ok();
+    let canonical = parsed.as_ref().and_then(|p| p.canonical().ok()).map(|c| c.address());
     let metadata = match (&parsed, &canonical) {
-        (Some(p), Some(c)) => {
-            Some((c.clone(), p.get() == c.as_str(), p.is_corporate(), p.is_disposable(), p.is_free()))
-        }
+        (Some(p), Some(c)) => Some((
+            String::from_utf8_lossy(c).into_owned(),
+            p.get() == c.as_slice(),
+            p.is_corporate(),
+            p.is_disposable(),
+            p.is_free(),
+        )),
         _ => None,
     };
     let project = &ctx.project;
@@ -452,7 +455,7 @@ async fn create_invitee(
     user.put("tokens", Value::Null);
     user.put("memberships", Value::Null);
     user.put("search", Value::from(format!("{user_id} {email} {name}").as_str()));
-    user.put("emailCanonical", text(canonical.as_deref().filter(|_| metadata.is_some())));
+    user.put("emailCanonical", text(metadata.as_ref().map(|m| m.0.as_str())));
     user.put("emailIsCanonical", flag(is_canonical));
     user.put("emailIsCorporate", flag(is_corporate));
     user.put("emailIsDisposable", flag(is_disposable));

@@ -2,8 +2,7 @@
 
 use serde_json::{Map, Value, json};
 use utopia_emails::{
-    Email, EmailCorporate, EmailDomain, EmailLocal, EmailNotDisposable, EmailValidator, Error, Fastmail, Format,
-    Generic, Gmail, Icloud, Outlook, Protonmail, Provider, Walla, Yahoo, Yandex,
+    Address, EmailCorporate, EmailDomain, EmailLocal, EmailNotDisposable, EmailValidator, Error, Format, Provider,
 };
 use utopia_validators::Validator;
 
@@ -106,15 +105,15 @@ pub async fn bench(name: &str, _session: &mut crate::adapter::Session) -> Result
 
     use crate::bench::Bench;
 
-    let parsed = |address: &str| -> Result<Email, Fault> {
-        let email = Email::new(address).map_err(|e| Fault::new(String::from_utf8_lossy(e.message()).into_owned()))?;
+    let parsed = |address: &str| -> Result<Address, Fault> {
+        let email = Address::new(address).map_err(|e| Fault::new(String::from_utf8_lossy(e.message()).into_owned()))?;
         // Reads the domain lists, as the first check in a process does.
         black_box((email.is_disposable(), email.is_free()));
         Ok(email)
     };
     Ok(match name {
         "parse" => Bench::sync(|| {
-            black_box(Email::new(black_box("  John.Doe+News@Example.COM ")).ok());
+            black_box(Address::new(black_box("  John.Doe+News@Example.COM ")).ok());
         }),
         "validate" => {
             let validator = EmailValidator::new(false);
@@ -158,37 +157,37 @@ fn error_value(e: &Error) -> Value {
     json!({ "$error": { "class": e.php_class(), "message": bytes_value(e.message()) } })
 }
 
-fn inspect(email: &Email) -> Value {
+fn inspect(email: &Address) -> Value {
     let mut o = Map::new();
-    o.insert("get".into(), email.get().into());
-    o.insert("local".into(), email.local().into());
-    o.insert("domain".into(), email.domain().into());
+    o.insert("get".into(), bytes_value(email.get()));
+    o.insert("local".into(), bytes_value(email.local()));
+    o.insert("domain".into(), bytes_value(email.domain()));
     o.insert("isValid".into(), email.is_valid().into());
     o.insert("hasValidLocal".into(), email.has_valid_local().into());
     o.insert("hasValidDomain".into(), email.has_valid_domain().into());
     o.insert("isDisposable".into(), email.is_disposable().into());
     o.insert("isFree".into(), email.is_free().into());
     o.insert("isCorporate".into(), email.is_corporate().into());
-    o.insert("provider".into(), email.provider().into_owned().into());
-    o.insert("subdomain".into(), email.subdomain().into());
+    o.insert("provider".into(), bytes_value(&email.provider()));
+    o.insert("subdomain".into(), bytes_value(email.subdomain()));
     o.insert("hasSubdomain".into(), email.has_subdomain().into());
-    o.insert("canonical".into(), email.canonical().map_or_else(|e| error_value(&e), Value::from));
+    o.insert("canonical".into(), email.canonical().map_or_else(|e| error_value(&e), |c| bytes_value(&c.address())));
     o.insert("isCanonicalSupported".into(), email.is_canonical_supported().into());
     o.insert("canonicalDomain".into(), email.canonical_domain().map_or(Value::Null, Value::from));
     Value::Object(o)
 }
 
-fn provider(name: &str) -> Result<&'static dyn Provider, Fault> {
+fn provider(name: &str) -> Result<&'static Provider, Fault> {
     Ok(match name {
-        "gmail" => &Gmail,
-        "outlook" => &Outlook,
-        "yahoo" => &Yahoo,
-        "icloud" => &Icloud,
-        "protonmail" => &Protonmail,
-        "fastmail" => &Fastmail,
-        "yandex" => &Yandex,
-        "walla" => &Walla,
-        "generic" => &Generic,
+        "gmail" => &Provider::GMAIL,
+        "outlook" => &Provider::OUTLOOK,
+        "yahoo" => &Provider::YAHOO,
+        "icloud" => &Provider::ICLOUD,
+        "protonmail" => &Provider::PROTONMAIL,
+        "fastmail" => &Provider::FASTMAIL,
+        "yandex" => &Provider::YANDEX,
+        "walla" => &Provider::WALLA,
+        "generic" => &Provider::GENERIC,
         other => return Err(Fault::new(format!("unknown provider `{other}`"))),
     })
 }
@@ -253,32 +252,32 @@ pub async fn call(op: &str, args: &Value, session: &mut crate::adapter::Session)
         _ => {}
     }
     if let Some(method) = op.strip_prefix("email.") {
-        let email = match Email::new(a.bytes("email")?) {
+        let email = match Address::new(a.bytes("email")?) {
             Ok(email) => email,
             Err(e) => return Ok(err(&e)),
         };
         return Ok(Outcome::Ok(match method {
-            "get" => email.get().into(),
-            "local" => email.local().into(),
-            "domain" => email.domain().into(),
+            "get" => bytes_value(email.get()),
+            "local" => bytes_value(email.local()),
+            "domain" => bytes_value(email.domain()),
             "is_valid" => email.is_valid().into(),
             "has_valid_local" => email.has_valid_local().into(),
             "has_valid_domain" => email.has_valid_domain().into(),
             "is_disposable" => email.is_disposable().into(),
             "is_free" => email.is_free().into(),
             "is_corporate" => email.is_corporate().into(),
-            "provider" => email.provider().into_owned().into(),
-            "subdomain" => email.subdomain().into(),
+            "provider" => bytes_value(&email.provider()),
+            "subdomain" => bytes_value(email.subdomain()),
             "has_subdomain" => email.has_subdomain().into(),
             "canonical" => match email.canonical() {
-                Ok(c) => c.into(),
+                Ok(c) => bytes_value(&c.address()),
                 Err(e) => return Ok(err(&e)),
             },
             "is_canonical_supported" => email.is_canonical_supported().into(),
             "canonical_domain" => email.canonical_domain().map_or(Value::Null, Value::from),
             "formatted" => {
-                let format = a.opt_str("format")?.map_or(Format::Full, Format::from_name);
-                email.formatted(format).into_owned().into()
+                let format = a.opt_str("format")?.map_or(Format::Full, |name| Format::from_name(name.as_bytes()));
+                bytes_value(&email.formatted(format))
             }
             "inspect" => inspect(&email),
             _ => return Err(Fault::new(format!("emails: unknown operation `{op}`"))),
@@ -289,13 +288,15 @@ pub async fn call(op: &str, args: &Value, session: &mut crate::adapter::Session)
         "validator.describe" => {
             Outcome::Ok(describe(a.str("validator")?, a.opt_bool("allow_empty")?.unwrap_or(false))?)
         }
-        "provider.supports" => Outcome::ok(provider(a.str("provider")?)?.supports(a.str("domain")?)),
-        "provider.canonical" => match provider(a.str("provider")?)?.canonical(a.str("local")?, a.str("domain")?) {
-            Ok(c) => Outcome::ok(json!({ "local": c.local, "domain": c.domain })),
-            Err(e) => err(&e),
-        },
-        "provider.canonical_domain" => Outcome::ok(provider(a.str("provider")?)?.canonical_domain()),
-        "provider.supported_domains" => Outcome::ok(provider(a.str("provider")?)?.supported_domains().to_vec()),
+        "provider.supports" => Outcome::ok(provider(a.str("provider")?)?.supports(&a.bytes("domain")?)),
+        "provider.canonical" => {
+            match provider(a.str("provider")?)?.canonical(&a.bytes("local")?, &a.bytes("domain")?) {
+                Ok(c) => Outcome::ok(json!({ "local": bytes_value(&c.local), "domain": bytes_value(&c.domain) })),
+                Err(e) => err(&e),
+            }
+        }
+        "provider.canonical_domain" => Outcome::ok(provider(a.str("provider")?)?.canonical_domain),
+        "provider.supported_domains" => Outcome::ok(provider(a.str("provider")?)?.domains.to_vec()),
         _ => return Err(Fault::new(format!("emails: unknown operation `{op}`"))),
     };
     Ok(result)

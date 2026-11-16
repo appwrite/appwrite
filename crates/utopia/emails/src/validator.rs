@@ -1,13 +1,13 @@
-//! Request parameter validators. Each accepts a string that [`Email::new`]
-//! parses and [`Email::is_valid`] accepts, and adds its own rule. Values that
-//! are not strings are invalid.
+//! Request parameter validators. Each accepts a string that [`Address::new`]
+//! parses and [`Email::is_valid`](crate::Email::is_valid) accepts, and adds
+//! its own rule. Values that are not strings are invalid.
 //!
 //! PHP: `Utopia\Emails\Validator\*`.
 
 use serde_json::Value;
 use utopia_validators::Validator;
 
-use crate::Email;
+use crate::Address;
 
 /// The value type every email validator accepts.
 ///
@@ -19,8 +19,8 @@ const TYPE: &str = "string";
 /// not valid fails.
 ///
 /// PHP: `try { new Email(...) } catch { false }`.
-fn check(value: &[u8], rule: impl FnOnce(&Email) -> bool) -> bool {
-    Email::new(value).is_ok_and(|email| email.is_valid() && rule(&email))
+fn check(value: &[u8], rule: impl FnOnce(&Address) -> bool) -> bool {
+    Address::new(value).is_ok_and(|email| email.is_valid() && rule(&email))
 }
 
 macro_rules! string_only {
@@ -97,7 +97,7 @@ impl EmailValidator {
 string_only!(EmailValidator);
 
 /// Validates an email address whose domain is valid
-/// ([`Email::has_valid_domain`]).
+/// ([`Address::has_valid_domain`]).
 ///
 /// PHP: `Validator\EmailDomain`.
 #[derive(Debug, Clone, Copy, Default)]
@@ -111,14 +111,14 @@ impl EmailDomain {
     ///
     /// PHP: `isValid()` on a string.
     pub fn is_valid_address(&self, value: impl AsRef<[u8]>) -> bool {
-        check(value.as_ref(), Email::has_valid_domain)
+        check(value.as_ref(), Address::has_valid_domain)
     }
 }
 
 string_only!(EmailDomain);
 
 /// Validates an email address whose local part is valid
-/// ([`Email::has_valid_local`]).
+/// ([`Email::has_valid_local`](crate::Email::has_valid_local)).
 ///
 /// PHP: `Validator\EmailLocal`.
 #[derive(Debug, Clone, Copy, Default)]
@@ -132,14 +132,14 @@ impl EmailLocal {
     ///
     /// PHP: `isValid()` on a string.
     pub fn is_valid_address(&self, value: impl AsRef<[u8]>) -> bool {
-        check(value.as_ref(), Email::has_valid_local)
+        check(value.as_ref(), |address| address.has_valid_local())
     }
 }
 
 string_only!(EmailLocal);
 
 /// Validates an email address on a corporate domain
-/// ([`Email::is_corporate`]).
+/// ([`Address::is_corporate`]).
 ///
 /// PHP: `Validator\EmailCorporate`.
 #[derive(Debug, Clone, Copy, Default)]
@@ -153,14 +153,14 @@ impl EmailCorporate {
     ///
     /// PHP: `isValid()` on a string.
     pub fn is_valid_address(&self, value: impl AsRef<[u8]>) -> bool {
-        check(value.as_ref(), Email::is_corporate)
+        check(value.as_ref(), Address::is_corporate)
     }
 }
 
 string_only!(EmailCorporate);
 
 /// Validates an email address that is not on a disposable domain
-/// ([`Email::is_disposable`]).
+/// ([`Address::is_disposable`]).
 ///
 /// PHP: `Validator\EmailNotDisposable`.
 #[derive(Debug, Clone, Copy, Default)]

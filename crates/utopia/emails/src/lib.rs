@@ -1,56 +1,56 @@
-//! Email addresses: parsing, validation, the canonical form of an address
-//! per mail provider, and the free / disposable / corporate classification
-//! of its domain.
+//! Email addresses: split at the `@`, checked, made canonical per mail
+//! provider, and their domains classified as free, disposable or corporate;
+//! and validators for request parameters.
 //!
 //! PHP: the semantics of `utopia-php/emails`; validation is PHP's
-//! `FILTER_VALIDATE_EMAIL`, through `php-std`.
+//! `FILTER_VALIDATE_EMAIL`, through `php-std`. Addresses are bytes, as PHP
+//! strings are.
 //!
 //! | PHP | Rust |
 //! |---|---|
-//! | `Utopia\Emails\Email` | [`Email`] |
-//! | `new Email($email)` | [`Email::new`] |
+//! | `Utopia\Emails\Email` | [`Address`] (with its domain parsed), [`Email`] (without) |
+//! | `new Email($email)` | [`Address::new`]; [`Email::new`] stops before `new Domain()` |
 //! | `get()`, `getLocal()`, `getDomain()` | [`Email::get`], [`Email::local`], [`Email::domain`] |
-//! | `isValid()`, `hasValidLocal()`, `hasValidDomain()` | [`Email::is_valid`], [`Email::has_valid_local`], [`Email::has_valid_domain`] |
-//! | `isDisposable()`, `isFree()`, `isCorporate()` | [`Email::is_disposable`], [`Email::is_free`], [`Email::is_corporate`] |
-//! | `getProvider()`, `getSubdomain()`, `hasSubdomain()` | [`Email::provider`], [`Email::subdomain`], [`Email::has_subdomain`] |
-//! | `getCanonical()`, `isCanonicalSupported()`, `getCanonicalDomain()` | [`Email::canonical`], [`Email::is_canonical_supported`], [`Email::canonical_domain`] (and `*_with` for other providers) |
-//! | `getFormatted($format)`, `Email::FORMAT_*` | [`Email::formatted`], [`Format`] |
+//! | `isValid()`, `hasValidLocal()` | [`Email::is_valid`], [`Email::has_valid_local`] |
+//! | `hasValidDomain()` | [`Address::has_valid_domain`] ([`Email::has_valid_domain_syntax`] without the known suffix) |
+//! | `isDisposable()`, `isFree()`, `isCorporate()` | [`Address::is_disposable`], [`Address::is_free`], [`Address::is_corporate`] ([`Lists::is_disposable`], [`Lists::is_on_free_list`] given the domain) |
+//! | `getProvider()`, `getSubdomain()`, `hasSubdomain()` | [`Address::provider`], [`Address::subdomain`], [`Address::has_subdomain`] |
+//! | `getCanonical()`, `isCanonicalSupported()`, `getCanonicalDomain()` | [`Email::canonical`], [`Email::is_canonical_supported`], [`Email::canonical_domain`] |
+//! | `getFormatted($format)`, `Email::FORMAT_*` | [`Address::formatted`], [`Format`] |
 //! | `Email::LOCAL_MAX_LENGTH`, `DOMAIN_MAX_LENGTH` | [`LOCAL_MAX_LENGTH`], [`DOMAIN_MAX_LENGTH`] |
 //! | `data/free-domains.php`, `data/disposable-domains.php` | [`Lists`] ([`Lists::FREE`], [`Lists::DISPOSABLE`]) |
 //! | `import.php` (`composer import:*`) | the `emails-import` binary |
-//! | `Utopia\Emails\Canonicals\Provider` (abstract) | [`Provider`] (trait) |
-//! | `Canonicals\Providers\{Gmail, Outlook, Yahoo, Icloud, Protonmail, Fastmail, Yandex, Walla, Generic}` | [`Gmail`], [`Outlook`], [`Yahoo`], [`Icloud`], [`Protonmail`], [`Fastmail`], [`Yandex`], [`Walla`], [`Generic`] |
+//! | `Canonicals\Providers\{Gmail, Outlook, Yahoo, Icloud, Protonmail, Fastmail, Yandex, Walla, Generic}` | [`Provider`] ([`Provider::GMAIL`] to [`Provider::GENERIC`]) |
+//! | provider `supports()`, `getCanonical()`, `getCanonicalDomain()`, `getSupportedDomains()` | [`Provider::supports`], [`Provider::canonical`], [`Provider::canonical_domain`], [`Provider::domains`] |
 //! | `getCanonical()` result `['local' => ..., 'domain' => ...]` | [`Canonical`] |
 //! | the providers `Email` consults | [`PROVIDERS`] |
 //! | `Validator\Email`, `EmailDomain`, `EmailLocal`, `EmailCorporate`, `EmailNotDisposable` | [`EmailValidator`], [`EmailDomain`], [`EmailLocal`], [`EmailCorporate`], [`EmailNotDisposable`] |
 //! | validator `isValid($value)` | `utopia_validators::Validator::is_valid` (JSON values), `is_valid_address` (strings of any bytes) |
 //! | validator `getDescription()`, `getType()`, `isArray()` | `Validator::description`, `value_type()`, `Validator::is_array` |
-//! | `Exception` (constructor), `InvalidArgumentException` (canonical form) | [`Error::Parse`], [`Error::InvalidArgument`] |
+//! | `Exception` (constructor), `InvalidArgumentException` (canonical form) | [`Error::Parse`], [`Error::EmptyLocal`] |
 //!
 //! Domain parsing (provider, subdomain, known suffixes) is `utopia-domains`.
+//! The `utopia` PHP extension builds `Utopia\Emails\Email` on [`Email`] and
+//! asks PHP's `Utopia\Domains\Domain` for the rest, as PHP does.
 //!
-//! The free and disposable lists are embedded in the crate
-//! (`data/free-domains.txt`, `data/disposable-domains.txt`) and parsed on
-//! first use, unless a server installs other lists with [`Lists::install`]
-//! at startup. The `emails-import` task refreshes them from their sources
-//! (see the guide).
-//!
-//! PHP: `utopia-php/emails` uses `utopia-php/domains` the same way. PHP's
-//! lists are the package's data files (`data/*-domains.php`, written by
-//! `import.php`), which hold the same domains in the same order.
+//! The lists are embedded in the crate (`data/*-domains.txt`) and parsed
+//! once, on first use. The `emails-import` task refreshes them from their
+//! sources (see the guide); `data/export.php` writes them from the PHP
+//! package's `data/*-domains.php`, which hold the same domains in the same
+//! order.
 
 #![warn(missing_docs)]
 
+mod address;
 mod canonicals;
 mod email;
 mod error;
 mod lists;
 mod validator;
 
-pub use canonicals::{
-    Canonical, Fastmail, Generic, Gmail, Icloud, Outlook, PROVIDERS, Protonmail, Provider, Walla, Yahoo, Yandex,
-};
-pub use email::{DOMAIN_MAX_LENGTH, Email, Format, LOCAL_MAX_LENGTH};
+pub use address::{Address, Format};
+pub use canonicals::{Canonical, PROVIDERS, Provider};
+pub use email::{DOMAIN_MAX_LENGTH, Email, LOCAL_MAX_LENGTH};
 pub use error::Error;
 pub use lists::{DomainList, Lists};
 pub use validator::{EmailCorporate, EmailDomain, EmailLocal, EmailNotDisposable, EmailValidator};

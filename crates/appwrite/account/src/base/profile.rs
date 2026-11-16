@@ -12,7 +12,7 @@ use utopia_database::Permission;
 use utopia_database::Role;
 use utopia_database::value::{from_plain, list, to_long};
 use utopia_database::{Database, Document, Query, Value};
-use utopia_emails::Email;
+use utopia_emails::Address;
 use utopia_http::Response;
 use utopia_validators::Validator;
 
@@ -222,11 +222,11 @@ pub struct Metadata {
 impl Metadata {
     /// The metadata of an address, or `None` when it cannot be parsed.
     pub fn of(email: &str) -> Option<Self> {
-        let parsed = Email::new(email).ok()?;
-        let canonical = parsed.canonical().ok()?;
+        let parsed = Address::new(email).ok()?;
+        let canonical = parsed.canonical().ok()?.address();
         Some(Self {
-            is_canonical: Some(parsed.get() == canonical),
-            canonical: Some(canonical),
+            is_canonical: Some(parsed.get() == canonical.as_slice()),
+            canonical: Some(String::from_utf8_lossy(&canonical).into_owned()),
             is_corporate: Some(parsed.is_corporate()),
             is_disposable: Some(parsed.is_disposable()),
             is_free: Some(parsed.is_free()),

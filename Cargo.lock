@@ -5186,6 +5186,7 @@ dependencies = [
  "php-std",
  "utopia-domains",
  "utopia-dsn",
+ "utopia-emails",
  "utopia-image",
  "utopia-locale",
  "utopia-user-agent",

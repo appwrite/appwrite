@@ -20,14 +20,15 @@ Utopia Emails parses email addresses and answers the questions an application as
 
 ## Validate an address from a sign-up form
 
-`EmailValidator` accepts a string that parses as a valid address. Surrounding spaces and upper case are fine, because the address is trimmed and lower-cased first.
+`EmailValidator` accepts a string that parses as a valid address. Upper case is fine, because the address is lower-cased first. Surrounding spaces and control characters are not: the parser would trim them, so the value stored would be a lookalike of the address checked.
 
 ```rust
 use utopia_emails::EmailValidator;
 
 let validator = EmailValidator::default();
 
-assert!(validator.is_valid_address("  Jane.Doe@Example.com "));
+assert!(validator.is_valid_address("Jane.Doe@Example.com"));
+assert!(!validator.is_valid_address("  Jane.Doe@Example.com "));
 assert!(!validator.is_valid_address("jane.doe"));
 assert!(!validator.is_valid_address("jane@doe@example.com"));
 assert!(!validator.is_valid_address(""));
@@ -38,21 +39,21 @@ assert!(EmailValidator::new(true).is_valid_address(""));
 
 ## Read the parts of an address
 
-Parse the address once, then read its local part, its domain, and the provider and subdomain inside the domain. `formatted` returns any one of them by name.
+Parse the address once, then read its local part, its domain, and the provider and subdomain inside the domain. `formatted` returns any one of them by name. An `Address` is an `Email` with its domain parsed; the parts are bytes, as PHP strings are.
 
 ```rust
-use utopia_emails::{Email, Format};
+use utopia_emails::{Address, Format};
 
-let email = Email::new("  Jane@Mail.Example.co.uk ")?;
+let email = Address::new("  Jane@Mail.Example.co.uk ")?;
 
-assert_eq!(email.get(), "jane@mail.example.co.uk");
-assert_eq!(email.local(), "jane");
-assert_eq!(email.domain(), "mail.example.co.uk");
-assert_eq!(email.provider(), "example.co.uk");
-assert_eq!(email.subdomain(), "mail");
+assert_eq!(email.get(), b"jane@mail.example.co.uk");
+assert_eq!(email.local(), b"jane");
+assert_eq!(email.domain(), b"mail.example.co.uk");
+assert_eq!(&*email.provider(), b"example.co.uk");
+assert_eq!(email.subdomain(), b"mail");
 assert!(email.has_subdomain());
-assert_eq!(email.formatted(Format::Provider), "example.co.uk");
-assert_eq!(email.formatted(Format::from_name("local")), "jane");
+assert_eq!(&*email.formatted(Format::Provider), b"example.co.uk");
+assert_eq!(&*email.formatted(Format::from_name(b"local")), b"jane");
 ```
 
 ## Check the local part and the domain
@@ -60,9 +61,9 @@ assert_eq!(email.formatted(Format::from_name("local")), "jane");
 `FILTER_VALIDATE_EMAIL` allows more than most applications want. `has_valid_local` allows only letters, digits and `._+-` with no stray dots, and `has_valid_domain` requires a known public suffix. `EmailLocal` and `EmailDomain` apply the same rules as validators.
 
 ```rust
-use utopia_emails::{Email, EmailDomain, EmailLocal};
+use utopia_emails::{Address, EmailDomain, EmailLocal};
 
-let email = Email::new("o'brien@example.com")?;
+let email = Address::new("o'brien@example.com")?;
 assert!(email.is_valid());
 assert!(!email.has_valid_local());
 assert!(email.has_valid_domain());
@@ -80,12 +81,12 @@ Many providers deliver several spellings to the same inbox. Gmail ignores dots a
 ```rust
 use utopia_emails::Email;
 
-let canonical = |address: &str| Email::new(address)?.canonical();
+let canonical = |address: &str| Email::new(address)?.canonical().map(|canonical| canonical.address());
 
-assert_eq!(canonical("Jane.Doe+promo@googlemail.com")?, "janedoe@gmail.com");
-assert_eq!(canonical("jane.doe+promo@hotmail.co.uk")?, "jane.doe@outlook.com");
-assert_eq!(canonical("jane.doe+promo@me.com")?, "jane.doe@icloud.com");
-assert_eq!(canonical("jane.doe+promo@example.com")?, "jane.doe+promo@example.com");
+assert_eq!(canonical("Jane.Doe+promo@googlemail.com")?, b"janedoe@gmail.com");
+assert_eq!(canonical("jane.doe+promo@hotmail.co.uk")?, b"jane.doe@outlook.com");
+assert_eq!(canonical("jane.doe+promo@me.com")?, b"jane.doe@icloud.com");
+assert_eq!(canonical("jane.doe+promo@example.com")?, b"jane.doe+promo@example.com");
 ```
 
 ## Find the mail provider behind a domain
@@ -109,13 +110,16 @@ assert_eq!(email.canonical_domain(), None);
 Each address is free (a public mail service), disposable (a throwaway inbox) or corporate (anything else). Use `EmailNotDisposable` to block throwaway inboxes, and `EmailCorporate` when only work addresses are welcome.
 
 ```rust
-use utopia_emails::{Email, EmailCorporate, EmailNotDisposable};
+use utopia_emails::{Address, EmailCorporate, EmailNotDisposable};
 
-let email = Email::new("jane@mailinator.com")?;
+let email = Address::new("jane@mailinator.com")?;
 assert!(email.is_disposable());
 assert!(!email.is_free());
 
-let email = Email::new("jane@gmail.com")?;
+// A subdomain of a disposable provider is disposable too.
+assert!(Address::new("jane@inbox.mailinator.com")?.is_disposable());
+
+let email = Address::new("jane@gmail.com")?;
 assert!(email.is_free());
 assert!(!email.is_corporate());
 
@@ -127,7 +131,7 @@ assert!(EmailCorporate.is_valid_address("jane@company.org"));
 
 ## Report addresses that cannot be parsed
 
-Parsing fails on an empty value or one without exactly one `@`. Normalizing fails when a provider's rules leave nothing of the local part. Each error carries a message you can show.
+Parsing fails on an empty value or one without exactly one `@`, and `Address::new` on a URL as the domain. Normalizing fails when a provider's rules leave nothing of the local part. Each error carries a message you can show.
 
 ```rust
 use utopia_emails::{Email, Error};
@@ -141,38 +145,23 @@ for value in ["", "jane.doe", "jane@doe@example.com"] {
 assert_eq!(Email::new("jane.doe").unwrap_err().to_string(), "'jane.doe' must be a valid email address");
 
 let error = Email::new("...@gmail.com")?.canonical().unwrap_err();
-assert!(matches!(error, Error::InvalidArgument(_)));
+assert_eq!(error, Error::EmptyLocal);
 assert_eq!(error.to_string(), "Email local part cannot be empty after normalization");
 ```
 
-## Add rules for your own mail provider
+## Apply one provider's rules
 
-Implement `Provider` for a domain the built-in providers do not know, then pass it to `canonical_with` ahead of the defaults. The first provider that supports the domain wins.
+Each provider is a `Provider`: its canonical domain, the domains it owns and its aliasing rules. `Provider::of` finds the one `Email` would use for a domain. Yandex is one `Email` does not consult; apply it yourself.
 
 ```rust
-use utopia_emails::{Canonical, Email, Error, Provider, PROVIDERS};
+use utopia_emails::Provider;
 
-struct Acme;
+assert_eq!(Provider::of(b"googlemail.com").canonical_domain, "gmail.com");
+assert_eq!(Provider::of(b"example.com"), &Provider::GENERIC);
 
-impl Provider for Acme {
-    fn canonical(&self, local: &str, _domain: &str) -> Result<Canonical, Error> {
-        let local = local.split('-').next().unwrap_or(local);
-        Ok(Canonical { local: local.to_owned(), domain: "acme.com".to_owned() })
-    }
-
-    fn canonical_domain(&self) -> &str {
-        "acme.com"
-    }
-
-    fn supported_domains(&self) -> &[&str] {
-        &["acme.com", "acme.net"]
-    }
-}
-
-let providers: Vec<&dyn Provider> = std::iter::once(&Acme as &dyn Provider).chain(PROVIDERS.iter().copied()).collect();
-
-assert_eq!(Email::new("jane-news@acme.net")?.canonical_with(&providers)?, "jane@acme.com");
-assert_eq!(Email::new("jane+news@gmail.com")?.canonical_with(&providers)?, "jane@gmail.com");
+let canonical = Provider::YANDEX.canonical(b"Jane.Doe+news", b"ya.ru")?;
+assert_eq!(canonical.address(), b"jane.doe+news@yandex.ru");
+assert!(Provider::YANDEX.supports(b"yandex.com"));
 ```
 
 ## Tasks

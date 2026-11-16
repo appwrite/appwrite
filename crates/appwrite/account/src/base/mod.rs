@@ -14,7 +14,7 @@ use utopia_database::Permission;
 use utopia_database::Role;
 use utopia_database::value::list;
 use utopia_database::{Document, Value};
-use utopia_emails::Email;
+use utopia_emails::Address;
 use utopia_http::Cookie;
 use utopia_http::Response;
 
@@ -300,11 +300,11 @@ impl Metadata {
     /// The metadata of `email` as sign-up computes it; an address without
     /// a canonical form is `general_invalid_email`.
     pub fn of(email: &str) -> Result<Self> {
-        let parsed = Email::new(email).map_err(|_| Error::new(ErrorType::GeneralInvalidEmail))?;
-        let canonical = parsed.canonical().map_err(|_| Error::new(ErrorType::GeneralInvalidEmail))?;
+        let parsed = Address::new(email).map_err(|_| Error::new(ErrorType::GeneralInvalidEmail))?;
+        let canonical = parsed.canonical().map_err(|_| Error::new(ErrorType::GeneralInvalidEmail))?.address();
         Ok(Self {
-            is_canonical: Some(parsed.get() == canonical),
-            canonical: Some(canonical),
+            is_canonical: Some(parsed.get() == canonical.as_slice()),
+            canonical: Some(String::from_utf8_lossy(&canonical).into_owned()),
             is_corporate: Some(parsed.is_corporate()),
             is_disposable: Some(parsed.is_disposable()),
             is_free: Some(parsed.is_free()),
