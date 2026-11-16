@@ -1,27 +1,25 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
-import { View } from '@/components/pages/projects/$projectId/settings/View'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import { pageTitle } from '@/lib/utils/page-title'
+import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
+
+function isIdentityServersIndexPath(pathname: string): boolean {
+  return /\/settings\/identity-servers\/?$/.test(pathname)
+}
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/settings/identity-servers',
 )({
-  // Preview behind the identityServers flag (Previews menu or debug menu).
-  beforeLoad: ({ params }) => {
-    if (!getActiveProfileFeatures().identityServers) {
+  // LDAP is the only identity server so far, so the index opens it.
+  beforeLoad: ({ location, params }) => {
+    if (isIdentityServersIndexPath(location.pathname)) {
       throw redirect({
-        to: '/projects/$projectId/settings',
-        params,
+        to: '/projects/$projectId/settings/identity-servers/ldap',
+        params: { projectId: params.projectId },
         replace: true,
       })
     }
   },
-  head: () => ({
-    meta: [{ title: pageTitle('Identity servers', 'Settings') }],
-  }),
-  component: SettingsIdentityServersPage,
+  component: SettingsIdentityServersLayout,
 })
 
-function SettingsIdentityServersPage() {
-  return <View />
+function SettingsIdentityServersLayout() {
+  return <Outlet />
 }

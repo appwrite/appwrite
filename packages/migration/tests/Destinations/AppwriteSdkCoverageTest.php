@@ -90,10 +90,10 @@ class AppwriteSdkCoverageTest extends TestCase
         'createEphemeralKey' => 'skipped: ephemeral keys expire within minutes and are never listed.',
         'createSMTPTest' => 'skipped: sends a test email; there is nothing to migrate.',
         'createLDAPTest' => 'skipped: tests the LDAP connection; there is nothing to migrate.',
-        'updateLDAP' => 'not migrated yet: LDAP sign-in settings, including the bind password.',
         'createMockPhone' => 'not migrated yet: mock phone numbers for testing phone sign-in.',
         'updateMockPhone' => 'not migrated yet: mock phone numbers for testing phone sign-in.',
         'updateOAuth2Server' => 'not migrated yet: the project acting as an OAuth2 server, and its clients.',
+        'updateLDAP' => 'not migrated yet: LDAP sign-in settings, which hold the bind password.',
     ];
 
     /**
