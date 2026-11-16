@@ -37,6 +37,7 @@
 #![warn(missing_docs)]
 
 mod body;
+pub mod cipher;
 mod device;
 mod error;
 mod local;
@@ -48,6 +49,7 @@ mod telemetry;
 pub mod validator;
 
 pub use body::{Body, Source};
+pub use cipher::Cipher;
 pub use device::{
     Acl, COPY_CHUNK_SIZE, Device, DeviceType, FileInfo, FileList, Metadata, Part, Sink, UploadInfo, UploadList,
     absolute_path, copy, move_file, stream,

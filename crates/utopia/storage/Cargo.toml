@@ -16,11 +16,13 @@ s3 = ["dep:http-body-util", "dep:hyper", "dep:hyper-rustls", "dep:hyper-util", "
 telemetry = ["dep:utopia-telemetry"]
 
 [dependencies]
+aes-gcm.workspace = true
 async-trait.workspace = true
 base64.workspace = true
 bytes.workspace = true
 chrono.workspace = true
 futures-util.workspace = true
+getrandom.workspace = true
 hex.workspace = true
 hmac.workspace = true
 http-body-util = { workspace = true, optional = true }
