@@ -1249,7 +1249,12 @@ class Deletes extends Action
         $projectInternalId = $document->getSequence();
 
         $executionStore?->deleteProject($projectId);
-        $logs?->delete($projectId);
+        try {
+            $logs?->delete($projectId);
+        } catch (\Throwable $th) {
+            // Rows expire with their TTL, so an unreachable log store must not block the deletion.
+            Console::error("Failed to delete logs of project {$projectId}: " . $th->getMessage());
+        }
 
         try {
             $dsn = new DSN($document->getAttribute('database', 'console'));
@@ -1985,7 +1990,11 @@ class Deletes extends Action
          */
         Console::info("Deleting logs for site " . $siteId);
         $executionStore?->deleteByResource($project->getId(), (string) $siteInternalId, RESOURCE_TYPE_SITES);
-        $logs?->delete($project->getId(), RESOURCE_TYPE_SITES, (string) $siteInternalId);
+        try {
+            $logs?->delete($project->getId(), RESOURCE_TYPE_SITES, (string) $siteInternalId);
+        } catch (\Throwable $th) {
+            Console::error("Failed to delete logs of site {$siteId} in project {$project->getId()}: " . $th->getMessage());
+        }
 
         /**
          * Delete VCS Repositories and VCS Comments
@@ -2070,7 +2079,11 @@ class Deletes extends Action
          */
         Console::info("Deleting executions for function " . $functionId);
         $executionStore?->deleteByResource($project->getId(), (string) $functionInternalId, RESOURCE_TYPE_FUNCTIONS);
-        $logs?->delete($project->getId(), RESOURCE_TYPE_FUNCTIONS, (string) $functionInternalId);
+        try {
+            $logs?->delete($project->getId(), RESOURCE_TYPE_FUNCTIONS, (string) $functionInternalId);
+        } catch (\Throwable $th) {
+            Console::error("Failed to delete logs of function {$functionId} in project {$project->getId()}: " . $th->getMessage());
+        }
 
         /**
          * Delete VCS Repositories and VCS Comments

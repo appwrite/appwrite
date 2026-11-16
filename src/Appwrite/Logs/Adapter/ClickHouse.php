@@ -52,6 +52,14 @@ class ClickHouse extends Adapter
         'message' => ['message', 'String'],
     ];
 
+    /**
+     * Server-side limits for reads, so a slow query stops on ClickHouse instead of
+     * running on after the client gives up.
+     */
+    private const array READ_SETTINGS = [
+        'max_execution_time' => 2,
+    ];
+
     private readonly RequestFactory $requestFactory;
 
     private ?string $host = null;
@@ -82,6 +90,10 @@ class ClickHouse extends Adapter
         $database = $this->identifier($this->database);
         $table = $this->quotedTable();
 
+        $retention = \max(0, $this->retention);
+        // Partitioning by expiry day lets the TTL drop whole parts instead of rewriting them.
+        $ttl = $retention > 0 ? 'TTL expiresAt DELETE SETTINGS ttl_only_drop_parts = 1' : '';
+
         $this->query("CREATE DATABASE IF NOT EXISTS {$database}");
         $this->query(<<<SQL
             CREATE TABLE IF NOT EXISTS {$table} (
@@ -98,8 +110,9 @@ class ClickHouse extends Adapter
                 expiresAt DateTime64(6)
             )
             ENGINE = MergeTree
-            PARTITION BY cityHash64(projectId) % 32
+            PARTITION BY toYYYYMMDD(expiresAt)
             ORDER BY (projectId, deploymentId, timestamp, id)
+            {$ttl}
             SQL);
 
         $this->query(<<<SQL
@@ -108,19 +121,12 @@ class ClickHouse extends Adapter
             AFTER deploymentId
             SQL);
 
-        $retention = \max(0, $this->retention);
         $this->query(<<<SQL
             ALTER TABLE {$table}
             ADD COLUMN IF NOT EXISTS expiresAt DateTime64(6)
             DEFAULT timestamp + INTERVAL {$retention} SECOND
             AFTER message
             SQL);
-        if ($retention > 0) {
-            $this->query(<<<SQL
-                ALTER TABLE {$table}
-                MODIFY TTL expiresAt DELETE
-                SQL);
-        }
     }
 
     /** @return array<string, mixed> */
@@ -256,15 +262,14 @@ class ClickHouse extends Adapter
      */
     public function count(string $projectId, array $queries, int $max): int
     {
-        $params = ['projectId' => $projectId, 'max' => $max];
+        $params = ['projectId' => $projectId];
         [$filters] = $this->compileQueries($queries, $params);
         $filters[] = 'projectId = {projectId:String}';
 
-        $builder = $this->builder()
-            ->from($this->relation())
-            ->selectRaw('least(count(), {max:UInt64}) AS total')
-            ->whereRaw(\implode(' AND ', $filters));
-        $rows = $this->rows($this->select($builder->build(), $params));
+        // Count over a limited subquery, so a large resource stops scanning at the cap.
+        $where = \implode(' AND ', $filters);
+        $sql = 'SELECT count() AS total FROM (SELECT 1 FROM ' . $this->quotedTable() . " WHERE {$where} LIMIT " . \max(0, $max) . ') FORMAT JSON';
+        $rows = $this->rows($this->query($sql, $params, self::READ_SETTINGS));
 
         return (int) ($rows[0]['total'] ?? 0);
     }
@@ -609,18 +614,25 @@ class ClickHouse extends Adapter
     {
         $sql = $statement->query . ' FORMAT JSON';
 
-        return $this->query($sql, \array_merge($params, $statement->namedBindings ?? []));
+        return $this->query($sql, \array_merge($params, $statement->namedBindings ?? []), self::READ_SETTINGS);
     }
 
-    /** @param array<string, mixed> $params */
-    private function query(string $sql, array $params = []): string
+    /**
+     * @param array<string, mixed> $params
+     * @param array<string, int|string> $settings ClickHouse settings for this query
+     */
+    private function query(string $sql, array $params = [], array $settings = []): string
     {
         $this->connect();
         $parts = ['query' => $sql];
         foreach ($params as $key => $value) {
             $parts['param_' . $key] = (string) $value;
         }
-        $request = $this->requestFactory->multipart(Method::POST, $this->url(), $parts, $this->headers());
+        $url = $this->url();
+        if ($settings !== []) {
+            $url .= '?' . \http_build_query($settings);
+        }
+        $request = $this->requestFactory->multipart(Method::POST, $url, $parts, $this->headers());
 
         try {
             $response = $this->client()->sendRequest($request);

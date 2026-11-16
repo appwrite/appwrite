@@ -68,8 +68,12 @@ final class ClickHouseTest extends TestCase
         $this->assertStringContainsString('CREATE TABLE IF NOT EXISTS', $bodies[1]);
         $this->assertStringContainsString('ENGINE = MergeTree', $bodies[1]);
         $this->assertStringContainsString('ORDER BY (projectId, deploymentId, timestamp, id)', $bodies[1]);
+        $this->assertStringContainsString('PARTITION BY toYYYYMMDD(expiresAt)', $bodies[1]);
+        $this->assertStringContainsString('TTL expiresAt DELETE SETTINGS ttl_only_drop_parts = 1', $bodies[1]);
         $this->assertStringContainsString('ADD COLUMN IF NOT EXISTS region', $bodies[2]);
-        $this->assertStringContainsString('MODIFY TTL expiresAt DELETE', $bodies[4]);
+        $this->assertStringContainsString('ADD COLUMN IF NOT EXISTS expiresAt', $bodies[3]);
+        // The TTL is set when the table is created, not altered again on every boot.
+        $this->assertCount(4, $client->requests);
     }
 
     public function testFindsAndCountsWithDeploymentFilter(): void
@@ -125,6 +129,12 @@ final class ClickHouseTest extends TestCase
         $this->assertSame('stderr', $logs[0]->getAttribute('stream'));
         $this->assertSame('dep', $logs[0]->getAttribute('deploymentId'));
         $this->assertSame(1, $total);
+
+        // Reads carry a server-side time limit, and the count stops scanning at the cap.
+        foreach ($client->requests as $request) {
+            $this->assertStringContainsString('max_execution_time=2', $request->getUri()->getQuery());
+        }
+        $this->assertStringContainsString('LIMIT 100)', (string) $client->requests[1]->getBody());
     }
 
     public function testFindsAndCountsWithRegionFilter(): void
@@ -333,7 +343,7 @@ final class FilteringClient implements ClientInterface
         }
 
         $matched = $this->match($sql, $params);
-        if (\str_contains($sql, 'least(count()')) {
+        if (\str_contains($sql, 'SELECT count() AS total')) {
             $body = \json_encode(['data' => [['total' => \count($matched)]]], JSON_THROW_ON_ERROR);
 
             return new Response(200, body: new Stream($body));
