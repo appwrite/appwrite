@@ -30,7 +30,6 @@ import {
   useProject,
 } from '@/lib/react-query/hooks'
 import { Lock, ExternalLink, Loader2, X } from 'lucide-react'
-import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { RepositoryPicker } from '@/components/global/shared/RepositoryPicker'
