@@ -101,8 +101,9 @@ final class GitAction
         self::check($status, $vcs, $commitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform);
         self::deployment($status, $vcs, $commitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform);
 
+        // A posted comment is finished even if comments were switched off since
         $commentId = $deployment->getAttribute('providerCommentId', '');
-        if (empty($commentId) || $resource->getAttribute('providerComments', true) === false) {
+        if (empty($commentId)) {
             return;
         }
 
