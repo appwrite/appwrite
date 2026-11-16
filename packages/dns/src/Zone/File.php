@@ -55,6 +55,7 @@ final readonly class File
 
         $lastOwner = null;
         $lastTTL   = $defaultTTL;
+        $zoneTTL   = null; // $TTL directive (RFC 2308 §4); overrides the last TTL when set
         $lastClass = Record::CLASS_IN;
 
         foreach ($normalizedLines as ['line' => $line, 'num' => $num]) {
@@ -64,7 +65,7 @@ final readonly class File
 
             // Directives
             try {
-                $directive = self::handleDirectives($line, $origin, $lastTTL);
+                $directive = self::handleDirectives($line, $origin, $zoneTTL);
             } catch (InvalidArgumentException $e) {
                 throw new ImportException($content, $e->getMessage(), previous: $e);
             }
@@ -91,7 +92,7 @@ final readonly class File
             $line = ltrim($line);
 
             try {
-                $rr = self::parseResourceRecord($line, $origin, $lastOwner, $lastTTL, $lastClass, $ownerOmitted, $num);
+                $rr = self::parseResourceRecord($line, $origin, $lastOwner, $zoneTTL ?? $lastTTL, $lastClass, $ownerOmitted, $num);
             } catch (InvalidArgumentException $e) {
                 throw new ImportException($content, $e->getMessage(), previous: $e);
             }
@@ -273,10 +274,10 @@ final readonly class File
      * Handle $ORIGIN / $TTL directives.
      *
      * @param-out string|null $origin
-     * @param-out int         $lastTTL
+     * @param-out int|null    $zoneTTL
      * @return 'origin'|'ttl'|null
      */
-    private static function handleDirectives(string $line, ?string &$origin, int &$lastTTL): ?string
+    private static function handleDirectives(string $line, ?string &$origin, ?int &$zoneTTL): ?string
     {
         if (preg_match('/^\s*\$ORIGIN\s+(\S+)\s*$/i', $line, $m) === 1) {
             $origin = self::canonicalizeName($m[1]);
@@ -284,7 +285,7 @@ final readonly class File
         }
 
         if (preg_match('/^\s*\$TTL\s+(\d+)\s*$/i', $line, $m) === 1) {
-            $lastTTL = (int) $m[1];
+            $zoneTTL = (int) $m[1];
             return 'ttl';
         }
 
