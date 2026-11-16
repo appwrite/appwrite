@@ -12,6 +12,7 @@ parameters:
     - packages/image/stubs/Canvas.php
     - crates/extension/stubs/DSN.php
     - crates/extension/stubs/Locale.php
+    - packages/user-agent/stubs/UserAgent.php
   scanDirectories:
     - vendor/swoole/ide-helper
   excludePaths:
