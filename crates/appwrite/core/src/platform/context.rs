@@ -132,6 +132,20 @@ pub struct Context {
 }
 
 impl Context {
+    /// `$request->getNegotiatedParams()`: the route's `cache.negotiate`
+    /// params set to `auto`, resolved from the `Accept` header (empty when
+    /// the client accepts none of their types).
+    pub fn negotiated_params(&self) -> Vec<(String, String)> {
+        if self.route.labels.cache_negotiate.is_empty() {
+            return Vec::new();
+        }
+        crate::platform::hooks::shutdown::cache_write::negotiated(
+            self.request.params(),
+            self.route.labels.cache_negotiate,
+            &self.request.header_line_or("accept", ""),
+        )
+    }
+
     pub(crate) fn new(
         state: Arc<State>,
         request: Request,

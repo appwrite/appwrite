@@ -96,6 +96,9 @@ pub struct Labels {
     pub cache_resource_type: &'static str,
     /// `cache.params`: the params that key the entry, `None` for all.
     pub cache_params: Option<&'static [&'static str]>,
+    /// `cache.negotiate`: params that, set to `auto`, are picked from the
+    /// `Accept` header: `(param, [(value, MIME type)])` in preference order.
+    pub cache_negotiate: &'static [(&'static str, &'static [(&'static str, &'static str)])],
 }
 
 impl Labels {
@@ -111,6 +114,7 @@ impl Labels {
         cache_resource: "",
         cache_resource_type: "",
         cache_params: None,
+        cache_negotiate: &[],
     };
 }
 

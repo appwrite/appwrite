@@ -57,6 +57,70 @@ pub(in crate::platform) fn identifier(
     hex::encode(Md5::digest(&input))
 }
 
+/// `$request->getNegotiatedParams()`: each param of the route's
+/// `cache.negotiate` label set to `auto`, resolved to the first value whose
+/// MIME type the `Accept` header lists by name (empty when none is).
+pub(in crate::platform) fn negotiated(
+    params: &Map<String, Value>,
+    negotiate: &[(&str, &[(&str, &str)])],
+    accept: &str,
+) -> Vec<(String, String)> {
+    let mut resolved = Vec::new();
+    for (param, types) in negotiate {
+        if params.get(*param).and_then(Value::as_str) != Some(NEGOTIATE_AUTO) {
+            continue;
+        }
+        let mimes: Vec<&str> = types.iter().map(|(_, mime)| *mime).collect();
+        let value = accepted_type(accept, &mimes)
+            .and_then(|mime| types.iter().find(|(_, m)| *m == mime).map(|(value, _)| (*value).to_owned()))
+            .unwrap_or_default();
+        resolved.push(((*param).to_owned(), value));
+    }
+    resolved
+}
+
+/// `Request::NEGOTIATE_AUTO`.
+pub const NEGOTIATE_AUTO: &str = "auto";
+
+/// `$request->getAcceptedType($types)`: the first of `types` the `Accept`
+/// header lists with a non-zero quality. Only exact entries count.
+fn accepted_type<'a>(accept: &str, types: &[&'a str]) -> Option<&'a str> {
+    let mut accepted: Vec<String> = Vec::new();
+    for entry in accept.split(',') {
+        let mut parts = entry.split(';');
+        let kind = parts.next().unwrap_or("").trim_matches(TRIM).to_ascii_lowercase();
+        let mut quality = 1.0;
+        for parameter in parts {
+            let (name, value) = parameter.split_once('=').unwrap_or((parameter, ""));
+            if name.trim_matches(TRIM).eq_ignore_ascii_case("q") {
+                quality = php_std::format::str_to_float(value.trim_matches(TRIM).as_bytes());
+            }
+        }
+        if !kind.is_empty() && quality > 0.0 {
+            accepted.push(kind);
+        }
+    }
+    types.iter().copied().find(|t| accepted.iter().any(|a| *a == t.to_ascii_lowercase()))
+}
+
+/// The characters PHP's `trim()` strips.
+const TRIM: &[char] = &[' ', '\t', '\n', '\r', '\0', '\x0B'];
+
+/// The params `cacheIdentifier()` keys on: a negotiated param by the value
+/// it resolved to (so it shares entries with explicit requests), or left
+/// out when it resolved to nothing.
+pub(in crate::platform) fn keyed(params: &Map<String, Value>, negotiated: &[(String, String)]) -> Map<String, Value> {
+    let mut params = params.clone();
+    for (param, value) in negotiated {
+        if value.is_empty() {
+            params.remove(param);
+        } else {
+            params.insert(param.clone(), Value::String(value.clone()));
+        }
+    }
+    params
+}
+
 /// What the cache shutdown writes for a request.
 pub(in crate::platform) struct Entry {
     /// [`identifier`].
@@ -69,6 +133,9 @@ pub(in crate::platform) struct Entry {
     pub(in crate::platform) mime_type: String,
     /// The response body (`$response->getPayload()['payload']`).
     pub(in crate::platform) payload: Bytes,
+    /// The init hook missed the entry (`X-Appwrite-Cache: miss`): the payload
+    /// is saved again, so an emptied store refills.
+    pub(in crate::platform) missed: bool,
 }
 
 impl Entry {
@@ -93,6 +160,7 @@ impl Entry {
             resource_type: render(labels.cache_resource_type),
             mime_type: mime_type.to_owned(),
             payload: payload.clone(),
+            missed: false,
         })
     }
 
@@ -138,7 +206,7 @@ impl Entry {
             }
         }
         let stored = log.get("signature").map(utopia_database::value::to_text);
-        if stale || stored.as_deref() != Some(signature.as_str()) {
+        if stale || self.missed || stored.as_deref() != Some(signature.as_str()) {
             self.save(&cache).await;
         }
     }

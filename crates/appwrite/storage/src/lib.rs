@@ -6,6 +6,7 @@
 
 mod base;
 mod device;
+mod encryption;
 mod filename;
 mod folder;
 mod http;
@@ -53,6 +54,8 @@ const PREVIEW: Labels = Labels {
         "output",
         "project",
     ]),
+    // `storage-outputs-auto`.
+    cache_negotiate: &[("output", &[("avif", "image/avif"), ("webp", "image/webp")])],
     ..Labels::NONE
 };
 

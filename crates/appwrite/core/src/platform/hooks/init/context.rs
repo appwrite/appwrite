@@ -51,9 +51,11 @@ pub(in crate::platform) async fn context(ctx: &mut Context) -> Result<()> {
             && plan.get("imageTransformations").is_some_and(Value::is_i64)
     }) && !privileged;
 
+    // `auto` params resolved from the Accept header: the response varies by Accept.
+    let negotiated = ctx.negotiated_params();
     let key = cache_write::identifier(
         ctx.request.uri(),
-        ctx.request.params(),
+        &cache_write::keyed(ctx.request.params(), &negotiated),
         ctx.route.labels.cache_params,
         ctx.request.header_or_empty("x-appwrite-project"),
     );
@@ -147,10 +149,16 @@ pub(in crate::platform) async fn context(ctx: &mut Context) -> Result<()> {
         let mut response = Response::with_body(StatusCode::OK, &mime, data);
         response.add("cache-control", &cache_control);
         response.add("x-appwrite-cache", "hit");
+        if !negotiated.is_empty() {
+            response.add("vary", "Accept");
+        }
         ctx.send(response);
     } else {
         ctx.response_headers.push(("cache-control", cache_control));
         ctx.response_headers.push(("x-appwrite-cache", "hit".to_owned()));
+        if !negotiated.is_empty() {
+            ctx.response_headers.push(("vary", "Accept".to_owned()));
+        }
     }
     Ok(())
 }

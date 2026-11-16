@@ -108,9 +108,10 @@ pub(in crate::platform) async fn schedule(
     };
     // The `cache` routes' entry: the request's key and the payload.
     let cache = if ctx.route.labels.cache {
+        let negotiated = ctx.negotiated_params();
         let key = cache_write::identifier(
             ctx.request.uri(),
-            ctx.request.params(),
+            &cache_write::keyed(ctx.request.params(), &negotiated),
             ctx.route.labels.cache_params,
             ctx.request.header_or_empty("x-appwrite-project"),
         );
@@ -119,7 +120,9 @@ pub(in crate::platform) async fn schedule(
         for (name, value) in &ctx.path_params {
             params.insert(name.clone(), value.clone());
         }
+        let missed = ctx.response_headers.iter().any(|(name, value)| *name == "x-appwrite-cache" && value == "miss");
         cache_write::Entry::of(key, &ctx.route.labels, &params, status.as_u16(), &content_type, &body)
+            .map(|entry| cache_write::Entry { missed, ..entry })
     } else {
         None
     };
