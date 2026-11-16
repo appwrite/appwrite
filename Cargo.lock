@@ -5180,6 +5180,7 @@ dependencies = [
  "ext-php-rs",
  "foldhash",
  "php-std",
+ "utopia-domains",
  "utopia-dsn",
  "utopia-image",
  "utopia-locale",
