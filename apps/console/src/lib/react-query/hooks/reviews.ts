@@ -480,3 +480,26 @@ export function useDeleteReviewRepository(
     },
   })
 }
+
+/**
+ * Chooses whether repositories added to a GitHub installation later are
+ * reviewed, and how hard.
+ */
+export function useUpdateReviewInstallation(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (params: {
+      installationId: string
+      newRepositories: boolean
+      strength?: ReviewStrength
+    }) => sdk.forProject(projectId!).reviews.updateInstallation(params),
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['vcs', 'installations', projectId],
+      })
+    },
+  })
+}

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Reviews\Strength;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
@@ -53,6 +54,20 @@ class Installation extends Model
                 'description' => 'VCS (Version Control System) organization URL. Points at the configured instance, which is not the provider\'s own host for a self-hosted install.',
                 'default' => '',
                 'example' => 'https://github.com/appwrite',
+            ])
+            ->addRule('reviewNewRepositories', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether code review is turned on for repositories added to the installation later.',
+                'default' => false,
+                'example' => false,
+            ])
+            ->addRule('reviewStrength', [
+                'type' => self::TYPE_ENUM,
+                'description' => 'How hard pull requests of repositories added to the installation later are reviewed. Possible values: basic, normal, expert.',
+                'default' => Strength::Normal->value,
+                'example' => Strength::Normal->value,
+                'enum' => Strength::values(),
+                'enumSDKName' => 'ReviewStrength',
             ]);
     }
 

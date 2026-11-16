@@ -61,22 +61,19 @@ export function StrengthSelect({
   disabled,
 }: StrengthSelectProps) {
   const t = useT()
-  const { isCloud } = useConsoleProfile()
   const mutation = useUpdateReviewRepositoryStrength(projectId)
   const value = mutation.isPending
     ? mutation.variables.strength
     : (repository.strength ?? 'normal')
 
-  // A strength this bundle doesn't know yet shows as its value.
-  const current = STRENGTHS.find((strength) => strength.value === value)
-
   return (
-    <Select
+    <StrengthPicker
       value={value}
       disabled={disabled || mutation.isPending}
-      onValueChange={(next) => {
+      label={t('Review strength for {name}').replace('{name}', name)}
+      onChange={(next) => {
         mutation.mutate(
-          { repositoryId: repository.$id, strength: next as ReviewStrength },
+          { repositoryId: repository.$id, strength: next },
           {
             onSuccess: () => {
               toast.success(t('Review strength updated'), {
@@ -91,16 +88,46 @@ export function StrengthSelect({
           },
         )
       }}
+    />
+  )
+}
+
+type StrengthPickerProps = {
+  value: ReviewStrength
+  onChange: (strength: ReviewStrength) => void
+  /** Accessible name of the trigger. */
+  label: string
+  disabled?: boolean
+}
+
+/**
+ * The strengths with what each does and, on Cloud, what a review costs.
+ */
+export function StrengthPicker({
+  value,
+  onChange,
+  label,
+  disabled,
+}: StrengthPickerProps) {
+  const t = useT()
+  const { isCloud } = useConsoleProfile()
+
+  // A strength this bundle doesn't know yet shows as its value.
+  const current = STRENGTHS.find((strength) => strength.value === value)
+
+  return (
+    <Select
+      value={value}
+      disabled={disabled}
+      onValueChange={(next) => onChange(next as ReviewStrength)}
     >
       <SelectTrigger
         size="sm"
         className="ms-auto border-border bg-background text-[13px] text-foreground focus:ring-0"
-        aria-label={t('Review strength for {name}').replace('{name}', name)}
+        aria-label={label}
       >
         {/* The items carry a description; the trigger shows the name only. */}
-        <SelectValue>
-          {current ? t(current.label) : value}
-        </SelectValue>
+        <SelectValue>{current ? t(current.label) : value}</SelectValue>
       </SelectTrigger>
       <SelectContent align="end">
         {STRENGTHS.map((strength) => (

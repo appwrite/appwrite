@@ -8,6 +8,8 @@ use Appwrite\Event\Publisher\Review as ReviewPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
+use Appwrite\Platform\Permission;
+use Appwrite\Reviews\Strength;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
@@ -31,6 +33,7 @@ class Create extends Action
 {
     use HTTP;
     use Deployment;
+    use Permission;
 
     public static function getName()
     {
@@ -102,6 +105,7 @@ class Create extends Action
                 match ($event) {
                     GitHub::EVENT_PULL_REQUEST => $this->queueReviews($parsedPayload, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
                     GitHub::EVENT_ISSUE_COMMENT, GitHub::EVENT_PULL_REQUEST_REVIEW_COMMENT => $this->queueComment($parsedPayload, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
+                    GitHub::EVENT_INSTALLATION_REPOSITORIES => $this->createReviewRepositories($parsedPayload, $dbForPlatform, $authorization),
                     default => null,
                 };
             }
@@ -214,6 +218,57 @@ class Create extends Action
 
             $installationCursor = count($installations) === 1000 ? $installations[array_key_last($installations)] : null;
         } while ($installationCursor !== null);
+    }
+
+    /**
+     * Turns code review on for repositories added to an installation, in every project that asked
+     * for its new repositories to be reviewed. Repositories are only added here, never removed:
+     * one that leaves the installation stops being reviewed because the app can no longer reach it.
+     */
+    private function createReviewRepositories(array $parsedPayload, Database $dbForPlatform, Authorization $authorization): void
+    {
+        $providerRepositoryIds = $parsedPayload['repositoriesAdded'] ?? [];
+        if (($parsedPayload['action'] ?? '') !== 'added' || empty($providerRepositoryIds)) {
+            return;
+        }
+
+        $installations = $authorization->skip(fn () => $dbForPlatform->find('installations', [
+            Query::equal('providerInstallationId', [$parsedPayload['installationId'] ?? '']),
+            Query::equal('provider', ['github']),
+            Query::equal('reviewNewRepositories', [true]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]));
+
+        foreach ($installations as $installation) {
+            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $installation->getAttribute('projectId', '')));
+
+            // Every region gets the delivery; each turns review on for its own projects only.
+            if ($project->isEmpty() || !$this->isProjectInCurrentRegion($project)) {
+                continue;
+            }
+
+            foreach ($providerRepositoryIds as $providerRepositoryId) {
+                // The same id as a repository turned on by hand, so one already reviewed is kept as it is.
+                try {
+                    $authorization->skip(fn () => $dbForPlatform->createDocument('repositories', new Document([
+                        '$id' => Id::custom('reviews-' . $project->getSequence() . '-' . $providerRepositoryId),
+                        '$permissions' => $this->getPermissions($project->getAttribute('teamId', ''), $project->getId()),
+                        'installationId' => $installation->getId(),
+                        'installationInternalId' => $installation->getSequence(),
+                        'projectId' => $project->getId(),
+                        'projectInternalId' => $project->getSequence(),
+                        'providerRepositoryId' => $providerRepositoryId,
+                        'resourceId' => $project->getId(),
+                        'resourceInternalId' => $project->getSequence(),
+                        'resourceType' => RESOURCE_TYPE_REVIEWS,
+                        'providerPullRequestIds' => [],
+                        'strength' => $installation->getAttribute('reviewStrength', Strength::Normal->value),
+                    ])));
+                } catch (DuplicateException) {
+                    continue;
+                }
+            }
+        }
     }
 
     /**
