@@ -675,6 +675,7 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
           limit={backupPoliciesLimit}
           planName={planName}
           resourceName="backup policies"
+          resourceNameSingular="backup policy"
           orgId={project?.teamId}
           fullWidth
           salesSource={showContactSales ? 'backups' : undefined}

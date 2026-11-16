@@ -151,6 +151,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Backup policies have been created': 'כללי מדיניות הגיבוי נוצרו',
   'Backup policies': 'מדיניות גיבויים',
   'backup policies': 'מדיניות גיבויים',
+  'backup policy': 'מדיניות גיבוי',
   'Backup policy has been deleted': 'מדיניות הגיבוי נמחקה',
   'Backups already taken by this policy are kept until their retention expires.': 'גיבויים שכבר נוצרו על ידי מדיניות זו יישמרו עד שתקופת השמירה שלהם תסתיים.',
   'backup selected': 'גיבוי נבחר',
