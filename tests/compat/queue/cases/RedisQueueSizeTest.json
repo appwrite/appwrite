@@ -419,6 +419,240 @@
           "expect": 0
         }
       ]
+    },
+    {
+      "name": "age of an empty queue is zero",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.queue_age",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "age of a message the codec cannot read is zero",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "RPUSH",
+              "${ns}.queue.audits",
+              "x0"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.queue_age",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "age reads the oldest message, at the right end",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LPUSH",
+              "${ns}.queue.audits",
+              "{\"pid\": \"p\", \"queue\": \"audits\", \"timestamp\": 4000000000, \"payload\": {}}"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LPUSH",
+              "${ns}.queue.audits",
+              "x1"
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "broker.queue_age",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "age of a timestamp that is not numeric is zero",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "RPUSH",
+              "${ns}.queue.audits",
+              "{\"pid\": \"p\", \"queue\": \"audits\", \"timestamp\": \"soon\", \"payload\": {}}"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.queue_age",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "age of a numeric string timestamp in the future is zero",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "RPUSH",
+              "${ns}.queue.audits",
+              "{\"pid\": \"p\", \"queue\": \"audits\", \"timestamp\": \"4000000000\", \"payload\": {}}"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.queue_age",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "age of an envelope that is not an array is zero",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "RPUSH",
+              "${ns}.queue.audits",
+              "7"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.queue_age",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 0
+        }
+      ]
     }
   ]
 }

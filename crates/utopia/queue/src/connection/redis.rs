@@ -21,10 +21,13 @@ const CONNECT_MAX_BACKOFF_MS: u64 = 3_000;
 /// the socket is lost.
 ///
 /// Connecting is retried five times with jittered exponential backoff. A
-/// command that fails because the socket went away drops the connection; a
-/// command safe to repeat (reads, `SET`, `DEL`, `LREM`) is run once more on
-/// a fresh one, others (pops, pushes, counters) report the error, because the
-/// server may already have applied them.
+/// command that fails the way phpredis throws (the socket went away, a reply
+/// missed the read timeout, an error reply phpredis raises) drops the
+/// connection, since a late reply would otherwise be read by the next
+/// command; a command safe to repeat (reads, `SET`, `DEL`, `LREM`) is run
+/// once more on a fresh one, others (pops, pushes, counters) report the
+/// error, because the server may already have applied them. Error replies
+/// phpredis returns rather than throws keep the connection.
 ///
 /// ```no_run
 /// use utopia_queue::connection::{Connection, Redis};
@@ -214,22 +217,23 @@ impl Connection for Redis {
         Box::pin(async move {
             let mut retried = false;
             loop {
-                match self.run(&cmd).await {
+                // Whatever phpredis throws drops the client, and a command safe
+                // to repeat runs once more on a fresh one.
+                let thrown = match self.run(&cmd).await {
                     Ok(reply) => match super::raised(&reply) {
-                        Some(message) => return Err(Error::Redis(message)),
+                        Some(message) => message,
                         None => return Ok(Some(reply)),
                     },
-                    Err(e) if is_transport(&e) => {
-                        self.drop_connection().await;
-                        if !idempotent || retried {
-                            return Err(Error::Redis(transport_message(&e)));
-                        }
-                        retried = true;
-                    }
+                    Err(e) if is_transport(&e) => transport_message(&e),
                     // A refusal phpredis raises (NOAUTH, a script's own error), or `false`.
-                    Err(e) if super::raises(&server_message(&e)) => return Err(Error::Redis(server_message(&e))),
+                    Err(e) if super::raises(&server_message(&e)) => server_message(&e),
                     Err(_) => return Ok(None),
+                };
+                self.drop_connection().await;
+                if !idempotent || retried {
+                    return Err(Error::Redis(thrown));
                 }
+                retried = true;
             }
         })
     }
@@ -248,7 +252,6 @@ impl Connection for Redis {
                 c.arg("LOAD").arg(script);
                 c
             };
-            let transport = |e: redis::RedisError| Error::Redis(transport_message(&e));
             if !loaded {
                 self.run(&load()).await.map_err(|e| self.lost(e))?;
                 if let Ok(mut s) = self.scripts.lock() {
@@ -266,13 +269,16 @@ impl Connection for Redis {
             let reply = match self.run(&eval).await {
                 Ok(reply) => reply,
                 Err(e) if e.kind() == redis::ErrorKind::NoScriptError => {
-                    self.run(&load()).await.map_err(transport)?;
+                    self.run(&load()).await.map_err(|e| self.lost(e))?;
                     self.run(&eval).await.map_err(|e| self.lost(e))?
                 }
                 Err(e) => return Err(self.lost(e)),
             };
             match super::raised(&reply) {
-                Some(message) => Err(Error::Redis(message)),
+                Some(message) => {
+                    self.forget();
+                    Err(Error::Redis(message))
+                }
                 None => Ok(reply),
             }
         })
@@ -288,15 +294,29 @@ impl Connection for Redis {
 }
 
 impl Redis {
+    /// The error of a failed script step. One phpredis throws drops the
+    /// connection; an error reply it returns (read with `getLastError()`)
+    /// keeps it.
     fn lost(&self, e: redis::RedisError) -> Error {
         if is_transport(&e) {
-            // Dropped synchronously on the next call: `conn` is reset lazily.
-            if let Ok(mut guard) = self.conn.try_lock() {
-                *guard = None;
-            }
+            self.forget();
             return Error::Redis(transport_message(&e));
         }
-        Error::Redis(server_message(&e))
+        let message = server_message(&e);
+        if super::raises(&message) {
+            self.forget();
+        }
+        Error::Redis(message)
+    }
+
+    /// Drops the connection synchronously: `conn` is reopened lazily.
+    fn forget(&self) {
+        if let Ok(mut guard) = self.conn.try_lock() {
+            *guard = None;
+        }
+        if let Ok(mut s) = self.scripts.lock() {
+            s.clear();
+        }
     }
 }
 

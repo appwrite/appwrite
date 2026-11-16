@@ -797,6 +797,241 @@
           ]
         }
       ]
+    },
+    {
+      "name": "a star init hook that skips the message stops before the job and the later hooks",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "name": "ada",
+                  "n": 3
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work",
+                "groups": [
+                  "mails"
+                ],
+                "params": [
+                  {
+                    "key": "name"
+                  }
+                ],
+                "inject": [
+                  "message"
+                ]
+              }
+            ],
+            "hooks": {
+              "init": [
+                {
+                  "inject": [
+                    "message"
+                  ],
+                  "skip": true
+                },
+                {
+                  "inject": [
+                    "message"
+                  ]
+                },
+                {
+                  "groups": [
+                    "mails"
+                  ],
+                  "inject": [
+                    "message"
+                  ]
+                }
+              ],
+              "shutdown": [
+                {
+                  "inject": [
+                    "message"
+                  ]
+                }
+              ],
+              "error": [
+                {
+                  "inject": [
+                    "error"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "init0",
+              [
+                "message:p1"
+              ]
+            ],
+            [
+              "shutdown0",
+              [
+                "message:p1"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "commit:p1",
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a group init hook that skips the message stops before the job",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "name": "ada",
+                  "n": 3
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work",
+                "groups": [
+                  "mails"
+                ],
+                "params": [
+                  {
+                    "key": "name"
+                  }
+                ],
+                "inject": [
+                  "message"
+                ]
+              }
+            ],
+            "hooks": {
+              "init": [
+                {
+                  "inject": [
+                    "message"
+                  ]
+                },
+                {
+                  "groups": [
+                    "mails"
+                  ],
+                  "inject": [
+                    "message"
+                  ],
+                  "skip": true
+                },
+                {
+                  "groups": [
+                    "mails"
+                  ],
+                  "inject": [
+                    "message"
+                  ]
+                }
+              ],
+              "shutdown": [
+                {
+                  "inject": [
+                    "message"
+                  ]
+                }
+              ],
+              "error": [
+                {
+                  "inject": [
+                    "error"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "init0",
+              [
+                "message:p1"
+              ]
+            ],
+            [
+              "init1",
+              [
+                "message:p1"
+              ]
+            ],
+            [
+              "shutdown0",
+              [
+                "message:p1"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "commit:p1",
+            "close"
+          ]
+        }
+      ]
     }
   ]
 }

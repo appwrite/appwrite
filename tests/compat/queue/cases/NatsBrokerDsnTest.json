@@ -1,0 +1,747 @@
+{
+  "source": "packages/queue/tests/NatsBrokerDsnTest.php",
+  "cases": [
+    {
+      "name": "an untuned DSN sets nothing",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222"
+      },
+      "expect": []
+    },
+    {
+      "name": "an untuned DSN builds a broker",
+      "op": "nats.from_dsn",
+      "args": {
+        "dsn": "nats://host:4222"
+      },
+      "expect": {
+        "max_deliver": 5
+      }
+    },
+    {
+      "name": "every parameter is cast to its constructor type",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?replicas=3&maxDeliver=6&backoff=30,120,600&deadMaxAge=604800&duplicateWindow=900&maxAge=3600&maxMsgSize=262144&maxMsgs=100000&maxBytes=1073741824&discard=new&maxAckPending=360&maxWaiting=16"
+      },
+      "expect": {
+        "$array": [
+          [
+            "ackWait",
+            30.0
+          ],
+          [
+            "backoff",
+            [
+              30.0,
+              120.0,
+              600.0
+            ]
+          ],
+          [
+            "deadMaxAge",
+            604800.0
+          ],
+          [
+            "discard",
+            "DiscardPolicy::New"
+          ],
+          [
+            "duplicateWindow",
+            900.0
+          ],
+          [
+            "maxAckPending",
+            360
+          ],
+          [
+            "maxAge",
+            3600.0
+          ],
+          [
+            "maxBytes",
+            1073741824
+          ],
+          [
+            "maxDeliver",
+            6
+          ],
+          [
+            "maxMsgSize",
+            262144
+          ],
+          [
+            "maxMsgs",
+            100000
+          ],
+          [
+            "maxWaiting",
+            16
+          ],
+          [
+            "replicas",
+            3
+          ]
+        ]
+      }
+    },
+    {
+      "name": "the schedule sets the ack wait",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?backoff=20,240,1200"
+      },
+      "expect": {
+        "$array": [
+          [
+            "ackWait",
+            20.0
+          ],
+          [
+            "backoff",
+            [
+              20.0,
+              240.0,
+              1200.0
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "name": "an explicit ack wait rewrites the schedule's first step",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?ackWait=45&backoff=20,240"
+      },
+      "expect": {
+        "$array": [
+          [
+            "ackWait",
+            45.0
+          ],
+          [
+            "backoff",
+            [
+              45.0,
+              240.0
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "name": "a max deliver lowered into the schedule trims it",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?maxDeliver=3&backoff=120,300,900"
+      },
+      "expect": {
+        "$array": [
+          [
+            "ackWait",
+            120.0
+          ],
+          [
+            "backoff",
+            [
+              120.0,
+              300.0
+            ]
+          ],
+          [
+            "maxDeliver",
+            3
+          ]
+        ]
+      }
+    },
+    {
+      "name": "a max deliver lowered into the schedule builds a broker",
+      "op": "nats.from_dsn",
+      "args": {
+        "dsn": "nats://host:4222?maxDeliver=3&backoff=120,300,900"
+      },
+      "expect": {
+        "max_deliver": 3
+      }
+    },
+    {
+      "name": "the default max deliver trims a long schedule",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?backoff=10,20,30,40,50,60"
+      },
+      "expect": {
+        "$array": [
+          [
+            "ackWait",
+            10.0
+          ],
+          [
+            "backoff",
+            [
+              10.0,
+              20.0,
+              30.0,
+              40.0
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "name": "a single delivery drops the schedule",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?maxDeliver=1&backoff=30,120"
+      },
+      "expect": {
+        "$array": [
+          [
+            "ackWait",
+            30.0
+          ],
+          [
+            "backoff",
+            null
+          ],
+          [
+            "maxDeliver",
+            1
+          ]
+        ]
+      }
+    },
+    {
+      "name": "values below their floor are raised to it",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?ackWait=0&maxDeliver=0&replicas=0"
+      },
+      "expect": {
+        "$array": [
+          [
+            "ackWait",
+            1.0
+          ],
+          [
+            "maxDeliver",
+            1
+          ],
+          [
+            "replicas",
+            1
+          ]
+        ]
+      }
+    },
+    {
+      "name": "a schedule step below a second is raised to one",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?backoff=0.5,60"
+      },
+      "expect": {
+        "$array": [
+          [
+            "ackWait",
+            1.0
+          ],
+          [
+            "backoff",
+            [
+              1.0,
+              60.0
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "name": "a zero dead max age keeps dead letters forever: 0",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?deadMaxAge=0"
+      },
+      "expect": {
+        "$array": [
+          [
+            "deadMaxAge",
+            null
+          ]
+        ]
+      }
+    },
+    {
+      "name": "a zero dead max age keeps dead letters forever: 0.0",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?deadMaxAge=0.0"
+      },
+      "expect": {
+        "$array": [
+          [
+            "deadMaxAge",
+            null
+          ]
+        ]
+      }
+    },
+    {
+      "name": "a zero dead max age keeps dead letters forever: .0",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?deadMaxAge=.0"
+      },
+      "expect": {
+        "$array": [
+          [
+            "deadMaxAge",
+            null
+          ]
+        ]
+      }
+    },
+    {
+      "name": "a zero dead max age keeps dead letters forever: 00",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?deadMaxAge=00"
+      },
+      "expect": {
+        "$array": [
+          [
+            "deadMaxAge",
+            null
+          ]
+        ]
+      }
+    },
+    {
+      "name": "a zero dead max age keeps dead letters forever: 0e5",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?deadMaxAge=0e5"
+      },
+      "expect": {
+        "$array": [
+          [
+            "deadMaxAge",
+            null
+          ]
+        ]
+      }
+    },
+    {
+      "name": "a zero dead max age keeps dead letters forever: 0.0E-3",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?deadMaxAge=0.0E-3"
+      },
+      "expect": {
+        "$array": [
+          [
+            "deadMaxAge",
+            null
+          ]
+        ]
+      }
+    },
+    {
+      "name": "a negative dead max age is refused rather than kept forever",
+      "op": "nats.from_dsn",
+      "args": {
+        "dsn": "nats://host:4222?deadMaxAge=-1"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "deadMaxAge must be a positive number of seconds, or null to keep dead messages forever"
+        }
+      }
+    },
+    {
+      "name": "unlimited stays expressible",
+      "op": "nats.from_dsn",
+      "args": {
+        "dsn": "nats://host:4222?maxMsgs=-1&maxBytes=-1"
+      },
+      "expect": {
+        "max_deliver": 5
+      }
+    },
+    {
+      "name": "a malformed DSN is refused before the cast: a typo",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?maxAckPendng=8"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unknown parameter 'maxAckPendng' in the NATS broker DSN; allowed: ackWait, maxDeliver, replicas, backoff, deadMaxAge, duplicateWindow, maxAge, maxMsgSize, maxMsgs, maxBytes, discard, maxAckPending, maxWaiting"
+        }
+      }
+    },
+    {
+      "name": "a malformed DSN is refused before the cast: inactiveThreshold, which silences a worker",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?inactiveThreshold=86400"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unknown parameter 'inactiveThreshold' in the NATS broker DSN; allowed: ackWait, maxDeliver, replicas, backoff, deadMaxAge, duplicateWindow, maxAge, maxMsgSize, maxMsgs, maxBytes, discard, maxAckPending, maxWaiting"
+        }
+      }
+    },
+    {
+      "name": "a malformed DSN is refused before the cast: a unit on seconds",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?duplicateWindow=30seconds"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "duplicateWindow must be a number of seconds, got \"30seconds\" -- units and suffixes are not read"
+        }
+      }
+    },
+    {
+      "name": "a malformed DSN is refused before the cast: a unit on a count",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?maxAckPending=8%20jobs"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "maxAckPending must be a whole number, got \"8 jobs\""
+        }
+      }
+    },
+    {
+      "name": "a malformed DSN is refused before the cast: a fractional count",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?maxAckPending=4.9"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "maxAckPending must be a whole number, got \"4.9\""
+        }
+      }
+    },
+    {
+      "name": "a malformed DSN is refused before the cast: a list where one number goes",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?ackWait=30,120"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "ackWait must be a number of seconds, got \"30,120\" -- units and suffixes are not read"
+        }
+      }
+    },
+    {
+      "name": "a malformed DSN is refused before the cast: a unit in the schedule",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?backoff=30,2m,600"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "backoff must be a comma-separated list of seconds, got \"30,2m,600\""
+        }
+      }
+    },
+    {
+      "name": "a malformed DSN is refused before the cast: an unknown discard policy",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?discard=newest"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "discard must be 'old' or 'new', got \"newest\""
+        }
+      }
+    },
+    {
+      "name": "a malformed DSN is refused before the cast: a repeated parameter",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?replicas=1&replicas=3"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Parameter 'replicas' is given more than once in the NATS broker DSN"
+        }
+      }
+    },
+    {
+      "name": "a malformed DSN is refused before the cast: an array-style parameter",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?replicas[]=1&replicas[]=3"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Parameter 'replicas[]' is given more than once in the NATS broker DSN"
+        }
+      }
+    },
+    {
+      "name": "a malformed DSN is refused before the cast: a negative count",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?maxDeliver=-1"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "maxDeliver must be a whole number, got \"-1\""
+        }
+      }
+    },
+    {
+      "name": "a malformed DSN is refused before the cast: a count past PHP_INT_MAX",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?maxBytes=99999999999999999999999"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "maxBytes must be a whole number, got \"99999999999999999999999\""
+        }
+      }
+    },
+    {
+      "name": "a malformed DSN is refused before the cast: a signed count",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?replicas=%2B3"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "replicas must be a whole number, got \"+3\""
+        }
+      }
+    },
+    {
+      "name": "a malformed DSN is refused before the cast: whitespace around seconds",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?ackWait=%2010"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "ackWait must be a number of seconds, got \" 10\" -- units and suffixes are not read"
+        }
+      }
+    },
+    {
+      "name": "a malformed DSN is refused before the cast: a signed number of seconds",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?ackWait=%2B10"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "ackWait must be a number of seconds, got \"+10\" -- units and suffixes are not read"
+        }
+      }
+    },
+    {
+      "name": "a malformed DSN is refused before the cast: an infinite number of seconds",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?maxAge=1e999"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "maxAge must be a number of seconds, got \"1e999\" -- units and suffixes are not read"
+        }
+      }
+    },
+    {
+      "name": "a malformed DSN is refused before the cast: an infinite step in the schedule",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?backoff=30,1e999"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "backoff must be a comma-separated list of seconds, got \"30,1e999\""
+        }
+      }
+    },
+    {
+      "name": "a malformed DSN is refused before the cast: a positive age that underflows to zero",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "nats://host:4222?deadMaxAge=1e-999"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "deadMaxAge must be a number of seconds, got \"1e-999\" -- units and suffixes are not read"
+        }
+      }
+    },
+    {
+      "name": "a malformed DSN is refused before the cast: another scheme",
+      "op": "nats.dsn_arguments",
+      "args": {
+        "dsn": "redis://host:6379?replicas=3"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "A NATS broker DSN must use the nats:// scheme, got redis://"
+        }
+      }
+    },
+    {
+      "name": "the constructor still refuses what it cannot honour",
+      "op": "nats.from_dsn",
+      "args": {
+        "dsn": "nats://host:4222?discard=new"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "discard: New requires a maxMsgs or maxBytes limit — on an unlimited stream it never applies"
+        }
+      }
+    },
+    {
+      "name": "code is passed by name",
+      "op": "nats.from_dsn",
+      "args": {
+        "dsn": "nats://host:4222?replicas=3",
+        "name": "worker-audits",
+        "provisioning": "require"
+      },
+      "expect": {
+        "max_deliver": 5
+      }
+    },
+    {
+      "name": "a DSN parameter cannot also be passed in code",
+      "op": "nats.from_dsn",
+      "args": {
+        "dsn": "nats://host:4222",
+        "replicas": 3
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "replicas is read from the DSN; set it there"
+        }
+      }
+    },
+    {
+      "name": "the max deliver is readable: default",
+      "op": "nats.from_dsn",
+      "args": {
+        "dsn": "nats://host:4222"
+      },
+      "expect": {
+        "max_deliver": 5
+      }
+    },
+    {
+      "name": "the max deliver is readable: set",
+      "op": "nats.from_dsn",
+      "args": {
+        "dsn": "nats://host:4222?maxDeliver=8"
+      },
+      "expect": {
+        "max_deliver": 8
+      }
+    },
+    {
+      "name": "connection options carry decoded credentials and the name",
+      "op": "nats.connection_options",
+      "args": {
+        "dsn": "nats://us%40r:p%40ss@host:4223?replicas=3",
+        "name": "edge/pod-1"
+      },
+      "expect": {
+        "servers": [
+          "nats://host:4223"
+        ],
+        "name": "edge/pod-1",
+        "user": "us@r",
+        "pass": "p@ss",
+        "token": null
+      }
+    },
+    {
+      "name": "a user without a password is a token",
+      "op": "nats.connection_options",
+      "args": {
+        "dsn": "nats://s3cr3t-token@host:4222"
+      },
+      "expect": {
+        "servers": [
+          "nats://host:4222"
+        ],
+        "name": "",
+        "user": null,
+        "pass": null,
+        "token": "s3cr3t-token"
+      }
+    },
+    {
+      "name": "an IPv6 host keeps its brackets",
+      "op": "nats.connection_options",
+      "args": {
+        "dsn": "nats://[::1]:4223"
+      },
+      "expect": {
+        "servers": [
+          "nats://[::1]:4223"
+        ],
+        "name": "",
+        "user": null,
+        "pass": null,
+        "token": null
+      }
+    },
+    {
+      "name": "connection options default the port and send no credentials",
+      "op": "nats.connection_options",
+      "args": {
+        "dsn": "nats://host"
+      },
+      "expect": {
+        "servers": [
+          "nats://host:4222"
+        ],
+        "name": "",
+        "user": null,
+        "pass": null,
+        "token": null
+      }
+    }
+  ]
+}

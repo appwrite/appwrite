@@ -5429,6 +5429,7 @@ dependencies = [
  "utopia-async",
  "utopia-dsn",
  "utopia-lock",
+ "utopia-nats",
  "utopia-validators",
  "xxhash-rust",
 ]

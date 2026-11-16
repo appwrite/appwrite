@@ -52,6 +52,7 @@ pub const OPS: &[&str] = &[
     "broker.retry",
     "broker.reap",
     "broker.queue_size",
+    "broker.queue_age",
     "broker.failed_count",
     "broker.in_flight_ceiling",
     "broker.close",
@@ -59,6 +60,7 @@ pub const OPS: &[&str] = &[
     "background.new",
     "background.run",
     "background.size",
+    "background.age",
     "background.failed_count",
     "background.retry",
     "background.publish",
@@ -68,6 +70,9 @@ pub const OPS: &[&str] = &[
     "server.configure",
     "server.run",
     "nats.broker",
+    "nats.dsn_arguments",
+    "nats.from_dsn",
+    "nats.connection_options",
     "nats.provision",
     "nats.duplicates",
     "nats.reconnect",
@@ -443,6 +448,33 @@ fn unit(r: Result<(), Error>) -> Outcome {
     }
 }
 
+/// `Nats::dsnArguments()` as PHP's adapter dumps it: the discard policy as
+/// `DiscardPolicy::<case>`.
+fn dsn_dump(arguments: Vec<(&'static str, utopia_queue::broker::DsnArgument)>) -> Array {
+    use utopia_queue::broker::DsnArgument;
+    let mut out = Array::new();
+    for (name, argument) in arguments {
+        let value = match argument {
+            DsnArgument::Int(i) => Value::Int(i),
+            DsnArgument::Float(f) => Value::Float(f),
+            DsnArgument::Floats(list) => {
+                let mut steps = Array::new();
+                for step in list {
+                    let _ = steps.push(Value::Float(step));
+                }
+                Value::Array(steps)
+            }
+            DsnArgument::Null => Value::Null,
+            DsnArgument::Discard(policy) => Value::from(match policy {
+                async_nats::jetstream::stream::DiscardPolicy::New => "DiscardPolicy::New",
+                _ => "DiscardPolicy::Old",
+            }),
+        };
+        out.set(name.into(), value);
+    }
+    out
+}
+
 fn val<T: Into<Json>>(r: Result<T, Error>) -> Outcome {
     match r {
         Ok(v) => Outcome::Ok(v.into()),
@@ -503,6 +535,9 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
             if let Some(v) = a.opt_bool("terminal")? {
                 m.terminal(v);
             }
+            if let Some(v) = a.opt_bool("skipped")? {
+                m.skip(v);
+            }
             if a.0.get("size").is_some() {
                 m.set_size(a.opt_i64("size")?);
             }
@@ -518,6 +553,9 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
             out.set("size".into(), m.size().map_or(Value::Null, Value::Int));
             out.set("array".into(), Value::Array(m.to_array()));
             // Only when the case sets it, so cases recorded before it existed keep their results.
+            if a.0.get("skipped").is_some() {
+                out.set("skipped".into(), Value::Bool(m.is_skipped()));
+            }
             if a.0.get("max_attempts").is_some() {
                 m.set_max_attempts(a.opt_i64("max_attempts")?);
                 out.set("max_attempts".into(), m.max_attempts().map_or(Value::Null, Value::Int));
@@ -731,6 +769,10 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
             let q = q!(a);
             val(broker(session)?.publisher()?.queue_size(&q, a.opt_bool("failed")?.unwrap_or(false)).await)
         }
+        "broker.queue_age" => {
+            let q = q!(a);
+            val(broker(session)?.publisher()?.queue_age(&q).await)
+        }
         "broker.failed_count" => {
             let q = q!(a);
             val(broker(session)?.publisher()?.failed_count(&q).await)
@@ -817,6 +859,11 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
             let q = q!(a);
             val(b.queue_size(&q, a.opt_bool("failed")?.unwrap_or(false)).await)
         }
+        "background.age" => {
+            let b = session.get::<Arc<Background<Redis>>>(a.value("background")?)?.clone();
+            let q = q!(a);
+            val(b.queue_age(&q).await)
+        }
         "background.failed_count" => {
             let b = session.get::<Arc<Background<Redis>>>(a.value("background")?)?.clone();
             let q = q!(a);
@@ -851,6 +898,38 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
         "server.configure" => configure(&a, session).await?,
         "server.run" => run(&a, session).await?,
         "nats.broker" => nats_broker(&a, session).await?,
+        "nats.dsn_arguments" => {
+            let dsn = Dsn::parse(a.str("dsn")?).map_err(fault)?;
+            match Nats::dsn_arguments(&dsn) {
+                Ok(arguments) => Outcome::Ok(dump(&Value::Array(dsn_dump(arguments)))),
+                Err(e) => err(e),
+            }
+        }
+        "nats.from_dsn" => {
+            let dsn = Dsn::parse(a.str("dsn")?).map_err(fault)?;
+            let mut config = NatsConfig::default();
+            if let Some(replicas) = a.opt_i64("replicas")? {
+                config.replicas = replicas as usize;
+            }
+            if a.opt_str("provisioning")? == Some("require") {
+                config.provisioning = Provisioning::Require;
+            }
+            match Nats::from_dsn(&dsn, a.opt_str("name")?.unwrap_or(""), config) {
+                Ok(broker) => Outcome::Ok(json!({"max_deliver": broker.max_deliver()})),
+                Err(e) => err(e),
+            }
+        }
+        "nats.connection_options" => {
+            let dsn = Dsn::parse(a.str("dsn")?).map_err(fault)?;
+            let options = Nats::connection_options(&dsn, a.opt_str("name")?.unwrap_or(""));
+            Outcome::Ok(json!({
+                "servers": options.servers,
+                "name": options.name,
+                "user": options.user,
+                "pass": options.pass,
+                "token": options.token,
+            }))
+        }
         "nats.provision" => {
             let q = q!(a);
             match broker(session)? {
@@ -1209,6 +1288,7 @@ fn declare(hook: &mut Hook, spec: &Json, name: String, events: &Events) -> Resul
         hook.inject(i);
     }
     let fail = s.opt("fail").cloned();
+    let skip = s.opt("skip").and_then(Json::as_bool).unwrap_or(false);
     let context = s.opt_str("context")?.map(str::to_owned);
     let when = s.opt_str("when")?.map(str::to_owned);
     let has = s.opt_str("has")?.map(str::to_owned);
@@ -1227,6 +1307,9 @@ fn declare(hook: &mut Hook, spec: &Json, name: String, events: &Events) -> Resul
                     seen.push(json!(format!("message:{}", pid(&m))));
                     if fail.as_ref().and_then(Json::as_str) == Some("terminal") {
                         m.terminal(true);
+                    }
+                    if skip {
+                        m.skip(true);
                     }
                     if let (Some(key), Some(target)) = (&context, scope.context())
                         && when.as_ref().is_none_or(|w| *w == pid(&m))

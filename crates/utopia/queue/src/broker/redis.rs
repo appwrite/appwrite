@@ -709,6 +709,20 @@ impl Publisher for Redis {
         Box::pin(async move { self.commands.list_size(&Self::key(queue, "queue")).await })
     }
 
+    /// Messages are pushed on the left and received from the right, so the
+    /// right end is the oldest still waiting. One the codec cannot read reads
+    /// as 0; the consumer parks it as poison.
+    fn queue_age<'a>(&'a self, queue: &'a Queue) -> BoxFuture<'a, Result<i64>> {
+        Box::pin(async move {
+            let range = self.commands.list_range(&Self::key(queue, "queue"), 1, -1).await?;
+            let Some(oldest) = range.first() else { return Ok(0) };
+            Ok(match self.codec.decode(oldest) {
+                Ok(envelope) => super::envelope_age(&envelope, php_std::datetime::time()),
+                Err(_) => 0,
+            })
+        })
+    }
+
     /// The failed, dead and poison lists together.
     fn failed_count<'a>(&'a self, queue: &'a Queue) -> BoxFuture<'a, Result<i64>> {
         Box::pin(async move {

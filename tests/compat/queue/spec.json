@@ -109,6 +109,8 @@
         "Utopia\\Queue\\Message::getSequence",
         "Utopia\\Queue\\Message::getReceipt",
         "Utopia\\Queue\\Message::isTerminal",
+        "Utopia\\Queue\\Message::skip",
+        "Utopia\\Queue\\Message::isSkipped",
         "Utopia\\Queue\\Message::setSize",
         "Utopia\\Queue\\Message::getSize",
         "Utopia\\Queue\\Message::setMaxAttempts",
@@ -445,6 +447,14 @@
         "Utopia\\Queue\\Broker\\Nats::getQueueSize"
       ]
     },
+    "broker.queue_age": {
+      "doc": "$broker->getQueueAge(queue): seconds the oldest waiting message has waited",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Redis::getQueueAge",
+        "Utopia\\Queue\\Broker\\Pool::getQueueAge",
+        "Utopia\\Queue\\Broker\\Nats::getQueueAge"
+      ]
+    },
     "broker.failed_count": {
       "doc": "$broker->getFailedCount(queue)",
       "covers": [
@@ -493,6 +503,12 @@
       "doc": "$background->getQueueSize(queue, failed)",
       "covers": [
         "Utopia\\Queue\\Broker\\Background::getQueueSize"
+      ]
+    },
+    "background.age": {
+      "doc": "$background->getQueueAge(queue)",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Background::getQueueAge"
       ]
     },
     "background.failed_count": {
@@ -576,6 +592,25 @@
       "doc": "new Broker\\Nats(connection factory, or a live connection, and every setting); `time` pins the clock",
       "covers": [
         "Utopia\\Queue\\Broker\\Nats::__construct"
+      ]
+    },
+    "nats.dsn_arguments": {
+      "doc": "Nats::dsnArguments(new DSN(dsn)), the discard policy as DiscardPolicy::<case>",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Nats::dsnArguments"
+      ]
+    },
+    "nats.from_dsn": {
+      "doc": "Nats::fromDSN(new DSN(dsn), name, replicas?: (refused), provisioning?: 'require'): {max_deliver} (getMaxDeliver())",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Nats::fromDSN",
+        "Utopia\\Queue\\Broker\\Nats::getMaxDeliver"
+      ]
+    },
+    "nats.connection_options": {
+      "doc": "Nats::connectionOptions(new DSN(dsn), name): {servers, name, user, pass, token}",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Nats::connectionOptions"
       ]
     },
     "nats.provision": {
