@@ -9,10 +9,10 @@
  * so Cloud-only parameters, properties and enum values survive. Removals and
  * renames are not carried.
  *
- * Runs the Appwrite CLI in the `appwrite` Compose service's image: Appwrite boots
- * only with the utopia extension, which a host PHP does not load. Build the image
- * first (`docker compose build appwrite` at the repository root); no service needs
- * to run.
+ * Runs the Appwrite CLI in the `appwrite` Compose service's image (`appwrite-dev`):
+ * Appwrite boots only with the utopia extension, which a host PHP does not load.
+ * Build the image first (`docker compose build appwrite` at the repository root); no
+ * service needs to run.
  *
  * Usage:
  *   bun run sdk:preview               build and install it into node_modules
@@ -119,21 +119,26 @@ const run = (command: string[], cwd: string) => {
   }
 }
 
-// The CLI in a throwaway container of the `appwrite` service, as this user, so the
-// specs and SDK it writes into the mounted app/ stay writable here.
+// The CLI in a throwaway container of the `appwrite` service's image, as this user, so
+// the specs and SDK it writes stay writable here. Only the directories it reads or
+// writes are mounted, with no network and no Docker socket: this runs a branch's code.
+const MOUNTS = ['app', 'src', 'packages', 'docs', 'public']
+
 const cli = (args: string[]) =>
   run(
     [
       'docker',
-      'compose',
       'run',
       '--rm',
-      '--no-deps',
-      '-T',
+      '--network=none',
       `--user=${process.getuid?.()}:${process.getgid?.()}`,
+      '--env-file=.env',
       '--env=_APP_SDK_PREVIEW=enabled',
+      ...MOUNTS.map(
+        (path) => `--volume=${join(REPOSITORY, path)}:/usr/src/code/${path}`,
+      ),
       '--entrypoint=php',
-      'appwrite',
+      'appwrite-dev',
       'app/cli.php',
       ...args,
     ],

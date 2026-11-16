@@ -122,7 +122,6 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-          submodules: recursive
 
       # The runner injects GCRUNNER_REGISTRY into the shell only; action inputs
       # read ${{ env.* }}, which needs it promoted to GITHUB_ENV first.
@@ -133,7 +132,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
-      # The image `docker compose run appwrite` uses: Appwrite's CLI boots only with the
+      # The image the preview script runs the CLI in: Appwrite's CLI boots only with the
       # utopia extension, which a host PHP does not load. Reads CI's layer cache, never writes it.
       - name: Build Appwrite
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
