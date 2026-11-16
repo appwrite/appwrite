@@ -3826,6 +3826,11 @@
             "queries",
             "total"
         ],
+        "reviews.updateInstallation": [
+            "installationId",
+            "newRepositories",
+            "strength"
+        ],
         "reviews.updateRepositoryStrength": [
             "repositoryId",
             "strength"
@@ -8148,6 +8153,11 @@
         "reviews.listRepositories": [
             "queries",
             "total"
+        ],
+        "reviews.updateInstallation": [
+            "installationId",
+            "newRepositories",
+            "strength"
         ],
         "reviews.updateRepositoryStrength": [
             "repositoryId",
