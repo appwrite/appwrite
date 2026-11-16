@@ -4952,6 +4952,7 @@ name = "utopia-cache"
 version = "0.1.0"
 dependencies = [
  "bytes",
+ "chrono",
  "crc32fast",
  "flate2",
  "getrandom 0.3.4",
@@ -4968,6 +4969,7 @@ dependencies = [
  "utopia-async",
  "utopia-circuit-breaker",
  "utopia-pools",
+ "utopia-storage",
  "utopia-telemetry",
 ]
 

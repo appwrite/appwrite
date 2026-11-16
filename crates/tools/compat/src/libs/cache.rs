@@ -12,9 +12,10 @@ use utopia_cache::telemetry::{Kind, MemoryTelemetry, Telemetry};
 use utopia_cache::{
     Adapter, AnyCodec, Cache, CircuitBreaker, Codec, DynAdapter, Envelope, Error, Fields, Filesystem, Hazelcast,
     Memcached, MemcachedClient, Memory, Multiplexing, MultiplexingOptions, Native, None as NoneAdapter, Pool, Purges,
-    Redis, RedisCluster, Retry, Sharding, resp,
+    Redis, RedisCluster, Retry, Sharding, Storage, resp,
 };
 use utopia_circuit_breaker::CircuitBreaker as Breaker;
+use utopia_storage::Local;
 
 use crate::adapter::{Args, Fault, OpResult, Outcome, Session, bytes, bytes_value};
 use crate::libs::php_std::typed;
@@ -25,6 +26,8 @@ pub const OPS: &[&str] = &[
     "none.new",
     "filesystem.new",
     "filesystem.path",
+    "storage.new",
+    "storage.path",
     "filesystem.stream",
     "redis.new",
     "memcached.new",
@@ -639,6 +642,14 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
         "none.new" => new(session, Arc::new(NoneAdapter)),
         "filesystem.new" => new(session, Arc::new(Filesystem::new(a.str("path")?))),
         "filesystem.path" => Outcome::ok(Filesystem::new(a.str("path")?).path(a.str("key")?).display().to_string()),
+        "storage.new" => match Storage::new(Arc::new(Local::new(a.str("root")?))) {
+            Ok(adapter) => new(session, Arc::new(adapter)),
+            Err(e) => err(e),
+        },
+        "storage.path" => match Storage::new(Arc::new(Local::new(a.str("root")?))) {
+            Ok(adapter) => Outcome::ok(adapter.path(a.str("key")?)),
+            Err(e) => err(e),
+        },
         "filesystem.stream" => {
             use utopia_async::io::AsyncReadExt;
             match Filesystem::new(a.str("path")?).open(a.str("key")?, a.i64("ttl")?).await {

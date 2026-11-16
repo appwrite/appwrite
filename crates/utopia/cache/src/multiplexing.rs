@@ -28,7 +28,8 @@ pub struct MultiplexingOptions {
     pub host: String,
     /// Server port (6379).
     pub port: u16,
-    /// Connect timeout in seconds (1.0).
+    /// Connect timeout in seconds (1.0), covering the TCP connect and the
+    /// `AUTH`/`SELECT` handshake.
     pub timeout: f64,
     /// How long one caller waits for its own reply, in seconds (0.25).
     /// Expiring fails that call only, not the connection.
@@ -271,11 +272,14 @@ impl<K: Codec> Multiplexing<K> {
         let _ = stream.set_nodelay(true);
         let (mut reader, mut writer) = stream.into_split();
         let mut buffer = Vec::new();
-        let read_timeout = Duration::from_secs_f64(o.read_timeout);
+        // The handshake is part of connecting, so it gets the connect deadline:
+        // held to the per-call read timeout, a busy, freshly started worker sees
+        // a healthy server's AUTH reply land a little late and fails to connect.
+        let handshake_timeout = timeout;
         if let Some(auth) = &o.auth {
             let mut args: Vec<&[u8]> = vec![b"AUTH"];
             args.extend(auth.iter().map(|a| a.as_bytes()));
-            if handshake(&mut reader, &mut writer, &mut buffer, &args, read_timeout).await?
+            if handshake(&mut reader, &mut writer, &mut buffer, &args, handshake_timeout).await?
                 != Reply::Str(b"OK".to_vec())
             {
                 return Err(Error::Redis("Redis AUTH failed".into()));
@@ -284,7 +288,7 @@ impl<K: Codec> Multiplexing<K> {
         if o.db != 0 {
             let db = o.db.to_string();
             let args: [&[u8]; 2] = [b"SELECT", db.as_bytes()];
-            if handshake(&mut reader, &mut writer, &mut buffer, &args, read_timeout).await?
+            if handshake(&mut reader, &mut writer, &mut buffer, &args, handshake_timeout).await?
                 != Reply::Str(b"OK".to_vec())
             {
                 return Err(Error::Redis("Redis SELECT failed".into()));

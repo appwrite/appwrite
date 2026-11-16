@@ -88,6 +88,17 @@ pub enum Error {
         /// The adapter's failure, when it ran and failed.
         previous: Option<Box<Error>>,
     },
+    /// A storage device failed an operation the [`Storage`](crate::Storage)
+    /// adapter lets through (a purge or a flush).
+    ///
+    /// PHP: the `utopia-php/storage` exception, `class` its name.
+    #[error("{message}")]
+    Storage {
+        /// The storage exception's class.
+        class: &'static str,
+        /// The message.
+        message: String,
+    },
 }
 
 impl Error {
@@ -110,6 +121,7 @@ impl Error {
             Error::Type(_) => "TypeError",
             Error::NoScript(_) => "Utopia\\Cache\\Adapter\\Redis\\NoScript",
             Error::Unavailable { .. } => "Utopia\\Cache\\Exception\\Unavailable",
+            Error::Storage { class, .. } => class,
         }
     }
 
