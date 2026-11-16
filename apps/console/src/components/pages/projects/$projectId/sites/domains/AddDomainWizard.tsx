@@ -59,7 +59,9 @@ export function AddDomainWizard() {
   const [redirectUrl, setRedirectUrl] = useState('')
   const [statusCode, setStatusCode] = useState('302')
   const [domainTouched, setDomainTouched] = useState(false)
-  const domainError = domainFieldError(domain, domainTouched, t)
+  // The server's reason the last add failed, such as a domain that exists already
+  const [submitError, setSubmitError] = useState('')
+  const domainError = domainFieldError(domain, domainTouched, t) || submitError
   const [rule, setRule] = useState<Models.ProxyRule | null>(null)
   // Set while the create waits for the domain's ownership TXT record
   const [claimDomain, setClaimDomain] = useState<string | null>(null)
@@ -160,7 +162,7 @@ export function AddDomainWizard() {
         return
       }
       const message = getErrorMessage(err, 'Failed to add domain')
-      setError(message)
+      setSubmitError(message)
       toast.error(message)
     }
   }
@@ -329,7 +331,10 @@ export function AddDomainWizard() {
             <Input
               placeholder="app.example.com"
               value={domain}
-              onChange={(e) => setDomain(e.target.value)}
+              onChange={(e) => {
+                setDomain(e.target.value)
+                setSubmitError('')
+              }}
               onBlur={() => setDomainTouched(true)}
               aria-invalid={domainError ? true : undefined}
               className="font-mono mt-1.5"
