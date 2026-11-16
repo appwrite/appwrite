@@ -6,12 +6,13 @@
 //! `Utopia\Locale\Locale` are always registered: they have no PHP
 //! implementation. Every other library still has one, and its class is
 //! registered only when `_APP_EXTENSION_LIBRARIES` names its package
-//! (`user-agent`, `domains`), so each can be canaried and switched back to PHP
+//! (`user-agent`, `domains`, `emails`), so each can be canaried and switched back to PHP
 //! with a restart, not a deploy.
 
 mod canvas;
 mod domains;
 mod dsn;
+mod emails;
 mod locale;
 mod string;
 mod user_agent;
@@ -37,6 +38,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .class::<dsn::Dsn>()
         .class::<locale::Locale>();
     let module = if enabled("domains") { module.class::<domains::Domain>() } else { module };
+    let module = if enabled("emails") { module.class::<emails::Email>() } else { module };
     let module = if enabled("user-agent") { module.class::<user_agent::UserAgent>() } else { module };
     module.request_shutdown_function(request_shutdown)
 }
