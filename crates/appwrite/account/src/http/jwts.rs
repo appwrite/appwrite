@@ -68,6 +68,6 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     claims.insert("projectId".into(), Value::String(project));
     claims.insert("userId".into(), Value::String(user.id.clone()));
     claims.insert("sessionId".into(), Value::String(session.id.clone()));
-    let token = jwt::encode(&ctx.state.config.openssl_key_v1, claims, duration);
+    let token = jwt::encode(&ctx.state.config.openssl_key, claims, duration);
     Ok(ctx.created(&JwtModel { jwt: &token }))
 }

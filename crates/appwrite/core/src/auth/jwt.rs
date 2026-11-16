@@ -82,9 +82,37 @@ pub fn decode_with_leeway(key: &str, token: &str, max_age: i64, leeway: i64) -> 
     Ok(claims)
 }
 
+/// `EncryptionKey::decode($token, 'HS256', $maxAge, $leeway)`: the token
+/// verified against each accepted key in turn. Only a failed signature moves
+/// on to the next key; past the signature the key is right, so any other
+/// error is the token's.
+pub fn decode_accepted(keys: &[String], token: &str, max_age: i64, leeway: i64) -> Result<Map<String, Value>, String> {
+    let mut error = "Signing key cannot be empty".to_owned();
+    for key in keys {
+        match decode_with_leeway(key, token, max_age, leeway) {
+            Ok(claims) => return Ok(claims),
+            Err(e) if e == SIGNATURE_FAILED => error = e,
+            Err(e) => return Err(e),
+        }
+    }
+    Err(error)
+}
+
+const SIGNATURE_FAILED: &str = "Invalid token: Signature failed";
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn accepted_keys_are_tried_in_turn() {
+        let token = encode("old", Map::new(), 900);
+        let keys = vec!["new".to_owned(), "old".to_owned()];
+        assert!(decode_accepted(&keys, &token, 3600, 0).is_ok());
+        assert_eq!(decode_accepted(&keys[..1], &token, 3600, 0).unwrap_err(), "Invalid token: Signature failed");
+        assert_eq!(decode_accepted(&[], &token, 3600, 0).unwrap_err(), "Signing key cannot be empty");
+        assert_eq!(decode_accepted(&keys, "a.b", 3600, 0).unwrap_err(), "Invalid token: Incomplete segments");
+    }
 
     #[test]
     fn round_trip() {

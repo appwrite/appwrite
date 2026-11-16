@@ -42,7 +42,7 @@ pub(in crate::platform) async fn resolve(
         };
         // A secret `Key::decode` refuses leaves no key: the auth hook
         // answers 401 for the header.
-        let Some(key) = ApiKey::decode(&ctx.project, key_header, &state.config.openssl_key_v1, &owners) else {
+        let Some(key) = ApiKey::decode(&ctx.project, key_header, &state.config.openssl_keys, &owners) else {
             return Ok(String::new());
         };
         if !key.project_id.is_empty() && (header_project.is_empty() || header_project != key.project_id) {

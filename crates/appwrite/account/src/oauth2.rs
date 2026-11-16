@@ -1155,11 +1155,15 @@ fn credentials(ctx: &Context, provider: &str) -> (String, String) {
 }
 
 /// The state's `binding`: the flow's nonce bound to the user who started it
-/// (`hash_hmac('sha256', "$nonce:$userId", _APP_OPENSSL_KEY_V1)`), since a
-/// sibling site can plant the nonce cookie.
+/// (`hash_hmac('sha256', "$nonce:$userId", EncryptionKey::current())`),
+/// since a sibling site can plant the nonce cookie.
 fn binding(ctx: &Context, nonce: &str, user_id: &str) -> String {
+    binding_with(&ctx.state.config.openssl_key, nonce, user_id)
+}
+
+fn binding_with(key: &str, nonce: &str, user_id: &str) -> String {
     use hmac::{Hmac, Mac};
-    let Ok(mut mac) = Hmac::<sha2::Sha256>::new_from_slice(ctx.state.config.openssl_key_v1.as_bytes()) else {
+    let Ok(mut mac) = Hmac::<sha2::Sha256>::new_from_slice(key.as_bytes()) else {
         return String::new();
     };
     mac.update(format!("{nonce}:{user_id}").as_bytes());
@@ -1483,9 +1487,11 @@ pub async fn redirect(ctx: &mut Context) -> Result<Response> {
         _ => String::new(),
     };
     let user_id = ctx.user.as_ref().map(|u| u.id.clone()).unwrap_or_default();
-    let expected = binding(ctx, &state_nonce, &user_id);
-    let user_bound = utopia_auth::hash_equals(expected.as_bytes(), state_binding.as_bytes())
-        || (state_binding.is_empty() && ctx.user.is_none());
+    // Bound under any accepted key (`EncryptionKey::accepted()`): a flow
+    // started before a key rotation still finishes.
+    let user_bound = ctx.state.config.openssl_keys.iter().any(|key| {
+        utopia_auth::hash_equals(binding_with(key, &state_nonce, &user_id).as_bytes(), state_binding.as_bytes())
+    }) || (state_binding.is_empty() && ctx.user.is_none());
     let bound = held
         .split(',')
         .filter(|n| !n.is_empty())
@@ -1690,7 +1696,7 @@ pub async fn redirect(ctx: &mut Context) -> Result<Response> {
         claims.insert("provider".into(), Json::String(provider.clone()));
         query.insert(
             "secret".into(),
-            Json::String(appwrite_core::auth::jwt::encode(&ctx.state.config.openssl_key_v1, claims, 60)),
+            Json::String(appwrite_core::auth::jwt::encode(&ctx.state.config.openssl_key, claims, 60)),
         );
         query.insert("userId".into(), Json::String(user.id.clone()));
     } else {
@@ -1710,8 +1716,14 @@ pub async fn redirect(ctx: &mut Context) -> Result<Response> {
         }
         ctx.event_param("userId", user.id.clone());
         ctx.event_param("sessionId", session.id.clone());
-        let model =
-            SessionModel { session: &session, country_name: "", current: false, secret: None, render: ctx.render() };
+        let model = SessionModel {
+            session: &session,
+            user_name: user.name.as_deref().unwrap_or(""),
+            country_name: "",
+            current: false,
+            secret: None,
+            render: ctx.render(),
+        };
         ctx.event_payload_sensitive(&model, SESSION_SENSITIVE);
         if success_url.host.as_deref() == Some(console_host.as_str())
             && success_url.path.as_deref() == Some(DEFAULT_SUCCESS)
@@ -2647,6 +2659,7 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
     let country = base::country_name(ctx, session.country_code.as_deref().unwrap_or(""));
     let model = SessionModel {
         session: &session,
+        user_name: user.name.as_deref().unwrap_or(""),
         country_name: &country,
         current: true,
         secret: Some(&encoded),
