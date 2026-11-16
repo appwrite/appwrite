@@ -22,17 +22,15 @@ describe('hasQualityLabel', () => {
 })
 
 describe('experiments catalog', () => {
-  test('lists Appwrite Analytics, project environments, Origin and identity servers', () => {
+  test('lists Appwrite Analytics, project environments and Origin', () => {
     expect(EXPERIMENTS.map((experiment) => experiment.flag)).toEqual([
       'analytics',
       'projectEnvironments',
       'vcsOrigin',
-      'identityServers',
     ])
     expect(EXPERIMENTS[0]?.name).toBe('Appwrite Analytics')
     expect(EXPERIMENTS[1]?.name).toBe('Project environments')
     expect(EXPERIMENTS[2]?.name).toBe('Origin Git provider')
-    expect(EXPERIMENTS[3]?.name).toBe('Identity servers')
     for (const experiment of EXPERIMENTS) {
       expect(experiment.description.length).toBeGreaterThan(0)
     }
@@ -159,66 +157,51 @@ describe('usage alerts flag', () => {
   })
 })
 
-describe('identity servers flag', () => {
-  const globals = globalThis as { window?: unknown; localStorage?: unknown }
-  const originalWindow = globals.window
-  const originalLocalStorage = globals.localStorage
-
-  beforeEach(() => {
-    const storage = new Map<string, string>()
-    const localStorage = {
-      getItem: (key: string) => storage.get(key) ?? null,
-      setItem: (key: string, value: string) => void storage.set(key, value),
-      removeItem: (key: string) => void storage.delete(key),
-    }
-    globals.localStorage = localStorage
-    globals.window = {
-      localStorage,
-      location: new URL('https://cloud.appwrite.io/console'),
-      dispatchEvent: () => true,
-    }
-  })
-
-  afterEach(() => {
-    globals.window = originalWindow
-    globals.localStorage = originalLocalStorage
-  })
-
+describe('identity servers', () => {
   const params = { projectId: 'project' }
 
-  function enter(): unknown {
+  function enter(pathname: string): unknown {
     const beforeLoad = IdentityServersRoute.options
-      .beforeLoad as unknown as (context: { params: typeof params }) => unknown
+      .beforeLoad as unknown as (context: {
+      location: { pathname: string }
+      params: typeof params
+    }) => unknown
     try {
-      beforeLoad({ params })
+      beforeLoad({ location: { pathname }, params })
       return null
     } catch (thrown) {
       return thrown
     }
   }
 
-  test('is a preview: off in every profile and listed in the previews menu', () => {
+  test('is generally available: no feature flag and not in the previews menu', () => {
     for (const profile of Object.values(CONSOLE_PROFILES)) {
-      expect(profile.features.identityServers).toBe(false)
+      expect(profile.features).not.toHaveProperty('identityServers')
     }
     expect(
-      EXPERIMENTS.some((experiment) => experiment.flag === 'identityServers'),
-    ).toBe(true)
+      EXPERIMENTS.some(
+        (experiment) => (experiment.flag as string) === 'identityServers',
+      ),
+    ).toBe(false)
   })
 
-  test('a deep link to identity servers lands on settings while the flag is off', () => {
-    const thrown = enter()
-    expect(isRedirect(thrown)).toBe(true)
-    expect(
-      (thrown as { options: { to: string; params: unknown } }).options,
-    ).toMatchObject({ to: '/projects/$projectId/settings', params })
+  test('the index opens LDAP, the only identity server so far', () => {
+    for (const pathname of [
+      '/projects/project/settings/identity-servers',
+      '/projects/project/settings/identity-servers/',
+    ]) {
+      const thrown = enter(pathname)
+      expect(isRedirect(thrown)).toBe(true)
+      expect(
+        (thrown as { options: { to: string; params: unknown } }).options,
+      ).toMatchObject({
+        to: '/projects/$projectId/settings/identity-servers/ldap',
+        params,
+      })
+    }
   })
 
-  test('the page opens once the preview is turned on', () => {
-    setDebugProfileFeatureOverride('identityServers', true)
-    expect(enter()).toBeNull()
-
-    setDebugProfileFeatureOverride('identityServers', false)
-    expect(isRedirect(enter())).toBe(true)
+  test('the LDAP page opens without a redirect', () => {
+    expect(enter('/projects/project/settings/identity-servers/ldap')).toBeNull()
   })
 })
