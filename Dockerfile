@@ -67,6 +67,30 @@ RUN . "$HOME/.cargo/env" && \
     cargo build --release --locked -p utopia-extension && \
     strip target/release/libutopia.so
 
+# Swoole from appwrite-labs/swoole-rs, the Rust rewrite of Swoole v6.2.5 (the
+# version the base image ships). It takes the base image's Swoole switches, less
+# those the Cargo build has built in (sockets, Brotli, zstd and OpenSSL). The
+# release binaries leave out the curl and pgsql hooks, so it builds from source.
+# docker-php-ext-install puts the sockets headers where --php-sockets looks.
+FROM appwrite/base:2.3.1@sha256:8476fd5f134f9953341152c45a7bf1bb5d08b0d039ce76018d062edd20457fd8 AS swoole-build
+
+ARG SWOOLE_RS_VERSION=v0.1.0
+
+RUN apk add --no-cache $PHPIZE_DEPS rustup clang-dev python3 git pcre2-dev linux-headers \
+        openssl-dev brotli-dev zstd-dev c-ares-dev 'curl-dev>=8.22.0' postgresql-dev && \
+    rustup-init -y --profile minimal --default-toolchain none && \
+    docker-php-ext-install sockets && \
+    git clone --depth 1 --branch "$SWOOLE_RS_VERSION" https://github.com/appwrite-labs/swoole-rs.git /usr/local/src/swoole-rs
+
+WORKDIR /usr/local/src/swoole-rs
+
+RUN . "$HOME/.cargo/env" && \
+    rustup toolchain install && \
+    RUSTFLAGS="-C target-feature=-crt-static" python3 tools/build_ext.py --php-sockets \
+        --configure=--enable-cares --configure=--enable-mysqlnd \
+        --configure=--enable-swoole-curl --configure=--enable-swoole-pgsql && \
+    strip target/ext/swoole.so
+
 FROM appwrite/base:2.3.1@sha256:8476fd5f134f9953341152c45a7bf1bb5d08b0d039ce76018d062edd20457fd8 AS base
 
 LABEL maintainer="team@appwrite.io"
@@ -81,6 +105,9 @@ ENV _APP_VERSION=$VERSION \
 RUN if [ "$DEBUG" == "true" ]; then \
     apk add boost boost-dev; \
     fi
+
+RUN --mount=from=swoole-build,source=/usr/local/src/swoole-rs/target/ext/swoole.so,target=/tmp/swoole.so \
+    cp /tmp/swoole.so "$(php-config --extension-dir)/swoole.so"
 
 # Runtime libs for the source-built ffmpeg 8.1.2; mediainfo is unused by the
 # worker today (probe is ffprobe) but kept until that Dockerfile comment is retired.
