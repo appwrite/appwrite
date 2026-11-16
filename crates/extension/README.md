@@ -20,14 +20,14 @@ and libclang at build time.
 
 ## Switching a class on
 
-`Utopia\Image\Canvas`, `Utopia\Image\Font` and `Utopia\DSN\DSN` are always registered: they have
-no PHP implementation. Their signatures are in `stubs/` and `packages/image/stubs/` for PHPStan,
+`Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN` and `Utopia\Locale\Locale` are always
+registered: they have no PHP implementation. Their signatures are in `stubs/` and `packages/image/stubs/` for PHPStan,
 which runs without the extension. Every other class is registered only when
 `_APP_EXTENSION_LIBRARIES` names its package. Otherwise Composer loads the package's PHP class as
 before:
 
 ```sh
-_APP_EXTENSION_LIBRARIES=locale,user-agent,domains   # Utopia\Locale\Locale, Utopia\UserAgent\UserAgent and Utopia\Domains\Domain from the extension
+_APP_EXTENSION_LIBRARIES=user-agent,domains   # Utopia\UserAgent\UserAgent and Utopia\Domains\Domain from the extension
 ```
 
 The extension reads it once, when PHP loads the module, so changing it takes a restart and no
@@ -70,21 +70,25 @@ reads them, so construction stores each component once, in `utopia-dsn`'s single
 
 ## Utopia\Locale\Locale
 
-Over `crates/utopia/locale` (`_APP_EXTENSION_LIBRARIES=locale`). The registered languages are the
-PHP class's static state, so they live once per process and are cleared when the request ends, as
+Over `crates/utopia/locale`, always registered. Its PHP package, `packages/locale`, was removed once
+the extension had served it in every Cloud region (appwrite-labs/cloud#7503); `utopia-php/locale`
+stays published at its last release for other projects. The registered languages are the PHP
+class's static state, so they live once per process and are cleared when the request ends, as
 PHP clears static properties. `Locale::$exceptions` is still a PHP static property:
 `Locale::$exceptions = false` works unchanged, and every call reads it. Translation files are read
 through PHP's `file_exists()` and `file_get_contents()`, so Swoole's hooks, stream wrappers and
 PHP's warnings apply. `getTranslations()` builds a language's array once and returns it by
 refcount afterwards, as PHP returns `self::$language[$name]`.
 
-`crates/extension/tests/locale.php` prints a corpus of results that must be identical on both
-implementations: every Appwrite translation in every language, with placeholders; JSON files of
+`crates/extension/tests/locale.php` prints a corpus of results that must match
+`locale.expected.jsonl`, the output of the PHP class: real Appwrite translations pinned in
+`tests/fixtures/locale` (English, Hebrew, Arabic, Japanese, Chinese, Russian, Hindi), with
+placeholders; JSON files of
 every shape; every combination of default, fallback and missing key with and without
 exceptions; placeholder values of every type; the scalar arguments PHP converts; and the warnings
-each case raises. It asserts these known differences on the extension:
+each case raises. It asserts these known differences from the PHP class:
 
-- `setLanguageFromArray()` refuses a translation that is not a string; PHP stores it and returns it.
+- `setLanguageFromArray()` refuses a translation that is not a string; PHP stored it and returned it.
 - A language name, translation key or text that is not UTF-8 is refused with an `Exception` when it
   is registered, where PHP stores the bytes; translation files are always UTF-8 (`json_decode`
   refuses anything else). A key or name looked up with such bytes is read with U+FFFD in their
@@ -146,7 +150,7 @@ times one implementation; `run.py` runs it on both, alternating, and prints the 
 
 ```sh
 cargo build --release -p utopia-extension
-python3 crates/extension/bench/run.py crates/extension/bench/locale.php . target/release/libutopia.so 5
+python3 crates/extension/bench/run.py crates/extension/bench/user-agent.php . target/release/libutopia.so 5
 ```
 
 ## Utopia\Image\Canvas and Utopia\Image\Font

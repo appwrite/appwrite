@@ -2,11 +2,12 @@
 //! value objects and enums those classes take live in the Composer packages
 //! (`packages/<name>`), as plain PHP.
 //!
-//! `Utopia\Image\Canvas`, `Utopia\Image\Font` and `Utopia\DSN\DSN` are always
-//! registered: they have no PHP implementation. Every other library still has
-//! one, and its class is registered only when `_APP_EXTENSION_LIBRARIES` names
-//! its package (`locale`, `user-agent`, `domains`), so each can be canaried and
-//! switched back to PHP with a restart, not a deploy.
+//! `Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN` and
+//! `Utopia\Locale\Locale` are always registered: they have no PHP
+//! implementation. Every other library still has one, and its class is
+//! registered only when `_APP_EXTENSION_LIBRARIES` names its package
+//! (`user-agent`, `domains`), so each can be canaried and switched back to PHP
+//! with a restart, not a deploy.
 
 mod canvas;
 mod domains;
@@ -29,9 +30,13 @@ fn enabled(package: &str) -> bool {
 /// The module PHP loads: every class of the extension that is switched on.
 #[php_module]
 pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
-    let module = module.name("utopia").class::<canvas::Canvas>().class::<canvas::Font>().class::<dsn::Dsn>();
+    let module = module
+        .name("utopia")
+        .class::<canvas::Canvas>()
+        .class::<canvas::Font>()
+        .class::<dsn::Dsn>()
+        .class::<locale::Locale>();
     let module = if enabled("domains") { module.class::<domains::Domain>() } else { module };
-    let module = if enabled("locale") { module.class::<locale::Locale>() } else { module };
     let module = if enabled("user-agent") { module.class::<user_agent::UserAgent>() } else { module };
     module.request_shutdown_function(request_shutdown)
 }
