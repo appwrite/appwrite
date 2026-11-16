@@ -47,6 +47,7 @@ class Delete extends Base
                 namespace: 'videos',
                 group: 'renditions',
                 name: 'deleteRendition',
+                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/delete-rendition.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [

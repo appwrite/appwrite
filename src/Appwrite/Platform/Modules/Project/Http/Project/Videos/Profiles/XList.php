@@ -20,6 +20,7 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Query\Method as QueryMethod;
+use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\WhiteList;
 
@@ -45,6 +46,7 @@ class XList extends Base
                 namespace: 'project',
                 group: 'profiles',
                 name: 'listVideoProfiles',
+                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/project/list-video-profiles.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [

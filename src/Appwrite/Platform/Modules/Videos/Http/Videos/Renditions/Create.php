@@ -53,6 +53,7 @@ class Create extends Base
                 namespace: 'videos',
                 group: 'renditions',
                 name: 'createRendition',
+                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/create-rendition.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [

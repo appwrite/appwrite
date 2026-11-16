@@ -20,6 +20,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
+use Utopia\System\System;
 
 class Get extends Base
 {
@@ -44,6 +45,7 @@ class Get extends Base
                 namespace: 'videos',
                 group: 'videos',
                 name: 'getTimelines',
+                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/get-timelines.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [

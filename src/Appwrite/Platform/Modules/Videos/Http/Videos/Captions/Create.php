@@ -54,6 +54,7 @@ class Create extends Base
                 namespace: 'videos',
                 group: 'captions',
                 name: 'createCaption',
+                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/create-caption.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [

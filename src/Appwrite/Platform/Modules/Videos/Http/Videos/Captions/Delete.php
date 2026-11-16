@@ -48,6 +48,7 @@ class Delete extends Base
                 namespace: 'videos',
                 group: 'captions',
                 name: 'deleteCaption',
+                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/delete-caption.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
