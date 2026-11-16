@@ -230,7 +230,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
     onSuccess: (updated) => {
       toast.success(t('Repository disconnected successfully'))
       setDisconnectDialogOpen(false)
-      setSelectedBranch('')
       setSelectedDir('')
       queryClient.setQueryData(
         ['function', 'project', projectId, func.$id],
