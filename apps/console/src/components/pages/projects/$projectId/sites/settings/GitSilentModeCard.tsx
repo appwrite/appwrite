@@ -35,11 +35,24 @@ export function GitSilentModeCard({
 }: GitSilentModeCardProps) {
   const t = useT()
   const queryClient = useQueryClient()
-  const [silentMode, setSilentMode] = useState(site.providerSilentMode ?? false)
+  const silent = site.providerSilentMode ?? false
+  const saved = {
+    branch: site.providerBranch || '',
+    deployments: site.providerDeployments ?? true,
+    comments: !silent && (site.providerComments ?? true),
+    statuses: !silent && (site.providerStatuses ?? true),
+  }
+  const [settings, setSettings] = useState(saved)
 
   useEffect(() => {
-    setSilentMode(site.providerSilentMode ?? false)
-  }, [site.providerSilentMode, site.$id])
+    setSettings(saved)
+  }, [
+    saved.branch,
+    saved.deployments,
+    saved.comments,
+    saved.statuses,
+    site.$id,
+  ])
 
   const updateSiteMutation = useMutation({
     mutationFn: async (updates: Partial<Models.Site>) => {
