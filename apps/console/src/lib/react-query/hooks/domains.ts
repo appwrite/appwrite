@@ -1358,6 +1358,7 @@ export function useDomainRecords(
     data: recordsData,
     isLoading,
     isFetching,
+    isSuccess,
     error,
     refetch,
   } = useQuery(
@@ -1383,10 +1384,12 @@ export function useDomainRecords(
 
   return {
     dnsRecords,
-    total: recordsData?.total || 0,
+    // Leave a missing total undefined so callers can tell "not loaded" from 0.
+    total: recordsData?.total,
     totalPages,
     isLoading,
     isFetching,
+    isSuccess,
     error,
     refetch,
   }
