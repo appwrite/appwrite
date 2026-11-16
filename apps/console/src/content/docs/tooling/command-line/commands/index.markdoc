@@ -37,7 +37,7 @@ Below is a list of the available commands in the Appwrite CLI. You can get more 
 * The graphql command allows you to query and mutate any resource type on your Appwrite server.
 ---
 * `types [options] <output-directory>`
-* The types command generates type definitions based on your Appwrite database schema. Learn more about [type generation](/docs/products/databases/type-generation).
+* The types command generates type definitions based on your Appwrite database schema. Learn more about [type generation](/docs/products/databases/tablesdb/type-generation).
 ---
 * `generate`
 * The generate command creates a type-safe SDK tailored to your project. It detects your project's language and generates typed helpers based on your database schema. Learn more about [SDK generation](/docs/tooling/command-line/generate).
@@ -228,7 +228,7 @@ appwrite tables-db get-row \
 
 # Filter, sort, and paginate {% #filter-sort-paginate %}
 
-List commands across services accept a set of dedicated flags for the most common filtering, sorting, and pagination needs, so you don't have to hand-write JSON [query](/docs/products/databases/queries) strings for everyday cases. These flags are supported on `list-*` commands such as `tables-db list-tables`, `tables-db list-rows`, `users list`, `functions list`, `messaging list-messages`, and similar list endpoints across services.
+List commands across services accept a set of dedicated flags for the most common filtering, sorting, and pagination needs, so you don't have to hand-write JSON [query](/docs/products/databases/tablesdb/queries) strings for everyday cases. These flags are supported on `list-*` commands such as `tables-db list-tables`, `tables-db list-rows`, `users list`, `functions list`, `messaging list-messages`, and similar list endpoints across services.
 
 {% table %}
 * Flag
@@ -250,7 +250,7 @@ List commands across services accept a set of dedicated flags for the most commo
 * Number of results to skip from the beginning.
 ---
 * `--cursor-after <id>`
-* Return results after this cursor ID. Use for forward [cursor pagination](/docs/products/databases/pagination).
+* Return results after this cursor ID. Use for forward [cursor pagination](/docs/products/databases/tablesdb/pagination).
 ---
 * `--cursor-before <id>`
 * Return results before this cursor ID. Use for backward cursor pagination.
@@ -271,7 +271,7 @@ appwrite tables-db list-rows \
     --limit 10
 ```
 
-The `--queries` flag is still supported and remains the way to pass raw [Appwrite query](/docs/products/databases/queries) JSON strings for advanced cases, automation pipelines, or operators that the new flags don't cover. When you mix `--queries` with the new flags, the raw queries are sent first and the flag-generated queries are appended after.
+The `--queries` flag is still supported and remains the way to pass raw [Appwrite query](/docs/products/databases/tablesdb/queries) JSON strings for advanced cases, automation pipelines, or operators that the new flags don't cover. When you mix `--queries` with the new flags, the raw queries are sent first and the flag-generated queries are appended after.
 
 ```sh
 appwrite tables-db list-rows \

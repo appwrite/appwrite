@@ -41,7 +41,7 @@ The interface connects to the endpoint you signed in to. To use a self-hosted in
 
 ## Sign in with an API key {% #api-key %}
 
-To use the interface without a console login, store a project's [API key](/docs/advanced/security/api-keys) and open that project:
+To use the interface without a console login, store a project's [API key](/docs/partners/project/api-keys) and open that project:
 
 ```sh
 appwrite client --key "<API_KEY>"
@@ -145,7 +145,7 @@ Press `/` on a list to filter it. As you type, the list narrows to the items who
 
 # Query rows {% #query-rows %}
 
-On a table's **rows** tab, `/` also takes a query. Write one or more conditions separated by spaces, and press `Enter` to run them as [Appwrite queries](/docs/products/databases/queries) on the server. A row must meet every condition.
+On a table's **rows** tab, `/` also takes a query. Write one or more conditions separated by spaces, and press `Enter` to run them as [Appwrite queries](/docs/products/databases/tablesdb/queries) on the server. A row must meet every condition.
 
 ```text
 status=open total>=100 sort:-total
@@ -205,7 +205,7 @@ Press `x` on a function to execute it. A form asks for the method, path, headers
 
 # Usage {% #usage %}
 
-The project overview and the **usage** tab of each resource show its usage over the last 24 hours, in 15-minute buckets, next to the total, the range, and the latest value.
+The project overview and the **usage** tab show usage over the last 24 hours, in 15-minute buckets, next to the total, the range, and the latest value. Not every resource has a usage tab: the [resources table](#resources) lists the ones that do.
 
 - **Requests, inbound, and outbound** count the successful requests to the resource's API route and the routes below it, other than the Console's, with a list of the busiest routes.
 - **Databases** add reads, writes, and storage.

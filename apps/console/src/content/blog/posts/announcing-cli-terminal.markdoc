@@ -20,7 +20,7 @@ faqs:
   - question: "How do I filter and sort rows with the terminal command?"
     answer: "Open a table's **rows** tab, press `/`, and type conditions separated by spaces, such as `status=open total>=100 sort:-total`. Press `Enter` to run them as Appwrite queries on the server. It supports `=`, `!=`, `>`, `>=`, `<`, `<=`, `~` for contains, `null` checks, and `sort:` for order. See [Query rows](/docs/tooling/command-line/terminal#query-rows)."
   - question: "Can I delete resources with the terminal command?"
-    answer: "You can delete rows, files, sessions, and subscribers with `Ctrl` + `D`. Every delete asks you to type the resource's ID first, and it can't be undone. Apart from editing and creating rows and executing functions, everything else in the interface is read-only."
+    answer: "You can delete rows, files, sessions, and subscribers with `Ctrl` + `D`. Every delete asks you to type the resource's ID first, and it can't be undone. Other than these deletes, editing and creating rows, and executing functions, the interface only reads from your project."
 ---
 
 The Appwrite CLI is where many teams deploy functions, push table schemas, and script against the API. It's less comfortable for looking around. Checking what's in a table means chaining `list-databases`, `list-tables`, and `list-rows` with IDs copied between them, and reading a function's last few executions means another round of the same. Most of the time, the faster option was to open the Console in a browser, which pulls you out of the terminal you were already working in.
@@ -84,7 +84,7 @@ customer=ada sort:-total
 
 ![Rows filtered with a query in the CLI terminal interface](/images/docs/command-line/terminal/rows-query.avif)
 
-Conditions use `=`, `!=`, `>`, `>=`, `<`, `<=`, and `~` for contains, with `null` checks and `sort:column` or `sort:-column` for order. The interface sends them as [Appwrite queries](/docs/products/databases/queries), so they behave exactly as they would from an SDK, and the footer shows how many rows matched in total. Press `m` to load the next page, or `Esc` to clear the query.
+Conditions use `=`, `!=`, `>`, `>=`, `<`, `<=`, and `~` for contains, with `null` checks and `sort:column` or `sort:-column` for order. The interface sends them as [Appwrite queries](/docs/products/databases/tablesdb/queries), so they behave exactly as they would from an SDK, and the footer shows how many rows matched in total. Press `m` to load the next page, or `Esc` to clear the query.
 
 ## Inspect and fix a row
 
@@ -104,7 +104,7 @@ Some cleanup belongs in the same session: a test row, a stale file, a session yo
 
 ![Delete confirmation in the CLI terminal interface](/images/docs/command-line/terminal/delete-row.avif)
 
-Those are the only deletes the interface offers. Apart from editing and creating rows and executing functions, everything else is read-only, which makes it a safe place to look around a production project.
+Those are the only deletes the interface offers. Other than these deletes, row edits, and function executions, the interface only reads from your project, so you can look around a production project without changing anything by accident.
 
 # When to reach for `appwrite terminal`
 
