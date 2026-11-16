@@ -22,6 +22,7 @@ publish = false
 
 [workspace.dependencies]
 php-std = { path = "crates/support/php-std" }
+utopia-domains = { path = "crates/utopia/domains" }
 utopia-dsn = { path = "crates/utopia/dsn" }
 utopia-image = { path = "crates/utopia/image", default-features = false }
 utopia-locale = { path = "crates/utopia/locale" }

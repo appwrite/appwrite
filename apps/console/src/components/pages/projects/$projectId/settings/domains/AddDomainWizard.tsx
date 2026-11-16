@@ -24,6 +24,10 @@ import {
   useDeleteDomain,
 } from '@/lib/react-query/hooks'
 import {
+  DomainPlanLimitNotice,
+  useNewApexPlanLimit,
+} from '@/components/pages/projects/$projectId/shared/NewApexPlanLimit'
+import {
   domainFieldError,
   ensureApexDomainInOrganization,
   getDomainClaimReason,
@@ -45,12 +49,17 @@ export function AddDomainWizard({
   const navigate = useNavigate()
   const { project } = useProject(projectId)
   const region = project?.region
+  const [domain, setDomain] = useState(initialDomain ?? '')
+  const { blocked: apexPlanBlocked, limit: domainsLimit } = useNewApexPlanLimit(
+    project?.teamId,
+    domain,
+    region,
+  )
 
   const createMutation = useCreateDomain(projectId, region)
   const verifyMutation = useVerifyDomain(projectId, region)
   const deleteMutation = useDeleteDomain(projectId, region)
 
-  const [domain, setDomain] = useState(initialDomain ?? '')
   const [domainTouched, setDomainTouched] = useState(false)
   // The server's reason the last add failed, such as a domain that exists already
   const [submitError, setSubmitError] = useState('')
@@ -96,6 +105,7 @@ export function AddDomainWizard({
     setDomainTouched(true)
     if (!isValidDomain(domain)) return
     const d = domain.trim().toLowerCase()
+    if (apexPlanBlocked) return
 
     setRegistering(true)
     try {
@@ -107,7 +117,9 @@ export function AddDomainWizard({
     } catch (err: unknown) {
       const e = err as { type?: string }
       if (e?.type !== 'domain_already_exists') {
-        toast.error(getErrorMessage(err, 'Failed to register domain'))
+        const message = getErrorMessage(err, 'Failed to register domain')
+        setSubmitError(message)
+        toast.error(message)
         return
       }
     } finally {
@@ -272,7 +284,7 @@ export function AddDomainWizard({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={isPending || !isValidDomain(domain)}
+            disabled={isPending || !isValidDomain(domain) || apexPlanBlocked}
           >
             {t('Add')}
           </Button>
@@ -307,6 +319,12 @@ export function AddDomainWizard({
             />
             {domainError ? (
               <p className="text-[11px] text-destructive mt-1">{domainError}</p>
+            ) : null}
+            {apexPlanBlocked ? (
+              <DomainPlanLimitNotice
+                orgId={project?.teamId}
+                limit={domainsLimit}
+              />
             ) : null}
           </div>
         </div>

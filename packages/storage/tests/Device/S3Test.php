@@ -385,6 +385,51 @@ final class S3Test extends TestCase
         $this->assertSame('utopia-php/storage', $request->getHeaderLine('user-agent'));
     }
 
+    /**
+     * Recomputes the signature the way an S3 server does, from the request as
+     * sent and the secret, so a wrong signing key cannot pass.
+     */
+    public function testAuthorizationHeaderCarriesAValidSigV4Signature(): void
+    {
+        $client = new ScriptedClient([new Response(200)->withHeader('etag', '"abc"')]);
+        $this->device($client)->write('/root/file.txt', new Stream('Hello World'), 'text/plain');
+        $request = $client->requests[0];
+
+        // Which headers were signed is the sender's choice; everything else is recomputed
+        $authorization = $request->getHeaderLine('authorization');
+        $signedHeaders = str_replace('SignedHeaders=', '', explode(',', $authorization)[1] ?? '');
+        $date = substr($request->getHeaderLine('x-amz-date'), 0, 8);
+        $scope = $date . '/us-east-1/s3/aws4_request';
+
+        $canonical = [$request->getMethod(), $request->getUri()->getPath(), $request->getUri()->getQuery()];
+        foreach (explode(';', $signedHeaders) as $name) {
+            $canonical[] = $name . ':' . trim($request->getHeaderLine($name));
+        }
+        $canonical[] = '';
+        $canonical[] = $signedHeaders;
+        $canonical[] = hash('sha256', 'Hello World');
+
+        $stringToSign = implode("\n", [
+            'AWS4-HMAC-SHA256',
+            $request->getHeaderLine('x-amz-date'),
+            $scope,
+            hash('sha256', implode("\n", $canonical)),
+        ]);
+
+        $key = 'AWS4test-secret';
+        foreach ([$date, 'us-east-1', 's3', 'aws4_request'] as $part) {
+            $key = hash_hmac('sha256', $part, $key, true);
+        }
+
+        $this->assertContains('host', explode(';', $signedHeaders));
+        $this->assertSame(
+            'AWS4-HMAC-SHA256 Credential=test-key/' . $scope
+            . ',SignedHeaders=' . $signedHeaders
+            . ',Signature=' . hash_hmac('sha256', $stringToSign, $key),
+            $authorization,
+        );
+    }
+
     public function testEndpointPathIsExcludedFromHostHeader(): void
     {
         $client = new ScriptedClient([new Response(200)->withHeader('etag', '"abc"')]);

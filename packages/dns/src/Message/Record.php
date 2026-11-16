@@ -42,7 +42,7 @@ final readonly class Record
     private const int MAX_WEIGHT = 65535;
     private const int MAX_PORT = 65535;
     private const int MAX_CAA_FLAGS = 255;
-    private const int MAX_TXT_CHUNK = 255;
+    public const int MAX_TXT_CHUNK = 255;
 
     /**
      * Map between textual record mnemonics and their numeric codes.
