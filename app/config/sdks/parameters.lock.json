@@ -6325,7 +6325,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description"
+            "description",
+            "providerComments",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "functions.createDeployment": [
             "functionId",
