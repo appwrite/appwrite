@@ -8,7 +8,7 @@ LDAP login lets users sign in to your app with the username and password they al
 
 Use LDAP login for internal tools, employee portals, and apps you sell to companies that manage their people in a directory. You can limit sign-in to the members of one group, and map any attribute your directory uses to the account.
 
-LDAP login is available on Appwrite Cloud and on self-hosted Appwrite 2.8 or later.
+LDAP login is available on Appwrite Cloud, and is coming to self-hosted Appwrite soon.
 
 # How it works {% #how-it-works %}
 
@@ -317,7 +317,7 @@ The directory password is never stored in Appwrite, so it doesn't work with [ema
 
 # Self-hosted Appwrite {% #self-hosted %}
 
-LDAP login needs self-hosted Appwrite 2.8 or later. Appwrite refuses directory hosts that resolve to private or reserved addresses, and resolves their hostnames with the DNS servers in `_APP_DNS_EXTERNAL`, or `_APP_DNS` when it is empty, rather than the container's own resolver. To reach a directory on your internal network, set these [environment variables](/docs/advanced/self-hosting/configuration/environment-variables) and restart Appwrite:
+LDAP login is coming to self-hosted Appwrite soon. On a self-hosted instance, Appwrite refuses directory hosts that resolve to private or reserved addresses, and resolves their hostnames with the DNS servers in `_APP_DNS_EXTERNAL`, or `_APP_DNS` when it is empty, rather than the container's own resolver. To reach a directory on your internal network, set these [environment variables](/docs/advanced/self-hosting/configuration/environment-variables) and restart Appwrite:
 
 - `_APP_ALLOWED_INTERNAL_ADDRESSES`: the IP addresses or CIDR ranges of your directory hosts, such as `10.0.0.0/8`.
 - `_APP_DNS_EXTERNAL`: a DNS server that resolves your directory's hostnames, if public DNS can't.

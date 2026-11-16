@@ -21,7 +21,7 @@ faqs:
   - question: "What happens when someone leaves the directory or the required group?"
     answer: "Their next sign-in fails, because the directory no longer finds them or they are no longer in the group. Sessions they already have stay valid until they expire, so delete their sessions or block the user in the Appwrite Console to sign them out right away."
   - question: "Can Appwrite reach an LDAP directory on a private network?"
-    answer: "Appwrite connects to your directory over the network and refuses hosts that resolve to private addresses. On Appwrite Cloud, your directory must be reachable from the internet. On self-hosted Appwrite 2.8 or later, add the directory's addresses to `_APP_ALLOWED_INTERNAL_ADDRESSES`, and point `_APP_DNS_EXTERNAL` at a DNS server that resolves its hostname."
+    answer: "Appwrite connects to your directory over the network and refuses hosts that resolve to private addresses. On Appwrite Cloud, your directory must be reachable from the internet. LDAP login is coming to self-hosted Appwrite soon, where you can add the directory's addresses to `_APP_ALLOWED_INTERNAL_ADDRESSES` and point `_APP_DNS_EXTERNAL` at a DNS server that resolves its hostname."
   - question: "Does LDAP login work with multi-factor authentication?"
     answer: "Yes. An LDAP sign-in counts as the password factor, so users who turned on MFA complete a second factor next, as they would after an email and password sign-in."
 ---
@@ -174,11 +174,11 @@ LDAP login fits when a directory is the system of record for your users:
 
 - **Internal tools and employee portals**, where everyone who should get in is already in Active Directory or OpenLDAP.
 - **B2B apps sold to companies that run their own directory**, where IT wants access to follow group membership.
-- **Self-hosted deployments on a company network**, next to a directory that never leaves it.
+- **Self-hosted deployments on a company network**, next to a directory that never leaves it, once LDAP login comes to self-hosted Appwrite.
 
 If your users sign in through a cloud identity provider such as Microsoft Entra ID or Okta, an [OAuth2 provider](/docs/products/auth/oauth2) is usually the better fit. LDAP login is for when the directory itself is what you have.
 
-LDAP login is available on Appwrite Cloud and on self-hosted Appwrite 2.8 or later. Appwrite Cloud connects to your directory over the internet, so its hosts must be publicly reachable. A self-hosted instance can reach a directory on your internal network once you allow its addresses with `_APP_ALLOWED_INTERNAL_ADDRESSES`.
+LDAP login is available on Appwrite Cloud today, and is coming to self-hosted Appwrite soon. Appwrite Cloud connects to your directory over the internet, so its hosts must be publicly reachable. On self-hosted Appwrite, you'll be able to reach a directory on your internal network by allowing its addresses with `_APP_ALLOWED_INTERNAL_ADDRESSES`.
 
 # Getting started with LDAP login in Appwrite
 

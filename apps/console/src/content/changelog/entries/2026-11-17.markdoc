@@ -10,7 +10,7 @@ Users can now sign in to your app with the username and password from your LDAP 
 
 Limit sign-in to the members of one group, map the attributes that hold each user's ID, email, name, and phone number, and keep accounts in step with the directory on every sign-in.
 
-[LDAP login](/docs/products/auth/ldap) is available on Appwrite Cloud and in self-hosted Appwrite 2.8.
+[LDAP login](/docs/products/auth/ldap) is available on Appwrite Cloud, and is coming to self-hosted Appwrite soon.
 
 {% arrow_link href="/blog/post/announcing-ldap-login" %}
 Read the announcement
