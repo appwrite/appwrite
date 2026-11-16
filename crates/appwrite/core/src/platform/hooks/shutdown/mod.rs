@@ -86,6 +86,7 @@ pub(in crate::platform) async fn schedule(
     content_type: String,
     body: Bytes,
     response_size: usize,
+    action: bool,
 ) {
     let info = RequestInfo::of(&ctx);
     // PHP's events carry the `user` resource's context: empty for a project
@@ -106,8 +107,12 @@ pub(in crate::platform) async fn schedule(
     } else {
         None
     };
-    // The `cache` routes' entry: the request's key and the payload.
-    let cache = if ctx.route.labels.cache {
+    // The `cache` routes' entry: the request's key and the payload. Only an
+    // action's response has a payload (PHP's `file()`); a hit the init hook
+    // sent (`send()`) leaves it empty, so the shutdown writes nothing. Writing
+    // it back would recreate an entry the deletes worker purged since the
+    // hit read it, and serve the old bytes for good.
+    let cache = if ctx.route.labels.cache && action {
         let negotiated = ctx.negotiated_params();
         let key = cache_write::identifier(
             ctx.request.uri(),
