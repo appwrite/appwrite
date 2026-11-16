@@ -171,9 +171,9 @@ export function AddDomainWizard() {
         setClaimDomain(d)
         return
       }
-      toast.error(
-        err instanceof Error ? err.message : t('Failed to add domain'),
-      )
+      const message = getErrorMessage(err, 'Failed to add domain')
+      setError(message)
+      toast.error(message)
     }
   }
 
