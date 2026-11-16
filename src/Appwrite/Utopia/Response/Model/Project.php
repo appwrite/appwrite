@@ -3,6 +3,7 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Auth\LDAP\Client;
+use Appwrite\Reviews\Strength;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Config\Config;
@@ -306,6 +307,14 @@ class Project extends Model
                 'description' => 'Whether WAF enforcement is enabled for the project.',
                 'default' => false,
                 'example' => false,
+            ])
+            ->addRule('reviewStrength', [
+                'type' => self::TYPE_ENUM,
+                'description' => 'How hard code review looks at every pull request in the project. Possible values: basic, normal, expert.',
+                'default' => Strength::Normal->value,
+                'example' => Strength::Normal->value,
+                'enum' => Strength::values(),
+                'enumSDKName' => 'ReviewStrength',
             ])
         ;
     }

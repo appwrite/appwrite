@@ -50,6 +50,8 @@ $platformCollections = [
             Attribute::string(key: 'prefs', size: 65535, default: new \stdClass(), filters: [Filter::Json]),
             Attribute::string(key: 'onboarding', size: 65536, default: [], filters: [Filter::Json]),
             Attribute::string(key: 'status', size: 100),
+            // Code review only: how hard every pull request in the project is reviewed (Appwrite\Reviews\Strength).
+            Attribute::string(key: 'reviewStrength', size: 16, default: 'normal'),
         ],
         'indexes' => [
             Index::fulltext(key: '_key_search', attributes: ['search']),
@@ -430,8 +432,6 @@ $platformCollections = [
             Attribute::string(key: 'resourceInternalId'),
             Attribute::string(key: 'resourceType', required: true),
             Attribute::string(key: 'providerPullRequestIds', size: 128, array: true),
-            // Code review only: how hard its pull requests are reviewed (Appwrite\Reviews\Strength).
-            Attribute::string(key: 'strength', size: 16, default: 'normal'),
         ],
         'indexes' => [
             Index::key(key: '_key_installationId', attributes: ['installationId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),

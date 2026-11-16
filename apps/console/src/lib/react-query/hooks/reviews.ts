@@ -444,20 +444,17 @@ export function useCreateAllReviewRepositories(
 }
 
 /**
- * Changes how hard a repository's pull requests are reviewed.
+ * Changes how hard the pull requests of every repository in the project are
+ * reviewed.
  */
-export function useUpdateReviewRepositoryStrength(
-  projectId: string | null | undefined,
-) {
+export function useUpdateReviewStrength(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (params: { repositoryId: string; strength: ReviewStrength }) =>
-      sdk.forProject(projectId!).reviews.updateRepositoryStrength(params),
-    onSuccess: async () => {
-      await queryClient.refetchQueries({
-        queryKey: ['review-repositories', 'project', projectId],
-      })
+    mutationFn: (params: { strength: ReviewStrength }) =>
+      sdk.forProject(projectId!).reviews.updateStrength(params),
+    onSuccess: (project) => {
+      queryClient.setQueryData(['project', projectId], project)
     },
   })
 }

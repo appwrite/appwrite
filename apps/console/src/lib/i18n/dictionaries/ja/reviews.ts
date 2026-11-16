@@ -210,7 +210,7 @@ export const jaReviewsDictionary: Record<string, string> = {
   '{credits} credits per review': 'レビューごとに {credits} クレジット',
   'Review strength updated': 'レビュー強度を更新しました',
   'Failed to update review strength': 'レビュー強度を更新できませんでした',
-  'Review strength for {name}': '{name} のレビュー強度',
+  'Review strength': 'レビュー強度',
 
   // New repositories
   'Review new repositories': '新しいリポジトリをレビュー',

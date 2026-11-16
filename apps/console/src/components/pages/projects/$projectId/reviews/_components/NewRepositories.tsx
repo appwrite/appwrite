@@ -14,8 +14,8 @@ type NewRepositoriesProps = {
 /**
  * Turns code review on for repositories added to a GitHub installation later,
  * whether picked in the app's settings or created in an account the app has
- * in full. They start at normal strength, changed per repository like any
- * other. Repositories already in the installation keep their own switch.
+ * in full. They are reviewed at the project's strength like any other.
+ * Repositories already in the installation keep their own switch.
  */
 export function NewRepositories({
   projectId,

@@ -19,8 +19,7 @@ use Utopia\Validator\Boolean;
 /**
  * Sets whether repositories added to a GitHub installation later are reviewed: each one that
  * joins it, picked in its settings or created in an account it covers in full, gets code review
- * at normal strength, which can then be changed per repository. Repositories already in the
- * installation are left as they are.
+ * at the project's strength. Repositories already in the installation are left as they are.
  */
 class Update extends Action
 {
@@ -46,7 +45,7 @@ class Update extends Action
                 group: 'installations',
                 name: 'updateInstallation',
                 description: <<<EOT
-                Choose whether code review is turned on for repositories added to a GitHub installation later. They are reviewed at normal strength, which can be changed per repository. A repository counts as added when it is picked in the installation's settings, or created in an account the installation covers in full. Repositories already in the installation keep their current setting. Reviews are only charged when they run.
+                Choose whether code review is turned on for repositories added to a GitHub installation later. They are reviewed at the project's review strength, like every other repository. A repository counts as added when it is picked in the installation's settings, or created in an account the installation covers in full. Repositories already in the installation keep their current setting. Reviews are only charged when they run.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
