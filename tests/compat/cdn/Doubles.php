@@ -74,6 +74,7 @@ final readonly class ProviderRecorder implements Provider
         private bool $instant,
         private ?string $date,
         private bool $renew,
+        private ?string $expiry = null,
     ) {
     }
 
@@ -96,9 +97,9 @@ final readonly class ProviderRecorder implements Provider
 
     public function getCertificateExpiry(string $domain, ?string $domainType): ?string
     {
-        $this->log[] = $this->name . ':getCertificateExpiry:' . $domain;
+        $this->log->append($this->name . ':expiry:' . $domain);
 
-        return $this->date;
+        return $this->expiry;
     }
 
     public function isRenewRequired(string $domain, ?string $domainType): bool

@@ -22,4 +22,4 @@ utopia-client.workspace = true
 
 [package.metadata.utopia]
 category = "integrations"
-php-sync = "9e4f3603968ea584f57dd92a4ce8e1401826f2ef"
+php-sync = "be5f3bd2c22216a80e40250ef9c35e1289a48d74"
