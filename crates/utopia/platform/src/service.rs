@@ -1,7 +1,7 @@
 //! Services group the actions of one server type; modules group services.
 
 use std::borrow::Cow;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 use indexmap::IndexMap;
 
@@ -54,8 +54,9 @@ impl ServiceType {
 /// let mut service = Service::new(ServiceType::TASK);
 /// service.add_action("build", Action::new()).add_action("clean", Action::new());
 /// service.remove_action("clean");
-/// assert_eq!(service.actions().keys().collect::<Vec<_>>(), ["build"]);
-/// assert!(service.action("clean").is_none());
+/// assert_eq!(service.actions()?.keys().copied().collect::<Vec<_>>(), ["build"]);
+/// assert!(service.action("clean")?.is_none());
+/// # Ok::<(), utopia_platform::Error>(())
 /// ```
 ///
 /// ```php
@@ -77,7 +78,43 @@ impl ServiceType {
 #[derive(Clone, Debug)]
 pub struct Service {
     kind: ServiceType,
-    actions: IndexMap<String, Action>,
+    actions: IndexMap<String, Slot>,
+}
+
+/// An action, or how to build it on first use.
+///
+/// PHP: the `Action|class-string<Action>` `addAction()` takes.
+#[derive(Clone, Debug)]
+pub enum ActionSource {
+    /// A built action.
+    Action(Box<Action>),
+    /// An action built the first time it is asked for: what registering a
+    /// class name does in PHP.
+    Lazy {
+        /// The class name, as messages name it.
+        class: &'static str,
+        /// The action's own name (PHP's static `getName()`), when it has one:
+        /// the action must be registered under it.
+        name: Option<&'static str>,
+        /// Builds the action.
+        make: fn() -> Action,
+    },
+}
+
+impl From<Action> for ActionSource {
+    fn from(action: Action) -> Self {
+        ActionSource::Action(Box::new(action))
+    }
+}
+
+/// A lazy action's class, own name and constructor.
+type Factory = (&'static str, Option<&'static str>, fn() -> Action);
+
+/// One registered action: built, or built on first use.
+#[derive(Clone, Debug)]
+struct Slot {
+    action: OnceLock<Action>,
+    lazy: Option<Factory>,
 }
 
 impl Service {
@@ -101,11 +138,19 @@ impl Service {
         &self.kind
     }
 
-    /// Adds `action` under `key`, replacing one of that key in place.
+    /// Adds `action` under `key`, replacing one of that key in place: a
+    /// built [`Action`], or an [`ActionSource::Lazy`] built the first time
+    /// it is asked for.
     ///
     /// PHP: `addAction($key, $action)`.
-    pub fn add_action(&mut self, key: &str, action: Action) -> &mut Self {
-        self.actions.insert(key.to_owned(), action);
+    pub fn add_action(&mut self, key: &str, action: impl Into<ActionSource>) -> &mut Self {
+        let slot = match action.into() {
+            ActionSource::Action(action) => Slot { action: OnceLock::from(*action), lazy: Option::None },
+            ActionSource::Lazy { class, name, make } => {
+                Slot { action: OnceLock::new(), lazy: Some((class, name, make)) }
+            }
+        };
+        self.actions.insert(key.to_owned(), slot);
         self
     }
 
@@ -117,24 +162,48 @@ impl Service {
         self
     }
 
-    /// The action under `key`.
+    /// The action under `key`, built now if it was registered lazily.
+    /// Fails when a lazily registered action's own name is not its key.
     ///
     /// PHP: `getAction($key)`.
-    pub fn action(&self, key: &str) -> Option<&Action> {
-        self.actions.get(key)
+    pub fn action(&self, key: &str) -> Result<Option<&Action>, Error> {
+        match self.actions.get(key) {
+            Some(slot) => resolve(key, slot).map(Some),
+            Option::None => Ok(Option::None),
+        }
     }
 
-    /// The action under `key`, mutably.
-    pub fn action_mut(&mut self, key: &str) -> Option<&mut Action> {
-        self.actions.get_mut(key)
+    /// The action under `key`, mutably, built now if it was registered
+    /// lazily.
+    pub fn action_mut(&mut self, key: &str) -> Result<Option<&mut Action>, Error> {
+        let Some(slot) = self.actions.get_mut(key) else { return Ok(Option::None) };
+        resolve(key, slot)?;
+        Ok(slot.action.get_mut())
     }
 
-    /// The actions by key, in order.
+    /// The actions by key, in order, each built now if it was registered
+    /// lazily.
     ///
     /// PHP: `getActions()`.
-    pub fn actions(&self) -> &IndexMap<String, Action> {
-        &self.actions
+    pub fn actions(&self) -> Result<IndexMap<&str, &Action>, Error> {
+        self.actions.iter().map(|(key, slot)| Ok((key.as_str(), resolve(key, slot)?))).collect()
     }
+}
+
+/// The action of `slot`, built on first use.
+fn resolve<'a>(key: &str, slot: &'a Slot) -> Result<&'a Action, Error> {
+    if let Some(action) = slot.action.get() {
+        return Ok(action);
+    }
+    let Some((class, name, make)) = slot.lazy else {
+        return Err(Error::Exception(format!("Action {key} was never registered")));
+    };
+    if let Some(name) = name
+        && name != key
+    {
+        return Err(Error::Exception(format!("Action {class} is registered under a key other than its name: {key}")));
+    }
+    Ok(slot.action.get_or_init(make))
 }
 
 /// Services by key, also listed by type.

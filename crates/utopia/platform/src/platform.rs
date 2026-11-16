@@ -339,7 +339,7 @@ impl Platform {
     fn init_http(&mut self, services: &[(&str, &Service)]) -> Result<(), Error> {
         let http = self.http.get_or_insert_with(Http::default);
         for (_, service) in services {
-            for action in service.actions().values() {
+            for action in service.actions()?.values() {
                 let kind = action.kind();
                 if *kind == ActionType::INIT {
                     http_hook(http.init(), action)?;
@@ -373,7 +373,7 @@ impl Platform {
         }
         let cli = self.cli.as_mut().unwrap_or_else(|| unreachable!());
         for (_, service) in services {
-            for (key, action) in service.actions() {
+            for (key, action) in service.actions()? {
                 let kind = action.kind();
                 let hook: &mut utopia_servers::Hook = if *kind == ActionType::INIT {
                     cli.init()
@@ -404,7 +404,7 @@ impl Platform {
         let names: Vec<String> = names.iter().map(|n| n.to_ascii_lowercase()).collect();
         let all = names.is_empty() || names.iter().any(|n| n == "all");
         for (_, service) in services {
-            for (key, action) in service.actions() {
+            for (key, action) in service.actions()? {
                 let kind = action.kind();
                 let name = key.to_ascii_lowercase();
                 if *kind == ActionType::DEFAULT && !all && !names.contains(&name) {

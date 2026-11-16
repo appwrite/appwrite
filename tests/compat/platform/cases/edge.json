@@ -2494,6 +2494,168 @@
         null,
         null
       ]
+    },
+    {
+      "name": "service: actions registered by class name are built on first use",
+      "op": "service.run",
+      "args": {
+        "type": "Task",
+        "steps": [
+          {
+            "add_action": {
+              "key": "lazy",
+              "lazy": "plain"
+            }
+          },
+          {
+            "add_action": {
+              "key": "named",
+              "lazy": "named"
+            }
+          },
+          {
+            "add_action": {
+              "key": "built",
+              "action": {
+                "desc": "built"
+              }
+            }
+          },
+          {
+            "built": true
+          },
+          {
+            "action": "lazy"
+          },
+          {
+            "built": true
+          },
+          {
+            "action": "lazy"
+          },
+          {
+            "built": true
+          },
+          {
+            "actions": true
+          },
+          {
+            "built": true
+          },
+          {
+            "add_action": {
+              "key": "lazy",
+              "lazy": "plain"
+            }
+          },
+          {
+            "remove_action": "named"
+          },
+          {
+            "actions": true
+          },
+          {
+            "built": true
+          }
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        true,
+        0,
+        {
+          "type": "Default",
+          "desc": "lazy",
+          "groups": [],
+          "callback": false,
+          "params": [],
+          "injections": [],
+          "labels": [],
+          "options": [],
+          "path": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Platform\\Action::getHttpPath(): Return value must be of type string, null returned",
+              "code": 0
+            }
+          },
+          "method": "",
+          "methods": [],
+          "aliases": []
+        },
+        1,
+        {
+          "type": "Default",
+          "desc": "lazy",
+          "groups": [],
+          "callback": false,
+          "params": [],
+          "injections": [],
+          "labels": [],
+          "options": [],
+          "path": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Platform\\Action::getHttpPath(): Return value must be of type string, null returned",
+              "code": 0
+            }
+          },
+          "method": "",
+          "methods": [],
+          "aliases": []
+        },
+        1,
+        [
+          "lazy",
+          "named",
+          "built"
+        ],
+        2,
+        true,
+        true,
+        [
+          "lazy",
+          "built"
+        ],
+        3
+      ]
+    },
+    {
+      "name": "service: a lazily registered action under a key other than its name is refused",
+      "op": "service.run",
+      "args": {
+        "type": "Task",
+        "steps": [
+          {
+            "add_action": {
+              "key": "other",
+              "lazy": "named"
+            }
+          },
+          {
+            "built": true
+          },
+          {
+            "action": "other"
+          },
+          {
+            "actions": true
+          },
+          {
+            "action": "missing"
+          },
+          {
+            "built": true
+          }
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Action Tests\\Compat\\Platform\\NamedLazyAction is registered under a key other than its name: other"
+        }
+      }
     }
   ]
 }

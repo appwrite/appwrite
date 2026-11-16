@@ -97,7 +97,7 @@ pub use action::{
     HTTP_REQUEST_METHOD_PUT, Param,
 };
 pub use platform::{Init, JobConfig, Platform, WorkerParams};
-pub use service::{Module, Service, ServiceType};
+pub use service::{ActionSource, Module, Service, ServiceType};
 
 /// The getting started guide (`guide.md`), compiled and run with the doctests.
 #[cfg(doctest)]
