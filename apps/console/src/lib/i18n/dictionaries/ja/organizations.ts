@@ -919,6 +919,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'プランの上限を超えた追加使用による予期しない課金を防ぐには、予算上限を有効にしてください。支出上限に達すると、サービスは自動的に一時停止されます。',
   'Enter a coupon code to update your estimated total. Applied credits expire after a set period and do not roll over.':
     'クーポンコードを入力すると見積合計が更新されます。適用したクレジットは一定期間後に失効し、繰り越されません。',
+  'Enter a domain like example.com':
+    'example.com のようにドメインを入力してください',
   'Enter a full domain name (e.g. example.com)':
     'ドメイン名をすべて入力してください (例: example.com)',
   'Enter tax ID (e.g., VAT, GST, EIN)':

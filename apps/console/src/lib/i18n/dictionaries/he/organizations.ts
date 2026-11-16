@@ -461,6 +461,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Enabled: 'מופעל',
   'Enter a coupon code to update your estimated total. Applied credits expire after a set period and do not roll over.':
     'הזינו קוד קופון לעדכון הסכום המשוער. קרדיטים שהוחלו פגים לאחר תקופה מוגדרת ואינם נצברים.',
+  'Enter a domain like example.com': 'הזינו דומיין כמו example.com',
   'Enter a full domain name (e.g. example.com)':
     'הזינו שם דומיין מלא (למשל example.com)',
   'Enter coupon code': 'הזינו קוד קופון',
