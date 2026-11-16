@@ -124,6 +124,7 @@ export function Firewall({ projectId, resourceSelection }: FirewallProps) {
           limit={wafRulesLimit}
           planName={planName}
           resourceName="firewall rules"
+          resourceNameSingular="firewall rule"
           orgId={project?.teamId}
           fullWidth={false}
         />
