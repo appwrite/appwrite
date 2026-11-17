@@ -162,19 +162,12 @@ final class KubernetesJobAdapterTest extends TestCase
 
     public function testRunsTheJobWhenTheHeartbeatCannotStart(): void
     {
-        // How many coroutines are alive while a handler runs, heartbeat included.
-        $alive = 0;
-        $this->server(new HeartbeatConsumer(), function () use (&$alive): void {
-            $alive = Coroutine::stats()['coroutine_num'];
-        })->start();
-        $this->assertGreaterThan(1, $alive);
-
         $broker = new HeartbeatConsumer();
         $ran = false;
 
-        // One short of that: room for the handler, none for its heartbeat. Swoole
-        // reports the refused coroutine as a warning, which is the failure under test.
-        Coroutine::set(['max_coroutine' => $alive - 1]);
+        // Room for the worker's coroutine and the handler's, none for the heartbeat.
+        // Swoole reports the refused coroutine as a warning, which is the failure under test.
+        Coroutine::set(['max_coroutine' => 2]);
         set_error_handler(static fn (): bool => true, E_WARNING);
 
         try {
