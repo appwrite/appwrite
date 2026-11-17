@@ -961,6 +961,45 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
+     * A playlist uploaded under a video type is stored as `<id>.m3u8`, which
+     * ffprobe would open with its hls demuxer and follow to the segment it
+     * names. The worker's format allowlist leaves hls out, so the probe is
+     * refused outright ("Invalid argument") instead of failing on the missing
+     * segment ("Invalid data found when processing input").
+     */
+    public function testTimelineErrorOnPlaylistSource(): void
+    {
+        $playlist = \tempnam(\sys_get_temp_dir(), 'playlist');
+        $this->assertNotFalse($playlist);
+        \file_put_contents($playlist, "#EXTM3U\n#EXT-X-TARGETDURATION:2\n#EXTINF:2,\nsegment.ts\n#EXT-X-ENDLIST\n");
+
+        try {
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $this->getVideoBucket()['$id'] . '/files', \array_merge([
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'fileId' => 'unique()',
+                'file' => new \CURLFile($playlist, 'video/mp4', 'playlist.m3u8'),
+            ]);
+        } finally {
+            \unlink($playlist);
+        }
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        $create = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $file['body']['$id'],
+        ]);
+        $this->assertEquals(201, $create['headers']['status-code']);
+        $videoId = $create['body']['$id'];
+
+        $body = $this->waitForTimelineTerminalState($videoId);
+        $this->assertSame('error', $body['timelineStatus'], 'Playlist source did not fail the timeline');
+        $this->assertSame('The requested file is not a valid video or audio file (ffprobe: Invalid argument)', $body['timelineError']);
+        $this->assertSame(0, (int) $body['duration']);
+    }
+
+    /**
      * A source that is neither encrypted nor compressed (uploaded to a bucket
      * with encryption off; every other file is encrypted whatever its size) is
      * read where it is stored: in place on a local device, over a presigned URL
