@@ -348,7 +348,7 @@ function RecordSection({
   )
 }
 
-type DnsBannerTone = 'info' | 'error' | 'success'
+type DnsBannerTone = 'info' | 'error' | 'warning' | 'success'
 
 const DNS_BANNER_TONES: Record<
   DnsBannerTone,
@@ -363,6 +363,11 @@ const DNS_BANNER_TONES: Record<
     className:
       'border-red-500/30 bg-red-500/10 [&>svg]:text-red-600 dark:[&>svg]:text-red-400',
     Icon: AlertTriangle,
+  },
+  warning: {
+    className:
+      'border-amber-500/30 bg-amber-500/10 [&>svg]:text-amber-600 dark:[&>svg]:text-amber-400',
+    Icon: AlertCircle,
   },
   success: {
     className:
@@ -443,6 +448,17 @@ function getDnsBanners(
   }
   if (banners.length > 0) return banners
 
+  if (pointing.some((check) => check.status === 'failed')) {
+    return [
+      {
+        tone: 'warning',
+        prefix: t('DNS lookup'),
+        text: t(
+          "We couldn't check DNS. This is on our side; Appwrite will try again.",
+        ),
+      },
+    ]
+  }
   if (!verified) {
     return [
       isDnsUnverified(rule) && !isWaitingForDns(rule)
