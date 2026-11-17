@@ -14,6 +14,8 @@ import { getRuntimeConfig } from '@/lib/runtime-config'
 
 const SECRET = getRuntimeConfig().fingerprintKey
 const CACHE_TTL_MS = 60 * 60 * 1000 // 1 hour
+// Re-sync well inside the backend's 500s window so a wall-clock jump (sleep, NTP) can't outlive it.
+const SERVER_TIME_MAX_AGE_MS = 5 * 60 * 1000
 
 const GLOBAL_SERVER_TIME_KEY = '__vibesFingerprintServerTime__'
 
@@ -41,21 +43,27 @@ function serverTimeSyncKey(endpoint: string, projectId: string): string {
   return `${endpoint.replace(/\/$/, '')}|${projectId}`
 }
 
-/**
- * Record server unix time (seconds). Only the first successful sync is kept, matching
- * console/src/lib/helpers/fingerprint.ts.
- */
+/** Record server unix time (seconds); the latest sync wins. */
 export function syncServerTime(serverTimeSecs: number): void {
-  const state = getFingerprintServerTimeGlobal()
-  if (state.cache) return
-  state.cache = { serverSecs: serverTimeSecs, fetchedAtMs: Date.now() }
+  getFingerprintServerTimeGlobal().cache = {
+    serverSecs: serverTimeSecs,
+    fetchedAtMs: Date.now(),
+  }
 }
 
-/** Clear cached server clock (e.g. when the API endpoint changes in debug menu). */
-export function resetFingerprintServerTimeCache(): void {
+/** Clear the cached server clock and browser signals (endpoint change, rejected token). */
+export function resetFingerprintCache(): void {
   const state = getFingerprintServerTimeGlobal()
   state.cache = null
   state.inflight.clear()
+  cache = null
+}
+
+function isServerTimeFresh(serverTime: ServerTimeCache | null): boolean {
+  if (!serverTime) return false
+  const ageMs = Date.now() - serverTime.fetchedAtMs
+  // Negative age means the wall clock moved backwards since the sync.
+  return ageMs >= 0 && ageMs < SERVER_TIME_MAX_AGE_MS
 }
 
 function getServerTimestamp(): number {
@@ -70,16 +78,15 @@ function getServerTimestamp(): number {
 }
 
 /**
- * Ensures server time is synced once from the Date header on GET /health/version
- * (same as console (console)/+layout.ts). Await before generating fingerprints when
- * the app may not have completed the background sync yet (e.g. Restore project).
+ * Ensures server time is synced from the Date header on GET /health/version, re-syncing
+ * once the last sync is stale. Await before generating fingerprints (e.g. Restore project).
  */
 export function ensureFingerprintServerTimeSynced(
   endpoint: string,
   projectId: string,
 ): Promise<void> {
   const state = getFingerprintServerTimeGlobal()
-  if (state.cache) return Promise.resolve()
+  if (isServerTimeFresh(state.cache)) return Promise.resolve()
   if (!endpoint?.trim() || !projectId?.trim()) {
     return Promise.resolve()
   }

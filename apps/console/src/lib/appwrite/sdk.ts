@@ -29,7 +29,7 @@ import {
 } from '@/lib/console-impersonation'
 import {
   ensureFingerprintServerTimeSynced,
-  resetFingerprintServerTimeCache,
+  resetFingerprintCache,
 } from '@/lib/fingerprint'
 import { getActiveLanguage } from '@/lib/i18n/active-language'
 import { subscribeToDebugOverrides } from '@/lib/debug-overrides'
@@ -337,7 +337,7 @@ if (typeof window !== 'undefined') {
     clientProject.setEndpoint(base)
     // Handles are kept per endpoint; the next call builds one for the new base
     projectSdks.clear()
-    resetFingerprintServerTimeCache()
+    resetFingerprintCache()
     void scheduleConsoleFingerprintServerTimeSync()
   })
 
