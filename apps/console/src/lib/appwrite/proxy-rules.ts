@@ -13,4 +13,5 @@ export interface ProxyRuleRecord {
   value: string
   /** The values DNS returned for this type */
   found: string[]
+  status: 'verified' | 'missing' | 'mismatch' | 'failed'
 }
