@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Cache\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Cache;
 
@@ -156,6 +157,49 @@ abstract class Base extends TestCase
         $this->assertEquals(true, $result);
 
         self::$cache->setCaseSensitivity(false);
+    }
+
+    public function testEmptyArrayIsStored(): void
+    {
+        $key = 'empty-array';
+
+        $this->assertFalse(self::$cache->load('empty-array-never-written', 60, 'empty-array-never-written'));
+
+        $this->assertSame([], self::$cache->save($key, [], $key));
+        $this->assertSame([], self::$cache->load($key, 60, $key));
+        // A zero TTL reads the entry as expired.
+        $this->assertFalse(self::$cache->load($key, 0, $key));
+
+        $this->assertTrue(self::$cache->purge($key));
+        $this->assertFalse(self::$cache->load($key, 60, $key));
+    }
+
+    public function testEmptyArrayIsStoredWithLease(): void
+    {
+        if (! self::$cache->supportsVersioning()) {
+            $this->markTestSkipped('This adapter cannot perform conditional fills.');
+        }
+
+        $key = 'empty-array-lease';
+
+        $this->assertSame([], self::$cache->saveWithLease($key, [], $key, self::$cache->getLease($key)));
+        $this->assertSame([], self::$cache->load($key, 60, $key));
+
+        self::$cache->purge($key);
+    }
+
+    /** @return \Iterator<string, array{string}> */
+    public static function emptyStrings(): \Iterator
+    {
+        yield 'empty string' => [''];
+        yield 'zero string' => ['0'];
+    }
+
+    #[DataProvider('emptyStrings')]
+    public function testEmptyStringIsRefused(string $data): void
+    {
+        $this->assertFalse(self::$cache->save('empty-string', $data, 'empty-string'));
+        $this->assertFalse(self::$cache->load('empty-string', 60, 'empty-string'));
     }
 
     public function testPing(): void

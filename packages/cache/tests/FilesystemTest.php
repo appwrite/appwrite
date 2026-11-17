@@ -18,6 +18,14 @@ final class FilesystemTest extends Base
         self::$cache = new Cache(new Filesystem(self::$path));
     }
 
+    /** Files hold strings, so an empty array is refused like an empty string. */
+    #[Override]
+    public function testEmptyArrayIsStored(): void
+    {
+        $this->assertFalse(self::$cache->save('empty-array', []));
+        $this->assertFalse(self::$cache->load('empty-array', 60));
+    }
+
     public function testAPurgeThatCannotRemoveTheFileThrowsInsteadOfReportingNothingToPurge(): void
     {
         if (\function_exists('posix_getuid') && posix_getuid() === 0) {

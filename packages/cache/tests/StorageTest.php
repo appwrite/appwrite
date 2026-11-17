@@ -20,6 +20,14 @@ final class StorageTest extends Base
         self::$cache = new Cache(new Storage(new Local(self::scratch('storage'))));
     }
 
+    /** Files hold strings, so an empty array is refused like an empty string. */
+    #[Override]
+    public function testEmptyArrayIsStored(): void
+    {
+        $this->assertFalse(self::$cache->save('empty-array', []));
+        $this->assertFalse(self::$cache->load('empty-array', 60));
+    }
+
     #[Override]
     public function testCaseSensitivity(): void
     {
