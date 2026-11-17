@@ -101,6 +101,8 @@ export const jaSitesDictionary: Record<string, string> = {
     '不要です。{type} レコードは設定済みです。',
   'Called CNAME flattening on Cloudflare (set it to DNS only) and Alias on Route 53. Some providers name it ANAME.':
     'Cloudflare では CNAME flattening（DNS only に設定）、Route 53 では Alias と呼ばれます。ANAME と呼ぶプロバイダーもあります。',
+  'It points to {found}. Change it to {value}.':
+    '現在は {found} を指しています。{value} に変更してください。',
   'DNS is set up': 'DNS の設定が完了しました',
   'Certificate expired': '証明書の期限切れ',
   'Renewal failed': '証明書の更新に失敗しました',
