@@ -145,7 +145,11 @@ function RecordStatus({ record }: { record: DnsRecord }) {
         </Badge>
       )
     default:
-      return <span className="text-muted-foreground">-</span>
+      return (
+        <Badge variant="warning" className={pill}>
+          {t("Couldn't check")}
+        </Badge>
+      )
   }
 }
 
