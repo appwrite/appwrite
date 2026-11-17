@@ -133,6 +133,7 @@ function RecordStatus({
   const { check } = record
   if (!check) return <span className="text-muted-foreground">-</span>
   const pill = 'text-[10px] shrink-0'
+  const title = check.message || undefined
   switch (check.status) {
     case 'verified':
       return (
@@ -142,19 +143,19 @@ function RecordStatus({
       )
     case 'missing':
       return (
-        <Badge variant="info" className={pill}>
+        <Badge variant="info" className={pill} title={title}>
           {waiting ? t('Not detected yet') : t('Not detected')}
         </Badge>
       )
     case 'mismatch':
       return (
-        <Badge variant="error" className={pill}>
+        <Badge variant="error" className={pill} title={title}>
           {t('Wrong value')}
         </Badge>
       )
     default:
       return (
-        <Badge variant="warning" className={pill}>
+        <Badge variant="warning" className={pill} title={title}>
           {t("Couldn't check")}
         </Badge>
       )
