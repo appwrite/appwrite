@@ -391,7 +391,11 @@ export function VerifyDomainContent({
       ? {
           type: 'CAA',
           name: '@',
-          value: hasCaa ? caa! : `0 issue "${caaCheck!.value}"`,
+          value: hasCaa
+            ? caa!
+            : caaCheck!.value.includes(' ')
+              ? caaCheck!.value
+              : `0 issue "${caaCheck!.value}"`,
           ttl: 3600,
           badge: 'Recommended',
           check: caaCheck,
