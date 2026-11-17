@@ -27,6 +27,7 @@ utopia-emails = { path = "crates/utopia/emails" }
 utopia-dsn = { path = "crates/utopia/dsn" }
 utopia-image = { path = "crates/utopia/image", default-features = false }
 utopia-locale = { path = "crates/utopia/locale" }
+utopia-query = { path = "crates/utopia/query" }
 utopia-user-agent = { path = "crates/utopia/user-agent" }
 
 # 0.16.5: #[php(sensitive(...))] (extphprs/ext-php-rs#840), which `Utopia\DSN\DSN` needs to keep

@@ -176,6 +176,34 @@ package's validators. It asserts these known differences on the extension:
   and the protected static properties `$freeDomains`, `$disposableDomains` and `$providers` do not
   exist: a subclass cannot call or read them. Nothing in Appwrite or Cloud subclasses `Email`.
 
+## Utopia\Query: the classifiers
+
+Over `crates/utopia/query` (`_APP_EXTENSION_LIBRARIES=query`). `packages/query` is about 300 classes,
+so it moves to the extension one part at a time, and `query` switches on whatever part is here. So
+far that is the statement classifiers a database proxy routes with: the `Classifier` interface,
+`Classifier\SQL` (abstract), `Classifier\MySQL`, `Classifier\PostgreSQL`, `Classifier\MongoDB` and
+the `Type` enum they return. Every other class of the package (`Query`, `Method`, the builders, the
+schema, the AST, the tokenizers) is still its PHP source and works with these unchanged.
+
+The interface and the enum are registered too, not left in PHP: a class registered when the module
+starts cannot implement a userland interface, and returning the extension's own enum case costs no
+lookup. PHP code that implements `Classifier`, extends `Classifier\SQL` with its own `classify()`,
+or extends a concrete classifier and calls `parent::classify()` works as before.
+
+`crates/extension/tests/query.php` prints a corpus of results that must be identical on both
+implementations: every keyword the classifiers know, in three spellings and seven positions; SQL
+with comments, quoted and dollar-quoted text, `COPY` and CTEs, bytes that are not UTF-8 and inputs
+of 100 KB; seeded mutations of all of them; MySQL and PostgreSQL packets of every command and
+message type around those statements; MongoDB `OP_MSG` messages for every command name with and
+without `startTransaction`, with every BSON value type before it, truncated and with a byte
+changed; 3,000 random messages; the enum's cases, `from()` and `tryFrom()`; `instanceof`,
+reflection, `==` and `clone`; PHP classes that implement the interface or extend a classifier; and
+the scalar arguments PHP converts. `packages/query/tests` run on the extension too, without
+`tests/E2E`, which needs database servers. The corpus asserts one known difference:
+
+- `ReflectionClass::isFinal()` is `false` for `Type`; a PHP enum reports `true`. Extending it is
+  refused either way.
+
 ## Benchmarks
 
 Every class's PR carries a benchmark against the PHP class. `crates/extension/bench/<name>.php`

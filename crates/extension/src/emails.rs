@@ -69,7 +69,7 @@ fn exception(error: &Error) -> PhpException {
 }
 
 /// A PHP string the binding made.
-pub struct Text(Vec<u8>);
+pub struct Text(pub(crate) Vec<u8>);
 
 impl IntoZval for Text {
     const TYPE: DataType = DataType::String;

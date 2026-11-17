@@ -2562,6 +2562,7 @@ dependencies = [
  "utopia-emails",
  "utopia-image",
  "utopia-locale",
+ "utopia-query",
  "utopia-user-agent",
 ]
 
@@ -2592,6 +2593,15 @@ dependencies = [
  "indexmap",
  "php-std",
  "serde_json",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "utopia-query"
+version = "0.1.0"
+dependencies = [
+ "md-5",
+ "php-std",
  "thiserror 2.0.21",
 ]
 

@@ -23,4 +23,5 @@ utopia-dsn.workspace = true
 utopia-emails.workspace = true
 utopia-image = { workspace = true, features = ["libwebp", "libheif"] }
 utopia-locale.workspace = true
+utopia-query.workspace = true
 utopia-user-agent.workspace = true
