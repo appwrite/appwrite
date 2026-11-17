@@ -3166,6 +3166,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "utopia-audit"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "getrandom 0.3.4",
+ "php-std",
+ "serde_json",
+ "thiserror 2.0.21",
+ "utopia-async",
+ "utopia-query",
+ "utopia-validators",
+]
+
+[[package]]
 name = "utopia-domains"
 version = "0.1.0"
 dependencies = [
@@ -3267,6 +3281,15 @@ dependencies = [
  "tokio-rustls",
  "utopia-async",
  "webpki-roots 1.0.12",
+]
+
+[[package]]
+name = "utopia-query"
+version = "0.1.0"
+dependencies = [
+ "md-5",
+ "php-std",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
