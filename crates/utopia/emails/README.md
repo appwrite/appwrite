@@ -197,7 +197,9 @@ cargo fmt --all --check
 
 ### Compare with PHP
 
-Replay the results PHP recorded for every case against Rust, without PHP:
+The utopia PHP extension serves this crate as `Utopia\Emails\Email`, which no longer has a PHP implementation. `crates/extension/tests/run.sh` runs `packages/emails/tests` on it in the development image.
+
+The canonical providers and validators keep their PHP classes. Replay the results PHP recorded for every case against Rust, without PHP:
 
 ```bash
 COMPAT_LIB=emails cargo test -p compat
@@ -210,6 +212,14 @@ tests/compat/emails/services.sh up
 bin/compat run emails
 bin/compat fuzz emails
 bin/compat check emails
+```
+
+### Domain lists
+
+`data/free-domains.txt` and `data/disposable-domains.txt` are `packages/emails/data/{free,disposable}-domains.php` in the crate's format. After refreshing the package's lists (`composer import:all` in `packages/emails`), regenerate them from the repository root:
+
+```bash
+php crates/utopia/emails/data/export.php
 ```
 
 ### Benchmark

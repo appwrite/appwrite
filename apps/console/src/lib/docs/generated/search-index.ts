@@ -6727,6 +6727,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "tooling/command-line/terminal",
+    "title": "Terminal",
+    "description": "Browse, query, and manage your Appwrite projects in an interactive, keyboard-driven interface with the terminal command in the Appwrite CLI.",
+    "excerpt": "The command opens your Appwrite projects in an interactive, keyboard-driven interface inside your terminal. Browse databases, functions, sites, storage, users, teams, and messaging, query rows, execute functions, and watch your project's usage, without leaving the command line. It works with Appwrite Cloud and self-hosted instances. is available in Appwrite CLI version 28.13.3 and later. Update your CLI to the latest version before you start. Open the terminal interface Sign in with the CLI, then run the command: uses the credentials…",
+    "breadcrumbs": [
+      "Tooling",
+      "Guides",
+      "Terminal"
+    ]
+  },
+  {
     "slug": "tooling/command-line/topics",
     "title": "Topics",
     "description": "Efficiently deploy your Appwrite topics using the Command-Line Tool (CLI).",

@@ -19,8 +19,6 @@
     "email.get": {
       "doc": "(new Email(email))->get()",
       "covers": [
-        "Utopia\\Emails\\Email::__construct",
-        "Utopia\\Emails\\Email::get"
       ],
       "fuzz": [
         {
@@ -33,19 +31,16 @@
     "email.local": {
       "doc": "(new Email(email))->getLocal()",
       "covers": [
-        "Utopia\\Emails\\Email::getLocal"
       ]
     },
     "email.domain": {
       "doc": "(new Email(email))->getDomain()",
       "covers": [
-        "Utopia\\Emails\\Email::getDomain"
       ]
     },
     "email.is_valid": {
       "doc": "(new Email(email))->isValid()",
       "covers": [
-        "Utopia\\Emails\\Email::isValid"
       ],
       "fuzz": [
         {
@@ -58,55 +53,46 @@
     "email.has_valid_local": {
       "doc": "(new Email(email))->hasValidLocal()",
       "covers": [
-        "Utopia\\Emails\\Email::hasValidLocal"
       ]
     },
     "email.has_valid_domain": {
       "doc": "(new Email(email))->hasValidDomain()",
       "covers": [
-        "Utopia\\Emails\\Email::hasValidDomain"
       ]
     },
     "email.is_disposable": {
       "doc": "(new Email(email))->isDisposable()",
       "covers": [
-        "Utopia\\Emails\\Email::isDisposable"
       ]
     },
     "email.is_free": {
       "doc": "(new Email(email))->isFree()",
       "covers": [
-        "Utopia\\Emails\\Email::isFree"
       ]
     },
     "email.is_corporate": {
       "doc": "(new Email(email))->isCorporate()",
       "covers": [
-        "Utopia\\Emails\\Email::isCorporate"
       ]
     },
     "email.provider": {
       "doc": "(new Email(email))->getProvider()",
       "covers": [
-        "Utopia\\Emails\\Email::getProvider"
       ]
     },
     "email.subdomain": {
       "doc": "(new Email(email))->getSubdomain()",
       "covers": [
-        "Utopia\\Emails\\Email::getSubdomain"
       ]
     },
     "email.has_subdomain": {
       "doc": "(new Email(email))->hasSubdomain()",
       "covers": [
-        "Utopia\\Emails\\Email::hasSubdomain"
       ]
     },
     "email.canonical": {
       "doc": "(new Email(email))->getCanonical()",
       "covers": [
-        "Utopia\\Emails\\Email::getCanonical"
       ],
       "fuzz": [
         {
@@ -119,19 +105,16 @@
     "email.is_canonical_supported": {
       "doc": "(new Email(email))->isCanonicalSupported()",
       "covers": [
-        "Utopia\\Emails\\Email::isCanonicalSupported"
       ]
     },
     "email.canonical_domain": {
       "doc": "(new Email(email))->getCanonicalDomain()",
       "covers": [
-        "Utopia\\Emails\\Email::getCanonicalDomain"
       ]
     },
     "email.formatted": {
       "doc": "(new Email(email))->getFormatted(format?)",
       "covers": [
-        "Utopia\\Emails\\Email::getFormatted"
       ],
       "fuzz": [
         {
