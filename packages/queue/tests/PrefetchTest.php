@@ -169,7 +169,7 @@ final class PrefetchTest extends TestCase
                     $adapter->stop();
                 }
             });
-            $server->error()->inject('error')->action(function ($error) use (&$errors, $adapter): void {
+            $server->error()->inject('error')->action(function (\Throwable $error) use (&$errors, $adapter): void {
                 $errors[] = $error->getMessage();
                 $adapter->stop();
             });
