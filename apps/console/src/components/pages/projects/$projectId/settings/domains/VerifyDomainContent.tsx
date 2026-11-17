@@ -380,6 +380,7 @@ type DnsBanner = {
 
 /** One problem, or the next step, above the records. */
 function DnsBannerAlert({ banner }: { banner: DnsBanner }) {
+  const t = useT()
   const { className, Icon } = DNS_BANNER_TONES[banner.tone]
   return (
     <Alert variant="default" className={className}>
@@ -393,6 +394,15 @@ function DnsBannerAlert({ banner }: { banner: DnsBanner }) {
           )}
           {banner.text}
         </p>
+        {banner.tone !== 'success' && (
+          <DocsRouteLink
+            href={DNS_PROVIDERS_LINK}
+            className="inline-flex shrink-0 items-center gap-1 font-medium text-foreground hover:underline"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            {t('Docs')}
+          </DocsRouteLink>
+        )}
       </AlertDescription>
     </Alert>
   )
