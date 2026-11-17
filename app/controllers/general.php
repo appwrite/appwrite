@@ -734,22 +734,31 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             if (!$isResponseBranded) {
                 $transformation = new Transformation();
 
-                if ($isPreview && (\is_null($apiKey) || $apiKey->isBannerDisabled() === false)) {
+                // Banner-disabled keys belong to the screenshot worker: no banner, and its captures are not visits
+                $isCapture = $apiKey?->isBannerDisabled() === true;
+
+                if ($isPreview && !$isCapture) {
                     $transformation->addAdapter(new Preview());
                 }
 
-                // Cloud-only site attributes; absent on self-hosted, so this never applies there.
-                // Banner-disabled keys are the screenshot worker's; its captures are not visits.
-                // An empty buffered body must stay empty so the branded error page below still applies, and HEAD, 204 and 304 responses carry no body at all.
-                $hasPage = ($streamed === true || $executionResponse['body'] !== '')
-                    && $request->getMethod() !== Request::METHOD_HEAD
-                    && !\in_array($executionResponse['statusCode'], [Response::STATUS_CODE_NOCONTENT, Response::STATUS_CODE_NOT_MODIFIED], true);
+                // Cloud-only attributes; self-hosted sites never have them
                 $propertyId = $resource->getAttribute('analyticsPropertyId', '');
-                if ($hasPage && $type === 'site' && !$isPreview && $apiKey?->isBannerDisabled() !== true && $resource->getAttribute('analyticsEnabled', false) === true && !empty($propertyId)) {
-                    $web = \array_values(\array_filter(
+                $isTracked = $type === 'site'
+                    && !$isPreview
+                    && !$isCapture
+                    && $resource->getAttribute('analyticsEnabled', false) === true
+                    && $propertyId !== '';
+
+                // HEAD, 204 and 304 carry no body, and an empty buffered body is left for the branded error page below
+                $hasBody = $request->getMethod() !== Request::METHOD_HEAD
+                    && !\in_array($executionResponse['statusCode'], [Response::STATUS_CODE_NOCONTENT, Response::STATUS_CODE_NOT_MODIFIED], true)
+                    && ($streamed === true || $executionResponse['body'] !== '');
+
+                if ($isTracked && $hasBody) {
+                    $web = \array_find(
                         Config::getParam('sdks')[APP_SDK_PLATFORM_CLIENT]['sdks'],
                         fn (array $sdk) => $sdk['key'] === 'web'
-                    ))[0];
+                    );
                     $transformation->addAdapter(new Analytics($endpoint, $project->getId(), $propertyId, $web['version']));
                 }
 

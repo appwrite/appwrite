@@ -6,6 +6,8 @@ use Appwrite\Transformation\Adapter;
 
 class Analytics extends Adapter
 {
+    public const string SDK_URL = 'https://sdk.appwrite.io/web';
+
     public function __construct(
         protected string $endpoint,
         protected string $projectId,
@@ -43,7 +45,7 @@ class Analytics extends Adapter
 
     public function transform(): void
     {
-        $src = \htmlspecialchars("https://sdk.appwrite.io/web/{$this->version}/tracker.js");
+        $src = \htmlspecialchars(self::SDK_URL . "/{$this->version}/tracker.js");
         $endpoint = \htmlspecialchars($this->endpoint);
         $project = \htmlspecialchars($this->projectId);
         $property = \htmlspecialchars($this->propertyId);
