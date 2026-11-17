@@ -94,4 +94,89 @@ final class PrefetchTest extends TestCase
         $this->assertSame(1, $peak);
         $this->assertSame(0, $confirmationsAtFourthHandler, 'Handlers continue while confirmations are pending');
     }
+
+    /**
+     * Long handlers holding more than half the slots must not stop the worker
+     * from fetching for the slots that are still idle.
+     */
+    public function testIdleCoroutinesFetchWhileLongHandlersHoldMostSlots(): void
+    {
+        $consumer = new class () implements Consumer {
+            /** @var list<string> */
+            public array $backlog = ['long-1', 'long-2', 'long-3'];
+            public int $confirmed = 0;
+            public int $longRunning = 0;
+            public ?int $longRunningWhenShortRan = null;
+
+            public function receive(Queue $queue, int $timeout, int $n = 1): array
+            {
+                if ($this->backlog === []) {
+                    Coroutine::sleep(0.01);
+                    return [];
+                }
+                $messages = [];
+                while ($n-- > 0 && $this->backlog !== []) {
+                    $messages[] = new Message(['pid' => array_shift($this->backlog), 'queue' => $queue->name, 'timestamp' => time()]);
+                }
+                return $messages;
+            }
+
+            public function commit(Queue $queue, Message $message): void
+            {
+                $this->confirmed++;
+            }
+
+            public function reject(Queue $queue, Message $message): never
+            {
+                throw new \LogicException('No handler should fail');
+            }
+
+            public function close(): void
+            {
+            }
+        };
+        $errors = [];
+        Coroutine\run(function () use ($consumer, &$errors): void {
+            $adapter = new class ($consumer, 1) extends Swoole {
+                public function start(): self
+                {
+                    foreach ($this->onWorkerStart as $callback) {
+                        $callback('0');
+                    }
+                    return $this;
+                }
+            };
+            $release = new Coroutine\Channel(3);
+            $server = new Server($adapter);
+            $server->job('jobs', coroutines: 4)->inject('message')->action(function (Message $message) use ($consumer, $release): void {
+                if ($message->getPid() === 'short') {
+                    $consumer->longRunningWhenShortRan = $consumer->longRunning;
+                    for ($i = 0; $i < 3; $i++) {
+                        $release->push(true);
+                    }
+                    return;
+                }
+                if (++$consumer->longRunning === 3) {
+                    // Three of the four slots are now busy and one is idle.
+                    $consumer->backlog[] = 'short';
+                }
+                // Bounded, so a stalled loop fails the assertion below instead of hanging the suite.
+                $release->pop(3.0);
+                $consumer->longRunning--;
+            });
+            $server->shutdown()->action(function () use ($consumer, $adapter): void {
+                if ($consumer->confirmed === 4) {
+                    $adapter->stop();
+                }
+            });
+            $server->error()->inject('error')->action(function ($error) use (&$errors, $adapter): void {
+                $errors[] = $error->getMessage();
+                $adapter->stop();
+            });
+            $server->start();
+        });
+        $this->assertSame([], $errors);
+        $this->assertSame(4, $consumer->confirmed);
+        $this->assertSame(3, $consumer->longRunningWhenShortRan, 'The idle slot runs the next message while the long handlers still hold theirs');
+    }
 }
