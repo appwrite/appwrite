@@ -206,7 +206,6 @@ class MySQLTest extends TestCase
 
         $rewritten = $this->rewritten($sql);
 
-        $this->assertIsString($rewritten);
         $this->assertStringContainsString('#name', $rewritten);
         $this->assertStringNotContainsString('--name', $rewritten);
         $this->assertSame($sql, $rewritten);
@@ -220,7 +219,6 @@ class MySQLTest extends TestCase
 
         $rewritten = $this->rewritten($sql);
 
-        $this->assertIsString($rewritten);
         $this->assertStringContainsString('--  trailing comment', $rewritten);
         $this->assertStringNotContainsString('# trailing comment', $rewritten);
 
@@ -240,7 +238,6 @@ class MySQLTest extends TestCase
 
         $rewritten = $this->rewritten($sql);
 
-        $this->assertIsString($rewritten);
         $this->assertStringContainsString('-- comment', $rewritten);
         $this->assertStringNotContainsString('#comment', $rewritten);
     }
@@ -251,7 +248,6 @@ class MySQLTest extends TestCase
 
         $rewritten = $this->rewritten($sql);
 
-        $this->assertIsString($rewritten);
         $this->assertSame($sql, $rewritten);
         $this->assertStringContainsString("'a#b'", $rewritten);
         $this->assertStringNotContainsString("'a--b'", $rewritten);
