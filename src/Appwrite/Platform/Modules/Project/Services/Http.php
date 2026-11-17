@@ -292,7 +292,7 @@ class Http extends Service
         $this->addAction('updateProjectOAuth2Apple', UpdateOAuth2Apple::class);
         $this->addAction('updateProjectOAuth2Microsoft', UpdateOAuth2Microsoft::class);
         $this->addAction('updateProjectOAuth2Hugging Face', UpdateOAuth2HuggingFace::class);
-        $this->addAction('updateProjectOAuth2Line', UpdateOAuth2Line::class);
+        $this->addAction('updateProjectOAuth2LINE', UpdateOAuth2Line::class);
         $this->addAction('updateProjectOAuth2Resend', UpdateOAuth2Resend::class);
         $this->addAction('updateProjectOAuth2TikTok', UpdateOAuth2TikTok::class);
         $this->addAction('updateProjectOAuth2Kakao', UpdateOAuth2Kakao::class);
