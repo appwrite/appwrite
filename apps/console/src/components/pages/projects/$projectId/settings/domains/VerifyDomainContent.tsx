@@ -139,9 +139,16 @@ function RecordStatus({
   waiting: boolean
 }) {
   const t = useT()
-  const { check } = record
+  const { check, notNeeded } = record
   if (!check) return <span className="text-muted-foreground">-</span>
   const pill = 'text-[10px] shrink-0'
+  if (check.status !== 'verified' && notNeeded) {
+    return (
+      <Badge variant="inactive" className={pill}>
+        {t('Not needed')}
+      </Badge>
+    )
+  }
   const title = check.message || undefined
   switch (check.status) {
     case 'verified':
