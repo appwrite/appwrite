@@ -39,6 +39,8 @@ export const DEFAULT_SCOPES = [
   'videos.write',
   'reviews.read',
   'reviews.write',
+  'sandboxes.read',
+  'sandboxes.write',
   'domains.write',
   'executions.write',
   'migrations.write',
