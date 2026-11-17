@@ -477,6 +477,18 @@ function getDnsBanners(
           },
     ]
   }
+  // A failed lookup says nothing about the CAA record, so it asks for no change.
+  if (caa?.status === 'failed') {
+    return [
+      {
+        tone: 'warning',
+        prefix: t('CAA record'),
+        text: t(
+          "We couldn't check the CAA record. This is on our side; Appwrite will try again.",
+        ),
+      },
+    ]
+  }
   if (caa?.required && caa.status !== 'verified') {
     return [
       {
