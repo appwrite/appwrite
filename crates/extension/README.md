@@ -20,14 +20,15 @@ and libclang at build time.
 
 ## Switching a class on
 
-`Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN` and `Utopia\Locale\Locale` are always
-registered: they have no PHP implementation. Their signatures are in `stubs/` and `packages/image/stubs/` for PHPStan,
-which runs without the extension. Every other class is registered only when
+`Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`, `Utopia\Locale\Locale` and
+`Utopia\Domains\Domain` are always registered: they have no PHP implementation. Their signatures are
+in `stubs/`, `packages/image/stubs/` and `packages/domains/stubs/` for PHPStan, which runs without the
+extension. Every other class is registered only when
 `_APP_EXTENSION_LIBRARIES` names its package. Otherwise Composer loads the package's PHP class as
 before:
 
 ```sh
-_APP_EXTENSION_LIBRARIES=user-agent,domains   # Utopia\UserAgent\UserAgent and Utopia\Domains\Domain from the extension
+_APP_EXTENSION_LIBRARIES=user-agent,emails   # Utopia\UserAgent\UserAgent and Utopia\Emails\Email from the extension
 ```
 
 The extension reads it once, when PHP loads the module, so changing it takes a restart and no
@@ -122,20 +123,23 @@ not UTF-8, 100 KB inputs) and seeded mutations of all of them, read through ever
 
 ## Utopia\Domains\Domain
 
-Over `crates/utopia/domains` (`_APP_EXTENSION_LIBRARIES=domains`), the Public Suffix List parser of
-`packages/domains`. The registrars make network calls, so they and the validators stay PHP. The
-crate embeds the list as `crates/utopia/domains/data/public-suffix-list.txt`, exported from the PHP
-package's `data/data.php`, so both read the same rules. PHP fills the class's protected properties as
+Over `crates/utopia/domains`, always registered: the Public Suffix List parser of `packages/domains`.
+Once the extension had served it in every Cloud region (appwrite-labs/cloud#7503), the PHP class
+(`src/Domain.php`) was removed from `packages/domains`, which now requires `ext-utopia` like
+`packages/image`; 4.4.x on Packagist is the last release that parses in PHP. The registrars make
+network calls, so they and the validators stay PHP. The crate embeds the list as
+`crates/utopia/domains/data/public-suffix-list.txt`, exported from the package's `data/data.php`,
+which stays the list's source. PHP fills the class's protected properties as
 its getters run (`getTLD()` sets `$TLD`, a matching `getSuffix()` sets `$suffix` and `$rule`), and the
 binding shows the same properties, so `==`, `var_dump()` and `(array)` see what they see in PHP.
 
-`crates/extension/tests/domains.php` prints a corpus of results that must be identical on both
-implementations: every rule of `data.php` as a suffix, under a name, under a subdomain and in upper
+`crates/extension/tests/domains.php` prints a corpus of results that must match
+`domains.expected.jsonl`, the output of the PHP class: every rule of `data.php` as a suffix, under a name, under a subdomain and in upper
 case, so a list refreshed on one side and not the other fails it; hostnames Appwrite and Cloud parse;
 edge cases (empty and dotted names, `0`, IDN and punycode, IPs, ports, bytes that are not UTF-8,
 URLs); the properties after each getter and after every getter in reverse; the scalar arguments PHP
-converts; and `==`, clone, `var_dump()`, reflection and a subclass. It asserts one known difference on
-the extension:
+converts; and `==`, clone, `var_dump()`, reflection and a subclass. `packages/domains/tests` run on
+the extension too. It asserts one known difference from the PHP class:
 
 - The exception for a URL (`http://`, `https://`) holding bytes that are not UTF-8 shows them as
   U+FFFD; PHP's message keeps the bytes.
