@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
 import {
-  getApexDomain,
   getRecordName,
   getVerificationMethods,
   isCloud as isCloudEndpoint,
@@ -299,7 +298,6 @@ export function VerifyDomainContent({
     return rawCname
   }, [edgeNetworkEnabled, resourceType, rawCname, sitesDomain])
 
-  const hasNameservers = isCloud && nameservers.length > 0
   // Older servers send `0 issue ""` for an unset CAA target, a record that
   // would block every CA.
   const hasCaa = !!caa && caa !== '0 issue ""'
@@ -320,12 +318,6 @@ export function VerifyDomainContent({
     activeTab && tabOptions.some((tab) => tab.id === activeTab)
       ? activeTab
       : (tabOptions[0]?.id ?? 'cname')
-
-  // Must run before any early return so hook count stays stable across renders.
-  const isApex = useMemo(() => {
-    const apex = getApexDomain(rule.domain)
-    return !!apex && apex === rule.domain.trim().toLowerCase()
-  }, [rule.domain])
 
   if (isLoading) {
     return (
@@ -351,42 +343,6 @@ export function VerifyDomainContent({
   )
   const nameserverNote = t(
     'Add the following nameservers on your DNS provider. Note that DNS changes may take up to 48 hours to propagate fully.',
-  )
-
-  const apexCnameNote = (
-    <Alert
-      variant="default"
-      className="border-border bg-muted/30 [&>svg]:text-muted-foreground"
-    >
-      <Info className="h-4 w-4" />
-      <AlertDescription className="text-[13px] text-muted-foreground">
-        <p className="leading-relaxed">
-          {t('Since')}{' '}
-          <code className="rounded bg-muted px-1 py-0.5 font-mono text-foreground">
-            {rule.domain}
-          </code>{' '}
-          {t(
-            "is an apex domain, CNAME record is only supported by certain providers. If yours doesn't, please verify using",
-          )}{' '}
-          {hasNameservers ? (
-            <button
-              type="button"
-              className="font-medium text-foreground underline underline-offset-2 hover:no-underline"
-              onClick={() => setActiveTab('nameservers')}
-            >
-              {t('nameservers')}
-            </button>
-          ) : (
-            <span className="font-medium text-foreground">
-              {t('an A or AAAA record')}
-            </span>
-          )}{' '}
-          {t(
-            "instead. If you're using Cloudflare or another CDN, make sure the proxy is disabled (set to DNS only) for this record, since Appwrite serves your domain through its own CDN.",
-          )}
-        </p>
-      </AlertDescription>
-    </Alert>
   )
 
   const getCnameRecords = (): DnsRecord[] => {
@@ -445,7 +401,6 @@ export function VerifyDomainContent({
                   records={getCnameRecords()}
                   showTtl={true}
                 />
-                {isApex && apexCnameNote}
               </div>
             )}
             {tabOptions[0].id === 'nameservers' && (
@@ -508,7 +463,6 @@ export function VerifyDomainContent({
                         records={getCnameRecords()}
                         showTtl={true}
                       />
-                      {isApex && apexCnameNote}
                     </div>
                   )}
                   {tab.id === 'nameservers' && (
