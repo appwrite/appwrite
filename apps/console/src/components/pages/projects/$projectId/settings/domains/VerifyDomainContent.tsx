@@ -448,7 +448,7 @@ function getDnsBanners(
   }
   if (banners.length > 0) return banners
 
-  if (pointing.some((check) => check.status === 'failed')) {
+  if (!verified && pointing.some((check) => check.status === 'failed')) {
     return [
       {
         tone: 'warning',
