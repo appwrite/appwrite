@@ -291,6 +291,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Kick',
     ],
+    'linear' => [
+        'name' => 'Linear',
+        'developers' => 'https://linear.app/developers/oauth-2-0-authentication',
+        'icon' => 'icon-linear',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Linear',
+    ],
     'linkedin' => [
         'name' => 'LinkedIn',
         'developers' => 'https://developer.linkedin.com/',
