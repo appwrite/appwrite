@@ -588,6 +588,8 @@ export const jaSitesDictionary: Record<string, string> = {
   'Point your domain': 'ドメインの向き先',
   'Allow the SSL certificate': 'SSL 証明書の許可',
   'Required · any one': '必須 · いずれか 1 つ',
+  'Add the records below at your DNS provider. Appwrite checks again automatically for 3 days.':
+    'DNS プロバイダーで下記のレコードを追加してください。Appwrite が 3 日間、自動的に再確認します。',
   'Not detected yet': 'まだ検出されていません',
   'Not detected': '検出されません',
 }
