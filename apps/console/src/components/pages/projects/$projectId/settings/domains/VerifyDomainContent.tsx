@@ -413,6 +413,11 @@ function DnsBannerAlert({ banner }: { banner: DnsBanner }) {
   )
 }
 
+/**
+ * What the stored checks ask of the developer: one banner per problem, or the
+ * next step when nothing is wrong. CNAME, A and AAAA are alternatives, so a
+ * wrong one stops mattering once another is verified.
+ */
 function getDnsBanners(
   t: (text: string) => string,
   rule: Models.ProxyRule,
