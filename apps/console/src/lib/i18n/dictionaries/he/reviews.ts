@@ -190,8 +190,8 @@ export const heReviewsDictionary: Record<string, string> = {
     'הפעילו סקירת קוד למאגר, וה-Pull requests שלו ייסקרו כשהם נפתחים או מקבלים קומיטים חדשים.',
   'Turn on code review for every repository in {organization} ({count}).':
     'הפעלת סקירת קוד לכל המאגרים ב-{organization} ({count}).',
-  'Repositories added to the installation later are not included.':
-    'מאגרים שיתווספו להתקנה בהמשך לא ייכללו.',
+  'To review repositories added to the installation later, turn on Review new repositories.':
+    'כדי לסקור מאגרים שיתווספו להתקנה בהמשך, הפעילו את סקירת מאגרים חדשים.',
   'Review pull requests in {name}': 'סקירת Pull requests ב-{name}',
 
   // Review strength
@@ -209,4 +209,12 @@ export const heReviewsDictionary: Record<string, string> = {
   'Review strength updated': 'עוצמת הסקירה עודכנה',
   'Failed to update review strength': 'עדכון עוצמת הסקירה נכשל',
   'Review strength for {name}': 'עוצמת הסקירה עבור {name}',
+
+  // New repositories
+  'Review new repositories': 'סקירת מאגרים חדשים',
+  'Turn on code review for repositories added to {organization} on GitHub later.':
+    'הפעלת סקירת קוד למאגרים שיתווספו ל-{organization} ב-GitHub בהמשך.',
+  'New repositories will be reviewed': 'מאגרים חדשים ייסקרו',
+  'New repositories will not be reviewed': 'מאגרים חדשים לא ייסקרו',
+  'Failed to update new repositories': 'עדכון ההגדרה למאגרים חדשים נכשל',
 }

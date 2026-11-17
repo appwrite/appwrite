@@ -507,6 +507,7 @@
         "PATCH /v1/proxy/rules/:ruleId/status",
         "PATCH /v1/reviews/:reviewId/status",
         "PATCH /v1/reviews/:reviewId/tier",
+        "PATCH /v1/reviews/installations/:installationId",
         "PATCH /v1/reviews/repositories/:repositoryId/pulls/:pullNumber/findings/status",
         "PATCH /v1/reviews/repositories/:repositoryId/strength",
         "PATCH /v1/sites/:siteId/deployment",
