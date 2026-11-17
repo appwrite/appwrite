@@ -533,6 +533,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Wordpress',
     ],
+    'workos' => [
+        'name' => 'WorkOS',
+        'developers' => 'https://workos.com/docs/user-management',
+        'icon' => 'icon-workos',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\WorkOS',
+    ],
     'x' => [
         'name' => 'X',
         'developers' => 'https://docs.x.com/fundamentals/authentication/oauth-2-0/authorization-code',
