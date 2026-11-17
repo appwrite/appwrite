@@ -277,6 +277,10 @@ export function useVerifyDomain(
         queryKey: ['proxy-rules'],
         predicate: (query) => query.queryKey.includes(projectId),
       })
+      await queryClient.refetchQueries({
+        queryKey: ['proxy-rule'],
+        predicate: (query) => query.queryKey.includes(projectId),
+      })
     },
   })
 }
