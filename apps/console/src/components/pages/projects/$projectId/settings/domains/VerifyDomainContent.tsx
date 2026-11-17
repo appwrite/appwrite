@@ -924,9 +924,14 @@ export function VerifyDomainContent({
     const record = getPointingRecord(tab.id)
     return record ? [record] : []
   })
+  // A record that verifies the domain counts even when this screen does not
+  // ask for it, e.g. an A record on a subdomain.
   const pointingChecks = [
     ...pointingRecords.flatMap((record) =>
       record.check ? [record.check] : [],
+    ),
+    ...(checks ?? []).filter(
+      (check) => check.type in POINTING_METHODS && check.status === 'verified',
     ),
   ]
   const offersNameservers = tabOptions.some((tab) => tab.id === 'nameservers')
