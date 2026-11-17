@@ -301,10 +301,12 @@ export function TrafficSplit({
     return () => toggleTrafficKind(kind)
   }
   const isSegmentActive = (segment: Segment): boolean => {
-    if (segment.category) return isFilterActive('botCategory', segment.category)
     if (segment.kind === 'human') return trafficKind === 'human'
-    // "Other bots" (or plain "Bots" with no categories) stands for bots only.
-    return segment.key === 'bot-other' && trafficKind === 'bot'
+    // Bots only covers every bot segment, named categories included.
+    if (trafficKind === 'bot') return true
+    return segment.category
+      ? isFilterActive('botCategory', segment.category)
+      : false
   }
   const anySegmentActive = visibleSegments.some(isSegmentActive)
 
@@ -542,7 +544,7 @@ export function TrafficSplit({
                         type="button"
                         onClick={onSelect}
                         aria-pressed={active}
-                        aria-label={`${segment.label} · ${formatShare(width)}`}
+                        aria-label={`${segment.label} · ${formatShare(width)} · ${formatNumber(segment.value)} ${measure === 'visitors' ? t('visitors') : t('events')}`}
                         className="group flex h-full min-w-[2px] cursor-pointer items-center rounded-sm transition-[width] duration-700 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none"
                         style={{ width: `${width}%` }}
                       >
