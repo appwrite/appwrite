@@ -177,7 +177,7 @@ function RecordStatus({
     case 'mismatch':
       return (
         <Badge variant="error" className={pill} title={title}>
-          {t('Wrong value')}
+          {check.type === 'CAA' ? t('Blocked') : t('Wrong value')}
         </Badge>
       )
     default:
