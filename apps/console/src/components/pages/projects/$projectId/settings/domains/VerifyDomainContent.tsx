@@ -211,7 +211,11 @@ function RecordSection({
                 {t('Name')}
               </TableHead>
               <TableHead className={TABLE_HEAD}>{t('Value')}</TableHead>
-              <TableHead className={`w-[72px] ${TABLE_HEAD}`}>TTL</TableHead>
+              <TableHead
+                className={`hidden sm:table-cell w-[72px] ${TABLE_HEAD}`}
+              >
+                TTL
+              </TableHead>
               <TableHead className={`w-[156px] ${TABLE_HEAD} text-end`}>
                 {t('Status')}
               </TableHead>
@@ -248,7 +252,7 @@ function RecordSection({
                         className="-my-1.5 -ms-2.5"
                       />
                     </TableCell>
-                    <TableCell className="px-4 py-3 text-[12px] text-muted-foreground">
+                    <TableCell className="hidden sm:table-cell px-4 py-3 text-[12px] text-muted-foreground">
                       {r.ttl ?? '-'}
                     </TableCell>
                     <TableCell className="px-4 py-3 text-end">
