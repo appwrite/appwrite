@@ -285,7 +285,13 @@ function RecordSection({
                           {found.map((value, i) => (
                             <Fragment key={value}>
                               {i > 0 && ', '}
-                              <span className="font-mono text-foreground underline decoration-wavy decoration-red-500 underline-offset-4">
+                              <span
+                                className={
+                                  r.type === 'CAA'
+                                    ? 'font-mono text-foreground'
+                                    : 'font-mono text-foreground underline decoration-wavy decoration-red-500 underline-offset-4'
+                                }
+                              >
                                 {value}
                               </span>
                             </Fragment>
