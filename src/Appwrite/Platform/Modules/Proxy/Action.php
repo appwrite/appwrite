@@ -180,6 +180,7 @@ class Action extends PlatformAction
         // Keep the latest checks on the rule before any failure, so the caller's write persists them.
         $rule->setAttribute('records', \array_map(fn (array $record) => [
             'type' => $record['type'],
+            'name' => $record['name'],
         ], $records));
 
         // Ensure CAA won't block certificate issuance
