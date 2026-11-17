@@ -6,6 +6,7 @@ use Appwrite\Tests\Retry;
 use Appwrite\Utopia\Response;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Id;
 use Utopia\Database\Query;
@@ -2927,6 +2928,124 @@ trait UsersBase
         ], $this->getHeaders()));
 
         $this->assertEquals($response['headers']['status-code'], 204);
+    }
+
+    public function testListUserSessionsQueries(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        $userId = Id::unique();
+        $user = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => $userId,
+            'email' => 'list-sessions-' . $userId . '@example.com',
+            'password' => 'password',
+            'name' => 'List Sessions',
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $first = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/sessions', $headers);
+        $this->assertEquals(201, $first['headers']['status-code']);
+
+        \usleep(500000);
+
+        $second = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/sessions', $headers);
+        $this->assertEquals(201, $second['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/sessions', $headers);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(2, $response['body']['total']);
+        $this->assertCount(2, $response['body']['sessions']);
+        foreach ($response['body']['sessions'] as $session) {
+            $this->assertFalse($session['current']);
+        }
+
+        $limited = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/sessions', $headers, [
+            'queries' => [
+                Query::orderDesc('$createdAt')->toString(),
+                Query::limit(1)->toString(),
+            ],
+        ]);
+        $this->assertEquals(200, $limited['headers']['status-code']);
+        $this->assertEquals(2, $limited['body']['total']);
+        $this->assertCount(1, $limited['body']['sessions']);
+        $this->assertEquals($second['body']['$id'], $limited['body']['sessions'][0]['$id']);
+
+        $filtered = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/sessions', $headers, [
+            'queries' => [Query::equal('$id', [$first['body']['$id']])->toString()],
+        ]);
+        $this->assertEquals(200, $filtered['headers']['status-code']);
+        $this->assertEquals(1, $filtered['body']['total']);
+        $this->assertCount(1, $filtered['body']['sessions']);
+        $this->assertEquals($first['body']['$id'], $filtered['body']['sessions'][0]['$id']);
+
+        $byProvider = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/sessions', $headers, [
+            'queries' => [Query::equal('provider', [SESSION_PROVIDER_SERVER])->toString()],
+        ]);
+        $this->assertEquals(200, $byProvider['headers']['status-code']);
+        $this->assertEquals(2, $byProvider['body']['total']);
+        $this->assertCount(2, $byProvider['body']['sessions']);
+
+        $cursored = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/sessions', $headers, [
+            'queries' => [
+                Query::orderAsc('$createdAt')->toString(),
+                Query::cursorAfter(new Document(['$id' => $first['body']['$id']]))->toString(),
+            ],
+        ]);
+        $this->assertEquals(200, $cursored['headers']['status-code']);
+        $this->assertEquals(2, $cursored['body']['total']);
+        $this->assertCount(1, $cursored['body']['sessions']);
+        $this->assertEquals($second['body']['$id'], $cursored['body']['sessions'][0]['$id']);
+
+        $active = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/sessions', $headers, [
+            'queries' => [Query::greaterThan('expire', DateTime::now())->toString()],
+        ]);
+        $this->assertEquals(200, $active['headers']['status-code']);
+        $this->assertEquals(2, $active['body']['total']);
+        $this->assertCount(2, $active['body']['sessions']);
+
+        $noTotal = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/sessions', $headers, ['total' => false]);
+        $this->assertEquals(200, $noTotal['headers']['status-code']);
+        $this->assertEquals(0, $noTotal['body']['total']);
+        $this->assertCount(2, $noTotal['body']['sessions']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/sessions', $headers, [
+            'queries' => [Query::equal('userInternalId', ['user'])->toString()],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/sessions', $headers, [
+            'queries' => [Query::cursorAfter(new Document(['$id' => 'nonexistent-session']))->toString()],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_cursor_not_found', $response['body']['type']);
+
+        $otherUserId = Id::unique();
+        $otherUser = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => $otherUserId,
+            'email' => 'list-sessions-other-' . $otherUserId . '@example.com',
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $otherUser['headers']['status-code']);
+
+        $otherSession = $this->client->call(Client::METHOD_POST, '/users/' . $otherUserId . '/sessions', $headers);
+        $this->assertEquals(201, $otherSession['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/sessions', $headers, [
+            'queries' => [Query::cursorAfter(new Document(['$id' => $otherSession['body']['$id']]))->toString()],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_cursor_not_found', $response['body']['type']);
     }
 
     public function testDeleteUserSessionRequiresOwnership(): void

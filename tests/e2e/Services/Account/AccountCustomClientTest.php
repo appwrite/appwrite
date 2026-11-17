@@ -1093,6 +1093,133 @@ final class AccountCustomClientTest extends Scope
         $this->assertCount(1, $response['body']['sessions']);
     }
 
+    public function testListAccountSessionsQueries(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $data['session'],
+        ];
+
+        \usleep(500000);
+        $second = $this->createSessionCookie($data['email'], $data['password']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', $headers);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(2, $response['body']['total']);
+        $this->assertCount(2, $response['body']['sessions']);
+
+        $current = [];
+        foreach ($response['body']['sessions'] as $session) {
+            $current[$session['$id']] = $session['current'];
+        }
+        $this->assertTrue($current[$data['sessionId']]);
+        $this->assertFalse($current[$second['id']]);
+
+        $limited = $this->client->call(Client::METHOD_GET, '/account/sessions', $headers, [
+            'queries' => [
+                Query::orderDesc('$createdAt')->toString(),
+                Query::limit(1)->toString(),
+            ],
+        ]);
+        $this->assertEquals(200, $limited['headers']['status-code']);
+        $this->assertEquals(2, $limited['body']['total']);
+        $this->assertCount(1, $limited['body']['sessions']);
+        $this->assertEquals($second['id'], $limited['body']['sessions'][0]['$id']);
+        $this->assertFalse($limited['body']['sessions'][0]['current']);
+
+        $offset = $this->client->call(Client::METHOD_GET, '/account/sessions', $headers, [
+            'queries' => [
+                Query::orderAsc('$createdAt')->toString(),
+                Query::offset(1)->toString(),
+            ],
+        ]);
+        $this->assertEquals(200, $offset['headers']['status-code']);
+        $this->assertEquals(2, $offset['body']['total']);
+        $this->assertCount(1, $offset['body']['sessions']);
+        $this->assertEquals($second['id'], $offset['body']['sessions'][0]['$id']);
+
+        $filtered = $this->client->call(Client::METHOD_GET, '/account/sessions', $headers, [
+            'queries' => [Query::equal('$id', [$second['id']])->toString()],
+        ]);
+        $this->assertEquals(200, $filtered['headers']['status-code']);
+        $this->assertEquals(1, $filtered['body']['total']);
+        $this->assertCount(1, $filtered['body']['sessions']);
+        $this->assertEquals($second['id'], $filtered['body']['sessions'][0]['$id']);
+
+        $byProvider = $this->client->call(Client::METHOD_GET, '/account/sessions', $headers, [
+            'queries' => [Query::equal('provider', [SESSION_PROVIDER_EMAIL])->toString()],
+        ]);
+        $this->assertEquals(200, $byProvider['headers']['status-code']);
+        $this->assertEquals(2, $byProvider['body']['total']);
+        $this->assertCount(2, $byProvider['body']['sessions']);
+
+        $cursored = $this->client->call(Client::METHOD_GET, '/account/sessions', $headers, [
+            'queries' => [
+                Query::orderAsc('$createdAt')->toString(),
+                Query::cursorAfter(new Document(['$id' => $data['sessionId']]))->toString(),
+            ],
+        ]);
+        $this->assertEquals(200, $cursored['headers']['status-code']);
+        $this->assertEquals(2, $cursored['body']['total']);
+        $this->assertCount(1, $cursored['body']['sessions']);
+        $this->assertEquals($second['id'], $cursored['body']['sessions'][0]['$id']);
+
+        $active = $this->client->call(Client::METHOD_GET, '/account/sessions', $headers, [
+            'queries' => [Query::greaterThan('expire', DateTime::now())->toString()],
+        ]);
+        $this->assertEquals(200, $active['headers']['status-code']);
+        $this->assertEquals(2, $active['body']['total']);
+        $this->assertCount(2, $active['body']['sessions']);
+
+        $expired = $this->client->call(Client::METHOD_GET, '/account/sessions', $headers, [
+            'queries' => [Query::lessThan('expire', DateTime::now())->toString()],
+        ]);
+        $this->assertEquals(200, $expired['headers']['status-code']);
+        $this->assertEquals(0, $expired['body']['total']);
+        $this->assertEmpty($expired['body']['sessions']);
+
+        $noTotal = $this->client->call(Client::METHOD_GET, '/account/sessions', $headers, ['total' => false]);
+        $this->assertEquals(200, $noTotal['headers']['status-code']);
+        $this->assertEquals(0, $noTotal['body']['total']);
+        $this->assertCount(2, $noTotal['body']['sessions']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]);
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', $headers, [
+            'queries' => [Query::equal('userInternalId', ['user'])->toString()],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', $headers, [
+            'queries' => [Query::cursorAfter(new Document(['$id' => 'nonexistent-session']))->toString()],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_cursor_not_found', $response['body']['type']);
+
+        $other = $this->createFreshAccountWithSession();
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', $headers, [
+            'queries' => [Query::cursorAfter(new Document(['$id' => $other['sessionId']]))->toString()],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_cursor_not_found', $response['body']['type']);
+    }
+
     public function testCreateEmailPasswordSessionWithDuration(): void
     {
         $data = $this->createFreshAccountWithSession();
