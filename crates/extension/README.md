@@ -18,26 +18,34 @@ docker compose exec appwrite php --ri utopia
 Built on [ext-php-rs](https://github.com/extphprs/ext-php-rs); it needs `php-config`
 and libclang at build time.
 
-## Classes
+## Switching a class on
 
-Every class is registered unconditionally: `Utopia\Image\Canvas`, `Utopia\Image\Font`,
-`Utopia\DSN\DSN`, `Utopia\Locale\Locale`, `Utopia\UserAgent\UserAgent`, `Utopia\Domains\Domain` and
-`Utopia\Emails\Email` have no PHP implementation. Their signatures are in `stubs/`,
-`packages/image/stubs/`, `packages/user-agent/stubs/`, `packages/domains/stubs/` and
-`packages/emails/stubs/` for PHPStan, which runs without the extension.
+`Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`, `Utopia\Locale\Locale`,
+`Utopia\UserAgent\UserAgent`, `Utopia\Domains\Domain` and `Utopia\Emails\Email` are always
+registered: they have no PHP implementation. Their signatures are in `stubs/`, `packages/image/stubs/`,
+`packages/user-agent/stubs/`, `packages/domains/stubs/` and `packages/emails/stubs/` for PHPStan,
+which runs without the extension. Every other class is registered only when
+`_APP_EXTENSION_LIBRARIES` names its package. Otherwise Composer loads the package's PHP class as
+before:
 
-Each class was canaried on Cloud behind `_APP_EXTENSION_LIBRARIES` (an `enabled("<package>")` check
-in `src/lib.rs` that registered it only when the variable named its package), region by region,
-before its PHP copy was removed (appwrite-labs/cloud#7503). The extension no longer reads the
-variable. A library ported later can bring the switch back: see `src/lib.rs` before the emails
-removal.
+```sh
+_APP_EXTENSION_LIBRARIES=<package>,<package>   # those packages' classes from the extension
+```
 
-CI runs `crates/extension/tests/run.sh` in the development image. For every
-`tests/<name>.expected.jsonl`, the output of the PHP class a class replaced, it runs
-`packages/<name>/tests` on the extension and diffs `tests/<name>.php`, the parity corpus, against
-the file. The packages stay published at their last PHP release for projects outside this
-repository; the root `composer.json` keeps `replace`-ing those it no longer needs, so they are never
-installed here.
+The extension reads it once, when PHP loads the module, so changing it takes a restart and no
+deploy. Each library is canaried on Cloud this way before it becomes the default.
+
+CI runs `crates/extension/tests/run.sh` in the development image. It finds the libraries from the
+`enabled()` calls in `src/lib.rs` and requires a parity corpus at `tests/<name>.php` for each. For
+every library it runs `packages/<name>/tests` on the extension and diffs the corpus on both
+implementations, first one library at a time, then with all of them on. A new library needs only
+its `enabled()` call, its corpus and its package tests; there is no CI step to add.
+
+Once a library has run on the extension everywhere, its PHP package is removed: the class is
+registered unconditionally, `tests/<name>.expected.jsonl` holds the output of the PHP class it
+replaced, and `run.sh` diffs the corpus against that file. The package stays published at its last
+release for projects outside this repository; the root `composer.json` keeps `replace`-ing it so it
+is never installed here.
 
 ## Utopia\DSN\DSN
 
@@ -175,6 +183,16 @@ differences from the PHP class:
 - The protected helpers `initializeProviders()`, `getProviderForDomain()` and `isDomainSupported()`
   and the protected static properties `$freeDomains`, `$disposableDomains` and `$providers` do not
   exist: a subclass cannot call or read them. Nothing in Appwrite or Cloud subclasses `Email`.
+
+## Benchmarks
+
+Every class's PR carries a benchmark against the PHP class. `crates/extension/bench/<name>.php`
+times one implementation; `run.py` runs it on both, alternating, and prints the medians:
+
+```sh
+cargo build --release -p utopia-extension
+python3 crates/extension/bench/run.py crates/extension/bench/<name>.php . target/release/libutopia.so 5
+```
 
 ## Utopia\Image\Canvas and Utopia\Image\Font
 
