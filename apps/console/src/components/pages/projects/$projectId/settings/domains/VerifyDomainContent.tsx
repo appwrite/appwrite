@@ -207,6 +207,9 @@ function RecordSection({
               <TableHead className={`w-[88px] ${TABLE_HEAD}`}>
                 {t('Type')}
               </TableHead>
+              <TableHead className={`w-[22%] ${TABLE_HEAD}`}>
+                {t('Name')}
+              </TableHead>
               <TableHead className={TABLE_HEAD}>{t('Value')}</TableHead>
               <TableHead className={`w-[156px] ${TABLE_HEAD} text-end`}>
                 {t('Status')}
@@ -220,6 +223,19 @@ function RecordSection({
                   <TableRow>
                     <TableCell className="whitespace-normal px-4 py-3 font-mono text-[12px]">
                       {r.type}
+                    </TableCell>
+                    <TableCell
+                      className="px-4 py-3 font-mono text-[12px]"
+                      title={r.name || undefined}
+                    >
+                      <CopyableId
+                        id={r.name}
+                        variant="inline"
+                        size="md"
+                        constrainToContainer
+                        showCopyOnHover={false}
+                        className="-my-1.5 -ms-2.5"
+                      />
                     </TableCell>
                     <TableCell className="px-4 py-3" title={r.value}>
                       <CopyableId
