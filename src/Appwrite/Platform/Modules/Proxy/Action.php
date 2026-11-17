@@ -11,6 +11,7 @@ use Swoole\Coroutine;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\Bus\Bus;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
@@ -179,6 +180,8 @@ class Action extends PlatformAction
 
         // Keep the latest checks on the rule before any failure, so the caller's write persists them.
         // Found values and message are capped to keep the stored JSON within the attribute size.
+        // The check time is stored with them: the rule's own update time also moves on certificate writes.
+        $checkedAt = DateTime::now();
         $rule->setAttribute('records', \array_map(fn (array $record) => [
             'type' => $record['type'],
             'name' => $record['name'],
@@ -187,6 +190,7 @@ class Action extends PlatformAction
             'status' => $record['status'],
             'message' => \mb_strcut($record['message'], 0, 1000),
             'required' => $record['required'],
+            'checkedAt' => $checkedAt,
         ], $records));
 
         // Ensure CAA won't block certificate issuance
