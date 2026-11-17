@@ -22,13 +22,14 @@ export type FrameState = {
   realShadows: boolean
   /**
    * Per station, how its unfolded display fits around the page copy laid
-   * over the scene: how much of the mast to raise and how large to open.
+   * over the scene: how much of the mast to raise, and whether the open
+   * display still covers the copy (which then steps back while it is open).
    */
   fits: DisplayFit[]
 }
 
 /** See `FrameState.fits`. */
-export type DisplayFit = { lift: number; scale: number }
+export type DisplayFit = { lift: number; covers: boolean }
 
 const POWER_ORDER = Array.from({ length: STATION_COUNT }, (_, index) => index)
   .sort((a, b) => STATION_DELAY[a]! - STATION_DELAY[b]!)

@@ -374,19 +374,25 @@ type Feed = { points: Vector3[]; station: number }
 /** A station's unfolding display. */
 type Extension = {
   group: Group
-  /** The folded display: rises out of the column (scaled from its base), then rides up the mast. */
+  /** The display, its origin on the hinge: slides up out of the column's slot, then rides the mast. */
   riser: Group
+  /** The mast: stored in the column under the slot, it rises with the display and slides with the hinge. */
   post: Mesh
-  /** The two halves, hinged at the centre. */
+  /** The front half, which swings open about the hinge; the back half is fixed to the mast. */
   left: Group
-  right: Group
   screen: MeshBasicMaterial
 }
 
 /** Seconds to unfold fully (folding back takes half). */
 const UNFOLD = 1
-/** Unfold progress at which the halves start to open. */
+/** Unfold progress at which the front half starts to swing open. */
 const OPEN_START = 0.5
+/** The mast: long enough to stay seated in the column at full lift. */
+const MAST = { width: 0.1, depth: 0.1, length: EXTENSION.lift + 0.2 } as const
+/** The mast sits under the back half, just clear of the hinge. */
+const MAST_OFFSET = 0.07
+/** Where the front half's hinge axis sits, just in front of the screens so the folded halves close with a hair between them. */
+const HINGE_Z = 0.006
 
 /** A screen panel showing the part of a station's description cell between `from` and `to` (meters across the open screen). */
 function describedPanel(
@@ -609,7 +615,7 @@ export class FactoryWorld {
       )
     }
 
-    // The foldable displays, one per station, folded away inside its column.
+    // The foldable displays, one per station, stored folded inside its column.
     const { leaf, thickness, height } = EXTENSION
     const { crease } = DESCRIPTION_SCREEN
     const leafScreen = DESCRIPTION_SCREEN.leaf
@@ -643,24 +649,33 @@ export class FactoryWorld {
         -thickness,
       ),
     )
-    const mast = track(box(0.16, 1, 0.12, 0.012, 1).translate(0, 0.5, 0))
+    const mast = track(
+      box(MAST.width, MAST.length, MAST.depth, 0.012, 1).translate(
+        0,
+        MAST.length / 2,
+        0,
+      ),
+    )
     for (let index = 0; index < STATION_COUNT; index++) {
       const group = new Group()
       group.position.set(stationX(index), TOWER_TOP - 0.01, EXTENSION.z)
       group.visible = false
       const post = new Mesh(mast, kit.aluminum)
-      post.scale.y = 0.001
       group.add(post)
       const riser = new Group()
       riser.add(new Mesh(spine, kit.aluminum))
       const screen = createKitDisplay(kit, descriptionTexture)
       const hinge = (sign: number) => {
         const leafGroup = new Group()
+        // The front half turns about an axis just in front of the screens.
+        const pivot = sign < 0 ? HINGE_Z : 0
+        leafGroup.position.z = pivot
         const parts = sign < 0 ? halves.left : halves.right
-        leafGroup.add(
-          new Mesh(parts.body, kit.enclosure),
-          new Mesh(parts.face, kit.matte),
-        )
+        const body = new Mesh(parts.body, kit.enclosure)
+        const face = new Mesh(parts.face, kit.matte)
+        body.position.z = -pivot
+        face.position.z = -pivot
+        leafGroup.add(body, face)
         const glass = new Mesh(
           track(
             sign < 0
@@ -679,16 +694,28 @@ export class FactoryWorld {
           ),
           screen,
         )
-        glass.position.set(sign * (crease + leafScreen / 2), height / 2, 0.0055)
+        glass.position.set(
+          sign * (crease + leafScreen / 2),
+          height / 2,
+          0.0055 - pivot,
+        )
         leafGroup.add(glass)
         riser.add(leafGroup)
         return leafGroup
       }
       const left = hinge(-1)
-      const right = hinge(1)
+      hinge(1)
       group.add(riser)
       this.group.add(group)
-      this.extensions.push({ group, riser, post, left, right, screen })
+      this.extensions.push({ group, riser, post, left, screen })
+      // The slot in the column's top the display and its mast come out of.
+      add(
+        'matte',
+        plain(leaf + 0.03, 0.004, 0.14),
+        stationX(index),
+        TOWER_TOP + 0.001,
+        EXTENSION.z - 0.005,
+      )
     }
 
     // The framework installer: a column like the others, with a display where the nameplate goes.
@@ -1209,15 +1236,18 @@ export class FactoryWorld {
       0.06 * flare * power * palette.glowBoost,
     )
 
-    // The hovered station unfolds: its display rises out of the column folded,
-    // a mast lifts it, its halves open and the screen comes on. Neighbours'
-    // halves would meet, so a display stays folded until the one beside it
-    // has folded away; folding runs twice as fast as unfolding.
+    // The hovered station unfolds: its display slides up out of the slot in
+    // the column's top, folded; the mast lifts it; the front half swings open
+    // about the hinge while the mast slides along the slot to centre the
+    // screen, and the screen comes on. An open display reaches over the next
+    // column, so a display stays in its column until the one beside it has
+    // closed; folding runs twice as fast as unfolding, so the neighbour is
+    // back inside before this one opens.
     for (let index = 0; index < STATION_COUNT; index++) {
       const neighbourOpen = [index - 1, index + 1].some(
         (other) => (this.unfold[other] ?? 0) > OPEN_START,
       )
-      const target = highlight === index ? (neighbourOpen ? OPEN_START : 1) : 0
+      const target = highlight === index && !neighbourOpen ? 1 : 0
       const current = this.unfold[index]!
       const unfold =
         frame.dt === 0
@@ -1231,20 +1261,25 @@ export class FactoryWorld {
       const extension = this.extensions[index]!
       extension.group.visible = unfold > 0.001
       if (!extension.group.visible) continue
-      const rise = easeInOutCubic(range(unfold, 0, 0.32))
-      const lift = easeInOutCubic(range(unfold, 0.28, OPEN_START))
+      const rise = easeInOutCubic(range(unfold, 0, 0.3))
+      const lift = easeInOutCubic(range(unfold, 0.26, OPEN_START))
       const open = easeInOutCubic(range(unfold, OPEN_START, 0.86))
       const fit = frame.fits[index]!
-      extension.riser.scale.set(
-        fit.scale,
-        Math.max(rise, 0.001) * fit.scale,
-        fit.scale,
+      // Stored, the display's top sits just under the slot.
+      const bottom =
+        -(1 - rise) * (EXTENSION.height + 0.03) +
+        lift * EXTENSION.lift * fit.lift
+      // Folded, the hinge is at the stack's left edge, centring it over the slot.
+      const hinge = -(1 - open) * (EXTENSION.leaf / 2)
+      extension.riser.position.set(hinge, bottom, 0)
+      // The mast waits under the slot until the display's foot reaches it.
+      extension.post.position.set(
+        hinge + MAST_OFFSET,
+        Math.max(bottom, 0) - MAST.length,
+        0,
       )
-      extension.riser.position.y = lift * EXTENSION.lift * fit.lift
-      extension.post.scale.y = Math.max(lift * EXTENSION.lift * fit.lift, 0.001)
-      // Folded, both halves point at the camera, screens facing each other.
-      extension.left.rotation.y = (1 - open) * (Math.PI / 2)
-      extension.right.rotation.y = -(1 - open) * (Math.PI / 2)
+      // Folded, the front half lies over the back one, screens facing; it swings open toward the camera.
+      extension.left.rotation.y = (1 - open) * Math.PI
       extension.screen.color.setScalar(range(unfold, 0.84, 1))
     }
 

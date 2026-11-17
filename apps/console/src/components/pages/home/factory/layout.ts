@@ -82,16 +82,18 @@ export const FASCIA = {
 } as const
 
 /**
- * On hover a station unfolds a display like a foldable phone: it rises out
- * of the column folded shut, a mast lifts it, and its two halves open about
- * the centre hinge into one screen that explains the product.
+ * On hover a station unfolds a display like a foldable phone. Folded shut it
+ * is stored upright inside the column, so each half is as wide as a slot in
+ * the column's top and as tall as the column: it rises out of the slot, a
+ * mast lifts it, and its front half swings open about the hinge while the
+ * mast slides along the slot to bring the open screen to the column's centre.
  */
 export const EXTENSION = {
   /** Width of each half. */
-  leaf: 1.29,
+  leaf: 1,
   /** Thickness of each half. */
   thickness: 0.032,
-  height: 1.42,
+  height: 1.1,
   /** The hinge line. */
   z: TOWER.z + 0.04,
   /** Border around the screen. */
@@ -148,10 +150,12 @@ export const CORE = {
 } as const
 
 /**
- * The giant Console screen: a display unit standing flush beside the first
+ * The giant Console screen: a display unit standing a step right of the first
  * rack, its face in the plane of the rack's end panel, as tall as the rack.
  */
 const WALL_FRAME = 0.05
+/** Floor between the first rack's side and the screen's frame. */
+const WALL_GAP = 0.9
 const WALL_HEIGHT = RACKS.height - 2 * WALL_FRAME
 /** The Console capture's shape (1920 x 1234). */
 const WALL_ASPECT = 1920 / 1234
@@ -165,7 +169,7 @@ export const WALL = {
   x:
     RACKS.x +
     RACKS.depth / 2 +
-    0.06 +
+    WALL_GAP +
     (WALL_HEIGHT * WALL_ASPECT) / 2 +
     WALL_FRAME,
   /** The screen's face, flush with the rack row's end. */

@@ -368,18 +368,79 @@ export function getDescriptionCell(index: number, count: number) {
   }
 }
 
-/** Breaks `text` into lines that fit `width`; by word, or by character for CJK. */
+/** Chinese, Japanese and Korean characters. */
+function isCjk(char: string): boolean {
+  const code = char.codePointAt(0) ?? 0
+  return (
+    (code >= 0x3000 && code <= 0x9fff) ||
+    (code >= 0xac00 && code <= 0xd7af) ||
+    (code >= 0xff00 && code <= 0xffef)
+  )
+}
+
+/** Hiragana and the long vowel mark: particles and endings, which stay on the word before them. */
+function isKana(char: string): boolean {
+  const code = char.codePointAt(0) ?? 0
+  return (code >= 0x3040 && code <= 0x309f) || code === 0x30fc
+}
+
+/** Katakana: a run of it is one loanword, whatever the dictionary says. */
+function isKatakana(char: string): boolean {
+  const code = char.codePointAt(0) ?? 0
+  return code >= 0x30a0 && code <= 0x30ff
+}
+
+/** Punctuation that never starts a line. */
+const CLOSING = '、。，．）」』！？'
+
+/**
+ * Where a line may break, as units that keep the space before them: at
+ * spaces, and in CJK text between words (Intl.Segmenter knows where those
+ * are), with particles and punctuation kept on the word before.
+ */
+function breakUnits(text: string): string[] {
+  const words: string[] = []
+  if (!Array.from(text).some(isCjk))
+    text.split(' ').forEach((word, index) => {
+      if (index) words.push(' ')
+      words.push(word)
+    })
+  else if (typeof Intl.Segmenter === 'function')
+    for (const { segment } of new Intl.Segmenter(undefined, {
+      granularity: 'word',
+    }).segment(text))
+      words.push(segment)
+  else words.push(...Array.from(text))
+
+  const units: string[] = []
+  let space = ''
+  for (const word of words) {
+    if (!word.trim()) {
+      space += word
+      continue
+    }
+    const first = Array.from(word)[0] ?? ''
+    const previous = Array.from(units[units.length - 1] ?? '').at(-1) ?? ''
+    const attached =
+      CLOSING.includes(first) ||
+      isKana(first) ||
+      (!space && isKatakana(previous) && isKatakana(first))
+    if (units.length && attached) units[units.length - 1] += space + word
+    else units.push(space + word)
+    space = ''
+  }
+  return units
+}
+
+/** Breaks `text` into lines that fit `width`. */
 function wrap(context: Context, text: string, width: number): string[] {
-  const spaced = text.includes(' ')
-  const units = spaced ? text.split(' ') : Array.from(text)
   const lines: string[] = []
   let line = ''
-  for (const unit of units) {
-    const next = line ? (spaced ? `${line} ${unit}` : line + unit) : unit
-    if (line && context.measureText(next).width > width) {
+  for (const unit of breakUnits(text)) {
+    if (line && context.measureText(line + unit).width > width) {
       lines.push(line)
-      line = unit
-    } else line = next
+      line = unit.trimStart()
+    } else line += unit
   }
   if (line) lines.push(line)
   return lines
@@ -483,6 +544,16 @@ export function createDescriptionAtlas(
         lines = wrap(context, description, measure * 0.9)
         if (lines.length <= 3) break
       }
+      // Balance the lines: the narrowest measure that keeps the same line count.
+      let narrow = measure * 0.4
+      let wide = measure * 0.9
+      while (wide - narrow > 2) {
+        const middle = (narrow + wide) / 2
+        if (wrap(context, description, middle).length > lines.length)
+          narrow = middle
+        else wide = middle
+      }
+      lines = wrap(context, description, wide)
       const leading = size * 1.16
       const headlineTop =
         height * 0.5 - (lines.length * leading) / 2 + leading * 0.1

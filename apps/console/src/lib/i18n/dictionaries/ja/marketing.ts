@@ -1591,4 +1591,21 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Email, SMS, and push with topics and targets.': 'トピックとターゲットで、メール、SMS、プッシュ通知を配信。',
   'Project rules to deny, rate limit, and redirect traffic.': 'トラフィックを拒否、レート制限、リダイレクトするプロジェクトルール。',
   'Projects shipped': 'リリースされたプロジェクト',
+  // Home factory: the display each machine unfolds.
+  'Sign users in with email, OAuth, or passkeys, plus MFA, teams, and roles':
+    'メール、OAuth、パスキーでサインイン。MFA、チーム、ロールにも対応',
+  'Postgres, MySQL, tables, documents, and vectors, managed in one project':
+    'Postgres、MySQL、テーブル、ドキュメント、ベクトルを 1 つのプロジェクトで管理',
+  'Upload files, resize images on the fly, and deliver them over a global CDN':
+    'ファイルをアップロードし、画像をその場でリサイズして、グローバル CDN で配信',
+  'Run Node, Python, Go, and more on requests, schedules, or events':
+    'Node、Python、Go などを、リクエスト、スケジュール、イベントで実行',
+  'Push every database, file, and auth change to your clients as it happens':
+    'データベース、ファイル、認証の変更を、発生した瞬間にアプリへ届けます',
+  'Send email, SMS, and push to users or topics, now or on a schedule':
+    'メール、SMS、プッシュ通知を、ユーザーやトピックへ今すぐ、または予約で配信',
+  'Block, rate limit, or redirect traffic before it reaches your app':
+    'アプリに届く前に、トラフィックをブロック、レート制限、リダイレクト',
+  'Deploy any framework from Git, with a live preview for every branch':
+    'あらゆるフレームワークを Git からデプロイ。ブランチごとにライブプレビュー',
 }

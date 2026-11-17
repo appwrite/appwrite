@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { ArrowRight, Megaphone } from 'lucide-react'
+import { useState } from 'react'
 import { FactoryStage } from '@/components/pages/home/FactoryStage'
 import { HomeSoftLights } from '@/components/pages/home/HomeSoftLights'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
@@ -8,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useI18n } from '@/lib/i18n'
 import { useT } from '@/lib/i18n/translate'
+import { cn } from '@/lib/utils'
 
 /**
  * `/home1` hero: copy on the start side, the software factory filling the
@@ -18,6 +20,8 @@ export function FactoryHero() {
   const t = useT()
   const { catalog } = useI18n()
   const homeCopy = catalog.website.home
+  /** A machine's open display sits under the copy, so the copy steps back. */
+  const [covered, setCovered] = useState(false)
 
   return (
     <section className="relative isolate flex flex-col overflow-hidden border-b border-border bg-background lg:block lg:h-[clamp(720px,calc(100dvh-4rem),960px)]">
@@ -25,7 +29,13 @@ export function FactoryHero() {
 
       <div className="relative z-[1] mx-auto w-full max-w-7xl px-4 pt-12 sm:px-6 sm:pt-16 lg:pointer-events-none lg:px-8 lg:pt-[clamp(3.5rem,7dvh,6rem)]">
         {/* On large screens the scene runs under the copy: only the copy itself takes the pointer. */}
-        <div data-factory-copy className="max-w-xl xl:max-w-2xl">
+        <div
+          data-factory-copy
+          className={cn(
+            'max-w-xl transition-opacity duration-300 motion-reduce:transition-none xl:max-w-2xl',
+            covered ? 'opacity-15' : '',
+          )}
+        >
           <Button
             variant="outline"
             size="sm"
@@ -90,7 +100,10 @@ export function FactoryHero() {
         </div>
       </div>
 
-      <FactoryStage className="mt-4 h-[clamp(400px,70vw,560px)] sm:mt-6 lg:absolute lg:inset-0 lg:z-0 lg:mt-0 lg:h-auto" />
+      <FactoryStage
+        className="mt-4 h-[clamp(400px,70vw,560px)] sm:mt-6 lg:absolute lg:inset-0 lg:z-0 lg:mt-0 lg:h-auto"
+        onCoverChange={setCovered}
+      />
     </section>
   )
 }

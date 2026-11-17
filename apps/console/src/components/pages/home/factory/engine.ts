@@ -191,7 +191,7 @@ export class FactoryEngine {
   private copyArea: CopyArea | null = null
   private readonly fits: DisplayFit[] = Array.from(
     { length: STATION_COUNT },
-    () => ({ lift: 1, scale: 1 }),
+    () => ({ lift: 1, covers: false }),
   )
   private reflection: WebGLRenderTarget | null = null
   private floor: Mesh | null = null
@@ -589,44 +589,44 @@ export class FactoryEngine {
   }
 
   /**
-   * Keeps every unfolded display clear of the copy: lower the mast first,
-   * and if the display still reaches the copy, open it smaller.
+   * Every display opens at the same size. Where the copy is laid over the
+   * scene, a display's mast rises only as far as keeps it clear of the copy;
+   * a display that covers the copy even with its mast down opens at full
+   * height, and the copy steps back while it is open (see `coversCopy`).
    */
   private fitDisplays() {
     const area = this.copyArea
     for (let index = 0; index < STATION_COUNT; index++) {
       const fit = this.fits[index]!
       fit.lift = 1
-      fit.scale = 1
-      if (!area || this.isClear(index, 1, 1, area)) continue
-      let low = 0
-      let high = 1
-      if (this.isClear(index, 0, 1, area)) {
-        for (let step = 0; step < 8; step++) {
-          const middle = (low + high) / 2
-          if (this.isClear(index, middle, 1, area)) low = middle
-          else high = middle
-        }
-        fit.lift = low
+      fit.covers = false
+      if (!area || this.isClear(index, 1, area)) continue
+      if (!this.isClear(index, 0, area)) {
+        fit.covers = true
         continue
       }
-      fit.lift = 0
-      low = 0.5
+      let low = 0
+      let high = 1
       for (let step = 0; step < 8; step++) {
         const middle = (low + high) / 2
-        if (this.isClear(index, 0, middle, area)) low = middle
+        if (this.isClear(index, middle, area)) low = middle
         else high = middle
       }
-      fit.scale = low
+      fit.lift = low
     }
   }
 
-  /** Whether station `index`'s open display, so lifted and scaled, stays off the copy. */
-  private isClear(index: number, lift: number, scale: number, area: CopyArea) {
+  /** Whether station `index`'s open display covers the page copy, which should then step back. */
+  coversCopy(index: number): boolean {
+    return this.fits[index]?.covers ?? false
+  }
+
+  /** Whether station `index`'s open display, its mast raised by `lift`, stays off the copy. */
+  private isClear(index: number, lift: number, area: CopyArea) {
     const x = stationX(index)
     const base = TOWER_TOP - 0.01 + lift * EXTENSION.lift
-    const top = base + EXTENSION.height * scale
-    const reach = EXTENSION.leaf * scale
+    const top = base + EXTENSION.height
+    const reach = EXTENSION.leaf
     let left = Number.POSITIVE_INFINITY
     let right = Number.NEGATIVE_INFINITY
     let highest = Number.POSITIVE_INFINITY

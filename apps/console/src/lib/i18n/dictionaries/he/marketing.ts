@@ -1749,4 +1749,21 @@ export const heMarketingDictionary: Record<string, string> = {
   'Project rules to deny, rate limit, and redirect traffic.':
     'כללי פרויקט לחסימה, להגבלת קצב ולהפניה של תעבורה.',
   'Projects shipped': 'פרויקטים שהושקו',
+  // Home factory: the display each machine unfolds.
+  'Sign users in with email, OAuth, or passkeys, plus MFA, teams, and roles':
+    'התחברות עם אימייל, OAuth או מפתחות גישה, לצד MFA, צוותים ותפקידים',
+  'Postgres, MySQL, tables, documents, and vectors, managed in one project':
+    'Postgres, MySQL, טבלאות, מסמכים ווקטורים, מנוהלים בפרויקט אחד',
+  'Upload files, resize images on the fly, and deliver them over a global CDN':
+    'העלו קבצים, התאימו את גודל התמונות בזמן אמת והגישו אותם דרך CDN גלובלי',
+  'Run Node, Python, Go, and more on requests, schedules, or events':
+    'הריצו Node, Python, Go ועוד בתגובה לבקשות, לתזמונים או לאירועים',
+  'Push every database, file, and auth change to your clients as it happens':
+    'דחפו כל שינוי במסד הנתונים, בקבצים ובאימות לאפליקציות שלכם ברגע שהוא קורה',
+  'Send email, SMS, and push to users or topics, now or on a schedule':
+    'שלחו אימייל, SMS והתראות Push למשתמשים או לנושאים, עכשיו או בתזמון',
+  'Block, rate limit, or redirect traffic before it reaches your app':
+    'חסמו, הגבילו קצב או הפנו תעבורה לפני שהיא מגיעה לאפליקציה שלכם',
+  'Deploy any framework from Git, with a live preview for every branch':
+    'פרסו כל framework מ-Git, עם תצוגה מקדימה חיה לכל Branch',
 }

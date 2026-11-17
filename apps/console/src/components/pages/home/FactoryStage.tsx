@@ -16,7 +16,7 @@ import { useT } from '@/lib/i18n/translate'
 import { PRODUCT_REGISTRY } from '@/lib/products/registry'
 import { cn } from '@/lib/utils'
 import { canUseWebGL } from '@/lib/webgl'
-import { STATION_IDS } from './factory/layout'
+import { STATION_IDS, type FactoryStationId } from './factory/layout'
 import type { FactoryEngine } from './factory/engine'
 
 const loadFactory = createClientOnlyFn(() => import('./factory/engine'))
@@ -41,8 +41,16 @@ const isRtl = () =>
  * hydration, renders only while on screen and never above 60 fps. Product
  * names are shown on the machines; hovering or focusing one unfolds a
  * display that explains the product, and every machine links to its page.
+ * `onCoverChange` reports when an open display covers the copy laid over
+ * the scene, so the copy can step back.
  */
-export function FactoryStage({ className }: { className?: string }) {
+export function FactoryStage({
+  className,
+  onCoverChange,
+}: {
+  className?: string
+  onCoverChange?: (covering: boolean) => void
+}) {
   const t = useT()
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -55,7 +63,34 @@ export function FactoryStage({ className }: { className?: string }) {
   const names = STATION_IDS.map((id) => t(PRODUCT_REGISTRY[id].name))
   /** What the machine prints: every station's name, then the gate's sign. */
   const plates = [...names, NETWORK_NAME]
-  const descriptions = STATION_IDS.map((id) => t(PRODUCT_REGISTRY[id].tagline))
+  /** What each unfolded display says: up to three lines, ending in the brand underscore. */
+  const copy: Record<FactoryStationId, string> = {
+    auth: t(
+      'Sign users in with email, OAuth, or passkeys, plus MFA, teams, and roles',
+    ),
+    databases: t(
+      'Postgres, MySQL, tables, documents, and vectors, managed in one project',
+    ),
+    storage: t(
+      'Upload files, resize images on the fly, and deliver them over a global CDN',
+    ),
+    functions: t(
+      'Run Node, Python, Go, and more on requests, schedules, or events',
+    ),
+    realtime: t(
+      'Push every database, file, and auth change to your clients as it happens',
+    ),
+    messaging: t(
+      'Send email, SMS, and push to users or topics, now or on a schedule',
+    ),
+    firewall: t(
+      'Block, rate limit, or redirect traffic before it reaches your app',
+    ),
+    sites: t(
+      'Deploy any framework from Git, with a live preview for every branch',
+    ),
+  }
+  const descriptions = STATION_IDS.map((id) => copy[id])
   const counterLabel = t('Projects shipped')
   const labelsKey = `${plates.join('|')}|${descriptions.join('|')}|${counterLabel}`
   const platesRef = useRef(plates)
@@ -64,6 +99,8 @@ export function FactoryStage({ className }: { className?: string }) {
   descriptionsRef.current = descriptions
   const counterLabelRef = useRef(counterLabel)
   counterLabelRef.current = counterLabel
+  const onCoverChangeRef = useRef(onCoverChange)
+  onCoverChangeRef.current = onCoverChange
 
   useEffect(() => {
     const container = containerRef.current
@@ -195,6 +232,13 @@ export function FactoryStage({ className }: { className?: string }) {
     engineRef.current?.setCounterLabel(counterLabelRef.current)
   }, [labelsKey])
 
+  // The copy steps back while the open display would sit under it.
+  useEffect(() => {
+    onCoverChangeRef.current?.(
+      hovered >= 0 && (engineRef.current?.coversCopy(hovered) ?? false),
+    )
+  }, [hovered])
+
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.pointerType === 'touch') return
     const rect = event.currentTarget.getBoundingClientRect()
@@ -296,7 +340,7 @@ export function FactoryStage({ className }: { className?: string }) {
                 engineRef.current?.setHighlight(-1)
               }}
             >
-              {`${names[index]}: ${t(PRODUCT_REGISTRY[id].tagline)}`}
+              {`${names[index]}: ${descriptions[index]}`}
             </MarketingSiteLink>
           </li>
         ))}
