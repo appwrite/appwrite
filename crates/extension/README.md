@@ -179,16 +179,16 @@ package's validators. It asserts these known differences on the extension:
   and the protected static properties `$freeDomains`, `$disposableDomains` and `$providers` do not
   exist: a subclass cannot call or read them. Nothing in Appwrite or Cloud subclasses `Email`.
 
-## Utopia\Query: the classifiers, the tokenizers, Query and the AST
+## Utopia\Query: the classifiers, the tokenizers, Query, the AST and the schemas
 
 Over `crates/utopia/query` (`_APP_EXTENSION_LIBRARIES=query`). `packages/query` is about 300 classes,
 so it moves to the extension one part at a time, and `query` switches on whatever part is here. So
 far that is the statement classifiers a database proxy routes with: the `Classifier` interface,
 `Classifier\SQL` (abstract), `Classifier\MySQL`, `Classifier\PostgreSQL`, `Classifier\MongoDB` and
-the `Type` enum they return; the tokenizers; `Query`; and the AST's parser and serializers, each
-below. Every other class of the
-package (`Method` and the other enums, the builders, the schema, the AST's nodes and walker) is still its PHP source and
-works with these unchanged.
+the `Type` enum they return; the tokenizers; `Query`; the AST's parser and serializers; and the
+schemas, each below. Every other class of the package (`Method` and the other enums, the builders,
+the schema's blueprints, the AST's nodes and walker) is still its PHP source and works with these
+unchanged.
 
 The interface and the enum are registered too, not left in PHP: a class registered when the module
 starts cannot implement a userland interface, and returning the extension's own enum case costs no
@@ -347,6 +347,69 @@ and the one on `main` drops them for every operator but `-`, `/` and `%`. So `a 
 written as `a = b = c`, which reads back as `(a = b) = c`. `packages/query/src/AST/Serializer.php`
 is now the fixed version, with two tests in `tests/AST/SerializerTest.php` that fail on the old
 one.
+
+### The schemas
+
+`Schema` and `Schema\SQL` (both abstract), the dialects `Schema\MySQL`, `PostgreSQL`, `SQLite`,
+`ClickHouse` and `MongoDB`, and the 16 `Schema\Feature\*` interfaces they implement. The
+blueprints stay PHP: `Table`, `Column`, `ForeignKey`, `Index`, `CheckConstraint`, `RenameColumn`,
+their dialect classes and traits, the forwarders and the enums. They are what PHP code fills with
+fluent calls, and they validate as they are filled.
+
+`$schema->table($name)` returns the package's own `Table\<Dialect>`, holding the schema. When the
+table calls back (`compileCreate($this)`), the schema reads it through its property slots, which
+it finds by name once a request for each class, builds the crate's blueprint and compiles it. The statement it returns is the package's
+`Builder\Statement`, carrying the closure given to `setExecutor()`. A view's query is still a PHP
+builder: the schema calls its `build()`, passes the SQL to the crate and keeps the bindings as PHP
+built them.
+
+This part is not faster. PHP compiles a `CREATE TABLE` of 18 columns in 9 microseconds, which is
+string concatenation it does well, and the extension has to read the blueprint out of PHP objects
+first: it takes 6% to 45% longer a statement, 1 to 4 microseconds. Only DDL calls a schema, and the
+statement then takes the database milliseconds. What this part buys is that
+`crates/utopia/query`'s DDL is checked against PHP's, statement for statement, before anything
+written in Rust relies on it.
+
+SQL names and text are bytes to PHP, so they are widened going into the crate and narrowed coming
+out, as the AST's are. MongoDB's statements are JSON, so its strings must be UTF-8.
+
+The corpus adds, for all five dialects: 97 blueprints, one for each column factory, modifier,
+index, key, check, alteration, partitioning and engine option, compiled as `CREATE` and as
+`ALTER`; every column type at six sizes, added and modified, and as a `Column` made directly with
+ten sets of arguments; 37 default values at four `precision` settings; 31 names (qualified, empty,
+quoted, with every quote character, with bytes that are not UTF-8, with Unicode spaces) in each of
+35 places a blueprint or a statement holds one; tables with properties set past the fluent
+methods; a table made by each dialect compiled by every schema; every other public method with
+every name, both flags and arguments of every wrong type; `createIndex()` with 33 sets of options,
+foreign keys with every action, procedures, triggers at every timing and event, collations, types,
+sequences and comments; views over six builders with their bindings; the executor, on a schema, a
+clone and a statement; and the signatures, parents and interfaces of the classes. The database
+library's unit tests that create collections, attributes or indexes give the same results on both.
+The corpus asserts six known differences:
+
+- The classes have the public methods only. PHP's dialects are built from protected steps
+  (`quote()`, `compileColumnType()`, `compileColumnDefinition()` and others) that a subclass can
+  override or call, and the abstract `Schema` holds the shared ones. Here a schema compiles a
+  statement whole, so a subclass can override a public method but not a step, and a dialect written
+  in PHP has nothing in `Schema` to build on. Nothing in Appwrite, Cloud or the database library
+  subclasses a schema.
+- The `Feature` interfaces declare no methods. ext-php-rs checks a class's methods against its
+  interface's when PHP starts, and these classes return their statements untyped. Every class has
+  every method of the interfaces it implements, and `instanceof` answers as before.
+- A schema reads the whole blueprint before it compiles. PHP reads only what the statement uses.
+  They differ only on a blueprint holding what its fluent methods refuse, such as a half-made
+  `CheckConstraint`, which takes a subclass or reflection to make: PHP compiles an `ALTER` that does
+  not write the check, and the extension throws.
+- An index length must be a number. PHP writes whatever it is given between the parentheses.
+- A procedure parameter's direction must be a `ParameterDirection`. PHP reads `->value` off
+  anything, with a warning.
+- MongoDB refuses a string that is not UTF-8 when it reads it, with the `JsonException` that
+  `json_encode()` throws. PHP throws it only if the statement uses the string.
+
+The executor closure is held in Rust, where PHP's cycle collector does not look. A closure that
+reaches its own schema (`$schema->setExecutor(fn () => $schema)`) is freed at the end of the
+request, not before. The database library's executor is bound to the database, which does not keep
+the schema.
 
 ## Benchmarks
 

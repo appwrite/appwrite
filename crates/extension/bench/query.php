@@ -1,6 +1,6 @@
 <?php
 
-// Times the Utopia\Query classifiers, tokenizers, AST parser and serializers, and Query on whichever implementation loaded. Compare both with
+// Times the Utopia\Query classifiers, tokenizers, AST parser and serializers, schemas, and Query on whichever implementation loaded. Compare both with
 // `python3 crates/extension/bench/run.py crates/extension/bench/query.php . <utopia.so> 5`.
 
 require __DIR__ . '/../../../vendor/autoload.php';
@@ -65,6 +65,25 @@ $nestedJson = $nested->toString();
 $list = [$filter, $nested, Query::limit(25), Query::offset(50), Query::orderDesc('time'), Query::select(['name', 'age']), Query::cursorAfter(['$id' => 'x']), Query::count('*', 'total')];
 $jsons = array_map(fn (Query $query): string => $query->toString(), array_slice($list, 0, 5));
 
+$schema = new Utopia\Query\Schema\PostgreSQL();
+$blueprint = function (Utopia\Query\Schema $schema): Utopia\Query\Schema\Table {
+    $table = $schema->table('collection_42');
+    $table->id('_id');
+    $table->string('_uid', 255);
+    $table->datetime('_createdAt', 3)->nullable();
+    $table->datetime('_updatedAt', 3)->nullable();
+    $table->text('_permissions')->nullable();
+    for ($i = 0; $i < 12; $i++) {
+        $table->string('attribute' . $i, 255)->nullable()->default('x');
+    }
+    $table->integer('count')->default(0);
+    $table->index(['_createdAt'], '_created_at');
+    $table->uniqueIndex(['_uid'], '_uid');
+
+    return $table;
+};
+$collection = $blueprint($schema);
+
 $cases = [
     'mysql COM_QUERY select' => fn () => $mysql->classify("\x00\x00\x00\x00\x03" . $select),
     'mysql COM_STMT_EXECUTE' => fn () => $mysql->classify("\x05\x00\x00\x00\x17\x01\x00\x00\x00"),
@@ -90,6 +109,12 @@ $cases = [
     'AST serialize 150 ORs' => fn () => $serializer->serialize($wideAst),
     'AST sql to sql (report)' => fn () => $postgresSerializer->serialize($parser->parse(Tokenizer::filter($tokenizer->tokenize($report)))),
     'AST Grammar::isType' => fn () => Utopia\Query\AST\Grammar::isType('decimal(10, 2)'),
+    // DDL, as the database library asks for it: a collection's table, an index, a dropped table.
+    'schema create table (18 columns)' => fn () => $collection->create(),
+    'schema build and create table' => fn () => $blueprint($schema)->create(),
+    'schema alter table' => fn () => $collection->alter(),
+    'schema createIndex' => fn () => $schema->createIndex('collection_42', '_key_name', ['name', 'status'], unique: true, lengths: ['name' => 191], orders: ['status' => 'desc']),
+    'schema drop table' => fn () => $schema->table('collection_42')->dropIfExists(),
     // What a request does with the queries it is given: parse them, read them, group them.
     'Query::equal' => fn () => Query::equal('status', ['active', 'pending']),
     'new Query' => fn () => new Query(Method::Equal, 'status', ['active']),

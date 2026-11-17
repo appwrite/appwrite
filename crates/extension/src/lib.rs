@@ -64,6 +64,29 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
             .class::<query::ast::PostgreSqlSerializer>()
             .class::<query::ast::SqliteSerializer>()
             .class::<query::ast::ClickHouseSerializer>()
+            .interface::<query::schema::feature::PhpInterfaceAnalyzeTable>()
+            .interface::<query::schema::feature::PhpInterfaceColumnComments>()
+            .interface::<query::schema::feature::PhpInterfaceCreatePartition>()
+            .interface::<query::schema::feature::PhpInterfaceDatabases>()
+            .interface::<query::schema::feature::PhpInterfaceDropPartition>()
+            .interface::<query::schema::feature::PhpInterfaceForeignKeys>()
+            .interface::<query::schema::feature::PhpInterfaceMaterializedViews>()
+            .interface::<query::schema::feature::PhpInterfacePartitioning>()
+            .interface::<query::schema::feature::PhpInterfaceProcedures>()
+            .interface::<query::schema::feature::PhpInterfaceRenameIndex>()
+            .interface::<query::schema::feature::PhpInterfaceReplaceView>()
+            .interface::<query::schema::feature::PhpInterfaceSequences>()
+            .interface::<query::schema::feature::PhpInterfaceTableComments>()
+            .interface::<query::schema::feature::PhpInterfaceTriggers>()
+            .interface::<query::schema::feature::PhpInterfaceTypes>()
+            .interface::<query::schema::feature::PhpInterfaceViews>()
+            .class::<query::schema::Base>()
+            .class::<query::schema::Sql>()
+            .class::<query::schema::MySqlSchema>()
+            .class::<query::schema::PostgreSqlSchema>()
+            .class::<query::schema::SqliteSchema>()
+            .class::<query::schema::ClickHouseSchema>()
+            .class::<query::schema::MongoDbSchema>()
     } else {
         module
     };
@@ -75,5 +98,6 @@ extern "C" fn request_shutdown(kind: i32, module: i32) -> i32 {
     user_agent::request_shutdown();
     query::value::request_shutdown();
     query::ast::request_shutdown();
+    query::schema::request_shutdown();
     locale::request_shutdown(kind, module)
 }

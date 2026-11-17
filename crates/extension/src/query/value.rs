@@ -115,7 +115,7 @@ fn method_of(zval: &Zval) -> PhpResult<Method> {
 
 /// `[]`: PHP's shared empty array, which is never counted or freed. A zval of type
 /// `IS_ARRAY` without the refcounted flag is how `ZVAL_EMPTY_ARRAY` points at it.
-fn empty() -> Zval {
+pub(super) fn empty() -> Zval {
     let mut zval = Zval::new();
     zval.value.arr = (&raw const ext_php_rs::ffi::zend_empty_array).cast_mut();
     zval.u1.type_info = 7;
@@ -166,7 +166,7 @@ impl<'a> Arr<'a> {
         }
     }
 
-    fn table(&self) -> Option<&'a ZendHashTable> {
+    pub(super) fn table(&self) -> Option<&'a ZendHashTable> {
         match self {
             Self::Given(zval) => zval.array(),
             Self::Empty => None,
@@ -180,7 +180,7 @@ impl<'a> Arr<'a> {
 
 /// An `int` parameter, converted the way PHP converts one outside `strict_types`: a bool, a
 /// float or a numeric string becomes the int it holds; anything else is a `TypeError`.
-pub struct Int(i64);
+pub struct Int(pub(super) i64);
 
 impl StubLiteral for Int {
     fn stub_literal(&self) -> String {
@@ -222,7 +222,7 @@ impl<'a> FromZval<'a> for Int {
 
 /// A `bool` parameter, converted the way PHP converts one outside `strict_types`.
 #[derive(Clone, Copy)]
-pub struct Bool(bool);
+pub struct Bool(pub(super) bool);
 
 impl StubLiteral for Bool {
     fn stub_literal(&self) -> String {
@@ -393,7 +393,7 @@ fn clone_object(zval: &Zval) -> Zval {
 }
 
 /// A PHP function called with `arguments`: its result, or the exception it threw, taken.
-fn call(
+pub(super) fn call(
     function: &str,
     arguments: Vec<&dyn ext_php_rs::convert::IntoZvalDyn>,
 ) -> Result<Zval, Option<ZBox<ZendObject>>> {

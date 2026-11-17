@@ -65,7 +65,7 @@ fn roomy<T>(levels: usize, inline: usize, work: impl FnOnce() -> T) -> T {
 }
 
 /// `bytes` as text: a byte above 127 is the character of that number.
-fn wide(bytes: &[u8]) -> Cow<'_, str> {
+pub(super) fn wide(bytes: &[u8]) -> Cow<'_, str> {
     match std::str::from_utf8(bytes) {
         Ok(text) if bytes.is_ascii() => Cow::Borrowed(text),
         _ => Cow::Owned(bytes.iter().map(|&byte| char::from(byte)).collect()),
@@ -73,7 +73,7 @@ fn wide(bytes: &[u8]) -> Cow<'_, str> {
 }
 
 /// The bytes [`wide`] read `text` from.
-fn narrow(text: &str) -> Cow<'_, [u8]> {
+pub(super) fn narrow(text: &str) -> Cow<'_, [u8]> {
     if text.is_ascii() {
         Cow::Borrowed(text.as_bytes())
     } else {
@@ -101,7 +101,7 @@ fn too_deep() -> utopia_query::Error {
 }
 
 /// An error of the crate as the package's exception, its message narrowed back to bytes.
-fn failed(error: &utopia_query::Error) -> PhpException {
+pub(super) fn failed(error: &utopia_query::Error) -> PhpException {
     let message = error.message_bytes();
     match std::str::from_utf8(&message) {
         Ok(text) if !text.is_ascii() => {
@@ -293,7 +293,7 @@ impl Classes {
 // ---------------------------------------------------------------------------------------
 
 /// The declared property slots of `object`.
-fn slots(object: &ZendObject) -> &[Zval] {
+pub(super) fn slots(object: &ZendObject) -> &[Zval] {
     let declared = usize::try_from(object.get_class_entry().default_properties_count).unwrap_or(0);
     // SAFETY: an object holds its class's `default_properties_count` slots after its header.
     unsafe { std::slice::from_raw_parts(object.properties_table.as_ptr(), declared) }
@@ -346,7 +346,7 @@ fn text(value: &Zval, what: &str) -> Read<String> {
 }
 
 /// `(string) $float` at the request's `precision` setting.
-fn float(value: f64) -> String {
+pub(super) fn float(value: f64) -> String {
     let precision = i32::try_from(ExecutorGlobals::get().precision).unwrap_or(-1);
     php_std::number::gcvt(value, if precision == 0 { 1 } else { precision }, 'E')
 }
@@ -626,7 +626,7 @@ impl Reader<'_> {
 // The crate's nodes to PHP
 // ---------------------------------------------------------------------------------------
 
-fn null() -> Zval {
+pub(super) fn null() -> Zval {
     let mut value = Zval::new();
     value.set_null();
     value

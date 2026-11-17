@@ -1,14 +1,16 @@
 <?php
 
 // Parity corpus for the part of Utopia\Query the utopia extension has so far: the statement
-// classifiers with the Type they return, the tokenizers, Query, and the AST's parser and serializers. Run it on the PHP classes and on the extension's
+// classifiers with the Type they return, the tokenizers, Query, the AST's parser and serializers, and the schemas. Run it on the PHP classes and on the extension's
 // (_APP_EXTENSION_LIBRARIES=query), and diff stdout: every line must match. Stderr names the
 // implementation that ran.
 
 require __DIR__ . '/../../../vendor/autoload.php';
 
 use Utopia\Query\AST;
+use Utopia\Query\Builder;
 use Utopia\Query\Builder\ParsedQuery;
+use Utopia\Query\Builder\Statement;
 use Utopia\Query\Classifier;
 use Utopia\Query\Classifier\MongoDB;
 use Utopia\Query\Classifier\MySQL;
@@ -20,6 +22,13 @@ use Utopia\Query\Method;
 use Utopia\Query\NullsPosition;
 use Utopia\Query\OrderDirection;
 use Utopia\Query\Query;
+use Utopia\Query\Schema;
+use Utopia\Query\Schema\ColumnType;
+use Utopia\Query\Schema\ForeignKeyAction;
+use Utopia\Query\Schema\IndexType;
+use Utopia\Query\Schema\ParameterDirection;
+use Utopia\Query\Schema\TriggerEvent;
+use Utopia\Query\Schema\TriggerTiming;
 use Utopia\Query\Tokenizer;
 use Utopia\Query\Tokenizer\Token;
 use Utopia\Query\Tokenizer\TokenType;
@@ -31,6 +40,7 @@ const NATIVE = [
     Tokenizer\SQLite::class, Tokenizer\ClickHouse::class, Query::class,
     AST\Grammar::class, AST\Parser::class, AST\Serializer::class, AST\Serializer\MySQL::class, AST\Serializer\MariaDB::class,
     AST\Serializer\PostgreSQL::class, AST\Serializer\SQLite::class, AST\Serializer\ClickHouse::class,
+    Schema::class, Schema\SQL::class, Schema\MySQL::class, Schema\PostgreSQL::class, Schema\SQLite::class, Schema\ClickHouse::class, Schema\MongoDB::class,
 ];
 
 // Query is the package's class over the extension's NativeQuery; every other one is the extension's own.
@@ -66,6 +76,9 @@ function exported(mixed $value): mixed
     }
     if (is_object($value) && str_starts_with($value::class, 'Utopia\\Query\\AST\\') && ! $value instanceof AST\Serializer && ! $value instanceof AST\Parser) {
         return ['node' => $value::class, 'fields' => exported(get_object_vars($value))];
+    }
+    if ($value instanceof Statement) {
+        return ['statement' => [exported($value->query), exported($value->bindings), $value->readOnly, exported($value->namedBindings)]];
     }
     if ($value instanceof ParsedQuery) {
         return ['parsed' => exported(get_object_vars($value))];
@@ -1557,6 +1570,564 @@ emit('walked', outcome(function () use ($parser, $tokenizers, $serializers): arr
     ];
 }));
 
+// --- Schema --------------------------------------------------------------------------------
+
+$schemas = [
+    'mysql' => new Schema\MySQL(), 'postgres' => new Schema\PostgreSQL(), 'sqlite' => new Schema\SQLite(),
+    'clickhouse' => new Schema\ClickHouse(), 'mongo' => new Schema\MongoDB(),
+];
+
+/** A table whose properties can be set to anything, past what the fluent methods validate. */
+class CorpusTable extends Schema\Table
+{
+    public function put(string $property, mixed $value): static
+    {
+        $this->$property = $value;
+
+        return $this;
+    }
+}
+
+class CorpusClickHouseTable extends Schema\Table\ClickHouse
+{
+    public function put(string $property, mixed $value): static
+    {
+        $this->$property = $value;
+
+        return $this;
+    }
+}
+
+/** What the table $fill fills compiles to, as CREATE and as ALTER. */
+function blueprinted(Schema $schema, callable $fill, string $name = 't'): array
+{
+    $table = $schema->table($name);
+    try {
+        $fill($table);
+    } catch (Throwable $e) {
+        return ['fill throws' => $e::class, 'message' => exported($e->getMessage())];
+    }
+
+    return [outcome(fn () => $table->create()), outcome(fn () => $table->alter())];
+}
+
+$fills = [
+    'nothing' => fn ($t) => null,
+    'id' => fn ($t) => $t->id(),
+    'id named' => fn ($t) => $t->id('uid'),
+    'string' => fn ($t) => $t->string('s'),
+    'string sized' => fn ($t) => $t->string('s', 10)->nullable()->default('x'),
+    'text' => fn ($t) => $t->text('body')->nullable(),
+    'medium text' => fn ($t) => $t->mediumText('body'),
+    'long text' => fn ($t) => $t->longText('body'),
+    'tiny integer' => fn ($t) => $t->tinyInteger('n')->unsigned()->default(0),
+    'small integer' => fn ($t) => $t->smallInteger('n')->default(-1),
+    'integer' => fn ($t) => $t->integer('n')->unsigned()->nullable(),
+    'big integer' => fn ($t) => $t->bigInteger('n')->unsigned()->default(9007199254740993),
+    'decimal' => fn ($t) => $t->decimal('price'),
+    'decimal sized' => fn ($t) => $t->decimal('price', 12, 4)->default(0),
+    'uuid' => fn ($t) => $t->uuid('ref')->unique(),
+    'float' => fn ($t) => $t->float('ratio')->default(0.5),
+    'boolean' => fn ($t) => $t->boolean('flag')->default(true),
+    'boolean false' => fn ($t) => $t->boolean('flag')->default(false)->nullable(),
+    'datetime' => fn ($t) => $t->datetime('at'),
+    'datetime precise' => fn ($t) => $t->datetime('at', 6)->nullable()->defaultRaw('CURRENT_TIMESTAMP(6)'),
+    'timestamp' => fn ($t) => $t->timestamp('at'),
+    'timestamp precise' => fn ($t) => $t->timestamp('at', 3)->defaultRaw('now()'),
+    'json' => fn ($t) => $t->json('data')->nullable(),
+    'binary' => fn ($t) => $t->binary('blob'),
+    'enum' => fn ($t) => $t->enum('status', ['draft', 'live', "it's", 'back\\slash', ''])->default('draft'),
+    'enum empty' => fn ($t) => $t->enum('status', []),
+    'point' => fn ($t) => $t->point('at'),
+    'point srid' => fn ($t) => $t->point('at', 3857)->nullable(),
+    'linestring' => fn ($t) => $t->linestring('path', 0),
+    'polygon' => fn ($t) => $t->polygon('area'),
+    'timestamps' => fn ($t) => $t->timestamps(),
+    'timestamps precise' => fn ($t) => $t->timestamps(6),
+    'serial' => fn ($t) => $t->serial('n'),
+    'big serial' => fn ($t) => $t->bigSerial('n')->primary(),
+    'small serial' => fn ($t) => $t->smallSerial('n'),
+    'vector' => fn ($t) => $t->vector('embedding', 1536),
+    'vector unsized' => fn ($t) => $t->vector('embedding'),
+    'array' => fn ($t) => $t->array('tags', ColumnType::String),
+    'array of arrays' => fn ($t) => $t->array('tags', ColumnType::Array),
+    'tuple' => fn ($t) => $t->tuple('pair', [ColumnType::String, ColumnType::Integer, ColumnType::Float]),
+    'fixed string' => fn ($t) => $t->fixedString('code', 8)->lowCardinality(),
+    'low cardinality' => fn ($t) => $t->string('country')->lowCardinality()->codec('ZSTD(3)')->codec('Delta'),
+    'column ttl' => fn ($t) => $t->datetime('at')->ttl('at + INTERVAL 1 DAY'),
+    'primary' => fn ($t) => $t->string('key', 36)->primary(),
+    'two primaries' => function ($t) {
+        $t->integer('a')->primary();
+        $t->integer('b')->primary();
+    },
+    'composite primary' => function ($t) {
+        $t->integer('a');
+        $t->integer('b');
+        $t->primary(['a', 'b']);
+    },
+    'both primaries' => function ($t) {
+        $t->integer('a')->primary();
+        $t->primary(['a', 'b']);
+    },
+    'auto increment' => fn ($t) => $t->integer('n')->autoIncrement(),
+    'auto increment primary' => fn ($t) => $t->integer('n')->autoIncrement()->primary()->default(5),
+    'unique' => fn ($t) => $t->string('email')->unique()->nullable(),
+    'after' => fn ($t) => $t->string('s')->after('other.col'),
+    'comment' => fn ($t) => $t->string('s')->comment("it's a \\ comment"),
+    'collation' => fn ($t) => $t->string('s')->collation('utf8mb4_bin'),
+    'collation odd' => fn ($t) => $t->string('s')->collation('en-US"x'),
+    'srid' => fn ($t) => $t->point('at')->srid(4326),
+    'dimensions' => fn ($t) => $t->addColumn('v', ColumnType::Vector)->dimensions(3),
+    'generated' => fn ($t) => $t->integer('total')->generatedAs('a + b'),
+    'generated stored' => fn ($t) => $t->integer('total')->generatedAs('a + b')->stored()->nullable()->comment('sum'),
+    'generated virtual' => fn ($t) => $t->integer('total')->generatedAs('a + b')->virtual(),
+    'user type' => fn ($t) => $t->string('mood')->userType('public.mood'),
+    'column check' => fn ($t) => $t->integer('age')->check('age >= 0'),
+    'modify' => fn ($t) => $t->string('s', 64)->modify(),
+    'modify column' => fn ($t) => $t->modifyColumn('s', ColumnType::Text)->nullable(),
+    'default raw' => fn ($t) => $t->string('s')->defaultRaw('  (uuid())  ')->default('ignored'),
+    'default null' => fn ($t) => $t->string('s')->nullable()->default(null),
+    'raw column' => fn ($t) => $t->rawColumn('`x` INT GENERATED ALWAYS AS (1)')->rawIndex('KEY `k` (`x`)'),
+    'index' => fn ($t) => $t->string('s')->index(['s']),
+    'index named' => fn ($t) => $t->index(['a', 'b'], 'by_a_b'),
+    'index options' => fn ($t) => $t->index(['a', 'b', 'c'], 'i', 'btree', 'text_pattern_ops', ['a' => 10, 'c' => 0], ['a' => 'desc', 'b' => 'ASC'], ['b' => 'utf8mb4_bin']),
+    'index bad order' => fn ($t) => $t->index(['a'], 'i', orders: ['a' => 'sideways']),
+    'index bad collation' => fn ($t) => $t->index(['a'], 'i', collations: ['a' => 'x y']),
+    'index numeric columns' => fn ($t) => $t->index(['1', '2'], 'i', lengths: ['1' => 5], orders: ['2' => 'desc']),
+    'unique index' => fn ($t) => $t->uniqueIndex(['email'], '', ['email' => 191], ['email' => 'desc']),
+    'fulltext index' => fn ($t) => $t->fulltextIndex(['title', 'body']),
+    'spatial index' => fn ($t) => $t->spatialIndex(['at'], 'geo'),
+    'add index' => fn ($t) => $t->addIndex('i', ['a'], IndexType::Unique, ['a' => 3], ['a' => 'desc'], 'hash', 'ops', ['a' => 'C'], ['(lower(b))', 'c DESC']),
+    'add index kinds' => function ($t) {
+        foreach (IndexType::cases() as $type) {
+            $t->addIndex('i_' . $type->value, ['a'], $type);
+        }
+    },
+    'skip index' => fn ($t) => $t->index(['a'], 'i', algorithm: Schema\ClickHouse\IndexAlgorithm::cases()[0], granularity: 4),
+    'skip indexes' => function ($t) {
+        foreach (Schema\ClickHouse\IndexAlgorithm::cases() as $algorithm) {
+            $t->index(['a'], 'i_' . $algorithm->value, algorithm: $algorithm, algorithmArgs: $algorithm->acceptsArgs() ? [0.01, 3, 'x'] : [], granularity: 2);
+        }
+    },
+    'drop index' => fn ($t) => $t->dropIndex('i')->dropIndex('my.i'),
+    'check' => fn ($t) => $t->check('positive', 'n > 0')->check('named.x', "s <> ''"),
+    'rename column' => fn ($t) => $t->renameColumn('old', 'new')->dropColumn('gone')->dropColumn('a.b'),
+    'foreign key' => fn ($t) => $t->foreignKey('team_id')->references('id')->on('teams'),
+    'foreign key actions' => function ($t) {
+        foreach (ForeignKeyAction::cases() as $delete) {
+            foreach (ForeignKeyAction::cases() as $update) {
+                $t->foreignKey('c')->references('id')->on('db.other')->onDelete($delete)->onUpdate($update);
+            }
+        }
+    },
+    'foreign key bare' => fn ($t) => $t->foreignKey('team_id'),
+    'add foreign key' => fn ($t) => $t->addForeignKey('team_id')->references('id')->on('teams')->onDelete(ForeignKeyAction::Cascade),
+    'drop foreign key' => fn ($t) => $t->dropForeignKey('fk_team')->dropForeignKey('fk.b'),
+    'partition range' => fn ($t) => $t->integer('n')->table->partitionByRange('n'),
+    'partition list' => function ($t) {
+        $t->integer('n');
+        $t->partitionByList('n');
+    },
+    'partition hash' => function ($t) {
+        $t->integer('n');
+        $t->partitionByHash('n', 8);
+    },
+    'partition hash uncounted' => function ($t) {
+        $t->integer('n');
+        $t->partitionByHash('n');
+    },
+    'engines' => function ($t) {
+        $t->string('a');
+        $t->engine(Schema\ClickHouse\Engine::ReplicatedMergeTree, '/clickhouse/{shard}', '{replica}')->orderBy(['a']);
+    },
+    'engine memory' => fn ($t) => $t->string('a')->table->engine(Schema\ClickHouse\Engine::Memory),
+    'order by' => function ($t) {
+        $t->string('a');
+        $t->integer('b');
+        $t->orderBy(['a', 'b'])->partitionBy('toYYYYMM(at)')->sampleBy('b')->ttl('at + INTERVAL 30 DAY');
+    },
+    'order by raw' => function ($t) {
+        $t->string('a');
+        $t->orderByRaw('(a, cityHash64(b))')->settings(['index_granularity' => 8192, 'allow_nullable_key' => true, 'ratio' => 0.5, 'name' => 'x']);
+    },
+    'settings bad' => fn ($t) => $t->settings(['bad name' => 1]),
+    'everything' => function ($t) {
+        $t->id();
+        $t->string('name', 120)->nullable()->default("o'k")->comment('the name');
+        $t->integer('team_id')->unsigned();
+        $t->decimal('price', 8, 2)->default(1.5);
+        $t->boolean('live')->default(true);
+        $t->datetime('at', 3)->nullable();
+        $t->json('data')->nullable();
+        $t->timestamps();
+        $t->index(['name'], 'by_name', lengths: ['name' => 50]);
+        $t->uniqueIndex(['team_id', 'name']);
+    },
+];
+foreach ($schemas as $dialect => $schema) {
+    foreach ($fills as $name => $fill) {
+        emit("schema $dialect fill $name", blueprinted($schema, $fill));
+    }
+}
+
+// Every column type at every size, added and modified.
+foreach ($schemas as $dialect => $schema) {
+    foreach (ColumnType::cases() as $type) {
+        emit("schema $dialect type {$type->value}", array_map(fn (?int $size): array => [
+            blueprinted($schema, fn ($t) => $t->addColumn('c', $type, $size)),
+            blueprinted($schema, fn ($t) => $t->modifyColumn('c', $type, $size)->nullable()),
+        ], [null, 0, 1, 6, 255, -1]));
+        emit("schema $dialect column {$type->value}", array_map(fn (array $arguments): array => outcome(function () use ($schema, $type, $arguments): array {
+            $table = new CorpusTable($schema, 't');
+            $table->put('columns', [new Schema\Column($table, 'c', $type, ...$arguments)]);
+
+            return [outcome(fn () => $table->create()), outcome(fn () => $table->alter())];
+        }), [[], [10], [null, 5], [null, 12, 4], [null, null, 3], [null, null, null, 4326], [null, null, null, null, 3], [null, null, null, null, null, true], [0, 0, 0, 0, 0, true], [-5, -5, -5, -5, -5]]));
+    }
+}
+
+// Defaults: every kind of value, at each precision a float is written with.
+$defaults = [
+    'x', '', "o'k", 'back\\slash', "é", "\xe9", "\xff\xfe", "nul\0l", '0', '1.50', ' padded ', 0, 1, -5, PHP_INT_MAX, PHP_INT_MIN,
+    1.5, 0.0, -0.0, 0.1 + 0.2, 1e100, 1.0e-10, 100000.0, 1e15, 1e21, 123456789.12345678, INF, -INF, NAN, true, false, null,
+    [1, 2], [], new stdClass(), ColumnType::String,
+    new class () {
+        public function __toString(): string
+        {
+            return "it's text";
+        }
+    },
+];
+foreach ([-1, 14, 17, 5] as $precision) {
+    ini_set('precision', (string) $precision);
+    foreach ($schemas as $dialect => $schema) {
+        emit("schema $dialect defaults at precision $precision", array_map(fn (mixed $default): array => [
+            blueprinted($schema, fn ($t) => $t->string('s')->default($default)),
+            blueprinted($schema, fn ($t) => $t->float('f')->nullable()->default($default)),
+            blueprinted($schema, fn ($t) => $t->integer('n')->autoIncrement()->primary()->default($default)),
+        ], $defaults));
+    }
+}
+ini_restore('precision');
+
+// Names and text, in every place a blueprint holds one.
+$names = [
+    'users', 'my_db.users', 'a.b.c', '', ' ', 'sp ace', 'a`b', 'a"b', "a'b", 'a\\b', 'x; DROP TABLE y', '*', 'é', "\xe9", "\xff\xfe",
+    "nul\0l", '123', '0', 'UPPER', str_repeat('n', 300), '.', 'a.', '.a', 'a..b', "line\nbreak", '--', '/*c*/', '$', "\u{a0}pad\u{a0}", "\x85x\x85", 'ǅ',
+];
+foreach ($schemas as $dialect => $schema) {
+    foreach ($names as $name) {
+        // MongoDB's statements are JSON: see the known difference at the end.
+        if ($dialect === 'mongo' && ! mb_check_encoding($name, 'UTF-8')) {
+            continue;
+        }
+        emit("schema $dialect named " . bin2hex($name), [
+            blueprinted($schema, fn ($t) => $t->string('s'), $name),
+            blueprinted($schema, fn ($t) => $t->string($name)->comment($name)->default($name)),
+            blueprinted($schema, fn ($t) => $t->string('s')->after($name)),
+            blueprinted($schema, fn ($t) => $t->string('s')->collation($name)),
+            blueprinted($schema, fn ($t) => $t->string('s')->defaultRaw($name)),
+            blueprinted($schema, fn ($t) => $t->integer('n')->generatedAs($name)),
+            blueprinted($schema, fn ($t) => $t->integer('n')->check($name)),
+            blueprinted($schema, fn ($t) => $t->string('s')->userType($name)),
+            blueprinted($schema, fn ($t) => $t->enum('e', [$name, $name])),
+            blueprinted($schema, fn ($t) => $t->index([$name], $name)),
+            blueprinted($schema, fn ($t) => $t->index([$name])),
+            blueprinted($schema, fn ($t) => $t->index(['a'], 'i', $name, $name)),
+            blueprinted($schema, fn ($t) => $t->index([$name], 'i', lengths: [$name => 3], orders: [$name => 'desc'], collations: [$name => 'C'])),
+            blueprinted($schema, fn ($t) => $t->index(['a'], 'i', orders: ['a' => $name])),
+            blueprinted($schema, fn ($t) => $t->index(['a'], 'i', collations: ['a' => $name])),
+            blueprinted($schema, fn ($t) => $t->addIndex($name, [$name], rawColumns: [$name])),
+            blueprinted($schema, fn ($t) => $t->check($name, $name)),
+            blueprinted($schema, fn ($t) => $t->renameColumn($name, $name)->dropColumn($name)->dropIndex($name)),
+            blueprinted($schema, fn ($t) => $t->foreignKey($name)->references($name)->on($name)),
+            blueprinted($schema, fn ($t) => $t->dropForeignKey($name)),
+            blueprinted($schema, fn ($t) => $t->primary([$name, 'b'])),
+            blueprinted($schema, fn ($t) => $t->rawColumn($name)->rawIndex($name)),
+            blueprinted($schema, fn ($t) => $t->partitionByRange($name)),
+            blueprinted($schema, fn ($t) => $t->partitionByHash($name, 4)),
+            blueprinted($schema, fn ($t) => $t->string('a')->table->engine(Schema\ClickHouse\Engine::ReplacingMergeTree, $name)->orderBy([$name])),
+            blueprinted($schema, fn ($t) => $t->string('a')->table->orderByRaw($name)->ttl($name)),
+            blueprinted($schema, fn ($t) => $t->string('a')->table->partitionBy($name)->sampleBy($name)),
+            blueprinted($schema, fn ($t) => $t->string('a')->table->settings([$name => $name])),
+            blueprinted($schema, fn ($t) => $t->string('a')->table->settings(['k' => $name])),
+            blueprinted($schema, fn ($t) => $t->string('a')->codec($name)->ttl($name)),
+            outcome(fn () => $schema->table($name)->drop()),
+            outcome(fn () => $schema->table($name)->dropIfExists()),
+            outcome(fn () => $schema->table($name)->truncate()),
+            outcome(fn () => $schema->table($name)->rename($name)),
+            outcome(fn () => $schema->table('t')->rename($name)),
+        ]);
+    }
+}
+
+// A blueprint's properties set past the fluent methods: what a schema reads is not validated.
+/** An object of $class with $properties set past what its constructor validates. */
+function made(string $class, array $properties): object
+{
+    $reflection = new ReflectionClass($class);
+    $object = $reflection->newInstanceWithoutConstructor();
+    foreach ($properties as $property => $value) {
+        if ($value !== 'unset') {
+            $reflection->getProperty($property)->setValue($object, $value);
+        }
+    }
+
+    return $object;
+}
+
+function indexed(array $properties): Schema\Index
+{
+    return made(Schema\Index::class, $properties + ['name' => 'i', 'columns' => ['a'], 'type' => IndexType::Index, 'lengths' => [], 'orders' => [], 'method' => '', 'operatorClass' => '', 'collations' => [], 'rawColumns' => [], 'algorithm' => null, 'algorithmArgs' => [], 'granularity' => null]);
+}
+
+$puts = [
+    'columns not columns' => ['columns', ['x', 1, null]],
+    'columns of another kind' => ['columns', [new stdClass()]],
+    'index by hand' => ['indexes', [indexed(['columns' => ['a', 'b'], 'type' => IndexType::Fulltext, 'lengths' => ['a' => 2], 'orders' => ['b' => 'desc'], 'method' => 'gin', 'operatorClass' => 'ops', 'collations' => ['a' => 'C'], 'rawColumns' => ['raw']])]],
+    'index of mixed values' => ['indexes', [indexed(['columns' => [1, 2, true], 'lengths' => [1 => '7', 'x' => null], 'orders' => [1 => 'DESC', 2 => 5], 'collations' => [1 => 9]])]],
+    'index bad order' => ['indexes', [indexed(['orders' => ['a' => 'up']])]],
+    'index bad collation' => ['indexes', [indexed(['collations' => ['a' => 'x;y']])]],
+    'index unnamed' => ['indexes', [indexed(['name' => '', 'columns' => []])]],
+    'index skipping' => ['indexes', [indexed(['algorithm' => Schema\ClickHouse\IndexAlgorithm::cases()[0], 'algorithmArgs' => [1, 'x', 0.5, true, "it's"], 'granularity' => 0])]],
+    'checks by hand' => ['checks', [made(Schema\CheckConstraint::class, ['name' => 'c', 'expression' => 'x > 0; DROP']), made(Schema\CheckConstraint::class, ['name' => '', 'expression' => ''])]],
+    'renames by hand' => ['renameColumns', [made(Schema\RenameColumn::class, ['from' => 'a', 'to' => 'b']), made(Schema\RenameColumn::class, ['from' => '', 'to' => 'é'])]],
+    'drop columns of mixed values' => ['dropColumns', [1, 2.5, true, 'x']],
+    'drop indexes' => ['dropIndexes', ['a', 'b.c', 7]],
+    'drop foreign keys' => ['dropForeignKeys', ['a', 7]],
+    'raw column defs' => ['rawColumnDefs', ['x INT', '', 3]],
+    'raw index defs' => ['rawIndexDefs', ['KEY k (x)', 4]],
+    'composite primary' => ['compositePrimaryKey', ['a', 'b.c', 5]],
+    'order by' => ['orderBy', ['a', 'b`c', 6]],
+    'partition type' => ['partitionType', Schema\PartitionType::List],
+    'partition expression' => ['partitionExpression', 'x; y'],
+    'partition count' => ['partitionCount', -3],
+    'engine' => ['engine', Schema\ClickHouse\Engine::SummingMergeTree],
+    'engine args' => ['engineArgs', ['a', 1, "it's"]],
+    'ttl' => ['ttl', 'at + 1'],
+    'settings' => ['settings', ['a' => '1', 5 => 'x', 'b c' => "it's", 'n' => null, 'i' => 3]],
+    'keyed lists' => ['dropColumns', ['x' => 'a', 9 => 'b']],
+];
+foreach ($schemas as $dialect => $schema) {
+    foreach (['table' => CorpusTable::class, 'clickhouse table' => CorpusClickHouseTable::class] as $kind => $class) {
+        emit("schema $dialect put on a $kind", array_map(fn (array $put): array => outcome(function () use ($schema, $class, $put): array {
+            $table = new $class($schema, 't');
+            $table->string('a');
+            $table->put($put[0], $put[1]);
+            if ($put[0] === 'partitionType' || $put[0] === 'partitionCount') {
+                $table->put('partitionType', Schema\PartitionType::Hash)->put('partitionExpression', 'a')->put($put[0], $put[1]);
+            }
+
+            return [outcome(fn () => $table->create()), outcome(fn () => $table->alter()), outcome(fn () => $schema->compileCreatePartitioning($table))];
+        }), $puts));
+    }
+    emit("schema $dialect clickhouse properties", outcome(function () use ($schema): array {
+        $table = new CorpusClickHouseTable($schema, 't');
+        $table->string('a');
+        $table->put('sampleBy', 'a')->put('orderByRaw', 'tuple()');
+
+        return [outcome(fn () => $table->create()), outcome(fn () => $table->alter())];
+    }));
+}
+
+// A blueprint made by one dialect, compiled by every schema; and one with no schema.
+$mixed = [];
+foreach ($schemas as $dialect => $schema) {
+    $table = $schema->table('events');
+    $table->id();
+    $table->string('name', 120)->nullable()->default("o'k");
+    $table->decimal('price', 8, 2)->default(1.5);
+    $table->enum('status', ['draft', 'live']);
+    $table->timestamps();
+    $table->index(['name'], 'by_name', lengths: ['name' => 50], orders: ['name' => 'desc']);
+    $table->uniqueIndex(['name', 'status']);
+    $mixed[$dialect] = $table;
+}
+foreach ($schemas as $dialect => $schema) {
+    foreach ($mixed as $made => $table) {
+        emit("schema $dialect compiles a $made table", [
+            outcome(fn () => $schema->compileCreate($table)), outcome(fn () => $schema->compileCreate($table, true)), outcome(fn () => $schema->compileCreate($table, false)),
+            outcome(fn () => $schema->compileCreate(ifNotExists: true, table: $table)), outcome(fn () => $schema->compileAlter($table)),
+            outcome(fn () => $schema->compileCreatePartitioning($table)), outcome(fn () => $table->createIfNotExists()), outcome(fn () => $table->create(true)),
+            outcome(fn () => $schema->compileCreate($table, 1)), outcome(fn () => $schema->compileCreate($table, '')), outcome(fn () => $schema->compileCreate($table, null)),
+        ]);
+    }
+    emit("schema $dialect compiles what is not a table", [
+        outcome(fn () => $schema->compileCreate(new stdClass())), outcome(fn () => $schema->compileCreate('t')), outcome(fn () => $schema->compileCreate(null)),
+        outcome(fn () => $schema->compileAlter([])), outcome(fn () => $schema->compileCreate()), outcome(fn () => $schema->compileAlter()),
+        outcome(fn () => $schema->compileCreate(new Schema\Table())), outcome(fn () => $schema->compileAlter(new Schema\Table(null, 'bare'))),
+    ]);
+}
+emit('schema table without a schema', [
+    outcome(fn () => (new Schema\Table(null, 't'))->create()), outcome(fn () => (new Schema\Table())->alter()), outcome(fn () => (new Schema\Table\MySQL(null, 't'))->drop()),
+    outcome(fn () => (new Schema\Table(null, 't'))->truncate()), outcome(fn () => (new Schema\Table(null, 't'))->rename('u')),
+]);
+emit('schema table classes', array_map(fn (Schema $schema): array => [$schema->table('t')::class, $schema->table('t')->name, $schema->table('')->name, $schema->table(5)->name, outcome(fn () => $schema->table()), outcome(fn () => $schema->table([]))], $schemas));
+
+// Every statement method that takes names, with every name.
+$special = ['__construct', 'setExecutor', 'table', 'compileCreate', 'compileAlter', 'compileCreatePartitioning', 'createIndex', 'createProcedure', 'createTrigger', 'createView', 'createOrReplaceView', 'createMaterializedView', 'createCollation', 'createType', 'addForeignKey'];
+foreach ($schemas as $dialect => $schema) {
+    $methods = (new ReflectionClass($schema))->getMethods(ReflectionMethod::IS_PUBLIC);
+    usort($methods, fn (ReflectionMethod $a, ReflectionMethod $b): int => strcmp($a->getName(), $b->getName()));
+    foreach ($methods as $method) {
+        if (in_array($method->getName(), $special, true)) {
+            continue;
+        }
+        $arguments = fn (string $name, bool $flag, int $number): array => array_map(fn (ReflectionParameter $parameter): mixed => match (ltrim((string) $parameter->getType(), '?')) {
+            'bool' => $flag,
+            'int' => $number,
+            default => $name,
+        }, $method->getParameters());
+        emit("schema $dialect {$method->getName()}", array_map(fn (string $name): array => [
+            outcome(fn () => $method->invokeArgs($schema, $arguments($name, true, 7))),
+            outcome(fn () => $method->invokeArgs($schema, $arguments($name, false, -1))),
+        ], $names));
+        emit("schema $dialect {$method->getName()} arguments", [
+            outcome(fn () => $method->invoke($schema)), outcome(fn () => $method->invokeArgs($schema, $arguments('x', true, 1) + [9 => 'extra'] === [] ? [] : array_slice($arguments('x', true, 1), 0, -1))),
+            outcome(fn () => $method->invokeArgs($schema, array_map(fn (): int => 5, $method->getParameters()))),
+            outcome(fn () => $method->invokeArgs($schema, array_map(fn (): float => 1.5, $method->getParameters()))),
+            outcome(fn () => $method->invokeArgs($schema, array_map(fn (): bool => true, $method->getParameters()))),
+            outcome(fn () => $method->invokeArgs($schema, array_map(fn (): mixed => null, $method->getParameters()))),
+            outcome(fn () => $method->invokeArgs($schema, array_map(fn (): array => [], $method->getParameters()))),
+        ]);
+    }
+}
+
+// The statements with arguments of their own.
+foreach ($schemas as $dialect => $schema) {
+    emit("schema $dialect createIndex", [
+        outcome(fn () => $schema->createIndex('t', 'i', ['a'])), outcome(fn () => $schema->createIndex('t', 'i', ['a', 'b.c'], true)),
+        outcome(fn () => $schema->createIndex('t', 'i', [])), outcome(fn () => $schema->createIndex('t', 'i', [], rawColumns: ['(lower(a))', 'b DESC'])),
+        outcome(fn () => $schema->createIndex('db.t', 'my.i', ['a'], unique: true, type: 'fulltext')), outcome(fn () => $schema->createIndex('t', 'i', ['a'], type: 'fulltext')),
+        outcome(fn () => $schema->createIndex('t', 'i', ['a'], type: 'spatial')), outcome(fn () => $schema->createIndex('t', 'i', ['a'], type: 'unique')),
+        outcome(fn () => $schema->createIndex('t', 'i', ['a'], type: 'index')), outcome(fn () => $schema->createIndex('t', 'i', ['a'], type: 'nope')),
+        outcome(fn () => $schema->createIndex('t', 'i', ['a'], type: "\xff")), outcome(fn () => $schema->createIndex('t', 'i', ['a'], true, 'nope')),
+        outcome(fn () => $schema->createIndex('t', 'i', ['a'], method: 'gin')), outcome(fn () => $schema->createIndex('t', 'i', ['a'], method: 'hnsw', operatorClass: 'vector_cosine_ops')),
+        outcome(fn () => $schema->createIndex('t', 'i', ['a'], method: 'bTree; x')), outcome(fn () => $schema->createIndex('t', 'i', ['a'], operatorClass: 'ops; x')),
+        outcome(fn () => $schema->createIndex('t', 'i', ['a', 'b'], lengths: ['a' => 10, 'b' => '5', 'c' => 1])), outcome(fn () => $schema->createIndex('t', 'i', ['a'], lengths: ['a' => 7.0])),
+        outcome(fn () => $schema->createIndex('t', 'i', ['a', 'b', 'c'], orders: ['a' => 'desc', 'b' => 'ASC', 'c' => 'Desc'])), outcome(fn () => $schema->createIndex('t', 'i', ['a'], orders: ['a' => 'down'])),
+        outcome(fn () => $schema->createIndex('t', 'i', ['a'], collations: ['a' => 'utf8mb4_bin'])), outcome(fn () => $schema->createIndex('t', 'i', ['a'], collations: ['a' => 'en-US'])),
+        outcome(fn () => $schema->createIndex('t', 'i', ['a', 'b'], false, '', 'btree', 'ops', ['a' => 1], ['a' => 'asc'], ['b' => 'C'], ['raw'])),
+        outcome(fn () => $schema->createIndex('t', 'i', ['a'], concurrently: true)), outcome(fn () => $schema->createIndex('t', 'i', ['a'], unique: true, concurrently: true, method: 'btree')),
+        outcome(fn () => $schema->createIndex('t', 'i', ['1', 2], orders: [1 => 'desc', '2' => 'desc'], lengths: [2 => 4])), outcome(fn () => $schema->createIndex('t', 'i', ['a'], orders: ['a' => null], lengths: ['a' => null])),
+        outcome(fn () => $schema->createIndex('t', 'i', 'a')), outcome(fn () => $schema->createIndex('t', 'i')), outcome(fn () => $schema->createIndex('t', 'i', ['a'], 'yes')), outcome(fn () => $schema->createIndex('t', 'i', ['a'], lengths: 'x')),
+        outcome(fn () => $schema->createIndex('t', 'i', [['a']])), outcome(fn () => $schema->createIndex('t', 'i', ['a'], nope: 1)),
+    ]);
+    emit("schema $dialect foreign keys", array_merge(
+        [outcome(fn () => $schema->addForeignKey('t', 'fk', 'c', 'other', 'id')), outcome(fn () => $schema->addForeignKey('db.t', 'my.fk', 'a.b', 'db.other', 'x.id', null, null))],
+        array_map(fn (ForeignKeyAction $action): array => [outcome(fn () => $schema->addForeignKey('t', 'fk', 'c', 'o', 'id', $action)), outcome(fn () => $schema->addForeignKey('t', 'fk', 'c', 'o', 'id', onUpdate: $action)), outcome(fn () => $schema->addForeignKey('t', 'fk', 'c', 'o', 'id', $action, $action))], ForeignKeyAction::cases()),
+        [outcome(fn () => $schema->addForeignKey('t', 'fk', 'c', 'o', 'id', 'CASCADE')), outcome(fn () => $schema->addForeignKey('t', 'fk', 'c', 'o', 'id', IndexType::Index)), outcome(fn () => $schema->addForeignKey('t', 'fk', 'c', 'o'))],
+    ));
+    emit("schema $dialect procedures", [
+        outcome(fn () => $schema->createProcedure('p', [], 'SELECT 1;')),
+        outcome(fn () => $schema->createProcedure('db.p', [[ParameterDirection::In, 'a', 'INT'], [ParameterDirection::Out, 'b', 'VARCHAR(10)'], [ParameterDirection::InOut, 'c.d', 'DOUBLE PRECISION']], "SELECT 'x';")),
+        outcome(fn () => $schema->createProcedure('p', [[ParameterDirection::In, 'a', 'INT; DROP']], '')), outcome(fn () => $schema->createProcedure('p', [[ParameterDirection::In, 'a', '']], '')),
+        outcome(fn () => $schema->createProcedure('p', [[ParameterDirection::In, 'a', "INT\n"]], 'x')), outcome(fn () => $schema->createProcedure('p', [[ParameterDirection::In, 'a', 'NUMERIC ( 10 , 2 )']], 'x')),
+        outcome(fn () => $schema->createProcedure('p', [[ParameterDirection::In, 'a', 'INT']], 'x $$ y')), outcome(fn () => $schema->createProcedure('p', [[ParameterDirection::In, 'a', 'INT']], 'x $body$ y')),
+        outcome(fn () => $schema->createProcedure('p', 'a', 'x')), outcome(fn () => $schema->createProcedure('p', [[ParameterDirection::In, 5, 'INT']], 'x')),
+    ]);
+    emit("schema $dialect triggers", array_merge(
+        array_merge(...array_map(fn (TriggerTiming $timing): array => array_map(fn (TriggerEvent $event): array => outcome(fn () => $schema->createTrigger('trg', 'db.t', $timing, $event, 'SET NEW.a = 1;')), TriggerEvent::cases()), TriggerTiming::cases())),
+        [outcome(fn () => $schema->createTrigger('my.trg', 't', TriggerTiming::Before, TriggerEvent::Insert, 'x $$ y')), outcome(fn () => $schema->createTrigger('trg', 't', TriggerTiming::Before, TriggerEvent::Insert, '')),
+            outcome(fn () => $schema->createTrigger('trg', 't', 'BEFORE', 'INSERT', 'x')), outcome(fn () => $schema->createTrigger('trg', 't', TriggerEvent::Insert, TriggerTiming::Before, 'x')),
+            outcome(fn () => $schema->dropTrigger('trg')), outcome(fn () => $schema->dropTrigger('trg', 't')), outcome(fn () => $schema->dropTrigger('my.trg', 'db.t')), outcome(fn () => $schema->dropTrigger('trg', null)), outcome(fn () => $schema->dropTrigger('trg', table: 'x`y'))],
+    ));
+    emit("schema $dialect postgres statements", [
+        outcome(fn () => $schema->createCollation('c', ['provider' => 'icu', 'locale' => 'und-u-ks-level1'])), outcome(fn () => $schema->createCollation('my.c', ['provider' => "it's"], false)),
+        outcome(fn () => $schema->createCollation('c', [])), outcome(fn () => $schema->createCollation('c', ['pro vider' => 'icu'])), outcome(fn () => $schema->createCollation('c', ['a', 'b'])),
+        outcome(fn () => $schema->createCollation('c', ['n' => 5, 'f' => 1.5, 't' => true], deterministic: true)), outcome(fn () => $schema->createCollation('c', ['a' => ['x'], 'b' => null])),
+        outcome(fn () => $schema->createType('mood', ['happy', 'sad', "it's", 'back\\slash'])), outcome(fn () => $schema->createType('my.mood', [])), outcome(fn () => $schema->createType('mood', [1, 2.5, true, null])),
+        outcome(fn () => $schema->createSequence('s')), outcome(fn () => $schema->createSequence('s', 10)), outcome(fn () => $schema->createSequence('my.s', -5, 0)), outcome(fn () => $schema->createSequence('s', incrementBy: 3)),
+        outcome(fn () => $schema->createSequence('s', '12', 2.0)), outcome(fn () => $schema->createSequence('s', 'x')), outcome(fn () => $schema->createSequence('s', PHP_INT_MAX, PHP_INT_MIN)),
+        outcome(fn () => $schema->alterColumnType('t', 'c', 'VARCHAR(10)')), outcome(fn () => $schema->alterColumnType('t', 'c', 'INTEGER', 'c::integer')), outcome(fn () => $schema->alterColumnType('t', 'c', 'INTEGER', using: 'c; DROP')),
+        outcome(fn () => $schema->alterColumnType('t', 'c', 'INT; x')), outcome(fn () => $schema->alterColumnType('t', 'c', 'INTEGER', 'a -- b')), outcome(fn () => $schema->alterColumnType('t', 'c', 'INTEGER', 'a /* b')),
+        outcome(fn () => $schema->alterColumnNullable('t', 'c', true)), outcome(fn () => $schema->alterColumnNullable('db.t', 'a.b', false)), outcome(fn () => $schema->alterColumnNullable('t', 'c', 0)),
+        outcome(fn () => $schema->changeColumn('t', 'a', 'b', 'VARCHAR(10) NOT NULL')), outcome(fn () => $schema->modifyColumn('t', 'a', 'TEXT')),
+    ]);
+    emit("schema $dialect comments", array_map(fn (string $comment): array => [
+        outcome(fn () => $schema->commentOnTable('t', $comment)), outcome(fn () => $schema->commentOnColumn('t', 'c', $comment)), outcome(fn () => $schema->createPartition('t', 'p', $comment)),
+    ], ['plain', '', "it's", 'back\\slash', "\\'", "é", "\xff", "line\nbreak", 'VALUES LESS THAN (10)', "FOR VALUES FROM ('a') TO ('b')"]));
+}
+
+// Views: the builder is PHP's, and its bindings ride along.
+$builders = [
+    'mysql' => fn () => (new Builder\MySQL())->from('users')->filter([Query::equal('active', [true]), Query::greaterThan('age', 18)]),
+    'postgres' => fn () => (new Builder\PostgreSQL())->from('users')->select(['name'])->filter([Query::equal('name', ["o'k", "\xff"])]),
+    'sqlite' => fn () => (new Builder\SQLite())->from('users'),
+    'clickhouse' => fn () => (new Builder\ClickHouse())->from('events')->filter([Query::equal('status', ['active'])]),
+    'mongo' => fn () => (new Builder\MongoDB())->from('users')->select(['name', 'email'])->filter([Query::equal('active', [true])]),
+    'unbuildable' => fn () => new Builder\MySQL(),
+];
+foreach ($schemas as $dialect => $schema) {
+    foreach ($builders as $made => $builder) {
+        emit("schema $dialect views over a $made builder", [
+            outcome(fn () => $schema->createView('v', $builder())), outcome(fn () => $schema->createView('db.my`v', $builder())), outcome(fn () => $schema->createOrReplaceView('v', $builder())),
+            outcome(fn () => $schema->createMaterializedView('mv', $builder())), outcome(fn () => $schema->createMaterializedView('mv', $builder(), 'target.t', false)),
+            outcome(fn () => $schema->createMaterializedView('mv', $builder(), ifNotExists: false)),
+        ]);
+    }
+    emit("schema $dialect views", [
+        outcome(fn () => $schema->createMaterializedView('mv', 'SELECT 1')), outcome(fn () => $schema->createMaterializedView('mv', "SELECT '\xff'", 't')), outcome(fn () => $schema->createMaterializedView('mv', '', null, true)),
+        outcome(fn () => $schema->createMaterializedView('mv', 5)), outcome(fn () => $schema->createMaterializedView('mv', null)), outcome(fn () => $schema->createMaterializedView('mv', new stdClass())),
+        outcome(fn () => $schema->createMaterializedView('mv', [])), outcome(fn () => $schema->dropMaterializedView('mv')), outcome(fn () => $schema->dropMaterializedView('db.mv', false)),
+        outcome(fn () => $schema->createView('v', 'SELECT 1')), outcome(fn () => $schema->createView('v', null)), outcome(fn () => $schema->createView('v', new stdClass())), outcome(fn () => $schema->createView('v')),
+        outcome(fn () => $schema->createOrReplaceView('v', $schema)),
+    ]);
+}
+
+// The executor: set on the schema, carried by every statement it compiles from then on.
+foreach ($schemas as $dialect => $schema) {
+    emit("schema $dialect executor", outcome(function () use ($schema): array {
+        $fresh = new ($schema::class)();
+        $before = $fresh->table('t')->drop();
+        $ran = [];
+        $returned = $fresh->setExecutor(function (Statement $statement) use (&$ran): array {
+            $ran[] = $statement->query;
+
+            return ['ran' => count($ran)];
+        });
+        $table = $fresh->table('t');
+        $table->string('a');
+        $copy = clone $fresh;
+        $second = $fresh->setExecutor(fn (Statement $statement): int => 42);
+
+        return [
+            $returned === $fresh, $second === $fresh, outcome(fn () => $before->execute()), outcome(fn () => $schema->compileDrop('t', false)->execute()),
+            $copy->compileDrop('a', true)->execute(), $copy->compileTruncate('b')->execute(), $table->create()->execute(), $fresh->compileRename('a', 'b')->execute(),
+            $ran, $fresh->compileDrop('t', false)->withExecutor(fn (): int => 7)->execute(),
+            outcome(fn () => $fresh->setExecutor('strlen')), outcome(fn () => $fresh->setExecutor(null)), outcome(fn () => $fresh->setExecutor()), outcome(fn () => $fresh->setExecutor(strlen(...)) === $fresh),
+        ];
+    }));
+}
+
+emit('schema instances', array_map(fn (Schema $schema): array => array_merge(
+    [$schema instanceof Schema, $schema instanceof Schema\SQL],
+    array_map(fn (string $feature): bool => $schema instanceof ('Utopia\\Query\\Schema\\Feature\\' . $feature), ['AnalyzeTable', 'ColumnComments', 'CreatePartition', 'Databases', 'DropPartition', 'ForeignKeys', 'MaterializedViews', 'Partitioning', 'Procedures', 'RenameIndex', 'ReplaceView', 'Sequences', 'TableComments', 'Triggers', 'Types', 'Views']),
+), $schemas));
+emit('schema signatures', array_map(function (Schema $schema): array {
+    $signatures = [];
+    foreach ((new ReflectionClass($schema))->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+        if ($method->getName() !== '__construct') {
+            $signatures[$method->getName()] = array_map(fn (ReflectionParameter $parameter): array => [$parameter->getName(), $parameter->isOptional(), $parameter->isOptional() ? exported($parameter->getDefaultValue()) : null], $method->getParameters());
+        }
+    }
+    ksort($signatures);
+
+    return $signatures;
+}, $schemas));
+emit('schema abstract classes', [outcome(fn () => new Schema()), outcome(fn () => new Schema\SQL()), (new ReflectionClass(Schema::class))->isAbstract(), (new ReflectionClass(Schema\SQL::class))->isAbstract()]);
+emit('schema typed parameter', outcome(fn () => (fn (Schema $any, Schema\SQL $sql, Schema\Feature\Views $views): string => $views->dropView('v')->query)($schemas['mongo'], $schemas['sqlite'], $schemas['clickhouse'])));
+emit('schema subclass', outcome(function (): array {
+    $own = new class () extends Schema\MySQL {
+        public function compileDrop(string $name, bool $ifExists): Statement
+        {
+            return new Statement('-- ' . parent::compileDrop($name, $ifExists)->query, []);
+        }
+    };
+
+    return [$own->table('t')->drop(), $own->table('t')->dropIfExists(), $own->table('t')->truncate(), $own->table('t')::class, $own instanceof Schema\SQL];
+}));
+
 // --- The classes themselves ----------------------------------------------------------------
 
 emit('cases', array_map(fn (Type $type): array => [$type->name, $type->value], Type::cases()));
@@ -1704,5 +2275,50 @@ if ($consulted === $requested) {
 $chained = outcome(fn () => (new AST\Parser())->parse(Tokenizer\Tokenizer::filter((new Tokenizer\Tokenizer())->tokenize('select ' . str_repeat('not ', 1100) . 'a'))))['throws'] ?? null;
 if (($chained === null) === $requested) {
     fwrite(STDERR, 'A chain of 1100 NOTs ' . ($chained === null ? 'parses' : 'is refused') . ': the known difference changed' . PHP_EOL);
+    exit(1);
+}
+
+// The schemas. PHP's dialects are built from protected steps (quote(), compileColumnType(), ...) that a
+// subclass can override or call; the extension's compile a statement whole and have only the public methods.
+// The abstract Schema has none of its own for the same reason.
+$steps = [method_exists(Schema\MySQL::class, 'quote'), method_exists(Schema\MySQL::class, 'compileColumnType'), method_exists(Schema::class, 'compileCreate')];
+if ($steps !== [! $requested, ! $requested, ! $requested]) {
+    fwrite(STDERR, 'The protected steps of a schema are ' . json_encode($steps) . ': the known difference changed' . PHP_EOL);
+    exit(1);
+}
+// The Feature interfaces declare no methods on the extension; the classes that implement them have every one.
+$declared = (new ReflectionClass(Schema\Feature\Views::class))->getMethods() !== [];
+if ($declared === $requested) {
+    fwrite(STDERR, 'Feature\\Views does ' . ($declared ? '' : 'not ') . 'declare its methods: the known difference changed' . PHP_EOL);
+    exit(1);
+}
+// PHP reads from a blueprint only what the statement uses; the extension reads all of it first. The two differ
+// only on a blueprint holding what its fluent methods refuse, which takes a subclass or reflection to make.
+$halfMade = new CorpusTable($schemas['mysql'], 't');
+$halfMade->put('checks', [made(Schema\CheckConstraint::class, ['name' => 'c'])]);
+$read = isset(outcome(fn () => $halfMade->alter())['throws']);
+if ($read !== $requested) {
+    fwrite(STDERR, 'ALTER TABLE does ' . ($read ? '' : 'not ') . 'read a check it does not write: the known difference changed' . PHP_EOL);
+    exit(1);
+}
+// PHP writes an index length as it is given; the extension takes a number.
+$length = outcome(fn () => $schemas['mysql']->createIndex('t', 'i', ['a'], lengths: ['a' => 'x'])->query);
+if (($length === ['value' => 'CREATE INDEX `i` ON `t` (`a`(x))']) === $requested) {
+    fwrite(STDERR, 'An index length that is not a number gives ' . json_encode($length) . ': the known difference changed' . PHP_EOL);
+    exit(1);
+}
+// PHP reads a procedure parameter's direction off anything, with a warning; the extension takes the enum.
+$direction = outcome(fn () => $schemas['mysql']->createProcedure('p', [['IN', 'a', 'INT']], 'x')->query);
+if (isset($direction['throws']) !== $requested) {
+    fwrite(STDERR, 'A procedure parameter without a ParameterDirection gives ' . json_encode($direction) . ': the known difference changed' . PHP_EOL);
+    exit(1);
+}
+// MongoDB's statements are JSON. PHP refuses a string that is not UTF-8 when it encodes it; the extension when
+// it reads it, so also where the statement does not use it.
+$unused = $schemas['mongo']->table('t');
+$unused->index(["\xff"], 'i');
+$refused = isset(outcome(fn () => $unused->create())['throws']);
+if ($refused !== $requested) {
+    fwrite(STDERR, 'A MongoDB blueprint with an unused string that is not UTF-8 is ' . ($refused ? '' : 'not ') . 'refused: the known difference changed' . PHP_EOL);
     exit(1);
 }
