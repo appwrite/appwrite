@@ -35,4 +35,4 @@ utopia-storage.workspace = true
 
 [package.metadata.utopia]
 category = "integrations"
-php-sync = "8a882f3c14b34f929ebb350738faa61695681c56"
+php-sync = "def1fe53b97cfa147e6864c9a9dc6aa7822f7e6b"

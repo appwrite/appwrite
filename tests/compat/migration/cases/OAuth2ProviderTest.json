@@ -1730,6 +1730,69 @@
           "op": "resource.from_array",
           "args": {
             "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "workos",
+            "array": {
+              "id": "workos",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_workos",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_workos"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDescription": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": [],
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "workos",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "workos",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
             "provider": "kakao",
             "array": {
               "id": "kakao",
