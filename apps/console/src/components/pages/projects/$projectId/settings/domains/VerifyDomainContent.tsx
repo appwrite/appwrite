@@ -419,7 +419,10 @@ export function VerifyDomainContent({
     nameservers,
   }).map((id) => ({ id, label: TAB_LABELS[id] }))
 
-  const normalize = (value: string) => value.trim().toLowerCase()
+  const normalize = (value: string) => {
+    const trimmed = value.trim().toLowerCase()
+    return trimmed.endsWith('.') ? trimmed.slice(0, -1) : trimmed
+  }
 
   // The server's check for the record of this type and value. There is at
   // most one CAA check, so it matches on type alone.
