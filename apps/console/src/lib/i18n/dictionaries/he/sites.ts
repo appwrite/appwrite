@@ -621,6 +621,7 @@ export const heSitesDictionary: Record<string, string> = {
   'Found:': 'נמצא:',
   'Wrong value': 'ערך שגוי',
   "Couldn't check": 'לא ניתן לבדוק',
+  Alternative: 'חלופה',
   'Point your domain': 'הפניית הדומיין',
   'Allow the SSL certificate': 'אישור תעודת ה-SSL',
   'Required · any one': 'חובה · אחת מהן',
