@@ -1,5 +1,6 @@
 #!/bin/sh
-# Package tests and parity corpus of every library in src/lib.rs, alone and together (see README).
+# Parity corpus of every library in src/lib.rs (see README): a switchable library against its PHP
+# package, alone and with all on; a library without PHP against tests/<name>.expected.jsonl.
 set -eu
 
 tests=crates/extension/tests
@@ -27,4 +28,14 @@ echo "== $all" >&2
 for library in $libraries; do
     _APP_EXTENSION_LIBRARIES=$all php "$tests/$library.php" > "$output/$library.all.jsonl"
     diff "$output/$library.php.jsonl" "$output/$library.all.jsonl"
+done
+
+for expected in "$tests"/*.expected.jsonl; do
+    library=$(basename "$expected" .expected.jsonl)
+    echo "== $library (no PHP)" >&2
+    if [ -d "packages/$library/tests" ]; then
+        vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php "packages/$library/tests"
+    fi
+    _APP_EXTENSION_LIBRARIES=$all php "$tests/$library.php" > "$output/$library.jsonl"
+    diff "$expected" "$output/$library.jsonl"
 done

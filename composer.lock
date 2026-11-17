@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "24acc20222cd5cc72413830ae0b647e5",
+    "content-hash": "b4967f83c04633b08ba59c763605ba2c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4714,16 +4714,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "10.1.2",
+            "version": "10.1.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "0f136bb85cf69e8310db135b3fc2da1360dbf726"
+                "reference": "74a59b3daab80f23b56c3630edd2a63a581dcb84"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/0f136bb85cf69e8310db135b3fc2da1360dbf726",
-                "reference": "0f136bb85cf69e8310db135b3fc2da1360dbf726",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/74a59b3daab80f23b56c3630edd2a63a581dcb84",
+                "reference": "74a59b3daab80f23b56c3630edd2a63a581dcb84",
                 "shasum": ""
             },
             "require": {
@@ -4781,10 +4781,10 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/10.1.2"
+                "source": "https://github.com/utopia-php/database/tree/10.1.4"
             },
-            "time": "2026-11-11T13:40:42+00:00",
-            "published-time": "2026-11-11T13:42:35+00:00"
+            "time": "2026-11-16T07:14:10+00:00",
+            "published-time": "2026-11-16T07:14:42+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -4849,16 +4849,16 @@
         },
         {
             "name": "utopia-php/video",
-            "version": "0.0.4",
+            "version": "0.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/video.git",
-                "reference": "7cb15b5ead80c498713d36369c2859043cc5ecbf"
+                "reference": "ae53ec411d721d2f97e019df50618f80a9f9a276"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/video/zipball/7cb15b5ead80c498713d36369c2859043cc5ecbf",
-                "reference": "7cb15b5ead80c498713d36369c2859043cc5ecbf",
+                "url": "https://api.github.com/repos/utopia-php/video/zipball/ae53ec411d721d2f97e019df50618f80a9f9a276",
+                "reference": "ae53ec411d721d2f97e019df50618f80a9f9a276",
                 "shasum": ""
             },
             "require": {
@@ -4871,7 +4871,7 @@
                 "laravel/pint": "1.*",
                 "phpstan/phpstan": "^2.0",
                 "phpunit/phpunit": "11.*",
-                "swoole/ide-helper": "6.2.4"
+                "swoole/ide-helper": "6.2.5"
             },
             "suggest": {
                 "ext-swoole": "Needed to run the library inside Swoole coroutines."
@@ -4907,10 +4907,10 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/video/issues",
-                "source": "https://github.com/utopia-php/video/tree/0.0.4"
+                "source": "https://github.com/utopia-php/video/tree/0.0.6"
             },
-            "time": "2026-11-03T16:45:03+00:00",
-            "published-time": "2026-11-03T16:46:13+00:00"
+            "time": "2026-11-17T17:29:58+00:00",
+            "published-time": "2026-11-17T17:30:11+00:00"
         },
         {
             "name": "web-auth/cose-lib",
@@ -5219,16 +5219,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "5.20.0",
+            "version": "5.20.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "9334947ed6eaad4f43ecf166ee46bb775c14028b"
+                "reference": "8310c19cf647f48fdf12333b38a28692f7a19c38"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/9334947ed6eaad4f43ecf166ee46bb775c14028b",
-                "reference": "9334947ed6eaad4f43ecf166ee46bb775c14028b",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/8310c19cf647f48fdf12333b38a28692f7a19c38",
+                "reference": "8310c19cf647f48fdf12333b38a28692f7a19c38",
                 "shasum": ""
             },
             "require": {
@@ -5266,10 +5266,10 @@
             "description": "SDK generator for Appwrite APIs across multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/5.20.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/5.20.6"
             },
-            "time": "2026-11-13T12:05:35+00:00",
-            "published-time": "2026-11-13T13:01:49+00:00"
+            "time": "2026-11-17T18:03:56+00:00",
+            "published-time": "2026-11-17T18:06:34+00:00"
         },
         {
             "name": "brianium/paratest",

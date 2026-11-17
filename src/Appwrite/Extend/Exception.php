@@ -51,6 +51,7 @@ class Exception extends \Exception
     public const string GENERAL_PHONE_DISABLED = 'general_phone_disabled';
     public const string GENERAL_PWNED_PASSWORDS_UNAVAILABLE = 'general_pwned_passwords_unavailable';
     public const string GENERAL_CACHE_UNAVAILABLE = 'general_cache_unavailable';
+    public const string GENERAL_EMBEDDING_UNAVAILABLE = 'general_embedding_unavailable';
     public const string GENERAL_ARGUMENT_INVALID = 'general_argument_invalid';
     public const string GENERAL_COLUMN_QUERY_LIMIT_EXCEEDED = 'general_column_query_limit_exceeded';
     public const string GENERAL_ATTRIBUTE_QUERY_LIMIT_EXCEEDED = 'general_attribute_query_limit_exceeded';
@@ -490,6 +491,7 @@ class Exception extends \Exception
     /** Reviews */
     public const string REVIEW_NOT_FOUND = 'review_not_found';
     public const string REVIEW_CHAT_NOT_FOUND = 'review_chat_not_found';
+    public const string REVIEW_LEARNING_NOT_FOUND = 'review_learning_not_found';
     public const string REVIEW_STATUS_INVALID = 'review_status_invalid';
     public const string REVIEW_REPOSITORY_ALREADY_EXISTS = 'review_repository_already_exists';
 

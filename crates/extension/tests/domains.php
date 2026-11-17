@@ -1,19 +1,15 @@
 <?php
 
-// Parity corpus for Utopia\Domains\Domain. Run it on the PHP class and on the utopia
-// extension's (_APP_EXTENSION_LIBRARIES=domains), and diff stdout: every line must match.
-// Stderr names the implementation that ran.
+// Parity corpus for Utopia\Domains\Domain, which only the utopia extension provides. Its stdout
+// must match domains.expected.jsonl, the output of the PHP class it replaced (utopia-php/domains
+// 4.4). The validators and the registrar stay PHP.
 
 require __DIR__ . '/../../../vendor/autoload.php';
 
 use Utopia\Domains\Domain;
 
-$internal = (new ReflectionClass(Domain::class))->isInternal();
-fwrite(STDERR, 'Utopia\\Domains\\Domain: ' . ($internal ? 'utopia extension' : 'PHP') . PHP_EOL);
-// A run meant for the extension that gets the PHP class would compare PHP with PHP and pass.
-$requested = in_array('domains', array_map(trim(...), explode(',', getenv('_APP_EXTENSION_LIBRARIES') ?: '')), true);
-if ($internal !== $requested) {
-    fwrite(STDERR, '_APP_EXTENSION_LIBRARIES ' . ($requested ? 'names' : 'does not name') . ' domains, but the other implementation loaded' . PHP_EOL);
+if (!(new ReflectionClass(Domain::class))->isInternal()) {
+    fwrite(STDERR, 'Utopia\\Domains\\Domain is not the utopia extension\'s' . PHP_EOL);
     exit(1);
 }
 
@@ -201,6 +197,19 @@ emit('subclass', outcome(function () {
 
     return [$sub->shout(), $sub->getSub(), $sub instanceof Domain];
 }));
+emit('subclass with properties clone', outcome(function () {
+    $sub = new class ('Blog.Example.CO.UK') extends Domain {
+        public string $label = 'first';
+
+        public array $seen = [];
+    };
+    $sub->seen[] = $sub->getSub();
+    $copy = clone $sub;
+    $copy->label = 'copy';
+    $copy->seen[] = 'more';
+
+    return [$copy::class === $sub::class, $sub->label, $copy->label, $sub->seen, $copy->seen, $copy->getApex(), properties($copy)];
+}));
 $methods = (new ReflectionClass(Domain::class))->getMethods(ReflectionMethod::IS_PUBLIC);
 usort($methods, fn ($a, $b) => strcmp($a->getName(), $b->getName()));
 emit('methods', outcome(fn () => array_map(fn (ReflectionMethod $method) => [$method->getName(), $method->isStatic(), $method->getNumberOfParameters(), $method->getNumberOfRequiredParameters()], $methods)));
@@ -214,9 +223,9 @@ emit('public domain validator', outcome(fn () => array_map(fn ($value) => (new U
 $waivers = [
     'URL message with bytes that are not UTF-8' => outcome(fn () => new Domain("http://\xff")),
 ];
-$expected = $internal ? [
+$expected = [
     'URL message with bytes that are not UTF-8' => ['throws' => 'Exception', 'message' => "'http://\u{FFFD}' must be a valid domain or hostname"],
-] : $waivers;
+];
 foreach ($expected as $name => $outcome) {
     if ($waivers[$name] !== $outcome) {
         fwrite(STDERR, "Waiver changed: {$name}: " . json_encode(exported($waivers[$name])) . PHP_EOL);

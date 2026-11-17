@@ -55,12 +55,6 @@ parameters:
 			path: src/Cache.php
 
 		-
-			message: '#^Static property Utopia\\Domains\\Domain\:\:\$list \(array\<string, array\{suffix\: string, type\: string, comments\: array\<string\>\}\>\) does not accept mixed\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: src/Domain.php
-
-		-
 			message: '#^Method Utopia\\Domains\\Registrar\:\:__construct\(\) has parameter \$defaultNameservers with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1

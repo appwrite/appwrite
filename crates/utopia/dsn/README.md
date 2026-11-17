@@ -120,11 +120,7 @@ cargo fmt --all --check
 
 ### Compare with PHP
 
-The utopia PHP extension serves this crate as `Utopia\DSN\DSN`. Its parity corpus, `crates/extension/tests/dsn.php`, must print the same on PHP's class and on the extension; `crates/extension/tests/run.sh` checks it in the development image. To time both implementations:
-
-```bash
-python3 crates/extension/bench/run.py crates/extension/bench/dsn.php . target/release/libutopia.so 5
-```
+The utopia PHP extension serves this crate as `Utopia\DSN\DSN`, which no longer has a PHP implementation. Its parity corpus, `crates/extension/tests/dsn.php`, must print `crates/extension/tests/dsn.expected.jsonl`, the output of the PHP class it replaced; `crates/extension/tests/run.sh` checks it in the development image.
 
 ## License
 

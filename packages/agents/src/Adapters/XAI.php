@@ -5,7 +5,7 @@ namespace Utopia\Agents\Adapters;
 /**
  * xAI Grok, over its OpenAI-compatible API.
  */
-class XAI extends OpenAI
+class XAI extends Compatible
 {
     protected const string ENDPOINT = 'https://api.x.ai/v1/chat/completions';
 

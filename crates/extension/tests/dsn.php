@@ -1,20 +1,16 @@
 <?php
 
-// Parity corpus for Utopia\DSN\DSN. Run it on the PHP class and on the utopia
-// extension's (_APP_EXTENSION_LIBRARIES=dsn), and diff stdout: every line must match.
-// Stderr names the implementation that ran. Inputs come from #14308's tests/compat/dsn
-// cases, plus edge cases they do not cover.
+// Parity corpus for Utopia\DSN\DSN, which only the utopia extension provides. Its stdout
+// must match dsn.expected.jsonl, the output of the PHP class it replaced (utopia-php/dsn
+// 1.0.0 and later main). Inputs come from #14308's tests/compat/dsn cases, plus edge cases
+// they do not cover.
 
 require __DIR__ . '/../../../vendor/autoload.php';
 
 use Utopia\DSN\DSN;
 
-$internal = (new ReflectionClass(DSN::class))->isInternal();
-fwrite(STDERR, 'Utopia\\DSN\\DSN: ' . ($internal ? 'utopia extension' : 'PHP') . PHP_EOL);
-// A run meant for the extension that gets the PHP class would compare PHP with PHP and pass.
-$requested = in_array('dsn', array_map(trim(...), explode(',', getenv('_APP_EXTENSION_LIBRARIES') ?: '')), true);
-if ($internal !== $requested) {
-    fwrite(STDERR, '_APP_EXTENSION_LIBRARIES ' . ($requested ? 'names' : 'does not name') . ' dsn, but the other implementation loaded' . PHP_EOL);
+if (!(new ReflectionClass(DSN::class))->isInternal()) {
+    fwrite(STDERR, 'Utopia\\DSN\\DSN is not the utopia extension\'s' . PHP_EOL);
     exit(1);
 }
 ini_set('zend.exception_ignore_args', '0');
@@ -229,10 +225,6 @@ foreach (['new' => fn () => new DSN('redis://user:SECRET@'), 'from' => fn () => 
     } catch (Throwable $e) {
         emit('trace ' . $name, ['leaks' => str_contains(print_r($e->getTrace(), true), 'SECRET') || str_contains($e->getTraceAsString(), 'SECRET')]);
     }
-}
-
-if (!$internal) {
-    exit;
 }
 
 // Known differences of the extension, each a waiver in crates/extension/README.md.

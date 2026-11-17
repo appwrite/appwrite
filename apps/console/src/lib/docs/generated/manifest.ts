@@ -1298,6 +1298,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "products/auth/account-switching",
+    "title": "Account switching",
+    "description": "Let users stay signed in to several accounts in one browser or app and switch between them with Appwrite Auth devices, without signing out and back in.",
+    "layout": "article",
+    "readingTimeMinutes": 5
+  },
+  {
     "slug": "products/auth/accounts",
     "title": "Accounts",
     "description": "Unlock advanced user management - Appwrite's Account API for seamless signups, authentication, and dynamic permissions.",
@@ -3350,7 +3357,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Deploy from Git",
     "description": "Learn to version and update your Appwrite Sites' code with deployments.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 6
   },
   {
     "slug": "products/sites/deploy-manually",

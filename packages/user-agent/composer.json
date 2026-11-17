@@ -19,13 +19,13 @@
         }
     },
     "require": {
-        "php": ">=8.4"
+        "php": ">=8.4",
+        "ext-utopia": "*"
     },
     "require-dev": {
         "matomo/device-detector": "6.4.*"
     },
     "scripts": {
-        "test": "phpunit",
-        "bench": "php benchmark/benchmark.php"
+        "test": "phpunit"
     }
 }
