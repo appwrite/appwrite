@@ -100,6 +100,7 @@ class Server extends Adapter
     ) {
         $this->server = new SwooleServer($host, (int) $port, $mode);
         $this->server->set($settings instanceof Mode ? $settings->settings() : $settings);
+        Response::setServer($this->server);
     }
 
     public function onRequest(callable $callback): void

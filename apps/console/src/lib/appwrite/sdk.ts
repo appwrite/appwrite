@@ -27,10 +27,7 @@ import {
   CONSOLE_IMPERSONATION_TARGET_KEY,
   clearConsoleImpersonationSession,
 } from '@/lib/console-impersonation'
-import {
-  ensureFingerprintServerTimeSynced,
-  resetFingerprintServerTimeCache,
-} from '@/lib/fingerprint'
+import { resetFingerprintCache } from '@/lib/fingerprint'
 import { getActiveLanguage } from '@/lib/i18n/active-language'
 import { subscribeToDebugOverrides } from '@/lib/debug-overrides'
 import { getActiveEnvironmentId } from '@/lib/active-environment'
@@ -321,14 +318,6 @@ if (typeof window !== 'undefined') {
   })
 }
 
-function scheduleConsoleFingerprintServerTimeSync(): Promise<void> {
-  if (typeof window === 'undefined') return Promise.resolve()
-  const ep = clientConsole.config.endpoint as string | undefined
-  const proj = clientConsole.config.project as string | undefined
-  if (!ep?.trim() || !proj?.trim()) return Promise.resolve()
-  return ensureFingerprintServerTimeSynced(ep, proj)
-}
-
 // When debug endpoint override changes, re-apply base endpoint to both clients
 if (typeof window !== 'undefined') {
   subscribeToDebugEndpointChange(() => {
@@ -337,11 +326,8 @@ if (typeof window !== 'undefined') {
     clientProject.setEndpoint(base)
     // Handles are kept per endpoint; the next call builds one for the new base
     projectSdks.clear()
-    resetFingerprintServerTimeCache()
-    void scheduleConsoleFingerprintServerTimeSync()
+    resetFingerprintCache()
   })
-
-  void scheduleConsoleFingerprintServerTimeSync()
 }
 
 // Realtime instances: one per client (console vs project).

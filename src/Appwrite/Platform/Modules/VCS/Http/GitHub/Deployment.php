@@ -381,6 +381,10 @@ trait Deployment
                 }
 
                 if (!$isAuthorized) {
+                    if ($resource->getAttribute('providerSilentMode', false) === true || $resource->getAttribute('providerStatuses', true) === false) {
+                        continue;
+                    }
+
                     $message = 'Authorization required for external contributor.';
 
                     $providerRepositoryId = $repository->getAttribute('providerRepositoryId');

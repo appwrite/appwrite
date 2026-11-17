@@ -108,6 +108,16 @@ export const vcsInlineProviderIconClassName = 'size-5 shrink-0'
 /** Provider connect buttons on VCS cards. */
 export const vcsProviderButtonIconClassName = 'size-4'
 
+/**
+ * Columns for a grid of provider connect buttons, so no row is left with a
+ * lone button for as long as two or three columns can avoid it: one row up to
+ * three providers, a 2x2 block for four, rows of three after that.
+ */
+export function getVcsProviderColumns(count: number): 1 | 2 | 3 {
+  if (count <= 1) return 1
+  return count === 2 || count === 4 ? 2 : 3
+}
+
 /** Provider-neutral Git mark for empty states and auth flows (not a host logo). */
 export { GitBranch as GitIcon } from 'lucide-react'
 
