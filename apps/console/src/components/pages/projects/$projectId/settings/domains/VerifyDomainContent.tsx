@@ -682,6 +682,14 @@ export function VerifyDomainContent({
           waiting={isWaitingForDns(rule)}
         />
       )}
+      {caaRecord && (
+        <RecordSection
+          title={t('Allow the SSL certificate')}
+          badge={caaCheck?.required ? t('Required') : t('Recommended')}
+          records={[caaRecord]}
+          waiting={isWaitingForDns(rule)}
+        />
+      )}
     </div>
   ) : null
 
