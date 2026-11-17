@@ -675,7 +675,9 @@ export function VerifyDomainContent({
       {pointingRecords.length > 0 && (
         <RecordSection
           title={t('Point your domain')}
-          badge={t('Required')}
+          badge={
+            pointingRecords.length > 1 ? t('Required · any one') : t('Required')
+          }
           records={pointingRecords}
           waiting={isWaitingForDns(rule)}
         />
