@@ -1529,7 +1529,7 @@ class GitHub extends Git
                     'headCommitUrl' => $headCommitUrl,
                     'external' => $external,
                     'pullRequestNumber' => $pullRequestNumber,
-                    'pullRequestAuthor' => $payloadPullRequestUser['login'] ?? '',
+                    'pullRequestAuthor' => \is_array($payloadPullRequestUser) ? ($payloadPullRequestUser['login'] ?? '') : '',
                     'action' => $action,
                 ]];
             case 'issue_comment':
