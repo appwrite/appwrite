@@ -27,4 +27,4 @@ thiserror.workspace = true
 
 [package.metadata.utopia]
 category = "security"
-php-sync = "43271113321d9096408a79fee7e93f26c6dbde2b"
+php-sync = "8f87278823e99568756f454f6d76a00da239b056"
