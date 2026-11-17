@@ -35,17 +35,17 @@ _APP_EXTENSION_LIBRARIES=<package>,<package>   # those packages' classes from th
 The extension reads it once, when PHP loads the module, so changing it takes a restart and no
 deploy. Each library is canaried on Cloud this way before it becomes the default.
 
-CI runs `crates/extension/tests/run.sh` in the development image. It finds the libraries from the
-`enabled()` calls in `src/lib.rs` and requires a parity corpus at `tests/<name>.php` for each. For
-every library it runs `packages/<name>/tests` on the extension and diffs the corpus on both
+CI runs `crates/extension/tests/run.sh` in the development image. It finds the switchable libraries
+from the `enabled()` calls in `src/lib.rs` and requires a parity corpus at `tests/<name>.php` for
+each. For every one it runs `packages/<name>/tests` on the extension and diffs the corpus on both
 implementations, first one library at a time, then with all of them on. A new library needs only
 its `enabled()` call, its corpus and its package tests; there is no CI step to add.
 
-Once a library has run on the extension everywhere, its PHP package is removed: the class is
-registered unconditionally, `tests/<name>.expected.jsonl` holds the output of the PHP class it
-replaced, and `run.sh` diffs the corpus against that file. The package stays published at its last
-release for projects outside this repository; the root `composer.json` keeps `replace`-ing it so it
-is never installed here.
+Once a library has run on the extension everywhere, its PHP class is removed and the class is
+registered unconditionally. Its corpus goes with it, since there is nothing left to compare
+against; the package's own tests keep running on the extension. The package stays published at its
+last release for projects outside this repository; the root `composer.json` keeps `replace`-ing a
+package removed whole so it is never installed here.
 
 ## Utopia\DSN\DSN
 
@@ -55,9 +55,7 @@ published at 1.0.0 for other projects. It declares the PHP class's protected pro
 `var_dump()` and `(array)` see what they saw in PHP. The DSN, `from()`'s user and its password are
 `#[\SensitiveParameter]`, as in PHP, so exception traces never hold them.
 
-`crates/extension/tests/dsn.php` prints a corpus of results (#14308's `tests/compat/dsn` cases, plus
-edge cases) that must match `dsn.expected.jsonl`, the output of the PHP class, and asserts the known
-differences from it:
+Known differences from the PHP class it replaced:
 
 - A DSN that is not UTF-8 is refused as malformed, where `parse_url` took any bytes.
 - `from()` takes string parameters; PHP also round-tripped a list value (`['a' => ['b', 'c']]`).
@@ -82,13 +80,7 @@ through PHP's `file_exists()` and `file_get_contents()`, so Swoole's hooks, stre
 PHP's warnings apply. `getTranslations()` builds a language's array once and returns it by
 refcount afterwards, as PHP returns `self::$language[$name]`.
 
-`crates/extension/tests/locale.php` prints a corpus of results that must match
-`locale.expected.jsonl`, the output of the PHP class: real Appwrite translations pinned in
-`tests/fixtures/locale` (English, Hebrew, Arabic, Japanese, Chinese, Russian, Hindi), with
-placeholders; JSON files of
-every shape; every combination of default, fallback and missing key with and without
-exceptions; placeholder values of every type; the scalar arguments PHP converts; and the warnings
-each case raises. It asserts these known differences from the PHP class:
+Known differences from the PHP class it replaced:
 
 - `setLanguageFromArray()` refuses a translation that is not a string; PHP stored it and returned it.
 - A language name, translation key or text that is not UTF-8 is refused with an `Exception` when it
@@ -113,12 +105,7 @@ Packagist is the last release that parses in PHP. What `UserAgent` returns are t
 agent and returned as the same object on every call, as in PHP. The class is final with a private constructor
 and the PHP class's private properties, so `==`, `var_dump()` and `(array)` see what they see in PHP.
 
-`crates/extension/tests/user-agent.php` prints a corpus of results that must match
-`user-agent.expected.jsonl`, the output of the PHP class: every string in the package's tests, agents Appwrite sees (SDKs, the CLI, HTTP
-libraries, browsers, previews, monitors, bots), edge cases (empty, case, control bytes, bytes that are
-not UTF-8, 100 KB inputs) and seeded mutations of all of them, read through every method and through
-`Appwrite\Detector\Detector`. `packages/user-agent/tests` run on the extension too. It asserts these
-known differences from the PHP class:
+`packages/user-agent/tests` run on the extension. Known differences from the PHP class it replaced:
 
 - A `null`, array or object argument and a missing argument raise the same `TypeError` and
   `ArgumentCountError` with ext-php-rs's message.
@@ -137,19 +124,13 @@ which stays the list's source. PHP fills the class's protected properties as
 its getters run (`getTLD()` sets `$TLD`, a matching `getSuffix()` sets `$suffix` and `$rule`), and the
 binding shows the same properties, so `==`, `var_dump()` and `(array)` see what they see in PHP.
 
-`crates/extension/tests/domains.php` prints a corpus of results that must match
-`domains.expected.jsonl`, the output of the PHP class: every rule of `data.php` as a suffix, under a name, under a subdomain and in upper
-case, so a list refreshed on one side and not the other fails it; hostnames Appwrite and Cloud parse;
-edge cases (empty and dotted names, `0`, IDN and punycode, IPs, ports, bytes that are not UTF-8,
-URLs); the properties after each getter and after every getter in reverse; the scalar arguments PHP
-converts; and `==`, clone, `var_dump()`, reflection and a subclass. `packages/domains/tests` run on
-the extension too. It asserts one known difference from the PHP class:
+`packages/domains/tests` run on the extension. Known differences from the PHP class it replaced:
 
 - The exception for a URL (`http://`, `https://`) holding bytes that are not UTF-8 shows them as
   U+FFFD; PHP's message keeps the bytes.
 
 A PHP subclass, with properties of its own, clones as in PHP (fixed in ext-php-rs 0.16.5,
-extphprs/ext-php-rs#838); the corpus clones one.
+extphprs/ext-php-rs#838).
 
 ## Utopia\Emails\Email
 
@@ -169,16 +150,7 @@ and `getSub()` on it as PHP does, so it is whichever implementation `domains` se
 same exception for a URL, and fills the same properties. `==`, `var_dump()`, `(array)` and `clone`
 (which shares `$domainInstance`) see what they see in PHP.
 
-`crates/extension/tests/emails.php` prints a corpus of results that must match
-`emails.expected.jsonl`, the output of the PHP class: every domain of both lists (and a subdomain of every 25th), so a list refreshed on
-one side and not the other fails it; every domain of every provider under local parts the rules
-change; addresses Appwrite and Cloud see and edge cases (whitespace, case, `0`, quoted and IP
-literal addresses, IDN, lengths at the limits, bytes that are not UTF-8, URLs as domains); 20,000
-seeded random addresses through `isValid()`, `hasValidLocal()`, `hasValidDomain()` and
-`getCanonical()`; the properties after each getter and after every getter in reverse; the scalar
-arguments PHP converts; `==`, clone, `var_dump()`, reflection, constants, subclasses and their clones; and the
-package's validators. `packages/emails/tests` run on the extension too. It asserts these known
-differences from the PHP class:
+`packages/emails/tests` run on the extension. Known differences from the PHP class it replaced:
 
 - The protected helpers `initializeProviders()`, `getProviderForDomain()` and `isDomainSupported()`
   and the protected static properties `$freeDomains`, `$disposableDomains` and `$providers` do not

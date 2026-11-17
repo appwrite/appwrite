@@ -69,7 +69,7 @@ cargo fmt --all --check
 
 ### Compare with PHP
 
-The utopia PHP extension serves this crate as `Utopia\Emails\Email`, which no longer has a PHP implementation. Its parity corpus, `crates/extension/tests/emails.php`, checks every domain of both lists, every provider domain and 20,000 random addresses, and must print `crates/extension/tests/emails.expected.jsonl`, the output of the PHP class it replaced; `crates/extension/tests/run.sh` checks it, and runs `packages/emails/tests`, in the development image.
+The utopia PHP extension serves this crate as `Utopia\Emails\Email`, which no longer has a PHP implementation. `crates/extension/tests/run.sh` runs `packages/emails/tests` on it in the development image.
 
 ### Domain lists
 
