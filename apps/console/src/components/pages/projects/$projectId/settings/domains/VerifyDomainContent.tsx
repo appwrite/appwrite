@@ -275,7 +275,7 @@ function RecordSection({
                           {found.map((value, i) => (
                             <Fragment key={value}>
                               {i > 0 && ', '}
-                              <span className="font-mono text-foreground">
+                              <span className="font-mono text-foreground underline decoration-wavy decoration-red-500 underline-offset-4">
                                 {value}
                               </span>
                             </Fragment>
