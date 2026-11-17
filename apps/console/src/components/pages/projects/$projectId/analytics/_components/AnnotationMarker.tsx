@@ -10,7 +10,6 @@ import {
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import type { AnalyticsAnnotation } from '@/lib/appwrite/analytics-annotations'
-import { useOrganizationMemberships, useProject } from '@/lib/react-query/hooks'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
 
@@ -23,8 +22,8 @@ const MARKER_SIZE = 14
 export function AnnotationMarker({
   x,
   y,
-  projectId,
   annotations,
+  authors,
   canWrite,
   onEdit,
   onDelete,
@@ -32,8 +31,9 @@ export function AnnotationMarker({
   /** Line position from the label's viewBox. */
   x: number
   y: number
-  projectId: string
   annotations: AnalyticsAnnotation[]
+  /** Names by user ID; undefined until loaded. */
+  authors: ReadonlyMap<string, string> | undefined
   canWrite: boolean
   onEdit: (annotation: AnalyticsAnnotation) => void
   onDelete: (annotation: AnalyticsAnnotation) => void
@@ -77,8 +77,8 @@ export function AnnotationMarker({
                 <div className="flex items-center justify-between gap-2">
                   <p className="flex min-w-0 items-center gap-1 text-[12px] text-muted-foreground">
                     <AnnotationAuthor
-                      projectId={projectId}
                       userId={annotation.userId}
+                      authors={authors}
                     />
                     <DateTooltip date={annotation.date} showFormattedDate />
                   </p>
@@ -114,28 +114,26 @@ export function AnnotationMarker({
   )
 }
 
-/** "You", or the member's name followed by a separator; nothing for API keys. */
+/**
+ * "You", the member's name, or "Former member" once the lookup finds no
+ * membership; nothing for API keys or while names load.
+ */
 function AnnotationAuthor({
-  projectId,
   userId,
+  authors,
 }: {
-  projectId: string
   userId: string
+  authors: ReadonlyMap<string, string> | undefined
 }) {
   const t = useT()
   const account = useAuth().account as
     | Models.User<Models.Preferences>
     | undefined
-  const { project } = useProject(projectId)
-  const isSelf = !!userId && userId === account?.$id
-  const { memberships } = useOrganizationMemberships(
-    userId && !isSelf ? project?.teamId : null,
-    0,
-    100,
-  )
-  const name = isSelf
-    ? t('You')
-    : memberships.find((member) => member.userId === userId)?.userName
+  if (!userId) return null
+  const name =
+    userId === account?.$id
+      ? t('You')
+      : authors && (authors.get(userId) || t('Former member'))
   if (!name) return null
   return (
     <>

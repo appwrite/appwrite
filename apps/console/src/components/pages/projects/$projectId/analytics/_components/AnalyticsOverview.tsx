@@ -3,7 +3,6 @@ import {
   useRef,
   useState,
   type KeyboardEvent,
-  type MouseEvent,
   type ReactNode,
 } from 'react'
 import { useQueries } from '@tanstack/react-query'
@@ -52,9 +51,11 @@ import {
 } from '../../overview/chart-panel'
 import {
   analyticsStatsQueryOptions,
+  useAnalyticsAnnotationAuthors,
   useAnalyticsAnnotations,
   useAnalyticsEventMetrics,
   useDeleteAnalyticsAnnotation,
+  useProject,
   useAnalyticsStats,
   type AnalyticsChartInterval,
   type AnalyticsCompareMode,
@@ -494,9 +495,16 @@ export function AnalyticsOverview({
   )
   const { annotations } = useAnalyticsAnnotations(projectId, propertyId, range)
   const annotationBuckets = useMemo(
-    () => groupAnnotationsByBucket(chartPoints, annotations),
-    [chartPoints, annotations],
+    () => groupAnnotationsByBucket(chartPoints, annotations, interval),
+    [chartPoints, annotations, interval],
   )
+  const { project } = useProject(projectId)
+  const authorIds = useMemo(
+    () =>
+      [...new Set(annotations.map((note) => note.userId).filter(Boolean))].sort(),
+    [annotations],
+  )
+  const { authors } = useAnalyticsAnnotationAuthors(project?.teamId, authorIds)
   const [noteDraft, setNoteDraft] = useState<{
     annotation?: AnalyticsAnnotation
     date: string
@@ -505,8 +513,8 @@ export function AnalyticsOverview({
     null,
   )
   const deleteNote = useDeleteAnalyticsAnnotation(projectId, propertyId)
-  // A drag that zooms the range also ends in a click; only a still press adds a note.
-  const pressX = useRef<number | null>(null)
+  // A drag that zooms the range also ends in a click, which must not add a note.
+  const brushCommitted = useRef(false)
 
   const previousPoints = useMemo(
     () =>
@@ -669,7 +677,10 @@ export function AnalyticsOverview({
   } = useUsageChartBrushSelect({
     points: brushPoints,
     chartInterval: interval,
-    onDateRangeChange,
+    onDateRangeChange: (next) => {
+      brushCommitted.current = true
+      onDateRangeChange(next)
+    },
   })
 
   const axisMax = chartData.reduce(
@@ -839,8 +850,8 @@ export function AnalyticsOverview({
                 !showSkeleton && USAGE_CHART_FADE_IN_CLASS_NAME,
               )}
               aria-busy={showSkeleton || undefined}
-              onPointerDownCapture={(event) => {
-                pressX.current = event.clientX
+              onPointerDownCapture={() => {
+                brushCommitted.current = false
               }}
               aria-label={
                 showSkeleton
@@ -860,15 +871,10 @@ export function AnalyticsOverview({
                   {...chartProps}
                   onClick={
                     canAnnotate && !showSkeleton
-                      ? (state, event) => {
-                          const index = Number(state.activeTooltipIndex)
-                          const point = chartPoints[index]
-                          const still =
-                            pressX.current !== null &&
-                            Math.abs(
-                              (event as MouseEvent).clientX - pressX.current,
-                            ) < 4
-                          if (!point || !still) return
+                      ? (state) => {
+                          const point =
+                            chartPoints[Number(state.activeTooltipIndex)]
+                          if (!point || brushCommitted.current) return
                           setNoteDraft({ date: point.day.toISOString() })
                         }
                       : undefined
@@ -1050,8 +1056,8 @@ export function AnalyticsOverview({
                                 <AnnotationMarker
                                   x={x}
                                   y={y}
-                                  projectId={projectId}
                                   annotations={notes}
+                                  authors={authors}
                                   canWrite={canAnnotate}
                                   onEdit={(annotation) =>
                                     setNoteDraft({

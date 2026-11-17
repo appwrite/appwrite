@@ -4186,5 +4186,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Create a monitor on analytics traffic across this project':
     'このプロジェクト全体のアナリティクストラフィックにモニターを作成します',
   'Analytics events': 'アナリティクスイベント',
+  'Former member': '元メンバー',
   'Analytics pageviews': 'アナリティクスのページビュー',
 }

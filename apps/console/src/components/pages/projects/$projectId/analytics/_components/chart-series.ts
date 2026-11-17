@@ -150,15 +150,13 @@ export function buildAnalyticsChartPoints(
 export function groupAnnotationsByBucket<T extends { date: string }>(
   points: readonly AnalyticsChartPoint[],
   annotations: readonly T[],
+  interval: AnalyticsChartInterval,
 ): Map<number, T[]> {
   const groups = new Map<number, T[]>()
   if (points.length === 0) return groups
   const first = points[0].day.getTime()
-  const end =
-    points.length > 1
-      ? points[points.length - 1].day.getTime() +
-        (points[1].day.getTime() - first)
-      : Infinity
+  // Calendar step, not elapsed time: a DST day is 23 or 25 hours long.
+  const end = nextBucket(points[points.length - 1].day, interval).getTime()
   for (const annotation of annotations) {
     const time = new Date(annotation.date).getTime()
     if (Number.isNaN(time) || time < first || time >= end) continue

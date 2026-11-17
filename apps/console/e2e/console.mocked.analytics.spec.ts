@@ -622,6 +622,24 @@ test.describe('analytics property (mocked API)', () => {
     )
   })
 
+  test('zooms on a drag without adding a note', async ({ page }) => {
+    await mockAppwriteApi(page)
+    await openProperty(page)
+
+    const chart = page.getByLabel('Drag on the chart to select a date range')
+    const box = await chart.boundingBox({ timeout: 30_000 })
+    if (!box) throw new Error('Chart has no box')
+    const y = box.y + box.height / 2
+    await page.mouse.move(box.x + box.width * 0.3, y)
+    await page.mouse.down()
+    await page.mouse.move(box.x + box.width * 0.6, y, { steps: 5 })
+    await page.mouse.up()
+
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await chart.click({ position: { x: box.width * 0.5, y: box.height / 2 } })
+    await expect(page.getByRole('dialog')).toContainText('Add note')
+  })
+
   test('links to a pageviews monitor', async ({ page }) => {
     await useProfile(page, { alerts: true })
     await mockAppwriteApi(page)

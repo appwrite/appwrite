@@ -34,6 +34,7 @@ import {
   deleteAnalyticsAnnotation,
   listAnalyticsAnnotations,
   updateAnalyticsAnnotation,
+  type AnalyticsAnnotation,
 } from '@/lib/appwrite/analytics-annotations'
 import {
   analyticsFilterQueries,
@@ -1255,27 +1256,41 @@ export function useDeleteAnalyticsProperty(
 
 // ─── Annotations ────────────────────────────────────────────────────────────
 
-/** Most notes one chart window shows; the API's page cap. */
-const ANALYTICS_ANNOTATIONS_LIMIT = 100
+/** The API's page cap. */
+const ANALYTICS_ANNOTATIONS_PAGE_SIZE = 100
+/** Bounds one chart window to 1,000 notes. */
+const ANALYTICS_ANNOTATIONS_MAX_PAGES = 10
 
 export async function fetchAnalyticsAnnotations(
   projectId: string,
   propertyId: string,
   range: AnalyticsRange,
 ) {
-  const response = await withReadTimeout(
-    'listAnnotations',
-    listAnalyticsAnnotations(sdk.forProject(projectId).client, {
-      propertyId,
-      queries: [
-        Query.greaterThanEqual('date', range.startAt),
-        Query.lessThanEqual('date', range.endAt),
-        Query.orderAsc('date'),
-        Query.limit(ANALYTICS_ANNOTATIONS_LIMIT),
-      ],
-    }),
-  )
-  return response.annotations ?? []
+  const client = sdk.forProject(projectId).client
+  const annotations: AnalyticsAnnotation[] = []
+  for (let page = 0; page < ANALYTICS_ANNOTATIONS_MAX_PAGES; page++) {
+    const last = annotations.at(-1)
+    const response = await withReadTimeout(
+      'listAnnotations',
+      listAnalyticsAnnotations(client, {
+        propertyId,
+        queries: [
+          Query.greaterThanEqual('date', range.startAt),
+          Query.lessThanEqual('date', range.endAt),
+          Query.orderAsc('date'),
+          Query.limit(ANALYTICS_ANNOTATIONS_PAGE_SIZE),
+          ...(last ? [Query.cursorAfter(last.$id)] : []),
+        ],
+      }),
+    )
+    annotations.push(...(response.annotations ?? []))
+    if (
+      (response.annotations ?? []).length < ANALYTICS_ANNOTATIONS_PAGE_SIZE ||
+      annotations.length >= response.total
+    )
+      break
+  }
+  return annotations
 }
 
 export function analyticsAnnotationsQueryOptions(
@@ -1310,6 +1325,46 @@ export function useAnalyticsAnnotations(
     analyticsAnnotationsQueryOptions(projectId, propertyId, range),
   )
   return { annotations: data ?? [] }
+}
+
+/**
+ * Display names of the members who wrote notes, by user ID. A user who has
+ * left the organization has no membership, so is missing from the map.
+ */
+export function useAnalyticsAnnotationAuthors(
+  organizationId: string | null | undefined,
+  userIds: readonly string[],
+) {
+  const { data } = useQuery({
+    queryKey: ['analytics', 'annotation-authors', organizationId, userIds],
+    queryFn: async () => {
+      const chunks: string[][] = []
+      // A query takes at most 100 values.
+      for (let index = 0; index < userIds.length; index += 100) {
+        chunks.push(userIds.slice(index, index + 100))
+      }
+      const responses = await Promise.all(
+        chunks.map((chunk) =>
+          sdk.forConsole.teams.listMemberships({
+            teamId: organizationId!,
+            queries: [Query.equal('userId', chunk), Query.limit(chunk.length)],
+          }),
+        ),
+      )
+      return new Map(
+        responses.flatMap((response) =>
+          response.memberships.map(
+            (membership) => [membership.userId, membership.userName] as const,
+          ),
+        ),
+      )
+    },
+    enabled: !!organizationId && userIds.length > 0 && isClientQueryEnabled,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnWindowFocus: false,
+  })
+  return { authors: data }
 }
 
 export type SaveAnalyticsAnnotationInput = {

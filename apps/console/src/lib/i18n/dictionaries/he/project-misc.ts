@@ -4114,5 +4114,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Create a monitor on analytics traffic across this project':
     'יצירת ניטור על תעבורת האנליטיקה בכל הפרויקט',
   'Analytics events': 'אירועי אנליטיקה',
+  'Former member': 'חבר לשעבר',
   'Analytics pageviews': 'צפיות בדפים באנליטיקה',
 }
