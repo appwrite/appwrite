@@ -117,8 +117,11 @@ pub(crate) fn parse(body: &[u8]) -> Option<Element> {
     let mut reader = quick_xml::Reader::from_reader(body);
     let mut stack: Vec<Element> = Vec::new();
     let mut root = None;
+    let mut started = false;
     loop {
-        match reader.read_event().ok()? {
+        let event = reader.read_event().ok()?;
+        let first = !std::mem::replace(&mut started, true);
+        match event {
             Event::Start(start) => {
                 if root.is_some() {
                     return None;
@@ -158,6 +161,21 @@ pub(crate) fn parse(body: &[u8]) -> Option<Element> {
                 let current = stack.last_mut()?;
                 current.text.push_str(std::str::from_utf8(&data).ok()?);
             }
+            // libxml refuses a processing instruction whose target is not a
+            // name followed by whitespace or its end (`<? version="1.0"?>`,
+            // `<?lversion="1.0"?>`), one named `xml` past the declaration,
+            // and a declaration anywhere but the very start.
+            Event::PI(pi) => {
+                let raw: &[u8] = &pi;
+                let target = raw.split(u8::is_ascii_whitespace).next().unwrap_or_default();
+                let name_start = |b: u8| b.is_ascii_alphabetic() || b == b'_' || b == b':' || b >= 0x80;
+                let name_char = |b: u8| name_start(b) || b.is_ascii_digit() || b == b'-' || b == b'.';
+                let is_name = target.first().is_some_and(|&b| name_start(b)) && target.iter().all(|&b| name_char(b));
+                if !is_name || target.eq_ignore_ascii_case(b"xml") {
+                    return None;
+                }
+            }
+            Event::Decl(_) if !first => return None,
             Event::Eof => break,
             _ => {}
         }

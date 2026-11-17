@@ -179,6 +179,53 @@
           "message": "Deployment poll attempts must be at least one."
         }
       }
+    },
+    {
+      "name": "cloudfront tenant whose processing instruction has no valid target is not XML",
+      "op": "certificates.once",
+      "args": {
+        "type": "cloudfront",
+        "access_key_id": "",
+        "secret_access_key": "",
+        "distribution": "",
+        "connection_group": "",
+        "method": "issueCertificate",
+        "domain": "example.com",
+        "responses": [
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E"
+            },
+            "body": "<?lversion=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>t</Id></DistributionTenant>"
+          },
+          {
+            "status": 200,
+            "headers": {
+              "ETag": "E"
+            },
+            "body": "<? version=\"1.0\" encoding=\"UTF-8\"?><DistributionTenant xmlns=\"http://cloudfront.amazonaws.com/doc/2020-05-31/\"><Id>t</Id></DistributionTenant>"
+          }
+        ]
+      },
+      "expect": {
+        "error": {
+          "class": "RuntimeException",
+          "message": "CloudFront distribution tenant response was not valid XML."
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant?domain=example.com",
+            "headers": {
+              "authorization": "AWS4-HMAC-SHA256 Credential=/<date>/us-east-1/cloudfront/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+              "user-agent": "Utopia CDN CloudFront Certificates Provider",
+              "x-amz-date": "<date>"
+            },
+            "body": ""
+          }
+        ]
+      }
     }
   ]
 }
