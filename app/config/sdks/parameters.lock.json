@@ -3364,6 +3364,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Atlassian": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Auth0": [
             "clientId",
             "clientSecret",
@@ -7725,6 +7730,11 @@
             "nativeEnabled"
         ],
         "project.updateOAuth2Appwrite": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Atlassian": [
             "clientId",
             "clientSecret",
             "enabled"
