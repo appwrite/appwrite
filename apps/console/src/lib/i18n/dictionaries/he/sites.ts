@@ -187,6 +187,7 @@ export const heSitesDictionary: Record<string, string> = {
     'לא נדרש. רשומת ה-{type} שלכם מוגדרת.',
   'Called CNAME flattening on Cloudflare (set it to DNS only) and Alias on Route 53. Some providers name it ANAME.':
     'ב-Cloudflare זה נקרא CNAME flattening (הגדירו DNS only), וב-Route 53 זה נקרא Alias. יש ספקים שקוראים לזה ANAME.',
+  'DNS is set up': 'ה-DNS מוגדר',
   'Certificate expired': 'פג תוקף התעודה',
   'Renewal failed': 'חידוש התעודה נכשל',
   'Certificate blocked': 'הנפקת התעודה חסומה',
