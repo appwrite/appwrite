@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { Fragment, useState, useMemo } from 'react'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
 import type { ProxyRuleRecord } from '@/lib/appwrite/proxy-rules'
@@ -114,6 +114,61 @@ export type DnsRecord = {
   badge?: string
   /** What DNS had for this record at the last check. */
   check?: ProxyRuleRecord
+}
+
+const TABLE_HEAD =
+  'px-4 py-2.5 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
+
+function RecordSection({
+  title,
+  records,
+}: {
+  title: string
+  records: DnsRecord[]
+}) {
+  const t = useT()
+  return (
+    <section className="space-y-3">
+      <div className="flex items-center gap-2">
+        <h4 className="text-[14px] font-semibold text-foreground">{title}</h4>
+      </div>
+      <div className="overflow-hidden rounded-lg border border-border">
+        <Table className="table-fixed">
+          <TableHeader className="bg-muted/40">
+            <TableRow className="hover:bg-transparent border-b border-border">
+              <TableHead className={`w-[88px] ${TABLE_HEAD}`}>
+                {t('Type')}
+              </TableHead>
+              <TableHead className={TABLE_HEAD}>{t('Value')}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {records.map((r) => {
+              return (
+                <Fragment key={`${r.type}-${r.value}`}>
+                  <TableRow>
+                    <TableCell className="whitespace-normal px-4 py-3 font-mono text-[12px]">
+                      {r.type}
+                    </TableCell>
+                    <TableCell className="px-4 py-3" title={r.value}>
+                      <CopyableId
+                        id={r.value}
+                        variant="inline"
+                        size="md"
+                        constrainToContainer
+                        showCopyOnHover={false}
+                        className="-my-1.5 -ms-2.5"
+                      />
+                    </TableCell>
+                  </TableRow>
+                </Fragment>
+              )
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    </section>
+  )
 }
 
 export function DnsRecordsTable({
@@ -291,6 +346,8 @@ export function VerifyDomainContent({
     isLoading,
     error,
   } = useConsoleVariables(region)
+  // The records the last DNS check saved. Older servers and rules nobody
+  // checked have none, and the screen shows only the records to add.
   const records = (rule as Models.ProxyRule & { records?: ProxyRuleRecord[] })
     .records
   const checks = records?.length ? records : null
@@ -435,6 +492,7 @@ export function VerifyDomainContent({
   const getNameserverRecords = (): DnsRecord[] =>
     nameservers.map((ns) => ({ type: 'NS', name: '@', value: ns, ttl: null }))
 
+  // Without stored checks, each tab lists its record and the CAA record.
   const methodContent = (method: VerificationMethod) => {
     if (method === 'nameservers') {
       return (
@@ -453,6 +511,22 @@ export function VerifyDomainContent({
       </div>
     )
   }
+
+  const pointingRecords = tabOptions.flatMap((tab) => {
+    const record = getPointingRecord(tab.id)
+    return record ? [record] : []
+  })
+
+  const checkedRecords = checks ? (
+    <div className="space-y-6">
+      {pointingRecords.length > 0 && (
+        <RecordSection
+          title={t('Point your domain')}
+          records={pointingRecords}
+        />
+      )}
+    </div>
+  ) : null
 
   const cardClassName =
     'rounded-xl border border-border bg-card/50 overflow-hidden'
@@ -475,40 +549,41 @@ export function VerifyDomainContent({
         </>
       )}
       <div className={noCard ? 'space-y-4' : `${padX} ${padY}`}>
-        {tabOptions.length === 1 ? (
-          <>
-            <p className="pb-3 text-[13px] text-muted-foreground">
-              {getNote(tabOptions[0].id)}
-            </p>
-            {methodContent(tabOptions[0].id)}
-          </>
-        ) : (
-          <Tabs
-            value={selectedTab}
-            onValueChange={setActiveTab}
-            className="w-full"
-          >
-            <div className="pb-4">
-              <TabsList>
-                {tabOptions.map((tab) => (
-                  <TabsTrigger key={tab.id} value={tab.id}>
-                    {tab.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </div>
-            {tabOptions.map((tab) => (
-              <TabsContent key={tab.id} value={tab.id} className="mt-0">
-                <div className="pb-4">
-                  <p className="pb-3 text-[13px] text-muted-foreground">
-                    {getNote(tab.id)}
-                  </p>
-                  {methodContent(tab.id)}
-                </div>
-              </TabsContent>
-            ))}
-          </Tabs>
-        )}
+        {checkedRecords ??
+          (tabOptions.length === 1 ? (
+            <>
+              <p className="pb-3 text-[13px] text-muted-foreground">
+                {getNote(tabOptions[0].id)}
+              </p>
+              {methodContent(tabOptions[0].id)}
+            </>
+          ) : (
+            <Tabs
+              value={selectedTab}
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
+              <div className="pb-4">
+                <TabsList>
+                  {tabOptions.map((tab) => (
+                    <TabsTrigger key={tab.id} value={tab.id}>
+                      {tab.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
+              {tabOptions.map((tab) => (
+                <TabsContent key={tab.id} value={tab.id} className="mt-0">
+                  <div className="pb-4">
+                    <p className="pb-3 text-[13px] text-muted-foreground">
+                      {getNote(tab.id)}
+                    </p>
+                    {methodContent(tab.id)}
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
+          ))}
       </div>
       {!noCard && <div className="border-t border-border" />}
       <div className={noCard ? '' : `${padX} ${padY}`}>
