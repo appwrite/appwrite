@@ -139,7 +139,7 @@ export function DnsRecordsTable({
             </TableHead>
           )}
           {ttl && (
-            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
+            <TableHead className="hidden sm:table-cell px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
               TTL
             </TableHead>
           )}
@@ -194,7 +194,7 @@ export function DnsRecordsTable({
               </TableCell>
             )}
             {ttl && (
-              <TableCell className="px-4 py-3 text-end text-[12px] text-muted-foreground">
+              <TableCell className="hidden sm:table-cell px-4 py-3 text-end text-[12px] text-muted-foreground">
                 {r.ttl ?? '-'}
               </TableCell>
             )}
