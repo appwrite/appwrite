@@ -29,6 +29,12 @@ import { useT } from '@/lib/i18n/translate'
 
 export const DNS_PROVIDERS_LINK = '/docs/advanced/platform/custom-domains'
 
+/**
+ * An apex record that names a host, as a CNAME does. Providers call it ALIAS,
+ * ANAME or CNAME flattening and answer it with the host's addresses.
+ */
+const ALIAS_TYPE = 'ALIAS / ANAME'
+
 const TAB_LABELS: Record<VerificationMethod, string> = {
   cname: 'CNAME',
   alias: 'ALIAS',
@@ -350,6 +356,15 @@ export function VerifyDomainContent({
     switch (method) {
       case 'cname':
         return cname ? getRecord('CNAME', cname) : null
+      case 'alias':
+        return cname
+          ? {
+              type: ALIAS_TYPE,
+              name: '@',
+              value: cname,
+              ttl: 3600,
+            }
+          : null
       case 'a':
         return a ? getRecord('A', a) : null
       case 'aaaa':
