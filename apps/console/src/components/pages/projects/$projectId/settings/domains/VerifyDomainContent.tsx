@@ -573,6 +573,12 @@ export function VerifyDomainContent({
         (type === 'CAA' || normalize(check.value) === normalize(value)),
     )
 
+  // A function domain accepts more than one CNAME target. When DNS points at
+  // another accepted one, that target is the one shown, with its check.
+  const verifiedCname = checks?.find(
+    (check) => check.type === 'CNAME' && check.status === 'verified',
+  )?.value
+
   // Once one record points the domain at Appwrite, the others are not needed.
   const verifiedType = checks?.find(
     (check) => check.type in POINTING_METHODS && check.status === 'verified',
@@ -595,7 +601,7 @@ export function VerifyDomainContent({
   const getPointingRecord = (method: VerificationMethod): DnsRecord | null => {
     switch (method) {
       case 'cname':
-        return cname ? getRecord('CNAME', cname) : null
+        return cname ? getRecord('CNAME', verifiedCname ?? cname) : null
       case 'alias':
         return cname
           ? {
