@@ -6,6 +6,7 @@ namespace Tests\Unit\Auth\Validator\PasswordPwned;
 
 use Appwrite\Auth\Validator\PasswordPwned\HIBP;
 use Appwrite\Extend\Exception;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
@@ -57,7 +58,7 @@ final class HIBPTest extends TestCase
 
     public function testOnlyTheHashPrefixLeavesTheServer(): void
     {
-        $fetch = new RangeFetch(body: '');
+        $fetch = new RangeFetch(body: $this->range([]));
 
         $this->validator($fetch)->isValid(self::LEAKED);
 
@@ -86,6 +87,17 @@ final class HIBPTest extends TestCase
         $this->assertCount(1, $fetch->urls);
     }
 
+    public function testRangeWithNoBreachesIsCached(): void
+    {
+        $fetch = new RangeFetch(body: $this->range([]));
+        $cache = new Cache(new Memory());
+
+        $this->assertTrue((new HIBP($cache, $fetch, self::ENDPOINT))->isValid(self::LEAKED));
+        $this->assertTrue((new HIBP($cache, $fetch, self::ENDPOINT))->isValid(self::LEAKED));
+
+        $this->assertCount(1, $fetch->urls);
+    }
+
     public function testCacheIsScopedToEndpoint(): void
     {
         $fetch = new RangeFetch(body: $this->range([self::LEAKED => 42]));
@@ -99,7 +111,7 @@ final class HIBPTest extends TestCase
 
     public function testLookupsGoToTheConfiguredEndpoint(): void
     {
-        $fetch = new RangeFetch(body: '');
+        $fetch = new RangeFetch(body: $this->range([]));
 
         (new HIBP(null, $fetch, 'https://server.test/range'))->isValid(self::LEAKED);
         (new HIBP(null, $fetch, 'https://other.test/range/'))->isValid(self::LEAKED);
@@ -127,6 +139,31 @@ final class HIBPTest extends TestCase
         $this->expectException(Exception::class);
 
         $this->validator($fetch)->isValid(self::LEAKED);
+    }
+
+    /** @return \Iterator<string, array{string}> */
+    public static function unreadableRanges(): \Iterator
+    {
+        yield 'empty body' => [''];
+        yield 'html page' => ["<!DOCTYPE html>\r\n<html><body>Service temporarily unavailable</body></html>"];
+    }
+
+    #[DataProvider('unreadableRanges')]
+    public function testUnreadableRangeIsReportedAndNotCached(string $body): void
+    {
+        $fetch = new RangeFetch(body: $body);
+        $validator = new HIBP(new Cache(new Memory()), $fetch, self::ENDPOINT);
+
+        foreach ([1, 2] as $attempt) {
+            try {
+                $validator->isValid(self::LEAKED);
+                $this->fail('Expected a range without a single entry to surface');
+            } catch (Exception $e) {
+                $this->assertSame(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE, $e->getType());
+            }
+        }
+
+        $this->assertCount(2, $fetch->urls);
     }
 
     public function testFailedLookupIsNotCached(): void
