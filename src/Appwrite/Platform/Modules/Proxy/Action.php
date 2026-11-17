@@ -178,13 +178,14 @@ class Action extends PlatformAction
         $records = $this->checkRecords($rule);
 
         // Keep the latest checks on the rule before any failure, so the caller's write persists them.
+        // Found values and message are capped to keep the stored JSON within the attribute size.
         $rule->setAttribute('records', \array_map(fn (array $record) => [
             'type' => $record['type'],
             'name' => $record['name'],
             'value' => $record['value'],
             'found' => \array_map(fn (string $value) => \mb_strcut($value, 0, 255), \array_slice($record['found'], 0, 10)),
             'status' => $record['status'],
-            'message' => $record['message'],
+            'message' => \mb_strcut($record['message'], 0, 1000),
             'required' => $record['required'],
         ], $records));
 
