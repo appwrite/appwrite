@@ -1,4 +1,4 @@
-import { Fragment, useState, useMemo } from 'react'
+import { Fragment, useState, useMemo, type ReactNode } from 'react'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
 import type { ProxyRuleRecord } from '@/lib/appwrite/proxy-rules'
@@ -195,11 +195,13 @@ function RecordSection({
   badge,
   records,
   waiting,
+  children,
 }: {
   title: string
   badge: string
   records: DnsRecord[]
   waiting: boolean
+  children?: ReactNode
 }) {
   const t = useT()
   return (
@@ -306,6 +308,7 @@ function RecordSection({
           </TableBody>
         </Table>
       </div>
+      {children}
     </section>
   )
 }
