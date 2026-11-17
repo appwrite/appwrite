@@ -15,4 +15,4 @@ php-std.workspace = true
 
 [package.metadata.utopia]
 category = "utilities"
-php-sync = "6fe5c3769aa775c35c557850e67cbb4576976290"
+php-sync = "ab221bbcda7fe2c95dd0522f7f9cb985fc40624d"
