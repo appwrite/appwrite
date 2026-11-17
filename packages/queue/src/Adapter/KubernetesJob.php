@@ -228,7 +228,7 @@ class KubernetesJob extends Adapter
         $finished = new Channel(1);
         $waitGroup = new WaitGroup(1);
 
-        Coroutine::create(static function () use ($consumer, $queue, $message, $beat, $finished, $waitGroup): void {
+        $heartbeat = Coroutine::create(static function () use ($consumer, $queue, $message, $beat, $finished, $waitGroup): void {
             try {
                 while ($finished->pop((float) $beat) === false) {
                     try {
@@ -242,6 +242,15 @@ class KubernetesJob extends Adapter
                 $waitGroup->done();
             }
         });
+
+        // A coroutine that never started never calls done(): waiting for it would
+        // block the worker forever. Run the job on the plain ack deadline instead.
+        if (!\is_int($heartbeat) || $heartbeat < 0) {
+            error_log('Failed to start the ack heartbeat for queue message ' . $message->getPid() . ': it runs on the plain ack deadline');
+            $work();
+
+            return;
+        }
 
         try {
             $work();
