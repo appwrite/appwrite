@@ -13,9 +13,10 @@ parameters:
   scanFiles:
     # Utopia\Image\Canvas, which the utopia extension registers
     - packages/image/stubs/Canvas.php
-    # Utopia\DSN\DSN and Utopia\Locale\Locale, which the extension can register
+    # Utopia\DSN\DSN, Utopia\Locale\Locale and Utopia\UserAgent\UserAgent, which the extension registers
     - crates/extension/stubs/DSN.php
     - crates/extension/stubs/Locale.php
+    - packages/user-agent/stubs/UserAgent.php
     # Classes the compat database recorder generates with eval()
     - tests/compat/database/recorder/Classes.stub
     # The migration suite's test doubles, which the compat migration adapter extends

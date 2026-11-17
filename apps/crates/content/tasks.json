@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-16T16:02:00Z",
+  "updated": "2026-11-17T15:12:00Z",
   "tasks": [
     {
       "id": "crate-layout",
@@ -771,11 +771,11 @@
     },
     {
       "id": "extension-retires-compat",
-      "title": "dsn, image and locale leave compat: PHP runs the Rust crates",
+      "title": "dsn, image, locale and user-agent leave compat: PHP runs the Rust crates",
       "area": "Libraries",
       "status": "done",
-      "updated": "2026-11-16T16:02:00Z",
-      "note": "Main removed the PHP Utopia\\DSN\\DSN, Utopia\\Locale\\Locale and Utopia\\Image\\Image: the utopia extension (crates/extension) registers the Rust crates in their place, so there is no PHP implementation left to compare against. Their compat cases, adapters and documentation-example twins are gone; each crate's parity with the PHP class it replaced is checked by the extension's corpus (crates/extension/tests/<name>.php against <name>.expected.jsonl) in CI's Extension job. user-agent and domains keep their PHP classes (the extension serves them only when _APP_EXTENSION_LIBRARIES names them) and stay in compat. auth also follows web-auth/webauthn-lib 5.3.12's passkey validation (612 cases, 68,650 fuzz inputs, 0 differences)."
+      "updated": "2026-11-17T15:12:00Z",
+      "note": "Main removed the PHP Utopia\\DSN\\DSN, Utopia\\Locale\\Locale, Utopia\\Image\\Image and (Nov 17) Utopia\\UserAgent\\UserAgent: the utopia extension (crates/extension) registers the Rust crates in their place, so there is no PHP implementation left to compare against. Their compat cases, adapters and documentation-example twins are gone; each crate's parity with the PHP class it replaced is checked by the extension's corpus (crates/extension/tests/<name>.php against <name>.expected.jsonl) in CI's Extension job. domains and emails keep their PHP classes (the extension serves them only when _APP_EXTENSION_LIBRARIES names them) and stay in compat. auth also follows web-auth/webauthn-lib 5.3.12's passkey validation (612 cases, 68,650 fuzz inputs, 0 differences)."
     }
   ]
 }

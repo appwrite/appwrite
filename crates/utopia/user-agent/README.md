@@ -177,27 +177,7 @@ cargo fmt --all --check
 
 ### Compare with PHP
 
-Replay the results PHP recorded for every case against Rust, without PHP:
-
-```bash
-COMPAT_LIB=user-agent cargo test -p compat
-```
-
-Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
-
-```bash
-bin/compat run user-agent
-bin/compat fuzz user-agent
-bin/compat check user-agent
-```
-
-### Benchmark
-
-```bash
-bin/compat bench user-agent
-```
-
-This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/user-agent/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/user-agent/bench.json). Run it on a quiet machine, one library at a time.
+The utopia PHP extension serves this crate as `Utopia\UserAgent\UserAgent`, which no longer has a PHP implementation. Its parity corpus, `crates/extension/tests/user-agent.php`, must print `crates/extension/tests/user-agent.expected.jsonl`, the output of the PHP class it replaced; `crates/extension/tests/run.sh` checks it, and runs `packages/user-agent/tests`, in the development image.
 
 ## License
 

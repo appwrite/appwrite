@@ -33,6 +33,9 @@ done
 for expected in "$tests"/*.expected.jsonl; do
     library=$(basename "$expected" .expected.jsonl)
     echo "== $library (no PHP)" >&2
+    if [ -d "packages/$library/tests" ]; then
+        vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php "packages/$library/tests"
+    fi
     _APP_EXTENSION_LIBRARIES=$all php "$tests/$library.php" > "$output/$library.jsonl"
     diff "$expected" "$output/$library.jsonl"
 done
