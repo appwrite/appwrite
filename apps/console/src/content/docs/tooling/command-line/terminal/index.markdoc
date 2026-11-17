@@ -207,7 +207,7 @@ Press `x` on a function to execute it. A form asks for the method, path, headers
 
 The project overview and the **usage** tab show usage over the last 24 hours, in 15-minute buckets, next to the total, the range, and the latest value. Not every resource has a usage tab: the [resources table](#resources) lists the ones that do.
 
-- **Requests, inbound, and outbound** count the successful requests to the resource's API route and the routes below it, other than the Console's, with a list of the busiest routes.
+- **Requests, inbound, and outbound** count the requests to the resource's API route and the routes below it, other than the Console's, with a list of the busiest routes.
 - **Databases** add reads, writes, and storage.
 - **Functions** add executions, compute, and deployment storage.
 - **Sites** show the requests and bandwidth the site served, plus the API calls to the site's route.
