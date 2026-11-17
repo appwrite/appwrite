@@ -184,6 +184,7 @@ class Action extends PlatformAction
             'value' => $record['value'],
             'found' => $record['found'],
             'status' => $record['status'],
+            'message' => $record['message'],
         ], $records));
 
         // Ensure CAA won't block certificate issuance
