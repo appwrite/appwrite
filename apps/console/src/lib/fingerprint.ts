@@ -14,8 +14,6 @@ import { getRuntimeConfig } from '@/lib/runtime-config'
 
 const SECRET = getRuntimeConfig().fingerprintKey
 const CACHE_TTL_MS = 60 * 60 * 1000 // 1 hour
-// Re-sync well inside the backend's 500s window so a wall-clock jump (sleep, NTP) can't outlive it.
-const SERVER_TIME_MAX_AGE_MS = 5 * 60 * 1000
 
 const GLOBAL_SERVER_TIME_KEY = '__vibesFingerprintServerTime__'
 
@@ -59,13 +57,6 @@ export function resetFingerprintCache(): void {
   cache = null
 }
 
-function isServerTimeFresh(serverTime: ServerTimeCache | null): boolean {
-  if (!serverTime) return false
-  const ageMs = Date.now() - serverTime.fetchedAtMs
-  // Negative age means the wall clock moved backwards since the sync.
-  return ageMs >= 0 && ageMs < SERVER_TIME_MAX_AGE_MS
-}
-
 function getServerTimestamp(): number {
   const serverTimeCache = getFingerprintServerTimeGlobal().cache
   if (!serverTimeCache) {
@@ -78,15 +69,14 @@ function getServerTimestamp(): number {
 }
 
 /**
- * Ensures server time is synced from the Date header on GET /health/version, re-syncing
- * once the last sync is stale. Await before generating fingerprints (e.g. Restore project).
+ * Syncs server time from the Date header on GET /health/version. Await right before
+ * generating a fingerprint: a sync kept from page load goes stale if the clock jumps.
  */
 export function ensureFingerprintServerTimeSynced(
   endpoint: string,
   projectId: string,
 ): Promise<void> {
   const state = getFingerprintServerTimeGlobal()
-  if (isServerTimeFresh(state.cache)) return Promise.resolve()
   if (!endpoint?.trim() || !projectId?.trim()) {
     return Promise.resolve()
   }

@@ -44,20 +44,20 @@ describe('fingerprint server time', () => {
     now.mockRestore()
   })
 
-  test('re-syncs after the wall clock jumps, as a reload would', async () => {
+  test('reads server time again on every sync, so a clock jump cannot outlive it', async () => {
     let local = 1_000_000_000_000
     const now = spyOn(Date, 'now').mockImplementation(() => local)
     await ensureFingerprintServerTimeSynced(ENDPOINT, 'console')
 
-    // NTP correction or sleep/wake skew: local clock jumps 20 minutes ahead
-    // while only 1 real minute passes on the server.
+    // Sleep/wake skew or an NTP correction: the local clock jumps 20 minutes
+    // ahead while only 1 real minute passes on the server.
     local += 20 * 60 * 1000
     serverSecs += 60
     await ensureFingerprintServerTimeSynced(ENDPOINT, 'console')
     expect(fetchCalls).toBe(2)
     expect(await tokenTimestamp()).toBe(serverSecs)
 
-    // Clock jumps backwards.
+    // The clock jumps backwards.
     local -= 30 * 60 * 1000
     await ensureFingerprintServerTimeSynced(ENDPOINT, 'console')
     expect(fetchCalls).toBe(3)
@@ -65,14 +65,11 @@ describe('fingerprint server time', () => {
     now.mockRestore()
   })
 
-  test('keeps a fresh sync without refetching', async () => {
-    let local = 1_000_000_000_000
-    const now = spyOn(Date, 'now').mockImplementation(() => local)
-    await ensureFingerprintServerTimeSynced(ENDPOINT, 'console')
-    local += 60 * 1000
-    await ensureFingerprintServerTimeSynced(ENDPOINT, 'console')
+  test('shares one request between concurrent syncs', async () => {
+    await Promise.all([
+      ensureFingerprintServerTimeSynced(ENDPOINT, 'console'),
+      ensureFingerprintServerTimeSynced(ENDPOINT, 'console'),
+    ])
     expect(fetchCalls).toBe(1)
-    expect(await tokenTimestamp()).toBe(SERVER_SECS + 60)
-    now.mockRestore()
   })
 })
