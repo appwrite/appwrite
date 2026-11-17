@@ -580,6 +580,7 @@ export const jaSitesDictionary: Record<string, string> = {
     '数クリックで動作するサイトをデプロイし、自由にカスタマイズできます。',
   "This site's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
     'このサイトの Git インストールからリポジトリにアクセスできなくなったため、プッシュはデプロイされません。リポジトリの接続を解除してから、現在そのリポジトリがあるインストールで接続し直してください。',
+  'Found:': '検出値:',
   'Wrong value': '値が正しくありません',
   "Couldn't check": '確認できません',
   'Point your domain': 'ドメインの向き先',
