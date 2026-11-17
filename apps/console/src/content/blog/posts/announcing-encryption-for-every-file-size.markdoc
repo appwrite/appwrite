@@ -1,0 +1,70 @@
+---
+layout: post
+title: "Announcing encryption for every file size"
+description: Appwrite Storage now encrypts every new file in an encrypted bucket, regardless of size, before it reaches the storage provider.
+date: 2026-11-17
+cover: /images/blog/announcing-encryption-for-every-file-size/cover.avif
+timeToRead: 4
+author: chirag-aggarwal
+category: announcements, security
+featured: false
+faqs:
+  - question: "Does Appwrite encrypt files of every size?"
+    answer: "Yes. Every new upload to an encrypted bucket is encrypted before it reaches the storage provider, regardless of file size. Encryption is on by default for new buckets."
+  - question: "What happens to files uploaded before this change?"
+    answer: "Existing files remain readable and are not automatically re-encrypted. Files up to 20 MB were already encrypted. Larger files in encrypted buckets were stored unencrypted and remain unencrypted until uploaded again."
+  - question: "Do I need to change my app or bucket settings?"
+    answer: "No code, SDK, or settings changes are needed. The change is live on Appwrite Cloud. Buckets used through the S3-compatible API still need encryption turned off."
+  - question: "How does encryption affect storage usage?"
+    answer: "Storage usage counts the stored file size. The new format adds 28 bytes per 64 KB segment, about 0.04 percent. Previously uploaded files keep their stored size."
+  - question: "Can Appwrite read part of an encrypted file?"
+    answer: "Yes. In a bucket without compression, a range request decrypts only the segments it covers. Compressed files are decrypted and decompressed as a whole."
+---
+
+Appwrite Storage now encrypts every new file in an encrypted bucket, regardless of its size, before it reaches the storage provider. The change is live on Appwrite Cloud and requires no code, SDK, or settings changes.
+
+# Encryption during upload
+
+Encryption is on by default for new buckets and can be configured under **Settings > Security settings > Encryption**. Previously, encryption applied only to files up to 20 MB. Larger files in encrypted buckets were stored unencrypted.
+
+Each new file gets a random 256-bit key. Appwrite encrypts that key with the server's encryption key and stores it in the file's internal metadata. The API never returns the file key.
+
+Appwrite encrypts files with AES-256-GCM in 64 KB segments. Each segment carries a nonce, a value used for encryption, and an authentication tag that checks its integrity. Authentication also covers the segment's position and whether it is the last segment, so swapping, reordering, or cutting off segments causes the read to fail.
+
+Upload chunks are encrypted in memory before they are written. Chunked and resumed uploads, including chunks that arrive out of order, continue to work. A plain encrypted upload is written once. For buckets with compression or image metadata stripping, Appwrite reads the uploaded file back, decrypts and processes it, then encrypts and writes it again. Both options apply only to files up to 20 MB.
+
+# Reading encrypted files
+
+In buckets without compression, a range request reads and decrypts only the segments it covers. This helps with requests such as video seeks and resumed downloads. Full downloads stream one segment at a time, keeping memory use flat regardless of file size. Compressed files are decrypted and decompressed as a whole.
+
+Downloads, views, image previews, messaging attachments, and CSV and JSON imports from storage can read both the new and old formats. Buckets used through the S3-compatible API still need encryption turned off.
+
+# Files already in storage
+
+Existing files remain readable and are not automatically re-encrypted. Files up to 20 MB were already encrypted with AES-128-GCM and remain in that format. Files larger than 20 MB in an encrypted bucket were stored unencrypted and remain unencrypted until uploaded again. Every new upload uses the new format.
+
+Storage usage counts the stored file size. The new format adds 28 bytes per 64 KB segment, about 0.04 percent. Old encrypted files were about a third larger than the original, and previously uploaded files keep their stored size.
+
+# Our measurements
+
+I measured the change on the same deployment backed by S3-compatible storage, with every request crossing the public internet. These figures are medians. Upload figures show the extra time for an encrypted upload over an unencrypted one.
+
+| Measurement | Before | After |
+| --- | --- | --- |
+| 100 KB encrypted upload | +155 ms | +20 ms |
+| 1 MB encrypted upload | +235 ms | -23 ms (within noise) |
+| 5 MB encrypted upload | +435 ms | +110 ms |
+| 64 KB range from a 20 MB encrypted file | 869 ms | 208 ms |
+
+The same range read from an unencrypted file took 189 ms. A 100 MB file in an encrypted bucket was stored unencrypted before the change; it is now encrypted, with download time within noise of an unencrypted file.
+
+# Protection for files of every size
+
+Files come in many sizes, and teams need to know what an encrypted bucket protects. This change brings new large uploads under the same bucket encryption setting as smaller files. We'd love to hear how it works for your team. Share feedback with us on [Discord](https://appwrite.io/discord).
+
+# More resources
+
+- [Storage encryption](/docs/advanced/security/encryption#storage)
+- [Existing files](/docs/advanced/security/encryption#existing-files)
+- [Bucket encryption settings](/docs/products/storage/buckets#encryption)
+- [Upload and download files](/docs/products/storage/upload-download)
