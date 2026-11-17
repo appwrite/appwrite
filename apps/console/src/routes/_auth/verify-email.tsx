@@ -62,15 +62,15 @@ function isInvalidTokenError(error: unknown): boolean {
  */
 const attemptedSecrets = new Set<string>()
 
-/** When the last link was mailed, kept per tab so a remount or reload neither mails another link nor resets the wait. */
-const sentAtKey = (accountId: string) => `verify-email-sent-at:${accountId}`
+/** When the link was last mailed, kept per tab so a remount or reload neither mails another link nor resets the wait. */
+const sentKey = (accountId: string) => `verify-email-sent:${accountId}`
 const RESEND_MUTATION_KEY = ['account', 'verification', 'email']
 
 /** One verification email per minute, as Supabase and Clerk allow. */
 const RESEND_COOLDOWN_MS = 60_000
 
 function readSentAt(accountId: string): number | null {
-  const value = Number(sessionStorage.getItem(sentAtKey(accountId)))
+  const value = Number(sessionStorage.getItem(sentKey(accountId)))
   return Number.isFinite(value) && value > 0 ? value : null
 }
 
@@ -99,14 +99,14 @@ function useResendCooldown(accountId: string | undefined) {
   const start = () => {
     if (!accountId) return
     const at = Date.now()
-    sessionStorage.setItem(sentAtKey(accountId), String(at))
+    sessionStorage.setItem(sentKey(accountId), String(at))
     setSentAt(at)
     setNow(at)
   }
 
   const clear = () => {
     if (!accountId) return
-    sessionStorage.removeItem(sentAtKey(accountId))
+    sessionStorage.removeItem(sentKey(accountId))
     setSentAt(null)
   }
 
