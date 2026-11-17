@@ -619,5 +619,6 @@ export const heSitesDictionary: Record<string, string> = {
   'Wrong value': 'ערך שגוי',
   "Couldn't check": 'לא ניתן לבדוק',
   'Point your domain': 'הפניית הדומיין',
+  'Not detected yet': 'עדיין לא זוהתה',
   'Not detected': 'לא זוהתה',
 }
