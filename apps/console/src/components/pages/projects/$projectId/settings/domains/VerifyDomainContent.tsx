@@ -341,8 +341,14 @@ function RecordSection({
   )
 }
 
-/** Added · Status, above the records. */
-function DnsCheckMeta({ rule }: { rule: Models.ProxyRule }) {
+/** Added · Status · Last check, above the records. */
+function DnsCheckMeta({
+  rule,
+  checkedAt,
+}: {
+  rule: Models.ProxyRule
+  checkedAt: string
+}) {
   const t = useT()
   const label = 'text-[12px] text-muted-foreground'
   const value = 'mt-0.5 flex h-6 items-center text-[13px] text-foreground'
@@ -358,6 +364,12 @@ function DnsCheckMeta({ rule }: { rule: Models.ProxyRule }) {
         <dt className={label}>{t('Status')}</dt>
         <dd className={value}>
           <RuleStatusBadge rule={rule} />
+        </dd>
+      </div>
+      <div className="min-w-0">
+        <dt className={label}>{t('Last check')}</dt>
+        <dd className={value}>
+          <DateTooltip date={checkedAt} />
         </dd>
       </div>
     </dl>
@@ -740,7 +752,7 @@ export function VerifyDomainContent({
 
   const checkedRecords = checks ? (
     <div className="space-y-6">
-      <DnsCheckMeta rule={rule} />
+      <DnsCheckMeta rule={rule} checkedAt={rule.$updatedAt} />
       {pointingRecords.length > 0 && (
         <RecordSection
           title={t('Point your domain')}
