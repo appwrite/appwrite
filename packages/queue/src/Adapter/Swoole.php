@@ -256,20 +256,18 @@ class Swoole extends Adapter
                 }
             });
         }
+        $batch = max(1, intdiv($prefetch, 2));
         try {
             while (!$this->isStopped()) {
-                // Refill in batches once half the budget is free, or as soon as a
-                // handler slot sits idle. Every fetched message has started by
-                // now, so an idle slot has nothing queued for it. Without the
-                // second rule, long handlers holding more than half the slots
-                // stop the fetching, and the idle slots wait for one of them to
-                // finish while the queue backs up.
-                while (
-                    !$this->isStopped()
-                    && $prefetch - \count($deliveries) < max(1, intdiv($prefetch, 2))
-                    && !($running->length() < $coroutines && \count($deliveries) < $prefetch)
-                ) {
-                    $available->pop(0.1);
+                // Fetch once half the budget is free, or for an idle slot after a poll in which no handler finished.
+                $quiet = false;
+                while (!$this->isStopped()) {
+                    $free = $prefetch - \count($deliveries);
+                    $idle = $running->length() < $coroutines;
+                    if ($free >= $batch || ($quiet && $idle && $free > 0)) {
+                        break;
+                    }
+                    $quiet = $available->pop(0.1) === false;
                 }
                 if ($this->isStopped()) {
                     break;
