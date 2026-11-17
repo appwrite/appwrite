@@ -16,4 +16,6 @@ export interface ProxyRuleRecord {
   status: 'verified' | 'missing' | 'mismatch' | 'failed'
   /** Why the check did not pass, empty when verified */
   message: string
+  /** CAA must pass; CNAME, A and AAAA are alternatives, any one is enough */
+  required: boolean
 }
