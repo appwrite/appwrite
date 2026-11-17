@@ -528,6 +528,13 @@
         },
         {
           "name": "cloudfront tenants",
+          "scrub": [
+            {
+              "kind": "now",
+              "seconds": 2593000,
+              "reason": "issueCertificate answers now + 30 days to the millisecond, and each runtime reads its own clock, so the two can differ by a millisecond (this fuzz profile only)"
+            }
+          ],
           "args": {
             "gen": "object",
             "fields": {
