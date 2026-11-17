@@ -335,62 +335,64 @@ export function DnsRecordsTable({
       </TableHeader>
       <TableBody>
         {records.map((r, i) => (
-          <TableRow key={`${r.type}-${i}`}>
-            <TableCell className="px-4 py-3 font-mono text-[12px]">
-              <span className="inline-flex flex-wrap items-center gap-1.5">
-                {r.type}
-                {r.badge ? (
-                  <Badge
-                    variant={
-                      r.check?.required || r.badge === 'Required'
-                        ? 'warning'
-                        : 'success'
-                    }
-                    className="text-[10px] shrink-0 font-sans font-medium normal-case tracking-normal"
-                  >
-                    {t(r.badge)}
-                  </Badge>
-                ) : null}
-              </span>
-            </TableCell>
-            <TableCell
-              className="px-4 py-3 font-mono text-[12px]"
-              title={r.name || undefined}
-            >
-              {r.name ? (
+          <Fragment key={`${r.type}-${i}`}>
+            <TableRow>
+              <TableCell className="px-4 py-3 font-mono text-[12px]">
+                <span className="inline-flex flex-wrap items-center gap-1.5">
+                  {r.type}
+                  {r.badge ? (
+                    <Badge
+                      variant={
+                        r.check?.required || r.badge === 'Required'
+                          ? 'warning'
+                          : 'success'
+                      }
+                      className="text-[10px] shrink-0 font-sans font-medium normal-case tracking-normal"
+                    >
+                      {t(r.badge)}
+                    </Badge>
+                  ) : null}
+                </span>
+              </TableCell>
+              <TableCell
+                className="px-4 py-3 font-mono text-[12px]"
+                title={r.name || undefined}
+              >
+                {r.name ? (
+                  <CopyableId
+                    id={r.name}
+                    variant="inline"
+                    size="md"
+                    maxWidth={180}
+                    showCopyOnHover={false}
+                    className="-my-1.5 -ms-2.5"
+                  />
+                ) : (
+                  '-'
+                )}
+              </TableCell>
+              <TableCell className="px-4 py-3" title={r.value}>
                 <CopyableId
-                  id={r.name}
+                  id={r.value}
                   variant="inline"
                   size="md"
-                  maxWidth={180}
+                  maxWidth={200}
                   showCopyOnHover={false}
                   className="-my-1.5 -ms-2.5"
                 />
-              ) : (
-                '-'
+              </TableCell>
+              {showPriority && (
+                <TableCell className="px-4 py-3 text-end text-[12px] text-muted-foreground">
+                  {r.priority ?? '-'}
+                </TableCell>
               )}
-            </TableCell>
-            <TableCell className="px-4 py-3" title={r.value}>
-              <CopyableId
-                id={r.value}
-                variant="inline"
-                size="md"
-                maxWidth={200}
-                showCopyOnHover={false}
-                className="-my-1.5 -ms-2.5"
-              />
-            </TableCell>
-            {showPriority && (
-              <TableCell className="px-4 py-3 text-end text-[12px] text-muted-foreground">
-                {r.priority ?? '-'}
-              </TableCell>
-            )}
-            {ttl && (
-              <TableCell className="hidden sm:table-cell px-4 py-3 text-end text-[12px] text-muted-foreground">
-                {r.ttl ?? '-'}
-              </TableCell>
-            )}
-          </TableRow>
+              {ttl && (
+                <TableCell className="hidden sm:table-cell px-4 py-3 text-end text-[12px] text-muted-foreground">
+                  {r.ttl ?? '-'}
+                </TableCell>
+              )}
+            </TableRow>
+          </Fragment>
         ))}
       </TableBody>
     </Table>
