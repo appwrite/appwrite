@@ -633,6 +633,8 @@ export const heSitesDictionary: Record<string, string> = {
     'הוסיפו את הרשומות שלמטה אצל ספק ה-DNS שלכם. Appwrite בודק שוב באופן אוטומטי במשך 3 ימים.',
   'Automatic checks have stopped. Fix the records below, then verify again.':
     'הבדיקות האוטומטיות הופסקו. תקנו את הרשומות שלמטה ולאחר מכן אמתו שוב.',
+  'Your {type} record is set. Add the CAA record below to finish.':
+    'רשומת ה-{type} שלכם מוגדרת. הוסיפו את רשומת ה-CAA שלמטה כדי לסיים.',
   'All records are verified.': 'כל הרשומות אומתו.',
   'Appwrite will issue the SSL certificate next.':
     'בשלב הבא Appwrite יפיק את תעודת ה-SSL.',
