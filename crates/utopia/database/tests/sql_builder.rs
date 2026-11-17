@@ -150,7 +150,7 @@ mod oracle {
             r#"["(`title` LIKE ? OR `title` LIKE ?)",["alpha","be%ta"]]"#
         );
         assert_eq!(
-            condition(&builder::postgres().compile_filters(&filters).unwrap()),
+            condition(&builder::postgres(false).compile_filters(&filters).unwrap()),
             r#"["(\"title\" ILIKE ? OR \"title\" ILIKE ?)",["alpha","be%ta"]]"#
         );
     }
@@ -163,14 +163,14 @@ mod oracle {
         );
         assert_eq!(
             condition(
-                &builder::postgres()
+                &builder::postgres(false)
                     .compile_filters(&[Query::search("title", "\"foo/bar baz\""), Query::not_search("t", "@García!")])
                     .unwrap()
             ),
             r#"["to_tsvector(regexp_replace(\"title\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?) AND NOT (to_tsvector(regexp_replace(\"t\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?))",["\"foo bar baz\"","Garc\u00eda"]]"#
         );
         assert_eq!(
-            condition(&builder::postgres().compile_filters(&[Query::search("title", "  \t ")]).unwrap()),
+            condition(&builder::postgres(false).compile_filters(&[Query::search("title", "  \t ")]).unwrap()),
             r#"["1 = 0",[]]"#
         );
     }
@@ -180,7 +180,7 @@ mod oracle {
         let query =
             typed(Query::distance_less_than("location", list([Value::Int(10), Value::Int(20)]), 1000, true), "point");
         assert_eq!(
-            condition(&builder::postgres().compile_filters(&[query]).unwrap()),
+            condition(&builder::postgres(false).compile_filters(&[query]).unwrap()),
             r#"["(\"location\" && ST_Expand(ST_GeomFromText(?, 4326), ?, ?) AND ST_Distance((\"location\"::geography), ST_SetSRID(ST_GeomFromText(?), 4326)::geography) < ?)",["POINT(10 20)",0.009560263084334466,0.009043717329571146,"POINT(10 20)",1000]]"#
         );
     }
@@ -189,11 +189,11 @@ mod oracle {
     fn postgres_object_path() {
         let ok = typed(Query::equal("meta.user-info.home_city2", strings(&["x"])), "object");
         assert_eq!(
-            condition(&builder::postgres().compile_filters(&[ok]).unwrap()),
+            condition(&builder::postgres(false).compile_filters(&[ok]).unwrap()),
             r#"["\"meta\"->'user-info'->>'home_city2' IN (?)",["x"]]"#
         );
         let bad = typed(Query::equal("meta..a", strings(&["x"])), "object");
-        let error = database_error(builder::postgres().compile_filters(&[bad]).unwrap_err());
+        let error = database_error(builder::postgres(false).compile_filters(&[bad]).unwrap_err());
         assert_eq!(error.kind(), Kind::Query);
         assert_eq!(
             error.message(),
@@ -212,7 +212,7 @@ mod contains_all_test {
         let mut cases: Vec<(SqlBuilder, &str)> = vec![
             (SqlBuilder::MariaDb(builder::mariadb()), "LIKE"),
             (SqlBuilder::MySql(builder::mysql()), "LIKE"),
-            (SqlBuilder::PostgreSql(builder::postgres()), "ILIKE"),
+            (SqlBuilder::PostgreSql(builder::postgres(false)), "ILIKE"),
         ];
         for (b, like) in &mut cases {
             let condition = utopia_database::each_builder!(b, b => b.compile_filters(&filters)).unwrap();
@@ -273,7 +273,7 @@ mod search_term_test {
 
     fn builders() -> Vec<SqlBuilder> {
         vec![
-            SqlBuilder::PostgreSql(builder::postgres()),
+            SqlBuilder::PostgreSql(builder::postgres(false)),
             SqlBuilder::MySql(builder::mysql()),
             SqlBuilder::MariaDb(builder::mariadb()),
         ]
@@ -282,7 +282,7 @@ mod search_term_test {
     #[test]
     fn postgre_sql_searches_each_word_of_a_term() {
         for (term, bound) in POSTGRES_TERMS {
-            let mut b = SqlBuilder::PostgreSql(builder::postgres());
+            let mut b = SqlBuilder::PostgreSql(builder::postgres(false));
             assert_eq!(bindings(&mut b, Query::search("title", term)), vec![string(bound)], "{term}");
             assert_eq!(bindings(&mut b, Query::not_search("title", term)), vec![string(bound)], "{term}");
         }
@@ -353,7 +353,7 @@ mod postgres_distance_test {
     #[test]
     fn distance_less_than_in_degrees_leads_with_d_within() {
         let query = typed(Query::distance_less_than("location", ints(10, 20), 5, false), "point");
-        let condition = builder::postgres().compile_filters(&[query]).unwrap();
+        let condition = builder::postgres(false).compile_filters(&[query]).unwrap();
         assert_eq!(
             condition.expression,
             r#"(ST_DWithin("location", ST_GeomFromText(?, 4326), ?) AND ST_Distance("location", ST_GeomFromText(?, 4326)) < ?)"#
@@ -367,7 +367,7 @@ mod postgres_distance_test {
     #[test]
     fn distance_less_than_in_meters_from_a_point_leads_with_a_degree_box() {
         let query = typed(Query::distance_less_than("location", ints(10, 20), 1000, true), "point");
-        let condition = builder::postgres().compile_filters(&[query]).unwrap();
+        let condition = builder::postgres(false).compile_filters(&[query]).unwrap();
         assert_eq!(
             condition.expression,
             r#"("location" && ST_Expand(ST_GeomFromText(?, 4326), ?, ?) AND ST_Distance(("location"::geography), ST_SetSRID(ST_GeomFromText(?), 4326)::geography) < ?)"#
@@ -401,7 +401,7 @@ mod postgres_distance_test {
             typed(Query::distance_less_than("location", point(179.99, 0.0), 5000, true), "point"),
         ];
         for query in cases {
-            let condition = builder::postgres().compile_filters(&[query]).unwrap();
+            let condition = builder::postgres(false).compile_filters(&[query]).unwrap();
             assert_eq!(
                 condition.expression,
                 r#"ST_Distance(("location"::geography), ST_SetSRID(ST_GeomFromText(?), 4326)::geography) < ?"#
@@ -416,7 +416,7 @@ mod postgres_distance_test {
     fn distance_less_than_in_meters_refuses_a_distance_that_is_not_finite() {
         for distance in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
             let query = typed(Query::distance_less_than("location", ints(10, 20), distance, true), "point");
-            let error = builder::postgres().compile_filters(&[query]).unwrap_err();
+            let error = builder::postgres(false).compile_filters(&[query]).unwrap_err();
             assert_eq!(error.to_string(), "Invalid distance query: the distance must be a finite number");
         }
     }
@@ -424,7 +424,7 @@ mod postgres_distance_test {
     #[test]
     fn distance_greater_than_is_unchanged() {
         let query = typed(Query::distance_greater_than("location", ints(10, 20), 5, false), "point");
-        let condition = builder::postgres().compile_filters(&[query]).unwrap();
+        let condition = builder::postgres(false).compile_filters(&[query]).unwrap();
         assert_eq!(condition.expression, r#"ST_Distance("location", ST_GeomFromText(?, 4326)) > ?"#);
     }
 }
@@ -449,7 +449,7 @@ mod postgres_object_path_test {
     fn a_filter_on_an_unsafe_object_path_is_a_query_error() {
         for path in UNSAFE {
             let error =
-                builder::postgres().compile_filters(&[object(Query::equal(path, strings(&["x"])))]).unwrap_err();
+                builder::postgres(false).compile_filters(&[object(Query::equal(path, strings(&["x"])))]).unwrap_err();
             assert_eq!(database_error(error).kind(), Kind::Query, "{path}");
         }
     }
@@ -457,7 +457,7 @@ mod postgres_object_path_test {
     #[test]
     fn a_statement_with_an_unsafe_object_path_inside_or_is_a_query_error() {
         for path in UNSAFE {
-            let error = builder::postgres()
+            let error = builder::postgres(false)
                 .from("docs", "")
                 .filter([Query::or([
                     object(Query::equal("meta.a", strings(&["x"]))),
@@ -471,7 +471,7 @@ mod postgres_object_path_test {
 
     #[test]
     fn a_filter_on_a_plain_object_path_binds_its_value() {
-        let condition = builder::postgres()
+        let condition = builder::postgres(false)
             .compile_filters(&[object(Query::equal("meta.user-info.home_city2", strings(&["x"])))])
             .unwrap();
         assert_eq!(condition.bindings, vec![string("x")]);
@@ -620,9 +620,67 @@ mod float_overflow {
     // `testPostgresRaisesAnOverflowItselfSoItsAggregatesAreLeftAsTheyAre`.
     #[test]
     fn postgres_aggregates_are_left_as_they_are() {
-        let postgres = || SqlBuilder::PostgreSql(builder::postgres());
+        let postgres = || SqlBuilder::PostgreSql(builder::postgres(false));
         assert_eq!(compiled(postgres(), Query::bit_or("flags", "bits")), r#"BIT_OR("flags") AS "bits""#);
         assert_eq!(compiled(postgres(), Query::sum("reading", "total")), r#"SUM("reading") AS "total""#);
         assert_eq!(compiled(postgres(), Query::stddev_pop("reading", "total")), r#"STDDEV_POP("reading") AS "total""#);
+    }
+}
+
+/// tests/unit/Builder/PostgresIdCollationTest.php: the `_uid` unique index,
+/// and the `_perms` one outside shared tables, are built in `utf8_ci_ai`, so
+/// equality on those columns, and a join between two of them, compares in it.
+mod postgres_id_collation_test {
+    use super::*;
+    use utopia_query::builder::JoinType;
+
+    #[test]
+    fn equal_compares_in_the_index_collation() {
+        for (shared_tables, column, expected) in [
+            (false, "_uid", r#""_uid" COLLATE utf8_ci_ai IN (?)"#),
+            (true, "_uid", r#""_uid" COLLATE utf8_ci_ai IN (?)"#),
+            (false, "_document", r#""_document" COLLATE utf8_ci_ai IN (?)"#),
+            (true, "_document", r#""_document" IN (?)"#),
+            (false, "name", r#""name" IN (?)"#),
+        ] {
+            let built = builder::postgres(shared_tables)
+                .from("docs", "")
+                .filter([Query::equal(column, strings(&["abc"]))])
+                .build()
+                .unwrap();
+            assert_eq!(built.query, format!(r#"SELECT * FROM "docs" WHERE {expected}"#), "{shared_tables} {column}");
+        }
+    }
+
+    const JOINS: [(&str, &str); 2] =
+        [("b._uid", r#""a"."_uid" COLLATE utf8_ci_ai = "b"."_uid""#), ("b.authorId", r#""a"."_uid" = "b"."authorId""#)];
+
+    #[test]
+    fn join_on_two_ids_compares_in_the_index_collation() {
+        for (right, expected) in JOINS {
+            let built = builder::postgres(false).from("a", "a").join("b", "a._uid", right, "=", "b").build().unwrap();
+            assert_eq!(built.query, format!(r#"SELECT * FROM "a" AS "a" JOIN "b" AS "b" ON {expected}"#));
+        }
+    }
+
+    #[test]
+    fn join_builder_on_two_ids_compares_in_the_index_collation() {
+        for (right, expected) in JOINS {
+            let mut builder = builder::postgres(false);
+            builder.from("a", "a");
+            builder
+                .join_where(
+                    "b",
+                    |join| {
+                        join.on("a._uid", right, "=")?;
+                        Ok(())
+                    },
+                    JoinType::Inner,
+                    "b",
+                )
+                .unwrap();
+            let built = builder.build().unwrap();
+            assert_eq!(built.query, format!(r#"SELECT * FROM "a" AS "a" JOIN "b" AS "b" ON {expected}"#));
+        }
     }
 }

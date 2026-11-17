@@ -14890,7 +14890,7 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
-                "query": "SELECT * FROM \"${ns}\".\"__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid AND (\"table_main\"._tenant IN (:_tenant) OR \"table_main\"._tenant IS NULL)",
+                "query": "SELECT * FROM \"${ns}\".\"__metadata\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid AND (\"table_main\"._tenant IN (:_tenant) OR \"table_main\"._tenant IS NULL)",
                 "bindings": {
                   ":_uid": "distanceWithin",
                   ":_tenant": 999

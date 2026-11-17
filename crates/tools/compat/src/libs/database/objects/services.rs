@@ -790,7 +790,9 @@ async fn build(class: &str, a: &Args, calls: &Calls) -> R<Option<Obj>> {
         "State\\Snapshot" => object(SnapshotObj(snapshot_of(Some(&a.cx), a.json())?)),
         "Builder\\MySQL" => builder_obj(SqlBuilder::MySql(builder::mysql())),
         "Builder\\MariaDB" => builder_obj(SqlBuilder::MariaDb(builder::mariadb())),
-        "Builder\\Postgres" => builder_obj(SqlBuilder::PostgreSql(builder::postgres())),
+        "Builder\\Postgres" => {
+            builder_obj(SqlBuilder::PostgreSql(builder::postgres(a.bool_or("sharedTables", false)?)))
+        }
         "Builder\\SQLite" => builder_obj(SqlBuilder::Sqlite(builder::sqlite())),
         "Query\\Builder\\Statement" => {
             let named = match a.raw("namedBindings") {

@@ -214,20 +214,20 @@ final class Values
     }
 
     /**
-     * Queries from a list argument: `$query` tags, or arrays parsed with
-     * Query::parseQuery (strings with Query::parse).
+     * Queries from a list argument: `$query` tags, queries (a builder's too),
+     * or arrays parsed with Query::parseQuery (strings with Query::parse).
      *
-     * @return array<Query>
+     * @return array<\Utopia\Query\Query>
      */
     public static function queries(mixed $value): array
     {
-        return array_map(static function (mixed $q): Query {
+        return array_map(static function (mixed $q): \Utopia\Query\Query {
             if (\is_string($q)) {
                 return Query::parse($q);
             }
             $q = self::decode($q);
 
-            return $q instanceof Query ? $q : Query::parseQuery($q);
+            return $q instanceof \Utopia\Query\Query ? $q : Query::parseQuery($q);
         }, self::list($value));
     }
 

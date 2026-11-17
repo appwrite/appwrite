@@ -10,8 +10,9 @@
 //! |---|---|
 //! | `Builder\MySQL` | [`mysql()`] |
 //! | `Builder\MariaDB` | [`mariadb()`] |
-//! | `Builder\Postgres` | [`postgres()`] |
+//! | `Builder\Postgres` (`Postgres::COLLATION`) | [`postgres()`] ([`POSTGRES_COLLATION`]) |
 //! | `Builder\SQLite` (`SQLite::COLLATION`) | [`sqlite()`] ([`SQLITE_COLLATION`]) |
+//! | `Builder\CollatesDocumentIds` | [`IdCollation`] |
 //! | `Builder\Scope` | [`Scope`] |
 //! | `Builder\Scoping`, `Builder\ScopesCollections`, `Builder\Filtering`, `Builder\CompilesFilters`, `Builder\RefusesJoinedWrites` | the builder's own `scope()`, `is_scoped()`, `from_table()`, `compile_filters()` and its refusals |
 //! | `Builder\PreparesSearchTerms`, `Builder\MatchesContainsAllPatterns`, `Builder\CompilesAggregates` | [`Flavor`] |
@@ -40,7 +41,7 @@ use std::sync::Arc;
 
 pub use crate::hook::SqlBuilder;
 use utopia_query::builder::{Condition, MariaDb, MySql, PostgreSql, Sqlite, Statement};
-pub use utopia_query::builder::{Flavor, Scope, ScopeBinding, SqliteFlavor};
+pub use utopia_query::builder::{Flavor, IdCollation, Scope, ScopeBinding, SqliteFlavor};
 
 use crate::error::Error;
 use crate::query::Query;
@@ -49,6 +50,11 @@ use crate::validator::object_path::ObjectPath;
 
 /// The collation document ids compare in on SQLite (`SQLite::COLLATION`).
 pub const SQLITE_COLLATION: &str = "NOCASE";
+
+/// The collation of the `_uid` unique index, and of the `_perms` one outside
+/// shared tables, on PostgreSQL (`Postgres::COLLATION`): non-deterministic,
+/// so ids are unique case- and accent-insensitively.
+pub const POSTGRES_COLLATION: &str = "utf8_ci_ai";
 
 /// A database error carried through a `utopia-query` result (a hook's or a
 /// scope's refusal, PHP's `Utopia\Database\Exception\*` thrown inside the
@@ -85,12 +91,20 @@ pub fn mariadb() -> MariaDb {
     builder
 }
 
-/// A PostgreSQL builder (`new Utopia\Database\Builder\Postgres()`): it also
-/// refuses a filter on an invalid path into an object attribute, and lets
-/// `distanceLessThan()` use the spatial index.
-pub fn postgres() -> PostgreSql {
+/// A PostgreSQL builder (`new Utopia\Database\Builder\Postgres($sharedTables)`):
+/// it also refuses a filter on an invalid path into an object attribute,
+/// lets `distanceLessThan()` use the spatial index, and compares `_uid`, and
+/// `_document` unless `shared_tables` (whose `_perms` unique index is built
+/// without the collation), in [`POSTGRES_COLLATION`]; a join only when both
+/// sides are such columns.
+pub fn postgres(shared_tables: bool) -> PostgreSql {
+    let mut collated_columns = vec![storage::UID.to_owned()];
+    if !shared_tables {
+        collated_columns.push(storage::PERMISSIONS_DOCUMENT.to_owned());
+    }
     let mut builder = PostgreSql::new();
     builder.set_flavor(Flavor {
+        ids: Some(IdCollation { collation: POSTGRES_COLLATION.to_owned(), collated_columns, join_both_sides: true }),
         object_path: Some(Arc::new(|attribute: &str| {
             if ObjectPath::accepts(attribute.as_bytes()) {
                 return Ok(());
@@ -107,9 +121,11 @@ pub fn postgres() -> PostgreSql {
 pub fn sqlite() -> Sqlite {
     let mut builder = Sqlite::new();
     builder.set_flavor(Flavor {
-        sqlite: Some(SqliteFlavor {
+        sqlite: Some(SqliteFlavor),
+        ids: Some(IdCollation {
             collation: SQLITE_COLLATION.to_owned(),
             collated_columns: vec![storage::UID.to_owned(), storage::PERMISSIONS_DOCUMENT.to_owned()],
+            join_both_sides: false,
         }),
         ..Flavor::default()
     });

@@ -7990,7 +7990,7 @@
             },
             {
               "transform": "document_find",
-              "query": "SELECT * FROM \"${ns}\".\"ns_t\" AS \"table_main\" WHERE \"_uid\" IN (?) LIMIT ?"
+              "query": "SELECT * FROM \"${ns}\".\"ns_t\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai IN (?) LIMIT ?"
             },
             {
               "transform": "document_find",

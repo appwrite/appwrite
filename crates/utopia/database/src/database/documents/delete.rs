@@ -73,12 +73,19 @@ impl Database {
                             changed = self.silent(hook.before_document_delete(collection, &document, report)).await?;
                         }
 
-                        let result = authorization.skip(self.inner.adapter.delete_document(collection, id)).await?;
+                        // The stored id, which an engine that matches ids case-insensitively may spell
+                        // differently from `id`
+                        let stored = document.id().to_owned();
+                        let result =
+                            authorization.skip(self.inner.adapter.delete_document(collection, &stored)).await?;
 
                         self.purge_cached_document_internal(collection.id(), Some(id)).await?;
+                        if stored != id {
+                            self.purge_cached_document_internal(collection.id(), Some(&stored)).await?;
+                        }
 
                         if result {
-                            self.queue_document_purge(collection.id(), id).await?;
+                            self.queue_document_purge(collection.id(), &stored).await?;
                         }
 
                         Ok((result.then_some(document), changed))

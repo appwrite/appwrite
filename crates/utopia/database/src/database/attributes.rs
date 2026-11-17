@@ -325,14 +325,23 @@ impl Database {
     }
 
     /// Whether the collection can take the attribute without exceeding its
-    /// limits (`checkAttribute()`).
+    /// limits (`checkAttribute()`). The `pending` attributes, accepted but
+    /// not yet in the collection (such as ones queued for creation), count
+    /// towards the limits as if they were already added.
     ///
     /// Fails ([`crate::Kind::NotFound`]) for a missing collection and
     /// ([`crate::Kind::Limit`]) past the attribute count or row width.
-    pub async fn check_attribute(&self, collection: &str, attribute: &Attribute) -> Result<bool> {
+    pub async fn check_attribute(
+        &self,
+        collection: &str,
+        attribute: &Attribute,
+        pending: &[Attribute],
+    ) -> Result<bool> {
         let mut definition = self.silent(self.get_collection(collection)).await?;
 
-        definition.set_with(collection::ATTRIBUTES, Value::from(attribute.to_document()?), SetType::Append)?;
+        for added in pending.iter().chain([attribute]) {
+            definition.set_with(collection::ATTRIBUTES, Value::from(added.to_document()?), SetType::Append)?;
+        }
 
         let adapter = &self.inner.adapter;
         let limits = adapter.limits();

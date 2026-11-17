@@ -91469,7 +91469,7 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
-                "query": "SELECT * FROM \"${ns}\".\"compat__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid",
+                "query": "SELECT * FROM \"${ns}\".\"compat__metadata\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid",
                 "bindings": {
                   ":_uid": "upsert_batch_read"
                 },
@@ -91482,7 +91482,7 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
-                "query": "SELECT * FROM \"${ns}\".\"compat__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid",
+                "query": "SELECT * FROM \"${ns}\".\"compat__metadata\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid",
                 "bindings": {
                   ":_uid": "upsert_batch_read"
                 },
@@ -91495,7 +91495,7 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
-                "query": "SELECT * FROM \"${ns}\".\"compat_upsert_batch_read\" AS \"table_main\" WHERE \"_uid\" IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ORDER BY \"_id\" ASC LIMIT ? OFFSET ?",
+                "query": "SELECT * FROM \"${ns}\".\"compat_upsert_batch_read\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ORDER BY \"_id\" ASC LIMIT ? OFFSET ?",
                 "bindings": [
                   "document0",
                   "document1",

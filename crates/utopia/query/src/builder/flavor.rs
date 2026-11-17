@@ -16,6 +16,7 @@
 //! | `Builder\Postgres::compileFilter()` (object paths) | [`Flavor::object_path`] |
 //! | `Builder\Postgres::compileSpatialFilter()` | [`Flavor::indexed_distance`] |
 //! | `Builder\SQLite` | [`Flavor::sqlite`] ([`SqliteFlavor`]) |
+//! | `Builder\CollatesDocumentIds` (`SQLite`, `Postgres`) | [`Flavor::ids`] ([`IdCollation`]) |
 //! | `Builder\CompilesFilters`, `Builder\Filtering` | [`Builder::compile_filters`] |
 //! | `Builder\Scope` | [`Scope`] |
 //! | `Builder\ScopesCollections`, `Builder\Scoping`, `Builder\RefusesJoinedWrites` | [`Builder::scope`], [`Builder::is_scoped`], [`Builder::from_table`] and the checks of `from()`, `into()`, `build()` and the multi-table writes |
@@ -85,6 +86,11 @@ pub struct Flavor {
     pub indexed_distance: Option<i64>,
     /// SQLite's overrides.
     pub sqlite: Option<SqliteFlavor>,
+    /// Compares document ids in the collation of their unique indexes
+    /// (SQLite, PostgreSQL).
+    ///
+    /// PHP: `Utopia\Database\Builder\CollatesDocumentIds`.
+    pub ids: Option<IdCollation>,
 }
 
 impl std::fmt::Debug for Flavor {
@@ -96,23 +102,39 @@ impl std::fmt::Debug for Flavor {
             .field("object_path", &self.object_path.is_some())
             .field("indexed_distance", &self.indexed_distance)
             .field("sqlite", &self.sqlite)
+            .field("ids", &self.ids)
             .finish()
     }
 }
 
 /// SQLite as `utopia-php/database` compiles it: every `LIKE` declares the
 /// backslash escape, `REGEXP` calls the user function the adapter
-/// registers, array filters match JSON elements, and every equality on a
-/// collated column compares in that collation (SQLite only uses an index
-/// for a comparison in the index's collation).
+/// registers, and array filters match JSON elements. Its id columns compare
+/// in their collation through [`Flavor::ids`].
 ///
 /// PHP: `Utopia\Database\Builder\SQLite`.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct SqliteFlavor;
+
+/// Document ids are unique in the collation of their unique indexes, and an
+/// engine only uses an index for a comparison made in the index's
+/// collation, so equality on an id column (`IN`, `NOT IN`), and an `=`,
+/// `!=` or `<>` of a join's ON on id columns, compares in that collation.
+///
+/// PHP: `Utopia\Database\Builder\CollatesDocumentIds`, with the using
+/// builder's `COLLATION`, `isCollated()` and `collatesJoin()`.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct SqliteFlavor {
-    /// The collation of the collated columns (`NOCASE`).
+pub struct IdCollation {
+    /// The collation (`NOCASE` on SQLite, `utf8_ci_ai` on PostgreSQL).
     pub collation: String,
-    /// The columns compared in it (`_uid`, `_document`).
+    /// The columns compared in it, by the last segment of their resolved
+    /// name (`_uid`, and `_document` where its index is collated).
     pub collated_columns: Vec<String>,
+    /// Whether a join comparison is collated only when both sides are id
+    /// columns (PostgreSQL: a plain column such as a relationship key has an
+    /// index in the default collation, which a collated comparison could not
+    /// use), rather than when either is (SQLite).
+    pub join_both_sides: bool,
 }
 
 /// How a builder's `from()` reads a collection: the table it is stored
@@ -428,11 +450,12 @@ impl<D: Dialect> Builder<D> {
         Some(format!("({})", parts.join(" OR ")))
     }
 
-    // ----- SQLite -------------------------------------------------------
+    // ----- Document id collation ----------------------------------------
 
-    /// Whether the column resolves to a collated column.
+    /// Whether the column resolves to a collated id column
+    /// (`isCollated()`, through `CollatesDocumentIds::columnName()`).
     pub(crate) fn is_collated(&mut self, column: &str) -> Result<bool> {
-        let Some(sqlite) = self.core.flavor.sqlite.clone() else {
+        let Some(ids) = self.core.flavor.ids.clone() else {
             return Ok(false);
         };
         let resolved = self.resolve_attribute(column)?;
@@ -440,40 +463,63 @@ impl<D: Dialect> Builder<D> {
             Some(i) => &resolved[i + 1..],
             None => resolved.as_str(),
         };
-        Ok(sqlite.collated_columns.iter().any(|c| c == name))
+        Ok(ids.collated_columns.iter().any(|c| c == name))
     }
 
     /// The attribute in the collation when its column is collated
-    /// (`SQLite::collate()`).
+    /// (`CollatesDocumentIds::collate()`).
     pub(crate) fn collate(&mut self, attribute: &str, column: Option<&str>) -> Result<String> {
-        let Some(sqlite) = self.core.flavor.sqlite.clone() else {
+        let Some(ids) = self.core.flavor.ids.clone() else {
             return Ok(attribute.to_owned());
         };
         match column {
-            Some(column) if self.is_collated(column)? => Ok(format!("{attribute} COLLATE {}", sqlite.collation)),
+            Some(column) if self.is_collated(column)? => Ok(format!("{attribute} COLLATE {}", ids.collation)),
             _ => Ok(attribute.to_owned()),
         }
     }
 
-    /// `SQLite::compileJoin()`: every `=`, `!=` and `<>` comparison of the
-    /// ON with a collated side compares in the collation.
-    pub(crate) fn collate_join(&mut self, query: &Query, mut sql: String) -> Result<String> {
-        let Some(sqlite) = self.core.flavor.sqlite.clone() else {
+    /// `CollatesDocumentIds::compileJoin()`: the ON comparisons of a join
+    /// query compared in the collation (see [`Self::collate_comparisons`]).
+    pub(crate) fn collate_join(&mut self, query: &Query, sql: String) -> Result<String> {
+        if self.core.flavor.ids.is_none() {
+            return Ok(sql);
+        }
+        let comparisons = on_comparisons(&query.join_on_queries());
+        self.collate_comparisons(sql, &comparisons)
+    }
+
+    /// `CollatesDocumentIds::collateJoin()`: every `=`, `!=` and `<>`
+    /// comparison the builder collates the sides of (`collatesJoin()`)
+    /// compares in the collation.
+    pub(crate) fn collate_comparisons(
+        &mut self,
+        mut sql: String,
+        comparisons: &[(String, String, String)],
+    ) -> Result<String> {
+        let Some(ids) = self.core.flavor.ids.clone() else {
             return Ok(sql);
         };
-        let collate = format!(" COLLATE {}", sqlite.collation);
-        for (left, operator, right) in on_comparisons(&query.join_on_queries()) {
-            if !matches!(operator.as_str(), "=" | "!=" | "<>")
-                || (!self.is_collated(&left)? && !self.is_collated(&right)?)
-            {
+        let collate = format!(" COLLATE {}", ids.collation);
+        for (left, operator, right) in comparisons {
+            if !matches!(operator.as_str(), "=" | "!=" | "<>") {
                 continue;
             }
-            let comparison = format!(" {operator} {}", self.resolve_and_wrap(&right)?);
-            let wrapped_left = self.resolve_and_wrap(&left)?;
+            let collates = if ids.join_both_sides {
+                self.is_collated(left)? && self.is_collated(right)?
+            } else {
+                self.is_collated(left)? || self.is_collated(right)?
+            };
+            if !collates {
+                continue;
+            }
+            let comparison = format!(" {operator} {}", self.resolve_and_wrap(right)?);
+            let wrapped_left = self.resolve_and_wrap(left)?;
             sql = sql.replace(&format!("{wrapped_left}{comparison}"), &format!("{wrapped_left}{collate}{comparison}"));
         }
         Ok(sql)
     }
+
+    // ----- SQLite -------------------------------------------------------
 
     /// `compileLike()` with SQLite's `ESCAPE '\'`.
     pub(crate) fn sqlite_like(

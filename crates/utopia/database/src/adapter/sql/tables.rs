@@ -59,6 +59,7 @@ impl Sql {
     pub(crate) fn collate_document_id(&self, column: &str) -> String {
         match self.engine {
             Engine::Sqlite => format!("{column} COLLATE {}", builder::SQLITE_COLLATION),
+            Engine::Postgres => format!("{column} COLLATE {}", builder::POSTGRES_COLLATION),
             _ => column.to_owned(),
         }
     }
@@ -112,7 +113,7 @@ impl Sql {
     /// `dialectBuilder()`: a builder in the engine's dialect, unscoped.
     pub(crate) fn dialect_builder(&self) -> SqlBuilder {
         match self.engine {
-            Engine::Postgres => SqlBuilder::PostgreSql(builder::postgres()),
+            Engine::Postgres => SqlBuilder::PostgreSql(builder::postgres(self.shared_tables())),
             Engine::MariaDb => SqlBuilder::MariaDb(builder::mariadb()),
             Engine::MySql => SqlBuilder::MySql(builder::mysql()),
             Engine::Sqlite => SqlBuilder::Sqlite(builder::sqlite()),

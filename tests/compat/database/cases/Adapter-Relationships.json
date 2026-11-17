@@ -1909,11 +1909,11 @@
             },
             {
               "transform": "document_read",
-              "query": "SELECT * FROM \"${ns}\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+              "query": "SELECT * FROM \"${ns}\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid"
             },
             {
               "transform": "document_read",
-              "query": "SELECT * FROM \"${ns}\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+              "query": "SELECT * FROM \"${ns}\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid"
             },
             {
               "transform": "attribute_update",
@@ -1949,11 +1949,11 @@
             },
             {
               "transform": "document_read",
-              "query": "SELECT * FROM \"${ns}\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+              "query": "SELECT * FROM \"${ns}\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid"
             },
             {
               "transform": "document_read",
-              "query": "SELECT * FROM \"${ns}\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+              "query": "SELECT * FROM \"${ns}\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid"
             },
             {
               "transform": "attribute_delete",
@@ -1961,11 +1961,11 @@
             },
             {
               "transform": "document_read",
-              "query": "SELECT * FROM \"${ns}\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+              "query": "SELECT * FROM \"${ns}\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid"
             },
             {
               "transform": "document_read",
-              "query": "SELECT * FROM \"${ns}\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+              "query": "SELECT * FROM \"${ns}\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid"
             },
             {
               "transform": "attribute_delete",

@@ -4981,7 +4981,7 @@
           "expect": [
             {
               "transform": "document_read",
-              "query": "SELECT * FROM \"${ns}\".\"compat_secrets\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+              "query": "SELECT * FROM \"${ns}\".\"compat_secrets\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid"
             }
           ]
         },

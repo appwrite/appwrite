@@ -648,7 +648,9 @@ fn section_attributes<'a>(
             "updateAttribute" => {
                 object(db.update_attribute(&s("collection")?, &s("key")?, a.req::<attribute::Update>("update")?).await?)
             }
-            "checkAttribute" => ok(db.check_attribute(&s("collection")?, &a.req::<Attribute>("attribute")?).await)?,
+            "checkAttribute" => ok(db
+                .check_attribute(&s("collection")?, &a.req::<Attribute>("attribute")?, &a.list::<Attribute>("pending")?)
+                .await)?,
             "deleteAttribute" => void(db.delete_attribute(&s("collection")?, &s("key")?).await)?,
             "renameAttribute" => void(db.rename_attribute(&s("collection")?, &s("old")?, &s("new")?).await)?,
 

@@ -1636,10 +1636,17 @@ impl<D: Dialect> Builder<D> {
             parts.push(condition.expression.clone());
             self.add_bindings(condition.bindings.clone());
         }
-        if parts.is_empty() {
-            return Ok(format!("{keyword} {table}"));
+        let sql = if parts.is_empty() {
+            format!("{keyword} {table}")
+        } else {
+            format!("{keyword} {table} ON {}", parts.join(" AND "))
+        };
+        if self.core.flavor.ids.is_none() {
+            return Ok(sql);
         }
-        Ok(format!("{keyword} {table} ON {}", parts.join(" AND ")))
+        let comparisons: Vec<(String, String, String)> =
+            join.ons().iter().map(|on| (on.left.clone(), on.operator.clone(), on.right.clone())).collect();
+        self.collate_comparisons(sql, &comparisons)
     }
 
     pub(crate) fn base_compile_like(

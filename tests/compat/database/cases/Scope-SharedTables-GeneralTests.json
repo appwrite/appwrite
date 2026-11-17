@@ -10197,7 +10197,7 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
-                "query": "SELECT * FROM \"${ns}\".\"_transactionDocumentCache\" AS \"table_main\" WHERE \"_uid\" = :_uid AND \"table_main\"._tenant IN (:_tenant) FOR UPDATE",
+                "query": "SELECT * FROM \"${ns}\".\"_transactionDocumentCache\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid AND \"table_main\"._tenant IN (:_tenant) FOR UPDATE",
                 "bindings": {
                   ":_uid": "user",
                   ":_tenant": 999
@@ -10329,7 +10329,7 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
-                "query": "SELECT * FROM \"${ns}\".\"_transactionDocumentCache\" AS \"table_main\" WHERE \"_uid\" = :_uid AND \"table_main\"._tenant IN (:_tenant) FOR UPDATE",
+                "query": "SELECT * FROM \"${ns}\".\"_transactionDocumentCache\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid AND \"table_main\"._tenant IN (:_tenant) FOR UPDATE",
                 "bindings": {
                   ":_uid": "user",
                   ":_tenant": 999

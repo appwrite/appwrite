@@ -133779,11 +133779,11 @@
           "expect": [
             {
               "transform": "document_read",
-              "query": "/* scope: api.users */\nSELECT * FROM \"${ns}\".\"_docs\" AS \"table_main\" WHERE \"_uid\" = :_uid AND \"table_main\"._tenant IN (:_tenant)"
+              "query": "/* scope: api.users */\nSELECT * FROM \"${ns}\".\"_docs\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid AND \"table_main\"._tenant IN (:_tenant)"
             },
             {
               "transform": "document_read",
-              "query": "/* scope: api.users */\nSELECT * FROM \"${ns}\".\"_docs\" AS \"table_main\" WHERE \"_uid\" = :_uid AND \"table_main\"._tenant IN (:_tenant)"
+              "query": "/* scope: api.users */\nSELECT * FROM \"${ns}\".\"_docs\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid AND \"table_main\"._tenant IN (:_tenant)"
             }
           ]
         },

@@ -1134,7 +1134,29 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "title": "Alien",
+              "year": "1979",
+              "big": "9007199254740993",
+              "rating": "8.5",
+              "active": "1",
+              "released": "1979-05-25 00:00:00",
+              "tags": "[\"sci-fi\", \"horror\"]",
+              "meta": "{\"a\": {\"b\": [1, 2]}, \"c\": \"x\"}",
+              "loc": null,
+              "path": null,
+              "area": null,
+              "emb": "[0.1,0.2,0.3]",
+              "note": "a\nb\tc",
+              "$id": "m1",
+              "$sequence": "1",
+              "$createdAt": "2020-01-01 10:00:00",
+              "$updatedAt": "2020-01-01 10:00:00",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"user:1\")"
+              ]
+            }
           }
         },
         {
@@ -2195,7 +2217,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception",
-              "message": "SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation \"${ns}.ns_missing\" does not exist\nLINE 1: DELETE FROM \"${ns}\".\"ns_missing\" WHERE \"_uid\" IN ('...\n                    ^"
+              "message": "SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation \"${ns}.ns_missing\" does not exist\nLINE 1: DELETE FROM \"${ns}\".\"ns_missing\" WHERE \"_uid\" COLLA...\n                    ^"
             }
           }
         },
@@ -2539,47 +2561,47 @@
             },
             {
               "transform": "document_read",
-              "query": "SELECT * FROM \"${ns}\".\"ns_mv\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+              "query": "SELECT * FROM \"${ns}\".\"ns_mv\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid"
             },
             {
               "transform": "document_read",
-              "query": "SELECT * FROM \"${ns}\".\"ns_mv\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+              "query": "SELECT * FROM \"${ns}\".\"ns_mv\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid"
             },
             {
               "transform": "document_read",
-              "query": "SELECT * FROM \"${ns}\".\"ns_mv\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+              "query": "SELECT * FROM \"${ns}\".\"ns_mv\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid"
             },
             {
               "transform": "document_read",
-              "query": "SELECT * FROM \"${ns}\".\"ns_mv\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+              "query": "SELECT * FROM \"${ns}\".\"ns_mv\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid"
             },
             {
               "transform": "document_read",
-              "query": "SELECT * FROM \"${ns}\".\"ns_mv\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+              "query": "SELECT * FROM \"${ns}\".\"ns_mv\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid"
             },
             {
               "transform": "document_read",
-              "query": "SELECT \"title\", \"year\", \"_uid\", \"_id\", \"_permissions\", \"_createdAt\", \"_updatedAt\" FROM \"${ns}\".\"ns_mv\" AS \"table_main\" WHERE \"_uid\" IN (?)"
+              "query": "SELECT \"title\", \"year\", \"_uid\", \"_id\", \"_permissions\", \"_createdAt\", \"_updatedAt\" FROM \"${ns}\".\"ns_mv\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai IN (?)"
             },
             {
               "transform": "document_read",
-              "query": "SELECT * FROM \"${ns}\".\"ns_mv\" AS \"table_main\" WHERE \"_uid\" IN (?)"
+              "query": "SELECT * FROM \"${ns}\".\"ns_mv\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai IN (?)"
             },
             {
               "transform": "document_read",
-              "query": "SELECT \"title\", \"deletedAt\", \"_uid\", \"_id\", \"_permissions\", \"_createdAt\", \"_updatedAt\" FROM \"${ns}\".\"ns_mv\" AS \"table_main\" WHERE \"_uid\" IN (?)"
+              "query": "SELECT \"title\", \"deletedAt\", \"_uid\", \"_id\", \"_permissions\", \"_createdAt\", \"_updatedAt\" FROM \"${ns}\".\"ns_mv\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai IN (?)"
             },
             {
               "transform": "document_read",
-              "query": "SELECT \"missing\", \"_uid\", \"_id\", \"_permissions\", \"_createdAt\", \"_updatedAt\" FROM \"${ns}\".\"ns_mv\" AS \"table_main\" WHERE \"_uid\" IN (?)"
+              "query": "SELECT \"missing\", \"_uid\", \"_id\", \"_permissions\", \"_createdAt\", \"_updatedAt\" FROM \"${ns}\".\"ns_mv\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai IN (?)"
             },
             {
               "transform": "document_read",
-              "query": "SELECT * FROM \"${ns}\".\"ns_mv\" AS \"table_main\" WHERE \"_uid\" = :_uid FOR UPDATE"
+              "query": "SELECT * FROM \"${ns}\".\"ns_mv\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid FOR UPDATE"
             },
             {
               "transform": "document_read",
-              "query": "SELECT * FROM \"${ns}\".\"ns_missing\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+              "query": "SELECT * FROM \"${ns}\".\"ns_missing\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid"
             },
             {
               "transform": "document_update",
@@ -2587,11 +2609,11 @@
             },
             {
               "transform": "permissions_read",
-              "query": "SELECT \"_document\", \"_type\", \"_permission\" FROM \"${ns}\".\"ns_mv_perms\" WHERE \"_document\" IN (?)"
+              "query": "SELECT \"_document\", \"_type\", \"_permission\" FROM \"${ns}\".\"ns_mv_perms\" WHERE \"_document\" COLLATE utf8_ci_ai IN (?)"
             },
             {
               "transform": "permissions_delete",
-              "query": "DELETE FROM \"${ns}\".\"ns_mv_perms\" WHERE ((\"_document\" IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?)))"
+              "query": "DELETE FROM \"${ns}\".\"ns_mv_perms\" WHERE ((\"_document\" COLLATE utf8_ci_ai IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?)))"
             },
             {
               "transform": "permissions_create",
@@ -2603,7 +2625,7 @@
             },
             {
               "transform": "permissions_delete",
-              "query": "DELETE FROM \"${ns}\".\"ns_mv_perms\" WHERE \"_document\" IN (?)"
+              "query": "DELETE FROM \"${ns}\".\"ns_mv_perms\" WHERE \"_document\" COLLATE utf8_ci_ai IN (?)"
             },
             {
               "transform": "permissions_create",
@@ -2623,7 +2645,7 @@
             },
             {
               "transform": "permissions_delete",
-              "query": "DELETE FROM \"${ns}\".\"ns_mv_perms\" WHERE \"_document\" IN (?)"
+              "query": "DELETE FROM \"${ns}\".\"ns_mv_perms\" WHERE \"_document\" COLLATE utf8_ci_ai IN (?)"
             },
             {
               "transform": "permissions_create",
@@ -2631,23 +2653,23 @@
             },
             {
               "transform": "document_delete",
-              "query": "DELETE FROM \"${ns}\".\"ns_mv\" WHERE \"_uid\" IN (?)"
+              "query": "DELETE FROM \"${ns}\".\"ns_mv\" WHERE \"_uid\" COLLATE utf8_ci_ai IN (?)"
             },
             {
               "transform": "permissions_delete",
-              "query": "DELETE FROM \"${ns}\".\"ns_mv_perms\" WHERE \"_document\" IN (?)"
+              "query": "DELETE FROM \"${ns}\".\"ns_mv_perms\" WHERE \"_document\" COLLATE utf8_ci_ai IN (?)"
             },
             {
               "transform": "document_delete",
-              "query": "DELETE FROM \"${ns}\".\"ns_mv\" WHERE \"_uid\" IN (?)"
+              "query": "DELETE FROM \"${ns}\".\"ns_mv\" WHERE \"_uid\" COLLATE utf8_ci_ai IN (?)"
             },
             {
               "transform": "permissions_delete",
-              "query": "DELETE FROM \"${ns}\".\"ns_mv_perms\" WHERE \"_document\" IN (?)"
+              "query": "DELETE FROM \"${ns}\".\"ns_mv_perms\" WHERE \"_document\" COLLATE utf8_ci_ai IN (?)"
             },
             {
               "transform": "document_delete",
-              "query": "DELETE FROM \"${ns}\".\"ns_missing\" WHERE \"_uid\" IN (?)"
+              "query": "DELETE FROM \"${ns}\".\"ns_missing\" WHERE \"_uid\" COLLATE utf8_ci_ai IN (?)"
             },
             {
               "transform": "document_create",
@@ -5340,15 +5362,15 @@
             },
             {
               "transform": "document_read",
-              "query": "SELECT * FROM \"${ns}\".\"ns_st\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+              "query": "SELECT * FROM \"${ns}\".\"ns_st\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid"
             },
             {
               "transform": "document_read",
-              "query": "SELECT * FROM \"${ns}\".\"ns_st\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+              "query": "SELECT * FROM \"${ns}\".\"ns_st\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid"
             },
             {
               "transform": "document_read",
-              "query": "SELECT * FROM \"${ns}\".\"ns_st\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+              "query": "SELECT * FROM \"${ns}\".\"ns_st\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid"
             },
             {
               "transform": "document_create",
@@ -6569,11 +6591,11 @@
             },
             {
               "transform": "document_read",
-              "query": "SELECT \"_uid\", \"_id\" FROM \"${ns}\".\"ns_b\" WHERE \"_uid\" IN (?, ?, ?)"
+              "query": "SELECT \"_uid\", \"_id\" FROM \"${ns}\".\"ns_b\" WHERE \"_uid\" COLLATE utf8_ci_ai IN (?, ?, ?)"
             },
             {
               "transform": "document_read",
-              "query": "SELECT \"_uid\", \"_id\" FROM \"${ns}\".\"ns_missing\" WHERE \"_uid\" IN (?)"
+              "query": "SELECT \"_uid\", \"_id\" FROM \"${ns}\".\"ns_missing\" WHERE \"_uid\" COLLATE utf8_ci_ai IN (?)"
             },
             {
               "transform": "documents_delete",
@@ -6581,7 +6603,7 @@
             },
             {
               "transform": "permissions_delete",
-              "query": "DELETE FROM \"${ns}\".\"ns_b_perms\" WHERE \"_document\" IN (?, ?)"
+              "query": "DELETE FROM \"${ns}\".\"ns_b_perms\" WHERE \"_document\" COLLATE utf8_ci_ai IN (?, ?)"
             },
             {
               "transform": "documents_delete",
@@ -7552,7 +7574,7 @@
             },
             {
               "transform": "document_read",
-              "query": "SELECT \"_uid\", \"_id\" FROM \"${ns}\".\"ns_u\" WHERE \"_uid\" IN (?, ?, ?)"
+              "query": "SELECT \"_uid\", \"_id\" FROM \"${ns}\".\"ns_u\" WHERE \"_uid\" COLLATE utf8_ci_ai IN (?, ?, ?)"
             },
             {
               "transform": "documents_update",
@@ -7564,11 +7586,11 @@
             },
             {
               "transform": "permissions_read",
-              "query": "SELECT \"_document\", \"_type\", \"_permission\" FROM \"${ns}\".\"ns_u_perms\" WHERE \"_document\" IN (?, ?, ?)"
+              "query": "SELECT \"_document\", \"_type\", \"_permission\" FROM \"${ns}\".\"ns_u_perms\" WHERE \"_document\" COLLATE utf8_ci_ai IN (?, ?, ?)"
             },
             {
               "transform": "permissions_delete",
-              "query": "DELETE FROM \"${ns}\".\"ns_u_perms\" WHERE ((\"_document\" IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?)) OR (\"_document\" IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?)))"
+              "query": "DELETE FROM \"${ns}\".\"ns_u_perms\" WHERE ((\"_document\" COLLATE utf8_ci_ai IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?)) OR (\"_document\" COLLATE utf8_ci_ai IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?)))"
             },
             {
               "transform": "permissions_create",
@@ -7580,11 +7602,11 @@
             },
             {
               "transform": "permissions_read",
-              "query": "SELECT \"_document\", \"_type\", \"_permission\" FROM \"${ns}\".\"ns_u_perms\" WHERE \"_document\" IN (?, ?)"
+              "query": "SELECT \"_document\", \"_type\", \"_permission\" FROM \"${ns}\".\"ns_u_perms\" WHERE \"_document\" COLLATE utf8_ci_ai IN (?, ?)"
             },
             {
               "transform": "permissions_delete",
-              "query": "DELETE FROM \"${ns}\".\"ns_u_perms\" WHERE ((\"_document\" IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?)) OR (\"_document\" IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?)) OR (\"_document\" IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?)) OR (\"_document\" IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?)))"
+              "query": "DELETE FROM \"${ns}\".\"ns_u_perms\" WHERE ((\"_document\" COLLATE utf8_ci_ai IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?)) OR (\"_document\" COLLATE utf8_ci_ai IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?)) OR (\"_document\" COLLATE utf8_ci_ai IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?)) OR (\"_document\" COLLATE utf8_ci_ai IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?)))"
             },
             {
               "transform": "documents_update",
@@ -7592,11 +7614,11 @@
             },
             {
               "transform": "permissions_read",
-              "query": "SELECT \"_document\", \"_type\", \"_permission\" FROM \"${ns}\".\"ns_u_perms\" WHERE \"_document\" IN (?, ?)"
+              "query": "SELECT \"_document\", \"_type\", \"_permission\" FROM \"${ns}\".\"ns_u_perms\" WHERE \"_document\" COLLATE utf8_ci_ai IN (?, ?)"
             },
             {
               "transform": "permissions_delete",
-              "query": "DELETE FROM \"${ns}\".\"ns_u_perms\" WHERE ((\"_document\" IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?)) OR (\"_document\" IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?, ?)) OR (\"_document\" IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?)))"
+              "query": "DELETE FROM \"${ns}\".\"ns_u_perms\" WHERE ((\"_document\" COLLATE utf8_ci_ai IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?)) OR (\"_document\" COLLATE utf8_ci_ai IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?, ?)) OR (\"_document\" COLLATE utf8_ci_ai IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?)))"
             },
             {
               "transform": "permissions_create",
@@ -7608,11 +7630,11 @@
             },
             {
               "transform": "permissions_read",
-              "query": "SELECT \"_document\", \"_type\", \"_permission\" FROM \"${ns}\".\"ns_u_perms\" WHERE \"_document\" IN (?, ?, ?)"
+              "query": "SELECT \"_document\", \"_type\", \"_permission\" FROM \"${ns}\".\"ns_u_perms\" WHERE \"_document\" COLLATE utf8_ci_ai IN (?, ?, ?)"
             },
             {
               "transform": "permissions_delete",
-              "query": "DELETE FROM \"${ns}\".\"ns_u_perms\" WHERE ((\"_document\" IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?)) OR (\"_document\" IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?)) OR (\"_document\" IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?)))"
+              "query": "DELETE FROM \"${ns}\".\"ns_u_perms\" WHERE ((\"_document\" COLLATE utf8_ci_ai IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?)) OR (\"_document\" COLLATE utf8_ci_ai IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?)) OR (\"_document\" COLLATE utf8_ci_ai IN (?) AND \"_type\" IN (?) AND \"_permission\" IN (?)))"
             },
             {
               "transform": "documents_update",
@@ -7620,7 +7642,7 @@
             },
             {
               "transform": "permissions_read",
-              "query": "SELECT \"_document\", \"_type\", \"_permission\" FROM \"${ns}\".\"ns_u_perms\" WHERE \"_document\" IN (?, ?)"
+              "query": "SELECT \"_document\", \"_type\", \"_permission\" FROM \"${ns}\".\"ns_u_perms\" WHERE \"_document\" COLLATE utf8_ci_ai IN (?, ?)"
             },
             {
               "transform": "permissions_create",
@@ -9458,51 +9480,51 @@
             },
             {
               "transform": "document_increase",
-              "query": "UPDATE \"${ns}\".\"ns_inc\" SET \"_updatedAt\" = ?, \"n\" = COALESCE(\"n\", 0) + ? WHERE \"_uid\" IN (?)"
+              "query": "UPDATE \"${ns}\".\"ns_inc\" SET \"_updatedAt\" = ?, \"n\" = COALESCE(\"n\", 0) + ? WHERE \"_uid\" COLLATE utf8_ci_ai IN (?)"
             },
             {
               "transform": "document_decrease",
-              "query": "UPDATE \"${ns}\".\"ns_inc\" SET \"_updatedAt\" = ?, \"n\" = COALESCE(\"n\", 0) + ? WHERE \"_uid\" IN (?) AND (\"n\" >= ? OR \"n\" IS NULL)"
+              "query": "UPDATE \"${ns}\".\"ns_inc\" SET \"_updatedAt\" = ?, \"n\" = COALESCE(\"n\", 0) + ? WHERE \"_uid\" COLLATE utf8_ci_ai IN (?) AND (\"n\" >= ? OR \"n\" IS NULL)"
             },
             {
               "transform": "document_increase",
-              "query": "UPDATE \"${ns}\".\"ns_inc\" SET \"_updatedAt\" = ?, \"n\" = COALESCE(\"n\", 0) + ? WHERE \"_uid\" IN (?) AND (\"n\" <= ? OR \"n\" IS NULL)"
+              "query": "UPDATE \"${ns}\".\"ns_inc\" SET \"_updatedAt\" = ?, \"n\" = COALESCE(\"n\", 0) + ? WHERE \"_uid\" COLLATE utf8_ci_ai IN (?) AND (\"n\" <= ? OR \"n\" IS NULL)"
             },
             {
               "transform": "document_increase",
-              "query": "UPDATE \"${ns}\".\"ns_inc\" SET \"_updatedAt\" = ?, \"n\" = COALESCE(\"n\", 0) + ? WHERE \"_uid\" IN (?) AND (\"n\" <= ? OR \"n\" IS NULL) AND (\"n\" >= ? OR \"n\" IS NULL)"
+              "query": "UPDATE \"${ns}\".\"ns_inc\" SET \"_updatedAt\" = ?, \"n\" = COALESCE(\"n\", 0) + ? WHERE \"_uid\" COLLATE utf8_ci_ai IN (?) AND (\"n\" <= ? OR \"n\" IS NULL) AND (\"n\" >= ? OR \"n\" IS NULL)"
             },
             {
               "transform": "document_increase",
-              "query": "UPDATE \"${ns}\".\"ns_inc\" SET \"_updatedAt\" = ?, \"f\" = COALESCE(\"f\", 0) + ? WHERE \"_uid\" IN (?)"
+              "query": "UPDATE \"${ns}\".\"ns_inc\" SET \"_updatedAt\" = ?, \"f\" = COALESCE(\"f\", 0) + ? WHERE \"_uid\" COLLATE utf8_ci_ai IN (?)"
             },
             {
               "transform": "document_increase",
-              "query": "UPDATE \"${ns}\".\"ns_inc\" SET \"_updatedAt\" = ?, \"f\" = COALESCE(\"f\", 0) + ? WHERE \"_uid\" IN (?)"
+              "query": "UPDATE \"${ns}\".\"ns_inc\" SET \"_updatedAt\" = ?, \"f\" = COALESCE(\"f\", 0) + ? WHERE \"_uid\" COLLATE utf8_ci_ai IN (?)"
             },
             {
               "transform": "document_increase",
-              "query": "UPDATE \"${ns}\".\"ns_inc\" SET \"_updatedAt\" = ?, \"f\" = COALESCE(\"f\", 0) + ? WHERE \"_uid\" IN (?)"
+              "query": "UPDATE \"${ns}\".\"ns_inc\" SET \"_updatedAt\" = ?, \"f\" = COALESCE(\"f\", 0) + ? WHERE \"_uid\" COLLATE utf8_ci_ai IN (?)"
             },
             {
               "transform": "document_increase",
-              "query": "UPDATE \"${ns}\".\"ns_inc\" SET \"_updatedAt\" = ?, \"n\" = COALESCE(\"n\", 0) + ? WHERE \"_uid\" IN (?)"
+              "query": "UPDATE \"${ns}\".\"ns_inc\" SET \"_updatedAt\" = ?, \"n\" = COALESCE(\"n\", 0) + ? WHERE \"_uid\" COLLATE utf8_ci_ai IN (?)"
             },
             {
               "transform": "document_increase",
-              "query": "UPDATE \"${ns}\".\"ns_inc\" SET \"_updatedAt\" = ?, \"t\" = COALESCE(\"t\", 0) + ? WHERE \"_uid\" IN (?)"
+              "query": "UPDATE \"${ns}\".\"ns_inc\" SET \"_updatedAt\" = ?, \"t\" = COALESCE(\"t\", 0) + ? WHERE \"_uid\" COLLATE utf8_ci_ai IN (?)"
             },
             {
               "transform": "document_increase",
-              "query": "UPDATE \"${ns}\".\"ns_inc\" SET \"_updatedAt\" = ?, \"missing\" = COALESCE(\"missing\", 0) + ? WHERE \"_uid\" IN (?)"
+              "query": "UPDATE \"${ns}\".\"ns_inc\" SET \"_updatedAt\" = ?, \"missing\" = COALESCE(\"missing\", 0) + ? WHERE \"_uid\" COLLATE utf8_ci_ai IN (?)"
             },
             {
               "transform": "document_increase",
-              "query": "UPDATE \"${ns}\".\"ns_inc\" SET \"_updatedAt\" = ?, \"n\" = COALESCE(\"n\", 0) + ? WHERE \"_uid\" IN (?)"
+              "query": "UPDATE \"${ns}\".\"ns_inc\" SET \"_updatedAt\" = ?, \"n\" = COALESCE(\"n\", 0) + ? WHERE \"_uid\" COLLATE utf8_ci_ai IN (?)"
             },
             {
               "transform": "document_increase",
-              "query": "UPDATE \"${ns}\".\"ns_inc\" SET \"_updatedAt\" = ?, \"n\" = COALESCE(\"n\", 0) + ? WHERE \"_uid\" IN (?)"
+              "query": "UPDATE \"${ns}\".\"ns_inc\" SET \"_updatedAt\" = ?, \"n\" = COALESCE(\"n\", 0) + ? WHERE \"_uid\" COLLATE utf8_ci_ai IN (?)"
             }
           ]
         },
@@ -10639,15 +10661,15 @@
             },
             {
               "transform": "document_read",
-              "query": "SELECT * FROM \"${ns}\".\"ns_sh\" AS \"table_main\" WHERE \"_uid\" = :_uid AND \"table_main\"._tenant IN (:_tenant)"
+              "query": "SELECT * FROM \"${ns}\".\"ns_sh\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid AND \"table_main\"._tenant IN (:_tenant)"
             },
             {
               "transform": "document_read",
-              "query": "SELECT * FROM \"${ns}\".\"ns_sh\" AS \"table_main\" WHERE \"_uid\" = :_uid AND \"table_main\"._tenant IN (:_tenant)"
+              "query": "SELECT * FROM \"${ns}\".\"ns_sh\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid AND \"table_main\"._tenant IN (:_tenant)"
             },
             {
               "transform": "document_read",
-              "query": "SELECT \"_uid\", \"_id\" FROM \"${ns}\".\"ns_sh\" WHERE \"_uid\" IN (?, ?, ?) AND _tenant IN (?)"
+              "query": "SELECT \"_uid\", \"_id\" FROM \"${ns}\".\"ns_sh\" WHERE \"_uid\" COLLATE utf8_ci_ai IN (?, ?, ?) AND _tenant IN (?)"
             },
             {
               "transform": "document_find",
@@ -10695,11 +10717,11 @@
             },
             {
               "transform": "document_increase",
-              "query": "UPDATE \"${ns}\".\"ns_sh\" SET \"_updatedAt\" = ?, \"t\" = COALESCE(\"t\", 0) + ? WHERE \"_uid\" IN (?) AND _tenant IN (?)"
+              "query": "UPDATE \"${ns}\".\"ns_sh\" SET \"_updatedAt\" = ?, \"t\" = COALESCE(\"t\", 0) + ? WHERE \"_uid\" COLLATE utf8_ci_ai IN (?) AND _tenant IN (?)"
             },
             {
               "transform": "document_delete",
-              "query": "DELETE FROM \"${ns}\".\"ns_sh\" WHERE \"_uid\" IN (?) AND _tenant IN (?)"
+              "query": "DELETE FROM \"${ns}\".\"ns_sh\" WHERE \"_uid\" COLLATE utf8_ci_ai IN (?) AND _tenant IN (?)"
             },
             {
               "transform": "permissions_delete",
@@ -10731,7 +10753,7 @@
             },
             {
               "transform": "document_read",
-              "query": "SELECT * FROM \"${ns}\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid AND (\"table_main\"._tenant IN (:_tenant) OR \"table_main\"._tenant IS NULL)"
+              "query": "SELECT * FROM \"${ns}\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid AND (\"table_main\"._tenant IN (:_tenant) OR \"table_main\"._tenant IS NULL)"
             },
             {
               "transform": "document_find",

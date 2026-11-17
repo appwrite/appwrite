@@ -513,11 +513,34 @@ fn the_check_counts_the_collections_attributes_against_the_limit() {
         ))
         .await
         .unwrap();
-        assert!(db.check_attribute("items", &Attribute::string("fourth", 16)).await.unwrap());
+        assert!(db.check_attribute("items", &Attribute::string("fourth", 16), &[]).await.unwrap());
         db.create_attribute("items", Attribute::string("fourth", 16)).await.unwrap();
-        assert!(db.check_attribute("items", &Attribute::string("fifth", 16)).await.unwrap_err().is_a(Kind::Limit));
+        assert!(db.check_attribute("items", &Attribute::string("fifth", 16), &[]).await.unwrap_err().is_a(Kind::Limit));
         assert_eq!(attribute_keys(&db, "items").await, ["first", "second", "third", "fourth"]);
-        assert!(db.check_attribute("missing", &Attribute::string("first", 16)).await.unwrap_err().is_a(Kind::NotFound));
+        assert!(
+            db.check_attribute("missing", &Attribute::string("first", 16), &[]).await.unwrap_err().is_a(Kind::NotFound)
+        );
+    });
+}
+
+#[test]
+fn pending_attributes_count_towards_the_limit() {
+    block_on(async {
+        let (adapter, db) = memory().await;
+        let limits = crate::adapter::Adapter::limits(adapter.as_ref());
+        adapter.set_limits(crate::adapter::Limits { attributes: limits.default_attributes + 4, ..(*limits).clone() });
+        db.create_collection(collection(
+            "items",
+            vec![Attribute::string("first", 16), Attribute::string("second", 16), Attribute::string("third", 16)],
+            Vec::new(),
+        ))
+        .await
+        .unwrap();
+        let pending = [Attribute::string("fourth", 16)];
+        assert!(
+            db.check_attribute("items", &Attribute::string("fifth", 16), &pending).await.unwrap_err().is_a(Kind::Limit)
+        );
+        assert_eq!(attribute_keys(&db, "items").await, ["first", "second", "third"]);
     });
 }
 

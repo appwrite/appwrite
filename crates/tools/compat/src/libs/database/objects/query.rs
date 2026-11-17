@@ -129,7 +129,9 @@ pub async fn construct(class: &str, a: &Args) -> R<Option<Obj>> {
 /// `<class>::<method>(...)` for the classes of this module.
 pub async fn call_static(class: &str, method: &str, a: &Args) -> R<Option<Obj>> {
     match class {
-        "Query" => query_static(method, a),
+        // utopia-php/query's own class, which a builder takes; its factories
+        // build the same queries.
+        "Query" | "Query\\Query" => query_static(method, a),
         "Operator" => operator_static(method, a),
         "Query\\Method" => enum_static::<Method>(method, a, Method::CASES),
         "OperatorType" => enum_static::<OperatorType>(method, a, OperatorType::CASES),

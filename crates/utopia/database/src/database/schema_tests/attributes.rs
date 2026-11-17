@@ -198,7 +198,7 @@ fn an_attribute_within_the_limit_passes_the_check() {
             Attribute::string("second", 16),
             Attribute::string("third", 16),
         ]);
-        assert!(f.db.check_attribute(COLLECTION, &Attribute::string("fourth", 16)).await.unwrap());
+        assert!(f.db.check_attribute(COLLECTION, &Attribute::string("fourth", 16), &[]).await.unwrap());
     });
 }
 
@@ -211,7 +211,7 @@ fn an_attribute_over_the_limit_is_refused() {
             Attribute::string("third", 16),
             Attribute::string("fourth", 16),
         ]);
-        let error = f.db.check_attribute(COLLECTION, &Attribute::string("fifth", 16)).await.unwrap_err();
+        let error = f.db.check_attribute(COLLECTION, &Attribute::string("fifth", 16), &[]).await.unwrap_err();
         assert_eq!(
             describe(&error),
             (
@@ -226,7 +226,7 @@ fn an_attribute_over_the_limit_is_refused() {
 fn checking_does_not_store_the_attribute() {
     block_on(async {
         let f = checked(vec![Attribute::string("first", 16)]);
-        f.db.check_attribute(COLLECTION, &Attribute::string("second", 16)).await.unwrap();
+        f.db.check_attribute(COLLECTION, &Attribute::string("second", 16), &[]).await.unwrap();
         assert_eq!(keys(f.db.get_collection(COLLECTION).await.unwrap().attributes().unwrap()), ["first"]);
         assert_eq!(f.write_count(), 0);
     });
@@ -236,7 +236,7 @@ fn checking_does_not_store_the_attribute() {
 fn checking_on_a_missing_collection_is_not_found() {
     block_on(async {
         let f = checked(Vec::new());
-        let error = f.db.check_attribute("missing", &Attribute::string("first", 16)).await.unwrap_err();
+        let error = f.db.check_attribute("missing", &Attribute::string("first", 16), &[]).await.unwrap_err();
         assert!(error.is_a(Kind::NotFound));
     });
 }

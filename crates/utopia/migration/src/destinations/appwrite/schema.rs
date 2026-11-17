@@ -870,7 +870,7 @@ impl Appwrite {
         let column = column_doc(&table, &key, Some(&description), &options)?;
         let collection_id = table_collection_id(&database, &table);
         let checked = match resource_attribute(f, t) {
-            Ok(attribute) => match db.check_attribute(&collection_id, &attribute).await {
+            Ok(attribute) => match db.check_attribute(&collection_id, &attribute, &[]).await {
                 Ok(_) => self.db_for_project.create_document(META_ATTRIBUTES, column).await,
                 Err(e) => Err(e),
             },

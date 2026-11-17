@@ -119,8 +119,8 @@ impl Database {
             RelationshipSide::Child,
         )?;
 
-        self.check_attribute(&collection_id, &parent).await?;
-        self.check_attribute(&related_id, &child).await?;
+        self.check_attribute(&collection_id, &parent, &[]).await?;
+        self.check_attribute(&related_id, &child, &[]).await?;
 
         let mut junction = None;
         if kind == RelationshipType::ManyToMany {

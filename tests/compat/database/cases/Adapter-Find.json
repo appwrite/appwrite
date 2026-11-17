@@ -4368,7 +4368,7 @@
             },
             {
               "transform": "document_find",
-              "query": "SELECT * FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE \"_uid\" IN (?) LIMIT ?"
+              "query": "SELECT * FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai IN (?) LIMIT ?"
             },
             {
               "transform": "document_find",
@@ -4476,7 +4476,7 @@
             },
             {
               "transform": "document_read",
-              "query": "SELECT * FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE \"_uid\" IN (?)"
+              "query": "SELECT * FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai IN (?)"
             },
             {
               "transform": "document_find",
@@ -19711,7 +19711,7 @@
             },
             {
               "transform": "document_find",
-              "query": "SELECT * FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE \"_uid\" IN (?) LIMIT ?"
+              "query": "SELECT * FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai IN (?) LIMIT ?"
             }
           ]
         },

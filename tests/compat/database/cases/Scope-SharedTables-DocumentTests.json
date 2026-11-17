@@ -93686,7 +93686,7 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
-                "query": "SELECT * FROM \"${ns}\".\"__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid AND (\"table_main\"._tenant IN (:_tenant) OR \"table_main\"._tenant IS NULL)",
+                "query": "SELECT * FROM \"${ns}\".\"__metadata\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid AND (\"table_main\"._tenant IN (:_tenant) OR \"table_main\"._tenant IS NULL)",
                 "bindings": {
                   ":_uid": "upsert_batch_read",
                   ":_tenant": 999
@@ -93700,7 +93700,7 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
-                "query": "SELECT * FROM \"${ns}\".\"__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid AND (\"table_main\"._tenant IN (:_tenant) OR \"table_main\"._tenant IS NULL)",
+                "query": "SELECT * FROM \"${ns}\".\"__metadata\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid AND (\"table_main\"._tenant IN (:_tenant) OR \"table_main\"._tenant IS NULL)",
                 "bindings": {
                   ":_uid": "upsert_batch_read",
                   ":_tenant": 999
@@ -93714,7 +93714,7 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
-                "query": "SELECT * FROM \"${ns}\".\"_upsert_batch_read\" AS \"table_main\" WHERE \"_uid\" IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) AND \"table_main\"._tenant IN (?) ORDER BY \"_id\" ASC LIMIT ? OFFSET ?",
+                "query": "SELECT * FROM \"${ns}\".\"_upsert_batch_read\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) AND \"table_main\"._tenant IN (?) ORDER BY \"_id\" ASC LIMIT ? OFFSET ?",
                 "bindings": [
                   "document0",
                   "document1",

@@ -9471,7 +9471,7 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
-                "query": "SELECT * FROM \"${ns}\".\"compat_transactionDocumentCache\" AS \"table_main\" WHERE \"_uid\" = :_uid FOR UPDATE",
+                "query": "SELECT * FROM \"${ns}\".\"compat_transactionDocumentCache\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid FOR UPDATE",
                 "bindings": {
                   ":_uid": "user"
                 },
@@ -9598,7 +9598,7 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
-                "query": "SELECT * FROM \"${ns}\".\"compat_transactionDocumentCache\" AS \"table_main\" WHERE \"_uid\" = :_uid FOR UPDATE",
+                "query": "SELECT * FROM \"${ns}\".\"compat_transactionDocumentCache\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid FOR UPDATE",
                 "bindings": {
                   ":_uid": "user"
                 },
