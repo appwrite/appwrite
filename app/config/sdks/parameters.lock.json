@@ -3609,6 +3609,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2WorkOS": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2X": [
             "customerKey",
             "secretKey",
@@ -7970,6 +7975,11 @@
             "enabled"
         ],
         "project.updateOAuth2WordPress": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2WorkOS": [
             "clientId",
             "clientSecret",
             "enabled"
