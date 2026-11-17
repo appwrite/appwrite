@@ -44,7 +44,7 @@ Some of those resources are also out of date, and checking them against each oth
 
 DentalRx gives dentists and dental students a fast, dental-focused way to look up medications and act on what they find. It runs on the web and as a mobile app for iOS and Android.
 
-DentalRx is free. Nickolas treats it as a contribution to the dental and healthcare community, in the same spirit as clinicians who publish research and resources to move their field forward.
+DentalRx is free to use. Nickolas treats it as a contribution to the dental and healthcare community, in the same spirit as clinicians who publish research and resources to move their field forward.
 
 > "This is quite literally a gesture of goodwill and a free resource for the healthcare field."
 
@@ -76,11 +76,11 @@ The **iOS and Android apps** carry the same tools, with the clinic dashboard, se
 
 # Building DentalRx with Appwrite
 
-All of those tools draw on the same drug database. Most drug databases, including the hospital systems Nickolas manages, are organized around a **drug concept**, the core record each drug starts from. Brand names, generic names, and drug classes are separate tables attached to that concept. A single drug ends up as a web of relationships, and that web differs from country to country.
+Nickolas built the first version of DentalRx in FlutterFlow, with Firebase as the database and Algolia synced alongside it for search. That stack let him ship the product quickly.
+
+Every tool in DentalRx draws on the same drug database. Most drug databases, including the hospital systems Nickolas manages, are organized around a **drug concept**, the core record each drug starts from. Brand names, generic names, and drug classes are separate tables attached to that concept, so a single drug ends up as a web of relationships that differs from country to country. Firebase's document model eventually stopped fitting that structure.
 
 > "Postgres is the gold standard of how drug databases are set up."
-
-DentalRx did not start there. The first version was built in FlutterFlow, with Firebase as the database and Algolia synced alongside it for search. That stack shipped the product, but Firebase's document model did not fit the data.
 
 Fixing that started with the app. FlutterFlow can export a project's code, and with today's AI coding tools, Nickolas could take full ownership of that Flutter codebase. Once the app was in his hands, the backend could change too, and Nickolas went looking for something more mature than Firebase.
 
