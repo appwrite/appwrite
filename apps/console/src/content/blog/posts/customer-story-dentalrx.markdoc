@@ -30,7 +30,9 @@ Nickolas is a clinically trained pharmacist with more than ten years of hospital
 
 > "The front end is easy enough. The hard part is all the database and compliance."
 
-Nickolas put that expertise behind [DentalRx](https://dentalrx.ca/dental-app), a free drug reference built for dentistry and used by over 6,000 dentists, dental students, and practices, most of them in Canada. Moving it from Firebase and Algolia to Postgres on Appwrite cleared the way for its next generation of features.
+Nickolas put that expertise behind [DentalRx](https://dentalrx.ca/dental-app), a free drug reference built for dentistry and used by over 6,000 dentists, dental students, and practices, most of them in Canada.
+
+DentalRx started on Firebase, and Firebase became a problem. Its document model didn't fit a drug database built on relationships, and searching it cost enough that the team paid for Algolia on top. Moving to Postgres on Appwrite solved both and cleared the way for the app's next generation of features.
 
 # The challenge
 
