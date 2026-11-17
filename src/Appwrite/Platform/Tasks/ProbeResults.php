@@ -41,7 +41,7 @@ class ProbeResults extends Action
             ->callback($this->action(...));
     }
 
-    public function action(AlertPublisher $publisherForAlerts, Database $dbForPlatform): void
+    public function action(AlertPublisher $publisherForAlerts, Database $dbForPlatform): never
     {
         $dsn = System::getEnv('_APP_CONNECTIONS_PROBER', '');
         if ($dsn === '') {

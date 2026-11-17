@@ -2,9 +2,8 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
-use Appwrite\Alert\Probe\DNS;
 use Appwrite\Alert\Probe\Result;
-use Appwrite\Alert\Probe\SMTP;
+use Appwrite\Alert\Prober;
 use Appwrite\Alert\Severity;
 use Appwrite\Alert\Status;
 use Appwrite\Utopia\Response;
@@ -144,7 +143,7 @@ class Monitor extends Model
             ])
             ->addRule('record', [
                 'type' => self::TYPE_STRING,
-                'description' => 'DNS monitors: record type queried: ' . \implode(', ', DNS::RECORDS) . '.',
+                'description' => 'DNS monitors: record type queried: ' . \implode(', ', Prober::RECORDS) . '.',
                 'default' => '',
                 'example' => 'A',
             ])
@@ -156,7 +155,7 @@ class Monitor extends Model
             ])
             ->addRule('answer', [
                 'type' => self::TYPE_STRING,
-                'description' => 'DNS monitors: record value one of the answers must have. Empty accepts any answer.',
+                'description' => 'DNS monitors: record value the first answer must have. Empty accepts any answer.',
                 'default' => '',
                 'example' => '93.184.215.14',
             ])
@@ -174,9 +173,9 @@ class Monitor extends Model
             ])
             ->addRule('tlsMode', [
                 'type' => self::TYPE_STRING,
-                'description' => 'SMTP monitors: `' . SMTP::TLS_NONE . '`, `' . SMTP::TLS_STARTTLS . '` or `' . SMTP::TLS_IMPLICIT . '`.',
+                'description' => 'SMTP monitors: `' . Prober::TLS_NONE . '`, `' . Prober::TLS_STARTTLS . '` or `' . Prober::TLS_IMPLICIT . '`.',
                 'default' => '',
-                'example' => SMTP::TLS_STARTTLS,
+                'example' => Prober::TLS_STARTTLS,
             ])
             ->addRule('result', [
                 'type' => self::TYPE_ENUM,

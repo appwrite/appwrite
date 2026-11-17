@@ -3,22 +3,20 @@
 namespace Appwrite\Alert;
 
 use Appwrite\Alert\Probe\Check;
-use Appwrite\Alert\Probe\DNS;
 use Appwrite\Alert\Probe\Result;
-use Appwrite\Alert\Probe\SMTP;
 use Utopia\Database\Document;
 use Utopia\DSN\DSN;
 use Utopia\System\System;
 
 /**
  * The wire format of the synthetics-operator prober (`internal/results` in
- * loks0n/synthetics-operator), which checks probe monitors' targets instead of
- * the alerts worker when `_APP_CONNECTIONS_PROBER` names the Redis it shares
- * with it. The worker pushes each job onto the `synthetics.probes.jobs` list
- * and `probe-results` pops what the prober pushes onto `synthetics.probes.results`.
+ * loks0n/synthetics-operator), which checks probe monitors' targets. It shares
+ * the Redis named by `_APP_CONNECTIONS_PROBER`: the alerts worker pushes each
+ * job onto the `synthetics.probes.jobs` list and `probe-results` pops what the
+ * prober pushes onto `synthetics.probes.results`.
  *
  * A `ProbeJob` carries the monitor's target with no assertions: the prober
- * reports what it saw, and the expectations the PHP probes check (status codes,
+ * reports what it saw, and the monitor's expectations (status codes,
  * certificate days, DNS answer) are checked here on its `ProbeResult`. The
  * job's namespace is the project ID, its name the monitor ID, and its
  * generation a hash of the target, so a result for a target the monitor no
@@ -28,6 +26,16 @@ final readonly class Prober
 {
     public const string JOBS = 'synthetics.probes.jobs';
     public const string RESULTS = 'synthetics.probes.results';
+
+    public const array METHODS = ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
+
+    public const array RECORDS = ['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'NS'];
+
+    public const string TLS_NONE = 'none';
+
+    public const string TLS_STARTTLS = 'starttls';
+
+    public const string TLS_IMPLICIT = 'implicit';
 
     /**
      * The prober's kind for each monitor type it checks.
@@ -40,7 +48,7 @@ final readonly class Prober
     ];
 
     /**
-     * The prober's result classes, as the PHP probes' results. `config_error` and
+     * The prober's result classes, as monitor results. `config_error` and
      * `assertion_failed` are missing on purpose: jobs carry no assertions, and a
      * target the API accepted is not one the prober refuses, so either is a
      * mismatch between the two that no check of the target explains.
@@ -56,6 +64,38 @@ final readonly class Prober
         'smtp_rejected' => Result::SmtpRejected,
         'target_denied' => Result::TargetDenied,
     ];
+
+    /**
+     * The SMTP TLS mode a port implies when none is chosen: implicit TLS on 465
+     * (RFC 8314), STARTTLS on submission (587), plaintext otherwise.
+     */
+    public static function tlsMode(int $port): string
+    {
+        return match ($port) {
+            465 => self::TLS_IMPLICIT,
+            587 => self::TLS_STARTTLS,
+            default => self::TLS_NONE,
+        };
+    }
+
+    /**
+     * The address and port of a DNS resolver written as `address`, `address:port` or `[IPv6]:port`.
+     *
+     * @return array{0: string, 1: int}
+     */
+    public static function server(string $resolver): array
+    {
+        if (\filter_var($resolver, FILTER_VALIDATE_IP) !== false) {
+            return [$resolver, 53];
+        }
+
+        $separator = \strrpos($resolver, ':');
+        if ($separator === false) {
+            return [$resolver, 53];
+        }
+
+        return [\trim(\substr($resolver, 0, $separator), '[]'), (int) \substr($resolver, $separator + 1)];
+    }
 
     /**
      * A connection to the Redis named by `_APP_CONNECTIONS_PROBER`
@@ -156,7 +196,7 @@ final readonly class Prober
 
     /**
      * Passes on a status the monitor expects (any 2xx by default) from a
-     * certificate further away than its `certificateDays`, as the HTTP probe.
+     * certificate further away than its `certificateDays`.
      */
     private static function http(Document $monitor, int $code, ?\DateTimeImmutable $certificateExpiresAt): Result
     {
@@ -175,8 +215,7 @@ final readonly class Prober
 
     /**
      * Passes on any answer, or on the expected one. The prober reports only the
-     * first answer's value, so that is the one compared, where the DNS probe
-     * accepts any answer of the record type.
+     * first answer's value, so that is the one compared.
      */
     private static function dns(Document $monitor, int $answers, string $first): Result
     {
@@ -227,18 +266,19 @@ final readonly class Prober
                 'timeoutMs' => $timeout,
                 'host' => (string) $monitor->getAttribute('host'),
                 'port' => $port,
-                'tlsMode' => (string) $monitor->getAttribute('tlsMode') ?: SMTP::mode($port),
+                'tlsMode' => (string) $monitor->getAttribute('tlsMode') ?: self::tlsMode($port),
             ],
+            default => throw new \InvalidArgumentException('The prober does not check ' . $monitor->getAttribute('type') . ' monitors.'),
         };
     }
 
     /**
      * The monitor's resolver as the `host:port` the prober dials. Without one,
-     * the resolver the DNS probe falls back to.
+     * the resolver Appwrite checks hosts with.
      */
     private static function resolver(string $resolver): string
     {
-        [$address, $port] = DNS::server($resolver ?: \trim(\explode(',', System::getEnv('_APP_DNS_EXTERNAL', System::getEnv('_APP_DNS', '8.8.8.8')))[0]));
+        [$address, $port] = self::server($resolver ?: \trim(\explode(',', System::getEnv('_APP_DNS_EXTERNAL', System::getEnv('_APP_DNS', '8.8.8.8')))[0]));
 
         return (\str_contains($address, ':') ? '[' . $address . ']' : $address) . ':' . $port;
     }

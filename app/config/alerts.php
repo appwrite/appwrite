@@ -1,9 +1,5 @@
 <?php
 
-use Appwrite\Alert\Probe\DNS;
-use Appwrite\Alert\Probe\HTTP;
-use Appwrite\Alert\Probe\SMTP;
-use Appwrite\Alert\Probe\TCP;
 use Appwrite\Utopia\Database\Documents\User;
 
 /**
@@ -12,10 +8,10 @@ use Appwrite\Utopia\Database\Documents\User;
  * `types` are the kinds of check a monitor runs, each with its own create and
  * update routes under `/v1/monitors/<type>`; `usage` reads the project's usage
  * stats. `optOut` lets a recipient stop every alert email of the type at once;
- * without it, an email offers to stop only its own monitor's. A type with a
- * `probe` checks a target itself: the alerts worker runs that `Appwrite\Alert\Probe`
- * on the monitor's own interval, and a failing check opens its alert. The rest
- * describes usage monitors.
+ * without it, an email offers to stop only its own monitor's. HTTP, DNS, TCP and
+ * SMTP monitors check a target: the synthetics-operator prober runs each check on
+ * the monitor's own interval (see `Appwrite\Alert\Prober`), and a failing check
+ * opens its alert. The rest describes usage monitors.
  *
  * `resources` are what a usage monitor's `resourceType` rule can scope it to,
  * each with the name alert emails give the type, the project collection its ID
@@ -55,19 +51,15 @@ return [
         ],
         MONITOR_TYPE_HTTP => [
             'label' => 'HTTP',
-            'probe' => HTTP::class,
         ],
         MONITOR_TYPE_DNS => [
             'label' => 'DNS',
-            'probe' => DNS::class,
         ],
         MONITOR_TYPE_TCP => [
             'label' => 'TCP',
-            'probe' => TCP::class,
         ],
         MONITOR_TYPE_SMTP => [
             'label' => 'SMTP',
-            'probe' => SMTP::class,
         ],
     ],
     'resources' => [

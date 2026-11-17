@@ -2273,7 +2273,7 @@ return [
             ],
             [
                 'name' => '_APP_MONITORS_DENIED_NETWORKS',
-                'description' => 'Comma-separated IP ranges in CIDR notation that HTTP, DNS, TCP and SMTP monitors may not connect to. The keyword \'private\' stands for the private, loopback, link-local (including cloud metadata at 169.254.169.254), CGNAT and unique local ranges. Checked on the resolved address of every connection, including redirects and DNS resolvers, and never bypassed through a proxy; a monitor whose target is denied reports target_denied without connecting. Empty by default, so monitors can check hosts on the server\'s own network.',
+                'description' => 'Comma-separated IP ranges in CIDR notation that HTTP, DNS, TCP and SMTP monitors may not connect to. The keyword \'private\' stands for the private, loopback, link-local (including cloud metadata at 169.254.169.254), CGNAT and unique local ranges. The prober checks the address of every connection it dials, including redirects and DNS resolvers; a monitor whose target is denied reports target_denied without connecting. Empty by default, so monitors can check hosts on the server\'s own network.',
                 'introduction' => '2.8.0',
                 'default' => '',
                 'required' => false,
@@ -2282,9 +2282,9 @@ return [
             ],
             [
                 'name' => '_APP_CONNECTIONS_PROBER',
-                'description' => 'Redis URL (redis://[user:password@]host:port) that the synthetics-operator prober pops HTTP, DNS, TCP and SMTP monitor checks from, so the prober container runs them instead of the alerts worker. The probe-results task hands what it finds back to the alerts worker. Empty by default, so the alerts worker runs the checks itself.',
+                'description' => 'Redis URL (redis://[user:password@]host:port) that the alerts worker pushes HTTP, DNS, TCP and SMTP monitor checks to. The synthetics-operator prober container pops and runs them, and the probe-results task hands what it finds back to the alerts worker.',
                 'introduction' => '2.8.0',
-                'default' => '',
+                'default' => 'redis://redis:6379',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

@@ -8,9 +8,6 @@ use Appwrite\Alert\Email;
 use Appwrite\Alert\Events;
 use Appwrite\Alert\Figure;
 use Appwrite\Alert\Meter;
-use Appwrite\Alert\Probe;
-use Appwrite\Alert\Probe\Egress;
-use Appwrite\Alert\Probe\Reported;
 use Appwrite\Alert\Probe\Result;
 use Appwrite\Alert\Prober;
 use Appwrite\Alert\Quantity;
@@ -124,9 +121,8 @@ class Alerts extends Action
             return;
         }
 
-        $probe = Config::getParam('alerts', [])['types'][(string) $monitor->getAttribute('type')]['probe'] ?? null;
-        if ($probe !== null) {
-            $this->probe($monitor, $project, new $probe(), $dbForPlatform, $publisherForNotifications, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $platform, $dbForProject);
+        if (isset(Prober::KINDS[(string) $monitor->getAttribute('type')])) {
+            $this->dispatch($monitor);
 
             return;
         }
@@ -189,69 +185,32 @@ class Alerts extends Action
     }
 
     /**
-     * Checks a probe monitor's target once and records the check on the monitor.
-     * A failing check fires it and a passing one recovers it, as a usage monitor's
-     * reading does; its latency is the alert's reading.
-     *
-     * With `_APP_CONNECTIONS_PROBER` set, the prober checks the target instead:
-     * the job is pushed for it, and what it found comes back through
-     * {@see self::report()} as a check already run.
-     *
-     * @param array<string, mixed> $platform
+     * Hands a probe monitor's check to the synthetics-operator prober, which pops
+     * it from Redis, checks the target and pushes what it found back for
+     * `probe-results`. The check returns through {@see self::report()}.
      */
-    protected function probe(
-        Document $monitor,
-        Document $project,
-        Probe $probe,
-        Database $dbForPlatform,
-        NotificationPublisher $publisherForNotifications,
-        Event $queueForEvents,
-        Webhook $queueForWebhooks,
-        FunctionPublisher $publisherForFunctions,
-        Realtime $queueForRealtime,
-        array $platform,
-        ?Database $dbForProject = null,
-    ): void {
-        // Unset by default, so this worker runs the checks itself.
+    protected function dispatch(Document $monitor): void
+    {
         $dsn = System::getEnv('_APP_CONNECTIONS_PROBER', '');
-        if ($dsn !== '' && !$probe instanceof Reported) {
-            // One connection per job: a single push, with nothing to keep alive between jobs.
-            $redis = Prober::connect($dsn);
-            try {
-                $redis->lPush(Prober::JOBS, (string) \json_encode(Prober::job($monitor, new \DateTimeImmutable())));
-            } finally {
-                $redis->close();
-            }
-            Span::add('monitor.prober', true);
-
-            return;
+        if ($dsn === '') {
+            throw new \RuntimeException('_APP_CONNECTIONS_PROBER is not set, so there is no prober to check probe monitors.');
         }
 
-        // Empty by default, so self-hosted servers can probe their own network.
-        $check = $probe->check($monitor, Egress::parse(System::getEnv('_APP_MONITORS_DENIED_NETWORKS', '')));
-
-        Span::add('monitor.result', $check->result->value);
-        Span::add('monitor.latency', $check->latency);
-
-        $reading = [
-            'result' => $check->result->value,
-            'latency' => $check->latency,
-            'code' => $check->code,
-            'certificateExpiresAt' => $check->certificateExpiresAt === null ? null : DateTime::format(\DateTime::createFromImmutable($check->certificateExpiresAt)),
-        ];
-        // What the alert and its notification describe.
-        foreach ($reading as $key => $value) {
-            $monitor->setAttribute($key, $value);
+        // One connection per job: a single push, with nothing to keep alive between jobs.
+        $redis = Prober::connect($dsn);
+        try {
+            $redis->lPush(Prober::JOBS, (string) \json_encode(Prober::job($monitor, new \DateTimeImmutable())));
+        } finally {
+            $redis->close();
         }
-
-        // A latency only gets worse as it grows.
-        $this->change($monitor, $project, $check->result === Result::Ok ? Status::Ok : Status::Firing, (float) $check->latency, Comparator::GreaterThan, new \DateTimeImmutable(), $reading, $dbForPlatform, $publisherForNotifications, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $platform, $dbForProject);
     }
 
     /**
-     * Records a check the prober ran, as one this worker ran is recorded, unless
-     * the monitor no longer runs it: deleted, disabled, moved, or checking another
-     * target since. {@see Prober::check()} drops results that are stale.
+     * Records a check the prober ran on the monitor, unless the monitor no longer
+     * runs it: deleted, disabled, moved, or checking another target since.
+     * {@see Prober::check()} drops results that are stale. A failing check fires
+     * the monitor and a passing one recovers it, as a usage monitor's reading
+     * does; its latency is the alert's reading.
      *
      * @param array<string, mixed> $platform
      */
@@ -285,7 +244,22 @@ class Alerts extends Action
             return;
         }
 
-        $this->probe($monitor, $project, new Reported($check), $dbForPlatform, $publisherForNotifications, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $platform, $dbForProject);
+        Span::add('monitor.result', $check->result->value);
+        Span::add('monitor.latency', $check->latency);
+
+        $reading = [
+            'result' => $check->result->value,
+            'latency' => $check->latency,
+            'code' => $check->code,
+            'certificateExpiresAt' => $check->certificateExpiresAt === null ? null : DateTime::format(\DateTime::createFromImmutable($check->certificateExpiresAt)),
+        ];
+        // What the alert and its notification describe.
+        foreach ($reading as $key => $value) {
+            $monitor->setAttribute($key, $value);
+        }
+
+        // A latency only gets worse as it grows.
+        $this->change($monitor, $project, $check->result === Result::Ok ? Status::Ok : Status::Firing, (float) $check->latency, Comparator::GreaterThan, new \DateTimeImmutable(), $reading, $dbForPlatform, $publisherForNotifications, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $platform, $dbForProject);
     }
 
     /**

@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Alerts\Http\Monitors\SMTP;
 
-use Appwrite\Alert\Probe\SMTP;
+use Appwrite\Alert\Prober;
 use Appwrite\Alert\Severity;
 use Appwrite\Platform\Modules\Alerts\Base;
 use Appwrite\SDK\AuthType;
@@ -63,7 +63,7 @@ class Create extends Base
             ->param('name', '', new Text(128), 'Monitor name. Max length: 128 chars.')
             ->param('host', '', new AnyOf([new Hostname(), new IP(IP::ALL)]), 'Hostname or IP address of the mail server.')
             ->param('port', 0, new Range(1, 65535), 'Port to connect to, such as 25, 465 or 587.')
-            ->param('tlsMode', '', new WhiteList([SMTP::TLS_NONE, SMTP::TLS_STARTTLS, SMTP::TLS_IMPLICIT, ''], true), 'TLS mode: `none`, `starttls` (upgrade after the greeting, and fail when the server does not offer it) or `implicit` (TLS from the first byte). Defaults to `implicit` on port 465, `starttls` on 587 and `none` otherwise.', true)
+            ->param('tlsMode', '', new WhiteList([Prober::TLS_NONE, Prober::TLS_STARTTLS, Prober::TLS_IMPLICIT, ''], true), 'TLS mode: `none`, `starttls` (upgrade after the greeting, and fail when the server does not offer it) or `implicit` (TLS from the first byte). Defaults to `implicit` on port 465, `starttls` on 587 and `none` otherwise.', true)
             ->param('interval', 60, new Range(1, 2592000), 'Seconds between two checks, between 1 and 2592000. The scheduler runs on a one second tick, so one second is the shortest interval.', true)
             ->param('timeout', 10, new Range(1, 2592000), 'Seconds a check may take before it fails, no longer than the interval.', true)
             ->param('cooldown', 3600, new Range(300, 2592000), 'Minimum seconds between two team notifications of this monitor firing, between 300 and 2592000. Events fire on every change between firing and resolved regardless.', true)
@@ -97,7 +97,7 @@ class Create extends Base
         Database $dbForPlatform,
         Authorization $authorization,
     ): void {
-        $target = ['host' => $host, 'port' => $port, 'tlsMode' => $tlsMode === '' ? SMTP::mode($port) : $tlsMode];
+        $target = ['host' => $host, 'port' => $port, 'tlsMode' => $tlsMode === '' ? Prober::tlsMode($port) : $tlsMode];
 
         $this->createProbeMonitor(MONITOR_TYPE_SMTP, $monitorId, $name, $target, $interval, $timeout, $cooldown, $enabled, $notify, Severity::from($severity), $response, $project, $dbForPlatform, $authorization);
     }

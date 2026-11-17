@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Alerts\Http\Monitors\SMTP;
 
-use Appwrite\Alert\Probe\SMTP;
+use Appwrite\Alert\Prober;
 use Appwrite\Alert\Severity;
 use Appwrite\Platform\Modules\Alerts\Base;
 use Appwrite\SDK\AuthType;
@@ -63,7 +63,7 @@ class Update extends Base
             ->param('name', null, new Nullable(new Text(128)), 'Monitor name. Max length: 128 chars.', true)
             ->param('host', null, new Nullable(new AnyOf([new Hostname(), new IP(IP::ALL)])), 'Hostname or IP address of the mail server.', true)
             ->param('port', null, new Nullable(new Range(1, 65535)), 'Port to connect to, such as 25, 465 or 587.', true)
-            ->param('tlsMode', null, new Nullable(new WhiteList([SMTP::TLS_NONE, SMTP::TLS_STARTTLS, SMTP::TLS_IMPLICIT, ''], true)), 'TLS mode: `none`, `starttls` (upgrade after the greeting, and fail when the server does not offer it) or `implicit` (TLS from the first byte).', true)
+            ->param('tlsMode', null, new Nullable(new WhiteList([Prober::TLS_NONE, Prober::TLS_STARTTLS, Prober::TLS_IMPLICIT, ''], true)), 'TLS mode: `none`, `starttls` (upgrade after the greeting, and fail when the server does not offer it) or `implicit` (TLS from the first byte).', true)
             ->param('interval', null, new Nullable(new Range(1, 2592000)), 'Seconds between two checks, between 1 and 2592000. The scheduler runs on a one second tick, so one second is the shortest interval.', true)
             ->param('timeout', null, new Nullable(new Range(1, 2592000)), 'Seconds a check may take before it fails, no longer than the interval.', true)
             ->param('cooldown', null, new Nullable(new Range(300, 2592000)), 'Minimum seconds between two team notifications of this monitor firing, between 300 and 2592000. Events fire on every change between firing and resolved regardless.', true)
@@ -99,7 +99,7 @@ class Update extends Base
     ): void {
         // An empty mode takes the one the port implies: the new port, else the stored one.
         if ($tlsMode === '') {
-            $tlsMode = SMTP::mode($port ?? (int) $this->getMonitor($dbForPlatform, $authorization, $project, $monitorId)->getAttribute('port'));
+            $tlsMode = Prober::tlsMode($port ?? (int) $this->getMonitor($dbForPlatform, $authorization, $project, $monitorId)->getAttribute('port'));
         }
 
         $target = ['host' => $host, 'port' => $port, 'tlsMode' => $tlsMode];

@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Alerts\Http\Monitors\HTTP;
 
-use Appwrite\Alert\Probe\HTTP;
+use Appwrite\Alert\Prober;
 use Appwrite\Alert\Severity;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Alerts\Base;
@@ -62,7 +62,7 @@ class Create extends Base
             ->param('monitorId', '', fn (Database $dbForPlatform) => new CustomId(false, $dbForPlatform->getMaxUidLength()), 'Monitor ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForPlatform'])
             ->param('name', '', new Text(128), 'Monitor name. Max length: 128 chars.')
             ->param('url', '', new URL(['http', 'https']), 'URL to request, with an `http` or `https` scheme.', false, example: 'https://example.com/health')
-            ->param('method', 'GET', new WhiteList(HTTP::METHODS, true), 'HTTP method to request the URL with: `GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE` or `OPTIONS`. Defaults to `GET`.', true)
+            ->param('method', 'GET', new WhiteList(Prober::METHODS, true), 'HTTP method to request the URL with: `GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE` or `OPTIONS`. Defaults to `GET`.', true)
             ->param('headers', [], new Assoc(), 'HTTP headers to send, as an object of header names and values.', true, example: '{"Accept":"application/json"}')
             ->param('body', '', new Text(16384, 0), 'Request body to send. Max length: 16384 chars.', true)
             ->param('statusCodes', [], new ArrayList(new Range(100, 599), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Status codes the final response may have for the check to pass. Empty accepts any 2xx status.', true)

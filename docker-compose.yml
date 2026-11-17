@@ -758,11 +758,9 @@ services:
     entrypoint: schedule-alerts
     container_name: appwrite-task-scheduler-alerts
 
-  # Checks HTTP, DNS, TCP and SMTP monitors instead of the alerts worker:
-  # `--profile prober` with _APP_CONNECTIONS_PROBER=redis://redis:6379.
+  # Checks HTTP, DNS, TCP and SMTP monitors: pops the jobs the alerts worker
+  # pushes and pushes back results for probe-results.
   appwrite-prober:
-    profiles:
-      - prober
     image: ${_APP_PROBER_IMAGE:-ghcr.io/loks0n/synthetics-operator-prober:0.12.0}
     container_name: appwrite-prober
     restart: unless-stopped
@@ -776,7 +774,7 @@ services:
 
   appwrite-task-probe-results:
     profiles:
-      - prober
+      - separate
     extends:
       service: appwrite-task-scheduler
     entrypoint: probe-results

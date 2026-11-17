@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Alerts\Http\Monitors\HTTP;
 
-use Appwrite\Alert\Probe\HTTP;
+use Appwrite\Alert\Prober;
 use Appwrite\Alert\Severity;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Alerts\Base;
@@ -62,7 +62,7 @@ class Update extends Base
             ->param('monitorId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Monitor ID.', false, ['dbForPlatform'])
             ->param('name', null, new Nullable(new Text(128)), 'Monitor name. Max length: 128 chars.', true)
             ->param('url', null, new Nullable(new URL(['http', 'https'])), 'URL to request, with an `http` or `https` scheme.', true, example: 'https://example.com/health')
-            ->param('method', null, new Nullable(new WhiteList(HTTP::METHODS, true)), 'HTTP method to request the URL with: `GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE` or `OPTIONS`. Defaults to `GET`.', true)
+            ->param('method', null, new Nullable(new WhiteList(Prober::METHODS, true)), 'HTTP method to request the URL with: `GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE` or `OPTIONS`. Defaults to `GET`.', true)
             ->param('headers', null, new Nullable(new Assoc()), 'HTTP headers to send, as an object of header names and values.', true, example: '{"Accept":"application/json"}')
             ->param('body', null, new Nullable(new Text(16384, 0)), 'Request body to send. Max length: 16384 chars.', true)
             ->param('statusCodes', null, new Nullable(new ArrayList(new Range(100, 599), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'Status codes the final response may have for the check to pass. Empty accepts any 2xx status.', true)

@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Alerts\Http\Monitors\DNS;
 
-use Appwrite\Alert\Probe\DNS;
+use Appwrite\Alert\Prober;
 use Appwrite\Alert\Severity;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Alerts\Base;
@@ -61,9 +61,9 @@ class Create extends Base
             ->param('monitorId', '', fn (Database $dbForPlatform) => new CustomId(false, $dbForPlatform->getMaxUidLength()), 'Monitor ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForPlatform'])
             ->param('name', '', new Text(128), 'Monitor name. Max length: 128 chars.')
             ->param('domain', '', new Hostname(), 'Domain to query, such as `example.com`.')
-            ->param('record', 'A', new WhiteList(DNS::RECORDS, true), 'Record type to query: `A`, `AAAA`, `CNAME`, `MX`, `TXT` or `NS`. Defaults to `A`.', true)
+            ->param('record', 'A', new WhiteList(Prober::RECORDS, true), 'Record type to query: `A`, `AAAA`, `CNAME`, `MX`, `TXT` or `NS`. Defaults to `A`.', true)
             ->param('resolver', '', new Text(128, 0), 'Resolver to query, as an IP address with an optional port, such as `1.1.1.1` or `[2606:4700:4700::1111]:53`. Defaults to the server\'s DNS resolver.', true)
-            ->param('answer', '', new Text(1024, 0), 'Record value one of the answers must have for the check to pass, such as an IP address for an `A` record. Leave empty to accept any answer.', true)
+            ->param('answer', '', new Text(1024, 0), 'Record value the first answer must have for the check to pass, such as an IP address for an `A` record. Leave empty to accept any answer.', true)
             ->param('interval', 60, new Range(1, 2592000), 'Seconds between two checks, between 1 and 2592000. The scheduler runs on a one second tick, so one second is the shortest interval.', true)
             ->param('timeout', 10, new Range(1, 2592000), 'Seconds a check may take before it fails, no longer than the interval.', true)
             ->param('cooldown', 3600, new Range(300, 2592000), 'Minimum seconds between two team notifications of this monitor firing, between 300 and 2592000. Events fire on every change between firing and resolved regardless.', true)
@@ -109,7 +109,7 @@ class Create extends Base
 
     private function assertResolver(string $resolver): void
     {
-        [$address, $port] = DNS::server($resolver);
+        [$address, $port] = Prober::server($resolver);
         if (\filter_var($address, FILTER_VALIDATE_IP) === false || $port < 1 || $port > 65535) {
             throw new Exception(Exception::MONITOR_TARGET_INVALID, "Resolver '{$resolver}' must be an IP address with an optional port.");
         }

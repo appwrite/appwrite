@@ -121,6 +121,7 @@ class Schedule extends Action
         $this->loop(ScheduleExecutions::getName(), fn () => (new ScheduleExecutions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $pools));
         $this->loop(ScheduleMessages::getName(), fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks, $pools));
         $this->loop(ScheduleAlerts::getName(), fn () => (new ScheduleAlerts())->action($publisherForAlerts, $dbForPlatform, $telemetry, $pools));
+        $this->loop(ProbeResults::getName(), fn () => (new ProbeResults())->action($publisherForAlerts, $dbForPlatform));
         foreach ($cycles as [$cohort, $cycle]) {
             $this->loop(ScheduleMaintenance::getName() . ':' . $cohort->value, fn () => (new ScheduleMaintenance())->run(ScheduleMaintenance::loop($cohort, $cycle, $publisherForMaintenance, $telemetry), $cohort, $pools));
         }
