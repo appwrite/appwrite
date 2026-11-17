@@ -465,6 +465,7 @@
         "PATCH /v1/project/oauth2/vipps",
         "PATCH /v1/project/oauth2/vippsSandbox",
         "PATCH /v1/project/oauth2/wordpress",
+        "PATCH /v1/project/oauth2/workos",
         "PATCH /v1/project/oauth2/x",
         "PATCH /v1/project/oauth2/yahoo",
         "PATCH /v1/project/oauth2/yandex",
