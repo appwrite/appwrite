@@ -581,5 +581,6 @@ export const jaSitesDictionary: Record<string, string> = {
   'Wrong value': '値が正しくありません',
   "Couldn't check": '確認できません',
   'Point your domain': 'ドメインの向き先',
+  'Not detected yet': 'まだ検出されていません',
   'Not detected': '検出されません',
 }
