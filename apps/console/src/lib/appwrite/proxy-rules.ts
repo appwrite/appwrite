@@ -18,4 +18,6 @@ export interface ProxyRuleRecord {
   message: string
   /** CAA must pass; CNAME, A and AAAA are alternatives, any one is enough */
   required: boolean
+  /** When DNS was checked, missing on rows stored before it was recorded */
+  checkedAt?: string
 }
