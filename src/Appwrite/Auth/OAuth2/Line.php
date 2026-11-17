@@ -65,7 +65,7 @@ class Line extends OAuth2
     protected function getTokens(string $code): array
     {
         if (empty($this->tokens)) {
-            $this->tokens = \json_decode($this->request(
+            $this->tokens = $this->parseTokens($this->request(
                 'POST',
                 'https://api.line.me/oauth2/v2.1/token',
                 ['Content-Type: application/x-www-form-urlencoded'],
@@ -77,7 +77,7 @@ class Line extends OAuth2
                     'code_verifier' => $this->getPKCEVerifier(),
                     'code' => $code,
                 ])
-            ), true);
+            ));
         }
 
         return $this->tokens;
@@ -90,7 +90,7 @@ class Line extends OAuth2
      */
     public function refreshTokens(string $refreshToken): array
     {
-        $this->tokens = \json_decode($this->request(
+        $this->tokens = $this->parseTokens($this->request(
             'POST',
             'https://api.line.me/oauth2/v2.1/token',
             ['Content-Type: application/x-www-form-urlencoded'],
@@ -100,13 +100,31 @@ class Line extends OAuth2
                 'client_secret' => $this->appSecret,
                 'refresh_token' => $refreshToken,
             ])
-        ), true);
+        ));
 
         if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
         return $this->tokens;
+    }
+
+    /**
+     * @param string $response
+     *
+     * @return array
+     *
+     * @throws Exception
+     */
+    private function parseTokens(string $response): array
+    {
+        $tokens = \json_decode($response, true);
+
+        if (!\is_array($tokens) || empty($tokens['access_token'])) {
+            throw new Exception($response, 424);
+        }
+
+        return $tokens;
     }
 
     /**
