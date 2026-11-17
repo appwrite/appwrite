@@ -586,6 +586,7 @@ export const jaSitesDictionary: Record<string, string> = {
   'Wrong value': '値が正しくありません',
   "Couldn't check": '確認できません',
   Alternative: '代替手段',
+  'CAA record': 'CAA レコード',
   'Domain verification': 'ドメインの検証',
   'Point your domain': 'ドメインの向き先',
   'Allow the SSL certificate': 'SSL 証明書の許可',
