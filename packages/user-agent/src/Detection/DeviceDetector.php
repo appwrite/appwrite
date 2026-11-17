@@ -133,7 +133,7 @@ final class DeviceDetector
 
         // The Flutter SDK sends the lowercase brand ahead of the model ("samsung SM-X710").
         return preg_match(
-            '/^(?:(?:samsung|google|lenovo|huawei|xiaomi|oneplus) )?(?:SM-[TX]|GT-P|Nexus (?:7|9|10)\b|Pixel (?:C|Tablet)\b|(?:Lenovo )?(?:TB-|YT-|Tab\b)|(?:Huawei )?MediaPad\b|(?:Xiaomi |Redmi |OnePlus )?Pad\b)/i',
+            '/^(?:(?:samsung|google|lenovo|huawei|xiaomi|oneplus|oppo|vivo|honor|realme) )?(?:SM-[TXP]|GT-(?:P|N80|N51)|AGS\d?-|BAH\d?-|Nexus (?:7|9|10)\b|Pixel (?:C|Tablet)\b|(?:Lenovo )?(?:TB-|YT-|(?:Galaxy |Yoga )?Tab\b)|(?:Huawei )?(?:MediaPad|MatePad)\b|(?:Xiaomi |Redmi |OnePlus |OPPO |vivo |Honor |realme )?Pad\b)/i',
             $model,
         ) === 1;
     }
