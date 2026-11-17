@@ -1,5 +1,10 @@
 # Change Log
 
+## 28.13.3
+
+* Fixed: `terminal` reads a Cloud project's usage within the history its plan keeps; the usage panel failed with `limit_history_exceeded`
+* Fixed: `terminal` names the Appwrite version and the `usage.read` scope only after a usage error they explain
+
 ## 28.13.2
 
 * Fixed: `terminal` re-reads an open organization on Cloud; every refresh failed with `Not Found (404 http)`
