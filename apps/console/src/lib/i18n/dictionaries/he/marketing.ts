@@ -1721,4 +1721,32 @@ export const heMarketingDictionary: Record<string, string> = {
   'Manage records in the Console, next to your projects.': 'ניהול רשומות ב-Console, לצד הפרויקטים שלכם.',
   'Connect Sites, Functions, or API domains with certificates issued for you.':
     'חיבור אתרים, פונקציות או דומיינים של API עם תעודות שמונפקות עבורכם.',
+  // Homepage factory hero and Console section.
+  'Your software factory': 'מפעל התוכנה שלכם',
+  'starts here': 'מתחיל כאן',
+  'An animated software factory where every Appwrite service builds apps on one production line':
+    'מפעל תוכנה מונפש שבו כל שירות של Appwrite בונה אפליקציות על פס ייצור אחד',
+  'The Appwrite Console': 'Appwrite Console',
+  'One control room for the whole factory': 'חדר בקרה אחד לכל המפעל',
+  'Every project, database, function, and deployment in one place. Watch usage, manage keys and teams, and ship without switching tools.':
+    'כל פרויקט, מסד נתונים, פונקציה ופריסה במקום אחד. עקבו אחר השימוש, נהלו מפתחות וצוותים ושחררו בלי לעבור בין כלים.',
+  'Open the Console': 'פתיחת ה-Console',
+  'Every service in one place': 'כל השירותים במקום אחד',
+  'Auth, Databases, Storage, Functions, Messaging, and Sites, side by side in every project.':
+    'אימות, מסדי נתונים, אחסון, פונקציות, הודעות ואתרים, זה לצד זה בכל פרויקט.',
+  'Usage at a glance': 'השימוש במבט אחד',
+  'Requests, bandwidth, storage, and executions for every project and organization.':
+    'בקשות, רוחב פס, אחסון והרצות לכל פרויקט וארגון.',
+  'Keys and roles': 'מפתחות ותפקידים',
+  'Create scoped API keys and give every teammate the right access.':
+    'צרו מפתחות API עם הרשאות מוגדרות ותנו לכל חבר צוות את הגישה המתאימה.',
+  'Managed PostgreSQL, TablesDB, DocumentsDB, VectorsDB, MySQL.':
+    'PostgreSQL מנוהל, TablesDB, DocumentsDB, VectorsDB ו-MySQL.',
+  'APIs, cron jobs, and event handlers at scale.':
+    'ממשקי API, משימות Cron ומטפלי אירועים בקנה מידה גדול.',
+  'Live events, channels, and presence.': 'אירועים חיים, ערוצים ונוכחות.',
+  'Email, SMS, and push with topics and targets.': 'אימייל, SMS והתראות Push עם נושאים ויעדים.',
+  'Project rules to deny, rate limit, and redirect traffic.':
+    'כללי פרויקט לחסימה, להגבלת קצב ולהפניה של תעבורה.',
+  'Projects shipped': 'פרויקטים שהושקו',
 }

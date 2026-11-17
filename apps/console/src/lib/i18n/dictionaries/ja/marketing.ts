@@ -1565,4 +1565,30 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Manage records in the Console, next to your projects.': 'プロジェクトと同じ Console でレコードを管理できます。',
   'Connect Sites, Functions, or API domains with certificates issued for you.':
     'サイト、Functions、API ドメインを接続すると、証明書が自動で発行されます。',
+  // Homepage factory hero and Console section.
+  'Your software factory': 'あなたのソフトウェア工場は',
+  'starts here': 'ここから始まる',
+  'An animated software factory where every Appwrite service builds apps on one production line':
+    'Appwrite のすべてのサービスが 1 本の生産ラインでアプリを組み立てる、アニメーションのソフトウェア工場',
+  'The Appwrite Console': 'Appwrite Console',
+  'One control room for the whole factory': '工場全体を、ひとつのコントロールルームで',
+  'Every project, database, function, and deployment in one place. Watch usage, manage keys and teams, and ship without switching tools.':
+    'すべてのプロジェクト、データベース、Functions、デプロイを 1 か所に。使用状況の確認、キーとチームの管理からリリースまで、ツールを切り替えずに行えます。',
+  'Open the Console': 'Console を開く',
+  'Every service in one place': 'すべてのサービスを 1 か所に',
+  'Auth, Databases, Storage, Functions, Messaging, and Sites, side by side in every project.':
+    '認証、データベース、ストレージ、Functions、メッセージング、サイトを、すべてのプロジェクトで並べて使えます。',
+  'Usage at a glance': '使用状況をひと目で',
+  'Requests, bandwidth, storage, and executions for every project and organization.':
+    'すべてのプロジェクトと組織のリクエスト、帯域幅、ストレージ、実行回数を確認できます。',
+  'Keys and roles': 'キーとロール',
+  'Create scoped API keys and give every teammate the right access.':
+    'スコープ付きの API キーを作成し、チームメンバーごとに適切なアクセス権を付与できます。',
+  'Managed PostgreSQL, TablesDB, DocumentsDB, VectorsDB, MySQL.':
+    'マネージド PostgreSQL、TablesDB、DocumentsDB、VectorsDB、MySQL。',
+  'APIs, cron jobs, and event handlers at scale.': 'API、Cron ジョブ、イベントハンドラーを大規模に。',
+  'Live events, channels, and presence.': 'ライブイベント、チャネル、プレゼンス。',
+  'Email, SMS, and push with topics and targets.': 'トピックとターゲットで、メール、SMS、プッシュ通知を配信。',
+  'Project rules to deny, rate limit, and redirect traffic.': 'トラフィックを拒否、レート制限、リダイレクトするプロジェクトルール。',
+  'Projects shipped': 'リリースされたプロジェクト',
 }
