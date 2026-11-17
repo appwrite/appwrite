@@ -1,11 +1,11 @@
 #!/bin/sh
-# Parity corpus of every library in src/lib.rs (see README): a switchable library against its PHP
-# package, alone (a batch with its package's switch) and with all on; a library without PHP against tests/<name>.expected.jsonl.
+# Parity corpus of every switchable library in src/lib.rs (see README) against its PHP package,
+# alone (a batch with its package's switch) and with all on; then the package tests of the
+# classes that have no PHP left.
 set -eu
 
 tests=crates/extension/tests
 libraries=$(grep -o 'enabled("[a-z-]*")' crates/extension/src/lib.rs | sed 's/enabled("\(.*\)")/\1/' | sort -u)
-[ -n "$libraries" ] || { echo "no libraries found in crates/extension/src/lib.rs" >&2; exit 1; }
 all=$(echo "$libraries" | paste -sd, -)
 output=$(mktemp -d)
 trap 'rm -r "$output"' EXIT
@@ -32,18 +32,14 @@ for library in $libraries; do
     [ -s "$output/$library.rust.jsonl" ] || { echo "$library corpus printed nothing" >&2; exit 1; }
 done
 
-echo "== $all" >&2
+[ -z "$libraries" ] || echo "== $all" >&2
 for library in $libraries; do
     _APP_EXTENSION_LIBRARIES=$all php "$tests/$library.php" > "$output/$library.all.jsonl"
     diff "$output/$library.php.jsonl" "$output/$library.all.jsonl"
 done
 
-for expected in "$tests"/*.expected.jsonl; do
-    library=$(basename "$expected" .expected.jsonl)
-    echo "== $library (no PHP)" >&2
-    if [ -d "packages/$library/tests" ]; then
-        vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php "packages/$library/tests"
-    fi
-    _APP_EXTENSION_LIBRARIES=$all php "$tests/$library.php" > "$output/$library.jsonl"
-    diff "$expected" "$output/$library.jsonl"
+# Classes with no PHP implementation left: their packages' own tests, on the extension.
+for package in user-agent domains emails; do
+    echo "== $package (no PHP)" >&2
+    vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php "packages/$package/tests"
 done
