@@ -26,6 +26,13 @@ final class FilesystemTest extends Base
         $this->assertFalse(self::$cache->load('empty-array', 60));
     }
 
+    #[Override]
+    public function testEmptyArrayIsKeptByTouch(): void
+    {
+        $this->assertFalse(self::$cache->save('empty-array-touch', []));
+        $this->assertFalse(self::$cache->touch('empty-array-touch'));
+    }
+
     public function testAPurgeThatCannotRemoveTheFileThrowsInsteadOfReportingNothingToPurge(): void
     {
         if (\function_exists('posix_getuid') && posix_getuid() === 0) {

@@ -29,6 +29,13 @@ final class StorageTest extends Base
     }
 
     #[Override]
+    public function testEmptyArrayIsKeptByTouch(): void
+    {
+        $this->assertFalse(self::$cache->save('empty-array-touch', []));
+        $this->assertFalse(self::$cache->touch('empty-array-touch'));
+    }
+
+    #[Override]
     public function testCaseSensitivity(): void
     {
         // A flush removes a local device's root until the next write, so probe beside it.
