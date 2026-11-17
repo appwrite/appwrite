@@ -385,6 +385,8 @@ export function VerifyDomainContent({
     'Add the following nameservers on your DNS provider. Note that DNS changes may take up to 48 hours to propagate fully.',
   )
 
+  // The CAA row: recommended from the console variables, required once the
+  // server checks it.
   const caaCheck = findCheck('CAA', '')
   const caaRecord: DnsRecord | null =
     hasCaa || caaCheck
@@ -397,7 +399,7 @@ export function VerifyDomainContent({
               ? caaCheck!.value
               : `0 issue "${caaCheck!.value}"`,
           ttl: 3600,
-          badge: 'Recommended',
+          badge: caaCheck?.required ? 'Required' : 'Recommended',
           check: caaCheck,
         }
       : null
