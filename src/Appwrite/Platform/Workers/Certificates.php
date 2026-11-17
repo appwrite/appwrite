@@ -580,6 +580,7 @@ class Certificates extends Action
             'status' => $rule->getAttribute('status'),
             'certificateId' => $rule->getAttribute('certificateId'),
             'logs' => $rule->getAttribute('logs'),
+            'records' => $rule->getAttribute('records', []),
         ]));
         $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
 
