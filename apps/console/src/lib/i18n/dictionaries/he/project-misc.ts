@@ -1062,13 +1062,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Tracking disabled': 'המעקב הושבת',
   'Browser versions': 'גרסאות דפדפן',
   'OS versions': 'גרסאות מערכת הפעלה',
-  'Versions': 'גרסאות',
+  Versions: 'גרסאות',
   'Browser version': 'גרסת דפדפן',
   'OS version': 'גרסת מערכת הפעלה',
-  'Identified users, ranked by visitors':
-    'משתמשים מזוהים, לפי מספר המבקרים',
-  'No identified users in this range':
-    'אין משתמשים מזוהים בטווח הזה',
+  'Identified users, ranked by visitors': 'משתמשים מזוהים, לפי מספר המבקרים',
+  'No identified users in this range': 'אין משתמשים מזוהים בטווח הזה',
   'Event properties': 'מאפייני אירועים',
   'Models and tools': 'מודלים וכלים',
   'Calls by model and by tool': 'קריאות לפי מודל ולפי כלי',
