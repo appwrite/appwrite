@@ -31,13 +31,18 @@ before:
 _APP_EXTENSION_LIBRARIES=emails   # Utopia\Emails\Email from the extension
 ```
 
+A package ported in batches has one switch per batch, `<package>-<batch>`, which needs the
+package's own: `validators,validators-scalar` registers the validators' base and the scalar leaf
+validators, `validators` alone only the base.
+
 The extension reads it once, when PHP loads the module, so changing it takes a restart and no
 deploy. Each library is canaried on Cloud this way before it becomes the default.
 
 CI runs `crates/extension/tests/run.sh` in the development image. It finds the libraries from the
 `enabled()` calls in `src/lib.rs` and requires a parity corpus at `tests/<name>.php` for each. For
 every library it runs `packages/<name>/tests` on the extension and diffs the corpus on both
-implementations, first one library at a time, then with all of them on. A new library needs only
+implementations, first one library at a time (a batch with its package's switch, running the
+package's tests), then with all of them on. A new library needs only
 its `enabled()` call, its corpus and its package tests; there is no CI step to add.
 
 Once a library has run on the extension everywhere, its PHP package is removed: the class is
@@ -184,7 +189,7 @@ package's validators. It asserts these known differences on the extension:
 `_APP_EXTENSION_LIBRARIES=validators` registers the abstract base of every validator, its seven
 `TYPE_*` constants and its four abstract methods. It holds nothing, so the leaf validators of
 `packages/validators`, Appwrite's and utopia-php/database's stay PHP and extend it as they would
-extend `Exception`. `src/validators.rs` builds it with ext-php-rs's `ClassBuilder` rather than
+extend `Exception`. `src/validators/mod.rs` builds it with ext-php-rs's `ClassBuilder` rather than
 `#[php_class]`: that macro gives a class a Rust object and a public `__construct` that throws
 without a Rust constructor, which a subclass without a constructor of its own would inherit. Built
 by hand it has neither, as in PHP: `new` on a subclass, `parent::__construct()` (an `Error`),
@@ -201,13 +206,43 @@ objects); PHP subclasses (a clone with properties of its own, `var_dump()`, seri
 subclass calling `parent::` and reading its protected state, `parent::__construct()`); constants
 through a leaf; the `Utopia\Validator` alias of `compat.php`; and, from a child process, the
 declarations the engine refuses or accepts (a missing method, a missing or wrong return type, a
-`mixed` or extra optional parameter, a static override). It asserts these known differences on
-the extension:
+`mixed` or extra optional parameter, a static override). There is no known difference: `isValid()`'s
+`$value` is untyped, as in PHP (ext-php-rs types every argument it builds; the binding clears the
+type in the engine's copy after registration).
 
-- `isValid()`'s `$value` is typed `mixed`; PHP declares it untyped. An internal argument always
-  has a type, and the two accept and override alike.
-- So the engine's message for an incompatible override names the parent as
-  `isValid(mixed $value)`, not `isValid($value)`.
+## Utopia\Validator's scalar validators
+
+`_APP_EXTENSION_LIBRARIES=validators,validators-scalar` also registers `Boolean`, `Integer`,
+`FloatValidator`, `Numeric`, `Range` (a `Numeric`), `Port`, `HexColor` and `Wildcard` over
+`crates/utopia/validators`. Nothing outside the package extends them.
+
+`src/validators/scalar.rs` builds them by hand like the base: a class has a constructor only where
+PHP's has one, and no Rust object. What a PHP constructor keeps is in real typed protected
+properties, declared as `packages/validators` declares them (types, defaults, order, promoted
+parameters), so a subclass reads and writes them with their type checks, and `var_dump()`,
+`(array)`, `==`, `clone`, `serialize()`, `unserialize()` and reflection see what they see in PHP.
+Methods read the properties on every call, in PHP's order (an uninitialized one throws the same
+`Error`), straight from the object's slot on an object of the class itself and through the engine
+otherwise. Arguments go through the engine's own conversions, and a rejected one throws the
+`TypeError` or `ArgumentCountError` of a userland function, `called in` file and line included.
+`src/validators/engine.rs` holds the engine calls ext-php-rs does not wrap, which are worth
+proposing upstream: typed property declarations, union and untyped argument types (the engine
+copies a typed method's argument info at registration, so they are patched in its copy after the
+inheritance checks), and `FunctionHandler`, which is not exported.
+
+`crates/extension/tests/validators-scalar.php` prints a corpus that must be identical on both
+implementations (10,008 lines): each class's reflection (constants, properties, methods,
+parameters with their types, defaults and promotion); every constructor over arguments of every
+kind PHP converts or rejects, named arguments, too few arguments, strict types (in a child
+process), reflection's `newInstance()` and `newInstanceWithoutConstructor()`; the getters and
+`isValid()` of 69 validators over 127 values (ints and floats at every bound, `NAN`, `INF`,
+numeric strings with whitespace, exponents, overflow, hex and signs, ports with IPv4 and IPv6
+hosts, colours with a trailing newline, bytes that are not UTF-8, arrays, objects, `Stringable`);
+dumps, copies, comparisons, JSON, iteration and serialization, crafted serializations included;
+PHP subclasses of the leaves (overriding `isUnsigned()` that `getFormat()` calls, writing the
+protected bounds, skipping the parent constructor); and, from a child process, the declarations
+the engine checks against them. There is no known difference: only `isInternal()`, the file, the
+doc comments and the methods' attributes (`#[\Override]`) differ, by construction.
 
 ## Benchmarks
 
