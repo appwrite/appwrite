@@ -152,7 +152,7 @@ export function DnsRecordsTable({
         {records.map((r, i) => (
           <TableRow key={`${r.type}-${i}`}>
             <TableCell className="px-4 py-3 font-mono text-[12px]">
-              <span className="inline-flex items-center gap-1.5">
+              <span className="inline-flex flex-wrap items-center gap-1.5">
                 {r.type}
                 {r.badge ? (
                   <Badge
