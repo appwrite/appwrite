@@ -629,6 +629,7 @@ export const heSitesDictionary: Record<string, string> = {
   'Required · any one': 'חובה · אחת מהן',
   'Add the records below at your DNS provider. Appwrite checks again automatically for 3 days.':
     'הוסיפו את הרשומות שלמטה אצל ספק ה-DNS שלכם. Appwrite בודק שוב באופן אוטומטי במשך 3 ימים.',
+  'All records are verified.': 'כל הרשומות אומתו.',
   'Appwrite will issue the SSL certificate next.':
     'בשלב הבא Appwrite יפיק את תעודת ה-SSL.',
   'Not detected yet': 'עדיין לא זוהתה',
