@@ -1,0 +1,10 @@
+/**
+ * The stored DNS checks of a proxy rule (`rule.records`): the pinned Console
+ * SDK has no `Models.RuleRecord` yet. Delete this for the SDK model once the
+ * pin carries it.
+ */
+
+export interface ProxyRuleRecord {
+  /** `CNAME`, `A`, `AAAA` or `CAA` */
+  type: string
+}
