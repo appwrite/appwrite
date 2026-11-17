@@ -28,6 +28,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
+import { RuleStatusBadge } from './RuleStatusBadge'
 
 export const DNS_PROVIDERS_LINK = '/docs/advanced/platform/custom-domains'
 
@@ -340,7 +341,7 @@ function RecordSection({
   )
 }
 
-/** When the domain was added, above the records. */
+/** Added · Status, above the records. */
 function DnsCheckMeta({ rule }: { rule: Models.ProxyRule }) {
   const t = useT()
   const label = 'text-[12px] text-muted-foreground'
@@ -351,6 +352,12 @@ function DnsCheckMeta({ rule }: { rule: Models.ProxyRule }) {
         <dt className={label}>{t('Added')}</dt>
         <dd className={value}>
           <DateTooltip date={rule.$createdAt} />
+        </dd>
+      </div>
+      <div className="min-w-0">
+        <dt className={label}>{t('Status')}</dt>
+        <dd className={value}>
+          <RuleStatusBadge rule={rule} />
         </dd>
       </div>
     </dl>
