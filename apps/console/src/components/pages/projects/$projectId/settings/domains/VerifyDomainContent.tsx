@@ -397,7 +397,7 @@ export function VerifyDomainContent({
     ]
     return (
       <div className="space-y-3">
-        <DnsRecordsTable records={rows} showTtl={true} />
+        <DnsRecordsTable records={rows} showTtl={true} compact={compact} />
       </div>
     )
   }
