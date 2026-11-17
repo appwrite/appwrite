@@ -490,6 +490,709 @@
         "deviceKnown": true,
         "memoized": true
       }
+    },
+    {
+      "name": "testBrowserWithoutMobileTokenIsTabletForUnknownModel",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "10"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "120.0",
+            "engine": "Blink",
+            "engineVersion": "120.0.0.0"
+          },
+          "device": {
+            "type": "tablet",
+            "brand": null,
+            "model": "K"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "testNativeAndroidClassifiesByModelNotMobileToken with data set \"Android SDK phone\"",
+      "op": "agent.inspect",
+      "args": {
+        "value": "io.example.app/1.2.0, Dalvik/2.1.0 (Linux; U; Android 14; Pixel 8 Build/AP2A.240805.005)"
+      },
+      "expect": {
+        "raw": "io.example.app/1.2.0, Dalvik/2.1.0 (Linux; U; Android 14; Pixel 8 Build/AP2A.240805.005)",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "14"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Google",
+            "model": "Pixel 8"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "testNativeAndroidClassifiesByModelNotMobileToken with data set \"Android SDK tablet\"",
+      "op": "agent.inspect",
+      "args": {
+        "value": "io.example.app/1.2.0, Dalvik/2.1.0 (Linux; U; Android 13; SM-X710 Build/TP1A.220624.014)"
+      },
+      "expect": {
+        "raw": "io.example.app/1.2.0, Dalvik/2.1.0 (Linux; U; Android 13; SM-X710 Build/TP1A.220624.014)",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "13"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Samsung",
+            "model": "SM-X710"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "testNativeAndroidClassifiesByModelNotMobileToken with data set \"Flutter SDK phone\"",
+      "op": "agent.inspect",
+      "args": {
+        "value": "io.example.app/1.2.0 (Linux; U; Android 14; google Pixel 8)"
+      },
+      "expect": {
+        "raw": "io.example.app/1.2.0 (Linux; U; Android 14; google Pixel 8)",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "14"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Google",
+            "model": "google Pixel 8"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "testNativeAndroidClassifiesByModelNotMobileToken with data set \"Flutter SDK Samsung phone\"",
+      "op": "agent.inspect",
+      "args": {
+        "value": "io.example.app/1.2.0 (Linux; U; Android 14; samsung SM-S918B)"
+      },
+      "expect": {
+        "raw": "io.example.app/1.2.0 (Linux; U; Android 14; samsung SM-S918B)",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "14"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Samsung",
+            "model": "samsung SM-S918B"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "testNativeAndroidClassifiesByModelNotMobileToken with data set \"Flutter SDK Samsung tablet\"",
+      "op": "agent.inspect",
+      "args": {
+        "value": "io.example.app/1.2.0 (Linux; U; Android 13; samsung SM-X710)"
+      },
+      "expect": {
+        "raw": "io.example.app/1.2.0 (Linux; U; Android 13; samsung SM-X710)",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "13"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Samsung",
+            "model": "samsung SM-X710"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "testNativeAndroidClassifiesByModelNotMobileToken with data set \"Flutter SDK Pixel Tablet\"",
+      "op": "agent.inspect",
+      "args": {
+        "value": "io.example.app/1.2.0 (Linux; U; Android 14; google Pixel Tablet)"
+      },
+      "expect": {
+        "raw": "io.example.app/1.2.0 (Linux; U; Android 14; google Pixel Tablet)",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "14"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Google",
+            "model": "google Pixel Tablet"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "testNativeAndroidClassifiesByModelNotMobileToken with data set \"Android SDK Galaxy Tab S6 Lite\"",
+      "op": "agent.inspect",
+      "args": {
+        "value": "io.example.app/1.2.0, Dalvik/2.1.0 (Linux; U; Android 13; SM-P610 Build/TP1A.220624.014)"
+      },
+      "expect": {
+        "raw": "io.example.app/1.2.0, Dalvik/2.1.0 (Linux; U; Android 13; SM-P610 Build/TP1A.220624.014)",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "13"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Samsung",
+            "model": "SM-P610"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "testNativeAndroidClassifiesByModelNotMobileToken with data set \"Android SDK Galaxy Note 10.1\"",
+      "op": "agent.inspect",
+      "args": {
+        "value": "io.example.app/1.2.0, Dalvik/1.6.0 (Linux; U; Android 4.4.2; GT-N8000 Build/KOT49H)"
+      },
+      "expect": {
+        "raw": "io.example.app/1.2.0, Dalvik/1.6.0 (Linux; U; Android 4.4.2; GT-N8000 Build/KOT49H)",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "4.4.2"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "tablet",
+            "brand": null,
+            "model": "GT-N8000"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "testNativeAndroidClassifiesByModelNotMobileToken with data set \"Android SDK Galaxy Note 8.0\"",
+      "op": "agent.inspect",
+      "args": {
+        "value": "io.example.app/1.2.0, Dalvik/1.6.0 (Linux; U; Android 4.4.2; GT-N5110 Build/KOT49H)"
+      },
+      "expect": {
+        "raw": "io.example.app/1.2.0, Dalvik/1.6.0 (Linux; U; Android 4.4.2; GT-N5110 Build/KOT49H)",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "4.4.2"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "tablet",
+            "brand": null,
+            "model": "GT-N5110"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "testNativeAndroidClassifiesByModelNotMobileToken with data set \"Android SDK Galaxy Note phone\"",
+      "op": "agent.inspect",
+      "args": {
+        "value": "io.example.app/1.2.0, Dalvik/1.6.0 (Linux; U; Android 4.1.2; GT-N7000 Build/JZO54K)"
+      },
+      "expect": {
+        "raw": "io.example.app/1.2.0, Dalvik/1.6.0 (Linux; U; Android 4.1.2; GT-N7000 Build/JZO54K)",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "4.1.2"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": null,
+            "model": "GT-N7000"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "testNativeAndroidClassifiesByModelNotMobileToken with data set \"Flutter SDK MediaPad T3\"",
+      "op": "agent.inspect",
+      "args": {
+        "value": "io.example.app/1.2.0 (Linux; U; Android 7.0; huawei AGS-L09)"
+      },
+      "expect": {
+        "raw": "io.example.app/1.2.0 (Linux; U; Android 7.0; huawei AGS-L09)",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "7.0"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Huawei",
+            "model": "huawei AGS-L09"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "testNativeAndroidClassifiesByModelNotMobileToken with data set \"Flutter SDK MediaPad T5\"",
+      "op": "agent.inspect",
+      "args": {
+        "value": "io.example.app/1.2.0 (Linux; U; Android 8.0; huawei AGS2-W09)"
+      },
+      "expect": {
+        "raw": "io.example.app/1.2.0 (Linux; U; Android 8.0; huawei AGS2-W09)",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "8.0"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Huawei",
+            "model": "huawei AGS2-W09"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "testNativeAndroidClassifiesByModelNotMobileToken with data set \"Flutter SDK MediaPad M5 lite\"",
+      "op": "agent.inspect",
+      "args": {
+        "value": "io.example.app/1.2.0 (Linux; U; Android 8.0; huawei BAH2-W19)"
+      },
+      "expect": {
+        "raw": "io.example.app/1.2.0 (Linux; U; Android 8.0; huawei BAH2-W19)",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "8.0"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Huawei",
+            "model": "huawei BAH2-W19"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "testNativeAndroidClassifiesByModelNotMobileToken with data set \"Flutter SDK MatePad\"",
+      "op": "agent.inspect",
+      "args": {
+        "value": "io.example.app/1.2.0 (Linux; U; Android 10; huawei MatePad Pro)"
+      },
+      "expect": {
+        "raw": "io.example.app/1.2.0 (Linux; U; Android 10; huawei MatePad Pro)",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "10"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Huawei",
+            "model": "huawei MatePad Pro"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "testNativeAndroidClassifiesByModelNotMobileToken with data set \"Flutter SDK Galaxy Tab marketing name\"",
+      "op": "agent.inspect",
+      "args": {
+        "value": "io.example.app/1.2.0 (Linux; U; Android 14; samsung Galaxy Tab S9)"
+      },
+      "expect": {
+        "raw": "io.example.app/1.2.0 (Linux; U; Android 14; samsung Galaxy Tab S9)",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "14"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Samsung",
+            "model": "samsung Galaxy Tab S9"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "testNativeAndroidClassifiesByModelNotMobileToken with data set \"Flutter SDK Yoga Tab\"",
+      "op": "agent.inspect",
+      "args": {
+        "value": "io.example.app/1.2.0 (Linux; U; Android 11; lenovo Yoga Tab 13)"
+      },
+      "expect": {
+        "raw": "io.example.app/1.2.0 (Linux; U; Android 11; lenovo Yoga Tab 13)",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "11"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Lenovo",
+            "model": "lenovo Yoga Tab 13"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "testNativeAndroidClassifiesByModelNotMobileToken with data set \"Flutter SDK vivo Pad\"",
+      "op": "agent.inspect",
+      "args": {
+        "value": "io.example.app/1.2.0 (Linux; U; Android 14; vivo Pad 3)"
+      },
+      "expect": {
+        "raw": "io.example.app/1.2.0 (Linux; U; Android 14; vivo Pad 3)",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "14"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Vivo",
+            "model": "vivo Pad 3"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "testNativeAndroidClassifiesByModelNotMobileToken with data set \"Flutter SDK OPPO Pad\"",
+      "op": "agent.inspect",
+      "args": {
+        "value": "io.example.app/1.2.0 (Linux; U; Android 13; OPPO Pad Air)"
+      },
+      "expect": {
+        "raw": "io.example.app/1.2.0 (Linux; U; Android 13; OPPO Pad Air)",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "13"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Oppo",
+            "model": "OPPO Pad Air"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
     }
   ]
 }

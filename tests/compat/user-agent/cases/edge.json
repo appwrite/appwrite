@@ -1674,7 +1674,7 @@
             "engineVersion": "9.80"
           },
           "device": {
-            "type": "tablet",
+            "type": "smartphone",
             "brand": null,
             "model": "Linux"
           },
