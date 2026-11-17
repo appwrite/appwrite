@@ -443,6 +443,7 @@
         "PATCH /v1/project/oauth2/kakao",
         "PATCH /v1/project/oauth2/keycloak",
         "PATCH /v1/project/oauth2/kick",
+        "PATCH /v1/project/oauth2/linear",
         "PATCH /v1/project/oauth2/linkedin",
         "PATCH /v1/project/oauth2/microsoft",
         "PATCH /v1/project/oauth2/naver",
