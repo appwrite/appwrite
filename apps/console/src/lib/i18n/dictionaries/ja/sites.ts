@@ -591,6 +591,7 @@ export const jaSitesDictionary: Record<string, string> = {
   Alternative: '代替手段',
   'CAA record': 'CAA レコード',
   '{type} record': '{type} レコード',
+  'DNS lookup': 'DNS の確認',
   'Domain verification': 'ドメインの検証',
   'Point your domain': 'ドメインの向き先',
   'Allow the SSL certificate': 'SSL 証明書の許可',
