@@ -10,7 +10,7 @@ use php_std::types::{Array, ArrayKey, Value};
 use utopia_async::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufStream};
 use utopia_async::net::TcpStream;
 
-use crate::adapter::{Adapter, Retry, blank, coerce, empty, now};
+use crate::adapter::{Adapter, Retry, blank, coerce, empty_string, now};
 use crate::{Codec, Envelope, Error, Json, Result, fastlz};
 
 /// Value flags of the Memcached extension.
@@ -382,7 +382,7 @@ impl Adapter for Memcached {
 
     async fn save(&self, key: &str, data: &Value, _hash: &str, _ttl: i64) -> Result<bool> {
         let data = coerce(data, "Utopia\\Cache\\Adapter\\Memcached::save(): Argument #2 ($data)")?;
-        if blank(key) || empty(&data) {
+        if blank(key) || empty_string(&data) {
             return Ok(false);
         }
         let mut record = Array::with_capacity(2);
@@ -511,7 +511,7 @@ impl<K: Codec> Adapter for Hazelcast<K> {
 
     async fn save(&self, key: &str, data: &Value, _hash: &str, _ttl: i64) -> Result<bool> {
         let data = coerce(data, "Utopia\\Cache\\Adapter\\Hazelcast::save(): Argument #2 ($data)")?;
-        if blank(key) || empty(&data) {
+        if blank(key) || empty_string(&data) {
             return Ok(false);
         }
         let Ok(value) = self.envelope.encode(&data, now()) else { return Ok(false) };

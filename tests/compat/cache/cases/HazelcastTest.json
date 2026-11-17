@@ -894,6 +894,269 @@
           "expect": false
         }
       ]
+    },
+    {
+      "name": "testEmptyArrayIsStored",
+      "steps": [
+        {
+          "op": "hazelcast.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array-never-written",
+            "ttl": 60,
+            "hash": "${ns}:empty-array-never-written"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array",
+            "data": [],
+            "hash": "${ns}:empty-array"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array",
+            "ttl": 60,
+            "hash": "${ns}:empty-array"
+          },
+          "expect": []
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array",
+            "ttl": 0,
+            "hash": "${ns}:empty-array"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array",
+            "ttl": 60,
+            "hash": "${ns}:empty-array"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testEmptyArrayIsKeptByTouch",
+      "steps": [
+        {
+          "op": "hazelcast.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array-touch",
+            "data": [],
+            "hash": "${ns}:empty-array-touch"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.touch",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array-touch",
+            "hash": "${ns}:empty-array-touch"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array-touch",
+            "ttl": 60,
+            "hash": "${ns}:empty-array-touch"
+          },
+          "expect": []
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array-touch"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testEmptyStringIsRefused with data set \"empty string\"",
+      "steps": [
+        {
+          "op": "hazelcast.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-string",
+            "data": "",
+            "hash": "${ns}:empty-string"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-string",
+            "ttl": 60,
+            "hash": "${ns}:empty-string"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testEmptyStringIsRefused with data set \"zero string\"",
+      "steps": [
+        {
+          "op": "hazelcast.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-string",
+            "data": "0",
+            "hash": "${ns}:empty-string"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-string",
+            "ttl": 60,
+            "hash": "${ns}:empty-string"
+          },
+          "expect": false
+        }
+      ]
     }
   ]
 }

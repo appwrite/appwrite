@@ -755,6 +755,209 @@
       "state": [
         "files"
       ]
+    },
+    {
+      "name": "testEmptyArrayIsStored",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/pool",
+            "size": 10
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-array",
+            "data": []
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-array",
+            "ttl": 60
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testEmptyArrayIsKeptByTouch",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/pool",
+            "size": 10
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-array-touch",
+            "data": []
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.touch",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-array-touch"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testEmptyStringIsRefused with data set \"empty string\"",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/pool",
+            "size": 10
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-string",
+            "data": "",
+            "hash": "empty-string"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-string",
+            "ttl": 60,
+            "hash": "empty-string"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testEmptyStringIsRefused with data set \"zero string\"",
+      "steps": [
+        {
+          "op": "pool.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/pool",
+            "size": 10
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-string",
+            "data": "0",
+            "hash": "empty-string"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-string",
+            "ttl": 60,
+            "hash": "empty-string"
+          },
+          "expect": false
+        }
+      ]
     }
   ]
 }

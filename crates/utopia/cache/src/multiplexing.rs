@@ -12,7 +12,7 @@ use utopia_async::net::TcpStream;
 use utopia_async::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use utopia_async::sync::{Notify, oneshot};
 
-use crate::adapter::{Adapter, Fields, Snapshot, blank, coerce, empty, field, now};
+use crate::adapter::{Adapter, Fields, Snapshot, blank, coerce, empty_string, field, now};
 use crate::redis_adapter::text;
 use crate::resp::{self, Reply};
 use crate::versioned::{self, Transport, VERSION_FIELD, is_reserved};
@@ -512,7 +512,7 @@ impl<K: Codec> Adapter for Multiplexing<K> {
     async fn save(&self, key: &str, data: &Value, hash: &str, ttl: i64) -> Result<bool> {
         let data = coerce(data, "Utopia\\Cache\\Adapter\\Redis\\Multiplexing::save(): Argument #2 ($data)")?;
         let data = data.as_ref();
-        if blank(key) || empty(data) {
+        if blank(key) || empty_string(data) {
             return Ok(false);
         }
         let hash = field(key, hash);

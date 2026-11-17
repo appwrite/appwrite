@@ -10907,6 +10907,152 @@
           ]
         }
       ]
+    },
+    {
+      "name": "testEmptyArrayIsStored",
+      "steps": [
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "options": {},
+            "steps": [
+              {
+                "op": "purge",
+                "args": {
+                  "key": "${ns}:empty-array"
+                }
+              },
+              {
+                "op": "save",
+                "args": {
+                  "key": "${ns}:empty-array",
+                  "data": [],
+                  "hash": "${ns}:empty-array"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:empty-array",
+                  "ttl": 60,
+                  "hash": "${ns}:empty-array"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:empty-array",
+                  "ttl": 0,
+                  "hash": "${ns}:empty-array"
+                }
+              },
+              {
+                "op": "purge",
+                "args": {
+                  "key": "${ns}:empty-array"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:empty-array",
+                  "ttl": 60,
+                  "hash": "${ns}:empty-array"
+                }
+              },
+              {
+                "op": "lease",
+                "args": {
+                  "key": "${ns}:empty-array"
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:empty-array",
+                  "data": [],
+                  "hash": "${ns}:empty-array",
+                  "version": {
+                    "$result": 6
+                  }
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:empty-array",
+                  "ttl": 60,
+                  "hash": "${ns}:empty-array"
+                }
+              },
+              {
+                "op": "purge",
+                "args": {
+                  "key": "${ns}:empty-array"
+                }
+              },
+              {
+                "op": "save",
+                "args": {
+                  "key": "${ns}:empty-string",
+                  "data": "",
+                  "hash": "${ns}:empty-string"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:empty-string",
+                  "ttl": 60,
+                  "hash": "${ns}:empty-string"
+                }
+              },
+              {
+                "op": "save",
+                "args": {
+                  "key": "${ns}:empty-string",
+                  "data": "0",
+                  "hash": "${ns}:empty-string"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:empty-string",
+                  "ttl": 60,
+                  "hash": "${ns}:empty-string"
+                }
+              }
+            ]
+          },
+          "expect": [
+            false,
+            true,
+            [],
+            false,
+            true,
+            false,
+            "<masked>",
+            true,
+            [],
+            true,
+            false,
+            false,
+            false,
+            false
+          ],
+          "mask": {
+            "paths": [
+              "/6"
+            ],
+            "reason": "versions are random identities"
+          }
+        }
+      ],
+      "state": [
+        "redis@cache-redis-mux/10,15"
+      ]
     }
   ]
 }

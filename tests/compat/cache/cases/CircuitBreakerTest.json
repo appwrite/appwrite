@@ -1951,6 +1951,130 @@
           "expect": true
         }
       ]
+    },
+    {
+      "name": "testPassesThroughAnEmptyArray",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "key",
+            "data": []
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "key",
+            "ttl": 60
+          },
+          "expect": []
+        },
+        {
+          "op": "cache.lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "lease"
+          },
+          "bind": "lease",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "lease",
+            "data": [],
+            "hash": "",
+            "version": {
+              "$ref": "lease"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "lease",
+            "ttl": 60
+          },
+          "expect": []
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty",
+            "data": ""
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "zero",
+            "data": "0"
+          },
+          "expect": false
+        }
+      ]
     }
   ]
 }

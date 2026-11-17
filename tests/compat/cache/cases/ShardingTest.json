@@ -1557,6 +1557,865 @@
           "expect": true
         }
       ]
+    },
+    {
+      "name": "testEmptyArrayIsStored",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {
+            "service": "cache-shard-a"
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.new",
+          "args": {
+            "service": "cache-shard-b"
+          },
+          "bind": "s2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.new",
+          "args": {
+            "service": "cache-shard-c"
+          },
+          "bind": "s3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "sharding.new",
+          "args": {
+            "adapters": [
+              {
+                "$ref": "s1"
+              },
+              {
+                "$ref": "s2"
+              },
+              {
+                "$ref": "s3"
+              }
+            ]
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array-never-written",
+            "ttl": 60,
+            "hash": "${ns}:empty-array-never-written"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array",
+            "data": [],
+            "hash": "${ns}:empty-array"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array",
+            "ttl": 60,
+            "hash": "${ns}:empty-array"
+          },
+          "expect": []
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array",
+            "ttl": 0,
+            "hash": "${ns}:empty-array"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array",
+            "ttl": 60,
+            "hash": "${ns}:empty-array"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testEmptyArrayIsStoredWithLease",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {
+            "service": "cache-shard-a"
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.new",
+          "args": {
+            "service": "cache-shard-b"
+          },
+          "bind": "s2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.new",
+          "args": {
+            "service": "cache-shard-c"
+          },
+          "bind": "s3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "sharding.new",
+          "args": {
+            "adapters": [
+              {
+                "$ref": "s1"
+              },
+              {
+                "$ref": "s2"
+              },
+              {
+                "$ref": "s3"
+              }
+            ]
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.supports_versioning",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array-lease"
+          },
+          "bind": "lease",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array-lease",
+            "data": [],
+            "hash": "${ns}:empty-array-lease",
+            "version": {
+              "$ref": "lease"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array-lease",
+            "ttl": 60,
+            "hash": "${ns}:empty-array-lease"
+          },
+          "expect": []
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array-lease"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testEmptyArrayIsKeptByTouch",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {
+            "service": "cache-shard-a"
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.new",
+          "args": {
+            "service": "cache-shard-b"
+          },
+          "bind": "s2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.new",
+          "args": {
+            "service": "cache-shard-c"
+          },
+          "bind": "s3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "sharding.new",
+          "args": {
+            "adapters": [
+              {
+                "$ref": "s1"
+              },
+              {
+                "$ref": "s2"
+              },
+              {
+                "$ref": "s3"
+              }
+            ]
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array-touch",
+            "data": [],
+            "hash": "${ns}:empty-array-touch"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.touch",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array-touch",
+            "hash": "${ns}:empty-array-touch"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array-touch",
+            "ttl": 60,
+            "hash": "${ns}:empty-array-touch"
+          },
+          "expect": []
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array-touch"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testEmptyArrayIsStoredWithCompareAndSwap",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {
+            "service": "cache-shard-a"
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.new",
+          "args": {
+            "service": "cache-shard-b"
+          },
+          "bind": "s2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.new",
+          "args": {
+            "service": "cache-shard-c"
+          },
+          "bind": "s3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "sharding.new",
+          "args": {
+            "adapters": [
+              {
+                "$ref": "s1"
+              },
+              {
+                "$ref": "s2"
+              },
+              {
+                "$ref": "s3"
+              }
+            ]
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.supports_versioning",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array-swap"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load_versioned",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array-swap"
+          },
+          "bind": "snap",
+          "mask": {
+            "paths": [
+              "/version"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": {
+            "version": "<masked>",
+            "value": false
+          }
+        },
+        {
+          "op": "cache.compare_and_swap",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array-swap",
+            "data": [],
+            "version": {
+              "$ref": "snap",
+              "path": "/version"
+            }
+          },
+          "bind": "v",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "cache.load_versioned",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array-swap"
+          },
+          "bind": "after",
+          "mask": {
+            "paths": [
+              "/version"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": {
+            "version": "<masked>",
+            "value": []
+          }
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "v"
+            },
+            "b": {
+              "$ref": "after",
+              "path": "/version"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array-swap"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testEmptyArrayFieldIsStoredInABatch",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {
+            "service": "cache-shard-a"
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.new",
+          "args": {
+            "service": "cache-shard-b"
+          },
+          "bind": "s2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.new",
+          "args": {
+            "service": "cache-shard-c"
+          },
+          "bind": "s3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "sharding.new",
+          "args": {
+            "adapters": [
+              {
+                "$ref": "s1"
+              },
+              {
+                "$ref": "s2"
+              },
+              {
+                "$ref": "s3"
+              }
+            ]
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save_many",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array-batch",
+            "data": [
+              [
+                "total",
+                "1"
+              ]
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save_many",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array-batch",
+            "data": [
+              [
+                "documents",
+                []
+              ]
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load_many",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array-batch",
+            "ttl": 60,
+            "fields": [
+              "documents",
+              "total"
+            ]
+          },
+          "expect": {
+            "documents": [],
+            "total": "1"
+          }
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-array-batch"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testEmptyStringIsRefused with data set \"empty string\"",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {
+            "service": "cache-shard-a"
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.new",
+          "args": {
+            "service": "cache-shard-b"
+          },
+          "bind": "s2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.new",
+          "args": {
+            "service": "cache-shard-c"
+          },
+          "bind": "s3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "sharding.new",
+          "args": {
+            "adapters": [
+              {
+                "$ref": "s1"
+              },
+              {
+                "$ref": "s2"
+              },
+              {
+                "$ref": "s3"
+              }
+            ]
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-string",
+            "data": "",
+            "hash": "${ns}:empty-string"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-string",
+            "ttl": 60,
+            "hash": "${ns}:empty-string"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testEmptyStringIsRefused with data set \"zero string\"",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {
+            "service": "cache-shard-a"
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.new",
+          "args": {
+            "service": "cache-shard-b"
+          },
+          "bind": "s2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.new",
+          "args": {
+            "service": "cache-shard-c"
+          },
+          "bind": "s3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "sharding.new",
+          "args": {
+            "adapters": [
+              {
+                "$ref": "s1"
+              },
+              {
+                "$ref": "s2"
+              },
+              {
+                "$ref": "s3"
+              }
+            ]
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-string",
+            "data": "0",
+            "hash": "${ns}:empty-string"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:empty-string",
+            "ttl": 60,
+            "hash": "${ns}:empty-string"
+          },
+          "expect": false
+        }
+      ]
     }
   ]
 }

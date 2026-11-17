@@ -46,4 +46,4 @@ utopia-telemetry.workspace = true
 
 [package.metadata.utopia]
 category = "data"
-php-sync = "ef6cd8fe161e711873663009cf3ba02b7392af7c"
+php-sync = "c6bea66275b86929da00d8cb3e8023b0f52a66a3"

@@ -6,7 +6,7 @@ use std::sync::Mutex;
 use indexmap::IndexMap;
 use php_std::types::Value;
 
-use crate::adapter::{Adapter, Snapshot, blank, coerce, empty, now};
+use crate::adapter::{Adapter, Snapshot, blank, coerce, empty_string, now};
 use crate::versioned::fresh as fresh_version;
 use crate::{Error, Result};
 
@@ -77,7 +77,7 @@ impl Adapter for Memory {
 
     fn save(&self, key: &str, data: &Value, _hash: &str, _ttl: i64) -> impl Future<Output = Result<bool>> + Send {
         let result = coerce(data, "Utopia\\Cache\\Adapter\\Memory::save(): Argument #2 ($data)").map(|data| {
-            let stored = !blank(key) && !empty(&data);
+            let stored = !blank(key) && !empty_string(&data);
             if stored {
                 let entry = Entry { time: now(), data: data.into_owned(), version: Some(fresh_version()) };
                 self.with(|store| store.insert(key.to_owned(), entry));

@@ -5,7 +5,7 @@ use php_std::types::Value;
 use redis::aio::ConnectionLike;
 use redis::cluster_async::ClusterConnection;
 
-use crate::adapter::{Adapter, Fields, Retry, blank, coerce, empty, field, now};
+use crate::adapter::{Adapter, Fields, Retry, blank, coerce, empty_string, field, now};
 use crate::redis_adapter::{reply, server_error, text};
 use crate::resp::Reply;
 use crate::{Codec, Envelope, Error, Json, Result};
@@ -129,7 +129,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Adapter for Re
 
     async fn save(&self, key: &str, data: &Value, hash: &str, ttl: i64) -> Result<bool> {
         let data = coerce(data, "Utopia\\Cache\\Adapter\\RedisCluster::save(): Argument #2 ($data)")?;
-        if blank(key) || empty(&data) {
+        if blank(key) || empty_string(&data) {
             return Ok(false);
         }
         let hash = field(key, hash);

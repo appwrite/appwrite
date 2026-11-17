@@ -401,6 +401,108 @@
           }
         }
       ]
+    },
+    {
+      "name": "testEmptyArrayLoadIsAHit",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.new",
+          "args": {},
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.set_telemetry",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty",
+            "data": []
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty",
+            "ttl": 60
+          },
+          "expect": []
+        },
+        {
+          "op": "telemetry.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "counter:cache.load.total": [
+              {
+                "value": 1,
+                "attributes": {
+                  "adapter": "memory",
+                  "result": "hit"
+                }
+              }
+            ],
+            "histogram:cache.operation.duration": [
+              {
+                "value": 0,
+                "attributes": {
+                  "operation": "save",
+                  "adapter": "memory"
+                }
+              },
+              {
+                "value": 0,
+                "attributes": {
+                  "operation": "load",
+                  "adapter": "memory"
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

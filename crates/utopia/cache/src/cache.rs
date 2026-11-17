@@ -425,7 +425,7 @@ impl<A: Adapter + ?Sized> Cache<A> {
     pub async fn save_with_lease(&self, key: &str, data: &Value, hash: &str, version: &str) -> Result<bool> {
         let data = crate::adapter::coerce(data, "Utopia\\Cache\\Cache::saveWithLease(): Argument #2 ($data)")?;
         if crate::adapter::blank(key)
-            || crate::adapter::empty(&data)
+            || crate::adapter::empty_string(&data)
             || !self.supports_versioning()
             || version.is_empty()
         {

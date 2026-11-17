@@ -689,7 +689,7 @@
             "key": "k",
             "data": []
           },
-          "expect": false
+          "expect": true
         },
         {
           "op": "cache.load",
@@ -729,7 +729,7 @@
               "$ref": "c"
             }
           },
-          "expect": 0
+          "expect": 1
         },
         {
           "op": "adapter.save",
@@ -1623,7 +1623,7 @@
       ]
     },
     {
-      "name": "testConditionalFillsRejectTheSameEmptyInputsAsOrdinarySaves",
+      "name": "testConditionalFillsTreatEmptyInputsLikeOrdinarySaves",
       "steps": [
         {
           "op": "memory.new",
@@ -1847,7 +1847,7 @@
               "$ref": "l4"
             }
           },
-          "expect": false
+          "expect": true
         },
         {
           "op": "cache.load",
@@ -1858,7 +1858,7 @@
             "key": "key",
             "ttl": 60
           },
-          "expect": false
+          "expect": []
         },
         {
           "op": "adapter.supports_versioning",
@@ -2017,12 +2017,493 @@
               "$ref": "next"
             }
           },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        }
+      ]
+    },
+    {
+      "name": "testEmptyArrayIsStored",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Cache\\Exception\\Unavailable",
-              "message": "Unable to save cache snapshot"
-            }
+            "$handle": "*"
           }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-array-never-written",
+            "ttl": 60,
+            "hash": "empty-array-never-written"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-array",
+            "data": [],
+            "hash": "empty-array"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-array",
+            "ttl": 60,
+            "hash": "empty-array"
+          },
+          "expect": []
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-array",
+            "ttl": 0,
+            "hash": "empty-array"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-array"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-array",
+            "ttl": 60,
+            "hash": "empty-array"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testEmptyArrayIsStoredWithLease",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.supports_versioning",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-array-lease"
+          },
+          "bind": "lease",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-array-lease",
+            "data": [],
+            "hash": "empty-array-lease",
+            "version": {
+              "$ref": "lease"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-array-lease",
+            "ttl": 60,
+            "hash": "empty-array-lease"
+          },
+          "expect": []
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-array-lease"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testEmptyArrayIsKeptByTouch",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-array-touch",
+            "data": [],
+            "hash": "empty-array-touch"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.touch",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-array-touch",
+            "hash": "empty-array-touch"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-array-touch",
+            "ttl": 60,
+            "hash": "empty-array-touch"
+          },
+          "expect": []
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-array-touch"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testEmptyArrayIsStoredWithCompareAndSwap",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.supports_versioning",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-array-swap"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load_versioned",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-array-swap"
+          },
+          "bind": "snap",
+          "mask": {
+            "paths": [
+              "/version"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": {
+            "version": "<masked>",
+            "value": false
+          }
+        },
+        {
+          "op": "cache.compare_and_swap",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-array-swap",
+            "data": [],
+            "version": {
+              "$ref": "snap",
+              "path": "/version"
+            }
+          },
+          "bind": "v",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "cache.load_versioned",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-array-swap"
+          },
+          "bind": "after",
+          "mask": {
+            "paths": [
+              "/version"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": {
+            "version": "<masked>",
+            "value": []
+          }
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "v"
+            },
+            "b": {
+              "$ref": "after",
+              "path": "/version"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-array-swap"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testEmptyStringIsRefused with data set \"empty string\"",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-string",
+            "data": "",
+            "hash": "empty-string"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-string",
+            "ttl": 60,
+            "hash": "empty-string"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testEmptyStringIsRefused with data set \"zero string\"",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-string",
+            "data": "0",
+            "hash": "empty-string"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "empty-string",
+            "ttl": 60,
+            "hash": "empty-string"
+          },
+          "expect": false
         }
       ]
     }

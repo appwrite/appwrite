@@ -580,6 +580,14 @@ pub(crate) fn empty(data: &Value) -> bool {
     !data.truthy()
 }
 
+/// The data the stores that keep arrays refuse: `""` and `"0"`, the empty
+/// strings. An empty array is stored, unlike under [`empty`].
+///
+/// PHP: `$data === '' || $data === '0'`.
+pub(crate) fn empty_string(data: &Value) -> bool {
+    matches!(data, Value::Str(s) if s.as_bytes().is_empty() || s.as_bytes() == b"0")
+}
+
 /// The data an adapter's `array|string $data` parameter receives from
 /// coercive-mode callers: strings and arrays as they are, other scalars as
 /// their string form (`1` is `"1"`, `true` is `"1"`, `false` is `""`), and a
