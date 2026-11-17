@@ -129,7 +129,7 @@ export function GitSilentModeCard({ func }: GitSilentModeCardProps) {
     : t('Needs deploy on push. Manual deployments choose whether to go live.')
   const branchRow = (
     <div
-      className={`flex items-center gap-3 px-4 py-3 ${branchDisabledReason ? 'opacity-60' : ''}`}
+      className={`flex flex-wrap items-center gap-3 px-4 py-3 sm:flex-nowrap ${branchDisabledReason ? 'opacity-60' : ''}`}
     >
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-muted">
         <GitBranch className="h-4 w-4 text-muted-foreground" />
@@ -160,7 +160,7 @@ export function GitSilentModeCard({ func }: GitSilentModeCardProps) {
         </p>
       </div>
       <BranchSelector
-        className="w-56 shrink-0"
+        className="ms-11 w-[calc(100%-2.75rem)] sm:ms-0 sm:w-56 sm:shrink-0"
         label=""
         projectId={projectId}
         installationId={func.installationId}

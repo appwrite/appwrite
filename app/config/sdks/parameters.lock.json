@@ -3609,6 +3609,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2WorkOS": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2X": [
             "customerKey",
             "secretKey",
@@ -3831,6 +3836,10 @@
         "reviews.listRepositories": [
             "queries",
             "total"
+        ],
+        "reviews.updateInstallation": [
+            "installationId",
+            "newRepositories"
         ],
         "reviews.updateRepositoryStrength": [
             "repositoryId",
@@ -7974,6 +7983,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2WorkOS": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2X": [
             "customerKey",
             "secretKey",
@@ -8166,6 +8180,10 @@
         "reviews.listRepositories": [
             "queries",
             "total"
+        ],
+        "reviews.updateInstallation": [
+            "installationId",
+            "newRepositories"
         ],
         "reviews.updateRepositoryStrength": [
             "repositoryId",
