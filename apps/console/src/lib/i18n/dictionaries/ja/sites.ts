@@ -596,6 +596,8 @@ export const jaSitesDictionary: Record<string, string> = {
   'Point your domain': 'ドメインの向き先',
   'Allow the SSL certificate': 'SSL 証明書の許可',
   'Required · any one': '必須 · いずれか 1 つ',
+  "We couldn't check DNS. This is on our side; Appwrite will try again.":
+    'DNS を確認できませんでした。Appwrite 側の問題のため、Appwrite が再試行します。',
   'A CAA record on your domain blocks the certificate. Keep it, and add the CAA record below next to it.':
     'ドメインの CAA レコードが証明書の発行を妨げています。そのレコードは残したまま、下記の CAA レコードを追加してください。',
   'Add the records below at your DNS provider. Appwrite checks again automatically for 3 days.':
