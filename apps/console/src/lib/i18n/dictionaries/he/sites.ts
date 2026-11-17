@@ -625,6 +625,7 @@ export const heSitesDictionary: Record<string, string> = {
   "Couldn't check": 'לא ניתן לבדוק',
   Alternative: 'חלופה',
   'CAA record': 'רשומת CAA',
+  '{type} record': 'רשומת {type}',
   'Domain verification': 'אימות הדומיין',
   'Point your domain': 'הפניית הדומיין',
   'Allow the SSL certificate': 'אישור תעודת ה-SSL',
