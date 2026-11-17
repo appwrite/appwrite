@@ -634,6 +634,8 @@ export const heSitesDictionary: Record<string, string> = {
   'Point your domain': 'הפניית הדומיין',
   'Allow the SSL certificate': 'אישור תעודת ה-SSL',
   'Required · any one': 'חובה · אחת מהן',
+  "We couldn't check DNS. This is on our side; Appwrite will try again.":
+    'לא הצלחנו לבדוק את ה-DNS. הבעיה אצלנו, ו-Appwrite ינסה שוב.',
   'A CAA record on your domain blocks the certificate. Keep it, and add the CAA record below next to it.':
     'רשומת CAA בדומיין שלכם חוסמת את התעודה. השאירו אותה והוסיפו לצדה את רשומת ה-CAA שלמטה.',
   'Add the records below at your DNS provider. Appwrite checks again automatically for 3 days.':
