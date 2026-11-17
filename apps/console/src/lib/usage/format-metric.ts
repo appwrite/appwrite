@@ -107,6 +107,11 @@ export function formatCompactBytesAxis(bytes: number): string {
 
 export interface FormatCompactCountOptions {
   compact?: boolean
+  /**
+   * Most decimals kept below 100 of a unit; trailing zeros are dropped. Default 1.
+   * Plan quotas pass 2 so 1,750,000 reads read `1.75M`, not `1.8M`.
+   */
+  decimals?: number
 }
 
 /** Compact count formatter for requests and similar metrics (`1.2M`, `12.5K`). */
@@ -114,7 +119,7 @@ export function formatCompactCount(
   num: number,
   options: FormatCompactCountOptions = {},
 ): string {
-  const { compact = true } = options
+  const { compact = true, decimals = 1 } = options
 
   if (!Number.isFinite(num) || num <= 0) {
     return '0'
@@ -125,7 +130,7 @@ export function formatCompactCount(
     const amount =
       scaled >= 100
         ? Math.round(scaled).toString()
-        : trimTrailingZeros(scaled.toFixed(1))
+        : trimTrailingZeros(scaled.toFixed(decimals))
     return compact ? `${amount}B` : `${amount} B`
   }
 
@@ -134,7 +139,7 @@ export function formatCompactCount(
     const amount =
       scaled >= 100
         ? Math.round(scaled).toString()
-        : trimTrailingZeros(scaled.toFixed(1))
+        : trimTrailingZeros(scaled.toFixed(decimals))
     return compact ? `${amount}M` : `${amount} M`
   }
 
@@ -143,14 +148,14 @@ export function formatCompactCount(
     const amount =
       scaled >= 100
         ? Math.round(scaled).toString()
-        : trimTrailingZeros(scaled.toFixed(1))
+        : trimTrailingZeros(scaled.toFixed(decimals))
     return compact ? `${amount}K` : `${amount} K`
   }
 
   if (num >= 1_000) {
     return compact
-      ? `${trimTrailingZeros((num / 1_000).toFixed(1))}K`
-      : `${trimTrailingZeros((num / 1_000).toFixed(1))} K`
+      ? `${trimTrailingZeros((num / 1_000).toFixed(decimals))}K`
+      : `${trimTrailingZeros((num / 1_000).toFixed(decimals))} K`
   }
 
   return Math.round(num).toLocaleString()

@@ -1,0 +1,18 @@
+[package]
+name = "utopia-emails"
+description = "Email addresses split, checked and made canonical per provider, and their domains classified as free or disposable."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+php-std.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
+[package.metadata.utopia]
+category = "utilities"
+php-sync = "7b0d70bc62"

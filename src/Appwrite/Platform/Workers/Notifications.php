@@ -543,7 +543,8 @@ class Notifications extends Action
     /**
      * Pushes to every signed-in device of the console user the recipient names: their push
      * targets on the console project that have not expired. The user's `beep` prefs mute
-     * organizations and projects and turn resolved pushes off for all of them. Each device's
+     * organizations and projects, turn resolved pushes off for all of them, and snooze an
+     * organization's pushes, or all of them, until a time. Each device's
      * push is recorded before it is sent, so a redelivered message pushes nothing twice, even
      * after a crash between the send and the record, while a new device still gets it.
      * Each device is pushed through the service its token belongs to; a device whose service is
@@ -576,6 +577,11 @@ class Notifications extends Action
             || ($status === 'resolved' && ($beep['resolved'] ?? true) === false)
         ) {
             Span::add('push.skipped', 'muted');
+            return null;
+        }
+
+        if (self::isSnoozed($beep, $data['organizationId'] ?? '', new \DateTimeImmutable())) {
+            Span::add('push.skipped', 'snoozed');
             return null;
         }
 
@@ -677,6 +683,52 @@ class Notifications extends Action
 
         if ($failures !== []) {
             throw new Exception('Push delivery failed: ' . \implode(', ', $failures));
+        }
+
+        return null;
+    }
+
+    /**
+     * Whether the user's `beep.snoozes` holds back pushes for the organization at `$now`. Snoozes map
+     * an organization ID, or `*` for every organization, to the ISO 8601 time they end, so a snooze
+     * runs out by itself and needs no write to end. Prefs are user-written: a value that is not a
+     * date reads as no snooze.
+     *
+     * @param array<string, mixed> $beep
+     */
+    public static function isSnoozed(array $beep, string $organizationId, \DateTimeImmutable $now): bool
+    {
+        $snoozes = $beep['snoozes'] ?? null;
+        if (!\is_array($snoozes)) {
+            return false;
+        }
+        foreach ([$organizationId, '*'] as $key) {
+            $until = $snoozes[$key] ?? null;
+            if ($key === '' || !\is_string($until)) {
+                continue;
+            }
+            $end = self::parseInstant($until);
+            if ($end !== null && $end > $now) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Parses exactly an ISO 8601 date and time with its offset, with or without fractional
+     * seconds. Anything else, such as a relative phrase like `+1 day` alone or after a date,
+     * which would never run out, or a time with no offset, is null.
+     */
+    private static function parseInstant(string $value): ?\DateTimeImmutable
+    {
+        foreach (['!Y-m-d\\TH:i:sP', '!Y-m-d\\TH:i:s.uP'] as $format) {
+            $parsed = \DateTimeImmutable::createFromFormat($format, $value);
+            $errors = \DateTimeImmutable::getLastErrors();
+            if ($parsed !== false && ($errors === false || ($errors['warning_count'] === 0 && $errors['error_count'] === 0))) {
+                return $parsed;
+            }
         }
 
         return null;

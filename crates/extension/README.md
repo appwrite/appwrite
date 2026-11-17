@@ -147,6 +147,37 @@ the extension:
 Cloning an instance of a PHP subclass is not tested: it hits the ext-php-rs bug in
 extphprs/ext-php-rs#837. Nothing in Appwrite or Cloud subclasses `Domain`.
 
+## Utopia\Emails\Email
+
+Over `crates/utopia/emails` (`_APP_EXTENSION_LIBRARIES=emails`): parsing, the local-part and
+`FILTER_VALIDATE_EMAIL` checks, the free and disposable lists and the canonical forms of
+`packages/emails`. The validators and the `Canonicals` provider classes stay PHP; the validators make
+`Email`s, so they use the extension's. The crate embeds the lists as
+`crates/utopia/emails/data/{free,disposable}-domains.txt`, exported from the PHP package's
+`data/*-domains.php` by `data/export.php`.
+
+What `Email` asks of its domain is `Utopia\Domains\Domain`'s: the binding makes the
+`$domainInstance` object with `new Domain()` and calls `isKnown()`, `isTest()`, `getRegisterable()`
+and `getSub()` on it as PHP does, so it is whichever implementation `domains` selects, throws the
+same exception for a URL, and fills the same properties. `==`, `var_dump()`, `(array)` and `clone`
+(which shares `$domainInstance`) see what they see in PHP.
+
+`crates/extension/tests/emails.php` prints a corpus of results that must be identical on both
+implementations: every domain of both lists (and a subdomain of every 25th), so a list refreshed on
+one side and not the other fails it; every domain of every provider under local parts the rules
+change; addresses Appwrite and Cloud see and edge cases (whitespace, case, `0`, quoted and IP
+literal addresses, IDN, lengths at the limits, bytes that are not UTF-8, URLs as domains); 20,000
+seeded random addresses through `isValid()`, `hasValidLocal()`, `hasValidDomain()` and
+`getCanonical()`; the properties after each getter and after every getter in reverse; the scalar
+arguments PHP converts; `==`, clone, `var_dump()`, reflection, constants, subclasses; and the
+package's validators. It asserts these known differences on the extension:
+
+- The protected helpers `initializeProviders()`, `getProviderForDomain()` and `isDomainSupported()`
+  and the protected static properties `$freeDomains`, `$disposableDomains` and `$providers` do not
+  exist: a subclass cannot call or read them. Nothing in Appwrite or Cloud subclasses `Email`.
+- Cloning an instance of a PHP subclass gives an `Email`, not the subclass (extphprs/ext-php-rs#837);
+  a subclass that declares properties of its own crashes on `clone`, as it does with `Domain`.
+
 ## Benchmarks
 
 Every class's PR carries a benchmark against the PHP class. `crates/extension/bench/<name>.php`

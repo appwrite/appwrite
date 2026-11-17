@@ -546,6 +546,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Please select a state': '州を選択してください',
   'Please select exactly': '正確に選択してください',
   'Please try again.': 'もう一度お試しください。',
+  'Port is required': 'ポートは必須です',
+  'Port must be between 0 and 65535':
+    'ポートは 0 から 65535 の範囲で指定してください',
   'Post-logout redirect URIs': 'ログアウト後のリダイレクト URI',
   'Postal code': '郵便番号',
   'Preparing your organization dashboard.': '組織ダッシュボードを準備中です。',
@@ -553,6 +556,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Previous projects page': '前のプロジェクトページ',
   'Primary payment method updated': '主要な支払い方法を更新しました',
   'Priority for SRV record': 'SRV レコードの優先度',
+  'Priority is required': '優先度は必須です',
+  'Priority must be between 0 and 65535':
+    '優先度は 0 から 65535 の範囲で指定してください',
   'Privacy policy': 'プライバシーポリシー',
   'Project (optional)': 'プロジェクト (任意)',
   'Project ID': 'プロジェクト ID',
@@ -561,6 +567,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Project keys': 'プロジェクトキー',
   'Project pinned': 'プロジェクトをピン留めしました',
   'Project unpinned': 'プロジェクトのピン留めを解除しました',
+  'Projects subtotal': 'プロジェクト小計',
   'Projects that will be deleted:': '削除されるプロジェクト:',
   'Promo code': 'プロモコード',
   'Public client': 'パブリッククライアント',
@@ -713,6 +720,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'View recap': 'まとめを見る',
   'View charges breakdown': '料金内訳を表示',
   'View detailed pricing': '詳細な料金を表示',
+  'Weight is required': '重みは必須です',
+  'Weight must be between 0 and 65535':
+    '重みは 0 から 65535 の範囲で指定してください',
   'View invoice': '請求書を表示',
   'View members': 'メンバーを表示',
   'View project': 'プロジェクトを表示',

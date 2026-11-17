@@ -316,7 +316,7 @@ test.describe('auth overview (mocked API)', () => {
     await expect(page.getByText('2 social providers')).toBeVisible()
 
     const methods = card(page, 'Auth methods')
-    await expect(methods.getByText('2 of 8 enabled')).toBeVisible()
+    await expect(methods.getByText('2 of 9 enabled')).toBeVisible()
     await expect(methods.getByText('GitHub', { exact: true })).toBeVisible()
     await expect(methods.getByText('Google', { exact: true })).toBeVisible()
     await expect(methods.getByText('Apple', { exact: true })).toHaveCount(0)

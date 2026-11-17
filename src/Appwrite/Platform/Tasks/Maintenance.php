@@ -15,6 +15,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
+use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Validator\WhiteList;
 
@@ -73,17 +74,17 @@ class Maintenance extends Action
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
 
             // Projects are maintained by schedule-maintenance, a slot at a time, so the deletes queue never takes them all at once.
-            $publisherForDeletes->enqueue(new DeleteMessage(
+            $this->step('console_delete', fn () => $publisherForDeletes->enqueue(new DeleteMessage(
                 project: $console,
                 type: DELETE_TYPE_MAINTENANCE,
-            ));
+            )));
 
-            $this->notifyDeleteConnections($publisherForDeletes);
-            $this->renewCertificates($dbForPlatform, $publisherForCertificates, $certificateIssuer);
-            $this->notifyDeleteCache($cacheRetention, $console, $publisherForDeletes);
-            $this->notifyDeleteSchedules($schedulesDeletionRetention, $publisherForDeletes);
-            $this->notifyDeleteAlerts($alertsRetention, $publisherForDeletes);
-            $this->notifyDeleteCSVExports($publisherForDeletes);
+            $this->step('delete_connections', fn () => $this->notifyDeleteConnections($publisherForDeletes));
+            $this->step('renew_certificates', fn () => $this->renewCertificates($dbForPlatform, $publisherForCertificates, $certificateIssuer));
+            $this->step('delete_cache', fn () => $this->notifyDeleteCache($cacheRetention, $console, $publisherForDeletes));
+            $this->step('delete_schedules', fn () => $this->notifyDeleteSchedules($schedulesDeletionRetention, $publisherForDeletes));
+            $this->step('delete_alerts', fn () => $this->notifyDeleteAlerts($alertsRetention, $publisherForDeletes));
+            $this->step('delete_csv_exports', fn () => $this->notifyDeleteCSVExports($publisherForDeletes));
         };
 
         if ($type === 'loop') {
@@ -97,6 +98,41 @@ class Maintenance extends Action
             $this->notifyDeleteProjects($dbForPlatform, $publisherForDeletes);
             $action();
         }
+    }
+
+    /**
+     * Run one maintenance step and record its time and memory.
+     *
+     * The task is one long-lived process, so its span only flushes when the
+     * process exits; a kernel OOM kill never flushes it. The log line written
+     * before each step is what survives such a kill: the last `start` without a
+     * matching `done` names the step that was running.
+     */
+    private function step(string $name, callable $run): void
+    {
+        $startedAt = \microtime(true);
+        $memory = \memory_get_usage();
+        \memory_reset_peak_usage();
+
+        Console::info(\sprintf('[maintenance] step=%s start memory=%.1fMB', $name, $memory / 1048576));
+
+        $run();
+
+        $duration = \microtime(true) - $startedAt;
+        $delta = \memory_get_usage() - $memory;
+        $peak = \memory_get_peak_usage();
+
+        Span::add("maintenance.{$name}.duration", $duration);
+        Span::add("maintenance.{$name}.memory_delta", $delta);
+        Span::add("maintenance.{$name}.memory_peak", $peak);
+
+        Console::info(\sprintf(
+            '[maintenance] step=%s done duration=%.2fs memory_delta=%.1fMB memory_peak=%.1fMB',
+            $name,
+            $duration,
+            $delta / 1048576,
+            $peak / 1048576,
+        ));
     }
 
     private function notifyDeleteProjects(Database $dbForPlatform, DeletePublisher $publisherForDeletes): void
@@ -190,11 +226,16 @@ class Maintenance extends Action
         }
 
         Console::info("[{$time}] Found " . \count($documents) . " certificates for renewal, scheduling jobs.");
+        Console::info(\sprintf('[maintenance] step=renew_certificates queries_done certificates=%d memory=%.1fMB', \count($documents), \memory_get_usage() / 1048576));
 
         $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
         $appRegion = System::getEnv('_APP_REGION', 'default');
 
-        foreach ($documents as $certificate) {
+        foreach ($documents as $index => $certificate) {
+            if ($index > 0 && $index % 25 === 0) {
+                Console::info(\sprintf('[maintenance] step=renew_certificates progress=%d/%d memory=%.1fMB', $index, \count($documents), \memory_get_usage() / 1048576));
+            }
+
             $domain = $certificate->getAttribute('domain');
             $rule = $isMd5 ?
                 $dbForPlatform->getDocument('rules', md5($domain)) :
