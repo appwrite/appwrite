@@ -51,6 +51,26 @@ const POINTING_METHODS: Record<string, VerificationMethod> = {
   AAAA: 'aaaa',
 }
 
+/**
+ * The check of an ALIAS record. DNS answers an ALIAS with the target's
+ * addresses, so the server's A and AAAA checks are its check: verified when
+ * either is.
+ */
+function getAliasCheck(
+  checks: ProxyRuleRecord[] | null,
+  value: string,
+): ProxyRuleRecord | undefined {
+  const addresses =
+    checks?.filter((check) => check.type === 'A' || check.type === 'AAAA') ?? []
+  const check = addresses.find((c) => c.status === 'verified') ?? addresses[0]
+  if (!check) return undefined
+  return {
+    ...check,
+    type: ALIAS_TYPE,
+    value,
+  }
+}
+
 export type DomainVerificationError = {
   title: string
   message: string
@@ -577,6 +597,7 @@ export function VerifyDomainContent({
               name: '@',
               value: cname,
               ttl: 3600,
+              check: getAliasCheck(checks, cname),
             }
           : null
       case 'a':
