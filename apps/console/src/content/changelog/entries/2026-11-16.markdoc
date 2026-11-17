@@ -13,7 +13,7 @@ The Appwrite CLI now includes [`appwrite terminal`](/docs/tooling/command-line/t
 - **Queries in place.** Filter and sort a table's rows with `/`, for example `status=open sort:-total`.
 - **Actions.** Edit or create rows in your `$EDITOR`, execute functions, download files, and delete rows, files, sessions, or subscribers behind a typed confirmation.
 
-It signs in with your existing `appwrite login` or a stored API key, and works with Appwrite Cloud and self-hosted instances. Update to Appwrite CLI 28.13.1 or later, then run `appwrite terminal`.
+It signs in with your existing `appwrite login` or a stored API key, and works with Appwrite Cloud and self-hosted instances. Update to Appwrite CLI 28.13.2 or later, then run `appwrite terminal`.
 
 {% arrow_link href="/blog/post/announcing-cli-terminal" %}
 Read the announcement
