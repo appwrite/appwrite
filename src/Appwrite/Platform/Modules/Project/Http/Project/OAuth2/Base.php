@@ -387,6 +387,7 @@ abstract class Base extends Action
             'salesforce' => Salesforce\Update::class,
             'yahoo' => Yahoo\Update::class,
             'huggingface' => HuggingFace\Update::class,
+            'vercel' => Vercel\Update::class,
             'linkedin' => Linkedin\Update::class,
             'disqus' => Disqus\Update::class,
             'amazon' => Amazon\Update::class,
