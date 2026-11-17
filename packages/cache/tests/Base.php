@@ -188,6 +188,48 @@ abstract class Base extends TestCase
         self::$cache->purge($key);
     }
 
+    public function testEmptyArrayIsKeptByTouch(): void
+    {
+        $key = 'empty-array-touch';
+
+        $this->assertSame([], self::$cache->save($key, [], $key));
+        $this->assertTrue(self::$cache->touch($key, $key));
+        $this->assertSame([], self::$cache->load($key, 60, $key));
+
+        self::$cache->purge($key);
+    }
+
+    public function testEmptyArrayIsStoredWithCompareAndSwap(): void
+    {
+        if (! self::$cache->supportsVersioning()) {
+            $this->markTestSkipped('This adapter cannot perform conditional fills.');
+        }
+
+        $key = 'empty-array-swap';
+        self::$cache->purge($key);
+
+        $version = self::$cache->compareAndSwap($key, [], self::$cache->loadVersioned($key)['version']);
+
+        $this->assertIsString($version);
+        $this->assertSame(['version' => $version, 'value' => []], self::$cache->loadVersioned($key));
+
+        self::$cache->purge($key);
+    }
+
+    public function testEmptyArrayFieldIsStoredInABatch(): void
+    {
+        $key = 'empty-array-batch';
+
+        if (self::$cache->saveMany($key, ['total' => '1']) === false) {
+            $this->markTestSkipped('This adapter does not store fields.');
+        }
+
+        $this->assertSame(['documents' => []], self::$cache->saveMany($key, ['documents' => []]));
+        $this->assertSame(['documents' => [], 'total' => '1'], self::$cache->loadMany($key, 60, ['documents', 'total']));
+
+        self::$cache->purge($key);
+    }
+
     /** @return \Iterator<string, array{string}> */
     public static function emptyStrings(): \Iterator
     {

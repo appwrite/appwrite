@@ -33,6 +33,13 @@ final class PoolTest extends Base
         $this->assertFalse(self::$cache->load('empty-array', 60));
     }
 
+    #[Override]
+    public function testEmptyArrayIsKeptByTouch(): void
+    {
+        $this->assertFalse(self::$cache->save('empty-array-touch', []));
+        $this->assertFalse(self::$cache->touch('empty-array-touch'));
+    }
+
     public function testEmptyArrayIsStoredThroughAPoolOfMemory(): void
     {
         $pool = new UtopiaPool(new Stack(), 'memory', 1, fn (): Memory => new Memory(), timeout: 0.0);
