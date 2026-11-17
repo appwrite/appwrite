@@ -1904,11 +1904,6 @@
     "vendor/utopia-php/database/bin/tasks/operators.php": "Development benchmark: times operator updates against read-modify-write in that scratch database",
     "vendor/utopia-php/database/bin/view/index.php": "Development tooling: an HTML page charting the query benchmark's result files; no library behaviour",
     "vendor/utopia-php/database/composer.json#build": "Development tooling: builds the library's docker-compose test stack (docker compose build)",
-    "vendor/utopia-php/database/composer.json#start": "Development tooling: starts the library's docker-compose test stack (docker compose up -d)",
-    "vendor/utopia-php/database/stubs/Swoole/Database/DetectsLostConnections.stub.php": "PHPStan stub: declares Swoole\\Database\\DetectsLostConnections for static analysis when the swoole extension is absent; no runtime code",
-    "vendor/utopia-php/database/stubs/Swoole/Database/PDOConfig.stub.php": "PHPStan stub: declares Swoole\\Database\\PDOConfig for static analysis when the swoole extension is absent; no runtime code",
-    "vendor/utopia-php/database/stubs/Swoole/Database/PDOPool.stub.php": "PHPStan stub: declares Swoole\\Database\\PDOPool for static analysis when the swoole extension is absent; no runtime code",
-    "vendor/utopia-php/database/stubs/Swoole/Database/PDOProxy.stub.php": "PHPStan stub: declares Swoole\\Database\\PDOProxy for static analysis when the swoole extension is absent; no runtime code",
-    "vendor/utopia-php/database/stubs/Swoole/Database/PDOStatementProxy.stub.php": "PHPStan stub: declares Swoole\\Database\\PDOStatementProxy for static analysis when the swoole extension is absent; no runtime code"
+    "vendor/utopia-php/database/composer.json#start": "Development tooling: starts the library's docker-compose test stack (docker compose up -d)"
   }
 }

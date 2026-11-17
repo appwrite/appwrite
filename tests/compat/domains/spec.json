@@ -20,21 +20,7 @@
   "ops": {
     "domain.parse": {
       "doc": "new Domain(domain) and every getter: {get, tld, suffix, rule, name, sub, apex, registerable, known, icann, private, test}",
-      "covers": [
-        "Utopia\\Domains\\Domain::__construct",
-        "Utopia\\Domains\\Domain::get",
-        "Utopia\\Domains\\Domain::getTLD",
-        "Utopia\\Domains\\Domain::getSuffix",
-        "Utopia\\Domains\\Domain::getRule",
-        "Utopia\\Domains\\Domain::getName",
-        "Utopia\\Domains\\Domain::getSub",
-        "Utopia\\Domains\\Domain::getApex",
-        "Utopia\\Domains\\Domain::getRegisterable",
-        "Utopia\\Domains\\Domain::isKnown",
-        "Utopia\\Domains\\Domain::isICANN",
-        "Utopia\\Domains\\Domain::isPrivate",
-        "Utopia\\Domains\\Domain::isTest"
-      ],
+      "covers": [],
       "fuzz": [
         {
           "name": "structured",
