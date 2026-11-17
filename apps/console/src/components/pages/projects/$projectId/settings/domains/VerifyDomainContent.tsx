@@ -12,7 +12,13 @@ import {
 } from '@/lib/utils/proxy-domains'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
-import { Loader2, ExternalLink, Info, AlertCircle } from 'lucide-react'
+import {
+  Loader2,
+  ExternalLink,
+  Info,
+  AlertCircle,
+  CheckCircle2,
+} from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
@@ -341,7 +347,7 @@ function RecordSection({
   )
 }
 
-type DnsBannerTone = 'info'
+type DnsBannerTone = 'info' | 'success'
 
 const DNS_BANNER_TONES: Record<
   DnsBannerTone,
@@ -351,6 +357,11 @@ const DNS_BANNER_TONES: Record<
     className:
       'border-blue-500/30 bg-blue-500/5 [&>svg]:text-blue-600 dark:[&>svg]:text-blue-400',
     Icon: Info,
+  },
+  success: {
+    className:
+      'border-emerald-500/30 bg-emerald-500/5 [&>svg]:text-emerald-600 dark:[&>svg]:text-emerald-400',
+    Icon: CheckCircle2,
   },
 }
 
@@ -396,7 +407,13 @@ function getDnsBanners(
       },
     ]
   }
-  return []
+  return [
+    {
+      tone: 'success',
+      prefix: t('DNS is set up'),
+      text: t('Appwrite will issue the SSL certificate next.'),
+    },
+  ]
 }
 
 /** Added · Status · Last check, above the records. */
