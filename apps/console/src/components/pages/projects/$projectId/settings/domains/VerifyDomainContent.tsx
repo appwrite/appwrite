@@ -394,6 +394,7 @@ function DnsBannerAlert({ banner }: { banner: DnsBanner }) {
 
 function getDnsBanners(
   t: (text: string) => string,
+  rule: Models.ProxyRule,
   pointing: ProxyRuleRecord[],
 ): DnsBanner[] {
   const verified = pointing.find((check) => check.status === 'verified')
@@ -411,7 +412,10 @@ function getDnsBanners(
     {
       tone: 'success',
       prefix: t('DNS is set up'),
-      text: t('Appwrite will issue the SSL certificate next.'),
+      text:
+        rule.status === 'verified'
+          ? t('All records are verified.')
+          : t('Appwrite will issue the SSL certificate next.'),
     },
   ]
 }
@@ -829,7 +833,7 @@ export function VerifyDomainContent({
     ),
   ]
   const offersNameservers = tabOptions.some((tab) => tab.id === 'nameservers')
-  const banners = checks ? getDnsBanners(t, pointingChecks) : []
+  const banners = checks ? getDnsBanners(t, rule, pointingChecks) : []
 
   const checkedRecords = checks ? (
     <div className="space-y-6">
