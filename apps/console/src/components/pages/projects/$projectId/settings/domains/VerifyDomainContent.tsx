@@ -31,6 +31,7 @@ export const DNS_PROVIDERS_LINK = '/docs/advanced/platform/custom-domains'
 
 const TAB_LABELS: Record<VerificationMethod, string> = {
   cname: 'CNAME',
+  alias: 'ALIAS',
   nameservers: 'Nameservers',
   a: 'A',
   aaaa: 'AAAA',

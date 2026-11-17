@@ -193,7 +193,12 @@ export function getRecordName(domain: string): string {
   return normalized.slice(0, -(apex.length + 1))
 }
 
-export type VerificationMethod = 'cname' | 'nameservers' | 'a' | 'aaaa'
+export type VerificationMethod =
+  | 'cname'
+  | 'alias'
+  | 'nameservers'
+  | 'a'
+  | 'aaaa'
 
 /**
  * Ways a rule's domain can be pointed at Appwrite, the one to show first
