@@ -9,6 +9,13 @@ class RuleRecord extends Model
 {
     public function __construct()
     {
+        $this
+            ->addRule('type', [
+                'type' => self::TYPE_STRING,
+                'description' => 'DNS record type. Possible values are "CNAME", "A", "AAAA", or "CAA".',
+                'default' => '',
+                'example' => 'CNAME',
+            ]);
     }
 
     /**
