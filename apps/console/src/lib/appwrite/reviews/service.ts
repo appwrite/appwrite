@@ -10,6 +10,7 @@ import type { Client } from '@appwrite.io/console'
 import type {
   Review,
   ReviewEventList,
+  ReviewInstallation,
   ReviewList,
   ReviewRepository,
   ReviewRepositoryList,
@@ -184,6 +185,31 @@ export class Reviews {
       this.uri(apiPath),
       { ...this.headers(), 'content-type': 'application/json' },
       {},
+    )
+  }
+
+  /**
+   * Choose whether code review is turned on for repositories added to a GitHub
+   * installation later. They are reviewed at normal strength.
+   *
+   * @param {string} params.installationId - Installation ID.
+   * @param {boolean} params.newRepositories - Review repositories added later.
+   * @throws {AppwriteException}
+   * @returns {Promise<ReviewInstallation>}
+   */
+  updateInstallation(params: {
+    installationId: string
+    newRepositories: boolean
+  }): Promise<ReviewInstallation> {
+    const apiPath = '/reviews/installations/{installationId}'.replace(
+      '{installationId}',
+      encodeURIComponent(params.installationId),
+    )
+    return this.client.call(
+      'patch',
+      this.uri(apiPath),
+      { ...this.headers(), 'content-type': 'application/json' },
+      { newRepositories: params.newRepositories },
     )
   }
 

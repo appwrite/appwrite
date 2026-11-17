@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Reviews\Services;
 
+use Appwrite\Platform\Modules\Reviews\Http\Installations\Update as UpdateInstallation;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Create as CreateRepository;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Delete as DeleteRepository;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Learnings\Create as CreateRepositoryLearning;
@@ -32,6 +33,7 @@ class Http extends Service
         $this->addAction(ListRepositories::getName(), new ListRepositories());
         $this->addAction(UpdateRepositoryStrength::getName(), new UpdateRepositoryStrength());
         $this->addAction(DeleteRepository::getName(), new DeleteRepository());
+        $this->addAction(UpdateInstallation::getName(), new UpdateInstallation());
 
         $this->addAction(ListReviews::getName(), new ListReviews());
         $this->addAction(GetReview::getName(), new GetReview());

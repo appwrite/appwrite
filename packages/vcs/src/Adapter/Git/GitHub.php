@@ -19,6 +19,8 @@ class GitHub extends Git
 
     public const EVENT_INSTALLATION = 'installation';
 
+    public const EVENT_INSTALLATION_REPOSITORIES = 'installation_repositories';
+
     public const EVENT_ISSUE_COMMENT = 'issue_comment';
 
     public const EVENT_PULL_REQUEST_REVIEW_COMMENT = 'pull_request_review_comment';
@@ -1582,10 +1584,26 @@ class GitHub extends Git
                 $action = $payload['action'] ?? '';
                 $userName = $payloadInstallationAccount['login'] ?? '';
 
+                // Repositories that joined or left the installation: chosen in its settings, or
+                // created in an account the installation covers in full.
+                $repositoryIds = static function (mixed $repositories): array {
+                    $ids = [];
+                    foreach (\is_array($repositories) ? $repositories : [] as $repository) {
+                        $id = \is_array($repository) ? ($repository['id'] ?? null) : null;
+                        if (\is_int($id) || (\is_string($id) && \ctype_digit($id))) {
+                            $ids[] = \strval($id);
+                        }
+                    }
+
+                    return $ids;
+                };
+
                 return [[
                     'action' => $action,
                     'installationId' => $installationId,
                     'userName' => $userName,
+                    'repositoriesAdded' => $repositoryIds($payload['repositories_added'] ?? []),
+                    'repositoriesRemoved' => $repositoryIds($payload['repositories_removed'] ?? []),
                 ]];
         }
 
