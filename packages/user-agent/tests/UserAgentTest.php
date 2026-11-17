@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\UserAgent\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\UserAgent\UserAgent;
 
@@ -93,6 +94,27 @@ final class UserAgentTest extends TestCase
         $this->assertSame('tablet', $agent->device()->type);
         $this->assertSame('Samsung', $agent->device()->brand);
         $this->assertSame('SM-X910', $agent->device()->model);
+    }
+
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function nativeAndroidProvider(): array
+    {
+        return [
+            'Android SDK phone' => ['io.example.app/1.2.0, Dalvik/2.1.0 (Linux; U; Android 14; Pixel 8 Build/AP2A.240805.005)', 'smartphone'],
+            'Android SDK tablet' => ['io.example.app/1.2.0, Dalvik/2.1.0 (Linux; U; Android 13; SM-X710 Build/TP1A.220624.014)', 'tablet'],
+            'Flutter SDK phone' => ['io.example.app/1.2.0 (Linux; U; Android 14; google Pixel 8)', 'smartphone'],
+            'Flutter SDK Samsung phone' => ['io.example.app/1.2.0 (Linux; U; Android 14; samsung SM-S918B)', 'smartphone'],
+            'Flutter SDK Samsung tablet' => ['io.example.app/1.2.0 (Linux; U; Android 13; samsung SM-X710)', 'tablet'],
+            'Flutter SDK Pixel Tablet' => ['io.example.app/1.2.0 (Linux; U; Android 14; google Pixel Tablet)', 'tablet'],
+        ];
+    }
+
+    #[DataProvider('nativeAndroidProvider')]
+    public function testNativeAndroidClassifiesByModelNotMobileToken(string $userAgent, string $type): void
+    {
+        $this->assertSame($type, UserAgent::parse($userAgent)->device()->type);
     }
 
     public function testBotDetectionDoesNotSuppressClientAndDevice(): void
