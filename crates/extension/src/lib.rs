@@ -3,11 +3,12 @@
 //! (`packages/<name>`), as plain PHP.
 //!
 //! `Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`,
-//! `Utopia\Locale\Locale`, `Utopia\UserAgent\UserAgent` and `Utopia\Domains\Domain` are
-//! always registered: they have no PHP implementation. Every other library still
-//! has one, and its class is registered only when `_APP_EXTENSION_LIBRARIES`
-//! names its package (`emails`, `validators`), so each can be canaried and
-//! switched back to PHP with a restart, not a deploy.
+//! `Utopia\Locale\Locale`, `Utopia\UserAgent\UserAgent`, `Utopia\Domains\Domain` and
+//! `Utopia\Emails\Email` are always registered: they have no PHP implementation.
+//! Every other library still has one, and its class is registered only when
+//! `_APP_EXTENSION_LIBRARIES` names its package (`validators`) or, for a package ported in
+//! batches, the package and the batch (`validators,validators-scalar`), so each can be
+//! canaried and switched back to PHP with a restart, not a deploy.
 
 mod canvas;
 mod domains;
@@ -40,8 +41,8 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .class::<dsn::Dsn>()
         .class::<locale::Locale>()
         .class::<user_agent::UserAgent>()
-        .class::<domains::Domain>();
-    let module = if enabled("emails") { module.class::<emails::Email>() } else { module };
+        .class::<domains::Domain>()
+        .class::<emails::Email>();
     module.request_shutdown_function(request_shutdown)
 }
 
@@ -51,7 +52,14 @@ fn startup(_kind: i32, _module: i32) -> i32 {
     if !enabled("validators") {
         return 0;
     }
-    ext_php_rs::internal::startup_guard(validators::register)
+    // The leaves extend the base, so a batch is registered only with it.
+    ext_php_rs::internal::startup_guard(|| {
+        validators::register()?;
+        if enabled("validators-scalar") {
+            validators::scalar::register()?;
+        }
+        Ok(())
+    })
 }
 
 /// Forgets what the classes hold for the request when it ends, as PHP frees its static state.
