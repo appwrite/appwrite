@@ -583,6 +583,7 @@ export const jaSitesDictionary: Record<string, string> = {
   'Found:': '検出値:',
   'Wrong value': '値が正しくありません',
   "Couldn't check": '確認できません',
+  Alternative: '代替手段',
   'Point your domain': 'ドメインの向き先',
   'Allow the SSL certificate': 'SSL 証明書の許可',
   'Required · any one': '必須 · いずれか 1 つ',
