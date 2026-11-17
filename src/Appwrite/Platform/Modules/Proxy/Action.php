@@ -182,7 +182,7 @@ class Action extends PlatformAction
             'type' => $record['type'],
             'name' => $record['name'],
             'value' => $record['value'],
-            'found' => $record['found'],
+            'found' => \array_map(fn (string $value) => \mb_strcut($value, 0, 255), \array_slice($record['found'], 0, 10)),
             'status' => $record['status'],
             'message' => $record['message'],
             'required' => $record['required'],
