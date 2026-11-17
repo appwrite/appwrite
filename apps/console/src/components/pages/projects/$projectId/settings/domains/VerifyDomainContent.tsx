@@ -54,7 +54,7 @@ const POINTING_METHODS: Record<string, VerificationMethod> = {
 /**
  * The check of an ALIAS record. DNS answers an ALIAS with the target's
  * addresses, so the server's A and AAAA checks are its check: verified when
- * either is.
+ * either is, otherwise the one that asks the most of the developer.
  */
 function getAliasCheck(
   checks: ProxyRuleRecord[] | null,
@@ -62,7 +62,10 @@ function getAliasCheck(
 ): ProxyRuleRecord | undefined {
   const addresses =
     checks?.filter((check) => check.type === 'A' || check.type === 'AAAA') ?? []
-  const check = addresses.find((c) => c.status === 'verified') ?? addresses[0]
+  const check =
+    addresses.find((c) => c.status === 'verified') ??
+    addresses.find((c) => c.status === 'mismatch') ??
+    addresses[0]
   if (!check) return undefined
   return {
     ...check,
