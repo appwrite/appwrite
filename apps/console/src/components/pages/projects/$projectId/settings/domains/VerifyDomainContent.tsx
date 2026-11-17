@@ -428,11 +428,15 @@ function getDnsBanners(
   if (!verified) {
     for (const check of pointing) {
       if (check.status !== 'mismatch') continue
+      const more =
+        check.found.length > 1
+          ? ` ${t('and {n} more').replace('{n}', String(check.found.length - 1))}`
+          : ''
       banners.push({
         tone: 'error',
         prefix: t('{type} record').replace('{type}', check.type),
         text: t('It points to {found}. Change it to {value}.')
-          .replace('{found}', check.found[0] ?? '')
+          .replace('{found}', `${check.found[0] ?? ''}${more}`)
           .replace('{value}', check.value),
       })
     }
