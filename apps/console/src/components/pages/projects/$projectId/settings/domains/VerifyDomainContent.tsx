@@ -156,7 +156,11 @@ export function DnsRecordsTable({
                 {r.type}
                 {r.badge ? (
                   <Badge
-                    variant="outline"
+                    variant={
+                      r.check?.required || r.badge === 'Required'
+                        ? 'warning'
+                        : 'success'
+                    }
                     className="text-[10px] shrink-0 font-sans font-medium normal-case tracking-normal"
                   >
                     {t(r.badge)}
