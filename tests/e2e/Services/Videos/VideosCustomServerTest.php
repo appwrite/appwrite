@@ -961,13 +961,12 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
-     * A playlist uploaded under a video type is stored as `<id>.m3u8`, which
-     * ffprobe would open with its hls demuxer and follow to the segment it
-     * names. The worker's format allowlist leaves hls out, so the probe is
-     * refused outright ("Invalid argument") instead of failing on the missing
-     * segment ("Invalid data found when processing input").
+     * A playlist only points at other media, so it is refused as a source even
+     * when the upload claims a video type: storage records the type it sniffs
+     * from the content, and playlist types are excluded. The worker's format
+     * allowlist (hls, concat, ... left out) is the second line behind this.
      */
-    public function testTimelineErrorOnPlaylistSource(): void
+    public function testCreateVideoRejectsPlaylist(): void
     {
         $playlist = \tempnam(\sys_get_temp_dir(), 'playlist');
         $this->assertNotFalse($playlist);
@@ -986,17 +985,13 @@ final class VideosCustomServerTest extends Scope
         }
         $this->assertEquals(201, $file['headers']['status-code']);
 
-        $create = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
+        $response = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $file['body']['$id'],
         ]);
-        $this->assertEquals(201, $create['headers']['status-code']);
-        $videoId = $create['body']['$id'];
 
-        $body = $this->waitForTimelineTerminalState($videoId);
-        $this->assertSame('error', $body['timelineStatus'], 'Playlist source did not fail the timeline');
-        $this->assertSame('The requested file is not a valid video or audio file (ffprobe: Invalid argument)', $body['timelineError']);
-        $this->assertSame(0, (int) $body['duration']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('video_not_valid', $response['body']['type']);
     }
 
     /**
