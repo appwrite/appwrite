@@ -138,6 +138,12 @@ function RecordStatus({ record }: { record: DnsRecord }) {
           {t('Not detected')}
         </Badge>
       )
+    case 'mismatch':
+      return (
+        <Badge variant="error" className={pill}>
+          {t('Wrong value')}
+        </Badge>
+      )
     default:
       return <span className="text-muted-foreground">-</span>
   }
