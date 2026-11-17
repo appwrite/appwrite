@@ -291,6 +291,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Kick',
     ],
+    'line' => [
+        'name' => 'LINE',
+        'developers' => 'https://developers.line.biz/en/docs/line-login/',
+        'icon' => 'icon-line',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Line',
+    ],
     'linkedin' => [
         'name' => 'LinkedIn',
         'developers' => 'https://developer.linkedin.com/',
