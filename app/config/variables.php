@@ -1340,6 +1340,22 @@ return [
                 'required' => false,
                 'question' => '',
             ],
+            [
+                'name' => '_APP_CONNECTIONS_STORAGE_CACHE',
+                'description' => 'DSN of the storage device for cached API responses, such as s3://key:secret@host/bucket?region=us-east-1. Empty keeps them on the local filesystem. Takes effect with _APP_STORAGE_CACHE_PERCENT.',
+                'introduction' => '2.8.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_CACHE_PERCENT',
+                'description' => 'Percentage of cached API responses, from 0 to 100, stored on the _APP_CONNECTIONS_STORAGE_CACHE device. The rest stay on the local filesystem.',
+                'introduction' => '2.8.0',
+                'default' => '0',
+                'required' => false,
+                'question' => '',
+            ],
         ],
     ],
     [
@@ -2101,6 +2117,33 @@ return [
                 'description' => 'Schedules deletion interval ( in seconds ) ',
                 'introduction' => '2.0.0',
                 'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_RENDITION',
+                'description' => 'Maximum age (in seconds) of an in-flight video rendition (`pending`, `started`, or `ended`) or caption (`pending` or `started`) before maintenance parks it as `aborted`. The default value is 86400 seconds (1 day).',
+                'introduction' => '2.4.0',
+                'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VIDEOS_ENCODE_TIMEOUT',
+                'description' => 'The maximum number of seconds one ffmpeg run in the videos worker may take. Each encode gets a limit scaled to the source duration, codec and resolution, capped at this value; a source with unknown duration gets this value. Set it to 0 to disable the limit. When the limit is disabled, or set high enough that an hour of slack would pass 7 days, an S3 source is copied locally instead of read through a presigned URL, which cannot be signed for longer than 7 days and would otherwise expire mid-encode. The default value is 21600 seconds (6 hours).',
+                'introduction' => '2.6.0',
+                'default' => '21600',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VIDEOS_THREADS',
+                'description' => 'The number of ffmpeg worker threads used for each encode and package job in the videos worker. The default value is 4.',
+                'introduction' => '2.6.0',
+                'default' => '4',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

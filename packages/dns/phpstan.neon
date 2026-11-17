@@ -6,6 +6,8 @@ parameters:
     paths:
         - src
         - tests
+    scanFiles:
+        - stubs/Domain.php
     scanDirectories:
         - vendor/swoole/ide-helper
     excludePaths:

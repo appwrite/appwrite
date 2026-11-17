@@ -166,6 +166,15 @@ class Create extends Action
             throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
         }
 
+        // A project-wide password reset refuses every password set before it
+        $passwordsInvalidatedAt = $project->getAttribute('auths', [])['passwordsInvalidatedAt'] ?? null;
+        if (
+            $passwordsInvalidatedAt !== null
+            && new \DateTime($profile->getAttribute('passwordUpdate')) <= new \DateTime($passwordsInvalidatedAt)
+        ) {
+            throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
+        }
+
         $user->setAttributes($profile->getArrayCopy());
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
@@ -271,7 +280,7 @@ class Create extends Action
         // The session joins the account switching device and becomes its active one, before the
         // response goes out so the device reads consistently on the client's next request
         if ($authDevice !== null) {
-            $authDevice = AuthDevice::attach($dbForProject, $authorization, $authDevice, $session, $publisherForDeletes, $project, $mqtt);
+            $authDevice = AuthDevice::attach($dbForProject, $authorization, $proofForToken, $authDevice, $session, $publisherForDeletes, $project, $mqtt);
             AuthDevice::refreshCookie($request, $response, $project, $authDevice, $protocol, $domainVerification, $cookieDomain);
         }
 

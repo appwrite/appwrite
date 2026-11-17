@@ -202,10 +202,10 @@ class PostgreSQL extends SQL implements
         array $rawColumns = [],
         bool $concurrently = false,
     ): Statement {
-        if ($method !== '' && ! \preg_match('/^[A-Za-z0-9_]+$/', $method)) {
+        if ($method !== '' && ! \preg_match('/^[A-Za-z0-9_]+$/D', $method)) {
             throw new ValidationException('Invalid index method: ' . $method);
         }
-        if ($operatorClass !== '' && ! \preg_match('/^[A-Za-z0-9_.]+$/', $operatorClass)) {
+        if ($operatorClass !== '' && ! \preg_match('/^[A-Za-z0-9_.]+$/D', $operatorClass)) {
             throw new ValidationException('Invalid operator class: ' . $operatorClass);
         }
 
@@ -446,7 +446,7 @@ class PostgreSQL extends SQL implements
     {
         $optParts = [];
         foreach ($options as $key => $value) {
-            if (! \preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $key)) {
+            if (! \preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/D', $key)) {
                 throw new ValidationException('Invalid collation option key: ' . $key);
             }
             $optParts[] = $key . " = '" . \str_replace(['\\', "'"], ['\\\\', "''"], $value) . "'";
@@ -493,7 +493,7 @@ class PostgreSQL extends SQL implements
      */
     public function alterColumnType(string $table, string $column, string $type, string $using = ''): Statement
     {
-        if (! \preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\s+[A-Za-z_][A-Za-z0-9_]*)*(\s*\(\s*[A-Za-z0-9_,\s]+\s*\))?$/', $type)) {
+        if (! \preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\s+[A-Za-z_][A-Za-z0-9_]*)*(\s*\(\s*[A-Za-z0-9_,\s]+\s*\))?$/D', $type)) {
             throw new ValidationException('Invalid column type: ' . $type);
         }
 

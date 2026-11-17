@@ -12,7 +12,7 @@ use Utopia\Storage\Exception\StorageException;
 use Utopia\Storage\Exception\UploadException;
 
 /**
- * @phpstan-type UploadMetadata array{parts?: array<int, bool|string>, chunks?: int, content_type?: string, uploadId?: string, whole?: bool}
+ * @phpstan-type UploadMetadata array{parts?: array<int, bool|string>, chunks?: int, content_type?: string, uploadId?: string, whole?: bool, ...}
  */
 abstract class Device
 {

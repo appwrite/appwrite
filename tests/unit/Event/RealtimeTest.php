@@ -102,11 +102,91 @@ final class RealtimeTest extends TestCase
         $this->assertSame([Role::user('user1')->toString()], $rolesByProject['project1'], 'Project copy keeps the execution read role so the end user receives it');
     }
 
-    private function project(): Document
+    /**
+     * Membership events are addressed to the whole team, and their payload is the response
+     * rendered for the *writer* — an API key or admin-mode caller renders the member's real
+     * name and email. The project's membership privacy policy must be applied again on the
+     * broadcast, with no privileged or self exemption, so a teammate never receives a field
+     * the read endpoints hide from them.
+     */
+    public function testMembershipPayloadDropsFieldsHiddenByPrivacyPolicy(): void
+    {
+        $realtime = new Realtime();
+        $realtime
+            ->setProject($this->project([
+                'membershipsUserName' => false,
+                'membershipsUserEmail' => false,
+                'membershipsUserId' => false,
+                'membershipsUserPhone' => false,
+                'membershipsMfa' => false,
+            ]))
+            ->setEvent('teams.[teamId].memberships.[membershipId].create')
+            ->setParam('teamId', 'team1')
+            ->setParam('membershipId', 'membership1')
+            ->setPayload([
+                '$id' => 'membership1',
+                'teamId' => 'team1',
+                'teamName' => 'VIP',
+                'userId' => 'user1',
+                'userName' => 'John Doe',
+                'userEmail' => 'john@appwrite.io',
+                'userPhone' => '+15555555555',
+                'mfa' => true,
+                'roles' => ['member'],
+            ])
+            ->trigger();
+
+        $payload = $this->recorder->payloads()[0] ?? [];
+
+        $this->assertArrayNotHasKey('userName', $payload, 'A hidden user name must not reach the team');
+        $this->assertArrayNotHasKey('userEmail', $payload, 'A hidden user email must not reach the team');
+        $this->assertArrayNotHasKey('userId', $payload, 'A hidden user id must not reach the team');
+        $this->assertArrayNotHasKey('userPhone', $payload, 'A hidden user phone must not reach the team');
+        $this->assertArrayNotHasKey('mfa', $payload, 'A hidden MFA status must not reach the team');
+        $this->assertSame('membership1', $payload['$id'] ?? null, 'The membership itself still reaches the team');
+        $this->assertSame('VIP', $payload['teamName'] ?? null, 'Fields the policy does not cover are untouched');
+        $this->assertSame(['member'], $payload['roles'] ?? null, 'Fields the policy does not cover are untouched');
+    }
+
+    /**
+     * The policy is opt-in: a project that allows the fields keeps broadcasting them.
+     */
+    public function testMembershipPayloadKeepsFieldsAllowedByPrivacyPolicy(): void
+    {
+        $realtime = new Realtime();
+        $realtime
+            ->setProject($this->project([
+                'membershipsUserName' => true,
+                'membershipsUserEmail' => true,
+                'membershipsUserId' => true,
+            ]))
+            ->setEvent('teams.[teamId].memberships.[membershipId].update')
+            ->setParam('teamId', 'team1')
+            ->setParam('membershipId', 'membership1')
+            ->setPayload([
+                '$id' => 'membership1',
+                'userId' => 'user1',
+                'userName' => 'John Doe',
+                'userEmail' => 'john@appwrite.io',
+            ])
+            ->trigger();
+
+        $payload = $this->recorder->payloads()[0] ?? [];
+
+        $this->assertSame('user1', $payload['userId'] ?? null);
+        $this->assertSame('John Doe', $payload['userName'] ?? null);
+        $this->assertSame('john@appwrite.io', $payload['userEmail'] ?? null);
+    }
+
+    /**
+     * @param array<string, mixed> $auths
+     */
+    private function project(array $auths = []): Document
     {
         return new Document([
             '$id' => 'project1',
             '$permissions' => [Permission::read(Role::team('org1'))],
+            'auths' => $auths,
         ]);
     }
 }
@@ -142,6 +222,14 @@ final class PubSubRecorder implements PubSubAdapter
     public function projectsSentTo(): array
     {
         return \array_map(fn (array $m): string => (string) ($m['project'] ?? ''), $this->messages);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function payloads(): array
+    {
+        return \array_map(fn (array $m): array => $m['data']['payload'] ?? [], $this->messages);
     }
 
     /**

@@ -80,6 +80,7 @@ class HIBP extends PasswordPwned
 
             // Each line is `HASH_SUFFIX:COUNT`; padded entries carry a count of 0 and are not breaches
             $breaches = [];
+            $entries = 0;
             foreach (\explode("\n", (string) $response->getBody()) as $line) {
                 $line = \trim($line);
                 $separator = \strpos($line, ':');
@@ -87,10 +88,21 @@ class HIBP extends PasswordPwned
                     continue;
                 }
 
+                $suffix = \substr($line, 0, $separator);
+                if (!\ctype_xdigit($suffix)) {
+                    continue;
+                }
+                $entries++;
+
                 $count = (int) \substr($line, $separator + 1);
                 if ($count > 0) {
-                    $breaches[\strtoupper(\substr($line, 0, $separator))] = $count;
+                    $breaches[\strtoupper($suffix)] = $count;
                 }
+            }
+
+            // A padded range always has entries; none means the answer cannot be trusted
+            if ($entries === 0) {
+                throw new Exception(Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE);
             }
 
             return $breaches;

@@ -2,6 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Reviews\Services;
 
+use Appwrite\Platform\Modules\Reviews\Http\Installations\Update as UpdateInstallation;
+use Appwrite\Platform\Modules\Reviews\Http\Learnings\Delete as DeleteLearning;
+use Appwrite\Platform\Modules\Reviews\Http\Learnings\XList as ListLearnings;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Create as CreateRepository;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Delete as DeleteRepository;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Learnings\Create as CreateRepositoryLearning;
@@ -9,6 +12,7 @@ use Appwrite\Platform\Modules\Reviews\Http\Repositories\Learnings\XList as ListR
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Pulls\Findings\Status\Update as UpdatePullFindingsStatus;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Pulls\Findings\XList as ListPullFindings;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Pulls\Reviews\XList as ListPullReviews;
+use Appwrite\Platform\Modules\Reviews\Http\Repositories\Strength\Update as UpdateRepositoryStrength;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Tokens\Create as CreateRepositoryToken;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Usage\Create as CreateRepositoryUsage;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\XList as ListRepositories;
@@ -29,11 +33,16 @@ class Http extends Service
 
         $this->addAction(CreateRepository::getName(), new CreateRepository());
         $this->addAction(ListRepositories::getName(), new ListRepositories());
+        $this->addAction(UpdateRepositoryStrength::getName(), new UpdateRepositoryStrength());
         $this->addAction(DeleteRepository::getName(), new DeleteRepository());
+        $this->addAction(UpdateInstallation::getName(), new UpdateInstallation());
 
         $this->addAction(ListReviews::getName(), new ListReviews());
         $this->addAction(GetReview::getName(), new GetReview());
         $this->addAction(ListReviewEvents::getName(), new ListReviewEvents());
+
+        $this->addAction(ListLearnings::getName(), new ListLearnings());
+        $this->addAction(DeleteLearning::getName(), new DeleteLearning());
 
         // Called by the review service, not by projects
         $this->addAction(CreateRepositoryToken::getName(), new CreateRepositoryToken());

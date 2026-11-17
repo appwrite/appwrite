@@ -345,6 +345,10 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/auth/mfa',
           },
           {
+            label: 'Account switching',
+            href: '/docs/products/auth/account-switching',
+          },
+          {
             label: 'Auth status check',
             href: '/docs/products/auth/checking-auth-status',
           },

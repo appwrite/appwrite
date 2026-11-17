@@ -32,6 +32,8 @@ const verifyDomainContentPath = join(
 )
 
 let edgeNetwork = false
+let caa: string | undefined
+let a: string | undefined
 
 function installMocks() {
   mock.module(consoleProfilePath, () => ({
@@ -47,9 +49,9 @@ function installMocks() {
     ...actualConsoleVariables,
     useConsoleVariables: () => ({
       cname: 'target.example.com',
-      a: undefined,
+      a,
       aaaa: undefined,
-      caa: undefined,
+      caa,
       nameservers: [],
       functionsDomain: 'functions.example.com',
       sitesDomain: 'sites.example.com',
@@ -77,10 +79,15 @@ afterAll(async () => {
 afterEach(() => {
   cleanup()
   edgeNetwork = false
+  caa = undefined
+  a = undefined
 })
 
-function renderContent(resourceType: 'api' | 'function' | 'site') {
-  const rule = { domain: 'app.custom.com' } as Models.ProxyRule
+function renderContent(
+  resourceType: 'api' | 'function' | 'site',
+  domain = 'app.custom.com',
+) {
+  const rule = { domain } as Models.ProxyRule
   return import(verifyDomainContentPath).then(({ VerifyDomainContent }) =>
     render(createElement(VerifyDomainContent, { rule, resourceType })),
   )
@@ -109,5 +116,39 @@ describe('VerifyDomainContent CNAME target', () => {
     const view = await renderContent('function')
     expect(view.queryAllByText('appwrite.network').length).toBeGreaterThan(0)
     expect(view.queryAllByText('target.example.com')).toHaveLength(0)
+  })
+})
+
+describe('VerifyDomainContent CAA record', () => {
+  test('recommends the CAA record the server reports', async () => {
+    caa = '0 issue "certainly.com"'
+    const view = await renderContent('api')
+    expect(
+      view.queryAllByText('0 issue "certainly.com"').length,
+    ).toBeGreaterThan(0)
+  })
+
+  test('leaves out a CAA record with no issuer, which would block every CA', async () => {
+    caa = '0 issue ""'
+    const view = await renderContent('api')
+    expect(view.queryAllByText('0 issue ""')).toHaveLength(0)
+    expect(view.queryAllByText('CAA')).toHaveLength(0)
+  })
+})
+
+describe('VerifyDomainContent apex domain', () => {
+  test('opens on the A record, not a CNAME on @', async () => {
+    a = '1.2.3.4'
+    const view = await renderContent('api', 'custom.com')
+    expect(view.queryAllByText('1.2.3.4').length).toBeGreaterThan(0)
+    expect(view.queryAllByText('target.example.com')).toHaveLength(0)
+  })
+
+  test('offers no A record for a site on the edge network, which it does not serve', async () => {
+    edgeNetwork = true
+    a = '1.2.3.4'
+    const view = await renderContent('site', 'custom.com')
+    expect(view.queryAllByText('1.2.3.4')).toHaveLength(0)
+    expect(view.queryAllByText('appwrite.network').length).toBeGreaterThan(0)
   })
 })

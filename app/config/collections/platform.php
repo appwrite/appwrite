@@ -35,6 +35,7 @@ $platformCollections = [
             Attribute::string(key: 'services', size: 16384, default: [], filters: [Filter::Json]),
             Attribute::string(key: 'apis', size: 16384, default: [], filters: [Filter::Json]),
             Attribute::string(key: 'smtp', size: 16384, default: [], filters: [Filter::Json, 'encrypt']),
+            Attribute::string(key: 'ldap', size: 16384, default: [], filters: [Filter::Json, 'encrypt']),
             // TODO make sure size fits
             Attribute::string(key: 'templates', size: 1_000_000, default: [], filters: [Filter::Json]),
             Attribute::string(key: 'auths', size: 16384, default: [], filters: [Filter::Json]),
@@ -212,7 +213,7 @@ $platformCollections = [
             Attribute::integer(key: 'window', required: true, default: 3600, signed: false),
             Attribute::integer(key: 'cooldown', required: true, default: 3600, signed: false),
             Attribute::string(key: 'notify', size: 32, default: ['owner'], array: true),
-            Attribute::boolean(key: 'critical', default: false),
+            Attribute::string(key: 'severity', size: 16, default: 'warning'),
             Attribute::boolean(key: 'enabled', required: true, default: true),
             Attribute::string(key: 'status', size: 16, required: true, default: 'ok'),
             Attribute::double(key: 'value'),
@@ -246,7 +247,7 @@ $platformCollections = [
             Attribute::string(key: 'region', size: 16, default: ''),
             Attribute::string(key: 'status', size: 16, required: true, default: 'firing'),
             Attribute::string(key: 'rules', size: 1024, default: [], array: true),
-            Attribute::boolean(key: 'critical', default: false),
+            Attribute::string(key: 'severity', size: 16, default: 'warning'),
             Attribute::string(key: 'type', size: 32, required: true, default: ''),
             Attribute::string(key: 'resourceType', size: 32, required: true, default: ''),
             Attribute::string(key: 'resourceId', required: true, default: ''),
@@ -257,6 +258,9 @@ $platformCollections = [
             Attribute::double(key: 'peak', required: true, default: 0),
             Attribute::integer(key: 'notifications', required: true, default: 0, signed: false),
             Attribute::datetime(key: 'resolvedAt'),
+            Attribute::datetime(key: 'acknowledgedAt'),
+            Attribute::string(key: 'acknowledgedBy', default: ''),
+            Attribute::string(key: 'acknowledgedByName', size: 128, default: ''),
             Attribute::string(key: 'search', size: 2048),
         ],
         'indexes' => [
@@ -402,6 +406,8 @@ $platformCollections = [
             Attribute::text(key: 'personalAccessToken', size: 65535, filters: ['encrypt']),
             Attribute::datetime(key: 'personalAccessTokenExpiry'),
             Attribute::text(key: 'personalRefreshToken', size: 65535, filters: ['encrypt']),
+            // Code review only: whether repositories added to the installation later are reviewed.
+            Attribute::boolean(key: 'reviewNewRepositories', default: false),
         ],
         'indexes' => [
             Index::key(key: '_key_projectInternalId', attributes: ['projectInternalId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),
@@ -424,6 +430,8 @@ $platformCollections = [
             Attribute::string(key: 'resourceInternalId'),
             Attribute::string(key: 'resourceType', required: true),
             Attribute::string(key: 'providerPullRequestIds', size: 128, array: true),
+            // Code review only: how hard its pull requests are reviewed (Appwrite\Reviews\Strength).
+            Attribute::string(key: 'strength', size: 16, default: 'normal'),
         ],
         'indexes' => [
             Index::key(key: '_key_installationId', attributes: ['installationId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),

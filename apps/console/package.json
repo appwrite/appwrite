@@ -59,8 +59,8 @@
     "benchmark:init-memory": "bun run scripts/benchmark-init-memory.ts"
   },
   "dependencies": {
-    "@appwrite.io/console": "https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@14dbd5acb0b3dc64a7ac38c6eb75c09f3c9efa36",
-    "@appwrite.io/specs": "github:appwrite/specs#9a50097dd538fd7663748aceed37fa05692bc5e4",
+    "@appwrite.io/console": "https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@65493f2e72dad173b301809f6664db7a0b623854",
+    "@appwrite.io/specs": "github:appwrite/specs#753c42642c9386bf802a59fbc6f7baa54e7b5e3d",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -135,6 +135,7 @@
     "motion": "^12.23.22",
     "next-themes": "^0.4.6",
     "node-appwrite": "^20.2.1",
+    "node-html-markdown": "^2.0.0",
     "prism-react-renderer": "^2.4.1",
     "prismjs": "^1.30.0",
     "react": "19.1.1",
@@ -210,6 +211,7 @@
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.50.0",
     "vite": "npm:rolldown-vite@7.3.1",
-    "vite-plugin-devtools-json": "^1.0.0"
+    "vite-plugin-devtools-json": "^1.0.0",
+    "webmcp-types": "^0.1.10"
   }
 }

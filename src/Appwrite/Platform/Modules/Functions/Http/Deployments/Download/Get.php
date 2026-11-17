@@ -12,12 +12,12 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Psr\Http\Message\StreamInterface;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
@@ -96,7 +96,8 @@ class Get extends Action
         // Access is granted either to a privileged caller (console/CLI via
         // session or API key) or to a valid presigned token bound to this
         // deployment + artifact type (used by the jobs-service).
-        $isPrivileged = $user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles());
+        $isPrivileged = $user->isPrivileged($authorization->getRoles())
+            || ($user->isKey($authorization->getRoles()) && \in_array('functions.read', $request->getScopes(), true));
         if (! $isPrivileged && ! Token::verify($token, $deploymentId, $type)) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }

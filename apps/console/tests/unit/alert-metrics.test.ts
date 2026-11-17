@@ -40,6 +40,19 @@ import {
   monitorInputFromForm,
   ruleFormFromMonitor,
 } from '@/components/pages/projects/$projectId/usage/monitors/RuleFields'
+import {
+  emptyProbeForm,
+  probeFormError,
+  probeFormFromMonitor,
+  probeInputFromForm,
+} from '@/components/pages/projects/$projectId/usage/monitors/ProbeFields'
+import { alertCondition } from '@/components/pages/projects/$projectId/usage/alerts/AlertHistory'
+import {
+  parseHeaders,
+  parseStatusCodes,
+  smtpTlsMode,
+} from '@/lib/alerts/probes'
+import type { Alert, ProbeType } from '@/lib/appwrite/monitors'
 
 describe('alert byte thresholds', () => {
   test.each([5e9, 1e12, 999_999_999, 1_234_567_891, 1_500, 0])(
@@ -117,22 +130,22 @@ describe('alert rule form', () => {
     const input = monitorInputFromForm(emptyRuleForm(), t)
     expect(Object.keys(input).sort()).toEqual([
       'cooldown',
-      'critical',
       'name',
       'notify',
       'rules',
+      'severity',
       'window',
     ])
     expect(input.notify).toEqual(['owner'])
-    expect(input.critical).toBe(false)
+    expect(input.severity).toBe('warning')
   })
 
-  test('keeps a critical monitor critical through the edit form', () => {
+  test("keeps a monitor's severity through the edit form", () => {
     const input = monitorInputFromForm(
-      { ...emptyRuleForm(), critical: true },
+      { ...emptyRuleForm(), severity: 'critical' },
       t,
     )
-    expect(input.critical).toBe(true)
+    expect(input.severity).toBe('critical')
     const monitor = parseMonitor({
       $id: 'm1',
       $createdAt: '',
@@ -150,8 +163,8 @@ describe('alert rule form', () => {
       triggeredAt: null,
       ...input,
     } as Monitor)
-    expect(monitorInputFromForm(ruleFormFromMonitor(monitor), t).critical).toBe(
-      true,
+    expect(monitorInputFromForm(ruleFormFromMonitor(monitor), t).severity).toBe(
+      'critical',
     )
   })
 
@@ -320,6 +333,170 @@ describe('monitor rules', () => {
     const form = { ...emptyRuleForm(), metric: 'storage' as const }
     expect(monitorInputFromForm(form, t).window).toBeUndefined()
     expect(monitorInputFromForm(emptyRuleForm(), t).window).toBe(3600)
+  })
+})
+
+describe('probe monitors', () => {
+  const t = (text: string) => text
+
+  test('sends only the fields of its type, named after its target', () => {
+    const http = probeInputFromForm({
+      ...emptyProbeForm('http'),
+      url: ' https://example.com/health ',
+      headers: 'Accept: application/json\nX-Token: a:b',
+      statusCodes: '200, 204 200',
+      body: 'ignored for GET',
+    })
+    expect(http).toEqual({
+      type: 'http',
+      params: {
+        name: 'GET https://example.com/health',
+        interval: 60,
+        timeout: 10,
+        cooldown: 3600,
+        notify: ['owner'],
+        severity: 'warning',
+        url: 'https://example.com/health',
+        method: 'GET',
+        headers: { Accept: 'application/json', 'X-Token': 'a:b' },
+        body: '',
+        statusCodes: [200, 204],
+        certificateDays: 14,
+      },
+    })
+
+    const smtp = probeInputFromForm({
+      ...emptyProbeForm('smtp'),
+      host: 'mail.example.com',
+    })
+    expect(Object.keys(smtp.params).sort()).toEqual([
+      'cooldown',
+      'host',
+      'interval',
+      'name',
+      'notify',
+      'port',
+      'severity',
+      'timeout',
+      'tlsMode',
+    ])
+    expect(smtp.params.name).toBe('mail.example.com:587')
+  })
+
+  test('an untouched probe monitor edits back to the input it was saved with', () => {
+    const forms = [
+      {
+        ...emptyProbeForm('http'),
+        url: 'https://example.com',
+        method: 'POST' as const,
+        headers: 'Content-Type: application/json',
+        body: '{}',
+        statusCodes: '201',
+      },
+      {
+        ...emptyProbeForm('dns'),
+        domain: 'example.com',
+        record: 'MX' as const,
+      },
+      { ...emptyProbeForm('tcp'), host: 'db.example.com', port: 5432 },
+      {
+        ...emptyProbeForm('smtp'),
+        host: 'mail.example.com',
+        tlsMode: 'implicit' as const,
+      },
+    ]
+    for (const form of forms) {
+      const { type, params } = probeInputFromForm(form)
+      // The model's defaults for the fields a type does not set.
+      const monitor = parseMonitor({
+        url: '',
+        method: '',
+        headers: {},
+        body: '',
+        statusCodes: [],
+        certificateDays: 0,
+        domain: '',
+        record: '',
+        resolver: '',
+        answer: '',
+        host: '',
+        port: 0,
+        tlsMode: '',
+        ...params,
+        $id: 'm1',
+        $createdAt: '',
+        $updatedAt: '',
+        type,
+        rules: [],
+        resourceType: 'project',
+        resourceId: 'p1',
+        enabled: true,
+        status: 'ok',
+        alertId: '',
+      } as unknown as Monitor)
+      expect(
+        probeInputFromForm(
+          probeFormFromMonitor(monitor as typeof monitor & { type: ProbeType }),
+        ),
+      ).toEqual({ type, params } as never)
+    }
+  })
+
+  test('refuses a target the server would reject', () => {
+    expect(probeFormError(emptyProbeForm('http'), t)).toBe(
+      'Enter a URL starting with http:// or https://.',
+    )
+    expect(
+      probeFormError(
+        { ...emptyProbeForm('http'), url: 'ftp://example.com' },
+        t,
+      ),
+    ).toBe('Enter a URL starting with http:// or https://.')
+    expect(
+      probeFormError(
+        { ...emptyProbeForm('tcp'), host: 'example.com', port: 0 },
+        t,
+      ),
+    ).toBe('Enter a port between 1 and 65535.')
+    expect(
+      probeFormError(
+        {
+          ...emptyProbeForm('dns'),
+          domain: 'example.com',
+          interval: 30,
+          timeout: 60,
+        },
+        t,
+      ),
+    ).toBe('The timeout must not be longer than the interval.')
+    expect(
+      probeFormError({ ...emptyProbeForm('dns'), domain: 'example.com' }, t),
+    ).toBeUndefined()
+  })
+
+  test('reads headers and status codes as typed', () => {
+    expect(parseHeaders('\nAccept: */*\n')).toEqual({ Accept: '*/*' })
+    expect(parseHeaders('no separator')).toBeNull()
+    expect(parseStatusCodes('')).toEqual([])
+    expect(parseStatusCodes('200,abc')).toBeNull()
+    expect(parseStatusCodes('99')).toBeNull()
+  })
+
+  test('derives the SMTP TLS mode from the port when none is set', () => {
+    expect(smtpTlsMode(465, '')).toBe('implicit')
+    expect(smtpTlsMode(587, '')).toBe('starttls')
+    expect(smtpTlsMode(25, '')).toBe('none')
+    expect(smtpTlsMode(25, 'starttls')).toBe('starttls')
+  })
+
+  test('a probe alert reads as what its check found', () => {
+    const alert = {
+      metric: null,
+      comparator: null,
+      result: 'connect_refused',
+      threshold: 0,
+    } as Alert
+    expect(alertCondition(alert, t)).toBe('Connection refused')
   })
 })
 

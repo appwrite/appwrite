@@ -117,6 +117,26 @@ class Update extends Action
             throw new Exception(Exception::USER_DEVICE_SESSION_NOT_FOUND);
         }
 
+        // A device keeps every session it holds until the sweep removes it, so expired or project-invalidated ones are refused here.
+        $invalidatedAt = $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null;
+        if (
+            ($invalidatedAt !== null && DateTime::formatTz($session->getCreatedAt()) <= $invalidatedAt)
+            || ! $session->isSet('expire')
+            || DateTime::formatTz(DateTime::format(new \DateTime($session->getAttribute('expire')))) < DateTime::formatTz(DateTime::now())
+        ) {
+            throw new Exception(Exception::USER_DEVICE_SESSION_NOT_FOUND);
+        }
+
+        $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $session->getAttribute('userId')));
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_DEVICE_SESSION_NOT_FOUND);
+        }
+
+        if ($user->getAttribute('status') === false) {
+            throw new Exception(Exception::USER_BLOCKED);
+        }
+
         $protocol = $request->getProtocol();
 
         // Session secrets are hashed, so the original can never be put back into a cookie. Switching
@@ -127,12 +147,15 @@ class Update extends Action
             'secret' => $proofForToken->hash($secret),
         ])));
 
+        // Signed out by another request after the device was read
+        if ($session->isEmpty()) {
+            throw new Exception(Exception::USER_DEVICE_SESSION_NOT_FOUND);
+        }
+
         $authorization->skip(fn () => $dbForProject->updateDocument('devices', $authDevice->getId(), new Document([
             'activeSessionId' => $session->getId(),
             'activeSessionInternalId' => $session->getSequence(),
         ])));
-
-        $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $session->getAttribute('userId')));
 
         $dbForProject->purgeCachedDocument('users', $session->getAttribute('userId'));
 

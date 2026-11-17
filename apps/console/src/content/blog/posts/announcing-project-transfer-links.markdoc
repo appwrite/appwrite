@@ -1,0 +1,74 @@
+---
+layout: post
+title: "Announcing project transfer links: hand off an Appwrite project to any organization"
+description: Hand an Appwrite Cloud project to another organization with a single-use transfer link, even one you're not a member of. The project keeps its data, keys, and endpoints.
+date: 2026-11-12
+cover: /images/blog/announcing-project-transfer-links/cover.avif
+timeToRead: 4
+author: atharva
+category: announcements
+featured: false
+faqs:
+  - question: "What is a project transfer link?"
+    answer: "A transfer link is a single-use link that hands an Appwrite Cloud project to another organization. An owner of the organization that owns the project creates it from the project's settings, and an owner of the receiving organization claims it. Neither of them needs to be a member of the other's organization."
+  - question: "Who can create and claim a project transfer link?"
+    answer: "Only organization owners. Creating, deleting, or reading back a transfer link needs the owner role on the organization that owns the project, and claiming it needs the owner role on the organization that receives it."
+  - question: "How long is a transfer link valid?"
+    answer: "A transfer link expires after 24 hours by default, and the Console also offers 7 days and 30 days when creating it. A link works once. After the project is claimed or moved, every link for that project stops working, and a pending link can be deleted to stop it right away."
+  - question: "What moves with an Appwrite project when it's transferred?"
+    answer: "Everything in the project: databases, storage, Auth users, functions, sites, API keys, platforms, custom domains, Git connections, and environments. The project stays in the same region and keeps its ID and API endpoint, so apps keep working without changes. Members of the previous organization lose access unless they also belong to the new one, and the new organization's plan and billing apply from the moment of the transfer."
+  - question: "Why was my project transfer refused?"
+    answer: "Appwrite checks both organizations when a link is claimed. A transfer is refused while either organization has an unpaid invoice or has reached its budget cap. It's also refused when the receiving organization's plan doesn't fit the project or has no room for another project, and when a Free project has gone over its plan's limits. The link stays valid, so it can be claimed again after the cause is fixed. See [Project transfers](/docs/advanced/billing/project-transfers#requirements) for the full list."
+  - question: "Can I lock a transfer link to one organization?"
+    answer: "Yes. Enter the recipient's organization ID when creating the link, and only that organization can claim the project. The recipient finds the ID in their organization's settings. Locking the link is the safer choice whenever the recipient is known, because the link is then useless to anyone else who sees it."
+---
+
+Projects change hands all the time. An agency finishes a build and gives it to the client, a freelancer passes a side project on to the company that hired them, and a prototype graduates into the team that will run it. Until now, moving an Appwrite project to another organization took someone with access to both, so handing a project to someone else's organization meant getting invited into it first.
+
+Today, we're announcing **project transfer links** on Appwrite Cloud. An owner creates a single-use link from the project's settings and shares it, and an owner of the receiving organization claims the project with one click. Nobody has to join anybody else's organization, and the project arrives with all of its data, keys, and endpoints intact.
+
+# What's new
+
+- **Transfer links.** Hand a project to any organization with a link, without being a member of it.
+- **Recipient lock.** Reserve a link for one organization, so it's useless to anyone else who sees it.
+- **Expiry you choose.** Links last 24 hours, 7 days, or 30 days, work once, and can be deleted at any time before they're claimed.
+- **A preview before claiming.** The recipient sees the project, the organization it comes from, and when the link expires before anything moves.
+- **Direct moves in the same place.** Owners of both organizations can still move a project right away from the same **Transfer project** card.
+
+# Hand off a project with a transfer link
+
+![Create transfer link dialog](/images/blog/announcing-project-transfer-links/create-link.avif)
+
+The **Transfer project** card lives in the project's **Settings**. Click **Create transfer link**, choose how long it stays valid, and optionally paste the recipient's organization ID. Appwrite creates the link, and the card lists it under **Pending transfer links** until someone claims it or it expires.
+
+Locking the link to an organization ID is worth the extra step whenever the recipient is known. A link without a recipient works for any organization owner who has it, so it should be treated like a password until it's claimed.
+
+# Claim the project
+
+![Claim project page](/images/blog/announcing-project-transfer-links/claim.avif)
+
+The recipient opens the link in the Appwrite Console and signs in, or creates an account if they don't have one yet. The claim page shows the project name, the organization it's coming from, and when the link expires. They pick one of the organizations they own and click **Claim project**. If they don't own an organization yet, they can create a free one from the same page.
+
+The project opens in its new organization straight away, and every other link for it stops working.
+
+# What moves with the project
+
+A transfer changes who owns the project, not where it runs. The project stays in the same region and keeps its ID and API endpoint, so the apps and integrations built on it keep working without a release. Databases, storage, Auth users, functions, sites, API keys, platforms, custom domains, Git connections, and environments all move with it.
+
+What changes is everything that comes from the organization. The new organization's members, plan, and billing apply from the moment of the claim, and members of the previous organization lose access unless they also belong to the new one.
+
+# Safe by default
+
+Moving a project hands over its data and its users, so transfer links are owner-only on both sides. Only an owner of the sending organization can create a link or read it back, and only an owner of the receiving organization can claim it.
+
+Appwrite also checks both organizations at the moment of the claim. A claim is refused while either organization has an unpaid invoice or has reached its budget cap, or while the receiving plan doesn't fit the project. When that happens, the link stays valid and the project stays where it was, so the recipient can sort out billing or upgrade and claim it again. The [requirements](/docs/advanced/billing/project-transfers#requirements) list every check.
+
+# Get started
+
+Handing over a project should feel like the end of a good piece of work, not a round of invites, role changes, and cleanup. With transfer links, the person who built it and the person who will run it each do one step from their own organization, and the project lands ready to go.
+
+We'd love to hear how you use transfer links, whether you're delivering client work or reorganizing your own teams. Share your story or any rough edges with us on [Discord](https://appwrite.io/discord).
+
+- [Project transfers](/docs/advanced/billing/project-transfers)
+- [Organization roles](/docs/advanced/security/roles)
+- [Sign up for Appwrite Cloud](/sign-up)

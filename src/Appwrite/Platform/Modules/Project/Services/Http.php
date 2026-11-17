@@ -13,6 +13,8 @@ use Appwrite\Platform\Modules\Project\Http\Project\Keys\Get as GetKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\Update as UpdateKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\XList as ListKeys;
 use Appwrite\Platform\Modules\Project\Http\Project\Labels\Update as UpdateProjectLabels;
+use Appwrite\Platform\Modules\Project\Http\Project\LDAP\Tests\Create as CreateLDAPTest;
+use Appwrite\Platform\Modules\Project\Http\Project\LDAP\Update as UpdateLDAP;
 use Appwrite\Platform\Modules\Project\Http\Project\MockPhone\Create as CreateMockPhone;
 use Appwrite\Platform\Modules\Project\Http\Project\MockPhone\Delete as DeleteMockPhone;
 use Appwrite\Platform\Modules\Project\Http\Project\MockPhone\Get as GetMockPhone;
@@ -46,6 +48,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Keycloak\Update as Upd
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Kick\Update as UpdateOAuth2Kick;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Linkedin\Update as UpdateOAuth2Linkedin;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Microsoft\Update as UpdateOAuth2Microsoft;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Naver\Update as UpdateOAuth2Naver;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Notion\Update as UpdateOAuth2Notion;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Oidc\Update as UpdateOAuth2Oidc;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Okta\Update as UpdateOAuth2Okta;
@@ -61,16 +64,19 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TikTok\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Tradeshift\Update as UpdateOAuth2Tradeshift;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TradeshiftSandbox\Update as UpdateOAuth2TradeshiftSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Twitch\Update as UpdateOAuth2Twitch;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Vercel\Update as UpdateOAuth2Vercel;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Vipps\Update as UpdateOAuth2Vipps;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\VippsSandbox\Update as UpdateOAuth2VippsSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Webflow\Update as UpdateOAuth2Webflow;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\WordPress\Update as UpdateOAuth2WordPress;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\WorkOS\Update as UpdateOAuth2WorkOS;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\X\Update as UpdateOAuth2X;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\XList as ListOAuth2Providers;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Yahoo\Update as UpdateOAuth2Yahoo;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Yandex\Update as UpdateOAuth2Yandex;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Zoho\Update as UpdateOAuth2Zoho;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Zoom\Update as UpdateOAuth2Zoom;
+use Appwrite\Platform\Modules\Project\Http\Project\Passwords\Delete as DeletePasswords;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Android\Create as CreateAndroidPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Android\Update as UpdateAndroidPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Apple\Create as CreateApplePlatform;
@@ -121,6 +127,11 @@ use Appwrite\Platform\Modules\Project\Http\Project\Variables\Delete as DeleteVar
 use Appwrite\Platform\Modules\Project\Http\Project\Variables\Get as GetVariable;
 use Appwrite\Platform\Modules\Project\Http\Project\Variables\Update as UpdateVariable;
 use Appwrite\Platform\Modules\Project\Http\Project\Variables\XList as ListVariables;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\Create as CreateProfile;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\Delete as DeleteProfile;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\Get as GetProfile;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\Update as UpdateProfile;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\XList as ListProfiles;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -150,6 +161,10 @@ class Http extends Service
         $this->addAction('updateProjectSMTP', UpdateSMTP::class);
         $this->addAction('createProjectSMTPTest', CreateSMTPTest::class);
 
+        // LDAP
+        $this->addAction('updateProjectLDAP', UpdateLDAP::class);
+        $this->addAction('createProjectLDAPTest', CreateLDAPTest::class);
+
         // Templates
         $this->addAction('listProjectEmailTemplates', ListTemplates::class);
         $this->addAction('getProjectEmailTemplate', GetTemplate::class);
@@ -170,6 +185,9 @@ class Http extends Service
         $this->addAction('getProjectKey', GetKey::class);
         $this->addAction('deleteProjectKey', DeleteKey::class);
         $this->addAction('updateProjectKey', UpdateKey::class);
+
+        // Passwords
+        $this->addAction('deleteProjectPasswords', DeletePasswords::class);
 
         // Platforms
         $this->addAction('listProjectPlatforms', ListPlatforms::class);
@@ -216,6 +234,13 @@ class Http extends Service
         $this->addAction('updateProjectDenyCorporateEmailPolicy', UpdateDenyCorporateEmailPolicy::class);
         $this->addAction('updateProjectDenyRealtimeGuestsPolicy', UpdateDenyRealtimeGuestsPolicy::class);
         $this->addAction('updateProjectAccountDevicesPolicy', UpdateAccountDevicesPolicy::class);
+
+        // Profiles
+        $this->addAction(CreateProfile::getName(), new CreateProfile());
+        $this->addAction(ListProfiles::getName(), new ListProfiles());
+        $this->addAction(GetProfile::getName(), new GetProfile());
+        $this->addAction(UpdateProfile::getName(), new UpdateProfile());
+        $this->addAction(DeleteProfile::getName(), new DeleteProfile());
 
         // Auth Methods
         $this->addAction('updateProjectAuthMethod', UpdateAuthMethod::class);
@@ -268,9 +293,12 @@ class Http extends Service
         $this->addAction('updateProjectOAuth2Apple', UpdateOAuth2Apple::class);
         $this->addAction('updateProjectOAuth2Microsoft', UpdateOAuth2Microsoft::class);
         $this->addAction('updateProjectOAuth2Hugging Face', UpdateOAuth2HuggingFace::class);
+        $this->addAction('updateProjectOAuth2Vercel', UpdateOAuth2Vercel::class);
+        $this->addAction('updateProjectOAuth2WorkOS', UpdateOAuth2WorkOS::class);
         $this->addAction('updateProjectOAuth2Resend', UpdateOAuth2Resend::class);
         $this->addAction('updateProjectOAuth2TikTok', UpdateOAuth2TikTok::class);
         $this->addAction('updateProjectOAuth2Kakao', UpdateOAuth2Kakao::class);
+        $this->addAction('updateProjectOAuth2Naver', UpdateOAuth2Naver::class);
         $this->addAction('updateProjectOAuth2Cloudflare', UpdateOAuth2Cloudflare::class);
         $this->addAction('updateProjectOAuth2Vipps MobilePay', UpdateOAuth2Vipps::class);
         $this->addAction('updateProjectOAuth2Vipps MobilePay Sandbox', UpdateOAuth2VippsSandbox::class);

@@ -2,9 +2,11 @@
 
 namespace Utopia\Emails\Tests\Validator;
 
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Emails\Validator\EmailNotDisposable;
 
+#[RequiresPhpExtension('utopia')]
 class EmailNotDisposableTest extends TestCase
 {
     public function test_valid_non_disposable_email(): void

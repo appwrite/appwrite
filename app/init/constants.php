@@ -35,7 +35,6 @@ const APP_LIMIT_USER_PASSWORD_HISTORY = 20;
 const APP_LIMIT_USER_SESSIONS_MAX = 100;
 const APP_LIMIT_USER_SESSIONS_DEFAULT = 10;
 const APP_LIMIT_ANTIVIRUS = 20_000_000; //20MB
-const APP_LIMIT_ENCRYPTION = 20_000_000; //20MB
 const APP_LIMIT_COMPRESSION = 20_000_000; //20MB
 const APP_LIMIT_ARRAY_PARAMS_SIZE = 100; // Default maximum of how many elements can there be in API parameter that expects array value
 const APP_LIMIT_ARRAY_LABELS_SIZE = 1000; // Default maximum of how many labels elements can there be in API parameter that expects array value
@@ -112,7 +111,7 @@ const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4327;
-const APP_VERSION_STABLE = '2.7.1';
+const APP_VERSION_STABLE = '2.7.2';
 const APP_READINESS_MARKER = '/tmp/.appwrite-ready';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
@@ -148,6 +147,8 @@ const APP_STORAGE_SITES = '/storage/sites';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
 const APP_STORAGE_CACHE = '/storage/cache';
+const APP_STORAGE_VIDEOS = '/storage/videos'; // Durable transcoded output: renditions, captions, thumbnail timelines
+const APP_STORAGE_VIDEOS_TMP = '/storage/videos-tmp'; // Scratch: source download + ffmpeg workdir, wiped per job
 const APP_STORAGE_IMPORTS = '/storage/imports'; // Temporary storage for csv imports
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
 const APP_STORAGE_CONFIG = '/storage/config';
@@ -239,6 +240,7 @@ const SESSION_PROVIDER_ANONYMOUS = 'anonymous';
 const SESSION_PROVIDER_MAGIC_URL = 'magic-url';
 const SESSION_PROVIDER_PHONE = 'phone';
 const SESSION_PROVIDER_OAUTH2 = 'oauth2';
+const SESSION_PROVIDER_LDAP = 'ldap';
 const SESSION_PROVIDER_TOKEN = 'token';
 const SESSION_PROVIDER_SERVER = 'server';
 const SESSION_PROVIDER_PASSKEY = 'passkey';
@@ -310,6 +312,11 @@ const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_REALTIME = 'realtime';
 const DELETE_TYPE_BUCKETS = 'buckets';
+// Must equal the collection id: the DELETE_TYPE_DOCUMENT branch of the
+// deletes worker dispatches on $document->getCollection().
+const DELETE_TYPE_VIDEOS = 'videos';
+const DELETE_TYPE_VIDEOS_RENDITIONS = 'videosRenditions';
+const DELETE_TYPE_VIDEOS_CAPTIONS = 'videosCaptions';
 const DELETE_TYPE_FILES = 'files';
 const DELETE_TYPE_INSTALLATIONS = 'installations';
 const DELETE_TYPE_RULES = 'rules';
@@ -383,6 +390,7 @@ const ALERT_UNSUBSCRIBE_TTL = 60 * 60 * 24 * 90; // An alert email's unsubscribe
 const MAIL_TEMPLATE_ALERT = 'alert';
 const MAIL_TEMPLATE_CERTIFICATE_FAILED = 'certificate-failed';
 const MAIL_TEMPLATE_DATA_EXPORT = 'data-export';
+const MAIL_TEMPLATE_DOMAIN_VERIFIED = 'domain-verified';
 const MAIL_TEMPLATE_INVITATION = 'invitation';
 const MAIL_TEMPLATE_MAGIC_URL = 'magic-url';
 const MAIL_TEMPLATE_MFA_CHALLENGE = 'mfa-challenge';
@@ -453,6 +461,7 @@ const METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_DURATION = 'embeddings.text.{embeddingM
 const METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS = 'embeddings.text.totalTokens';
 const METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_TOKENS = 'embeddings.text.{embeddingModel}.totalTokens';
 const METRIC_REVIEWS = 'reviews'; // Completed code reviews, the billed unit
+const METRIC_REVIEWS_STRENGTH = 'reviews.{strength}'; // Completed code reviews at one strength, billed at its rate
 const METRIC_REVIEWS_FAILED = 'reviews.failed';
 const METRIC_REVIEWS_CHATS = 'reviews.chats'; // Comments the review service answered
 const METRIC_REVIEWS_TOKENS_INPUT = 'reviews.tokens.input'; // Model tokens behind reviews and chat answers
@@ -480,6 +489,12 @@ const METRIC_BUILDS_COMPUTE  = 'builds.compute';
 const METRIC_BUILDS_COMPUTE_SUCCESS  = 'builds.compute.success';
 const METRIC_BUILDS_COMPUTE_FAILED  = 'builds.compute.failed';
 const METRIC_BUILDS_MB_SECONDS = 'builds.mbSeconds';
+const METRIC_VIDEOS = 'videos';
+const METRIC_VIDEOS_STORAGE = 'videos.storage';
+const METRIC_RENDITIONS = 'renditions';
+const METRIC_RENDITIONS_SUCCESS = 'renditions.success';
+const METRIC_RENDITIONS_FAILED = 'renditions.failed';
+const METRIC_RENDITIONS_COMPUTE = 'renditions.compute';
 const METRIC_EXECUTIONS  = 'executions';
 const METRIC_EXECUTIONS_COMPUTE  = 'executions.compute';
 const METRIC_EXECUTIONS_MB_SECONDS = 'executions.mbSeconds';
@@ -546,6 +561,7 @@ const METRIC_REALTIME_OUTBOUND = 'realtime.outbound';
 // MQTT push broker metrics (cumulative per-project counters, summed by StatsUsage)
 const METRIC_MQTT_CONNECTIONS = 'mqtt.connections';
 const METRIC_MQTT_MESSAGES_DELIVERED = 'mqtt.messages.delivered';
+const METRIC_MQTT_MESSAGES_ACKED = 'mqtt.messages.acked';
 
 // Resource types
 const RESOURCE_TYPE_PROJECTS = 'projects';
@@ -564,6 +580,7 @@ const RESOURCE_TYPE_TEAMS = 'teams';
 const RESOURCE_TYPE_EMBEDDINGS_TEXT = 'embeddingsText';
 const RESOURCE_TYPE_INSIGHTS = 'insights';
 const RESOURCE_TYPE_REPORTS = 'reports';
+const RESOURCE_TYPE_VIDEOS = 'videos';
 const RESOURCE_TYPE_REVIEWS = 'reviews';
 const RESOURCE_TYPE_MONITORS = 'monitors';
 
@@ -670,4 +687,5 @@ const MIGRATION_STALL_TIMEOUT = 60 * 60; // 1 hour
 
 const VCS_DEPLOYMENT_SKIP_PATTERNS = [
     '[skip ci]',
+    '[skip appwrite]',
 ];

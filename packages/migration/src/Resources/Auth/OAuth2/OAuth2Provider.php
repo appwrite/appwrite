@@ -51,6 +51,8 @@ final class OAuth2Provider extends Resource
         'gitlab' => ['clientId' => ['target' => self::TARGET_APP_ID], 'endpoint' => ['target' => self::TARGET_SECRET]],
         'google' => ['clientId' => ['target' => self::TARGET_APP_ID], 'prompt' => ['target' => self::TARGET_SECRET]],
         'huggingface' => ['clientId' => ['target' => self::TARGET_APP_ID]],
+        'vercel' => ['clientId' => ['target' => self::TARGET_APP_ID]],
+        'workos' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'kakao' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'keycloak' => [
             'clientId' => ['target' => self::TARGET_APP_ID],
@@ -60,6 +62,7 @@ final class OAuth2Provider extends Resource
         'kick' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'linkedin' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'microsoft' => ['clientId' => ['target' => self::TARGET_APP_ID], 'tenant' => ['target' => self::TARGET_SECRET]],
+        'naver' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'notion' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'oidc' => [
             'clientId' => ['target' => self::TARGET_APP_ID],

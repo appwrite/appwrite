@@ -53,6 +53,20 @@ export enum MonitorResourceType {
   Organization = 'organization',
 }
 
+export enum MonitorSeverity {
+  Info = 'info',
+  Warning = 'warning',
+  Error = 'error',
+  Critical = 'critical',
+}
+
+export enum AlertSeverity {
+  Info = 'info',
+  Warning = 'warning',
+  Error = 'error',
+  Critical = 'critical',
+}
+
 export enum MonitorStatus {
   Ok = 'ok',
   Firing = 'firing',
@@ -61,6 +75,40 @@ export enum MonitorStatus {
 export enum MonitorType {
   Usage = 'usage',
   Budget = 'budget',
+  Http = 'http',
+  Dns = 'dns',
+  Tcp = 'tcp',
+  Smtp = 'smtp',
+}
+
+export enum MonitorResult {
+  Ok = 'ok',
+  DnsFailed = 'dns_failed',
+  ConnectRefused = 'connect_refused',
+  ConnectTimeout = 'connect_timeout',
+  ConnectFailed = 'connect_failed',
+  TlsFailed = 'tls_failed',
+  TlsExpiring = 'tls_expiring',
+  StatusMismatch = 'status_mismatch',
+  AnswerMismatch = 'answer_mismatch',
+  SmtpRejected = 'smtp_rejected',
+  TargetDenied = 'target_denied',
+  Timeout = 'timeout',
+}
+
+export enum AlertResult {
+  Ok = 'ok',
+  DnsFailed = 'dns_failed',
+  ConnectRefused = 'connect_refused',
+  ConnectTimeout = 'connect_timeout',
+  ConnectFailed = 'connect_failed',
+  TlsFailed = 'tls_failed',
+  TlsExpiring = 'tls_expiring',
+  StatusMismatch = 'status_mismatch',
+  AnswerMismatch = 'answer_mismatch',
+  SmtpRejected = 'smtp_rejected',
+  TargetDenied = 'target_denied',
+  Timeout = 'timeout',
 }
 
 /**
@@ -96,27 +144,47 @@ export type Alert = {
    */
   resolvedAt?: string | null
   /**
+   * Date a member acknowledged the alert, in ISO 8601 format. Empty while nobody has. Absent on servers without acknowledgements.
+   */
+  acknowledgedAt?: string | null
+  /**
+   * ID of the user who acknowledged the alert. Empty while nobody has, or when it was acknowledged with an API key.
+   */
+  acknowledgedBy?: string
+  /**
+   * Name of the user who acknowledged the alert, when they did.
+   */
+  acknowledgedByName?: string
+  /**
    * The monitor's rules when the alert fired, as query strings.
    */
   rules: string[]
   /**
-   * Whether the monitor was critical when the alert fired.
+   * The monitor's severity when the alert fired: `info`, `warning`, `error` or `critical`.
+   */
+  severity: AlertSeverity
+  /**
+   * Deprecated: use `severity`. Whether the monitor was critical when the alert fired.
    */
   critical: boolean
   /**
-   * Metric the alert fired on.
+   * Metric the alert fired on. Null for a probe monitor's alert.
    */
-  metric: AlertMetric
+  metric?: AlertMetric | null
   /**
-   * How the metric was compared with the threshold.
+   * How the metric was compared with the threshold. Null for a probe monitor's alert.
    */
-  comparator: AlertComparator
+  comparator?: AlertComparator | null
   /**
    * Threshold the metric crossed, in the metric's unit.
    */
   threshold: number
   /**
-   * Latest reading while the alert fired.
+   * What the failing check of a probe monitor found when the alert opened, such as `connect_refused`. Null for a usage monitor's alert.
+   */
+  result?: AlertResult | null
+  /**
+   * Latest reading while the alert fired: the metric's value, or a probe's latency in milliseconds.
    */
   value: number
   /**
@@ -180,11 +248,11 @@ export type Monitor = {
    */
   projectId: string
   /**
-   * Rules that must all hold for the monitor to fire, as query strings. A usage monitor has one comparing a metric with a threshold, optionally scoped with `equal('resourceType')` and `equal('resourceId')`.
+   * Rules that must all hold for the monitor to fire, as query strings. A usage monitor has one comparing a metric with a threshold, optionally scoped with `equal('resourceType')` and `equal('resourceId')`. Empty for probe monitors.
    */
   rules: string[]
   /**
-   * What the monitor checks: `usage` compares a usage metric with a threshold.
+   * What the monitor checks: `usage` compares a usage metric with a threshold; `http`, `dns`, `tcp` and `smtp` probe a target on their own interval.
    */
   type: MonitorType
   /**
@@ -200,6 +268,82 @@ export type Monitor = {
    */
   window: number
   /**
+   * Probe monitors: seconds between two checks. 0 for usage monitors, which are evaluated on the server's interval.
+   */
+  interval: number
+  /**
+   * Probe monitors: seconds a check may take before it fails.
+   */
+  timeout: number
+  /**
+   * HTTP monitors: URL requested.
+   */
+  url: string
+  /**
+   * HTTP monitors: method the URL is requested with.
+   */
+  method: string
+  /**
+   * HTTP monitors: headers sent, as an object of header names and values.
+   */
+  headers: object
+  /**
+   * HTTP monitors: request body sent.
+   */
+  body: string
+  /**
+   * HTTP monitors: status codes the final response may have. Empty accepts any 2xx status.
+   */
+  statusCodes: number[]
+  /**
+   * HTTP monitors: days before an HTTPS URL's certificate expires from which the check fails. 0 never warns before it expires.
+   */
+  certificateDays: number
+  /**
+   * DNS monitors: domain queried.
+   */
+  domain: string
+  /**
+   * DNS monitors: record type queried: A, AAAA, CNAME, MX, TXT, NS.
+   */
+  record: string
+  /**
+   * DNS monitors: resolver queried. Empty for the server's DNS resolver.
+   */
+  resolver: string
+  /**
+   * DNS monitors: record value one of the answers must have. Empty accepts any answer.
+   */
+  answer: string
+  /**
+   * TCP and SMTP monitors: hostname or IP address connected to.
+   */
+  host: string
+  /**
+   * TCP and SMTP monitors: port connected to.
+   */
+  port: number
+  /**
+   * SMTP monitors: `none`, `starttls` or `implicit`.
+   */
+  tlsMode: string
+  /**
+   * Probe monitors: what the last check found. `ok` passes; anything else opened the monitor's alert. Null before the first check.
+   */
+  result?: MonitorResult | null
+  /**
+   * Probe monitors: milliseconds the last check took.
+   */
+  latency?: number | null
+  /**
+   * Probe monitors: last status code an HTTP target answered with, reply code an SMTP server sent, or response code a DNS resolver returned.
+   */
+  code?: number | null
+  /**
+   * Probe monitors: expiry date of the TLS certificate the last check saw, in ISO 8601 format. Null without TLS.
+   */
+  certificateExpiresAt?: string | null
+  /**
    * Minimum seconds between two team notifications of this monitor firing. Events fire on every change regardless.
    */
   cooldown: number
@@ -212,7 +356,11 @@ export type Monitor = {
    */
   notify: string[]
   /**
-   * Whether the monitor is critical: its alerts may be delivered with higher urgency by the notification channels that support it.
+   * How urgent the monitor's alerts are: `info`, `warning`, `error` or `critical`. Critical alerts may be delivered with higher urgency by the notification channels that support it.
+   */
+  severity: MonitorSeverity
+  /**
+   * Deprecated: use `severity`. Whether the monitor's severity is `critical`.
    */
   critical: boolean
   /**

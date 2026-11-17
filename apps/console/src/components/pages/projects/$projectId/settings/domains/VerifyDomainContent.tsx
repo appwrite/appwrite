@@ -4,13 +4,12 @@ import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
 import {
   getApexDomain,
   getRecordName,
+  getVerificationMethods,
   isCloud as isCloudEndpoint,
   isDomainClaimError,
+  type VerificationMethod,
 } from '@/lib/utils/proxy-domains'
-import {
-  getAppwriteErrorInfo,
-  getErrorMessage,
-} from '@/lib/utils/error-formatting'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
 import { Loader2, ExternalLink, Info, AlertCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -30,6 +29,13 @@ import { useT } from '@/lib/i18n/translate'
 
 export const DNS_PROVIDERS_LINK =
   '/docs/advanced/platform/custom-domains'
+
+const TAB_LABELS: Record<VerificationMethod, string> = {
+  cname: 'CNAME',
+  nameservers: 'Nameservers',
+  a: 'A',
+  aaaa: 'AAAA',
+}
 
 export type DomainVerificationError = {
   title: string
@@ -53,19 +59,16 @@ export function dnsPendingVerificationError(
 
 /**
  * Alert for a failed verify call. A failed DNS check or a refused ownership
- * claim keeps the amber pending style and leads with the API's reason;
- * anything else is a hard failure.
+ * claim keeps the amber pending style; the claim step's own copy and record
+ * table explain what to add, so the API's message is not repeated. Anything
+ * else is a hard failure.
  */
 export function domainVerificationError(
   t: (text: string) => string,
   error: unknown,
 ): DomainVerificationError {
-  const pending = dnsPendingVerificationError(t)
   if (isDomainClaimError(error)) {
-    const { message } = getAppwriteErrorInfo(error)
-    return message
-      ? { ...pending, message: `${message} ${pending.message}` }
-      : pending
+    return dnsPendingVerificationError(t)
   }
   return {
     title: t('Verification failed'),
@@ -297,20 +300,22 @@ export function VerifyDomainContent({
     return rawCname
   }, [edgeNetworkEnabled, resourceType, rawCname, sitesDomain])
 
-  const hasCname = !!cname
   const hasNameservers = isCloud && nameservers.length > 0
-  const hasA = !isCloud && !!a
-  const hasAaaa = !isCloud && !!aaaa
-  const hasCaa = !!caa
+  // Older servers send `0 issue ""` for an unset CAA target, a record that
+  // would block every CA.
+  const hasCaa = !!caa && caa !== '0 issue ""'
 
-  const tabOptions = [
-    ...(hasCname ? [{ id: 'cname' as const, label: 'CNAME' }] : []),
-    ...(hasNameservers
-      ? [{ id: 'nameservers' as const, label: 'Nameservers' }]
-      : []),
-    ...(hasA ? [{ id: 'a' as const, label: 'A' }] : []),
-    ...(hasAaaa ? [{ id: 'aaaa' as const, label: 'AAAA' }] : []),
-  ]
+  // On the edge network the CNAME targets appwrite.network, while A and AAAA
+  // name the region's address, so only the CNAME and nameservers are offered.
+  const edge = edgeNetworkEnabled && resourceType !== 'api'
+  const tabOptions = getVerificationMethods({
+    domain: rule.domain,
+    cloud: isCloud,
+    cname,
+    a: edge ? undefined : a,
+    aaaa: edge ? undefined : aaaa,
+    nameservers,
+  }).map((id) => ({ id, label: TAB_LABELS[id] }))
 
   const selectedTab =
     activeTab && tabOptions.some((tab) => tab.id === activeTab)
@@ -410,7 +415,7 @@ export function VerifyDomainContent({
   }
 
   const getNameserverRecords = (): DnsRecord[] =>
-    nameservers.map((ns) => ({ type: 'NS', name: '', value: ns, ttl: null }))
+    nameservers.map((ns) => ({ type: 'NS', name: '@', value: ns, ttl: null }))
 
   const cardClassName =
     'rounded-xl border border-border bg-card/50 overflow-hidden'

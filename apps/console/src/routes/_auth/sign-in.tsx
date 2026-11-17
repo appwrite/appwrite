@@ -49,6 +49,7 @@ import {
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
 import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
+import { isAddAccountSearch } from '@/lib/console-devices'
 
 const searchSchema = z.object({
   redirect: z
@@ -60,7 +61,9 @@ const searchSchema = z.object({
   // Operator account switching: when an operator is already signed in, this keeps
   // the sign-in form (instead of bouncing to the console) so a second account can
   // join the account switching device. See ConsoleAccountSwitcherDialog.
-  addAccount: z.string().optional(),
+  // The router keeps plain search values as strings, so `?addAccount=1` arrives
+  // as '1'; coerce it, and never fail the sign-in page over this flag.
+  addAccount: z.coerce.number().optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/_auth/sign-in')({
@@ -74,7 +77,7 @@ export const Route = createFileRoute('/_auth/sign-in')({
     if (account) {
       // Operator adding another account to the switcher: keep the sign-in form
       // rather than bouncing the already-signed-in operator back to the console.
-      if ((location.search as { addAccount?: string }).addAccount === '1') {
+      if (isAddAccountSearch(location.search)) {
         return
       }
       if (requiresConsoleEmailVerification(account)) {

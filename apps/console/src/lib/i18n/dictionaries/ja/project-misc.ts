@@ -153,6 +153,11 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '攻撃モードがオンです。すべての訪問者がチャレンジされます。',
   'Apply as firewall rule': 'ファイアウォールルールとして適用',
   'No firewall rules': 'ファイアウォールルールがありません',
+  'Configure rules': 'ルールを設定',
+  'Rules that apply to this site appear here.':
+    'このサイトに適用されるルールがここに表示されます。',
+  'Rules that apply to this function appear here.':
+    'この Function に適用されるルールがここに表示されます。',
   'No API firewall rules': 'API のファイアウォールルールがありません',
   'No function firewall rules':
     'Functions のファイアウォールルールがありません',
@@ -705,6 +710,23 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Identified users, ranked by visitors': '識別されたユーザー (訪問者数順)',
   'No identified users in this range': 'この期間に識別されたユーザーはいません',
   'Event properties': 'イベントの属性',
+  'Models and tools': 'モデルとツール',
+  'Calls by model and by tool': 'モデル別・ツール別の呼び出し数',
+  'No calls in this range': 'この期間の呼び出しはありません',
+  'Installs and push': 'インストールとプッシュ',
+  'Installs, updates and push notifications from the tracking SDK':
+    '計測 SDK によるインストール、アップデート、プッシュ通知',
+  'No installs tracked yet': 'まだインストールは計測されていません',
+  'Add the latest tracking SDK to your app to count installs, updates and push notifications.':
+    '最新の計測 SDK をアプリに追加すると、インストール、アップデート、プッシュ通知を計測できます。',
+  'Add the tracking SDK': '計測 SDK を追加',
+  Installs: 'インストール',
+  Updates: 'アップデート',
+  'Push received': 'プッシュ受信',
+  'Push opened': 'プッシュ開封',
+  'Push opened by message': 'メッセージ別のプッシュ開封',
+  'No opened pushes with a message ID in this range':
+    'この期間にメッセージ ID 付きで開封されたプッシュはありません',
   'Values of the props sent with your events':
     'イベントと一緒に送信された props の値',
   'No event props in this range': 'この期間にイベントの props はありません',
@@ -806,6 +828,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Most viewed screens': '最も閲覧された画面',
   'Where visitors are browsing from': '訪問者の閲覧地域',
   'What visitors are browsing with': '訪問者の利用環境',
+  'What visitors are using': '訪問者の利用デバイス',
   'Human visitors versus bots': '人間の訪問者とボットの比較',
   'AI agents and crawlers': 'AI エージェントとクローラー',
   Agents: 'エージェント',
@@ -944,6 +967,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'The domain your app makes requests from. Use':
     'アプリがリクエストを送信するドメイン。使用:',
   'Troubleshoot CORS errors': 'CORS エラーのトラブルシューティング',
+  "Any website can send requests to this project. Before going live, replace * with your app's domain, like app.example.com.":
+    'どのウェブサイトからでもこのプロジェクトにリクエストを送信できます。本番公開の前に、* をアプリのドメイン（例: app.example.com）に置き換えてください。',
   'Bundle ID': 'バンドル ID',
   'Application ID': 'アプリケーション ID',
   'Package identifier': 'パッケージ識別子',
@@ -1409,6 +1434,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Use a date range longer than this interval.':
     'この間隔より長い日付範囲を使用してください。',
   'days or less for this interval.': '日以下 (この間隔の場合)。',
+  'This interval is larger than the selected date range.':
+    'この間隔は選択した期間より大きいです。',
   Compute: 'コンピュート',
   'Compute over time': '経時的なコンピュート',
   'Copy API endpoint': 'API エンドポイントをコピー',
@@ -1903,8 +1930,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'すべてのプロジェクトプロトコルが有効になります。',
   'All protocols for': 'すべてのプロトコル:',
   'All services for': 'すべてのサービス:',
-  'Are you sure you want to delete this domain? This action cannot be undone.':
-    'このドメインを削除してもよろしいですか? この操作は元に戻せません。',
   'Are you sure you want to disable all protocols? This will disable client access over those protocols until they are re-enabled.':
     'すべてのプロトコルを無効にしてもよろしいですか? 再有効化されるまで、これらのプロトコル経由のクライアントアクセスが無効になります。',
   'Are you sure you want to disconnect this git installation?':
@@ -1991,7 +2016,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Failed to rotate secret': 'シークレットのローテーションに失敗しました',
   'Failed to send test email': 'テストメールの送信に失敗しました',
   'Failed to start migration': '移行の開始に失敗しました',
-  'Failed to transfer project': 'プロジェクトの転送に失敗しました',
   'Failed to update SMTP settings': 'SMTP 設定の更新に失敗しました',
   'Failed to update project name': 'プロジェクト名の更新に失敗しました',
   'Failed to update protocol': 'プロトコルの更新に失敗しました',
@@ -2133,8 +2157,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Search migrations...': 'マイグレーションを検索...',
   'Search webhooks...': 'Webhook を検索...',
   'Secure protocol': 'セキュアプロトコル',
-  'Select a different organization to transfer to.':
-    '転送先の別の組織を選択してください。',
   'Select at least one event': '少なくとも 1 つのイベントを選択',
   'Select at least one resource': '少なくとも 1 つのリソースを選択',
   'Select destination': '転送先を選択',
@@ -2193,12 +2215,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このシークレットは、Webhook 作成またはシークレットローテーション後に 1 回のみ表示されます。',
   'This secret is only shown once after webhook creation or secret rotation. Copy it now.':
     'このシークレットは、Webhook 作成またはシークレットローテーション後に 1 回のみ表示されます。今すぐコピーしてください。',
-  'To transfer this project, you must be a member of both the current and target organization. Select a destination below.':
-    'このプロジェクトを転送するには、現在の組織と転送先組織の両方のメンバーである必要があります。以下で転送先を選択してください。',
   'Transfer between organizations': '組織間の転送',
   'Transfer project': 'プロジェクトの転送',
-  'Transfer this project to the selected organization':
-    'このプロジェクトを選択した組織に転送',
   'URL is required': 'URL は必須です',
   'Update webhook': 'Webhook の更新',
   'Use a service account JSON key. In Firebase Console: Project Settings → Service Accounts → Create service account, then add keys and create a new JSON key. Required roles: Firebase Viewer (Database and Storage), Identity Toolkit Viewer (users).':
@@ -2227,10 +2245,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'インポート中に既存の ID を持つ行に遭遇した場合。',
   'When enabled, all emails will be sent through your configured SMTP server.':
     '有効にすると、すべてのメールは設定した SMTP サーバー経由で送信されます。',
-  'You do not have any organizations you can transfer this project to.':
-    'このプロジェクトを転送できる組織がありません。',
-  'You do not have any organizations you can transfer this project to. Create or join another organization to transfer.':
-    'このプロジェクトを転送できる組織がありません。転送するには、別の組織を作成または参加してください。',
   'an A or AAAA record': 'A または AAAA レコード',
   'and all its databases, functions, and files? This action cannot be undone.':
     'とそのすべてのデータベース、Functions、ファイル? この操作は元に戻せません。',
@@ -3102,6 +3116,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Clear: 'クリア',
   Apply: '適用',
   Compare: '比較',
+  vs: 'vs',
   Realtime: 'Realtime',
   Connected: '接続済み',
   Connecting: '接続中',
@@ -3187,6 +3202,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   domains: 'ドメイン',
   functions: '関数',
   sites: 'サイト',
+  'firewall rule': 'ファイアウォールルール',
   'firewall rules': 'ファイアウォールルール',
   'Firewall rules': 'ファイアウォールルール',
   Downgraded: 'ダウングレード済み',
@@ -3441,6 +3457,27 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Project environment': 'プロジェクト環境',
   'Switch to production': '本番に切り替え',
   'Environment ID': '環境 ID',
+  // Environments by plan: Pro and above, and the cap per project
+  'Project environments are available on Pro':
+    'プロジェクト環境は Pro プランで利用できます',
+  'does not include project environments. Upgrade to give each project environments such as staging and preview, with resources and users of their own.':
+    'にはプロジェクト環境が含まれていません。アップグレードすると、各プロジェクトに staging や preview などの環境を作成でき、それぞれが独自のリソースとユーザーを持ちます。',
+  environments: '個の環境',
+  'environments per project.': '個の環境をプロジェクトごとに作成できます。',
+  'Delete an environment to create another.':
+    '別の環境を作成するには、環境を 1 つ削除してください。',
+  // Settings of an environment: its name, its ID, and deleting it
+  'Environment name has been updated': '環境名を更新しました',
+  'Failed to update environment name': '環境名の更新に失敗しました',
+  "Access this environment with the project's API Endpoint and Project ID, and the Environment ID that tells it apart from production.":
+    'この環境には、プロジェクトの API エンドポイントとプロジェクト ID に加え、本番と区別するための環境 ID を使用してアクセスします。', // pragma: allowlist secret
+  'Permanently delete this environment with its resources and users. The project it belongs to and its other environments are not affected. This action cannot be undone.':
+    'この環境をリソースとユーザーごと完全に削除します。この環境が属するプロジェクトと他の環境には影響しません。この操作は元に戻せません。',
+  Environment: '環境',
+  'Project:': 'プロジェクト:',
+  'Failed to load migrations': 'マイグレーションの読み込みに失敗しました',
+  'Failed to refresh migrations': 'マイグレーションの更新に失敗しました',
+  'The list below may be out of date.': '以下の一覧は最新でない可能性があります。',
   'An environment with this ID already exists in this project.':
     'この ID の環境はこのプロジェクトに既に存在します。',
   'Use lowercase letters, numbers and hyphens, starting with a letter or a number.':
@@ -3689,8 +3726,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'まだ受け取られていないリンクです。期限切れのリンクでは受け取れません。期限より前に無効にするには、リンクを削除してください。',
   'The project already belongs to this organization.':
     'プロジェクトはすでにこの組織に属しています。',
-  'Only organization members whose role can manage projects can transfer this project. Ask an organization owner to transfer it or to update your role.':
-    'このプロジェクトを転送できるのは、プロジェクトを管理できるロールを持つ組織メンバーだけです。組織のオーナーに転送を依頼するか、ロールの変更を依頼してください。',
+  'Only organization owners can transfer this project. Ask an organization owner to transfer it or to update your role.':
+    'このプロジェクトを転送できるのは組織のオーナーだけです。組織のオーナーに転送を依頼するか、ロールの変更を依頼してください。',
   'No permission': '権限なし',
   "You don't have permission to transfer projects in this organization.":
     'この組織でプロジェクトを転送する権限がありません。',
@@ -3762,7 +3799,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Greater than': 'より大きい',
   'Greater than or equal': '以上',
   'Inbound bandwidth': '受信帯域幅',
-  'Know when usage crosses a line': '使用量がしきい値を超えたら把握する',
+  'Know when something needs attention': '対応が必要なときに把握する',
   'Last value': '最新の値',
   'Less than': 'より小さい',
   'Less than or equal': '以下',
@@ -3862,8 +3899,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   '{percent}% of {budget}': '{budget} の {percent}%',
   'Managed by budget': '予算で管理',
   'Last sent': '最終送信',
-  'A monitor raises an alert when its rules hold, and resolves it when usage recovers.':
-    'モニターはルールが成立するとアラートを発生させ、使用量が回復すると解決します。',
   Alert: 'アラート',
   'Alert not found': 'アラートが見つかりません',
   'Budget monitors': '予算モニター',
@@ -3888,8 +3923,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Monitor has been updated': 'モニターを更新しました',
   'Monitor not found': 'モニターが見つかりません',
   Monitors: 'モニター',
-  'Monitors watch your project usage and notify you when a metric crosses the threshold you set.':
-    'モニターはプロジェクトの使用量を監視し、メトリクスが設定したしきい値を超えると通知します。',
+  'Monitors watch your project usage and your endpoints, and notify you when a metric crosses your threshold or a check fails.':
+    'モニターはプロジェクトの使用量とエンドポイントを監視し、メトリクスがしきい値を超えたときやチェックが失敗したときに通知します。',
   'No alerts yet': 'まだアラートはありません',
   Ongoing: '継続中',
   Peak: 'ピーク',
@@ -3903,6 +3938,16 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'View monitors': 'モニターを表示',
   'Waiting for recovery': '回復待ち',
   Watches: '監視対象',
+  Acknowledge: '確認済みにする',
+  'Acknowledged by {name}': '{name} が確認済み',
+  'Acknowledged by a member': 'メンバーが確認済み',
+  'Acknowledged with an API key': 'API キーで確認済み',
+  'Failed to acknowledge the alert': 'アラートを確認済みにできませんでした',
+  'Failed to undo the acknowledgement': '確認済みを取り消せませんでした',
+  'Let your team know someone is on it. It keeps firing until its monitor recovers.':
+    '誰かが対応中であることをチームに知らせます。モニターが回復するまでアラートは発生し続けます。',
+  'Nobody has acknowledged this alert':
+    'このアラートはまだ誰も確認していません',
   "You don't have permission to manage monitors.":
     'モニターを管理する権限がありません。',
   'between two alerts from this monitor.':
@@ -3925,6 +3970,11 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Critical: '重要',
   "Rings on your phone even when it's on silent or in Do Not Disturb.":
     'スマートフォンがサイレントやおやすみモードでも鳴ります。',
+  Severity: '重大度',
+  Warning: '警告',
+  'Worth knowing about. Nothing needs doing yet.': '知っておくべき情報です。まだ対応は不要です。',
+  'Look into it soon, before it becomes a problem.': '問題になる前に、早めに確認してください。',
+  'Something is broken and needs fixing.': '何かが壊れていて、修正が必要です。',
   'Critical. Rings on phones even on silent.':
     '重要。サイレントでもスマートフォンが鳴ります。',
   'Rings on phones even on silent': 'サイレントでもスマートフォンが鳴ります',
@@ -4025,4 +4075,180 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Send email, SMS, and push notifications to your users.':
     'ユーザーにメール、SMS、プッシュ通知を送信します。',
   'Auto-deploy on every push': 'push のたびに自動デプロイ',
+  // Identity servers (LDAP)
+  'Identity servers': 'ID サーバー',
+  'Enable LDAP sign-in': 'LDAP サインインを有効化',
+  'When enabled, users can sign in with their directory username and password.':
+    '有効にすると、ユーザーはディレクトリのユーザー名とパスワードでサインインできます。',
+  'Tried in order until one answers, up to 10. Pasting an LDAP URL also fills in encryption, port and base DN.':
+    '応答があるまで順に試します。最大 10 件。LDAP URL を貼り付けると、暗号化、ポート、ベース DN も入力されます。',
+  'Leave empty for 636 with LDAPS, or 389 otherwise.':
+    '空にすると、LDAPS は 636、それ以外は 389 を使用します。',
+  'Use None only on a trusted private network.':
+    '「なし」は信頼できるプライベートネットワークでのみ使用してください。',
+  "Check the directory's certificate before sending any password.":
+    'パスワードを送信する前に、ディレクトリの証明書を検証します。',
+  'The CA or self-signed certificate to trust. Leave empty to use the system trust store.':
+    '信頼する CA 証明書または自己署名証明書。空にするとシステムの信頼ストアを使用します。',
+  'How long to wait for each answer, from 1 to 30.': '各応答を待つ時間。1 から 30 まで。',
+  'Service account for the search, or empty for anonymous.':
+    '検索に使うサービスアカウント。空にすると匿名で検索します。',
+  'Never shown again. Re-enter it when the connection changes.':
+    '再表示されません。接続を変更する際は再入力してください。',
+  'Enter the bind password again to save.': '保存するにはバインドパスワードを再入力してください。',
+  'Only its members can sign in. Leave empty to allow everyone.':
+    'このグループのメンバーだけがサインインできます。空にするとすべてのユーザーを許可します。',
+  'An ID that never changes, such as entryUUID.': '変更されない ID。entryUUID など。',
+  'Attribute holding the display name, usually cn.': '表示名を保持する属性。通常は cn。',
+  'Attribute holding an E.164 phone number. Optional.':
+    'E.164 形式の電話番号を保持する属性。任意。',
+  'Using Active Directory?': 'Active Directory を使用していますか?',
+  'Search identity servers...': 'ID サーバーを検索...',
+  'Identity servers section': 'ID サーバーセクション',
+  'Identity servers navigation': 'ID サーバーナビゲーション',
+  LDAP: 'LDAP',
+  'Let users sign in with the credentials of your LDAP directory, such as Active Directory or OpenLDAP.':
+    'Active Directory や OpenLDAP などの LDAP ディレクトリの認証情報でユーザーがサインインできるようにします。',
+  Directory: 'ディレクトリ',
+  Hosts: 'ホスト',
+  'Use {dn} as the base DN?': '{dn} をベース DN として使用しますか?',
+  Use: '使用',
+  'Verify certificate': '証明書を検証',
+  'Timeout (seconds)': 'タイムアウト (秒)',
+  'Certificate (PEM)': '証明書 (PEM)',
+  'Base DN': 'ベース DN',
+  'Subtree the user search starts from, for example ou=people,dc=example,dc=com.':
+    'ユーザー検索の起点となるサブツリー。例: ou=people,dc=example,dc=com',
+  'Bind DN': 'バインド DN',
+  'Bind password': 'バインドパスワード',
+  'User filter': 'ユーザーフィルター',
+  'Finds the person signing in. {username} is replaced with what they type.':
+    'サインインするユーザーを検索します。{username} は入力された内容に置き換えられます。',
+  'The user filter must contain {username}.':
+    'ユーザーフィルターには {username} を含める必要があります。',
+  'Sign-in rules': 'サインインのルール',
+  'Attribute mapping': '属性のマッピング',
+  'ID attribute': 'ID 属性',
+  'Email attribute': 'メール属性',
+  'Attribute holding the email address, usually mail.':
+    'メールアドレスを保持する属性。通常は mail。',
+  'Name attribute': '名前属性',
+  'Phone attribute': '電話番号属性',
+  'Required group DN': '必須グループ DN',
+  'Port must be between 1 and 65535.':
+    'ポートは 1 から 65535 の範囲で指定してください。',
+  'LDAP settings have been updated.': 'LDAP 設定を更新しました。',
+  'LDAP sign-in has been enabled.': 'LDAP サインインを有効にしました。',
+  'LDAP sign-in has been disabled.': 'LDAP サインインを無効にしました。',
+  'Failed to update LDAP settings': 'LDAP 設定の更新に失敗しました',
+  'Test connection': '接続をテスト',
+  'Update the configuration with at least one host and a base DN before testing the connection.':
+    '接続をテストする前に、少なくとも 1 つのホストとベース DN を設定して更新してください。',
+  'Test LDAP connection': 'LDAP 接続のテスト',
+  'Checks the configuration saved on this project: it connects to the directory, binds as the service account and reads the base DN.':
+    'このプロジェクトに保存された設定を確認します。ディレクトリに接続し、サービスアカウントでバインドして、ベース DN を読み取ります。',
+  'Unsaved changes in the form are not included: update first to test them.':
+    'フォームの未保存の変更は含まれません。テストするには先に更新してください。',
+  'Username (optional)': 'ユーザー名 (任意)',
+  'Also looks this user up and checks the required group.':
+    'このユーザーを検索し、必須グループも確認します。',
+  'Password (optional)': 'パスワード (任意)',
+  'Also verifies the password of that user.':
+    'そのユーザーのパスワードも検証します。',
+  'Run test': 'テストを実行',
+  'Testing the connection…': '接続をテストしています…',
+  'Connection, service account and base DN look good.':
+    '接続、サービスアカウント、ベース DN に問題はありません。',
+  'User found, group check passed, password accepted.':
+    'ユーザーが見つかり、グループの確認に合格し、パスワードが受け入れられました。',
+  'User found, group check passed.':
+    'ユーザーが見つかり、グループの確認に合格しました。',
+  'Failed to test the LDAP connection': 'LDAP 接続のテストに失敗しました',
+  'Add at least one host and a base DN to enable LDAP sign-in.':
+    'LDAP サインインを有効にするには、少なくとも 1 つのホストとベース DN を追加してください。',
+  'Add at least one host and a base DN under Settings > Identity servers to enable LDAP sign-in.':
+    'LDAP サインインを有効にするには、[設定] > [ID サーバー] で少なくとも 1 つのホストとベース DN を追加してください。',
+  // Probe monitors
+  'Enter a URL starting with http:// or https://.':
+    'http:// または https:// で始まる URL を入力してください。',
+  'Write each header on its own line as Name: value.':
+    'ヘッダーは 1 行に 1 つずつ Name: value の形式で記述してください。',
+  'Enter status codes between 100 and 599.':
+    '100 から 599 までのステータスコードを入力してください。',
+  'Enter the domain to query.': 'クエリするドメインを入力してください。',
+  'Enter the host to connect to.': '接続先のホストを入力してください。',
+  'Enter a port between 1 and 65535.':
+    '1 から 65535 までのポートを入力してください。',
+  'The timeout must not be longer than the interval.':
+    'タイムアウトはチェック間隔より長くできません。',
+  'Monitor type': 'モニターの種類',
+  'Expected status codes': '想定するステータスコード',
+  'Separate codes with commas.': 'コードはカンマで区切ります。',
+  'Any 2xx status': '任意の 2xx ステータス',
+  'Certificate expiry warning': '証明書の有効期限の警告',
+  'Days before an HTTPS certificate expires to fire. 0 never warns early.':
+    'HTTPS 証明書の有効期限の何日前に発生させるか。0 の場合は事前に警告しません。',
+  'One per line, as Name: value.':
+    '1 行に 1 つ、Name: value の形式で記述します。',
+  'Record type': 'レコードタイプ',
+  'Expected answer': '想定する応答',
+  'Leave empty to accept any answer.': '空欄の場合はどの応答も受け入れます。',
+  Resolver: 'リゾルバー',
+  "Leave empty to use the server's resolver.":
+    '空欄の場合はサーバーのリゾルバーを使用します。',
+  Checks: 'チェック',
+  'The monitor fires when a check fails, and resolves when one passes again.':
+    'チェックが失敗するとモニターが発生し、再び成功すると解決します。',
+  'Check every': 'チェック間隔',
+  'Check interval': 'チェック間隔',
+  'and fail after': 'タイムアウト',
+  'Check timeout': 'チェックのタイムアウト',
+  'Last check': '最新のチェック',
+  'Code {code}': 'コード {code}',
+  'Every {interval}, failing after {timeout}':
+    '{interval}ごと、{timeout}でタイムアウト',
+  Expects: '想定',
+  Certificate: '証明書',
+  'No certificate seen yet': 'まだ証明書は確認されていません',
+  'fires {days} days before it expires': '有効期限の {days} 日前に発生',
+  'Any answer': '任意の応答',
+  "The server's resolver": 'サーバーのリゾルバー',
+  'Checks run on the monitor interval, so this monitor is not being checked.':
+    'チェックはモニターの間隔で実行されるため、このモニターはチェックされていません。',
+  '{type} check': '{type} チェック',
+  'Check that your endpoints respond': 'エンドポイントが応答しているか確認する',
+  '{type} monitor': '{type} モニター',
+  'Latest latency': '最新のレイテンシ',
+  'Peak latency': '最大レイテンシ',
+  Result: '結果',
+  'Resolves when a check passes again.': 'チェックが再び成功すると解決します。',
+  'A monitor raises an alert when its rules hold or its check fails, and resolves it when they recover.':
+    'モニターはルールが成立するかチェックが失敗するとアラートを発生させ、回復すると解決します。',
+  'peak latency': '最大レイテンシ',
+  'Get notified when a URL stops answering with the status you expect, or its certificate is about to expire.':
+    'URL が想定したステータスで応答しなくなったとき、または証明書の有効期限が近づいたときに通知を受け取ります。',
+  'Get notified when a domain stops resolving, or stops answering with the value you expect.':
+    'ドメインが名前解決できなくなったとき、または想定した値で応答しなくなったときに通知を受け取ります。',
+  'Get notified when a host stops accepting connections on a port.':
+    'ホストがポートへの接続を受け付けなくなったときに通知を受け取ります。',
+  'Get notified when a mail server stops accepting sessions or its TLS handshake fails.':
+    'メールサーバーがセッションを受け付けなくなったとき、または TLS ハンドシェイクが失敗したときに通知を受け取ります。',
+  Responding: '応答あり',
+  'Name did not resolve': '名前解決に失敗',
+  'Connection refused': '接続が拒否されました',
+  'Connection timed out': '接続がタイムアウトしました',
+  'TLS handshake failed': 'TLS ハンドシェイクに失敗',
+  'TLS certificate expiring': 'TLS 証明書の有効期限切れ間近',
+  'Unexpected status code': '想定外のステータスコード',
+  'Unexpected answer': '想定外の応答',
+  'Server refused the session': 'サーバーがセッションを拒否しました',
+  'Target is in a denied network': '対象が拒否されたネットワーク内にあります',
+  'Timed out': 'タイムアウトしました',
+  '30 seconds': '30 秒',
+  '1 minute': '1 分',
+  '5 seconds': '5 秒',
+  '10 seconds': '10 秒',
+  'From the port': 'ポートから判断',
+  'Upgrade with STARTTLS': 'STARTTLS でアップグレード',
+  'Implicit TLS': '暗黙的 TLS',
 }

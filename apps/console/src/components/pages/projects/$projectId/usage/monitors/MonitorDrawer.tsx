@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { Pause, Pencil, Play, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
@@ -18,7 +18,12 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useUpdateMonitor } from '@/lib/react-query/hooks'
-import type { ParsedMonitor, MonitorInput } from '@/lib/appwrite/monitors'
+import type {
+  ParsedMonitor,
+  ProbeMonitorChanges,
+  ProbeType,
+  SmtpTlsMode,
+} from '@/lib/appwrite/monitors'
 import {
   COMPARATORS,
   COOLDOWNS,
@@ -27,6 +32,17 @@ import {
   formatMetricValue,
   thresholdRatio,
 } from '@/lib/alerts/metrics'
+import {
+  INTERVALS,
+  TIMEOUTS,
+  TLS_MODES,
+  formatHeaders,
+  formatLatency,
+  isProbeType,
+  probeTarget,
+  resultLabel,
+  smtpTlsMode,
+} from '@/lib/alerts/probes'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
@@ -34,12 +50,21 @@ import { cn } from '@/lib/utils'
 import { RuleChart } from './RuleChart'
 import { StatusPill, ruleState } from './StatusPill'
 import {
+  ProbeFields,
+  emptyProbeForm,
+  probeFormError,
+  probeFormFromMonitor,
+  probeInputFromForm,
+  type ProbeForm,
+} from './ProbeFields'
+import {
   RuleFields,
   emptyRuleForm,
   ruleFormError,
   ruleFormFromMonitor,
   monitorInputFromForm,
   roleLabel,
+  SEVERITIES,
   type RuleForm,
 } from './RuleFields'
 
@@ -47,18 +72,20 @@ import {
 const STALE_AFTER_MS = 60 * 60 * 1000
 
 /** Fields of `next` that differ from `previous`, so the update stays sparse. */
-function changedFields(
-  previous: MonitorInput,
-  next: MonitorInput,
-): Partial<MonitorInput> {
-  const changes: Partial<MonitorInput> = {}
-  for (const key of Object.keys(next) as (keyof MonitorInput)[]) {
+function changedFields<Input extends object>(
+  previous: Input,
+  next: Input,
+): Partial<Input> {
+  const changes: Partial<Input> = {}
+  for (const key of Object.keys(next) as (keyof Input)[]) {
     const before = previous[key]
     const after = next[key]
     const same =
       Array.isArray(before) && Array.isArray(after)
         ? [...before].sort().join() === [...after].sort().join()
-        : before === after
+        : typeof before === 'object' && typeof after === 'object'
+          ? JSON.stringify(before) === JSON.stringify(after)
+          : before === after
     if (!same) {
       Object.assign(changes, { [key]: after })
     }
@@ -146,6 +173,173 @@ function MonitorStatusSummary({ monitor }: { monitor: ParsedMonitor }) {
   )
 }
 
+/** What a probe monitor's last check found and when it started firing. */
+function ProbeStatusSummary({ monitor }: { monitor: ParsedMonitor }) {
+  const t = useT()
+  const firing = ruleState(monitor) === 'firing'
+  const failed = !!monitor.result && monitor.result !== 'ok'
+  return (
+    <div className="grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-[1.3fr_1fr]">
+      <Stat
+        label={t('Last check')}
+        value={monitor.result ? t(resultLabel(monitor.result)) : '–'}
+        note={
+          monitor.result
+            ? [
+                monitor.latency != null ? formatLatency(monitor.latency) : null,
+                monitor.code != null
+                  ? t('Code {code}').replace('{code}', String(monitor.code))
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(' · ') || undefined
+            : t('Waiting for the first check')
+        }
+        hot={failed}
+      />
+      <Stat
+        label={firing ? t('Firing since') : t('Last fired')}
+        value={
+          monitor.triggeredAt ? (
+            <DateTooltip date={monitor.triggeredAt} />
+          ) : (
+            <span className="text-muted-foreground">{t('Never')}</span>
+          )
+        }
+        note={
+          monitor.evaluatedAt ? (
+            <>
+              {t('Checked')} <DateTooltip date={monitor.evaluatedAt} />
+            </>
+          ) : undefined
+        }
+      />
+    </div>
+  )
+}
+
+/** A duration from a preset list in words, or in seconds when it is not one of them. */
+function durationLabel(
+  presets: { value: number; label: string }[],
+  seconds: number,
+  t: (text: string) => string,
+): string {
+  const preset = presets.find((entry) => entry.value === seconds)
+  return preset ? t(preset.label) : `${seconds}s`
+}
+
+/** The rows a probe monitor's drawer lists about its target, before who it notifies. */
+function ProbeDetails({ monitor }: { monitor: ParsedMonitor }) {
+  const t = useT()
+  const rows: { label: string; value: React.ReactNode }[] = [
+    {
+      label: t('Target'),
+      value: (
+        <span dir="ltr" className="break-all font-mono text-[12px]">
+          {probeTarget(monitor)}
+        </span>
+      ),
+    },
+    {
+      label: t('Checks'),
+      value: t('Every {interval}, failing after {timeout}')
+        .replace('{interval}', durationLabel(INTERVALS, monitor.interval, t))
+        .replace('{timeout}', durationLabel(TIMEOUTS, monitor.timeout, t)),
+    },
+  ]
+  if (monitor.type === 'http') {
+    const headers = formatHeaders(monitor.headers)
+    rows.push({
+      label: t('Expects'),
+      value:
+        monitor.statusCodes.length > 0
+          ? monitor.statusCodes.join(', ')
+          : t('Any 2xx status'),
+    })
+    if (headers) {
+      rows.push({
+        label: t('Headers'),
+        value: (
+          <span
+            dir="ltr"
+            className="whitespace-pre-wrap break-all font-mono text-[12px]"
+          >
+            {headers}
+          </span>
+        ),
+      })
+    }
+    rows.push({
+      label: t('Certificate'),
+      value: (
+        <>
+          {monitor.certificateExpiresAt ? (
+            <>
+              {t('Expires')} <DateTooltip date={monitor.certificateExpiresAt} />
+            </>
+          ) : (
+            t('No certificate seen yet')
+          )}
+          {monitor.certificateDays > 0 && (
+            <span className="text-muted-foreground">
+              {' · '}
+              {t('fires {days} days before it expires').replace(
+                '{days}',
+                String(monitor.certificateDays),
+              )}
+            </span>
+          )}
+        </>
+      ),
+    })
+  }
+  if (monitor.type === 'dns') {
+    rows.push(
+      {
+        label: t('Expects'),
+        value: monitor.answer ? (
+          <span dir="ltr" className="break-all font-mono text-[12px]">
+            {monitor.answer}
+          </span>
+        ) : (
+          t('Any answer')
+        ),
+      },
+      {
+        label: t('Resolver'),
+        value: monitor.resolver ? (
+          <span dir="ltr" className="font-mono text-[12px]">
+            {monitor.resolver}
+          </span>
+        ) : (
+          t("The server's resolver")
+        ),
+      },
+    )
+  }
+  if (monitor.type === 'smtp') {
+    const mode = smtpTlsMode(monitor.port, monitor.tlsMode as SmtpTlsMode)
+    rows.push({
+      label: t('TLS'),
+      value: t(TLS_MODES.find((entry) => entry.value === mode)?.label ?? mode),
+    })
+  }
+  return (
+    <>
+      {rows.map((row) => (
+        <Fragment key={row.label}>
+          <dt className="border-t border-border py-2 text-muted-foreground">
+            {row.label}
+          </dt>
+          <dd className="m-0 min-w-0 border-t border-border py-2 text-foreground">
+            {row.value}
+          </dd>
+        </Fragment>
+      ))}
+    </>
+  )
+}
+
 interface AlertDrawerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -167,27 +361,48 @@ export function MonitorDrawer({
   const t = useT()
   const updateMutation = useUpdateMonitor(projectId)
   const [form, setForm] = useState<RuleForm>(emptyRuleForm)
+  const [probe, setProbe] = useState<ProbeForm>(() => emptyProbeForm('http'))
   // The drawer opens on what the monitor does; the form is one click away.
   const [editing, setEditing] = useState(false)
   const isPending = updateMutation.isPending
+  const probeMonitor =
+    monitor && isProbeType(monitor.type)
+      ? (monitor as ParsedMonitor & { type: ProbeType })
+      : null
+
+  const resetForm = () => {
+    if (probeMonitor) setProbe(probeFormFromMonitor(probeMonitor))
+    else if (monitor) setForm(ruleFormFromMonitor(monitor))
+  }
 
   useEffect(() => {
-    if (open && monitor) {
+    if (!open || !monitor) return
+    if (isProbeType(monitor.type)) {
+      setProbe(
+        probeFormFromMonitor(monitor as ParsedMonitor & { type: ProbeType }),
+      )
+    } else {
       setForm(ruleFormFromMonitor(monitor))
-      setEditing(false)
     }
+    setEditing(false)
   }, [open, monitor])
 
   const changes = useMemo(() => {
     if (!monitor) return {}
+    if (probeMonitor) {
+      return changedFields<ProbeMonitorChanges>(
+        probeInputFromForm(probeFormFromMonitor(probeMonitor)).params,
+        probeInputFromForm(probe).params,
+      )
+    }
     return changedFields(
       monitorInputFromForm(ruleFormFromMonitor(monitor), t),
       monitorInputFromForm(form, t),
     )
-  }, [monitor, form, t])
+  }, [monitor, probeMonitor, form, probe, t])
 
   const error =
-    ruleFormError(form, t) ??
+    (probeMonitor ? probeFormError(probe, t) : ruleFormError(form, t)) ??
     (Object.keys(changes).length === 0 ? t('No changes to save.') : undefined)
 
   const handleOpenChange = (next: boolean) => {
@@ -198,7 +413,7 @@ export function MonitorDrawer({
     event.preventDefault()
     if (!monitor || error) return
     updateMutation.mutate(
-      { monitorId: monitor.$id, changes },
+      { monitorId: monitor.$id, type: monitor.type, changes },
       {
         onSuccess: () => {
           toast.success(t('Monitor has been updated'))
@@ -214,7 +429,11 @@ export function MonitorDrawer({
   const handleToggle = () => {
     if (!monitor) return
     updateMutation.mutate(
-      { monitorId: monitor.$id, changes: { enabled: !monitor.enabled } },
+      {
+        monitorId: monitor.$id,
+        type: monitor.type,
+        changes: { enabled: !monitor.enabled },
+      },
       {
         onSuccess: () =>
           toast.success(
@@ -234,23 +453,27 @@ export function MonitorDrawer({
     openDialogAfterOverlayCloses(() => onDelete(monitor))
   }
 
+  // A probe with a long interval is not stale until it misses a few checks.
   const stale =
     !!monitor?.enabled &&
     !!monitor.evaluatedAt &&
-    Date.now() - new Date(monitor.evaluatedAt).getTime() > STALE_AFTER_MS
+    Date.now() - new Date(monitor.evaluatedAt).getTime() >
+      Math.max(STALE_AFTER_MS, monitor.interval * 3 * 1000)
 
-  const condition = monitor
-    ? [
-        t(metricDefinition(monitor.metric).label),
-        COMPARATORS.find((entry) => entry.value === monitor.comparator)?.symbol,
-        formatMetricValue(monitor.metric, monitor.threshold),
-        metricDefinition(monitor.metric).counter
-          ? `${t('within')} ${t(WINDOWS.find((entry) => entry.value === monitor.window)?.label ?? `${monitor.window}s`)}`
-          : null,
-      ]
-        .filter(Boolean)
-        .join(' ')
-    : ''
+  const condition =
+    monitor && !probeMonitor
+      ? [
+          t(metricDefinition(monitor.metric).label),
+          COMPARATORS.find((entry) => entry.value === monitor.comparator)
+            ?.symbol,
+          formatMetricValue(monitor.metric, monitor.threshold),
+          metricDefinition(monitor.metric).counter
+            ? `${t('within')} ${t(WINDOWS.find((entry) => entry.value === monitor.window)?.label ?? `${monitor.window}s`)}`
+            : null,
+        ]
+          .filter(Boolean)
+          .join(' ')
+      : ''
   const cooldown = monitor
     ? COOLDOWNS.find((entry) => entry.value === monitor.cooldown)?.label
     : undefined
@@ -321,14 +544,24 @@ export function MonitorDrawer({
             className="flex min-h-0 flex-1 flex-col"
           >
             <div className="flex-1 overflow-y-auto px-6 py-6">
-              <RuleFields
-                projectId={projectId}
-                form={form}
-                onChange={(next) =>
-                  setForm((current) => ({ ...current, ...next }))
-                }
-                disabled={isPending}
-              />
+              {probeMonitor ? (
+                <ProbeFields
+                  form={probe}
+                  onChange={(next) =>
+                    setProbe((current) => ({ ...current, ...next }))
+                  }
+                  disabled={isPending}
+                />
+              ) : (
+                <RuleFields
+                  projectId={projectId}
+                  form={form}
+                  onChange={(next) =>
+                    setForm((current) => ({ ...current, ...next }))
+                  }
+                  disabled={isPending}
+                />
+              )}
             </div>
             <div className="flex flex-shrink-0 items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
               {error ? (
@@ -351,7 +584,7 @@ export function MonitorDrawer({
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  setForm(ruleFormFromMonitor(monitor))
+                  resetForm()
                   setEditing(false)
                 }}
                 disabled={isPending}
@@ -363,7 +596,11 @@ export function MonitorDrawer({
         ) : (
           monitor && (
             <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
-              <MonitorStatusSummary monitor={monitor} />
+              {probeMonitor ? (
+                <ProbeStatusSummary monitor={monitor} />
+              ) : (
+                <MonitorStatusSummary monitor={monitor} />
+              )}
 
               {stale && (
                 <div className="flex items-start gap-2.5 rounded-lg bg-amber-500/15 px-3 py-2.5 text-[12.5px] text-foreground">
@@ -373,32 +610,44 @@ export function MonitorDrawer({
                   <span>
                     {t('Last checked')}{' '}
                     <DateTooltip date={monitor.evaluatedAt as string} />.{' '}
-                    {t(
-                      'Checks run every few minutes, so this monitor is not being evaluated.',
-                    )}
+                    {probeMonitor
+                      ? t(
+                          'Checks run on the monitor interval, so this monitor is not being checked.',
+                        )
+                      : t(
+                          'Checks run every few minutes, so this monitor is not being evaluated.',
+                        )}
                   </span>
                 </div>
               )}
 
-              <RuleChart
-                projectId={projectId}
-                rule={{
-                  metric: monitor.metric,
-                  resourceType: monitor.resourceType,
-                  resourceId: monitor.resourceId,
-                  window: monitor.window,
-                  comparator: monitor.comparator,
-                  threshold: monitor.threshold,
-                }}
-              />
+              {!probeMonitor && (
+                <RuleChart
+                  projectId={projectId}
+                  rule={{
+                    metric: monitor.metric,
+                    resourceType: monitor.resourceType,
+                    resourceId: monitor.resourceId,
+                    window: monitor.window,
+                    comparator: monitor.comparator,
+                    threshold: monitor.threshold,
+                  }}
+                />
+              )}
 
               <dl className="grid grid-cols-[110px_1fr] text-[13px]">
-                <dt className="border-t border-border py-2 text-muted-foreground">
-                  {t('Condition')}
-                </dt>
-                <dd className="m-0 min-w-0 border-t border-border py-2 text-foreground">
-                  {condition}
-                </dd>
+                {probeMonitor ? (
+                  <ProbeDetails monitor={monitor} />
+                ) : (
+                  <>
+                    <dt className="border-t border-border py-2 text-muted-foreground">
+                      {t('Condition')}
+                    </dt>
+                    <dd className="m-0 min-w-0 border-t border-border py-2 text-foreground">
+                      {condition}
+                    </dd>
+                  </>
+                )}
                 <dt className="border-t border-border py-2 text-muted-foreground">
                   {t('Notifies')}
                 </dt>
@@ -418,16 +667,21 @@ export function MonitorDrawer({
                     </span>
                   )}
                 </dd>
-                {monitor.critical && (
-                  <>
-                    <dt className="border-t border-border py-2 text-muted-foreground">
-                      {t('Critical')}
-                    </dt>
-                    <dd className="m-0 min-w-0 border-t border-border py-2 text-foreground">
+                <dt className="border-t border-border py-2 text-muted-foreground">
+                  {t('Severity')}
+                </dt>
+                <dd className="m-0 min-w-0 border-t border-border py-2 text-foreground">
+                  {t(
+                    SEVERITIES.find(({ value }) => value === monitor.severity)
+                      ?.label ?? monitor.severity,
+                  )}
+                  {monitor.severity === 'critical' && (
+                    <span className="text-muted-foreground">
+                      {' · '}
                       {t('Rings on phones even on silent')}
-                    </dd>
-                  </>
-                )}
+                    </span>
+                  )}
+                </dd>
               </dl>
             </div>
           )

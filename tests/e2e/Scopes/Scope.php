@@ -390,17 +390,37 @@ abstract class Scope extends TestCase
 
     protected function assertSamePixels(string $expectedImagePath, string $actualImageBlob): void
     {
-        $expected = new \Imagick($expectedImagePath);
-        $actual = new \Imagick();
-        $actual->readImageBlob($actualImageBlob);
+        $expected = $this->getImagePixels((string) \file_get_contents($expectedImagePath));
+        $actual = $this->getImagePixels($actualImageBlob);
 
-        foreach ([$expected, $actual] as $image) {
-            $image->setImageFormat('PNG');
-            $image->stripImage();
-            $image->setOption('png:exclude-chunks', 'date,time,iCCP,sRGB,gAMA,cHRM');
+        $this->assertSame(\strstr($expected, ':', true), \strstr($actual, ':', true), 'The image has a different size.');
+        $this->assertSame($actual, $expected, 'The image has different pixels.');
+    }
+
+    /**
+     * An image's size and visible pixels, which are the same however the image was encoded.
+     */
+    protected function getImagePixels(string $blob): string
+    {
+        $image = \imagecreatefromstring($blob);
+        $this->assertNotFalse($image, 'The image could not be decoded.');
+        \imagepalettetotruecolor($image);
+
+        $width = \imagesx($image);
+        $height = \imagesy($image);
+        $pixels = $width . 'x' . $height . ':';
+
+        for ($y = 0; $y < $height; $y++) {
+            $row = [];
+            for ($x = 0; $x < $width; $x++) {
+                $color = (int) \imagecolorat($image, $x, $y);
+                // What colour a fully transparent pixel keeps depends on the format.
+                $row[] = $color >> 24 === 127 ? 127 << 24 : $color;
+            }
+            $pixels .= \pack('N*', ...$row);
         }
 
-        $this->assertSame($expected->getImageSignature(), $actual->getImageSignature());
+        return $pixels;
     }
 
     /**

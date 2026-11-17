@@ -1,8 +1,9 @@
-import { AnalyticsDimension } from '@appwrite.io/console'
+import { AnalyticsDimension, AnalyticsPropertyType } from '@appwrite.io/console'
 import { useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQueries, useQuery } from '@tanstack/react-query'
 import {
   analyticsBreakdownQueryOptions,
+  type fetchAnalyticsBreakdown,
   useAnalyticsProperty,
   useCountryLookups,
   type AnalyticsRange,
@@ -18,6 +19,7 @@ import {
   BreakdownSkeleton,
   type BreakdownTab,
 } from './BreakdownPanel'
+import { BREAKDOWN_DIALOG_MAX_ROWS } from './BreakdownDialog'
 import { useAnalyticsFilters } from './analytics-filters-context'
 import type { AnalyticsFilter } from '@/lib/analytics/analytics-filters'
 import { BrowserIcon, ChannelIcon, CountryFlag, SourceFavicon } from './BreakdownRow'
@@ -241,14 +243,28 @@ const TECH_TABS: BreakdownTab[] = [
   },
 ]
 
-export function TechnologyPanel(props: PanelProps) {
+// The Flutter tracker sends no user agent, so apps have no browser to break
+// down; OS versions is left alone, so it drops its one-entry Versions menu.
+const MOBILE_TECH_TABS = TECH_TABS.filter(
+  (tab) => tab.id !== 'browsers' && tab.id !== 'browser-versions',
+).map((tab) => ({ ...tab, group: undefined }))
+
+export function TechnologyPanel({
+  type,
+  ...props
+}: PanelProps & {
+  type: AnalyticsPropertyType
+}) {
+  const mobile = type === AnalyticsPropertyType.Mobile
   return (
     <BreakdownPanel
       {...props}
       cardId="technology"
       title="Technology"
-      description="What visitors are browsing with"
-      tabs={TECH_TABS}
+      description={
+        mobile ? 'What visitors are using' : 'What visitors are browsing with'
+      }
+      tabs={mobile ? MOBILE_TECH_TABS : TECH_TABS}
       renderLeading={(entry, _index, tabId) =>
         tabId === 'browsers' ? <BrowserIcon name={entry.value} /> : undefined
       }
@@ -333,6 +349,75 @@ export function UsersPanel(props: PanelProps) {
       tabs={USER_TABS}
       mono
       emptyLabel="No identified users in this range"
+    />
+  )
+}
+
+const MODEL_TABS: BreakdownTab[] = [
+  {
+    id: 'models',
+    label: 'Models',
+    dimension: AnalyticsDimension.Props,
+    propKey: 'model',
+  },
+  {
+    id: 'tools',
+    label: 'Tools',
+    dimension: AnalyticsDimension.Props,
+    propKey: 'tool',
+  },
+]
+
+/**
+ * Tabs for the agent's `model` and `tool` props, once either has a value.
+ * Same queries as the card's tabs, so the visible one is not fetched twice.
+ */
+export function useModelTabs(
+  { projectId, propertyId, range }: PanelProps,
+  filters: readonly AnalyticsFilter[],
+  enabled: boolean,
+) {
+  const results = useQueries({
+    queries: MODEL_TABS.map((tab) => ({
+      ...analyticsBreakdownQueryOptions(
+        projectId,
+        propertyId,
+        tab.dimension,
+        range,
+        BREAKDOWN_DIALOG_MAX_ROWS,
+        enabled,
+        filters,
+        tab.propKey,
+      ),
+      placeholderData: samePropertyPlaceholder<
+        Awaited<ReturnType<typeof fetchAnalyticsBreakdown>>
+      >(propertyId),
+    })),
+  })
+  const [hasModels, hasTools] = results.map(
+    (result) => (result.data?.breakdown.length ?? 0) > 0,
+  )
+  return useMemo(
+    () => MODEL_TABS.filter((_, index) => [hasModels, hasTools][index]),
+    [hasModels, hasTools],
+  )
+}
+
+/** The `model_called` and `tool_called` events, counted in calls. */
+export function ModelsPanel({
+  tabs,
+  ...props
+}: PanelProps & { tabs: BreakdownTab[] }) {
+  return (
+    <BreakdownPanel
+      {...props}
+      cardId="models"
+      title="Models and tools"
+      description="Calls by model and by tool"
+      tabs={tabs}
+      valueKey="events"
+      mono
+      emptyLabel="No calls in this range"
     />
   )
 }

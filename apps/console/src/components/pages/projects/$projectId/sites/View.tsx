@@ -640,6 +640,7 @@ export function View() {
     <EmptyState icon={Globe} isEmpty={false} hasFilters variant="card" />
   ) : (
     <SitesEmptyState
+      projectId={projectId!}
       onCreate={() => {
         navigate({
           to: '/projects/$projectId/sites/create',
@@ -732,6 +733,7 @@ export function View() {
                 planId: organizationPlan?.$id,
               })}
               resourceName={t('sites')}
+              resourceNameSingular="site"
               orgId={project?.teamId}
               fullWidth={false}
             />
