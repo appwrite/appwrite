@@ -258,6 +258,29 @@ abstract class Base extends Action
     public const SOURCE_MIME_PREFIXES = ['video/', 'audio/'];
     public const SOURCE_MIME_TYPES = ['application/ogg'];
 
+    /** Playlists carry an audio/ type but only point at other media. */
+    public const SOURCE_MIME_EXCLUDED = [
+        'application/vnd.apple.mpegurl',
+        'application/x-mpegurl',
+        'audio/mpegurl',
+        'audio/x-mpegurl',
+        'audio/x-scpls',
+    ];
+
+    /**
+     * Demuxers ffmpeg may read a source with. Playlist and reference formats
+     * (hls, dash, concat, ...) are left out so a source cannot open other
+     * files or URLs.
+     */
+    public const SOURCE_FORMATS = [
+        'aac', 'ac3', 'aiff', 'amr', 'asf', 'avi', 'caf', 'dv', 'eac3', 'flac', 'flv',
+        'h264', 'hevc', 'm4v', 'matroska', 'mov', 'mp3', 'mpeg', 'mpegts', 'mpegvideo',
+        'mxf', 'ogg', 'w64', 'wav', 'wv',
+    ];
+
+    /** Protocols ffmpeg may open a source with: a local path or a presigned URL. */
+    public const SOURCE_PROTOCOLS = ['file', 'http', 'https', 'tls', 'tcp'];
+
     /** Mime types accepted as a caption source. */
     public const CAPTION_MIME_TYPES = ['text/vtt', 'text/plain', 'application/x-subrip'];
 

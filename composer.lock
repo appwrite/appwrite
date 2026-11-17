@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f87c13f800110b3e997489385daf2d4a",
+    "content-hash": "b4967f83c04633b08ba59c763605ba2c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4849,16 +4849,16 @@
         },
         {
             "name": "utopia-php/video",
-            "version": "0.0.4",
+            "version": "0.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/video.git",
-                "reference": "7cb15b5ead80c498713d36369c2859043cc5ecbf"
+                "reference": "ae53ec411d721d2f97e019df50618f80a9f9a276"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/video/zipball/7cb15b5ead80c498713d36369c2859043cc5ecbf",
-                "reference": "7cb15b5ead80c498713d36369c2859043cc5ecbf",
+                "url": "https://api.github.com/repos/utopia-php/video/zipball/ae53ec411d721d2f97e019df50618f80a9f9a276",
+                "reference": "ae53ec411d721d2f97e019df50618f80a9f9a276",
                 "shasum": ""
             },
             "require": {
@@ -4871,7 +4871,7 @@
                 "laravel/pint": "1.*",
                 "phpstan/phpstan": "^2.0",
                 "phpunit/phpunit": "11.*",
-                "swoole/ide-helper": "6.2.4"
+                "swoole/ide-helper": "6.2.5"
             },
             "suggest": {
                 "ext-swoole": "Needed to run the library inside Swoole coroutines."
@@ -4907,10 +4907,10 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/video/issues",
-                "source": "https://github.com/utopia-php/video/tree/0.0.4"
+                "source": "https://github.com/utopia-php/video/tree/0.0.6"
             },
-            "time": "2026-11-03T16:45:03+00:00",
-            "published-time": "2026-11-03T16:46:13+00:00"
+            "time": "2026-11-17T17:29:58+00:00",
+            "published-time": "2026-11-17T17:30:11+00:00"
         },
         {
             "name": "web-auth/cose-lib",
