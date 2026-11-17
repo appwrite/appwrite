@@ -14,6 +14,7 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
 import { Loader2, ExternalLink, Info, AlertCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -336,6 +337,23 @@ function RecordSection({
       </div>
       {children}
     </section>
+  )
+}
+
+/** When the domain was added, above the records. */
+function DnsCheckMeta({ rule }: { rule: Models.ProxyRule }) {
+  const t = useT()
+  const label = 'text-[12px] text-muted-foreground'
+  const value = 'mt-0.5 flex h-6 items-center text-[13px] text-foreground'
+  return (
+    <dl className="grid grid-cols-3 gap-4">
+      <div className="min-w-0">
+        <dt className={label}>{t('Added')}</dt>
+        <dd className={value}>
+          <DateTooltip date={rule.$createdAt} />
+        </dd>
+      </div>
+    </dl>
   )
 }
 
@@ -715,6 +733,7 @@ export function VerifyDomainContent({
 
   const checkedRecords = checks ? (
     <div className="space-y-6">
+      <DnsCheckMeta rule={rule} />
       {pointingRecords.length > 0 && (
         <RecordSection
           title={t('Point your domain')}
