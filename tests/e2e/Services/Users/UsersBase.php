@@ -6,6 +6,7 @@ use Appwrite\Tests\Retry;
 use Appwrite\Utopia\Response;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
+use Tests\E2E\Traits\ExpireSession;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Id;
@@ -13,6 +14,8 @@ use Utopia\Database\Query;
 
 trait UsersBase
 {
+    use ExpireSession;
+
     /**
      * Static caches for test data
      */
@@ -3014,6 +3017,23 @@ trait UsersBase
         $this->assertEquals(200, $noTotal['headers']['status-code']);
         $this->assertEquals(0, $noTotal['body']['total']);
         $this->assertCount(2, $noTotal['body']['sessions']);
+
+        // A freshly created session lives for at least a minute, so move this one into the past.
+        $this->expireSession($second['body']['$id']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/sessions', $headers);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
+        $this->assertCount(1, $response['body']['sessions']);
+        $this->assertEquals($first['body']['$id'], $response['body']['sessions'][0]['$id']);
+
+        $expired = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/sessions', $headers, [
+            'queries' => [Query::lessThan('expire', DateTime::now())->toString()],
+        ]);
+        $this->assertEquals(200, $expired['headers']['status-code']);
+        $this->assertEquals(1, $expired['body']['total']);
+        $this->assertCount(1, $expired['body']['sessions']);
+        $this->assertEquals($second['body']['$id'], $expired['body']['sessions'][0]['$id']);
 
         /**
          * Test for FAILURE

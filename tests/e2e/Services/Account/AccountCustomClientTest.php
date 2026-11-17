@@ -10,6 +10,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Tests\E2E\Traits\ExpireSession;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Id;
@@ -23,6 +24,7 @@ use function Swoole\Coroutine\run;
 final class AccountCustomClientTest extends Scope
 {
     use AccountBase;
+    use ExpireSession;
     use ProjectCustom;
     use SideClient;
 
@@ -1178,17 +1180,27 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(2, $active['body']['total']);
         $this->assertCount(2, $active['body']['sessions']);
 
-        $expired = $this->client->call(Client::METHOD_GET, '/account/sessions', $headers, [
-            'queries' => [Query::lessThan('expire', DateTime::now())->toString()],
-        ]);
-        $this->assertEquals(200, $expired['headers']['status-code']);
-        $this->assertEquals(0, $expired['body']['total']);
-        $this->assertEmpty($expired['body']['sessions']);
-
         $noTotal = $this->client->call(Client::METHOD_GET, '/account/sessions', $headers, ['total' => false]);
         $this->assertEquals(200, $noTotal['headers']['status-code']);
         $this->assertEquals(0, $noTotal['body']['total']);
         $this->assertCount(2, $noTotal['body']['sessions']);
+
+        // A freshly created session lives for at least a minute, so move this one into the past.
+        $this->expireSession($second['id']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', $headers);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
+        $this->assertCount(1, $response['body']['sessions']);
+        $this->assertEquals($data['sessionId'], $response['body']['sessions'][0]['$id']);
+
+        $expired = $this->client->call(Client::METHOD_GET, '/account/sessions', $headers, [
+            'queries' => [Query::lessThan('expire', DateTime::now())->toString()],
+        ]);
+        $this->assertEquals(200, $expired['headers']['status-code']);
+        $this->assertEquals(1, $expired['body']['total']);
+        $this->assertCount(1, $expired['body']['sessions']);
+        $this->assertEquals($second['id'], $expired['body']['sessions'][0]['$id']);
 
         /**
          * Test for FAILURE
