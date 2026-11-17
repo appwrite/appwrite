@@ -3,6 +3,7 @@
 namespace Utopia\Queue\Adapter;
 
 use Swoole\Coroutine;
+use Swoole\Coroutine\Channel;
 use Swoole\Coroutine\WaitGroup;
 use Swoole\Process;
 use Utopia\DI\Container;
@@ -194,6 +195,60 @@ class KubernetesJob extends Adapter
             } else {
                 $this->processFrom($message, $messageCallback, $successCallback, $errorCallback, $queue, $consumer);
             }
+        }
+    }
+
+    /**
+     * Keep the broker's delivery deadline extended while the handler runs.
+     *
+     * The handler runs in its own coroutine, so a second one can tell the broker
+     * the message is still being worked on. Without it the ack deadline is a
+     * ceiling on how long a job may take, which forces it to hours for long jobs
+     * — and a message held by a pod that died stays reserved for those hours too.
+     *
+     * @param \Closure(): void $work
+     */
+    #[\Override]
+    protected function withAckExtension(Consumer $consumer, Queue $queue, Message $message, \Closure $work): void
+    {
+        $beat = \is_callable([$consumer, 'extendInterval']) ? $consumer->extendInterval() : null;
+
+        if (
+            !\extension_loaded('swoole')
+            || Coroutine::getCid() < 0
+            || !is_numeric($beat)
+            || $beat <= 0
+            || !\is_callable([$consumer, 'extend'])
+        ) {
+            $work();
+
+            return;
+        }
+
+        $finished = new Channel(1);
+        $waitGroup = new WaitGroup(1);
+
+        Coroutine::create(static function () use ($consumer, $queue, $message, $beat, $finished, $waitGroup): void {
+            try {
+                while ($finished->pop((float) $beat) === false) {
+                    try {
+                        $consumer->extend($queue, $message);
+                    } catch (\Throwable $error) {
+                        // A missed beat must not fail a job that is still succeeding.
+                        error_log('Failed to extend queue message ' . $message->getPid() . ': ' . $error->getMessage());
+                    }
+                }
+            } finally {
+                $waitGroup->done();
+            }
+        });
+
+        try {
+            $work();
+        } finally {
+            // Stop the heartbeat before the caller acks, so no beat follows the ack.
+            $finished->push(true);
+            $waitGroup->wait();
         }
     }
 

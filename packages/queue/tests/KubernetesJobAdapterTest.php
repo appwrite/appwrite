@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Swoole\Coroutine;
 use Swoole\Coroutine\Channel;
 use Utopia\Queue\Adapter\KubernetesJob;
+use Utopia\Queue\Consumer;
 use Utopia\Queue\Message;
 use Utopia\Queue\Queue;
 use Utopia\Queue\Server;
@@ -22,7 +23,7 @@ final class KubernetesJobAdapterTest extends TestCase
     private const string QUEUE = 'keda-unit';
     private const string NAMESPACE = 'tests';
 
-    private function server(MemoryConsumer $broker, callable $action): Server
+    private function server(Consumer $broker, callable $action): Server
     {
         $server = new Server(new KubernetesJob($broker, 1, self::NAMESPACE));
         $server->job(self::QUEUE)->inject('message')->action($action);
@@ -140,5 +141,90 @@ final class KubernetesJobAdapterTest extends TestCase
         $elapsed = microtime(true) - $startedAt;
 
         $this->assertLessThan(2.0, $elapsed, 'a coroutine parked on a read that never returns must be cancelled, not awaited');
+    }
+
+    public function testExtendsTheMessageWhileItsHandlerRuns(): void
+    {
+        $broker = new HeartbeatConsumer();
+
+        $this->server($broker, function (): void {
+            Coroutine::sleep(0.3);
+        })->start();
+
+        $beats = \count($broker->extended);
+        $this->assertGreaterThanOrEqual(2, $beats, 'a handler outlasting the interval keeps its message extended');
+        $this->assertCount(1, $broker->committed);
+        $this->assertSame([$broker->committed[0]->getPid()], array_values(array_unique($broker->extended)), 'the beats name the message being handled');
+
+        Coroutine\run(static fn () => Coroutine::sleep(0.15));
+        $this->assertCount($beats, $broker->extended, 'no beat is sent once the handler has returned');
+    }
+
+    public function testFailedBeatDoesNotFailTheJob(): void
+    {
+        $broker = new HeartbeatConsumer(failing: true);
+
+        $this->server($broker, function (): void {
+            Coroutine::sleep(0.15);
+        })->start();
+
+        $this->assertGreaterThanOrEqual(1, \count($broker->extended), 'the beat was attempted');
+        $this->assertCount(1, $broker->committed, 'the job still commits');
+        $this->assertCount(0, $broker->rejected);
+    }
+}
+
+/** Hands out one message and records the extensions it is asked for. */
+final class HeartbeatConsumer implements Consumer
+{
+    /** @var list<Message> */
+    public array $committed = [];
+    /** @var list<Message> */
+    public array $rejected = [];
+    /** @var list<string> */
+    public array $extended = [];
+    private bool $delivered = false;
+
+    public function __construct(private readonly bool $failing = false)
+    {
+    }
+
+    public function receive(Queue $queue, int $timeout, int $n = 1): array
+    {
+        if ($this->delivered) {
+            return [];
+        }
+        $this->delivered = true;
+
+        return [new Message(['pid' => 'beat-1', 'queue' => $queue->name, 'timestamp' => time(), 'payload' => []])];
+    }
+
+    public function commit(Queue $queue, Message $message): void
+    {
+        $this->committed[] = $message;
+    }
+
+    public function reject(Queue $queue, Message $message): void
+    {
+        $this->rejected[] = $message;
+    }
+
+    public function extendInterval(): float
+    {
+        return 0.05;
+    }
+
+    public function extend(Queue $queue, Message ...$messages): void
+    {
+        foreach ($messages as $message) {
+            $this->extended[] = $message->getPid();
+        }
+        if ($this->failing) {
+            throw new \RuntimeException('broker unreachable');
+        }
+    }
+
+    public function close(): void
+    {
     }
 }
