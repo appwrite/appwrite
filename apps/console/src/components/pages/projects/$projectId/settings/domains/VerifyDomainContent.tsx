@@ -419,12 +419,15 @@ export function VerifyDomainContent({
     nameservers,
   }).map((id) => ({ id, label: TAB_LABELS[id] }))
 
+  const normalize = (value: string) => value.trim().toLowerCase()
+
   // The server's check for the record of this type and value. There is at
   // most one CAA check, so it matches on type alone.
   const findCheck = (type: string, value: string) =>
     checks?.find(
       (check) =>
-        check.type === type && (type === 'CAA' || check.value === value),
+        check.type === type &&
+        (type === 'CAA' || normalize(check.value) === normalize(value)),
     )
 
   const getRecord = (type: string, value: string): DnsRecord => {
