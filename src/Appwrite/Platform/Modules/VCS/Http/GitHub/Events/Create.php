@@ -262,6 +262,7 @@ class Create extends Action
                         'resourceInternalId' => $project->getSequence(),
                         'resourceType' => RESOURCE_TYPE_REVIEWS,
                         'providerPullRequestIds' => [],
+                        'strength' => Strength::Normal->value,
                     ])));
                 } catch (DuplicateException) {
                     continue;
@@ -707,9 +708,8 @@ class Create extends Action
             'trigger' => $trigger['kind'],
             'providerCommentId' => isset($trigger['comment']) ? (string) $trigger['comment']['id'] : '',
             'status' => 'queued',
-            // The project's strength, kept on the review so it runs and is billed at the strength
-            // it was queued at.
-            'strength' => $project->getAttribute('reviewStrength', Strength::Normal->value),
+            // Kept on the review, so it runs and is billed at the strength it was queued at.
+            'strength' => $repository->getAttribute('strength', 'normal'),
         ]);
 
         // A redelivered comment that already queued its review changes nothing, not even the

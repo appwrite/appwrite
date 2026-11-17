@@ -208,7 +208,7 @@ export const heReviewsDictionary: Record<string, string> = {
   '{credits} credits per review': '{credits} קרדיטים לכל סקירה',
   'Review strength updated': 'עוצמת הסקירה עודכנה',
   'Failed to update review strength': 'עדכון עוצמת הסקירה נכשל',
-  'Review strength': 'עוצמת הסקירה',
+  'Review strength for {name}': 'עוצמת הסקירה עבור {name}',
 
   // New repositories
   'Review new repositories': 'סקירת מאגרים חדשים',

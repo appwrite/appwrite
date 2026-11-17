@@ -5,7 +5,7 @@
  * generated one once it ships.
  */
 
-import type { Client, Models } from '@appwrite.io/console'
+import type { Client } from '@appwrite.io/console'
 
 import type {
   Review,
@@ -119,38 +119,50 @@ export class Reviews {
    *
    * @param {string} params.installationId - Installation ID.
    * @param {string} params.providerRepositoryId - GitHub repository ID.
+   * @param {ReviewStrength} params.strength - How hard pull requests are reviewed. Defaults to normal.
    * @throws {AppwriteException}
    * @returns {Promise<ReviewRepository>}
    */
   createRepository(params: {
     installationId: string
     providerRepositoryId: string
+    strength?: ReviewStrength
   }): Promise<ReviewRepository> {
+    const payload: Record<string, unknown> = {
+      installationId: params.installationId,
+      providerRepositoryId: params.providerRepositoryId,
+    }
+    if (typeof params.strength !== 'undefined') {
+      payload['strength'] = params.strength
+    }
     return this.client.call(
       'post',
       this.uri('/reviews/repositories'),
       { ...this.headers(), 'content-type': 'application/json' },
-      {
-        installationId: params.installationId,
-        providerRepositoryId: params.providerRepositoryId,
-      },
+      payload,
     )
   }
 
   /**
-   * Change how hard the pull requests of every repository in the project are
-   * reviewed. Reviews already queued keep the strength they were queued at.
+   * Change how hard a repository's pull requests are reviewed. Reviews already
+   * queued keep the strength they were queued at.
    *
+   * @param {string} params.repositoryId - Repository ID.
    * @param {ReviewStrength} params.strength - How hard pull requests are reviewed.
    * @throws {AppwriteException}
-   * @returns {Promise<Models.Project>}
+   * @returns {Promise<ReviewRepository>}
    */
-  updateStrength(params: {
+  updateRepositoryStrength(params: {
+    repositoryId: string
     strength: ReviewStrength
-  }): Promise<Models.Project> {
+  }): Promise<ReviewRepository> {
+    const apiPath = '/reviews/repositories/{repositoryId}/strength'.replace(
+      '{repositoryId}',
+      encodeURIComponent(params.repositoryId),
+    )
     return this.client.call(
       'patch',
-      this.uri('/reviews/strength'),
+      this.uri(apiPath),
       { ...this.headers(), 'content-type': 'application/json' },
       { strength: params.strength },
     )
@@ -178,7 +190,7 @@ export class Reviews {
 
   /**
    * Choose whether code review is turned on for repositories added to a GitHub
-   * installation later. They are reviewed at the project's strength.
+   * installation later. They are reviewed at normal strength.
    *
    * @param {string} params.installationId - Installation ID.
    * @param {boolean} params.newRepositories - Review repositories added later.

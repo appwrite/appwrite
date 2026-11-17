@@ -91,12 +91,6 @@ class V25 extends Migration
                         }
 
                         try {
-                            $this->createAttributeFromCollection($this->dbForProject, $id, 'reviewStrength');
-                        } catch (Throwable $th) {
-                            Console::warning("Failed to create attribute \"reviewStrength\" in collection {$id}: {$th->getMessage()}");
-                        }
-
-                        try {
                             $this->createIndexFromCollection($this->dbForProject, $id, '_key_accessedAt');
                         } catch (Throwable $th) {
                             Console::warning("Failed to create index \"_key_accessedAt\" from {$id}: {$th->getMessage()}");
@@ -190,6 +184,17 @@ class V25 extends Migration
                             $this->createAttributeFromCollection($this->dbForProject, $id, 'reviewNewRepositories');
                         } catch (Throwable $th) {
                             Console::warning("Failed to create attribute \"reviewNewRepositories\" in collection {$id}: {$th->getMessage()}");
+                        }
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'repositories':
+                    if ($collectionType === 'console') {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'strength');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"strength\" in collection {$id}: {$th->getMessage()}");
                         }
                     }
                     $this->dbForProject->purgeCachedCollection($id);

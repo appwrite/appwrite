@@ -34,7 +34,6 @@ import type { ReviewInstallation } from '@/lib/appwrite/reviews'
 import { NewRepositories } from './NewRepositories'
 import { RepositoriesTable, type RepositoryRowData } from './RepositoriesTable'
 import { ReviewAll } from './ReviewAll'
-import { StrengthSelect } from './StrengthSelect'
 
 export type RepositoriesFilter = 'reviewed' | 'all'
 
@@ -193,8 +192,8 @@ export function Repositories({
             </Select>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          {filter === 'all' && installationId && (
+        {filter === 'all' && installationId && (
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
@@ -206,8 +205,6 @@ export function Repositories({
                 {t('Add installation')}
               </a>
             </Button>
-          )}
-          {filter === 'all' && installationId && (
             <Button
               variant="outline"
               size="sm"
@@ -217,9 +214,8 @@ export function Repositories({
             >
               {t('Review all')}
             </Button>
-          )}
-          <StrengthSelect projectId={projectId} disabled={!canWrite} />
-        </div>
+          </div>
+        )}
       </div>
 
       {filter === 'all' && installation && (

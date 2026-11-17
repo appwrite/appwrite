@@ -10,6 +10,7 @@ use Appwrite\Platform\Modules\Reviews\Http\Repositories\Learnings\XList as ListR
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Pulls\Findings\Status\Update as UpdatePullFindingsStatus;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Pulls\Findings\XList as ListPullFindings;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Pulls\Reviews\XList as ListPullReviews;
+use Appwrite\Platform\Modules\Reviews\Http\Repositories\Strength\Update as UpdateRepositoryStrength;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Tokens\Create as CreateRepositoryToken;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Usage\Create as CreateRepositoryUsage;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\XList as ListRepositories;
@@ -20,7 +21,6 @@ use Appwrite\Platform\Modules\Reviews\Http\Reviews\Status\Update as UpdateReview
 use Appwrite\Platform\Modules\Reviews\Http\Reviews\Tier\Update as UpdateReviewTier;
 use Appwrite\Platform\Modules\Reviews\Http\Reviews\Usage\Create as CreateReviewUsage;
 use Appwrite\Platform\Modules\Reviews\Http\Reviews\XList as ListReviews;
-use Appwrite\Platform\Modules\Reviews\Http\Strength\Update as UpdateStrength;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -31,9 +31,9 @@ class Http extends Service
 
         $this->addAction(CreateRepository::getName(), new CreateRepository());
         $this->addAction(ListRepositories::getName(), new ListRepositories());
+        $this->addAction(UpdateRepositoryStrength::getName(), new UpdateRepositoryStrength());
         $this->addAction(DeleteRepository::getName(), new DeleteRepository());
         $this->addAction(UpdateInstallation::getName(), new UpdateInstallation());
-        $this->addAction(UpdateStrength::getName(), new UpdateStrength());
 
         $this->addAction(ListReviews::getName(), new ListReviews());
         $this->addAction(GetReview::getName(), new GetReview());

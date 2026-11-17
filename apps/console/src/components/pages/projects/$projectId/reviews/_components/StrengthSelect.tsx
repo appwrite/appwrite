@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
   Select,
@@ -8,11 +7,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import type { ReviewStrength } from '@/lib/appwrite/reviews'
-import {
-  projectQueryOptions,
-  useUpdateReviewStrength,
-} from '@/lib/react-query/hooks'
+import type { ReviewRepository, ReviewStrength } from '@/lib/appwrite/reviews'
+import { useUpdateReviewRepositoryStrength } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 
@@ -48,24 +44,28 @@ const STRENGTHS: {
 
 type StrengthSelectProps = {
   projectId: string
+  repository: ReviewRepository
+  /** Shown in toasts, e.g. `appwrite/appwrite`. */
+  name: string
   disabled?: boolean
 }
 
 /**
- * Picks how hard the pull requests of every repository in the project are
- * reviewed: one setting for all of them. Reviews already queued keep the
- * strength they were queued at.
+ * Picks how hard a reviewed repository's pull requests are reviewed. Reviews
+ * already queued keep the strength they were queued at.
  */
-export function StrengthSelect({ projectId, disabled }: StrengthSelectProps) {
+export function StrengthSelect({
+  projectId,
+  repository,
+  name,
+  disabled,
+}: StrengthSelectProps) {
   const t = useT()
   const { isCloud } = useConsoleProfile()
-  // The Console SDK's Project model does not carry the strength yet.
-  const { data: project } = useQuery(projectQueryOptions(projectId))
-  const mutation = useUpdateReviewStrength(projectId)
-  const value: ReviewStrength = mutation.isPending
+  const mutation = useUpdateReviewRepositoryStrength(projectId)
+  const value = mutation.isPending
     ? mutation.variables.strength
-    : ((project as { reviewStrength?: ReviewStrength } | undefined)
-        ?.reviewStrength ?? 'normal')
+    : (repository.strength ?? 'normal')
 
   // A strength this bundle doesn't know yet shows as its value.
   const current = STRENGTHS.find((strength) => strength.value === value)
@@ -76,10 +76,12 @@ export function StrengthSelect({ projectId, disabled }: StrengthSelectProps) {
       disabled={disabled || mutation.isPending}
       onValueChange={(next) => {
         mutation.mutate(
-          { strength: next as ReviewStrength },
+          { repositoryId: repository.$id, strength: next as ReviewStrength },
           {
             onSuccess: () => {
-              toast.success(t('Review strength updated'))
+              toast.success(t('Review strength updated'), {
+                description: name,
+              })
             },
             onError: (error) => {
               toast.error(
@@ -92,12 +94,12 @@ export function StrengthSelect({ projectId, disabled }: StrengthSelectProps) {
     >
       <SelectTrigger
         size="sm"
-        className="h-9 border-border bg-background text-[13px] text-foreground focus:ring-0"
-        aria-label={t('Review strength')}
+        className="ms-auto border-border bg-background text-[13px] text-foreground focus:ring-0"
+        aria-label={t('Review strength for {name}').replace('{name}', name)}
       >
         {/* The items carry a description; the trigger shows the name only. */}
         <SelectValue>
-          {t('Strength')}: {current ? t(current.label) : value}
+          {current ? t(current.label) : value}
         </SelectValue>
       </SelectTrigger>
       <SelectContent align="end">

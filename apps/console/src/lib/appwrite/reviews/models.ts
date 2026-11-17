@@ -122,7 +122,7 @@ export type Review = {
    */
   trigger: ReviewTrigger
   /**
-   * Strength the review runs and is billed at: the project's when it was queued.
+   * Strength the review runs and is billed at: the repository's when it was queued.
    */
   strength: ReviewStrength
   /**
@@ -217,6 +217,10 @@ export type ReviewRepository = {
    * VCS repository ID.
    */
   providerRepositoryId: string
+  /**
+   * How hard pull requests are reviewed.
+   */
+  strength: ReviewStrength
 }
 
 /**

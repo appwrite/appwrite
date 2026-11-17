@@ -3804,7 +3804,8 @@
         ],
         "reviews.createRepository": [
             "installationId",
-            "providerRepositoryId"
+            "providerRepositoryId",
+            "strength"
         ],
         "reviews.deleteRepository": [
             "repositoryId"
@@ -3829,7 +3830,8 @@
             "installationId",
             "newRepositories"
         ],
-        "reviews.updateStrength": [
+        "reviews.updateRepositoryStrength": [
+            "repositoryId",
             "strength"
         ],
         "sites.create": [
@@ -8129,7 +8131,8 @@
         ],
         "reviews.createRepository": [
             "installationId",
-            "providerRepositoryId"
+            "providerRepositoryId",
+            "strength"
         ],
         "reviews.deleteRepository": [
             "repositoryId"
@@ -8154,7 +8157,8 @@
             "installationId",
             "newRepositories"
         ],
-        "reviews.updateStrength": [
+        "reviews.updateRepositoryStrength": [
+            "repositoryId",
             "strength"
         ],
         "sites.create": [
