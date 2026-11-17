@@ -2742,7 +2742,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'כאשר במהלך הייבוא נמצאת שורה עם מזהה קיים.',
   'When enabled, all emails will be sent through your configured SMTP server.':
     'כאשר האפשרות מופעלת, כל האימיילים יישלחו דרך שרת ה-SMTP שהגדרתם.',
-  'an A or AAAA record': 'רשומת A או AAAA',
   'and all its databases, functions, and files? This action cannot be undone.':
     'ואת כל מסדי הנתונים, הפונקציות והקבצים שלו? לא ניתן לבטל פעולה זו.',
   characters: 'תווים',
