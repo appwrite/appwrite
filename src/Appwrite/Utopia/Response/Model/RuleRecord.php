@@ -27,6 +27,13 @@ class RuleRecord extends Model
                 'description' => 'Value the record is expected to have.',
                 'default' => '',
                 'example' => 'appwrite.network',
+            ])
+            ->addRule('found', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Values DNS returned for the record type. Empty when none were found.',
+                'default' => [],
+                'example' => ['appwrite.network'],
+                'array' => true,
             ]);
     }
 
