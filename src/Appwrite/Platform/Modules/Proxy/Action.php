@@ -384,6 +384,7 @@ class Action extends PlatformAction
                 'status' => $status,
                 'message' => match (true) {
                     $verified => '',
+                    !\is_null($error) => 'DNS ' . $type . ' lookup failed.',
                     default => $validator->getDescription(),
                 },
                 'required' => $required,
