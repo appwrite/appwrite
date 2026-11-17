@@ -401,6 +401,8 @@ export function getRuleStatusBadgeConfig(
     certificateStatus?: string
     logs?: string
     $createdAt?: string
+    /** The stored DNS checks, see ProxyRuleRecord */
+    records?: Pick<ProxyRuleRecord, 'type' | 'status'>[]
   },
   now: Date = new Date(),
 ): {
