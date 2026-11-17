@@ -223,7 +223,10 @@ function RecordSection({
           </TableHeader>
           <TableBody>
             {records.map((r) => {
-              const found = r.check?.status === 'mismatch' ? r.check.found : []
+              const found =
+                r.check?.status === 'mismatch' && !r.notNeeded
+                  ? r.check.found
+                  : []
               return (
                 <Fragment key={`${r.type}-${r.value}`}>
                   <TableRow className={found.length ? 'border-b-0' : undefined}>
