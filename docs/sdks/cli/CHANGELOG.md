@@ -1,5 +1,13 @@
 # Change Log
 
+## 28.13.2
+
+* Fixed: `terminal` re-reads an open organization on Cloud; every refresh failed with `Not Found (404 http)`
+
+## 28.13.1
+
+* Fixed: `terminal` reached Cloud projects outside the default region instead of failing with `general_access_forbidden`
+
 ## 28.13.0
 
 * Added: `account create-ldap-session` for LDAP sign-in
