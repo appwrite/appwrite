@@ -43,7 +43,7 @@ class Analytics extends Adapter
 
     public function transform(): void
     {
-        $src = \htmlspecialchars(APP_SDK_URL . "/web/{$this->version}/tracker.js");
+        $src = \htmlspecialchars(APP_SDK_CDN_URL . "/web/{$this->version}/tracker.js");
         $endpoint = \htmlspecialchars($this->endpoint);
         $project = \htmlspecialchars($this->projectId);
         $property = \htmlspecialchars($this->propertyId);
