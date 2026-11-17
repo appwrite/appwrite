@@ -110,12 +110,16 @@ export function DnsRecordsTable({
   records,
   showTtl,
   showPriority = false,
+  compact = false,
 }: {
   records: DnsRecord[]
   showTtl: boolean
   showPriority?: boolean
+  /** Hide the TTL column, e.g. in modals */
+  compact?: boolean
 }) {
   const t = useT()
+  const ttl = showTtl && !compact
   return (
     <Table>
       <TableHeader>
@@ -134,7 +138,7 @@ export function DnsRecordsTable({
               {t('Priority')}
             </TableHead>
           )}
-          {showTtl && (
+          {ttl && (
             <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
               TTL
             </TableHead>
@@ -189,7 +193,7 @@ export function DnsRecordsTable({
                 {r.priority ?? '-'}
               </TableCell>
             )}
-            {showTtl && (
+            {ttl && (
               <TableCell className="px-4 py-3 text-end text-[12px] text-muted-foreground">
                 {r.ttl ?? '-'}
               </TableCell>
