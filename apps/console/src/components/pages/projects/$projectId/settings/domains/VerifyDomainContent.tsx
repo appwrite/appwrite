@@ -27,8 +27,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
 
-export const DNS_PROVIDERS_LINK =
-  '/docs/advanced/platform/custom-domains'
+export const DNS_PROVIDERS_LINK = '/docs/advanced/platform/custom-domains'
 
 const TAB_LABELS: Record<VerificationMethod, string> = {
   cname: 'CNAME',
