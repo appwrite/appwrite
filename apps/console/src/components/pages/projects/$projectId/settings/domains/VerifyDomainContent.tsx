@@ -389,7 +389,7 @@ export function VerifyDomainContent({
     const record = getPointingRecord(method)
     const rows = [
       ...(record ? [record] : []),
-      ...(method === 'cname' && caaRecord ? [caaRecord] : []),
+      ...(caaRecord ? [caaRecord] : []),
     ]
     return (
       <div className="space-y-3">
