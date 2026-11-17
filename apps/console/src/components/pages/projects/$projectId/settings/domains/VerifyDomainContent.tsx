@@ -119,6 +119,24 @@ export type DnsRecord = {
 const TABLE_HEAD =
   'px-4 py-2.5 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
 
+/** The status pill of one record at the last check. */
+function RecordStatus({ record }: { record: DnsRecord }) {
+  const t = useT()
+  const { check } = record
+  if (!check) return <span className="text-muted-foreground">-</span>
+  const pill = 'text-[10px] shrink-0'
+  switch (check.status) {
+    case 'verified':
+      return (
+        <Badge variant="success" className={pill}>
+          {t('Verified')}
+        </Badge>
+      )
+    default:
+      return <span className="text-muted-foreground">-</span>
+  }
+}
+
 function RecordSection({
   title,
   records,
@@ -140,6 +158,9 @@ function RecordSection({
                 {t('Type')}
               </TableHead>
               <TableHead className={TABLE_HEAD}>{t('Value')}</TableHead>
+              <TableHead className={`w-[156px] ${TABLE_HEAD} text-end`}>
+                {t('Status')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -159,6 +180,9 @@ function RecordSection({
                         showCopyOnHover={false}
                         className="-my-1.5 -ms-2.5"
                       />
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-end">
+                      <RecordStatus record={r} />
                     </TableCell>
                   </TableRow>
                 </Fragment>
@@ -515,6 +539,8 @@ export function VerifyDomainContent({
     )
   }
 
+  // With stored checks, the records are grouped by what they do, each with
+  // the status of its last check. The pointing records are alternatives.
   const pointingRecords = tabOptions.flatMap((tab) => {
     const record = getPointingRecord(tab.id)
     return record ? [record] : []
