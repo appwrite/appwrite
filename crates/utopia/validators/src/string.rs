@@ -6,7 +6,7 @@ use php_std::pcre::preg_quote;
 use php_std::string::str_contains;
 
 use crate::text::{dollar_body, is_e164_digits, preg_matches};
-use crate::{Error, Input, Type, Validator, Verdict, is_valid_via_validate};
+use crate::{Error, Input, Type, Validator, Verdict, is_valid_via_validate, scalar};
 
 /// A string containing at least one of the patterns, case-insensitively unless
 /// strict.
@@ -238,13 +238,7 @@ impl Validator for HexColor {
 
     /// Valid for a string of exactly 3 or 6 hexadecimal digits, in either case.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
-        // `/^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/`
-        Ok(Verdict::of(
-            value
-                .as_str()
-                .map(dollar_body)
-                .is_some_and(|s| matches!(s.len(), 3 | 6) && s.iter().all(u8::is_ascii_hexdigit)),
-        ))
+        Ok(Verdict::of(scalar::hex_color(value.scalar())))
     }
 
     /// Expects a string ([`Type::String`]).

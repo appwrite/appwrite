@@ -250,6 +250,18 @@ bin/compat fuzz validators
 bin/compat check validators
 ```
 
+The utopia PHP extension (`crates/extension`) serves the scalar leaf validators of `packages/validators` (`Boolean`, `Integer`, `FloatValidator`, `Numeric`, `Range`, `Port`, `HexColor`) from this crate's `scalar` module when `_APP_EXTENSION_LIBRARIES` names `validators,validators-scalar`. Each function there is the body of a PHP validator's method over a value as PHP sees it (`scalar::Input`), with the same coercions (`is_numeric()`, `$value + 0`), comparisons and messages; the extension's classes keep their constructors' state and pass it in, and this crate's validators run the same functions. `crates/extension/tests/run.sh` diffs the parity corpus `crates/extension/tests/validators-scalar.php` between the PHP classes and the extension's, and runs `packages/validators/tests` on the extension, in the development image.
+
+```rust
+use utopia_validators::scalar::{Input, Integer};
+use utopia_validators::{Number, range};
+
+let int8 = Integer::new(8, false).unwrap();
+assert!(int8.accepts(true, Input::Str(b" 127 ")));
+assert!(!int8.accepts(true, Input::Float(1.0)));
+assert!(range(Number::Int(1), Number::Int(10), b"integer", Input::Str(b"5")));
+```
+
 ### Benchmark
 
 ```bash

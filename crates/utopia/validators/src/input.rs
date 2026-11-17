@@ -10,7 +10,7 @@ use php_std::json;
 use php_std::types::{Iter, KeyRef, numeric_key};
 use php_std::value::{self, Number};
 
-use crate::Error;
+use crate::{Error, scalar};
 
 /// A value to validate, borrowed: a request value or an exact value.
 ///
@@ -194,12 +194,19 @@ impl<'a> Input<'a> {
     ///
     /// PHP: `is_numeric($value) ? $value + 0 : null`.
     pub fn number(self) -> Option<Number> {
+        self.scalar().numeric()
+    }
+
+    /// The value as the scalar checks ([`crate::scalar`]) take it: scalars by value,
+    /// strings as bytes, arrays and objects as [`scalar::Input::Other`].
+    pub fn scalar(self) -> scalar::Input<'a> {
         match self.view() {
-            View::Int(i) => Some(Number::Int(i)),
-            View::Float(f) => Some(Number::Float(f)),
-            // Numeric strings are ASCII: a string that is not UTF-8 is not numeric.
-            View::Str(s) => std::str::from_utf8(s).ok().and_then(value::numeric_str),
-            _ => None,
+            View::Null => scalar::Input::Null,
+            View::Bool(b) => scalar::Input::Bool(b),
+            View::Int(i) => scalar::Input::Int(i),
+            View::Float(f) => scalar::Input::Float(f),
+            View::Str(s) => scalar::Input::Str(s),
+            View::Array(_) | View::Object(_) => scalar::Input::Other,
         }
     }
 

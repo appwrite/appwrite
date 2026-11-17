@@ -67,6 +67,16 @@
 //!
 //! PHP: these are the cases where PHP throws inside `isValid()` or
 //! `getDescription()`.
+//!
+//! # Scalar checks
+//!
+//! The [`scalar`] module holds the bodies of the scalar validators'
+//! methods as functions over a PHP value ([`scalar::Input`]), with the state
+//! a PHP constructor keeps passed in: [`boolean`], [`float`], [`numeric`],
+//! [`scalar::Integer`], [`range`], [`port`], [`hex_color`]. [`Boolean`],
+//! [`Integer`], [`Float`], [`Numeric`], [`Range`], [`Port`] and [`HexColor`]
+//! run them, and so does the `utopia` PHP extension (`crates/extension`),
+//! whose classes keep their own state.
 
 #![warn(missing_docs)]
 
@@ -88,7 +98,8 @@ mod input;
 pub mod json;
 mod list;
 mod network;
-mod scalar;
+mod primitive;
+pub mod scalar;
 mod string;
 mod text;
 
@@ -102,7 +113,11 @@ pub use input::{Entries, Input, View};
 pub use json::Json;
 pub use list::{ArrayList, Assoc, Nullable, WhiteList};
 pub use network::{Domain, Ip, IpVersion, Port, Restriction, Url};
-pub use scalar::{Boolean, Float, Integer, Numeric, Range};
+pub use primitive::{Boolean, Float, Integer, Numeric, Range};
+pub use scalar::{
+    IntegerError, Number, boolean, float, hex_color, number_le, numeric, port, port_host, port_number, range,
+    range_description, range_number,
+};
 pub use string::{Contains, Globstar, HexColor, Phone, Wildcard};
 pub use text::{Identifier, Text};
 
@@ -421,11 +436,6 @@ pub fn number_format(n: i128) -> String {
         out.push(ch);
     }
     out
-}
-
-/// PHP `number_format($number)` of an `int|float`.
-pub(crate) fn format_number(n: php::Number) -> String {
-    String::from_utf8_lossy(&php_std::format::number_format(n, 0, b".", b",")).into_owned()
 }
 
 #[cfg(test)]

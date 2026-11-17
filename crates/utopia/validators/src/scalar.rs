@@ -1,327 +1,360 @@
-//! Booleans, integers, floats, numbers and numeric ranges.
+//! The checks of the scalar validators: booleans, integers, floats, numbers, ranges,
+//! ports and hex colors.
+//!
+//! Each function is the body of a PHP validator's method over a value as PHP sees it
+//! ([`Input`]): the same coercions (`is_numeric()`, `$value + 0`), the same comparisons and
+//! the same messages. This crate's validators ([`crate::Boolean`], [`crate::Integer`],
+//! [`crate::Float`], [`crate::Numeric`], [`crate::Range`], [`crate::Port`],
+//! [`crate::HexColor`]) run them, and so do the classes of the PHP extension
+//! (`crates/extension`), which keep the constructors' state themselves and pass it in.
+//!
+//! | PHP | Rust |
+//! |---|---|
+//! | `Boolean::isValid()` | [`boolean`] |
+//! | `Integer::isValid()`, `getDescription()`, `getFormat()` | [`Integer`] |
+//! | `FloatValidator::isValid()` | [`float`] |
+//! | `Numeric::isValid()` | [`numeric`] |
+//! | `Range::isValid()`, `getDescription()` | [`range`], [`range_description`] |
+//! | `Port::isValid()` | [`port`] |
+//! | `HexColor::isValid()` | [`hex_color`] |
 
-use serde_json::Value;
+use php_std::filter::{self, FILTER_FLAG_IPV4, FILTER_FLAG_IPV6, FILTER_VALIDATE_IP, Options};
+use php_std::format::number_format;
 
-use crate::input::View;
-use crate::php::{self, Number, le_numbers};
-use crate::{Error, Input, Type, Validator, Verdict, format_number, is_valid_via_validate};
+pub use php_std::value::Number;
 
-/// A boolean; when loose, also `"true"`, `"false"`, `"1"`, `"0"`, `1` and `0`.
+/// A PHP value as the checks look at it: scalars by value, strings as bytes, and
+/// everything else (arrays, objects, resources) as [`Input::Other`], which no check here
+/// accepts as a number or a string.
 ///
-/// PHP: `Utopia\Validator\Boolean`.
-#[derive(Debug, Clone, Copy, Default)]
-pub struct Boolean {
-    /// Accept `"true"`, `"false"`, `"1"`, `"0"`, `1` and `0`.
-    pub loose: bool,
+/// This crate's validators pass [`crate::Input::scalar`]; the PHP extension builds one
+/// from a `zval`.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Input<'a> {
+    /// `null`.
+    Null,
+    /// A `bool`.
+    Bool(bool),
+    /// An `int`.
+    Int(i64),
+    /// A `float`.
+    Float(f64),
+    /// A `string`, as bytes.
+    Str(&'a [u8]),
+    /// An array, an object or a resource.
+    Other,
 }
 
-impl Boolean {
-    /// Accepts booleans only.
-    pub const STRICT: Boolean = Boolean { loose: false };
-    /// Also accepts `"true"`, `"false"`, `"1"`, `"0"`, `1` and `0`.
-    pub const LOOSE: Boolean = Boolean { loose: true };
-
-    /// Converts an accepted value to a `bool` by truthiness, so the string
-    /// `"false"` becomes `true`.
-    ///
-    /// PHP: actions receive the raw value and cast it with `(bool)`; this mirrors
-    /// that cast exactly.
-    pub fn to_php_bool(value: &Value) -> bool {
-        php::truthy(value)
-    }
-}
-
-impl Validator for Boolean {
-    /// Returns "Value must be a valid boolean".
-    fn description(&self) -> String {
-        "Value must be a valid boolean".to_owned()
-    }
-
-    is_valid_via_validate!();
-
-    /// Valid for a boolean; when loose, also for `"true"`, `"false"`, `"1"`, `"0"`, `1` and `0`.
-    fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
-        Ok(Verdict::of(match value.view() {
-            View::Bool(_) => true,
-            View::Str(s) => self.loose && matches!(s, b"true" | b"false" | b"1" | b"0"),
-            View::Int(i) => self.loose && (i == 0 || i == 1),
-            _ => false,
-        }))
-    }
-
-    /// Expects a boolean ([`Type::Boolean`]).
-    fn kind(&self) -> Type {
-        Type::Boolean
+impl Input<'_> {
+    /// PHP `is_numeric($value) ? $value + 0 : null`: ints and floats as they are, numeric
+    /// strings (leading and trailing whitespace allowed, no hex) parsed as the engine
+    /// parses them, an integer that overflows becoming a float.
+    pub fn numeric(self) -> Option<Number> {
+        match self {
+            Input::Int(i) => Some(Number::Int(i)),
+            Input::Float(f) => Some(Number::Float(f)),
+            Input::Str(s) => php_std::value::numeric_bytes_ex(s).map(|(n, _)| n),
+            Input::Null | Input::Bool(_) | Input::Other => None,
+        }
     }
 }
 
-/// An integer of `bits` bits (8, 16, 32 or 64), signed or unsigned; when
-/// loose, also a numeric string.
+/// PHP `$a <= $b` on two numbers: exact between ints, as floats otherwise (NaN is never
+/// smaller or equal).
+pub fn number_le(a: Number, b: Number) -> bool {
+    match (a, b) {
+        (Number::Int(a), Number::Int(b)) => a <= b,
+        _ => a.as_f64() <= b.as_f64(),
+    }
+}
+
+/// PHP `number_format($number)`: rounded to an integer, digits grouped by `,`.
+fn grouped(number: Number) -> Vec<u8> {
+    number_format(number, 0, b".", b",")
+}
+
+/// A boolean; when `loose`, also `'true'`, `'false'`, `'1'`, `'0'`, `1` and `0`.
 ///
-/// PHP: `Utopia\Validator\Integer`.
-#[derive(Debug, Clone, Copy)]
+/// PHP: `Boolean::isValid()`.
+pub fn boolean(loose: bool, value: Input<'_>) -> bool {
+    match value {
+        Input::Bool(_) => true,
+        Input::Str(s) => loose && matches!(s, b"true" | b"false" | b"1" | b"0"),
+        Input::Int(i) => loose && (i == 1 || i == 0),
+        _ => false,
+    }
+}
+
+/// An int or a float; when `loose`, anything `is_numeric()`.
+///
+/// PHP: `FloatValidator::isValid()`.
+pub fn float(loose: bool, value: Input<'_>) -> bool {
+    if loose {
+        return value.numeric().is_some();
+    }
+    matches!(value, Input::Int(_) | Input::Float(_))
+}
+
+/// Anything `is_numeric()`: ints, floats (`NAN` and `INF` included) and numeric strings.
+///
+/// PHP: `Numeric::isValid()`.
+pub fn numeric(value: Input<'_>) -> bool {
+    value.numeric().is_some()
+}
+
+/// Why `new Integer()` refuses its arguments; [`IntegerError::message`] is the
+/// `InvalidArgumentException`'s.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum IntegerError {
+    /// `$bits` is not 8, 16, 32 or 64.
+    Bits,
+    /// An unsigned 64-bit integer.
+    Unsigned64,
+}
+
+impl IntegerError {
+    /// The exception's message, as `Integer.php` words it.
+    pub fn message(self) -> &'static str {
+        match self {
+            IntegerError::Bits => "Bits must be 8, 16, 32, or 64",
+            IntegerError::Unsigned64 => "64-bit unsigned integers are not supported due to PHP integer limitations",
+        }
+    }
+}
+
+/// An integer of `bits` bits, signed or `unsigned`.
+///
+/// PHP: `Integer`'s `$bits` and `$unsigned`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Integer {
-    /// Whether numeric strings are accepted too.
-    pub loose: bool,
-    /// The size in bits: 8, 16, 32 or 64.
-    pub bits: u32,
-    /// Whether the range starts at 0 instead of being centred on it.
+    /// The size in bits.
+    pub bits: i64,
+    /// Whether the range starts at 0.
     pub unsigned: bool,
 }
 
-impl Default for Integer {
-    /// A strict, signed 32-bit integer.
-    fn default() -> Self {
-        Self { loose: false, bits: 32, unsigned: false }
-    }
-}
-
 impl Integer {
-    /// An integer validator of `bits` bits.
-    ///
-    /// Fails with [`Error::InvalidArgument`] when `bits` is not 8, 16, 32 or 64,
-    /// and for unsigned 64-bit integers, which `i64` cannot hold.
+    /// The constructor's checks of `$bits` and `$unsigned` (on a 64-bit build, the third,
+    /// that the size fits the build's integers, follows from the first two).
     ///
     /// PHP: `new Integer($loose, $bits, $unsigned)`.
-    pub fn new(loose: bool, bits: i64, unsigned: bool) -> Result<Self, Error> {
+    pub fn new(bits: i64, unsigned: bool) -> Result<Self, IntegerError> {
         if !matches!(bits, 8 | 16 | 32 | 64) {
-            return Err(Error::InvalidArgument("Bits must be 8, 16, 32, or 64".into()));
+            return Err(IntegerError::Bits);
         }
         if bits == 64 && unsigned {
-            return Err(Error::InvalidArgument(
-                "64-bit unsigned integers are not supported due to PHP integer limitations".into(),
-            ));
+            return Err(IntegerError::Unsigned64);
         }
-        Ok(Self { loose, bits: bits as u32, unsigned })
+        Ok(Self { bits, unsigned })
     }
 
-    /// The size in bits.
+    /// The largest valid value.
     ///
-    /// PHP: `getBits()`.
-    pub fn bits(&self) -> u32 {
-        self.bits
-    }
-
-    /// Whether the integer is unsigned.
-    ///
-    /// PHP: `isUnsigned()`.
-    pub fn is_unsigned(&self) -> bool {
-        self.unsigned
-    }
-
-    /// The OpenAPI format: `int32`, `uint8`, ...
-    ///
-    /// PHP: `getFormat()`.
-    pub fn format(&self) -> String {
-        format!("{}{}", if self.unsigned { "uint" } else { "int" }, self.bits)
-    }
-
-    /// The exact bounds of the configured size and sign.
-    ///
-    /// PHP: `getMin()` and `getMax()` (private).
-    fn bounds(&self) -> (Number, Number) {
-        let max = if self.unsigned { (1i64 << self.bits) - 1 } else { i64::MAX >> (64 - self.bits) };
-        let min = if self.unsigned { 0 } else { -max - 1 };
-        (Number::Int(min), Number::Int(max))
-    }
-
-    fn number(&self, value: Input<'_>) -> Option<Number> {
-        if self.loose {
-            return value.number();
-        }
-        match value.view() {
-            View::Int(i) => Some(Number::Int(i)),
-            View::Float(f) => Some(Number::Float(f)),
-            _ => None,
-        }
-    }
-
-    /// The integer a valid value holds: the integer itself, or, when loose, the
-    /// one a numeric string spells; `None` for anything else, floats included.
-    ///
-    /// PHP: the value PHP would see (after `+ 0` when loose).
-    pub fn value(&self, value: &Value) -> Option<i64> {
-        match self.number(Input::Json(value))? {
-            Number::Int(i) => Some(i),
-            Number::Float(_) => None,
-        }
-    }
-}
-
-impl Validator for Integer {
-    /// The range of the configured size and sign, such as `Value must be a valid
-    /// signed 32-bit integer between -2,147,483,648 and 2,147,483,647`.
-    fn description(&self) -> String {
-        let (min, max) = self.bounds();
-        format!(
-            "Value must be a valid {} {}-bit integer between {} and {}",
-            if self.unsigned { "unsigned" } else { "signed" },
-            self.bits,
-            format_number(min),
-            format_number(max)
-        )
-    }
-
-    is_valid_via_validate!();
-
-    /// Valid for an integer within the range; when loose, also for a numeric string spelling one.
-    fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
-        let Some(Number::Int(i)) = self.number(value) else {
-            return Ok(Verdict::INVALID);
-        };
-        let (min, max) = self.bounds();
-        Ok(Verdict::of(le_numbers(min, Number::Int(i)) && le_numbers(Number::Int(i), max)))
-    }
-
-    /// Expects an integer ([`Type::Integer`]).
-    fn kind(&self) -> Type {
-        Type::Integer
-    }
-}
-
-/// A float or an integer; when loose, also a numeric string.
-///
-/// PHP: `Utopia\Validator\FloatValidator`.
-#[derive(Debug, Clone, Copy, Default)]
-pub struct Float {
-    /// Whether numeric strings are accepted too.
-    pub loose: bool,
-}
-
-impl Validator for Float {
-    /// Returns "Value must be a valid float".
-    fn description(&self) -> String {
-        "Value must be a valid float".to_owned()
-    }
-
-    is_valid_via_validate!();
-
-    /// Valid for a float or an integer; when loose, also for a numeric string.
-    fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
-        Ok(Verdict::of(if self.loose {
-            value.number().is_some()
+    /// PHP: `getMax()` (private): `(1 << $bits) - 1` unsigned, `PHP_INT_MAX >> (64 - $bits)`
+    /// signed.
+    pub fn max(self) -> i64 {
+        if self.unsigned {
+            let shifted = if (0..64).contains(&self.bits) { 1i64 << self.bits } else { 0 };
+            shifted.wrapping_sub(1)
         } else {
-            matches!(value.view(), View::Int(_) | View::Float(_))
-        }))
-    }
-
-    /// Expects a float ([`Type::Float`]).
-    fn kind(&self) -> Type {
-        Type::Float
-    }
-}
-
-/// A number, or a string that spells one.
-///
-/// PHP: `Utopia\Validator\Numeric`, which checks `is_numeric()`.
-#[derive(Debug, Clone, Copy, Default)]
-pub struct Numeric;
-
-impl Validator for Numeric {
-    /// Returns "Value must be a valid number".
-    fn description(&self) -> String {
-        "Value must be a valid number".to_owned()
-    }
-
-    is_valid_via_validate!();
-
-    /// Valid for an integer, a float or a numeric string.
-    fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
-        Ok(Verdict::of(value.number().is_some()))
-    }
-}
-
-/// A number between a minimum and a maximum, inclusive, in the
-/// [`Type::Integer`] or [`Type::Float`] format; any other format rejects every
-/// value.
-///
-/// PHP: `Utopia\Validator\Range`.
-#[derive(Debug, Clone, Copy)]
-pub struct Range {
-    min: Number,
-    max: Number,
-    format: Type,
-}
-
-impl Range {
-    /// An integer range.
-    pub const fn new(min: i64, max: i64) -> Self {
-        Self { min: Number::Int(min), max: Number::Int(max), format: Type::Integer }
-    }
-
-    /// A range in the given format.
-    ///
-    /// PHP: `new Range($min, $max, $format)`.
-    pub const fn with_format(min: Number, max: Number, format: Type) -> Self {
-        Self { min, max, format }
-    }
-
-    /// The smallest valid number.
-    ///
-    /// PHP: `getMin()`.
-    pub fn min(&self) -> Number {
-        self.min
-    }
-
-    /// The largest valid number.
-    ///
-    /// PHP: `getMax()`.
-    pub fn max(&self) -> Number {
-        self.max
-    }
-
-    /// The format: [`Type::Integer`] or [`Type::Float`].
-    ///
-    /// PHP: `getFormat()`.
-    pub fn format(&self) -> Type {
-        self.format
-    }
-
-    /// The integer a number or numeric string holds; `None` for floats and
-    /// anything else.
-    ///
-    /// PHP: the value PHP would see after `+ 0`.
-    pub fn value(value: &Value) -> Option<i64> {
-        match php::numeric(value)? {
-            Number::Int(i) => Some(i),
-            Number::Float(_) => None,
+            let shift = 64 - self.bits;
+            if (0..64).contains(&shift) { i64::MAX >> shift } else { 0 }
         }
     }
+
+    /// The smallest valid value.
+    ///
+    /// PHP: `getMin()` (private).
+    pub fn min(self) -> i64 {
+        if self.unsigned { 0 } else { -self.max() - 1 }
+    }
+
+    /// An int within the bounds; when `loose`, also a numeric string that `+ 0` makes one.
+    /// A float is never valid, `1.0` included.
+    ///
+    /// PHP: `Integer::isValid()`.
+    pub fn accepts(self, loose: bool, value: Input<'_>) -> bool {
+        let value = if loose {
+            value.numeric()
+        } else if let Input::Int(i) = value {
+            Some(Number::Int(i))
+        } else {
+            None
+        };
+        match value {
+            Some(Number::Int(i)) => i >= self.min() && i <= self.max(),
+            _ => false,
+        }
+    }
+
+    /// `Value must be a valid signed 32-bit integer between -2,147,483,648 and 2,147,483,647`.
+    ///
+    /// PHP: `Integer::getDescription()`.
+    pub fn description(self) -> Vec<u8> {
+        let mut out = format!(
+            "Value must be a valid {} {}-bit integer between ",
+            if self.unsigned { "unsigned" } else { "signed" },
+            self.bits
+        )
+        .into_bytes();
+        out.extend(grouped(Number::Int(self.min())));
+        out.extend_from_slice(b" and ");
+        out.extend(grouped(Number::Int(self.max())));
+        out
+    }
+
+    /// The OpenAPI format, `int32` or `uint8`, ..., given what `isUnsigned()` answers.
+    ///
+    /// PHP: `Integer::getFormat()`.
+    pub fn format(bits: i64, unsigned: bool) -> String {
+        format!("{}{bits}", if unsigned { "uint" } else { "int" })
+    }
 }
 
-impl Validator for Range {
-    /// The bounds, with commas between thousands: `Value must be a valid range between 1 and 1,000`.
-    fn description(&self) -> String {
-        format!("Value must be a valid range between {} and {}", format_number(self.min), format_number(self.max))
+/// The number `Range::isValid()` compares with its bounds, for a value that passed
+/// `is_numeric()`: as `'integer'`, an int (from `+ 0`, so a numeric string that makes one) or
+/// a float that already is `INF`/`-INF` (PHP checks `$value === INF` before `+ 0`, so a
+/// string such as `'1e400'` that overflows to `INF` is not one); as `'double'`, any number as
+/// a float; `None` when the value is not one, and for any other format.
+pub fn range_number(format: &[u8], value: Input<'_>) -> Option<Number> {
+    let number = value.numeric()?;
+    match format {
+        b"integer" => match (value, number) {
+            (Input::Float(f), _) if f.is_infinite() => Some(number),
+            (_, Number::Int(_)) => Some(number),
+            (_, Number::Float(_)) => None,
+        },
+        b"double" => Some(Number::Float(number.as_f64())),
+        _ => None,
+    }
+}
+
+/// A number from `min` to `max`, both included, of `format` (see [`range_number`]).
+///
+/// PHP: `Range::isValid()`.
+pub fn range(min: Number, max: Number, format: &[u8], value: Input<'_>) -> bool {
+    range_number(format, value).is_some_and(|number| number_le(min, number) && number_le(number, max))
+}
+
+/// `Value must be a valid range between 1 and 10`, both bounds as `number_format()` prints
+/// them.
+///
+/// PHP: `Range::getDescription()`.
+pub fn range_description(min: Number, max: Number) -> Vec<u8> {
+    let mut out = b"Value must be a valid range between ".to_vec();
+    out.extend(grouped(min));
+    out.extend_from_slice(b" and ");
+    out.extend(grouped(max));
+    out
+}
+
+/// A port from 1 to 65535, optionally after an IPv4 address or a bracketed IPv6 one and a
+/// colon (`127.0.0.1:80`, `[::1]:443`). An int is checked as its decimal string.
+///
+/// PHP: `Port::isValid()`.
+pub fn port(value: Input<'_>) -> bool {
+    let digits;
+    let value = match value {
+        Input::Int(i) => {
+            digits = i.to_string();
+            digits.as_bytes()
+        }
+        Input::Str(s) => s,
+        _ => return false,
+    };
+    match value.iter().rposition(|&b| b == b':') {
+        None => port_number(value),
+        Some(at) => port_host(&value[..at]) && port_number(&value[at + 1..]),
+    }
+}
+
+/// An IPv4 address, or an IPv6 address in brackets.
+///
+/// PHP: `Port::isValidHost()` (private).
+pub fn port_host(host: &[u8]) -> bool {
+    let (address, flag) = match host {
+        [b'[', .., b']'] => (&host[1..host.len() - 1], FILTER_FLAG_IPV6),
+        // `substr('[', 1, -1)`: a lone bracket both starts and ends the string.
+        [b'['] => (&host[..0], FILTER_FLAG_IPV6),
+        _ => (host, FILTER_FLAG_IPV4),
+    };
+    matches!(
+        filter::filter_var(&filter::Value::Str(address.to_vec()), FILTER_VALIDATE_IP, &Options::Flags(flag)),
+        Ok(filter::Filtered { value: filter::Value::Str(_), .. })
+    )
+}
+
+/// Decimal digits without a leading zero, from 1 to 65535.
+///
+/// PHP: `Port::isValidPort()` (private).
+pub fn port_number(port: &[u8]) -> bool {
+    if port.is_empty() || !port.iter().all(u8::is_ascii_digit) || port[0] == b'0' {
+        return false;
+    }
+    // `(int)` of a longer run of digits saturates far above 65535.
+    port.len() <= 5 && port.iter().fold(0u32, |n, &d| n * 10 + u32::from(d - b'0')) <= 65535
+}
+
+/// A string of 3 or 6 hex digits, no `#`. The pattern's `$` also matches before a final
+/// newline, so one trailing `"\n"` is allowed.
+///
+/// PHP: `HexColor::isValid()` (`/^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/`).
+pub fn hex_color(value: Input<'_>) -> bool {
+    let Input::Str(s) = value else {
+        return false;
+    };
+    let s = s.strip_suffix(b"\n").unwrap_or(s);
+    matches!(s.len(), 3 | 6) && s.iter().all(u8::is_ascii_hexdigit)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn integer_bounds() {
+        let signed = Integer::new(32, false).unwrap();
+        assert_eq!((signed.min(), signed.max()), (-2_147_483_648, 2_147_483_647));
+        let byte = Integer::new(8, true).unwrap();
+        assert_eq!((byte.min(), byte.max()), (0, 255));
+        let wide = Integer::new(64, false).unwrap();
+        assert_eq!((wide.min(), wide.max()), (i64::MIN, i64::MAX));
+        assert_eq!(Integer::new(12, false), Err(IntegerError::Bits));
+        assert_eq!(Integer::new(64, true), Err(IntegerError::Unsigned64));
     }
 
-    is_valid_via_validate!();
-
-    /// Valid for a number or numeric string within the range: an integer (or
-    /// infinity) in the integer format, any number in the float format.
-    fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
-        let Some(n) = value.number() else {
-            return Ok(Verdict::INVALID);
-        };
-        let n = match self.format {
-            // Infinity is accepted as an integer (gettype(INF) is "double").
-            Type::Integer => match (value.view(), n) {
-                (View::Float(f), _) if f.is_infinite() => n,
-                (_, Number::Int(_)) => n,
-                _ => return Ok(Verdict::INVALID),
-            },
-            Type::Float => Number::Float(n.as_f64()),
-            _ => return Ok(Verdict::INVALID),
-        };
-        Ok(Verdict::of(le_numbers(self.min, n) && le_numbers(n, self.max)))
+    #[test]
+    fn integer_accepts() {
+        let int = Integer::new(8, false).unwrap();
+        assert!(int.accepts(false, Input::Int(127)) && !int.accepts(false, Input::Int(128)));
+        assert!(!int.accepts(false, Input::Str(b"5")) && int.accepts(true, Input::Str(b" 5 ")));
+        assert!(!int.accepts(true, Input::Str(b"1e1")) && !int.accepts(true, Input::Float(1.0)));
+        assert_eq!(
+            String::from_utf8(int.description()).unwrap(),
+            "Value must be a valid signed 8-bit integer between -128 and 127"
+        );
     }
 
-    /// The format.
-    fn kind(&self) -> Type {
-        self.format
+    #[test]
+    fn ranges() {
+        let (one, ten) = (Number::Int(1), Number::Int(10));
+        assert!(range(one, ten, b"integer", Input::Str(b"5")) && !range(one, ten, b"integer", Input::Float(5.0)));
+        assert!(range(one, ten, b"double", Input::Float(5.5)) && !range(one, ten, b"string", Input::Int(5)));
+        assert!(range(Number::Float(f64::NEG_INFINITY), ten, b"integer", Input::Float(f64::NEG_INFINITY)));
+        assert!(!range(one, ten, b"double", Input::Float(f64::NAN)));
+        let unbounded = Number::Float(f64::INFINITY);
+        assert!(
+            range(one, unbounded, b"integer", Input::Float(f64::INFINITY))
+                && !range(one, unbounded, b"integer", Input::Str(b"1e400"))
+        );
     }
 
-    fn as_range(&self) -> Option<&Range> {
-        Some(self)
+    #[test]
+    fn ports_and_colors() {
+        assert!(port(Input::Int(80)) && port(Input::Str(b"127.0.0.1:8080")) && port(Input::Str(b"[::1]:443")));
+        assert!(!port(Input::Str(b"080")) && !port(Input::Str(b"65536")) && !port(Input::Str(b"[::1]")));
+        assert!(!port(Input::Str(b"::1:80")) && !port(Input::Int(0)) && !port(Input::Str(b"")));
+        assert!(hex_color(Input::Str(b"fff")) && hex_color(Input::Str(b"A0B1C2\n")) && !hex_color(Input::Str(b"#fff")));
+        assert!(!hex_color(Input::Str(b"ffff")) && !hex_color(Input::Str(b"fff\n\n")));
     }
 }

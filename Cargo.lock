@@ -5234,6 +5234,7 @@ dependencies = [
  "utopia-image",
  "utopia-locale",
  "utopia-user-agent",
+ "utopia-validators",
 ]
 
 [[package]]
