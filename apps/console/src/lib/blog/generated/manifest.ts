@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "customer-story-dentalrx",
+    "href": "/blog/post/customer-story-dentalrx",
+    "title": "How DentalRx replaced Firebase and Algolia with Appwrite for 6,000+ users",
+    "description": "Learn how pharmacist Nickolas Steel moved DentalRx from Firebase and Algolia to Postgres on Appwrite to run a free drug reference for 6,000+ dental users.",
+    "date": "2026-11-17",
+    "lastUpdated": "2026-11-17",
+    "timeToRead": 7,
+    "author": "aditya-oberai",
+    "category": "customer-stories",
+    "featured": false,
+    "cover": "/images/blog/customer-story-dentalrx/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-activity-reasons",
     "href": "/blog/post/announcing-activity-reasons",
     "title": "Announcing reasons in Activity: see why every change was made",
@@ -28,20 +42,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-project-transfer-links/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "customer-story-dentalrx",
-    "href": "/blog/post/customer-story-dentalrx",
-    "title": "How DentalRx replaced Firebase and Algolia with Appwrite for 6,000+ users",
-    "description": "Learn how pharmacist Nickolas Steel moved DentalRx from Firebase and Algolia to Postgres on Appwrite to run a free drug reference for 6,000+ dental users.",
-    "date": "2026-11-12",
-    "lastUpdated": "2026-11-12",
-    "timeToRead": 7,
-    "author": "aditya-oberai",
-    "category": "customer-stories",
-    "featured": false,
-    "cover": "/images/blog/customer-story-dentalrx/cover.avif",
     "hasCover": true
   },
   {
