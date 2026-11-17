@@ -6,6 +6,7 @@ namespace Utopia\Cache\Tests;
 
 use Override;
 use Utopia\Cache\Adapter\Filesystem;
+use Utopia\Cache\Adapter\Memory;
 use Utopia\Cache\Adapter\Pool;
 use Utopia\Cache\Cache;
 use Utopia\Pools\Adapter\Stack;
@@ -22,6 +23,32 @@ final class PoolTest extends Base
         $pool = new UtopiaPool(new Stack(), 'test', 10, fn (): Filesystem => new Filesystem(self::$path), timeout: 0.0);
 
         self::$cache = new Cache(new Pool($pool));
+    }
+
+    /** This pool holds Filesystem adapters, which store strings, so an empty array is refused like an empty string. */
+    #[Override]
+    public function testEmptyArrayIsStored(): void
+    {
+        $this->assertFalse(self::$cache->save('empty-array', []));
+        $this->assertFalse(self::$cache->load('empty-array', 60));
+    }
+
+    #[Override]
+    public function testEmptyArrayIsKeptByTouch(): void
+    {
+        $this->assertFalse(self::$cache->save('empty-array-touch', []));
+        $this->assertFalse(self::$cache->touch('empty-array-touch'));
+    }
+
+    public function testEmptyArrayIsStoredThroughAPoolOfMemory(): void
+    {
+        $pool = new UtopiaPool(new Stack(), 'memory', 1, fn (): Memory => new Memory(), timeout: 0.0);
+        $cache = new Cache(new Pool($pool));
+
+        $this->assertSame([], $cache->save('empty-array', []));
+        $this->assertSame([], $cache->load('empty-array', 60));
+        $this->assertSame([], $cache->saveWithLease('empty-array-lease', [], '', $cache->getLease('empty-array-lease')));
+        $this->assertSame([], $cache->load('empty-array-lease', 60));
     }
 
     public function testGetSize(): void

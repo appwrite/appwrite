@@ -180,6 +180,11 @@ class V25 extends Migration
                                 Console::warning("Failed to convert attribute \"{$attribute}\" to text in collection {$id}: {$th->getMessage()}");
                             }
                         }
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'reviewNewRepositories');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"reviewNewRepositories\" in collection {$id}: {$th->getMessage()}");
+                        }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
@@ -339,7 +344,7 @@ class V25 extends Migration
                 case 'functions':
                 case 'sites':
                     if ($collectionType === 'projects') {
-                        $attributes = ['providerBranches', 'providerPaths', 'description'];
+                        $attributes = ['providerBranches', 'providerPaths', 'description', 'providerComments', 'providerDeployments', 'providerStatuses'];
                         if ($id === 'sites') {
                             $attributes[] = 'scopes';
                         }

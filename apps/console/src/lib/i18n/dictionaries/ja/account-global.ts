@@ -309,6 +309,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Remember your password?': 'パスワードを覚えていますか?',
   'Requested resources': '要求されたリソース',
   'Resend verification email': '確認メールを再送信',
+  'Resend email in {seconds}s': '{seconds}秒後に再送信できます',
   'Reset password': 'パスワードをリセット',
   'Reset your password': 'パスワードをリセット',
   'Send recovery link': 'リカバリーリンクを送信',

@@ -567,6 +567,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Project keys': 'プロジェクトキー',
   'Project pinned': 'プロジェクトをピン留めしました',
   'Project unpinned': 'プロジェクトのピン留めを解除しました',
+  'Projects subtotal': 'プロジェクト小計',
   'Projects that will be deleted:': '削除されるプロジェクト:',
   'Promo code': 'プロモコード',
   'Public client': 'パブリッククライアント',

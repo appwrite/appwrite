@@ -116,7 +116,9 @@ final class DeviceDetector
         }
 
         $model = self::model($userAgent);
-        $type = stripos($userAgent, 'Mobile') === false || self::hasTabletModel($model)
+        // Only browsers add the Mobile token; native stacks (Dalvik, the Flutter SDK) never do, so its absence there says nothing.
+        $browserWithoutMobile = stripos($userAgent, 'Mozilla/') !== false && stripos($userAgent, 'Mobile') === false;
+        $type = $browserWithoutMobile || self::hasTabletModel($model)
             ? 'tablet'
             : 'smartphone';
 
@@ -129,8 +131,9 @@ final class DeviceDetector
             return false;
         }
 
+        // The Flutter SDK sends the lowercase brand ahead of the model ("samsung SM-X710").
         return preg_match(
-            '/^(?:SM-[TX]|GT-P|Nexus (?:7|9|10)\b|Pixel (?:C|Tablet)\b|(?:Lenovo )?(?:TB-|YT-|Tab\b)|(?:Huawei )?MediaPad\b|(?:Xiaomi |Redmi |OnePlus )?Pad\b)/i',
+            '/^(?:(?:samsung|google|lenovo|huawei|xiaomi|oneplus|oppo|vivo|honor|realme) )?(?:SM-[TXP]|GT-(?:P|N80|N51)|AGS\d?-|BAH\d?-|Nexus (?:7|9|10)\b|Pixel (?:C|Tablet)\b|(?:Lenovo )?(?:TB-|YT-|(?:Galaxy |Yoga )?Tab\b)|(?:Huawei )?(?:MediaPad|MatePad)\b|(?:Xiaomi |Redmi |OnePlus |OPPO |vivo |Honor |realme )?Pad\b)/i',
             $model,
         ) === 1;
     }
