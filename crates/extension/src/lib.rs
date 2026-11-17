@@ -3,10 +3,10 @@
 //! (`packages/<name>`), as plain PHP.
 //!
 //! `Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`,
-//! `Utopia\Locale\Locale`, `Utopia\UserAgent\UserAgent` and `Utopia\Domains\Domain` are
-//! always registered: they have no PHP implementation. Every other library still
-//! has one, and its class is registered only when `_APP_EXTENSION_LIBRARIES`
-//! names its package (`emails`, `validators`), so each can be canaried and
+//! `Utopia\Locale\Locale`, `Utopia\UserAgent\UserAgent`, `Utopia\Domains\Domain` and
+//! `Utopia\Emails\Email` are always registered: they have no PHP implementation.
+//! Every other library still has one, and its class is registered only when
+//! `_APP_EXTENSION_LIBRARIES` names its package (`validators`), so each can be canaried and
 //! switched back to PHP with a restart, not a deploy.
 
 mod canvas;
@@ -40,8 +40,8 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .class::<dsn::Dsn>()
         .class::<locale::Locale>()
         .class::<user_agent::UserAgent>()
-        .class::<domains::Domain>();
-    let module = if enabled("emails") { module.class::<emails::Email>() } else { module };
+        .class::<domains::Domain>()
+        .class::<emails::Email>();
     module.request_shutdown_function(request_shutdown)
 }
 
