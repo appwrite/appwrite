@@ -35,6 +35,7 @@ $platformCollections = [
             Attribute::string(key: 'services', size: 16384, default: [], filters: [Filter::Json]),
             Attribute::string(key: 'apis', size: 16384, default: [], filters: [Filter::Json]),
             Attribute::string(key: 'smtp', size: 16384, default: [], filters: [Filter::Json, 'encrypt']),
+            Attribute::string(key: 'ldap', size: 16384, default: [], filters: [Filter::Json, 'encrypt']),
             // TODO make sure size fits
             Attribute::string(key: 'templates', size: 1_000_000, default: [], filters: [Filter::Json]),
             Attribute::string(key: 'auths', size: 16384, default: [], filters: [Filter::Json]),
@@ -427,6 +428,8 @@ $platformCollections = [
             Attribute::string(key: 'resourceInternalId'),
             Attribute::string(key: 'resourceType', required: true),
             Attribute::string(key: 'providerPullRequestIds', size: 128, array: true),
+            // Code review only: how hard its pull requests are reviewed (Appwrite\Reviews\Strength).
+            Attribute::string(key: 'strength', size: 16, default: 'normal'),
         ],
         'indexes' => [
             Index::key(key: '_key_installationId', attributes: ['installationId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),

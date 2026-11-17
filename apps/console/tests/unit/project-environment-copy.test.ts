@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import {
   PROJECT_ENVIRONMENT_COPY_GROUPS,
   defaultProjectEnvironmentCopySelection,
@@ -6,6 +6,9 @@ import {
   fullProjectEnvironmentCopySelection,
   migrationProgress,
   projectEnvironmentCopyResources,
+  readDismissedFailedCopies,
+  rememberDismissedFailedCopy,
+  showsCopyAfterReload,
 } from '@/lib/project-environments'
 
 describe('project environment copy', () => {
@@ -101,5 +104,79 @@ describe('project environment copy', () => {
       ),
     ).toBe(75)
     expect(migrationProgress('not json')).toBe(0)
+  })
+})
+
+describe('the copy card after a reload', () => {
+  const store = new Map<string, string>()
+
+  beforeEach(() => {
+    store.clear()
+    ;(globalThis as { window?: unknown }).window = {
+      localStorage: {
+        getItem: (key: string) => store.get(key) ?? null,
+        setItem: (key: string, value: string) => void store.set(key, value),
+      },
+    }
+  })
+
+  afterEach(() => {
+    delete (globalThis as { window?: unknown }).window
+  })
+
+  test('a copy under way gets its card back', () => {
+    expect(showsCopyAfterReload({ $id: 'copy', status: 'pending' }, [])).toBe(
+      true,
+    )
+    expect(
+      showsCopyAfterReload({ $id: 'copy', status: 'processing' }, []),
+    ).toBe(true)
+  })
+
+  test('a failed copy gets its card back, which the reload used to lose', () => {
+    expect(showsCopyAfterReload({ $id: 'copy', status: 'failed' }, [])).toBe(
+      true,
+    )
+  })
+
+  test('a completed copy has nothing left to say', () => {
+    expect(showsCopyAfterReload({ $id: 'copy', status: 'completed' }, [])).toBe(
+      false,
+    )
+  })
+
+  test('a failed copy stays dismissed across reloads', () => {
+    rememberDismissedFailedCopy('copy')
+
+    // A reload reads what the dismissal stored
+    const dismissed = readDismissedFailedCopies()
+    expect(dismissed).toEqual(['copy'])
+    expect(
+      showsCopyAfterReload({ $id: 'copy', status: 'failed' }, dismissed),
+    ).toBe(false)
+    // Another environment's failed copy is its own
+    expect(
+      showsCopyAfterReload({ $id: 'other', status: 'failed' }, dismissed),
+    ).toBe(true)
+  })
+
+  test('dismissals are bounded and a repeat is kept once', () => {
+    for (let index = 0; index < 60; index += 1) {
+      rememberDismissedFailedCopy(`copy-${index}`)
+    }
+    rememberDismissedFailedCopy('copy-59')
+
+    const dismissed = readDismissedFailedCopies()
+    expect(dismissed).toHaveLength(50)
+    expect(dismissed.at(-1)).toBe('copy-59')
+    expect(dismissed.filter((id) => id === 'copy-59')).toHaveLength(1)
+    expect(dismissed).not.toContain('copy-0')
+  })
+
+  test('unreadable storage dismisses nothing', () => {
+    store.set('console:environment-copy:dismissed', '{not json')
+    expect(readDismissedFailedCopies()).toEqual([])
+    store.set('console:environment-copy:dismissed', '"copy"')
+    expect(readDismissedFailedCopies()).toEqual([])
   })
 })

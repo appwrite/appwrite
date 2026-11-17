@@ -1,8 +1,9 @@
 import { createMiddleware } from '@tanstack/react-start'
+import { classifyAgentUserAgent } from '@/lib/agent-user-agent'
 import { respondWithPrebuiltOrRuntime } from '@/lib/seo/export-response'
 import { DEFAULT_LLMS_ORIGIN } from '@/lib/seo/llms'
 import { generateLlmsTxt } from '@/lib/seo/llms-content'
-import { markdownTwinPage } from '@/lib/seo/markdown-twins'
+import { MARKDOWN_TWIN_PAGES, markdownTwinPage } from '@/lib/seo/markdown-twins'
 import {
   HOME_LINK_HEADER,
   HOME_MARKDOWN_FRONTMATTER,
@@ -15,21 +16,35 @@ import { trackServerPageview } from '@/lib/server-analytics'
  * Homepage content negotiation: `Accept: text/markdown` gets the llms.txt hub,
  * and the HTML homepage advertises agent resources in `Link`. Marketing pages
  * get a `.md` twin converted from their rendered HTML, and a 404 asked for as
- * markdown gets a markdown body.
+ * markdown gets a markdown body. AI agents (ChatGPT-User, Claude-User, Cursor,
+ * ...) get the markdown version of the homepage and of those pages even when
+ * they ask for HTML.
  */
 export const markdownNegotiationMiddleware = createMiddleware({
   type: 'request',
 }).server(async ({ request, pathname, next }) => {
-  const page = markdownTwinPage(pathname)
+  const agent =
+    classifyAgentUserAgent(request.headers.get('user-agent')).kind === 'agent'
+  const page =
+    markdownTwinPage(pathname) ??
+    (agent && (MARKDOWN_TWIN_PAGES as readonly string[]).includes(pathname)
+      ? pathname
+      : null)
   if (page) {
     trackServerPageview(request)
     // Loaded here so the converter stays out of the client bundle.
     const { pageHtmlToMarkdown } = await import('@/lib/seo/page-markdown')
-    throw await respondWithPrebuiltOrRuntime(
+    const twin = await respondWithPrebuiltOrRuntime(
       `${page.slice(1)}.md`,
       'text/markdown; charset=utf-8',
       async () => {
-        const response = await fetch(new URL(page, request.url))
+        const origin =
+          process.env.NODE_ENV === 'production'
+            ? `http://localhost:${process.env.PORT ?? 3000}`
+            : request.url
+        const response = await fetch(new URL(page, origin), {
+          redirect: 'manual',
+        })
         if (!response.ok) {
           throw new Response('Not found', {
             status: response.status,
@@ -43,6 +58,8 @@ export const markdownNegotiationMiddleware = createMiddleware({
         )
       },
     )
+    if (page === pathname) twin.headers.set('Vary', 'User-Agent')
+    throw twin
   }
 
   const markdown = prefersMarkdown(request.headers.get('accept'))
@@ -70,7 +87,7 @@ export const markdownNegotiationMiddleware = createMiddleware({
     }
   }
 
-  if (markdown) {
+  if (markdown || agent) {
     trackServerPageview(request)
     const response = await respondWithPrebuiltOrRuntime(
       'llms.txt',
@@ -78,7 +95,7 @@ export const markdownNegotiationMiddleware = createMiddleware({
       () => generateLlmsTxt(),
     )
     const headers = new Headers(response.headers)
-    headers.set('Vary', 'Accept')
+    headers.set('Vary', 'Accept, User-Agent')
     headers.set('Link', HOME_LINK_HEADER)
     throw new Response(HOME_MARKDOWN_FRONTMATTER + (await response.text()), {
       status: response.status,
@@ -92,7 +109,7 @@ export const markdownNegotiationMiddleware = createMiddleware({
   }
 
   const headers = new Headers(result.response.headers)
-  headers.append('Vary', 'Accept')
+  headers.append('Vary', 'Accept, User-Agent')
   headers.set('Link', HOME_LINK_HEADER)
   return {
     ...result,

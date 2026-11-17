@@ -24,11 +24,21 @@ import { sdk } from '@/lib/appwrite/sdk'
 import {
   deleteProject,
   useProject,
+  useProductionProject,
+  useDeleteProjectEnvironment,
+  useUpdateProjectEnvironment,
   useOrganizations,
   PROJECT_NAME_MAX_LENGTH,
   formatProjectNameForDisplay,
   getProjectNameDisplayTitle,
 } from '@/lib/react-query/hooks'
+import { setActiveEnvironment } from '@/lib/active-environment'
+import {
+  PROJECT_ENVIRONMENT_DOT_CLASS,
+  projectEnvironmentId,
+} from '@/lib/project-environments'
+import { ConfirmNameDialog } from '@/components/global/shared/ConfirmNameDialog'
+import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
 import { MCPSection } from '@/components/pages/projects/$projectId/shared/MCPSection'
 import { RESOURCE_CARD_GRID_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -198,6 +208,24 @@ export function ProjectSettingsOverview({
     isLoading: projectLoading,
   } = useProject(projectId)
 
+  // Inside an environment this page is the environment's settings: the project
+  // answers as the environment, under the project's own ID. What belongs to
+  // the project it is part of (its name, its organization, its add-ons) is
+  // not changed from here, and deleting removes the environment alone.
+  const environmentId = projectEnvironmentId(rawProjectData)
+  const { project: productionProject } = useProductionProject(
+    environmentId ? projectId : undefined,
+  )
+  const updateEnvironmentMutation = useUpdateProjectEnvironment(
+    projectId,
+    project?.region,
+  )
+  const deleteEnvironmentMutation = useDeleteProjectEnvironment(
+    projectId,
+    project?.region,
+  )
+  const [deleteEnvironmentOpen, setDeleteEnvironmentOpen] = useState(false)
+
   // Check permissions (assuming project has permissions info)
   // For now, we'll assume canWriteProjects is true if project exists
   // In real implementation, this should come from project data or account permissions
@@ -357,6 +385,16 @@ export function ProjectSettingsOverview({
           `${t('Name must be between 1 and')} ${PROJECT_NAME_MAX_LENGTH} ${t('characters')}`,
         )
       }
+      // The name shown is the environment's. The organization route below
+      // takes the project's ID, which is the project the environment belongs
+      // to: it would rename production.
+      if (environmentId) {
+        await updateEnvironmentMutation.mutateAsync({
+          environmentId,
+          name: trimmedName,
+        })
+        return
+      }
       if (!project?.teamId) {
         throw new Error(t('Organization not found for this project'))
       }
@@ -367,7 +405,11 @@ export function ProjectSettingsOverview({
       })
     },
     onSuccess: async () => {
-      toast.success(t('Project name has been updated'))
+      toast.success(
+        environmentId
+          ? t('Environment name has been updated')
+          : t('Project name has been updated'),
+      )
       await queryClient.refetchQueries({
         queryKey: [Dependencies.PROJECT, projectId],
         exact: true,
@@ -377,7 +419,14 @@ export function ProjectSettingsOverview({
       // Track analytics: Submit.ProjectUpdateName
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error, t('Failed to update project name')))
+      toast.error(
+        getErrorMessage(
+          error,
+          environmentId
+            ? t('Failed to update environment name')
+            : t('Failed to update project name'),
+        ),
+      )
     },
   })
 
@@ -571,6 +620,32 @@ export function ProjectSettingsOverview({
     },
   })
 
+  // Deleting from inside an environment names the environment on the project's
+  // environments route, which can remove an environment and nothing else. The
+  // project's own delete route would take the project and every environment
+  // with it if the request ever left the environment.
+  const handleDeleteEnvironment = () => {
+    if (!environmentId) return
+    const name = project?.name
+    closeDialogBeforeOverlayUnmount(() => setDeleteEnvironmentOpen(false))
+    deleteEnvironmentMutation.mutate(environmentId, {
+      onSuccess: async () => {
+        toast.success(
+          name
+            ? `${name} ${t('has been deleted')}`
+            : t('Environment deleted'),
+        )
+        // Back to production. Leaving the environment drops the project's
+        // cached queries, so the navigation loads production fresh.
+        setActiveEnvironment(projectId, null)
+        await navigate({ to: '/projects/$projectId', params: { projectId } })
+      },
+      onError: (error: Error) => {
+        toast.error(getErrorMessage(error, t('Failed to delete environment')))
+      },
+    })
+  }
+
   // Handle service toggle
   const handleServiceToggle = (service: ProjectServiceId, checked: boolean) => {
     const nextChecked =
@@ -763,7 +838,9 @@ export function ProjectSettingsOverview({
           <div className="flex gap-6 @[600px]:flex-row flex-col">
             <div className="@[600px]:w-64 shrink-0">
               <p className="text-[13px] text-muted-foreground">
-                {t("Access Appwrite services using this project's API Endpoint and Project ID.")} {/* pragma: allowlist secret */}
+                {environmentId
+                  ? t("Access this environment with the project's API Endpoint and Project ID, and the Environment ID that tells it apart from production.") /* pragma: allowlist secret */
+                  : t("Access Appwrite services using this project's API Endpoint and Project ID.")} {/* pragma: allowlist secret */}
               </p>
             </div>
             <div className="flex-1 min-w-0">
@@ -774,6 +851,17 @@ export function ProjectSettingsOverview({
                   </Label>
                   <CopyableInput value={project.$id} label={t('Project ID')} />
                 </div>
+                {environmentId && (
+                  <div>
+                    <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5 block">
+                      {t('Environment ID')}
+                    </Label>
+                    <CopyableInput
+                      value={environmentId}
+                      label={t('Environment ID')}
+                    />
+                  </div>
+                )}
                 <div>
                   <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5 block">
                     {t('API Endpoint')}
@@ -1002,29 +1090,48 @@ export function ProjectSettingsOverview({
             isVcsEnabled={true} // TODO: Get from project settings
           />
 
-          <PremiumGeoDBCard projectId={projectId} />
+          {/* An add-on is the project's, and its environments have it with it */}
+          {!environmentId && <PremiumGeoDBCard projectId={projectId} />}
 
-          {/* MCP Server Section */}
-          <MCPSection projectId={projectId} projectName={project.name} />
+          {/* MCP Server Section. Its prompts name a project: inside an
+              environment that is the project it belongs to, as no project
+              is called by the environment's name. */}
+          <MCPSection
+            projectId={projectId}
+            projectName={productionProject?.name ?? project.name}
+          />
 
-          {/* Change Organization Section (cloud multi-tenancy only) */}
-          {supportsMultiTenancy && (
+          {/* Change Organization Section (cloud multi-tenancy only). An
+              environment moves with its project, never on its own. */}
+          {supportsMultiTenancy && !environmentId && (
             <TransferProjectCard
               projectId={projectId}
               teamId={project.teamId}
             />
           )}
 
-          {/* Delete Project Section */}
-          <DeleteProjectSection
-            project={project}
-            supportsMultiRegion={supportsMultiRegion}
-            deleteConfirmation={deleteConfirmation}
-            onDeleteConfirmationChange={setDeleteConfirmation}
-            deleteDialogOpen={deleteDialogOpen}
-            onDeleteDialogOpenChange={setDeleteDialogOpen}
-            onDelete={deleteProjectMutation}
-          />
+          {/* Delete Section: the environment alone inside one, else the project */}
+          {environmentId ? (
+            <DeleteEnvironmentSection
+              environmentId={environmentId}
+              environmentName={project.name}
+              projectName={productionProject?.name ?? null}
+              open={deleteEnvironmentOpen}
+              onOpenChange={setDeleteEnvironmentOpen}
+              isDeleting={deleteEnvironmentMutation.isPending}
+              onDelete={handleDeleteEnvironment}
+            />
+          ) : (
+            <DeleteProjectSection
+              project={project}
+              supportsMultiRegion={supportsMultiRegion}
+              deleteConfirmation={deleteConfirmation}
+              onDeleteConfirmationChange={setDeleteConfirmation}
+              deleteDialogOpen={deleteDialogOpen}
+              onDeleteDialogOpenChange={setDeleteDialogOpen}
+              onDelete={deleteProjectMutation}
+            />
+          )}
 
           <Dialog
             open={protocolDialogOpen}
@@ -1076,6 +1183,110 @@ export function ProjectSettingsOverview({
         </>
       )}
     </div>
+  )
+}
+
+// Delete Environment Section Component
+interface DeleteEnvironmentSectionProps {
+  environmentId: string
+  environmentName: string
+  /** The project the environment belongs to; null while it loads */
+  projectName: string | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  isDeleting: boolean
+  onDelete: () => void
+}
+
+/**
+ * What the delete card is inside an environment. It says environment in its
+ * title, its copy and its button, carries the environment's purple, and names
+ * the project that stays: the card it replaces reads "Delete project" under
+ * the project's own ID, one click from being taken for it.
+ */
+function DeleteEnvironmentSection({
+  environmentId,
+  environmentName,
+  projectName,
+  open,
+  onOpenChange,
+  isDeleting,
+  onDelete,
+}: DeleteEnvironmentSectionProps) {
+  const t = useT()
+  const name = environmentName.trim() || environmentId
+
+  return (
+    <>
+      <div
+        data-card-id="delete-environment"
+        className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden"
+      >
+        <div className="px-6 py-4">
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Delete environment')}
+          </h3>
+        </div>
+        <div className="border-t border-destructive/20" />
+        <div className="px-6 py-4">
+          <p className="text-[13px] text-muted-foreground">
+            {t('Permanently delete this environment with its resources and users. The project it belongs to and its other environments are not affected. This action cannot be undone.')}
+          </p>
+
+          <div className="mt-4 flex items-center gap-3">
+            <span
+              aria-hidden
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-purple-500/30 bg-purple-500/10"
+            >
+              <span
+                className={cn('h-2.5 w-2.5 rounded-full', PROJECT_ENVIRONMENT_DOT_CLASS)}
+              />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <p
+                  className="truncate text-[14px] font-medium text-foreground"
+                  title={name}
+                >
+                  {formatProjectNameForDisplay(name)}
+                </p>
+                <span className="shrink-0 rounded-md bg-purple-500/10 px-1.5 py-0.5 text-[10px] font-medium text-purple-700 dark:bg-purple-500/20 dark:text-purple-300">
+                  {t('Environment')}
+                </span>
+              </div>
+              {projectName && (
+                <p className="truncate text-[12px] text-muted-foreground">
+                  {t('Project:')} {formatProjectNameForDisplay(projectName)}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="px-6 py-4 border-t border-destructive/20 bg-destructive/5">
+          <Button
+            variant="destructive"
+            size="sm"
+            className="h-9 text-[13px]"
+            onClick={() => onOpenChange(true)}
+          >
+            {t('Delete environment')}
+          </Button>
+        </div>
+      </div>
+
+      <ConfirmNameDialog
+        open={open}
+        onOpenChange={onOpenChange}
+        title="Delete environment"
+        description={t(
+          'Are you sure you want to delete this environment? Its resources and users are removed with it. This action cannot be undone.',
+        )}
+        confirmValue={name}
+        confirmPlaceholder="Enter environment name"
+        onConfirm={onDelete}
+        isConfirming={isDeleting}
+      />
+    </>
   )
 }
 

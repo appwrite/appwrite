@@ -3,6 +3,7 @@ layout: post
 title: "Add push notifications to your React Native app without Firebase"
 description: Send push notifications to an Expo app with Appwrite Push. Notify customers when an order ships, deliver on Android while the app is closed, and open the order on tap.
 date: 2026-11-06
+lastUpdated: 2026-11-16
 cover: /images/blog/add-push-notifications-to-your-react-native-app/cover.avif
 timeToRead: 9
 author: atharva
@@ -281,7 +282,22 @@ For instant delivery in the background on Android, turn on the SDK's foreground 
 await push.setForeground(true);
 ```
 
-The service shows a quiet ongoing notification and uses the `remoteMessaging` foreground service type, which Google Play asks you to declare. [Delivery while the app is closed](/docs/products/messaging/appwrite-push#background-android) covers exact alarms and battery optimization, which also affect timing.
+The service shows a quiet ongoing notification and uses the `remoteMessaging` foreground service type, which Google Play asks you to declare. Foreground mode is opt-in, so add its permissions to `app.json` and rebuild the native app. Without them, `setForeground(true)` reports an error to `onError` and delivery stays on the scheduled wake-ups:
+
+```json
+{
+  "expo": {
+    "android": {
+      "permissions": [
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING"
+      ]
+    }
+  }
+}
+```
+
+[Delivery while the app is closed](/docs/products/messaging/appwrite-push#background-android) covers exact alarms and battery optimization, which also affect timing.
 
 On iOS, the app keeps its connection while it runs and for a short time after the user leaves it. Once iOS suspends the app, messages wait until the app opens again, and Appwrite then replays the ones it missed. To show notifications while an iOS app is suspended, use the [Appwrite Apple SDK](/blog/post/add-push-notifications-to-your-ios-app), which reaches a suspended app through APNs.
 

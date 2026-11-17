@@ -1,0 +1,19 @@
+---
+layout: changelog
+title: Announcing Appwrite 2.7.2 for self-hosted deployments
+date: 2026-11-12
+cover: /images/changelog/2026-11-12.avif
+tags: security, infrastructure
+---
+
+Appwrite 2.7.2 is now available for self-hosting. It is a security patch for the 2.7 line, and we recommend every 2.7 install upgrades.
+
+This release includes:
+
+- Security fixes across auth, abuse limits, storage, realtime, messaging, functions, VCS and proxy.
+- Base image `appwrite/base` 2.2.11: patched git, curl, libexpat, perl, rsync and Docker CLI packages, and Go 1.27.4 for `git-remote-entire`.
+- Console 1.2.181.
+
+{% arrow_link href="https://github.com/appwrite/appwrite/releases/tag/2.7.2" %}
+View the release notes on GitHub
+{% /arrow_link %}

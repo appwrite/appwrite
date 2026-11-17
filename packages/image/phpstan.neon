@@ -1,7 +1,7 @@
 parameters:
     level: max
     scanFiles:
-        - stubs/Image.php
+        - stubs/Canvas.php
     paths:
         - src
         - tests

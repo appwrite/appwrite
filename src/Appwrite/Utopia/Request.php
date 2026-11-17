@@ -366,6 +366,10 @@ class Request extends UtopiaRequest
      * Creates a unique stable cache identifier for this GET request.
      * Stable-sorts query params, use `serialize` to ensure key&value are part of cache keys.
      * Negotiated `auto` params are keyed by their resolved value, so they share entries with explicit requests.
+     * A route that picks its format from the Accept header lists the media
+     * types it can upgrade to in `cache.accept`; the key carries the type the
+     * client gets, not the raw header, so every browser that accepts webp
+     * shares one entry. `cache.vary` only names the headers repeated as Vary.
      *
      * @return string
      */
@@ -386,8 +390,22 @@ class Request extends UtopiaRequest
         if (!isset($params['project'])) {
             $params['project'] = $this->getHeaderLine('x-appwrite-project', '');
         }
+        foreach ($this->getRoute()?->getLabel('cache.accept', []) ?? [] as $type) {
+            if ($this->accepts($type)) {
+                $params['$accept'] = $type;
+                break;
+            }
+        }
         ksort($params);
         return md5($this->getURI() . '*' . serialize($params) . '*' . APP_CACHE_BUSTER);
+    }
+
+    /**
+     * Whether the client lists this media type in its Accept header.
+     */
+    public function accepts(string $type): bool
+    {
+        return str_contains(strtolower($this->getHeaderLine('accept', '')), strtolower($type));
     }
 
     private ?Authorization $authorization = null;

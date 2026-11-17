@@ -1838,6 +1838,12 @@ trait StorageBase
             $cached = $this->client->call(Client::METHOD_GET, $path, $headers('image/webp'), $params);
             $this->assertSame('hit', $cached['headers']['x-appwrite-cache']);
             $this->assertEquals('image/webp', $cached['headers']['content-type']);
+
+            // An explicit output served from the cache does not vary by Accept
+            $cached = $this->client->call(Client::METHOD_GET, $path, $headers('image/avif'), array_merge($params, ['output' => 'webp']));
+            $this->assertSame('hit', $cached['headers']['x-appwrite-cache']);
+            $this->assertEquals('image/webp', $cached['headers']['content-type']);
+            $this->assertArrayNotHasKey('vary', $cached['headers']);
         });
 
         /**

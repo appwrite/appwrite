@@ -16,6 +16,8 @@ import { Domains } from './Domains'
 import { Webhooks } from './Webhooks'
 import { Migrations } from './Migrations'
 import { SMTP } from './SMTP'
+import { IdentityServersLayout } from './identity-servers/Layout'
+import { LDAP } from './identity-servers/LDAP'
 import { Variables } from './Variables'
 import { Firewall } from '../firewall/Firewall'
 import type { Models } from '@appwrite.io/console'
@@ -74,6 +76,7 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
             'migrations',
             'smtp',
             'variables',
+            'identity-servers',
             'firewall',
           ].includes(tabFromPath)
         ) {
@@ -141,6 +144,12 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
         to: '/projects/$projectId/settings/smtp',
         params: { projectId: projectId as string },
       },
+      {
+        id: 'identity-servers',
+        label: t('Identity servers'),
+        to: '/projects/$projectId/settings/identity-servers/ldap',
+        params: { projectId: projectId as string },
+      },
     ],
     [projectId, showFirewallTab, t],
   )
@@ -166,6 +175,7 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
     activeTab !== 'overview' &&
     activeTab !== 'smtp' &&
     activeTab !== 'variables' &&
+    activeTab !== 'identity-servers' &&
     activeTab !== 'firewall'
   const searchPlaceholder = hasSearch
     ? activeTab === 'domains'
@@ -268,6 +278,11 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
           />
         )}
         {activeTab === 'smtp' && <SMTP projectId={projectId} />}
+        {activeTab === 'identity-servers' && (
+          <IdentityServersLayout projectId={projectId} activeSubTab="ldap">
+            <LDAP projectId={projectId} />
+          </IdentityServersLayout>
+        )}
         {activeTab === 'variables' && <Variables />}
         {activeTab === 'firewall' && (
           <Firewall projectId={projectId} resourceSelection={API_SCOPE} />

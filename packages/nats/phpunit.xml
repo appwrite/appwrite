@@ -22,5 +22,6 @@
     </source>
     <php>
         <env name="NATS_URL" value="nats://127.0.0.1:14222"/>
+        <env name="NATS_SYSTEM_URL" value="nats://127.0.0.1:14226"/>
     </php>
 </phpunit>

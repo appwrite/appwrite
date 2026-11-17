@@ -90,6 +90,9 @@ test.describe('markdown exports (read-only)', () => {
     const body = await response.text()
     expect(body).toMatch(/^# Appwrite\n/)
     expect(body).toContain('## MCP Server')
+    expect(body).toContain(
+      'docs MCP server at https://mcp.appwrite.io/docs/mcp',
+    )
     expect(body).toContain('## Skills')
     expect(body).toContain('## Documentation')
     expect(body).toContain('/docs/llms.txt')
@@ -183,7 +186,22 @@ test.describe('markdown exports (read-only)', () => {
       expect(entry?.type).toBe('application/mcp-server-card+json')
       expect(entry?.url).toContain('/.well-known/mcp/server-card.json')
       expect(entry?.data).toBeUndefined()
+      const trust = path.endsWith('ard.json')
+        ? entry?.trustManifest?.identity
+        : entry?.trustManifests?.[0]?.contributor
+      expect(trust).toBe('https://appwrite.io')
+      expect(catalogBody.entries?.[1]?.url).toContain(
+        '/.well-known/mcp/docs/server-card.json',
+      )
     }
+
+    const docsCard = await request.get('/.well-known/mcp/docs/server-card.json')
+    expect(docsCard.status()).toBe(200)
+    const docsCardBody = await docsCard.json()
+    expect(docsCardBody.name).toBe('io.appwrite/mcp-docs')
+    expect(docsCardBody.remotes?.[0]?.url).toBe(
+      'https://mcp.appwrite.io/docs/mcp',
+    )
 
     const skills = await request.get('/.well-known/agent-skills/index.json')
     expect(skills.status()).toBe(200)
@@ -245,6 +263,84 @@ test.describe('markdown exports (read-only)', () => {
     expect(body).toContain('User-agent:')
     expect(body).toContain('Sitemap:')
     expect(body).toContain('https://appwrite.io/sitemap/news.xml')
+    expect(body).toContain('Schemamap: https://appwrite.io/schemamap.xml')
+
+    const schemamap = await request.get('/schemamap.xml')
+    expect(schemamap.status()).toBe(200)
+    expect(await schemamap.text()).toContain(
+      '<sf:contentType>structuredData/rss</sf:contentType>',
+    )
+  })
+
+  test('NLWeb /ask answers from the docs search index', async ({ request }) => {
+    const answer = await request.post('/ask', {
+      data: { query: { text: 'oauth login' } },
+    })
+    expect(answer.status()).toBe(200)
+    const body = await answer.json()
+    expect(body._meta).toMatchObject({
+      response_type: 'answer',
+      version: '0.55',
+    })
+    expect(body.results[0]).toMatchObject({ '@type': 'TechArticle' })
+    expect(body.results[0].url).toContain('/docs/')
+
+    const streamed = await request.post('/ask', {
+      data: { query: { text: 'deploy function' }, prefer: { streaming: true } },
+    })
+    expect(streamed.headers()['content-type']).toMatch(/text\/event-stream/)
+    const events = await streamed.text()
+    expect(events).toMatch(/^event: start\n/)
+    expect(events).toContain('event: result\n')
+    expect(events).toContain('event: complete\n')
+
+    const empty = await request.post('/ask', { data: { query: { text: '' } } })
+    expect((await empty.json()).error.code).toBe('INVALID_QUERY')
+
+    const oversized = await request.post('/ask', {
+      data: { query: { text: 'auth '.repeat(101) } },
+    })
+    expect((await oversized.json()).error.code).toBe('INVALID_QUERY')
+  })
+
+  test('A2A agent card points at a working docs agent', async ({ request }) => {
+    const card = await request.get('/.well-known/agent-card.json')
+    expect(card.status()).toBe(200)
+    const body = await card.json()
+    expect(body).toMatchObject({ name: 'Appwrite Docs', version: '1.0.0' })
+    expect(body.supportedInterfaces[0]).toMatchObject({
+      protocolBinding: 'JSONRPC',
+      protocolVersion: '1.0',
+    })
+
+    const send = await request.post('/a2a', {
+      headers: { 'A2A-Version': '1.0' },
+      data: {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'SendMessage',
+        params: {
+          message: {
+            messageId: 'e2e',
+            role: 'ROLE_USER',
+            parts: [{ text: 'oauth login' }],
+          },
+        },
+      },
+    })
+    const reply = (await send.json()).result.message
+    expect(reply.role).toBe('ROLE_AGENT')
+    expect(reply.parts[0].text).toContain('/docs/')
+
+    const legacy = await request.post('/a2a', {
+      data: {
+        jsonrpc: '2.0',
+        id: 2,
+        method: 'tasks/get',
+        params: { id: 'missing' },
+      },
+    })
+    expect((await legacy.json()).error.code).toBe(-32001)
   })
 
   test('sitemap index lists section sitemaps', async ({ request }) => {
@@ -308,6 +404,82 @@ test.describe('markdown exports (read-only)', () => {
     const body = await response.text()
     expect(body).toMatch(/^# Page not found\n/)
     expect(body).toContain('/llms.txt')
+  })
+
+  test('auth.md explains how agents get credentials', async ({ request }) => {
+    const response = await request.get('/auth.md')
+    expect(response.status()).toBe(200)
+    expect(response.headers()['content-type']).toMatch(MARKDOWN_CONTENT_TYPE)
+    const body = await response.text()
+    expect(body).toMatch(/^# Appwrite auth\.md\n/)
+    for (const section of [
+      '## Step 1 — Discover',
+      '## Step 2 — Pick a method',
+      '## Step 3 — Register',
+      '## Step 5 — Exchange',
+      '## Step 6 — Use the access_token',
+      '## Errors',
+      '## Revocation',
+    ]) {
+      expect(body, section).toContain(section)
+    }
+    expect(body).toContain(
+      'https://mcp.appwrite.io/.well-known/oauth-protected-resource',
+    )
+    expect(body).toContain('code_challenge_method=S256')
+  })
+
+  test('AI agents get markdown when they ask for HTML', async ({ request }) => {
+    for (const [userAgent, path, heading] of [
+      ['Mozilla/5.0 (compatible; ClaudeBot/1.0)', '/', /^---\ntitle: "Appwrite"/],
+      ['Mozilla/5.0 (compatible; ChatGPT-User/1.0)', '/company', /^---\ntitle: /],
+    ] as const) {
+      const response = await request.get(path, {
+        headers: { 'User-Agent': userAgent, Accept: 'text/html' },
+      })
+      expect(response.status(), path).toBe(200)
+      expect(response.headers()['content-type'], path).toMatch(
+        MARKDOWN_CONTENT_TYPE,
+      )
+      expect(response.headers()['vary'], path).toContain('User-Agent')
+      expect(await response.text(), path).toMatch(heading)
+    }
+
+    const browser = await request.get('/company', {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36',
+        Accept: 'text/html',
+      },
+    })
+    expect(browser.headers()['content-type']).toMatch(/text\/html/)
+  })
+
+  test('openapi.json declares OAuth 2.0 with named scopes', async ({
+    request,
+  }) => {
+    const response = await request.get('/openapi.json')
+    expect(response.status()).toBe(200)
+    const spec = await response.json()
+    const oauth2 = spec.components.securitySchemes.OAuth2
+    expect(oauth2.type).toBe('oauth2')
+    expect(oauth2.flows.authorizationCode.authorizationUrl).toMatch(
+      /\/oauth2\/console\/authorize$/,
+    )
+    expect(oauth2.flows.authorizationCode.scopes['project:rows.read']).toBe(
+      'Read rows in a project.',
+    )
+    const listRows = Object.values(spec.paths)
+      .flatMap((path) => Object.values(path as Record<string, unknown>))
+      .find(
+        (operation) =>
+          (operation as { operationId?: string }).operationId ===
+          'tablesDBListRows',
+      ) as { security: Array<Record<string, string[]>> }
+    expect(listRows.security).toContainEqual({
+      Project: [],
+      OAuth2: ['project:rows.read'],
+    })
   })
 
   test('blog llms.txt lists posts', async ({ request }) => {
