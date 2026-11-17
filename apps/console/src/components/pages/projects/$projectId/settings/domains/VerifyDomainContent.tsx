@@ -2,7 +2,7 @@ import { Fragment, useState, useMemo, type ReactNode } from 'react'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
 import type { ProxyRuleRecord } from '@/lib/appwrite/proxy-rules'
-import { isWaitingForDns } from '@/lib/utils/status-badge'
+import { isDnsUnverified, isWaitingForDns } from '@/lib/utils/status-badge'
 import {
   getRecordName,
   getVerificationMethods,
@@ -18,6 +18,7 @@ import {
   Info,
   AlertCircle,
   CheckCircle2,
+  AlertTriangle,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -347,7 +348,7 @@ function RecordSection({
   )
 }
 
-type DnsBannerTone = 'info' | 'success'
+type DnsBannerTone = 'info' | 'error' | 'success'
 
 const DNS_BANNER_TONES: Record<
   DnsBannerTone,
@@ -357,6 +358,11 @@ const DNS_BANNER_TONES: Record<
     className:
       'border-blue-500/30 bg-blue-500/5 [&>svg]:text-blue-600 dark:[&>svg]:text-blue-400',
     Icon: Info,
+  },
+  error: {
+    className:
+      'border-red-500/30 bg-red-500/10 [&>svg]:text-red-600 dark:[&>svg]:text-red-400',
+    Icon: AlertTriangle,
   },
   success: {
     className:
@@ -400,12 +406,20 @@ function getDnsBanners(
   const verified = pointing.find((check) => check.status === 'verified')
   if (!verified) {
     return [
-      {
-        tone: 'info',
-        text: t(
-          'Add the records below at your DNS provider. Appwrite checks again automatically for 3 days.',
-        ),
-      },
+      isDnsUnverified(rule) && !isWaitingForDns(rule)
+        ? {
+            tone: 'error',
+            prefix: t('Domain verification'),
+            text: t(
+              'Automatic checks have stopped. Fix the records below, then verify again.',
+            ),
+          }
+        : {
+            tone: 'info',
+            text: t(
+              'Add the records below at your DNS provider. Appwrite checks again automatically for 3 days.',
+            ),
+          },
     ]
   }
   return [
