@@ -409,6 +409,9 @@ export function VerifyDomainContent({
         }
       : null
 
+  const getNote = (method: VerificationMethod) =>
+    method === 'nameservers' ? nameserverNote : recordNote
+
   const getNameserverRecords = (): DnsRecord[] =>
     nameservers.map((ns) => ({ type: 'NS', name: '@', value: ns, ttl: null }))
 
@@ -454,7 +457,7 @@ export function VerifyDomainContent({
         {tabOptions.length === 1 ? (
           <>
             <p className="pb-3 text-[13px] text-muted-foreground">
-              {tabOptions[0].id === 'nameservers' ? nameserverNote : recordNote}
+              {getNote(tabOptions[0].id)}
             </p>
             {methodContent(tabOptions[0].id)}
           </>
@@ -477,7 +480,7 @@ export function VerifyDomainContent({
               <TabsContent key={tab.id} value={tab.id} className="mt-0">
                 <div className="pb-4">
                   <p className="pb-3 text-[13px] text-muted-foreground">
-                    {tab.id === 'nameservers' ? nameserverNote : recordNote}
+                    {getNote(tab.id)}
                   </p>
                   {methodContent(tab.id)}
                 </div>
