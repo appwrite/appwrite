@@ -20,14 +20,15 @@ and libclang at build time.
 
 ## Switching a class on
 
-`Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN` and `Utopia\Locale\Locale` are always
-registered: they have no PHP implementation. Their signatures are in `stubs/` and `packages/image/stubs/` for PHPStan,
+`Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`, `Utopia\Locale\Locale` and
+`Utopia\UserAgent\UserAgent` are always registered: they have no PHP implementation. Their
+signatures are in `stubs/`, `packages/image/stubs/` and `packages/user-agent/stubs/` for PHPStan,
 which runs without the extension. Every other class is registered only when
 `_APP_EXTENSION_LIBRARIES` names its package. Otherwise Composer loads the package's PHP class as
 before:
 
 ```sh
-_APP_EXTENSION_LIBRARIES=user-agent,domains   # Utopia\UserAgent\UserAgent and Utopia\Domains\Domain from the extension
+_APP_EXTENSION_LIBRARIES=domains   # Utopia\Domains\Domain from the extension
 ```
 
 The extension reads it once, when PHP loads the module, so changing it takes a restart and no
@@ -103,17 +104,20 @@ file and line, since the class has no PHP source.
 
 ## Utopia\UserAgent\UserAgent
 
-Over `crates/utopia/user-agent` (`_APP_EXTENSION_LIBRARIES=user-agent`). Only `UserAgent` moves: what
-it returns are the package's own `OperatingSystem`, `Client`, `Device` and `Bot` objects, built by
-their PHP constructors once per agent and returned as the same object on every call, as in PHP. The
-detectors in `Utopia\UserAgent\Detection` stay PHP. The class is final with a private constructor
+Over `crates/utopia/user-agent`, always registered. Once the extension had served it in every Cloud
+region (appwrite-labs/cloud#7503), the PHP parser (`UserAgent.php` and `Detection\*`) was removed
+from `packages/user-agent`, which now requires `ext-utopia` like `packages/image`; 0.1.x on
+Packagist is the last release that parses in PHP. What `UserAgent` returns are the package's own
+`OperatingSystem`, `Client`, `Device` and `Bot` objects, built by their PHP constructors once per
+agent and returned as the same object on every call, as in PHP. The class is final with a private constructor
 and the PHP class's private properties, so `==`, `var_dump()` and `(array)` see what they see in PHP.
 
-`crates/extension/tests/user-agent.php` prints a corpus of results that must be identical on both
-implementations: every string in the package's tests, agents Appwrite sees (SDKs, the CLI, HTTP
+`crates/extension/tests/user-agent.php` prints a corpus of results that must match
+`user-agent.expected.jsonl`, the output of the PHP class: every string in the package's tests, agents Appwrite sees (SDKs, the CLI, HTTP
 libraries, browsers, previews, monitors, bots), edge cases (empty, case, control bytes, bytes that are
 not UTF-8, 100 KB inputs) and seeded mutations of all of them, read through every method and through
-`Appwrite\Detector\Detector`. It asserts these known differences on the extension:
+`Appwrite\Detector\Detector`. `packages/user-agent/tests` run on the extension too. It asserts these
+known differences from the PHP class:
 
 - A `null`, array or object argument and a missing argument raise the same `TypeError` and
   `ArgumentCountError` with ext-php-rs's message.
@@ -179,7 +183,7 @@ times one implementation; `run.py` runs it on both, alternating, and prints the 
 
 ```sh
 cargo build --release -p utopia-extension
-python3 crates/extension/bench/run.py crates/extension/bench/user-agent.php . target/release/libutopia.so 5
+python3 crates/extension/bench/run.py crates/extension/bench/domains.php . target/release/libutopia.so 5
 ```
 
 ## Utopia\Image\Canvas and Utopia\Image\Font
