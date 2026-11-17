@@ -620,9 +620,14 @@ class V25 extends Migration
                     break;
 
                 case 'rules':
-                    // The latest DNS record checks from verification, shown on proxy rules.
+                    // The latest DNS record checks from verification, shown on proxy rules. An existing
+                    // attribute is skipped; any other failure propagates, since without it every write
+                    // silently drops the checks.
                     if ($collectionType === 'console' && $this->dbForProject->findCollection($id) !== null) {
-                        $this->createAttributeFromCollection($this->dbForProject, $id, 'records');
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'records');
+                        } catch (Duplicate) {
+                        }
                         $this->dbForProject->purgeCachedCollection($id);
                     }
                     break;
