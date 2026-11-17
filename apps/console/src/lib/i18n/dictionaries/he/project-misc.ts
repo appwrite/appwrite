@@ -2762,8 +2762,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   // pragma: allowlist secret
   "instead. If you're using Cloudflare or another CDN, make sure the proxy is disabled (set to DNS only) for this record, since Appwrite serves your domain through its own CDN.":
     'במקום זאת. אם אתם משתמשים ב-Cloudflare או ב-CDN אחר, ודאו שהפרוקסי מושבת (מוגדר כ-DNS only) עבור הרשומה הזו, כי Appwrite מגיש את הדומיין שלכם דרך ה-CDN שלו.', // pragma: allowlist secret
-  "is an apex domain, CNAME record is only supported by certain providers. If yours doesn't, please verify using":
-    'הוא דומיין שורש (apex), ורשומת CNAME נתמכת רק אצל ספקים מסוימים. אם הספק שלכם לא תומך בכך, אמתו באמצעות',
   item: 'פריט',
   'key for the API key.': 'בתור מפתח ה-API.',
   nameservers: 'שרתי שמות',
