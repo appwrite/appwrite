@@ -337,10 +337,7 @@ export function VerifyDomainContent({
 
   if (error || tabOptions.length === 0) {
     return (
-      <Alert
-        variant="default"
-        className="border-red-500/30 bg-red-500/10"
-      >
+      <Alert variant="default" className="border-red-500/30 bg-red-500/10">
         <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
         <AlertDescription className="text-[13px] text-red-600 dark:text-red-400">
           {t('Failed to load DNS instructions. Please try again.')}
