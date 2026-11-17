@@ -862,7 +862,8 @@ export function VerifyDomainContent({
   const checkedRecords = checks ? (
     <div className="space-y-6">
       <DnsCheckMeta rule={rule} checkedAt={rule.$updatedAt} />
-      <div className="space-y-3">
+      {/* Only the banners are live: the times above tick. */}
+      <div role="status" aria-live="polite" className="space-y-3">
         {banners.map((banner) => (
           <DnsBannerAlert
             key={`${banner.tone}-${banner.prefix ?? ''}-${banner.text}`}
