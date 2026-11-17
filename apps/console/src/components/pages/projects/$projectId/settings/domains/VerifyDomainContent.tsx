@@ -690,7 +690,9 @@ export function VerifyDomainContent({
           }
           records={pointingRecords}
           waiting={isWaitingForDns(rule)}
-        />
+        >
+          {tabOptions.some((tab) => tab.id === 'alias') && aliasNote}
+        </RecordSection>
       )}
       {caaRecord && (
         <RecordSection
