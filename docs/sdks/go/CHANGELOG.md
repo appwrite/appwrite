@@ -1,5 +1,20 @@
 # Change Log
 
+## v7.20.0
+
+* Added: `Account.CreateLDAPSession` for LDAP sign-in
+* Added: `Project.UpdateLDAP` and `Project.CreateLDAPTest` to configure and test a project's LDAP directory, and `Ldap*` fields on `Project`
+* Added: `Sites.UpdateAnalytics` and `AnalyticsEnabled` and `AnalyticsPropertyId` on `Site`
+* Added: `Reason` on `DomainPrice`, set when a domain was not priced for the requested registration type
+
+## v7.19.0
+
+* Added: `Project.UpdateOAuth2Naver` and the `OAuth2Naver` model
+* Added: `Project.DeletePasswords` to force every user to reset their password
+* Added: `auto` output on `Storage.GetFilePreview` and the avatar endpoints, serving avif or webp when the `Accept` header supports it
+* Fixed: `Avatars.GetScreenshot` sends `Accept: image/*`, so `output` `auto` can return avif or webp
+* Updated: requests send `X-Appwrite-Response-Format: 2.7.2`
+
 ## v7.18.0
 
 * Added: `Account.CreateDevice`, `GetDevice`, `DeleteDevice` and `UpdateDeviceSession`, and the `Device` model

@@ -3823,6 +3823,9 @@
             "providerRepositoryId",
             "strength"
         ],
+        "reviews.deleteLearning": [
+            "learningId"
+        ],
         "reviews.deleteRepository": [
             "repositoryId"
         ],
@@ -3835,6 +3838,10 @@
         ],
         "reviews.listEvents": [
             "reviewId",
+            "queries",
+            "total"
+        ],
+        "reviews.listLearnings": [
             "queries",
             "total"
         ],
@@ -8172,6 +8179,9 @@
             "providerRepositoryId",
             "strength"
         ],
+        "reviews.deleteLearning": [
+            "learningId"
+        ],
         "reviews.deleteRepository": [
             "repositoryId"
         ],
@@ -8184,6 +8194,10 @@
         ],
         "reviews.listEvents": [
             "reviewId",
+            "queries",
+            "total"
+        ],
+        "reviews.listLearnings": [
             "queries",
             "total"
         ],

@@ -87,6 +87,18 @@ final class CircuitBreakerTest extends TestCase
         $this->assertFalse($cache->load('key', 60));
     }
 
+    public function testPassesThroughAnEmptyArray(): void
+    {
+        $cache = new Cache(new CircuitBreaker(new Memory(), new UtopiaCircuitBreaker()));
+
+        $this->assertSame([], $cache->save('key', []));
+        $this->assertSame([], $cache->load('key', 60));
+        $this->assertSame([], $cache->saveWithLease('lease', [], '', $cache->getLease('lease')));
+        $this->assertSame([], $cache->load('lease', 60));
+        $this->assertFalse($cache->save('empty', ''));
+        $this->assertFalse($cache->save('zero', '0'));
+    }
+
     public function testReturnsFallbacksWhenCacheOperationsFail(): void
     {
         $this->assertFalse($this->failingCache()->load('key', 60));

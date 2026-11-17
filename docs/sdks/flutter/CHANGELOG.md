@@ -1,5 +1,88 @@
 # Change Log
 
+## 28.4.0
+
+* Added: `Tracking.start()` sends `first_open` once per install and `app_updated` (`previousVersion`, `version`) on the first start after the app's version changes
+* Added: `Push.setTracking` sends `push_received` and `push_opened` with the message's `messageId`; `Tracking.pushReceived` and `Tracking.pushOpened` for other push providers
+* Added: `PushNotificationOpened.messageId`
+* Added: `Account.createDevice`, `getDevice`, `deleteDevice` and `updateDeviceSession`, and the `Device` model
+* Added: `Account.createLDAPSession`
+* Added: `Session.userName`
+* Added: `auto` output on `Storage.getFilePreview` and the avatar endpoints, serving avif or webp when the `Accept` header supports it
+* Added: `OAuthProvider.naver` and `OAuthProvider.vippsSandbox`
+* Updated: the Android plugin no longer declares `FOREGROUND_SERVICE` and `FOREGROUND_SERVICE_REMOTE_MESSAGING`; apps that call `push.setForeground(true)` declare them
+* Fixed: Android background push keeps waking up on phones that hold back expedited jobs
+* Updated: Android plugin builds with Kotlin 2.4.20
+* Updated: requests send `X-Appwrite-Response-Format: 2.7.2`
+
+## 28.4.0-rc.1
+
+* Added: `Tracking.start()` sends `first_open` once per install and `app_updated` (`previousVersion`, `version`) on the first start after the app's version changes
+* Added: `Push.setTracking` sends `push_received` and `push_opened` with the message's `messageId`; `Tracking.pushReceived` and `Tracking.pushOpened` for other push providers
+* Added: `PushNotificationOpened.messageId`
+* Added: `Account.createDevice`, `getDevice`, `deleteDevice` and `updateDeviceSession`, and the `Device` model
+* Added: `Session.userName`
+* Added: `auto` output on `Storage.getFilePreview` and the avatar endpoints, serving avif or webp when the `Accept` header supports it
+* Added: `OAuthProvider.naver` and `OAuthProvider.vippsSandbox`
+* Updated: Android plugin builds with Kotlin 2.4.20
+* Updated: requests send `X-Appwrite-Response-Format: 2.7.2`
+
+## 28.3.0
+
+* Added: optional `interactive` param on `Analytics.createEvent` to mark an event as telemetry that does not end a bounce
+* Updated: the tracker sends `app_backgrounded` and `app_foregrounded` with `interactive: false`
+* Added: `Client.setEnvironment` to act in a project environment; realtime connections carry it
+* Added: `OAuthProvider.vipps`
+* Fixed: Android background push reconnects inside the system's network windows instead of minutes later
+* Updated: requests send `X-Appwrite-Response-Format: 2.7.0`; the SDK targets Appwrite 2.7.x
+
+## 28.3.0-rc.1
+
+* Added: optional `interactive` param on `Analytics.createEvent` to mark an event as telemetry that does not end a bounce
+* Updated: the tracker sends `app_backgrounded` and `app_foregrounded` with `interactive: false`
+* Added: `Client.setEnvironment` to act in a project environment; realtime connections carry it
+* Added: `OAuthProvider.vipps`
+* Updated: requests send `X-Appwrite-Response-Format: 2.7.0`; the SDK targets Appwrite 2.7.x
+
+## 28.2.1
+
+* Fixed: web `Push` uses `package:web` instead of the deprecated `dart:html`
+* Updated: minimum `http` version raised to `1.1.1`
+
+## 28.2.0
+
+* Updated: requests send `X-Appwrite-Response-Format: 2.6.2`; the SDK targets Appwrite 2.6.x
+* Fixed: path parameters are percent-encoded as one segment; `.` and `..` throw `AppwriteException`
+* Fixed: chunked upload resume lookups percent-encode the file ID
+* Fixed: examples pass `null` for unset optional params instead of empty strings
+
+## 28.1.0
+
+* Added: `createQuery` on `databases`, `documentsDB` and `tablesDB` to send list queries in the request body
+* Added: `account.listMemberships`
+* Added: `bundleId` and `environment` on `account.createPushTarget` and `account.updatePushTarget` for APNs routing
+* Fixed: OAuth2 sign-in on Windows and Linux returns through a loopback callback and creates the session; a denied sign-in throws its error instead of opening the `failure` URL
+* Fixed: saving the OAuth2 session waits for client initialisation already in progress
+
+## 28.0.0
+
+* Breaking: requests send `X-Appwrite-Response-Format: 2.5.0`; responses follow the 2.5 shapes
+* Breaking: missing response fields are filled with their documented defaults
+* Breaking: `Client.chunkedUpload` takes a `responseType` parameter; custom `Client` implementations must add it
+* Breaking: requires Dart `>=3.10.0` and Flutter `>=3.38.1`
+* Breaking: the package is now a Flutter plugin with native Android push code
+* Breaking: `Client` adds `setPushEndpoint`, `setPushClientId` and `flatten`; custom `Client` implementations must add them
+* Added: `Apps` service to manage apps, installations, keys and secrets
+* Added: `Oauth2` service for the OAuth2 authorize, token, device and grant flows
+* Added: `Push` service with background delivery on Android
+* Added: `Topic` helper and MQTT exports
+* Added: Android push code ships under `io.appwrite.flutter`, so apps can also depend on `sdk-for-android`; set the notification icon with the `io.appwrite.flutter.push.notification_icon` meta-data
+* Added: `Query` aggregates (`count`, `countDistinct`, `sum`, `avg`, `min`, `max` and more), `groupBy`, `having`, `distinct`, joins, `relationship`, `covers`, `spatialEquals` and `page`
+* Added: `Query.builder()` to chain queries; `build()` returns the query list
+* Added: `ExecutionTrigger.email`
+* Fixed: required map fields missing from a response, such as `prefs`, default to an empty map
+* Fixed: OAuth2 models wrap a single `prompt` value in a list
+
 ## 27.2.0
 
 * Added: `analytics.createEvent` in a new `Analytics` service to send tracking events

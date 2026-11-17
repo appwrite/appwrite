@@ -306,28 +306,41 @@ foreach (['Email', 'EmailCorporate', 'EmailDomain', 'EmailLocal', 'EmailNotDispo
     emit('validator ' . $validator, outcome(fn () => array_map(fn ($value) => attempt(fn () => (new $class())->isValid($value)), $samples)));
 }
 
+// Cloning a PHP subclass, with and without properties of its own: the copy keeps its class
+// and its properties, and shares $domainInstance as PHP's shallow copy does.
+emit('subclass clone', outcome(function () {
+    $sub = new class ('User@Mail.Example.CO.UK') extends Email {
+    };
+    $sub->getProvider();
+    $copy = clone $sub;
+
+    return [$copy::class === $sub::class, $copy instanceof Email, $copy->getProvider(), $copy == $sub];
+}));
+emit('subclass with properties clone', outcome(function () {
+    $sub = new class ('User@Mail.Example.CO.UK') extends Email {
+        public string $label = 'first';
+
+        public array $seen = [];
+    };
+    $sub->seen[] = $sub->getSubdomain();
+    $copy = clone $sub;
+    $copy->label = 'copy';
+    $copy->seen[] = 'more';
+
+    return [$copy::class === $sub::class, $sub->label, $copy->label, $sub->seen, $copy->seen, $copy->getProvider(), properties($copy)];
+}));
+
 // Known differences of the extension, each a waiver in crates/extension/README.md.
 $waivers = [
     'protected helpers' => outcome(fn () => array_map(fn (string $method) => method_exists(Email::class, $method), ['initializeProviders', 'getProviderForDomain', 'isDomainSupported'])),
     'protected static properties' => outcome(fn () => array_keys((new ReflectionClass(Email::class))->getStaticProperties())),
-    // A subclass that declares properties of its own is not cloned at all: ext-php-rs reads past its object.
-    'subclass clone' => outcome(function () {
-        $sub = new class ('User@Mail.Example.CO.UK') extends Email {
-        };
-        $sub->getProvider();
-        $copy = clone $sub;
-
-        return [$copy::class === $sub::class, $copy instanceof Email, $copy->getProvider(), $copy == $sub];
-    }),
 ];
 $expected = $internal ? [
     'protected helpers' => ['value' => [false, false, false]],
     'protected static properties' => ['value' => []],
-    'subclass clone' => ['value' => [false, true, 'example.co.uk', false]],
 ] : [
     'protected helpers' => ['value' => [true, true, true]],
     'protected static properties' => ['value' => ['freeDomains', 'disposableDomains', 'providers']],
-    'subclass clone' => ['value' => [true, true, 'example.co.uk', true]],
 ];
 foreach ($expected as $name => $outcome) {
     if ($waivers[$name] !== $outcome) {
