@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
+import type { ProxyRuleRecord } from '@/lib/appwrite/proxy-rules'
 import {
   getRecordName,
   getVerificationMethods,
@@ -104,6 +105,8 @@ export type DnsRecord = {
   /** MX preference, shown when the table has a Priority column. */
   priority?: number
   badge?: string
+  /** What DNS had for this record at the last check. */
+  check?: ProxyRuleRecord
 }
 
 export function DnsRecordsTable({
@@ -277,6 +280,9 @@ export function VerifyDomainContent({
     isLoading,
     error,
   } = useConsoleVariables(region)
+  const records = (rule as Models.ProxyRule & { records?: ProxyRuleRecord[] })
+    .records
+  const checks = records?.length ? records : null
 
   const isCloud = useMemo(() => isCloudEndpoint(), [])
 
@@ -317,6 +323,14 @@ export function VerifyDomainContent({
     aaaa: edge ? undefined : aaaa,
     nameservers,
   }).map((id) => ({ id, label: TAB_LABELS[id] }))
+
+  // The server's check for the record of this type and value. There is at
+  // most one CAA check, so it matches on type alone.
+  const findCheck = (type: string, value: string) =>
+    checks?.find(
+      (check) =>
+        check.type === type && (type === 'CAA' || check.value === value),
+    )
 
   const getRecord = (type: string, value: string): DnsRecord => {
     return {
@@ -371,15 +385,18 @@ export function VerifyDomainContent({
     'Add the following nameservers on your DNS provider. Note that DNS changes may take up to 48 hours to propagate fully.',
   )
 
-  const caaRecord: DnsRecord | null = hasCaa
-    ? {
-        type: 'CAA',
-        name: '@',
-        value: caa!,
-        ttl: 3600,
-        badge: 'Recommended',
-      }
-    : null
+  const caaCheck = findCheck('CAA', '')
+  const caaRecord: DnsRecord | null =
+    hasCaa || caaCheck
+      ? {
+          type: 'CAA',
+          name: '@',
+          value: hasCaa ? caa! : `0 issue "${caaCheck!.value}"`,
+          ttl: 3600,
+          badge: 'Recommended',
+          check: caaCheck,
+        }
+      : null
 
   const getNameserverRecords = (): DnsRecord[] =>
     nameservers.map((ns) => ({ type: 'NS', name: '@', value: ns, ttl: null }))
