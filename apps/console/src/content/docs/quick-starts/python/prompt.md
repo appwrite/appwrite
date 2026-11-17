@@ -49,7 +49,7 @@ source .venv/bin/activate
 
 - Run: `python -m pip install "appwrite==27.3.0"`
 
-- When upgrading from SDK 26.0.0, update dependency pins or constraints that exclude `requests>=2.34.2,<3` or `urllib3>=2.8.0,<3`. The service API and response format `2.5.0` are unchanged.
+- When upgrading from SDK 26.0.0, update dependency pins or constraints that exclude `requests>=2.34.2,<3` or `urllib3>=2.8.0,<3`.
 
 ## Step 4: Import Appwrite and initialize client (ask user for details; never assume)
 
