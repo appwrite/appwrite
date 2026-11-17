@@ -183,6 +183,8 @@ export const heSitesDictionary: Record<string, string> = {
   'Check now': 'בדוק עכשיו',
   'Not verified yet. Appwrite keeps checking.':
     'עדיין לא אומת. Appwrite ממשיך לבדוק.',
+  'Not needed. Your {type} record is set.':
+    'לא נדרש. רשומת ה-{type} שלכם מוגדרת.',
   'Called CNAME flattening on Cloudflare (set it to DNS only) and Alias on Route 53. Some providers name it ANAME.':
     'ב-Cloudflare זה נקרא CNAME flattening (הגדירו DNS only), וב-Route 53 זה נקרא Alias. יש ספקים שקוראים לזה ANAME.',
   'Certificate expired': 'פג תוקף התעודה',
