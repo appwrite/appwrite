@@ -27,23 +27,23 @@ pub trait Store: Send + Sync {
     fn purge<'a>(&'a self, key: &'a str) -> BoxFuture<'a, bool>;
 }
 
-/// Whether a value counts as empty: `false`, `0`, `0.0`, `""`, `"0"`, `[]`,
-/// `null`.
+/// Whether the Memory adapter refuses a value: the empty strings `""` and
+/// `"0"`, and the scalars that coerce to them (`false`, `0`) or cannot
+/// be stored (`null`). Arrays are stored, empty ones too.
 ///
-/// PHP: `empty()` of a cached value.
+/// PHP: `$data === '' || $data === '0'` in `Memory::save()`.
 fn empty(data: &Value) -> bool {
     match data {
         Value::Null => true,
         Value::Bool(b) => !b,
         Value::Number(n) => n.as_f64() == Some(0.0),
         Value::String(s) => s.is_empty() || s == "0",
-        Value::Array(a) => a.is_empty(),
-        Value::Object(o) => o.is_empty(),
+        Value::Array(_) | Value::Object(_) => false,
     }
 }
 
 /// A store that keeps entries in this process, each with the second it was
-/// saved. Empty values, and the keys `""` and `"0"`, are not stored.
+/// saved. Empty strings, and the keys `""` and `"0"`, are not stored.
 ///
 /// PHP: `Utopia\Cache\Adapter\Memory`.
 #[derive(Debug, Default)]

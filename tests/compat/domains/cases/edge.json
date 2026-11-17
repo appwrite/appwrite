@@ -1186,7 +1186,7 @@
             "domain": "empty.com",
             "data": []
           },
-          "expect": false
+          "expect": []
         },
         {
           "op": "cache.save",
