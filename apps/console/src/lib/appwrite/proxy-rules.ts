@@ -7,4 +7,6 @@
 export interface ProxyRuleRecord {
   /** `CNAME`, `A`, `AAAA` or `CAA` */
   type: string
+  /** The hostname that was looked up */
+  name: string
 }
