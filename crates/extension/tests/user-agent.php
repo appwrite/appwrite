@@ -1,19 +1,15 @@
 <?php
 
-// Parity corpus for Utopia\UserAgent\UserAgent. Run it on the PHP class and on the utopia
-// extension's (_APP_EXTENSION_LIBRARIES=user-agent), and diff stdout: every line must match.
-// Stderr names the implementation that ran.
+// Parity corpus for Utopia\UserAgent\UserAgent, which only the utopia extension provides. Its
+// stdout must match user-agent.expected.jsonl, the output of the PHP class it replaced
+// (utopia-php/user-agent 0.1). The value objects it returns are still the package's PHP classes.
 
 require __DIR__ . '/../../../vendor/autoload.php';
 
 use Utopia\UserAgent\UserAgent;
 
-$internal = (new ReflectionClass(UserAgent::class))->isInternal();
-fwrite(STDERR, 'Utopia\\UserAgent\\UserAgent: ' . ($internal ? 'utopia extension' : 'PHP') . PHP_EOL);
-// A run meant for the extension that gets the PHP class would compare PHP with PHP and pass.
-$requested = in_array('user-agent', array_map(trim(...), explode(',', getenv('_APP_EXTENSION_LIBRARIES') ?: '')), true);
-if ($internal !== $requested) {
-    fwrite(STDERR, '_APP_EXTENSION_LIBRARIES ' . ($requested ? 'names' : 'does not name') . ' user-agent, but the other implementation loaded' . PHP_EOL);
+if (!(new ReflectionClass(UserAgent::class))->isInternal()) {
+    fwrite(STDERR, 'Utopia\\UserAgent\\UserAgent is not the utopia extension\'s' . PHP_EOL);
     exit(1);
 }
 
@@ -87,14 +83,7 @@ function inspect(string $value): array
 }
 
 // Every string in the package's tests: the browsers, platforms, bots and Matomo cases they check.
-$agents = [];
-foreach (glob(__DIR__ . '/../../../packages/user-agent/tests/*.php') as $test) {
-    foreach (token_get_all(file_get_contents($test)) as $token) {
-        if (is_array($token) && $token[0] === T_CONSTANT_ENCAPSED_STRING) {
-            $agents[] = eval('return ' . $token[1] . ';');
-        }
-    }
-}
+$agents = require __DIR__ . '/fixtures/user-agent/agents.php';
 
 // Agents Appwrite sees: SDKs, the CLI, the Console, server runtimes, HTTP libraries, previews.
 array_push(
@@ -312,11 +301,7 @@ emit('static call', outcome(fn () => call_user_func([UserAgent::class, 'parse'],
 $methods = (new ReflectionClass(UserAgent::class))->getMethods(ReflectionMethod::IS_PUBLIC);
 usort($methods, fn ($a, $b) => strcmp($a->getName(), $b->getName()));
 emit('methods', outcome(fn () => array_map(fn (ReflectionMethod $method) => [$method->getName(), $method->isStatic(), $method->getNumberOfParameters(), $method->getNumberOfRequiredParameters()], $methods)));
-emit('detectors stay PHP', outcome(fn () => array_map(fn (string $class) => (new ReflectionClass($class))->isInternal(), [
-    Utopia\UserAgent\Detection\BotDetector::class,
-    Utopia\UserAgent\Detection\ClientDetector::class,
-    Utopia\UserAgent\Detection\DeviceDetector::class,
-    Utopia\UserAgent\Detection\OperatingSystemDetector::class,
+emit('value objects stay PHP', outcome(fn () => array_map(fn (string $class) => (new ReflectionClass($class))->isInternal(), [
     Utopia\UserAgent\OperatingSystem::class,
     Utopia\UserAgent\Client::class,
     Utopia\UserAgent\Device::class,
@@ -336,13 +321,13 @@ $waivers = [
     'isset private' => outcome(fn () => isset(UserAgent::parse($firefox)->value)),
     'serialize' => outcome(fn () => unserialize(serialize(UserAgent::parse($firefox)))->raw()),
 ];
-$expected = $internal ? [
+$expected = [
     'argument null' => ['throws' => 'TypeError', 'message' => 'Invalid value given for argument `value`.'],
     'argument array' => ['throws' => 'TypeError', 'message' => 'Invalid value given for argument `value`.'],
     'no argument' => ['throws' => 'ArgumentCountError', 'message' => 'Utopia\\UserAgent\\UserAgent::parse() expects exactly 1 argument, 0 given'],
     'isset private' => ['value' => true],
     'serialize' => ['throws' => 'Exception', 'message' => "Serialization of 'Utopia\\UserAgent\\UserAgent' is not allowed"],
-] : $waivers;
+];
 foreach ($expected as $name => $outcome) {
     if ($waivers[$name] !== $outcome) {
         fwrite(STDERR, "Waiver changed: {$name}: " . json_encode($waivers[$name], JSON_INVALID_UTF8_SUBSTITUTE) . PHP_EOL);

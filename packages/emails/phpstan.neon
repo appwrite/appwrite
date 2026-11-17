@@ -4,6 +4,7 @@ includes:
 parameters:
     level: max
     scanFiles:
+        - stubs/Domain.php
         - stubs/Email.php
     paths:
         - src

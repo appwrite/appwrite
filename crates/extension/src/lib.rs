@@ -2,12 +2,10 @@
 //! value objects and enums those classes take live in the Composer packages
 //! (`packages/<name>`), as plain PHP.
 //!
-//! `Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`,
-//! `Utopia\Locale\Locale` and `Utopia\Emails\Email` are always registered:
-//! they have no PHP implementation. Every other library still has one, and its
-//! class is registered only when `_APP_EXTENSION_LIBRARIES` names its package
-//! (`user-agent`, `domains`), so each can be canaried and switched back to PHP
-//! with a restart, not a deploy.
+//! Every class is registered unconditionally: `Utopia\Image\Canvas`,
+//! `Utopia\Image\Font`, `Utopia\DSN\DSN`, `Utopia\Locale\Locale`,
+//! `Utopia\UserAgent\UserAgent`, `Utopia\Domains\Domain` and
+//! `Utopia\Emails\Email` have no PHP implementation any more.
 
 mod canvas;
 mod domains;
@@ -19,28 +17,19 @@ mod user_agent;
 
 use ext_php_rs::prelude::*;
 
-/// The environment variable listing the packages the extension replaces,
-/// comma separated.
-const LIBRARIES: &str = "_APP_EXTENSION_LIBRARIES";
-
-/// Whether `_APP_EXTENSION_LIBRARIES` names `package`.
-fn enabled(package: &str) -> bool {
-    std::env::var(LIBRARIES).is_ok_and(|list| list.split(',').any(|name| name.trim() == package))
-}
-
-/// The module PHP loads: every class of the extension that is switched on.
+/// The module PHP loads: every class of the extension.
 #[php_module]
 pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
-    let module = module
+    module
         .name("utopia")
         .class::<canvas::Canvas>()
         .class::<canvas::Font>()
         .class::<dsn::Dsn>()
         .class::<locale::Locale>()
-        .class::<emails::Email>();
-    let module = if enabled("domains") { module.class::<domains::Domain>() } else { module };
-    let module = if enabled("user-agent") { module.class::<user_agent::UserAgent>() } else { module };
-    module.request_shutdown_function(request_shutdown)
+        .class::<user_agent::UserAgent>()
+        .class::<domains::Domain>()
+        .class::<emails::Email>()
+        .request_shutdown_function(request_shutdown)
 }
 
 /// Forgets what the classes hold for the request when it ends, as PHP frees its static state.

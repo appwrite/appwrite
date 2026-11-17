@@ -18,33 +18,26 @@ docker compose exec appwrite php --ri utopia
 Built on [ext-php-rs](https://github.com/extphprs/ext-php-rs); it needs `php-config`
 and libclang at build time.
 
-## Switching a class on
+## Classes
 
-`Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`, `Utopia\Locale\Locale` and
-`Utopia\Emails\Email` are always registered: they have no PHP implementation. Their signatures are in
-`stubs/`, `packages/image/stubs/` and `packages/emails/stubs/` for PHPStan, which runs without the
-extension. Every other class is registered only when
-`_APP_EXTENSION_LIBRARIES` names its package. Otherwise Composer loads the package's PHP class as
-before:
+Every class is registered unconditionally: `Utopia\Image\Canvas`, `Utopia\Image\Font`,
+`Utopia\DSN\DSN`, `Utopia\Locale\Locale`, `Utopia\UserAgent\UserAgent`, `Utopia\Domains\Domain` and
+`Utopia\Emails\Email` have no PHP implementation. Their signatures are in `stubs/`,
+`packages/image/stubs/`, `packages/user-agent/stubs/`, `packages/domains/stubs/` and
+`packages/emails/stubs/` for PHPStan, which runs without the extension.
 
-```sh
-_APP_EXTENSION_LIBRARIES=user-agent,domains   # Utopia\UserAgent\UserAgent and Utopia\Domains\Domain from the extension
-```
+Each class was canaried on Cloud behind `_APP_EXTENSION_LIBRARIES` (an `enabled("<package>")` check
+in `src/lib.rs` that registered it only when the variable named its package), region by region,
+before its PHP copy was removed (appwrite-labs/cloud#7503). The extension no longer reads the
+variable. A library ported later can bring the switch back: see `src/lib.rs` before the emails
+removal.
 
-The extension reads it once, when PHP loads the module, so changing it takes a restart and no
-deploy. Each library is canaried on Cloud this way before it becomes the default.
-
-CI runs `crates/extension/tests/run.sh` in the development image. It finds the libraries from the
-`enabled()` calls in `src/lib.rs` and requires a parity corpus at `tests/<name>.php` for each. For
-every library it runs `packages/<name>/tests` on the extension and diffs the corpus on both
-implementations, first one library at a time, then with all of them on. A new library needs only
-its `enabled()` call, its corpus and its package tests; there is no CI step to add.
-
-Once a library has run on the extension everywhere, its PHP package is removed: the class is
-registered unconditionally, `tests/<name>.expected.jsonl` holds the output of the PHP class it
-replaced, and `run.sh` diffs the corpus against that file. The package stays published at its last
-release for projects outside this repository; the root `composer.json` keeps `replace`-ing it so it
-is never installed here.
+CI runs `crates/extension/tests/run.sh` in the development image. For every
+`tests/<name>.expected.jsonl`, the output of the PHP class a class replaced, it runs
+`packages/<name>/tests` on the extension and diffs `tests/<name>.php`, the parity corpus, against
+the file. The packages stay published at their last PHP release for projects outside this
+repository; the root `composer.json` keeps `replace`-ing those it no longer needs, so they are never
+installed here.
 
 ## Utopia\DSN\DSN
 
@@ -104,17 +97,20 @@ file and line, since the class has no PHP source.
 
 ## Utopia\UserAgent\UserAgent
 
-Over `crates/utopia/user-agent` (`_APP_EXTENSION_LIBRARIES=user-agent`). Only `UserAgent` moves: what
-it returns are the package's own `OperatingSystem`, `Client`, `Device` and `Bot` objects, built by
-their PHP constructors once per agent and returned as the same object on every call, as in PHP. The
-detectors in `Utopia\UserAgent\Detection` stay PHP. The class is final with a private constructor
+Over `crates/utopia/user-agent`, always registered. Once the extension had served it in every Cloud
+region (appwrite-labs/cloud#7503), the PHP parser (`UserAgent.php` and `Detection\*`) was removed
+from `packages/user-agent`, which now requires `ext-utopia` like `packages/image`; 0.1.x on
+Packagist is the last release that parses in PHP. What `UserAgent` returns are the package's own
+`OperatingSystem`, `Client`, `Device` and `Bot` objects, built by their PHP constructors once per
+agent and returned as the same object on every call, as in PHP. The class is final with a private constructor
 and the PHP class's private properties, so `==`, `var_dump()` and `(array)` see what they see in PHP.
 
-`crates/extension/tests/user-agent.php` prints a corpus of results that must be identical on both
-implementations: every string in the package's tests, agents Appwrite sees (SDKs, the CLI, HTTP
+`crates/extension/tests/user-agent.php` prints a corpus of results that must match
+`user-agent.expected.jsonl`, the output of the PHP class: every string in the package's tests, agents Appwrite sees (SDKs, the CLI, HTTP
 libraries, browsers, previews, monitors, bots), edge cases (empty, case, control bytes, bytes that are
 not UTF-8, 100 KB inputs) and seeded mutations of all of them, read through every method and through
-`Appwrite\Detector\Detector`. It asserts these known differences on the extension:
+`Appwrite\Detector\Detector`. `packages/user-agent/tests` run on the extension too. It asserts these
+known differences from the PHP class:
 
 - A `null`, array or object argument and a missing argument raise the same `TypeError` and
   `ArgumentCountError` with ext-php-rs's message.
@@ -123,20 +119,23 @@ not UTF-8, 100 KB inputs) and seeded mutations of all of them, read through ever
 
 ## Utopia\Domains\Domain
 
-Over `crates/utopia/domains` (`_APP_EXTENSION_LIBRARIES=domains`), the Public Suffix List parser of
-`packages/domains`. The registrars make network calls, so they and the validators stay PHP. The
-crate embeds the list as `crates/utopia/domains/data/public-suffix-list.txt`, exported from the PHP
-package's `data/data.php`, so both read the same rules. PHP fills the class's protected properties as
+Over `crates/utopia/domains`, always registered: the Public Suffix List parser of `packages/domains`.
+Once the extension had served it in every Cloud region (appwrite-labs/cloud#7503), the PHP class
+(`src/Domain.php`) was removed from `packages/domains`, which now requires `ext-utopia` like
+`packages/image`; 4.4.x on Packagist is the last release that parses in PHP. The registrars make
+network calls, so they and the validators stay PHP. The crate embeds the list as
+`crates/utopia/domains/data/public-suffix-list.txt`, exported from the package's `data/data.php`,
+which stays the list's source. PHP fills the class's protected properties as
 its getters run (`getTLD()` sets `$TLD`, a matching `getSuffix()` sets `$suffix` and `$rule`), and the
 binding shows the same properties, so `==`, `var_dump()` and `(array)` see what they see in PHP.
 
-`crates/extension/tests/domains.php` prints a corpus of results that must be identical on both
-implementations: every rule of `data.php` as a suffix, under a name, under a subdomain and in upper
+`crates/extension/tests/domains.php` prints a corpus of results that must match
+`domains.expected.jsonl`, the output of the PHP class: every rule of `data.php` as a suffix, under a name, under a subdomain and in upper
 case, so a list refreshed on one side and not the other fails it; hostnames Appwrite and Cloud parse;
 edge cases (empty and dotted names, `0`, IDN and punycode, IPs, ports, bytes that are not UTF-8,
 URLs); the properties after each getter and after every getter in reverse; the scalar arguments PHP
-converts; and `==`, clone, `var_dump()`, reflection and a subclass. It asserts one known difference on
-the extension:
+converts; and `==`, clone, `var_dump()`, reflection and a subclass. `packages/domains/tests` run on
+the extension too. It asserts one known difference from the PHP class:
 
 - The exception for a URL (`http://`, `https://`) holding bytes that are not UTF-8 shows them as
   U+FFFD; PHP's message keeps the bytes.
@@ -176,16 +175,6 @@ differences from the PHP class:
 - The protected helpers `initializeProviders()`, `getProviderForDomain()` and `isDomainSupported()`
   and the protected static properties `$freeDomains`, `$disposableDomains` and `$providers` do not
   exist: a subclass cannot call or read them. Nothing in Appwrite or Cloud subclasses `Email`.
-
-## Benchmarks
-
-Every class's PR carries a benchmark against the PHP class. `crates/extension/bench/<name>.php`
-times one implementation; `run.py` runs it on both, alternating, and prints the medians:
-
-```sh
-cargo build --release -p utopia-extension
-python3 crates/extension/bench/run.py crates/extension/bench/user-agent.php . target/release/libutopia.so 5
-```
 
 ## Utopia\Image\Canvas and Utopia\Image\Font
 
