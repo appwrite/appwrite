@@ -6,6 +6,10 @@ parameters:
     paths:
         - src
         - tests
+    # Utopia\Domains\Domain is registered by the utopia PHP extension; its stub lives in the
+    # domains package of this repository.
+    scanFiles:
+        - ../domains/stubs/Domain.php
     scanDirectories:
         - vendor/swoole/ide-helper
     excludePaths:
