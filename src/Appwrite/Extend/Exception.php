@@ -358,7 +358,6 @@ class Exception extends \Exception
     public const string MONITOR_RULES_INVALID = 'monitor_rules_invalid';
     public const string MONITOR_TYPE_MISMATCH = 'monitor_type_mismatch';
     public const string MONITOR_RESOURCE_NOT_FOUND = 'monitor_resource_not_found';
-    public const string MONITOR_TARGET_INVALID = 'monitor_target_invalid';
 
     /** Alerts */
     public const string ALERT_NOT_FOUND = 'alert_not_found';

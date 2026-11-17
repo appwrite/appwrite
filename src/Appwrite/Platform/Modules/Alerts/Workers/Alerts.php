@@ -6,22 +6,17 @@ use Appwrite\Alert\Change;
 use Appwrite\Alert\Comparator;
 use Appwrite\Alert\Email;
 use Appwrite\Alert\Events;
-use Appwrite\Alert\Figure;
 use Appwrite\Alert\Meter;
-use Appwrite\Alert\Probe\Result;
-use Appwrite\Alert\Prober;
 use Appwrite\Alert\Quantity;
 use Appwrite\Alert\Schedules;
 use Appwrite\Alert\Severity;
 use Appwrite\Alert\State;
 use Appwrite\Alert\Status;
 use Appwrite\Alert\Unsubscribe;
-use Appwrite\Alert\Wording;
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Alert as AlertMessage;
 use Appwrite\Event\Message\Notification as NotificationMessage;
-use Appwrite\Event\Message\ProbeResult as ProbeResultMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Realtime;
@@ -42,9 +37,7 @@ use Utopia\Usage\Tenant;
 
 /**
  * Measures one monitor, compares it with its threshold and records the result
- * on the monitor and on the alert it opens while firing. A monitor whose type
- * registers a `probe` in `app/config/alerts.php` checks its target instead, and
- * fires while that check fails. Every change of state
+ * on the monitor and on the alert it opens while firing. Every change of state
  * fires a project event (`monitors.[monitorId].alerts.[alertId].firing` or
  * `.resolved`) for webhooks, functions and realtime. The organization's members
  * holding a role its `notify` names are notified by email, by push and in the console:
@@ -91,13 +84,6 @@ class Alerts extends Action
         Realtime $queueForRealtime,
         array $platform,
     ): void {
-        // A check the prober ran, handed back by `probe-results` with the project it was scheduled for.
-        if (isset($message->getPayload()['result'])) {
-            $this->report(ProbeResultMessage::fromArray($message->getPayload()), $project, $dbForProject, $dbForPlatform, $publisherForNotifications, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $platform);
-
-            return;
-        }
-
         $monitorId = AlertMessage::fromArray($message->getPayload())->monitorId;
         Span::add('monitor.id', $monitorId);
 
@@ -118,12 +104,6 @@ class Alerts extends Action
             return;
         }
         if (!$monitor->getAttribute('enabled', false) || $monitor->getAttribute('projectInternalId') !== (string) $project->getSequence()) {
-            return;
-        }
-
-        if (isset(Prober::KINDS[(string) $monitor->getAttribute('type')])) {
-            $this->dispatch($monitor);
-
             return;
         }
 
@@ -178,121 +158,16 @@ class Alerts extends Action
     ): void {
         $comparator = Comparator::from((string) $monitor->getAttribute('comparator'));
         $matches = $comparator->matches($value, (float) $monitor->getAttribute('threshold'));
-
-        Span::add('monitor.metric', (string) $monitor->getAttribute('metric'));
-
-        $this->change($monitor, $project, $matches ? Status::Firing : Status::Ok, $value, $comparator, $now, ['value' => $value], $dbForPlatform, $publisherForNotifications, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $platform, $dbForProject);
-    }
-
-    /**
-     * Hands a probe monitor's check to the synthetics-operator prober, which pops
-     * it from Redis, checks the target and pushes what it found back for
-     * `probe-results`. The check returns through {@see self::report()}.
-     */
-    protected function dispatch(Document $monitor): void
-    {
-        $dsn = System::getEnv('_APP_CONNECTIONS_PROBER', '');
-        if ($dsn === '') {
-            throw new \RuntimeException('_APP_CONNECTIONS_PROBER is not set, so there is no prober to check probe monitors.');
-        }
-
-        // One connection per job: a single push, with nothing to keep alive between jobs.
-        $redis = Prober::connect($dsn);
-        try {
-            $redis->lPush(Prober::JOBS, (string) \json_encode(Prober::job($monitor, new \DateTimeImmutable())));
-        } finally {
-            $redis->close();
-        }
-    }
-
-    /**
-     * Records a check the prober ran on the monitor, unless the monitor no longer
-     * runs it: deleted, disabled, moved, or checking another target since.
-     * {@see Prober::check()} drops results that are stale. A failing check fires
-     * the monitor and a passing one recovers it, as a usage monitor's reading
-     * does; its latency is the alert's reading.
-     *
-     * @param array<string, mixed> $platform
-     */
-    private function report(
-        ProbeResultMessage $message,
-        Document $project,
-        Database $dbForProject,
-        Database $dbForPlatform,
-        NotificationPublisher $publisherForNotifications,
-        Event $queueForEvents,
-        Webhook $queueForWebhooks,
-        FunctionPublisher $publisherForFunctions,
-        Realtime $queueForRealtime,
-        array $platform,
-    ): void {
-        Span::add('monitor.id', $message->monitorId);
-
-        if ($project->isEmpty()) {
-            return;
-        }
-
-        $monitor = $dbForPlatform->getDocument('monitors', $message->monitorId);
-        if ($monitor->isEmpty() || !$monitor->getAttribute('enabled', false) || $monitor->getAttribute('projectInternalId') !== (string) $project->getSequence()) {
-            return;
-        }
-
-        $check = Prober::check($monitor, $message->result);
-        if ($check === null) {
-            Span::add('monitor.dropped', (string) ($message->result['result'] ?? ''));
-
-            return;
-        }
-
-        Span::add('monitor.result', $check->result->value);
-        Span::add('monitor.latency', $check->latency);
-
-        $reading = [
-            'result' => $check->result->value,
-            'latency' => $check->latency,
-            'code' => $check->code,
-            'certificateExpiresAt' => $check->certificateExpiresAt === null ? null : DateTime::format(\DateTime::createFromImmutable($check->certificateExpiresAt)),
-        ];
-        // What the alert and its notification describe.
-        foreach ($reading as $key => $value) {
-            $monitor->setAttribute($key, $value);
-        }
-
-        // A latency only gets worse as it grows.
-        $this->change($monitor, $project, $check->result === Result::Ok ? Status::Ok : Status::Firing, (float) $check->latency, Comparator::GreaterThan, new \DateTimeImmutable(), $reading, $dbForPlatform, $publisherForNotifications, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $platform, $dbForProject);
-    }
-
-    /**
-     * Moves the monitor to the status its latest reading gives it, keeps its alert and announces it.
-     *
-     * @param array<string, mixed> $attributes what to store on the monitor besides its status
-     * @param array<string, mixed> $platform
-     */
-    private function change(
-        Document $monitor,
-        Document $project,
-        Status $status,
-        float $value,
-        Comparator $comparator,
-        \DateTimeImmutable $now,
-        array $attributes,
-        Database $dbForPlatform,
-        NotificationPublisher $publisherForNotifications,
-        Event $queueForEvents,
-        Webhook $queueForWebhooks,
-        FunctionPublisher $publisherForFunctions,
-        Realtime $queueForRealtime,
-        array $platform,
-        ?Database $dbForProject,
-    ): void {
         $previous = Status::tryFrom((string) $monitor->getAttribute('status')) ?? Status::Ok;
+        $status = $matches ? Status::Firing : Status::Ok;
         $evaluatedAt = DateTime::format(\DateTime::createFromImmutable($now));
 
+        Span::add('monitor.metric', (string) $monitor->getAttribute('metric'));
         Span::add('monitor.value', $value);
         Span::add('monitor.status', $status->value);
 
         $changes = new Document([
-            ...$attributes,
+            'value' => $value,
             'evaluatedAt' => $evaluatedAt,
         ]);
 
@@ -413,14 +288,12 @@ class Alerts extends Action
                 'resourceType' => (string) $monitor->getAttribute('resourceType'),
                 'resourceId' => (string) $monitor->getAttribute('resourceId'),
                 'metric' => (string) $monitor->getAttribute('metric'),
-                // Probe monitors compare no metric.
-                'comparator' => (string) $monitor->getAttribute('comparator') === '' ? null : $comparator->value,
-                'result' => (string) $monitor->getAttribute('result', ''),
+                'comparator' => $comparator->value,
                 'threshold' => (float) $monitor->getAttribute('threshold'),
                 'value' => $value,
                 'peak' => $value,
                 'notifications' => 0,
-                'search' => \implode(' ', \array_filter([$alertId, $monitor->getId(), (string) $monitor->getAttribute('name'), (string) $monitor->getAttribute('metric'), (string) $monitor->getAttribute('type')])),
+                'search' => \implode(' ', \array_filter([$alertId, $monitor->getId(), (string) $monitor->getAttribute('name'), (string) $monitor->getAttribute('metric')])),
             ]));
         } catch (Duplicate) {
             return $dbForPlatform->getDocument('monitorAlerts', $alertId);
@@ -569,7 +442,7 @@ class Alerts extends Action
             'metric' => (string) ($definition['label'] ?? $metric),
             'place' => $projectName,
             'value' => new Quantity($value, $unit),
-            'comparator' => Comparator::tryFrom((string) $monitor->getAttribute('comparator')) ?? Comparator::GreaterThan,
+            'comparator' => Comparator::from((string) $monitor->getAttribute('comparator')),
             'threshold' => new Quantity((float) $monitor->getAttribute('threshold'), $unit),
             'window' => ($definition['kind'] ?? 'gauge') !== 'gauge' ? (int) $monitor->getAttribute('window') : null,
             'changedAt' => new \DateTimeImmutable($changedAt),
@@ -584,13 +457,6 @@ class Alerts extends Action
             // The monitor's drawer, which pauses it from its header.
             'pauseUrl' => $consoleUrl . $this->path($project) . '/monitors?monitor=' . $monitor->getId(),
         ];
-
-        $result = Result::tryFrom((string) $monitor->getAttribute('result'));
-        if ($result !== null) {
-            $notice['wording'] = $this->wording($monitor, $status, $result);
-            $notice['window'] = null;
-            $notice['details'] = [];
-        }
 
         foreach ($members as [$user]) {
             $resource = [
@@ -665,40 +531,6 @@ class Alerts extends Action
                 ],
             ));
         }
-    }
-
-    /**
-     * What a probe monitor's email says in place of a metric against a threshold:
-     * its target, what the check found and, once it passes again, that it recovered.
-     */
-    protected function wording(Document $monitor, Status $status, Result $result): Wording
-    {
-        $type = (string) $monitor->getAttribute('type');
-        $target = match ($type) {
-            MONITOR_TYPE_HTTP => (string) $monitor->getAttribute('url'),
-            MONITOR_TYPE_DNS => $monitor->getAttribute('record') . ' ' . $monitor->getAttribute('domain'),
-            default => $monitor->getAttribute('host') . ':' . $monitor->getAttribute('port'),
-        };
-        $label = (string) (Config::getParam('alerts', [])['types'][$type]['label'] ?? \strtoupper($type));
-        $code = $monitor->getAttribute('code');
-        $found = $result->phrase() . ($code === null ? '' : ' (' . $code . ')');
-        $every = 'Checked every ' . (int) $monitor->getAttribute('interval') . ' seconds';
-
-        if ($status === Status::Firing) {
-            return new Wording(
-                heading: "{$target} is failing",
-                summary: "The {$label} check of {$target} failed: {$found}.",
-                value: new Figure('Result', $result->value, $found),
-                threshold: new Figure('Target', $target, $every),
-            );
-        }
-
-        return new Wording(
-            heading: "{$target} is passing again",
-            summary: "The {$label} check of {$target} passes again.",
-            value: new Figure('Result', $result->value, (int) $monitor->getAttribute('latency') . ' ms'),
-            threshold: new Figure('Target', $target, $every),
-        );
     }
 
     /**

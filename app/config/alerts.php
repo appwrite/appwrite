@@ -8,10 +8,7 @@ use Appwrite\Utopia\Database\Documents\User;
  * `types` are the kinds of check a monitor runs, each with its own create and
  * update routes under `/v1/monitors/<type>`; `usage` reads the project's usage
  * stats. `optOut` lets a recipient stop every alert email of the type at once;
- * without it, an email offers to stop only its own monitor's. HTTP, DNS, TCP and
- * SMTP monitors check a target: the synthetics-operator prober runs each check on
- * the monitor's own interval (see `Appwrite\Alert\Prober`), and a failing check
- * opens its alert. The rest describes usage monitors.
+ * without it, an email offers to stop only its own monitor's. The rest describes usage monitors.
  *
  * `resources` are what a usage monitor's `resourceType` rule can scope it to,
  * each with the name alert emails give the type, the project collection its ID
@@ -48,18 +45,6 @@ return [
         'usage' => [
             'label' => 'Usage',
             'optOut' => true,
-        ],
-        MONITOR_TYPE_HTTP => [
-            'label' => 'HTTP',
-        ],
-        MONITOR_TYPE_DNS => [
-            'label' => 'DNS',
-        ],
-        MONITOR_TYPE_TCP => [
-            'label' => 'TCP',
-        ],
-        MONITOR_TYPE_SMTP => [
-            'label' => 'SMTP',
         ],
     ],
     'resources' => [

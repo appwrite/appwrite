@@ -1377,11 +1377,6 @@ return [
         'description' => 'The resource the monitor watches could not be found in this project.',
         'code' => 400,
     ],
-    Exception::MONITOR_TARGET_INVALID => [
-        'name' => Exception::MONITOR_TARGET_INVALID,
-        'description' => 'The monitor\'s target is invalid, such as a DNS resolver that is not an IP address, or a timeout longer than the interval.',
-        'code' => 400,
-    ],
     Exception::ALERT_NOT_FOUND => [
         'name' => Exception::ALERT_NOT_FOUND,
         'description' => 'Alert with the requested ID could not be found.',

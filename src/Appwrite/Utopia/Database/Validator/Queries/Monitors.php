@@ -13,7 +13,6 @@ class Monitors extends Base
         'enabled',
         'severity',
         'status',
-        'result',
         'evaluatedAt',
         'triggeredAt',
         'search',

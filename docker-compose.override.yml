@@ -403,19 +403,6 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./packages:/usr/src/code/packages
-  appwrite-task-probe-results:
-    build:
-      context: .
-      target: development
-      args:
-        DEBUG: false
-        TESTING: true
-        VERSION: dev
-    image: appwrite-dev
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-      - ./packages:/usr/src/code/packages
   appwrite-task-stats-resources:
     build:
       context: .

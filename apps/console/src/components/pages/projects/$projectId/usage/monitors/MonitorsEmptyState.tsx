@@ -15,6 +15,7 @@ import {
 import { PROBE_TYPES } from '@/lib/alerts/probes'
 import type { ProbeType } from '@/lib/appwrite/monitors'
 import { useT } from '@/lib/i18n/translate'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { PRESETS, type AlertPreset } from './presets'
 import { MONITOR_TYPES } from './ProbeFields'
 import { useRuleSeries } from './RuleChart'
@@ -179,6 +180,7 @@ export function MonitorsEmptyState({
   createDisabledTooltip?: string
 }) {
   const t = useT()
+  const { isCloud } = useConsoleProfile()
   return (
     <div className="mx-auto w-full max-w-4xl py-4 sm:py-6">
       <ProductEmptyStateHero
@@ -214,39 +216,41 @@ export function MonitorsEmptyState({
           ))}
         </div>
       </div>
-      <div className="mt-8">
-        <p className="mb-3 text-[12px] font-medium text-muted-foreground">
-          {t('Check that your endpoints respond')}
-        </p>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {PROBE_TYPES.map((probe) => {
-            const Icon =
-              MONITOR_TYPES.find((entry) => entry.value === probe.value)
-                ?.icon ?? Bell
-            return (
-              <button
-                key={probe.value}
-                type="button"
-                disabled={createDisabled}
-                onClick={() => onProbe(probe.value)}
-                className="group flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3 text-start transition-colors hover:border-foreground/20 hover:bg-accent/40 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                  <Icon className="h-4 w-4" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-[13px] font-medium text-foreground">
-                    {t('{type} monitor').replace('{type}', probe.label)}
+      {isCloud && (
+        <div className="mt-8">
+          <p className="mb-3 text-[12px] font-medium text-muted-foreground">
+            {t('Check that your endpoints respond')}
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {PROBE_TYPES.map((probe) => {
+              const Icon =
+                MONITOR_TYPES.find((entry) => entry.value === probe.value)
+                  ?.icon ?? Bell
+              return (
+                <button
+                  key={probe.value}
+                  type="button"
+                  disabled={createDisabled}
+                  onClick={() => onProbe(probe.value)}
+                  className="group flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3 text-start transition-colors hover:border-foreground/20 hover:bg-accent/40 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                    <Icon className="h-4 w-4" />
                   </span>
-                  <span className="mt-0.5 block text-[12px] text-muted-foreground">
-                    {t(probe.description)}
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[13px] font-medium text-foreground">
+                      {t('{type} monitor').replace('{type}', probe.label)}
+                    </span>
+                    <span className="mt-0.5 block text-[12px] text-muted-foreground">
+                      {t(probe.description)}
+                    </span>
                   </span>
-                </span>
-              </button>
-            )
-          })}
+                </button>
+              )
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

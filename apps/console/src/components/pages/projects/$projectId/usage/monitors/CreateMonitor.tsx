@@ -17,6 +17,7 @@ import {
 import { useCreateMonitor, useProject } from '@/lib/react-query/hooks'
 import { getErrorMessage, isPlanLimitError } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { PROBE_TYPES } from '@/lib/alerts/probes'
 import type { ProbeType } from '@/lib/appwrite/monitors'
 import {
@@ -53,6 +54,7 @@ export function CreateMonitor({
   initialType = 'usage',
 }: CreateAlertProps) {
   const t = useT()
+  const { isCloud } = useConsoleProfile()
   const navigate = useNavigate()
   const { project } = useProject(projectId)
   const createMutation = useCreateMonitor(projectId)
@@ -144,11 +146,13 @@ export function CreateMonitor({
             className="flex min-h-0 flex-1 flex-col"
           >
             <div className="min-h-0 flex-1 space-y-7 overflow-y-auto px-6 py-5">
-              <MonitorTypePicker
-                value={type}
-                onChange={handleTypeChange}
-                disabled={isPending}
-              />
+              {isCloud && (
+                <MonitorTypePicker
+                  value={type}
+                  onChange={handleTypeChange}
+                  disabled={isPending}
+                />
+              )}
               {type === 'usage' ? (
                 <RuleFields
                   projectId={projectId}
