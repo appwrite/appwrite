@@ -9,4 +9,6 @@ export interface ProxyRuleRecord {
   type: string
   /** The hostname that was looked up */
   name: string
+  /** The value Appwrite expects */
+  value: string
 }
