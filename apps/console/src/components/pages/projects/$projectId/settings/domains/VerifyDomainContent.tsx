@@ -425,15 +425,17 @@ function getDnsBanners(
       ),
     })
   }
-  for (const check of pointing) {
-    if (check.status !== 'mismatch') continue
-    banners.push({
-      tone: 'error',
-      prefix: t('{type} record').replace('{type}', check.type),
-      text: t('It points to {found}. Change it to {value}.')
-        .replace('{found}', check.found[0] ?? '')
-        .replace('{value}', check.value),
-    })
+  if (!verified) {
+    for (const check of pointing) {
+      if (check.status !== 'mismatch') continue
+      banners.push({
+        tone: 'error',
+        prefix: t('{type} record').replace('{type}', check.type),
+        text: t('It points to {found}. Change it to {value}.')
+          .replace('{found}', check.found[0] ?? '')
+          .replace('{value}', check.value),
+      })
+    }
   }
   if (banners.length > 0) return banners
 
