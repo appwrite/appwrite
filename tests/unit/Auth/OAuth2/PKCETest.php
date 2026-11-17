@@ -10,6 +10,7 @@ use Appwrite\Auth\OAuth2\Cloudflare;
 use Appwrite\Auth\OAuth2\Etsy;
 use Appwrite\Auth\OAuth2\Kick;
 use Appwrite\Auth\OAuth2\Resend;
+use Appwrite\Auth\OAuth2\Vercel;
 use Appwrite\Auth\OAuth2\X;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -33,6 +34,7 @@ final class PKCETest extends TestCase
         yield 'appwrite' => [AppwriteProvider::class];
         yield 'resend' => [Resend::class];
         yield 'cloudflare' => [Cloudflare::class];
+        yield 'vercel' => [Vercel::class];
     }
 
     protected function setUp(): void
