@@ -1971,12 +1971,15 @@ class Videos extends Action
      * Bucket and file IDs can be reused once deleted, so the documents found
      * under them must still carry the internal IDs recorded when access was
      * checked; anything else is a different file and is treated as missing.
+     * Files uploaded before buckets' internal IDs were recorded on them leave
+     * the bucket's empty, so only a recorded one is compared.
      */
     private function resolveFile(Database $dbForProject, Document $source): Document
     {
         $bucket = $dbForProject->getDocument('buckets', (string) $source->getAttribute('bucketId', ''));
+        $bucketInternalId = (string) $source->getAttribute('bucketInternalId', '');
 
-        if ($bucket->isEmpty() || (string) $bucket->getSequence() !== (string) $source->getAttribute('bucketInternalId', '')) {
+        if ($bucket->isEmpty() || ($bucketInternalId !== '' && (string) $bucket->getSequence() !== $bucketInternalId)) {
             throw new AppwriteException(AppwriteException::STORAGE_BUCKET_NOT_FOUND);
         }
 
