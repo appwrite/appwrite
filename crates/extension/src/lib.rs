@@ -2,11 +2,11 @@
 //! value objects and enums those classes take live in the Composer packages
 //! (`packages/<name>`), as plain PHP.
 //!
-//! `Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN` and
-//! `Utopia\Locale\Locale` are always registered: they have no PHP
-//! implementation. Every other library still has one, and its class is
-//! registered only when `_APP_EXTENSION_LIBRARIES` names its package
-//! (`user-agent`, `domains`, `emails`), so each can be canaried and switched back to PHP
+//! `Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`,
+//! `Utopia\Locale\Locale` and `Utopia\Emails\Email` are always registered:
+//! they have no PHP implementation. Every other library still has one, and its
+//! class is registered only when `_APP_EXTENSION_LIBRARIES` names its package
+//! (`user-agent`, `domains`), so each can be canaried and switched back to PHP
 //! with a restart, not a deploy.
 
 mod canvas;
@@ -36,9 +36,9 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .class::<canvas::Canvas>()
         .class::<canvas::Font>()
         .class::<dsn::Dsn>()
-        .class::<locale::Locale>();
+        .class::<locale::Locale>()
+        .class::<emails::Email>();
     let module = if enabled("domains") { module.class::<domains::Domain>() } else { module };
-    let module = if enabled("emails") { module.class::<emails::Email>() } else { module };
     let module = if enabled("user-agent") { module.class::<user_agent::UserAgent>() } else { module };
     module.request_shutdown_function(request_shutdown)
 }

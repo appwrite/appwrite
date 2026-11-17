@@ -20,9 +20,10 @@ and libclang at build time.
 
 ## Switching a class on
 
-`Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN` and `Utopia\Locale\Locale` are always
-registered: they have no PHP implementation. Their signatures are in `stubs/` and `packages/image/stubs/` for PHPStan,
-which runs without the extension. Every other class is registered only when
+`Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`, `Utopia\Locale\Locale` and
+`Utopia\Emails\Email` are always registered: they have no PHP implementation. Their signatures are in
+`stubs/`, `packages/image/stubs/` and `packages/emails/stubs/` for PHPStan, which runs without the
+extension. Every other class is registered only when
 `_APP_EXTENSION_LIBRARIES` names its package. Otherwise Composer loads the package's PHP class as
 before:
 
@@ -145,12 +146,15 @@ extphprs/ext-php-rs#838); the corpus clones one.
 
 ## Utopia\Emails\Email
 
-Over `crates/utopia/emails` (`_APP_EXTENSION_LIBRARIES=emails`): parsing, the local-part and
-`FILTER_VALIDATE_EMAIL` checks, the free and disposable lists and the canonical forms of
-`packages/emails`. The validators and the `Canonicals` provider classes stay PHP; the validators make
-`Email`s, so they use the extension's. The crate embeds the lists as
-`crates/utopia/emails/data/{free,disposable}-domains.txt`, exported from the PHP package's
-`data/*-domains.php` by `data/export.php`.
+Over `crates/utopia/emails`, always registered: parsing, the local-part and `FILTER_VALIDATE_EMAIL`
+checks, the free and disposable lists and the canonical forms of `packages/emails`. Once the
+extension had served it in every Cloud region (appwrite-labs/cloud#7503), the PHP class
+(`src/Email.php`) was removed from `packages/emails`, which now requires `ext-utopia` like
+`packages/image`; 0.8.x on Packagist is the last release that parses in PHP. The validators and the
+`Canonicals` provider classes stay PHP; the validators make `Email`s, so they use the extension's.
+The crate embeds the lists as `crates/utopia/emails/data/{free,disposable}-domains.txt`, exported from
+the package's `data/*-domains.php` (which `import.php` refreshes, and which stay the lists' source)
+by `data/export.php`.
 
 What `Email` asks of its domain is `Utopia\Domains\Domain`'s: the binding makes the
 `$domainInstance` object with `new Domain()` and calls `isKnown()`, `isTest()`, `getRegisterable()`
@@ -158,15 +162,16 @@ and `getSub()` on it as PHP does, so it is whichever implementation `domains` se
 same exception for a URL, and fills the same properties. `==`, `var_dump()`, `(array)` and `clone`
 (which shares `$domainInstance`) see what they see in PHP.
 
-`crates/extension/tests/emails.php` prints a corpus of results that must be identical on both
-implementations: every domain of both lists (and a subdomain of every 25th), so a list refreshed on
+`crates/extension/tests/emails.php` prints a corpus of results that must match
+`emails.expected.jsonl`, the output of the PHP class: every domain of both lists (and a subdomain of every 25th), so a list refreshed on
 one side and not the other fails it; every domain of every provider under local parts the rules
 change; addresses Appwrite and Cloud see and edge cases (whitespace, case, `0`, quoted and IP
 literal addresses, IDN, lengths at the limits, bytes that are not UTF-8, URLs as domains); 20,000
 seeded random addresses through `isValid()`, `hasValidLocal()`, `hasValidDomain()` and
 `getCanonical()`; the properties after each getter and after every getter in reverse; the scalar
 arguments PHP converts; `==`, clone, `var_dump()`, reflection, constants, subclasses and their clones; and the
-package's validators. It asserts these known differences on the extension:
+package's validators. `packages/emails/tests` run on the extension too. It asserts these known
+differences from the PHP class:
 
 - The protected helpers `initializeProviders()`, `getProviderForDomain()` and `isDomainSupported()`
   and the protected static properties `$freeDomains`, `$disposableDomains` and `$providers` do not

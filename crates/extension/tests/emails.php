@@ -1,20 +1,16 @@
 <?php
 
-// Parity corpus for Utopia\Emails\Email. Run it on the PHP class and on the utopia
-// extension's (_APP_EXTENSION_LIBRARIES=emails), and diff stdout: every line must match.
-// Stderr names the implementation that ran.
+// Parity corpus for Utopia\Emails\Email, which only the utopia extension provides. Its stdout
+// must match emails.expected.jsonl, the output of the PHP class it replaced (utopia-php/emails
+// 0.8). The validators and the canonical providers stay PHP.
 
 require __DIR__ . '/../../../vendor/autoload.php';
 
 use Utopia\Domains\Domain;
 use Utopia\Emails\Email;
 
-$internal = (new ReflectionClass(Email::class))->isInternal();
-fwrite(STDERR, 'Utopia\\Emails\\Email: ' . ($internal ? 'utopia extension' : 'PHP') . PHP_EOL);
-// A run meant for the extension that gets the PHP class would compare PHP with PHP and pass.
-$requested = in_array('emails', array_map(trim(...), explode(',', getenv('_APP_EXTENSION_LIBRARIES') ?: '')), true);
-if ($internal !== $requested) {
-    fwrite(STDERR, '_APP_EXTENSION_LIBRARIES ' . ($requested ? 'names' : 'does not name') . ' emails, but the other implementation loaded' . PHP_EOL);
+if (!(new ReflectionClass(Email::class))->isInternal()) {
+    fwrite(STDERR, 'Utopia\\Emails\\Email is not the utopia extension\'s' . PHP_EOL);
     exit(1);
 }
 
@@ -335,12 +331,9 @@ $waivers = [
     'protected helpers' => outcome(fn () => array_map(fn (string $method) => method_exists(Email::class, $method), ['initializeProviders', 'getProviderForDomain', 'isDomainSupported'])),
     'protected static properties' => outcome(fn () => array_keys((new ReflectionClass(Email::class))->getStaticProperties())),
 ];
-$expected = $internal ? [
+$expected = [
     'protected helpers' => ['value' => [false, false, false]],
     'protected static properties' => ['value' => []],
-] : [
-    'protected helpers' => ['value' => [true, true, true]],
-    'protected static properties' => ['value' => ['freeDomains', 'disposableDomains', 'providers']],
 ];
 foreach ($expected as $name => $outcome) {
     if ($waivers[$name] !== $outcome) {
