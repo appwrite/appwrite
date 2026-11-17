@@ -169,7 +169,7 @@ export function formatUsagePlanOverageValue(
     case 'gbhours':
       return formatGbHoursValue(value)
     default:
-      return formatCompactCount(value)
+      return formatCompactCount(value, { decimals: 2 })
   }
 }
 
