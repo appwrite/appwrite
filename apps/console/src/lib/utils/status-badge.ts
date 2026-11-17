@@ -5,6 +5,7 @@
  * All status badges should use these utilities for consistency.
  */
 
+import type { ProxyRuleRecord } from '@/lib/appwrite/proxy-rules'
 import type { CanonicalPlanId } from '@/lib/utils/plan-filter'
 
 /**
@@ -306,6 +307,30 @@ export function isWaitingForDns(
   return (
     !Number.isNaN(createdAt) &&
     now.getTime() - createdAt < DOMAIN_VERIFICATION_WINDOW_MS
+  )
+}
+
+/**
+ * Whether the last DNS check of a domain found a record with the wrong value:
+ * no pointing record verified
+ * while one points elsewhere. A subdomain points with its CNAME; an apex has
+ * no CNAME check, and its ALIAS is verified by the A and AAAA checks.
+ */
+export function hasWrongDnsRecord(
+  records: Pick<ProxyRuleRecord, 'type' | 'status'>[],
+): boolean {
+  const pointingTypes = ['CNAME', 'A', 'AAAA']
+  if (
+    records.some(
+      (r) => pointingTypes.includes(r.type) && r.status === 'verified',
+    )
+  )
+    return false
+  const cname = records.some((r) => r.type === 'CNAME')
+  return records.some(
+    (r) =>
+      (cname ? r.type === 'CNAME' : r.type === 'A' || r.type === 'AAAA') &&
+      r.status === 'mismatch',
   )
 }
 
