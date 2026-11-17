@@ -7,6 +7,7 @@
 
 import type { ProxyRuleRecord } from '@/lib/appwrite/proxy-rules'
 import type { CanonicalPlanId } from '@/lib/utils/plan-filter'
+import { getRecordName } from '@/lib/utils/proxy-domains'
 
 /**
  * Status types for general use cases
@@ -313,10 +314,12 @@ export function isWaitingForDns(
 /**
  * Whether the last DNS check of a domain found a record with the wrong value:
  * a CAA record that blocks the certificate, or no pointing record verified
- * while one points elsewhere. A subdomain points with its CNAME; an apex has
- * no CNAME check, and its ALIAS is verified by the A and AAAA checks.
+ * while one points elsewhere. A subdomain points with its CNAME. An apex
+ * points with an ALIAS, which the A and AAAA checks verify, as they do for a
+ * domain with no CNAME check.
  */
 export function hasWrongDnsRecord(
+  domain: string,
   records: Pick<ProxyRuleRecord, 'type' | 'status'>[],
 ): boolean {
   if (records.some((r) => r.type === 'CAA' && r.status === 'mismatch'))
@@ -328,7 +331,8 @@ export function hasWrongDnsRecord(
     )
   )
     return false
-  const cname = records.some((r) => r.type === 'CNAME')
+  const cname =
+    getRecordName(domain) !== '@' && records.some((r) => r.type === 'CNAME')
   return records.some(
     (r) =>
       (cname ? r.type === 'CNAME' : r.type === 'A' || r.type === 'AAAA') &&
@@ -401,6 +405,7 @@ export function getRuleStatusBadgeConfig(
     certificateStatus?: string
     logs?: string
     $createdAt?: string
+    domain?: string
     /** The stored DNS checks, see ProxyRuleRecord */
     records?: Pick<ProxyRuleRecord, 'type' | 'status'>[]
   },
@@ -436,7 +441,7 @@ export function getRuleStatusBadgeConfig(
   }
   // Not an error while Appwrite still checks the DNS on its own.
   if (isWaitingForDns(rule, now)) {
-    if (hasWrongDnsRecord(rule.records ?? [])) {
+    if (hasWrongDnsRecord(rule.domain ?? '', rule.records ?? [])) {
       return {
         variant: 'error',
         label: 'Action needed',
