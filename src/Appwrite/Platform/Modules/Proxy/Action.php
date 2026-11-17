@@ -363,7 +363,11 @@ class Action extends PlatformAction
             $error = $errors[$key] ?? null;
             $verified = $results[$key] ?? false;
 
+            // A passing lookup across several resolvers keeps no records, yet it found the expected value
             $found = $validator->records;
+            if ($verified && empty($found) && $type !== 'CAA') {
+                $found = [$value];
+            }
 
             $status = match (true) {
                 $verified => 'verified',
