@@ -323,15 +323,12 @@ export function VerifyDomainContent({
   // would block every CA.
   const hasCaa = !!caa && caa !== '0 issue ""'
 
-  // On the edge network the CNAME targets appwrite.network, while A and AAAA
-  // name the region's address, so only the CNAME and nameservers are offered.
-  const edge = edgeNetworkEnabled && resourceType !== 'api'
   const tabOptions = getVerificationMethods({
     domain: rule.domain,
     cloud: isCloud,
     cname,
-    a: edge ? undefined : a,
-    aaaa: edge ? undefined : aaaa,
+    a,
+    aaaa,
     nameservers,
   }).map((id) => ({ id, label: TAB_LABELS[id] }))
 
