@@ -217,4 +217,20 @@ export const heReviewsDictionary: Record<string, string> = {
   'New repositories will be reviewed': 'מאגרים חדשים ייסקרו',
   'New repositories will not be reviewed': 'מאגרים חדשים לא ייסקרו',
   'Failed to update new repositories': 'עדכון ההגדרה למאגרים חדשים נכשל',
+
+  // Learnings
+  Learnings: 'למידות',
+  learnings: 'למידות',
+  Learning: 'למידה',
+  'Asked by': 'התבקש על ידי',
+  'Learning actions': 'פעולות למידה',
+  'Open conversation on GitHub': 'פתיחת השיחה ב-GitHub',
+  'Learning has been deleted': 'הלמידה נמחקה',
+  'Failed to delete learning': 'מחיקת הלמידה נכשלה',
+  'No learnings yet': 'אין עדיין למידות',
+  'When someone asks the reviewer to remember a preference in a pull request conversation, it shows up here. Later reviews of the repository follow it.':
+    'כשמישהו מבקש מהסוקר לזכור העדפה בשיחה ב-Pull request, היא מופיעה כאן. הסקירות הבאות של ה-repo יפעלו לפיה.',
+  'Delete learning': 'מחיקת למידה',
+  'Later reviews and answers will no longer follow this learning. This action cannot be undone.':
+    'סקירות ותשובות עתידיות לא יפעלו עוד לפי הלמידה הזו. לא ניתן לבטל פעולה זו.',
 }
