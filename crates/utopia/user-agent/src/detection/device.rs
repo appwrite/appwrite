@@ -178,39 +178,71 @@ fn android(ua: &[u8]) -> Option<Device<'_>> {
         return None;
     }
     let model = model(ua);
-    let kind = if !contains_ci(ua, "Mobile") || has_tablet_model(model.as_deref()) { "tablet" } else { "smartphone" };
+    // Only browsers add the Mobile token; native stacks (Dalvik, the Flutter SDK) never do, so its
+    // absence there says nothing.
+    let browser_without_mobile = contains_ci(ua, "Mozilla/") && !contains_ci(ua, "Mobile");
+    let kind = if browser_without_mobile || has_tablet_model(model.as_deref()) { "tablet" } else { "smartphone" };
     let brand = brand(ua, model.as_deref());
     Some(device_of(kind, brand, model))
 }
 
-/// `/^(?:SM-[TX]|GT-P|Nexus (?:7|9|10)\b|Pixel (?:C|Tablet)\b|(?:Lenovo )?(?:TB-|YT-|Tab\b)|(?:Huawei )?MediaPad\b|(?:Xiaomi |Redmi |OnePlus )?Pad\b)/i`
+/// `/^(?:(?:samsung|google|lenovo|huawei|xiaomi|oneplus|oppo|vivo|honor|realme) )?(?:SM-[TXP]|GT-(?:P|N80|N51)|AGS\d?-|BAH\d?-|Nexus (?:7|9|10)\b|Pixel (?:C|Tablet)\b|(?:Lenovo )?(?:TB-|YT-|(?:Galaxy |Yoga )?Tab\b)|(?:Huawei )?(?:MediaPad|MatePad)\b|(?:Xiaomi |Redmi |OnePlus |OPPO |vivo |Honor |realme )?Pad\b)/i`
 ///
-/// Every alternative is anchored, so each optional prefix is tried with and
-/// without it.
+/// Every alternative is anchored, so each optional prefix is tried with and without it. The Flutter
+/// SDK sends the lowercase brand ahead of the model (`samsung SM-X710`).
 pub(super) fn has_tablet_model(model: Option<&[u8]>) -> bool {
+    const BRANDS: [&str; 10] =
+        ["samsung ", "google ", "lenovo ", "huawei ", "xiaomi ", "oneplus ", "oppo ", "vivo ", "honor ", "realme "];
     let Some(m) = model else {
         return false;
     };
+    tablet_model_at(m, 0)
+        || BRANDS.into_iter().any(|brand| starts_with_ci(m, 0, brand) && tablet_model_at(m, brand.len()))
+}
+
+/// The alternatives of [`has_tablet_model`] after its optional brand, starting at `at`.
+fn tablet_model_at(m: &[u8], at: usize) -> bool {
     // A word ending at `at + word.len()`.
     let word = |at: usize, word: &str| starts_with_ci(m, at, word) && word_end(m, at + word.len());
-    let after = |prefix: &str| if starts_with_ci(m, 0, prefix) { Some(prefix.len()) } else { None };
-    if (starts_with_ci(m, 0, "SM-") && m.get(3).is_some_and(|b| b"tTxX".contains(b))) || starts_with_ci(m, 0, "GT-P") {
+    let after = |at: usize, prefix: &str| if starts_with_ci(m, at, prefix) { Some(at + prefix.len()) } else { None };
+    if starts_with_ci(m, at, "SM-") && m.get(at + 3).is_some_and(|b| b"tTxXpP".contains(b)) {
         return true;
     }
-    if starts_with_ci(m, 0, "Nexus ") && (word(6, "7") || word(6, "9") || word(6, "10")) {
+    if ["GT-P", "GT-N80", "GT-N51"].into_iter().any(|prefix| starts_with_ci(m, at, prefix)) {
         return true;
     }
-    if starts_with_ci(m, 0, "Pixel ") && (word(6, "C") || word(6, "Tablet")) {
+    // `AGS\d?-`, `BAH\d?-`: a digit, when there is one, must be the one before the dash.
+    let code = |prefix: &str| {
+        after(at, prefix).is_some_and(|i| {
+            let i = if m.get(i).is_some_and(u8::is_ascii_digit) { i + 1 } else { i };
+            m.get(i) == Some(&b'-')
+        })
+    };
+    if code("AGS") || code("BAH") {
         return true;
     }
-    let lenovo = |at: usize| starts_with_ci(m, at, "TB-") || starts_with_ci(m, at, "YT-") || word(at, "Tab");
-    if after("Lenovo ").is_some_and(lenovo) || lenovo(0) {
+    if after(at, "Nexus ").is_some_and(|i| word(i, "7") || word(i, "9") || word(i, "10")) {
         return true;
     }
-    if after("Huawei ").is_some_and(|at| word(at, "MediaPad")) || word(0, "MediaPad") {
+    if after(at, "Pixel ").is_some_and(|i| word(i, "C") || word(i, "Tablet")) {
         return true;
     }
-    ["Xiaomi ", "Redmi ", "OnePlus "].into_iter().filter_map(after).any(|at| word(at, "Pad")) || word(0, "Pad")
+    let tab = |i: usize| {
+        ["Galaxy ", "Yoga "].into_iter().filter_map(|prefix| after(i, prefix)).any(|j| word(j, "Tab")) || word(i, "Tab")
+    };
+    let lenovo = |i: usize| starts_with_ci(m, i, "TB-") || starts_with_ci(m, i, "YT-") || tab(i);
+    if after(at, "Lenovo ").is_some_and(lenovo) || lenovo(at) {
+        return true;
+    }
+    let huawei = |i: usize| word(i, "MediaPad") || word(i, "MatePad");
+    if after(at, "Huawei ").is_some_and(huawei) || huawei(at) {
+        return true;
+    }
+    ["Xiaomi ", "Redmi ", "OnePlus ", "OPPO ", "vivo ", "Honor ", "realme "]
+        .into_iter()
+        .filter_map(|prefix| after(at, prefix))
+        .any(|i| word(i, "Pad"))
+        || word(at, "Pad")
 }
 
 /// `/(?:BlackBerry|BB10)/i`

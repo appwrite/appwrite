@@ -3609,6 +3609,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2WorkOS": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2X": [
             "customerKey",
             "secretKey",
@@ -3813,6 +3818,9 @@
             "providerRepositoryId",
             "strength"
         ],
+        "reviews.deleteLearning": [
+            "learningId"
+        ],
         "reviews.deleteRepository": [
             "repositoryId"
         ],
@@ -3825,6 +3833,10 @@
         ],
         "reviews.listEvents": [
             "reviewId",
+            "queries",
+            "total"
+        ],
+        "reviews.listLearnings": [
             "queries",
             "total"
         ],
@@ -7978,6 +7990,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2WorkOS": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2X": [
             "customerKey",
             "secretKey",
@@ -8152,6 +8169,9 @@
             "providerRepositoryId",
             "strength"
         ],
+        "reviews.deleteLearning": [
+            "learningId"
+        ],
         "reviews.deleteRepository": [
             "repositoryId"
         ],
@@ -8164,6 +8184,10 @@
         ],
         "reviews.listEvents": [
             "reviewId",
+            "queries",
+            "total"
+        ],
+        "reviews.listLearnings": [
             "queries",
             "total"
         ],
