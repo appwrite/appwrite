@@ -2,6 +2,7 @@ import { Fragment, useState, useMemo } from 'react'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
 import type { ProxyRuleRecord } from '@/lib/appwrite/proxy-rules'
+import { isWaitingForDns } from '@/lib/utils/status-badge'
 import {
   getRecordName,
   getVerificationMethods,
@@ -120,7 +121,14 @@ const TABLE_HEAD =
   'px-4 py-2.5 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
 
 /** The status pill of one record at the last check. */
-function RecordStatus({ record }: { record: DnsRecord }) {
+function RecordStatus({
+  record,
+  waiting,
+}: {
+  record: DnsRecord
+  /** Still inside the automatic check window. */
+  waiting: boolean
+}) {
   const t = useT()
   const { check } = record
   if (!check) return <span className="text-muted-foreground">-</span>
@@ -135,7 +143,7 @@ function RecordStatus({ record }: { record: DnsRecord }) {
     case 'missing':
       return (
         <Badge variant="info" className={pill}>
-          {t('Not detected')}
+          {waiting ? t('Not detected yet') : t('Not detected')}
         </Badge>
       )
     case 'mismatch':
@@ -156,9 +164,11 @@ function RecordStatus({ record }: { record: DnsRecord }) {
 function RecordSection({
   title,
   records,
+  waiting,
 }: {
   title: string
   records: DnsRecord[]
+  waiting: boolean
 }) {
   const t = useT()
   return (
@@ -198,7 +208,7 @@ function RecordSection({
                       />
                     </TableCell>
                     <TableCell className="px-4 py-3 text-end">
-                      <RecordStatus record={r} />
+                      <RecordStatus record={r} waiting={waiting} />
                     </TableCell>
                   </TableRow>
                 </Fragment>
@@ -574,6 +584,7 @@ export function VerifyDomainContent({
         <RecordSection
           title={t('Point your domain')}
           records={pointingRecords}
+          waiting={isWaitingForDns(rule)}
         />
       )}
     </div>
