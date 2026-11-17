@@ -127,7 +127,7 @@ DentalRx has passed **6,000 lifetime users**, a mix of dental students, dental p
 
 The biggest feature on the roadmap is prescriptions, which is temporarily switched off while it's rebuilt on the new Postgres backend. On top of each drug concept, the team is attaching the same building blocks hospitals use for prescribing. The data is ready. What remains is a clinical review of every entry and working through the legal requirements of prescribing.
 
-Along the way, Nickolas has become one of Appwrite's most vocal advocates, calling it a hidden gem, recommending it to every developer he knows, and moving a dental tech startup he works with onto it as well. For a small team, the reason comes down to speed.
+Along the way, Nickolas has become one of Appwrite's most vocal advocates, recommending it to every developer he knows and moving a dental tech startup he works with onto it as well.
 
 > "We're a small team, so every extra SaaS or layer of infrastructure slows down how fast we can ship. With Appwrite, everything we need is already there, so there's nothing between building something and shipping it. If you're bootstrapping your project, or building your startup, that's a huge win."
 
