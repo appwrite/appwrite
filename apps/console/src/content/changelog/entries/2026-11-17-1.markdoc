@@ -1,7 +1,7 @@
 ---
 layout: changelog
 title: "Force every user in a project to reset their password"
-date: 2026-11-13
+date: 2026-11-17
 cover: /images/blog/announcing-force-password-reset/cover.avif
 tags: auth, security, console, api
 ---
