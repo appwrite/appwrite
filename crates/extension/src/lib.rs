@@ -6,8 +6,8 @@
 //! `Utopia\Locale\Locale` and `Utopia\UserAgent\UserAgent` are always
 //! registered: they have no PHP implementation. Every other library still has
 //! one, and its class is registered only when `_APP_EXTENSION_LIBRARIES` names
-//! its package (`domains`, `emails`), so each can be canaried and switched back
-//! to PHP with a restart, not a deploy.
+//! its package (`domains`, `emails`, `validators`), so each can be canaried and
+//! switched back to PHP with a restart, not a deploy.
 
 mod canvas;
 mod domains;
@@ -16,6 +16,7 @@ mod emails;
 mod locale;
 mod string;
 mod user_agent;
+mod validators;
 
 use ext_php_rs::prelude::*;
 
@@ -30,6 +31,7 @@ fn enabled(package: &str) -> bool {
 
 /// The module PHP loads: every class of the extension that is switched on.
 #[php_module]
+#[php(startup = startup)]
 pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     let module = module
         .name("utopia")
@@ -41,6 +43,15 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     let module = if enabled("domains") { module.class::<domains::Domain>() } else { module };
     let module = if enabled("emails") { module.class::<emails::Email>() } else { module };
     module.request_shutdown_function(request_shutdown)
+}
+
+/// Registers the classes built by hand rather than with `#[php_class]` that are switched on.
+/// Runs in MINIT, before the `#[php_class]` classes are registered.
+fn startup(_kind: i32, _module: i32) -> i32 {
+    if !enabled("validators") {
+        return 0;
+    }
+    ext_php_rs::internal::startup_guard(validators::register)
 }
 
 /// Forgets what the classes hold for the request when it ends, as PHP frees its static state.

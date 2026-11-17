@@ -176,6 +176,36 @@ package's validators. It asserts these known differences on the extension:
   and the protected static properties `$freeDomains`, `$disposableDomains` and `$providers` do not
   exist: a subclass cannot call or read them. Nothing in Appwrite or Cloud subclasses `Email`.
 
+## Utopia\Validator\Validator
+
+`_APP_EXTENSION_LIBRARIES=validators` registers the abstract base of every validator, its seven
+`TYPE_*` constants and its four abstract methods. It holds nothing, so the leaf validators of
+`packages/validators`, Appwrite's and utopia-php/database's stay PHP and extend it as they would
+extend `Exception`. `src/validators.rs` builds it with ext-php-rs's `ClassBuilder` rather than
+`#[php_class]`: that macro gives a class a Rust object and a public `__construct` that throws
+without a Rust constructor, which a subclass without a constructor of its own would inherit. Built
+by hand it has neither, as in PHP: `new` on a subclass, `parent::__construct()` (an `Error`),
+clone, `var_dump()` and serialization behave as on the PHP base.
+
+The migration goes in phases: this base first, then the leaf validators in batches, each batch
+behind its own switch (`validators-<batch>`) so it can be canaried alone, with its own corpus.
+
+`crates/extension/tests/validators.php` prints a corpus that must be identical on both
+implementations: the base's reflection (constants, modifiers, return types, parameters); every
+validator of the package in 52 configurations over 48 values of every kind (scalars, numeric
+strings, hostnames, URLs, IPs, colours, JSON, phone numbers, bytes that are not UTF-8, arrays,
+objects); PHP subclasses (a clone with properties of its own, `var_dump()`, serialization, a leaf's
+subclass calling `parent::` and reading its protected state, `parent::__construct()`); constants
+through a leaf; the `Utopia\Validator` alias of `compat.php`; and, from a child process, the
+declarations the engine refuses or accepts (a missing method, a missing or wrong return type, a
+`mixed` or extra optional parameter, a static override). It asserts these known differences on
+the extension:
+
+- `isValid()`'s `$value` is typed `mixed`; PHP declares it untyped. An internal argument always
+  has a type, and the two accept and override alike.
+- So the engine's message for an incompatible override names the parent as
+  `isValid(mixed $value)`, not `isValid($value)`.
+
 ## Benchmarks
 
 Every class's PR carries a benchmark against the PHP class. `crates/extension/bench/<name>.php`
