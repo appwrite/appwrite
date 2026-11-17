@@ -675,6 +675,7 @@ export function VerifyDomainContent({
     const record = getPointingRecord(tab.id)
     return record ? [record] : []
   })
+  const offersNameservers = tabOptions.some((tab) => tab.id === 'nameservers')
 
   const checkedRecords = checks ? (
     <div className="space-y-6">
@@ -695,6 +696,17 @@ export function VerifyDomainContent({
           records={[caaRecord]}
           waiting={isWaitingForDns(rule)}
         />
+      )}
+      {offersNameservers && (
+        <section className="space-y-3">
+          <div className="flex items-center gap-2">
+            <h4 className="text-[14px] font-semibold text-foreground">
+              {t('Nameservers')}
+            </h4>
+          </div>
+          <p className="text-[13px] text-muted-foreground">{nameserverNote}</p>
+          <DnsRecordsTable records={getNameserverRecords()} showTtl={false} />
+        </section>
       )}
     </div>
   ) : null
