@@ -1,12 +1,13 @@
 <?php
 
 // Parity corpus for the part of Utopia\Query the utopia extension has so far: the statement
-// classifiers with the Type they return, the tokenizers, and Query. Run it on the PHP classes and on the extension's
+// classifiers with the Type they return, the tokenizers, Query, and the AST's parser and serializers. Run it on the PHP classes and on the extension's
 // (_APP_EXTENSION_LIBRARIES=query), and diff stdout: every line must match. Stderr names the
 // implementation that ran.
 
 require __DIR__ . '/../../../vendor/autoload.php';
 
+use Utopia\Query\AST;
 use Utopia\Query\Builder\ParsedQuery;
 use Utopia\Query\Classifier;
 use Utopia\Query\Classifier\MongoDB;
@@ -17,6 +18,7 @@ use Utopia\Query\Compiler;
 use Utopia\Query\CursorDirection;
 use Utopia\Query\Method;
 use Utopia\Query\NullsPosition;
+use Utopia\Query\OrderDirection;
 use Utopia\Query\Query;
 use Utopia\Query\Tokenizer;
 use Utopia\Query\Tokenizer\Token;
@@ -27,6 +29,8 @@ const NATIVE = [
     Type::class, Classifier::class, SQL::class, MySQL::class, PostgreSQL::class, MongoDB::class,
     Tokenizer\Tokenizer::class, Tokenizer\MySQL::class, Tokenizer\MariaDB::class, Tokenizer\PostgreSQL::class,
     Tokenizer\SQLite::class, Tokenizer\ClickHouse::class, Query::class,
+    AST\Grammar::class, AST\Parser::class, AST\Serializer::class, AST\Serializer\MySQL::class, AST\Serializer\MariaDB::class,
+    AST\Serializer\PostgreSQL::class, AST\Serializer\SQLite::class, AST\Serializer\ClickHouse::class,
 ];
 
 // Query is the package's class over the extension's NativeQuery; every other one is the extension's own.
@@ -59,6 +63,9 @@ function exported(mixed $value): mixed
             $value->getMethod()->name, exported($value->getAttribute()), exported($value->getValues()), exported($value->getAlias()),
             $value->isAliasDefaulted(), $value->onArray(), exported($value->getAttributeType()),
         ]];
+    }
+    if (is_object($value) && str_starts_with($value::class, 'Utopia\\Query\\AST\\') && ! $value instanceof AST\Serializer && ! $value instanceof AST\Parser) {
+        return ['node' => $value::class, 'fields' => exported(get_object_vars($value))];
     }
     if ($value instanceof ParsedQuery) {
         return ['parsed' => exported(get_object_vars($value))];
@@ -1144,6 +1151,412 @@ emit('helper arguments', [
 ]);
 emit('page', array_map(fn (array $arguments): array => outcome(fn () => exported(Query::page(...$arguments))), [[1], [2], [3, 10], [0], [-1], [1, 0], [1, -5], ['2', '10'], [2.0], [2.5], ['x'], [null], [], [PHP_INT_MAX, 2], [true]]));
 
+// --- AST -----------------------------------------------------------------------------------
+
+$grammarWords = [
+    '', 'a', 'A1', '_', '_a', '1a', 'a b', 'a-b', 'a.b', 'COUNT', 'count', "a\n", ' a', 'a ', "\xff", "a\xffb", 'é', '0', 'a(', 'a()',
+    'int', 'INT', 'varchar(255)', 'VARCHAR (255)', 'decimal(10, 2)', 'decimal(10,2)', 'decimal()', 'decimal(', 'decimal)', 'double precision',
+    'double  precision', "double\tprecision", "double\nprecision", ' double', 'double ', 'timestamp with time zone', 'a(b)c', 'a(b))', 'a((b)',
+    'numeric(1', '(1)', ' (1)', 'a (1)', "a\t(1)", 'a(1) ', 'a(b c)', 'a(;)', 'a(1);drop', '1int', 'int 1', 'int 1a', 'unsigned big int', "a\v b", "a\f(1)",
+];
+emit('grammar', array_map(fn (string $word): array => [exported($word), outcome(fn () => AST\Grammar::isIdentifier($word)), outcome(fn () => AST\Grammar::isType($word))], $grammarWords));
+emit('grammar arguments', [
+    outcome(fn () => AST\Grammar::isIdentifier(1)), outcome(fn () => AST\Grammar::isType(1.5)), outcome(fn () => AST\Grammar::isIdentifier(null)),
+    outcome(fn () => AST\Grammar::isType([])), outcome(fn () => AST\Grammar::isIdentifier()), outcome(fn () => (new ReflectionClass(AST\Grammar::class))->isFinal()),
+]);
+
+$serializers = [
+    'base' => new AST\Serializer(),
+    'mysql' => new AST\Serializer\MySQL(),
+    'mariadb' => new AST\Serializer\MariaDB(),
+    'postgres' => new AST\Serializer\PostgreSQL(),
+    'sqlite' => new AST\Serializer\SQLite(),
+    'clickhouse' => new AST\Serializer\ClickHouse(),
+];
+$parser = new AST\Parser();
+
+/** What every serializer makes of a statement or an expression. */
+function serialized(array $serializers, mixed $node): array
+{
+    return array_map(fn (AST\Serializer $serializer): array => outcome(fn () => $node instanceof AST\Statement\Select ? $serializer->serialize($node) : $serializer->serializeExpression($node)), $serializers);
+}
+
+$selects = [
+    'select 1', 'select *', 'select * from users', 'select a, b from t', 'select t.a, s.t.b, t.*, s.t.* from s.t', 'select a as x, b y from t as u',
+    'select distinct a from t', 'select all a from t', 'select a from t where a = 1', 'select a from t where a = 1 and b = 2 or c = 3',
+    'select a from t where (a = 1 or b = 2) and c = 3', 'select a from t where not a = 1', 'select a from t where not (a = 1 and b = 2)',
+    'select a from t where a <> 1 and b != 2 and c < 3 and d > 4 and e <= 5 and f >= 6', 'select a + b * c - d / e % f from t', 'select (a + b) * c from t',
+    'select a - (b - c), a - b - c, a / (b * c), (a or b) and c, a or (b and c) from t', 'select -a, +a, - -a, -(a + b), not a from t', 'select a || b || c from t',
+    'select a from t where a is null', 'select a from t where a is not null', 'select a from t where a is true', 'select a from t where a is not false',
+    'select a from t where a in (1, 2, 3)', 'select a from t where a not in (1)', 'select a from t where a in (select b from u)', 'select a from t where a not in (select b from u where c = 1)',
+    'select a from t where a in ()', 'select a from t where a between 1 and 2', 'select a from t where a not between 1 and 2 and b = 3', 'select a from t where a between b + 1 and c * 2',
+    'select a from t where a like \'x%\'', 'select a from t where a not like \'x%\'', 'select a from t where a ilike \'x\'', 'select a from t where a not ilike \'x\'',
+    'select a from t where exists (select 1 from u)', 'select a from t where not exists (select 1 from u)', 'select (select max(b) from u) from t', 'select a from (select a from t) as s',
+    'select a from (select a from t) s', 'select a from (select a from t)', 'select count(*), count(distinct a), sum(a), max(a), coalesce(a, b, 1), now(), f() from t',
+    'select count(*) filter (where a > 1) from t', 'select Count(a), lower(Upper(a)) from t', 'select cast(a as int), cast(a as varchar(255)), cast(a as decimal(10, 2)), cast(a as double precision) from t',
+    'select cast(a as) from t', 'select cast(a as 1) from t', 'select cast(a as int;) from t', 'select a::int from t', 'select a::varchar(10)::text from t',
+    'select case when a = 1 then \'x\' end from t', 'select case when a = 1 then \'x\' when a = 2 then \'y\' else \'z\' end from t', 'select case a when 1 then \'x\' else \'y\' end from t',
+    'select case end from t', 'select case when a then b from t', 'select case a else 1 end from t',
+    'select a from t join u on t.id = u.id', 'select a from t inner join u on t.id = u.id', 'select a from t left join u on t.id = u.id', 'select a from t left outer join u on t.id = u.id',
+    'select a from t right join u on t.id = u.id', 'select a from t right outer join u on a = b', 'select a from t full join u on a = b', 'select a from t full outer join u on a = b',
+    'select a from t cross join u', 'select a from t natural join u', 'select a from t join u', 'select a from t, u', 'select a from t join u on a = b join v on c = d left join (select 1) w on true',
+    'select a from t join u using (id)', 'select a from t outer join u on a = b', 'select a from t left u on a = b',
+    'select a from t group by a', 'select a, b from t group by a, b having count(*) > 1', 'select a from t having a > 1', 'select a from t order by a', 'select a from t order by a asc, b desc',
+    'select a from t order by a nulls first, b desc nulls last', 'select a from t order by a nulls', 'select a from t order by a nulls middle', 'select a from t order by rand()', 'select a from t order by 1',
+    'select a from t limit 10', 'select a from t limit 10 offset 5', 'select a from t offset 5', 'select a from t limit ? offset ?', 'select a from t limit :n offset $1', 'select a from t limit 5, 10',
+    'select a from t limit', 'select a from t limit a + 1', 'select a from t where a = ? and b = :name and c = $2', 'select ?, :a, $1',
+    'with c as (select 1) select * from c', 'with c (a, b) as (select 1, 2) select a from c', 'with recursive c as (select 1) select * from c', 'with a as (select 1), b as (select 2) select * from a, b',
+    'with c as select 1 select 2', 'with c as (select 1)', 'with select 1', 'with c () as (select 1) select 1', 'with c (a,) as (select 1) select 1',
+    'select row_number() over () from t', 'select row_number() over (partition by a order by b) from t', 'select sum(a) over (partition by a, b order by c desc nulls last rows between unbounded preceding and current row) from t',
+    'select sum(a) over (order by b range between 1 preceding and 1 following) from t', 'select sum(a) over (rows unbounded preceding) from t', 'select sum(a) over (rows between current row and unbounded following) from t',
+    'select sum(a) over (groups between 1 preceding and 2 following) from t', 'select sum(a) over w from t window w as (partition by a)', 'select sum(a) over w, max(a) over v from t window w as (order by a), v as (partition by b order by c)',
+    'select sum(a) over (rows between) from t', 'select sum(a) over (rows 1) from t', 'select sum(a) over (partition a) from t', 'select sum(a) over from t', 'select a from t window w as',
+    'select count(*) filter (where a > 1) over (partition by b) from t',
+    'select `a`, `b c`, `d``e` from `t` where `t`.`a` = 1', 'select "a", "b c", "d""e" from "t" where "t"."a" = 1', 'select `select`, `from` from `where`', 'select a from t as `u v`',
+    "select 'a', 'it''s', 'a\\\\b', 'a\\'b', '', ' ', 'é', '\xff', 'a\nb' from t", 'select 1, 1.5, .5, 1., 1e3, 1.5e-3, 0, 007, 9223372036854775807, 9223372036854775808, 99999999999999999999, 0x1f, 1e999 from t',
+    'select true, false, null, TRUE, False, Null from t', 'select a from t where a = true and b = null', "select é from t where naïve = 'x'", "select a from t where b = '\xf0\x9f\x98\x80'", "select \xff from t",
+    'select a from t; select b from u', 'select a from t;', 'select a from t extra', 'select a from', 'select from t', 'select', '', 'from t', 'select a b c from t', 'select a, from t', 'select a,, b from t',
+    'select a from t where', 'select a from t where a =', 'select a from t where and', 'select a from t where a = 1 and', 'select (a from t', 'select a) from t', 'select a from t where a in (1,', 'select a from t where a in 1',
+    'select a from t where a between 1', 'select a from t where a between 1 or 2', 'select a from t where a is', 'select a from t where a is 1', 'select a from t where a not', 'select a from t where a not 1',
+    'select f( from t', 'select f(a, from t', 'select f(distinct) from t', 'select f(distinct a, b) from t', 'select f(*) from t', 'select f(a.*) from t', 'select 1f() from t', 'select a.b.c.d from t', 'select a. from t', 'select .a from t',
+    'select a from t group', 'select a from t group by', 'select a from t order', 'select a from t order by', 'select a from t order by a,', 'select a from s.t.u', 'select a from t as', 'select a from t join',
+    'select a from t union select b from u', 'select a from t for update', 'select * , a from t', 'select t.* as x from t', 'select a as from t', 'select a as 1 from t', 'select a as \'x\' from t',
+    'insert into t values (1)', 'update t set a = 1', 'delete from t', '(select 1)', 'select (((((1)))))', 'select a from t where ((a = 1))', 'SELECT A FROM T WHERE A = 1 ORDER BY A LIMIT 1',
+    "select /* c */ a -- d\nfrom t", "select\n\ta\nfrom\n\tt", 'select a from t where a = 1 and b in (select c from u where d between 1 and 2 and exists (select 1 from v where e like \'x\'))',
+    'select a from t where a @> b', 'select a from t where a ~ \'x\'', 'select a->b, a->>\'c\' from t', 'select a from t where a = any(b)', 'select interval \'1 day\'', 'select date \'2020-01-01\'', 'select a[1] from t',
+    'select not not a from t', 'select a from t where not a in (1)', 'select a from t where a = -1', 'select a from t where a = - 1', 'select 1 + -1, 1 - -1, 1 -1, 1-1', 'select a * -b from t',
+    'select current_timestamp, current_date from t', 'select a from t where a = \'x\' collate utf8mb4_bin', 'select distinct on (a) a, b from t', 'select top 5 a from t', 'select a from t limit all',
+    'select extract(year from a) from t', 'select substring(a from 1 for 2) from t', 'select trim(both \'x\' from a) from t', 'select position(\'a\' in b) from t', 'select if(a, b, c) from t', 'select values(a) from t',
+];
+$tokenizerFor = ['base' => $tokenizers['base'], 'postgres' => $tokenizers['postgres']];
+foreach ($selects as $sql) {
+    foreach ($tokenizerFor as $dialect => $tokenizer) {
+        $read = null;
+        $parsed = outcome(function () use ($tokenizer, $parser, $sql, &$read) {
+            return $read = $parser->parse(Tokenizer\Tokenizer::filter($tokenizer->tokenize($sql)));
+        });
+        emit('parse ' . $dialect . ' ' . $sql, [$parsed, $read === null ? null : serialized($serializers, $read)]);
+        if ($read === null) {
+            continue;
+        }
+        // What was written parses again, to a statement that writes the same.
+        emit('reparse ' . $dialect . ' ' . $sql, outcome(function () use ($tokenizerFor, $serializers, $parser, $read): array {
+            $again = [];
+            foreach (['base' => 'base', 'postgres' => 'postgres'] as $tokenizer => $serializer) {
+                $written = $serializers[$serializer]->serialize($read);
+                $again[] = $serializers[$serializer]->serialize($parser->parse(Tokenizer\Tokenizer::filter($tokenizerFor[$tokenizer]->tokenize($written)))) === $written;
+            }
+
+            return $again;
+        }));
+    }
+}
+
+// Every statement cut short after each of its tokens, with a token dropped, and with two swapped: the parser's errors.
+foreach ($selects as $sql) {
+    $all = outcome(fn () => Tokenizer\Tokenizer::filter($tokenizers['base']->tokenize($sql)));
+    if (! isset($all['value'])) {
+        continue;
+    }
+    $all = Tokenizer\Tokenizer::filter($tokenizers['base']->tokenize($sql));
+    $eof = $all[count($all) - 1];
+    $results = [];
+    for ($cut = 0; $cut < count($all) - 1; $cut++) {
+        $results['cut ' . $cut] = outcome(fn () => $parser->parse([...array_slice($all, 0, $cut), $eof]));
+        $results['drop ' . $cut] = outcome(fn () => $parser->parse([...array_slice($all, 0, $cut), ...array_slice($all, $cut + 1)]));
+        if ($cut > 0) {
+            $swapped = $all;
+            [$swapped[$cut - 1], $swapped[$cut]] = [$swapped[$cut], $swapped[$cut - 1]];
+            $results['swap ' . $cut] = outcome(fn () => $parser->parse($swapped));
+        }
+    }
+    emit('broken ' . $sql, $results);
+}
+
+$tokens = Tokenizer\Tokenizer::filter($tokenizers['base']->tokenize('select a from t where a = 1'));
+$unfiltered = $tokenizers['base']->tokenize("select a /* c */ from t -- d\n");
+emit('parser misuse', [
+    'nothing' => outcome(fn () => $parser->parse([])),
+    'only eof' => outcome(fn () => $parser->parse([$tokens[count($tokens) - 1]])),
+    'no eof' => outcome(fn () => $parser->parse(array_slice($tokens, 0, -1))),
+    'no eof, cut' => outcome(fn () => $parser->parse(array_slice($tokens, 0, 3))),
+    'one keyword' => outcome(fn () => $parser->parse([$tokens[0]])),
+    'unfiltered' => outcome(fn () => $parser->parse($unfiltered)),
+    'a string' => outcome(fn () => $parser->parse(['select', '1'])),
+    'a null' => outcome(fn () => $parser->parse([null])),
+    'an object' => outcome(fn () => $parser->parse([new stdClass()])),
+    'a token then a string' => outcome(fn () => $parser->parse([$tokens[0], 'x'])),
+    'keyed' => outcome(fn () => $parser->parse(array_combine(array_map(fn (int $i): string => 'k' . $i, array_keys($tokens)), $tokens))),
+    'gap' => outcome(fn () => $parser->parse([0 => $tokens[0], 2 => $tokens[1], 3 => $tokens[2]])),
+    'reversed keys' => outcome(fn () => $parser->parse(array_reverse($tokens, true))),
+    'not an array' => outcome(fn () => $parser->parse('select 1')),
+    'no argument' => outcome(fn () => $parser->parse()),
+    'twice' => outcome(fn () => [$parser->parse($tokens) == $parser->parse($tokens), $parser->parse($tokens) === $parser->parse($tokens)]),
+    'after a failure' => outcome(function () use ($parser, $tokens) {
+        try {
+            $parser->parse(array_slice($tokens, 0, 2));
+        } catch (Throwable) {
+        }
+
+        return $parser->parse($tokens);
+    }),
+    'made by hand' => outcome(fn () => $parser->parse([
+        new Token(TokenType::Keyword, 'select', 0), new Token(TokenType::Identifier, 'a', 7), new Token(TokenType::Keyword, 'FROM', 9),
+        new Token(TokenType::QuotedIdentifier, '`t`', 14), new Token(TokenType::Eof, '', 17),
+    ])),
+    'odd tokens' => array_map(fn (array $made): array => outcome(fn () => $parser->parse([new Token(TokenType::Keyword, 'SELECT', 0), new Token(...$made), new Token(TokenType::Eof, '', 9)])), [
+        [TokenType::Integer, 'abc', 7], [TokenType::Integer, '', 7], [TokenType::Float, 'x', 7], [TokenType::String, 'abc', 7], [TokenType::String, "'", 7], [TokenType::String, '', 7],
+        [TokenType::QuotedIdentifier, 'a', 7], [TokenType::QuotedIdentifier, '', 7], [TokenType::QuotedIdentifier, '`', 7], [TokenType::Identifier, '', 7], [TokenType::Identifier, 'a b', 7],
+        [TokenType::Keyword, 'nope', 7], [TokenType::Keyword, '', 7], [TokenType::Boolean, 'yes', 7], [TokenType::Null, 'x', 7], [TokenType::Placeholder, '', 7], [TokenType::Operator, '??', 7],
+        [TokenType::Star, 'x', 7], [TokenType::Whitespace, ' ', 7], [TokenType::Eof, 'x', 7], [TokenType::Identifier, "\xff", 7], [TokenType::String, "'\xff'", 7], [TokenType::Identifier, 'a', -5],
+        [TokenType::Integer, '12', PHP_INT_MAX], [TokenType::Identifier, 'é', 7], [TokenType::String, "'é\xff'", 7],
+    ]),
+    'deep' => array_map(fn (int $depth): array => outcome(function () use ($parser, $tokenizers, $serializers, $depth) {
+        $sql = 'select ' . str_repeat('(', $depth) . '1' . str_repeat(')', $depth);
+
+        return strlen($serializers['base']->serialize($parser->parse(Tokenizer\Tokenizer::filter($tokenizers['base']->tokenize($sql)))));
+    }), [1, 100, 250, 255, 256, 257, 300, 5000]),
+    'deep subqueries' => array_map(fn (int $depth): array => outcome(function () use ($parser, $tokenizers, $serializers, $depth) {
+        $sql = str_repeat('select (', $depth) . 'select 1' . str_repeat(')', $depth);
+
+        return strlen($serializers['base']->serialize($parser->parse(Tokenizer\Tokenizer::filter($tokenizers['base']->tokenize($sql)))));
+    }), [1, 50, 120, 127, 128, 129, 255, 256, 257, 1000]),
+    'deep nots' => array_map(fn (int $depth): array => outcome(function () use ($parser, $tokenizers, $serializers, $depth) {
+        $sql = 'select ' . str_repeat('not ', $depth) . 'a from t where ' . str_repeat('- ', $depth) . '1';
+
+        return strlen($serializers['base']->serialize($parser->parse(Tokenizer\Tokenizer::filter($tokenizers['base']->tokenize($sql)))));
+    }), [1, 200, 255, 256, 257, 1000]),
+]);
+
+// Nodes made by hand: every node, with the values a parser never produces.
+$one = new AST\Literal(1);
+$a = new AST\Reference\Column('a');
+$specification = new AST\Specification\Window([$a], [new AST\OrderByItem($a, OrderDirection::Desc, NullsPosition::Last)], 'ROWS', 'UNBOUNDED PRECEDING', 'CURRENT ROW');
+$inner = new AST\Statement\Select([$one]);
+final class CorpusExpression implements AST\Expression
+{
+}
+$custom = new CorpusExpression();
+$expressions = [
+    'literal null' => new AST\Literal(null), 'literal true' => new AST\Literal(true), 'literal false' => new AST\Literal(false), 'literal 0' => new AST\Literal(0),
+    'literal -5' => new AST\Literal(-5), 'literal max' => new AST\Literal(PHP_INT_MAX), 'literal min' => new AST\Literal(PHP_INT_MIN), 'literal 1.5' => new AST\Literal(1.5),
+    'literal 1.0' => new AST\Literal(1.0), 'literal -0.0' => new AST\Literal(-0.0), 'literal 1e100' => new AST\Literal(1e100), 'literal 1e-10' => new AST\Literal(1e-10),
+    'literal 0.1+0.2' => new AST\Literal(0.1 + 0.2), 'literal inf' => new AST\Literal(INF), 'literal -inf' => new AST\Literal(-INF), 'literal nan' => new AST\Literal(NAN),
+    'literal 1e15' => new AST\Literal(1e15), 'literal 123456789012345678' => new AST\Literal(123456789012345678.0), 'literal empty' => new AST\Literal(''),
+    'literal text' => new AST\Literal('abc'), 'literal quote' => new AST\Literal("it's"), 'literal backslash' => new AST\Literal('a\\b'), 'literal both' => new AST\Literal("\\'"),
+    'literal double quote' => new AST\Literal('a"b`c'), 'literal newline' => new AST\Literal("a\nb\0c"), 'literal utf8' => new AST\Literal('é😀'), 'literal bytes' => new AST\Literal("\xff\xfe'\xc3"),
+    'literal numeric string' => new AST\Literal('12'),
+    'placeholder' => new AST\Placeholder('?'), 'placeholder named' => new AST\Placeholder(':a'), 'placeholder empty' => new AST\Placeholder(''), 'placeholder odd' => new AST\Placeholder("x'; drop \xff"),
+    'raw' => new AST\Raw('NOW()'), 'raw empty' => new AST\Raw(''), 'raw bytes' => new AST\Raw("\xff é"),
+    'star' => new AST\Star(), 'star table' => new AST\Star('t'), 'star schema' => new AST\Star('t', 's'), 'star schema only' => new AST\Star(null, 's'), 'star quoted' => new AST\Star('a`b"c'), 'star empty' => new AST\Star(''),
+    'column' => $a, 'column table' => new AST\Reference\Column('a', 't'), 'column schema' => new AST\Reference\Column('a', 't', 's'), 'column schema only' => new AST\Reference\Column('a', null, 's'),
+    'column quotes' => new AST\Reference\Column('a`b', 'c"d', "e'f"), 'column empty' => new AST\Reference\Column(''), 'column bytes' => new AST\Reference\Column("\xff`é\""), 'column spaces' => new AST\Reference\Column('a b.c'),
+    'aliased' => new AST\Expression\Aliased($a, 'x'), 'aliased quotes' => new AST\Expression\Aliased($a, 'x`"y'), 'aliased empty' => new AST\Expression\Aliased($a, ''), 'aliased aliased' => new AST\Expression\Aliased(new AST\Expression\Aliased($a, 'x'), 'y'),
+    'between' => new AST\Expression\Between($a, $one, new AST\Literal(2)), 'not between' => new AST\Expression\Between($a, $one, new AST\Literal(2), true),
+    'between binaries' => new AST\Expression\Between(new AST\Expression\Binary($a, 'OR', $a), new AST\Expression\Binary($a, 'AND', $a), new AST\Expression\Binary($a, '+', $a)),
+    'cast' => new AST\Expression\Cast($a, 'INT'), 'cast arguments' => new AST\Expression\Cast($a, 'decimal(10, 2)'), 'cast words' => new AST\Expression\Cast(new AST\Expression\Binary($a, '+', $one), 'double precision'),
+    'exists' => new AST\Expression\Exists($inner), 'not exists' => new AST\Expression\Exists($inner, true), 'subquery' => new AST\Expression\Subquery($inner),
+    'in' => new AST\Expression\In($a, [$one, new AST\Literal('x')]), 'not in' => new AST\Expression\In($a, [$one], true), 'in nothing' => new AST\Expression\In($a, []), 'in select' => new AST\Expression\In($a, $inner),
+    'not in select' => new AST\Expression\In($a, $inner, true), 'in keyed' => new AST\Expression\In($a, ['x' => $one, 9 => $a]), 'in binary' => new AST\Expression\In(new AST\Expression\Binary($a, 'OR', $a), [new AST\Expression\Binary($a, 'OR', $a)]),
+    'in a string' => new AST\Expression\In($a, ['x']), 'in a null' => new AST\Expression\In($a, [null]), 'in a select element' => new AST\Expression\In($a, [$inner]), 'in a table' => new AST\Expression\In($a, [new AST\Reference\Table('t')]),
+    'func' => new AST\Call\Func('NOW'), 'func arguments' => new AST\Call\Func('COALESCE', [$a, $one]), 'func distinct' => new AST\Call\Func('COUNT', [$a], true), 'func distinct nothing' => new AST\Call\Func('COUNT', [], true),
+    'func filter' => new AST\Call\Func('COUNT', [new AST\Star()], false, new AST\Expression\Binary($a, '>', $one)), 'func lower' => new AST\Call\Func('lower_Case1', [$a]), 'func keyed' => new AST\Call\Func('F', ['k' => $a]),
+    'func bad argument' => new AST\Call\Func('F', [1]), 'func case when argument' => new AST\Call\Func('F', [new AST\Expression\CaseWhen($a, $one)]),
+    'unary' => new AST\Expression\Unary('-', $a), 'unary not' => new AST\Expression\Unary('NOT', $a), 'unary lower not' => new AST\Expression\Unary('not', $a), 'unary postfix' => new AST\Expression\Unary('IS NULL', $a, false),
+    'unary postfix not null' => new AST\Expression\Unary('IS NOT NULL', $a, false), 'unary odd' => new AST\Expression\Unary('~', $a), 'unary empty' => new AST\Expression\Unary('', $a), 'unary word' => new AST\Expression\Unary('EXISTS', $a),
+    'unary minus minus' => new AST\Expression\Unary('-', new AST\Expression\Unary('-', $a)), 'unary minus literal' => new AST\Expression\Unary('-', new AST\Literal(-1)), 'unary of binary' => new AST\Expression\Unary('-', new AST\Expression\Binary($a, '+', $one)),
+    'unary not of binary' => new AST\Expression\Unary('NOT', new AST\Expression\Binary($a, 'AND', $one)), 'unary postfix of binary' => new AST\Expression\Unary('IS NULL', new AST\Expression\Binary($a, 'OR', $one), false),
+    'unary plus' => new AST\Expression\Unary('+', $a), 'unary prefix spaced' => new AST\Expression\Unary(' x ', $a),
+    'window' => new AST\Expression\Window(new AST\Call\Func('ROW_NUMBER')), 'window named' => new AST\Expression\Window(new AST\Call\Func('SUM', [$a]), 'w'), 'window named quotes' => new AST\Expression\Window(new AST\Call\Func('SUM', [$a]), 'w`"'),
+    'window specification' => new AST\Expression\Window(new AST\Call\Func('SUM', [$a]), null, $specification), 'window both' => new AST\Expression\Window(new AST\Call\Func('SUM', [$a]), 'w', $specification),
+    'window empty specification' => new AST\Expression\Window($a, null, new AST\Specification\Window()), 'window empty name' => new AST\Expression\Window($a, ''),
+    'window frames' => array_map(fn (array $frame): AST\Expression\Window => new AST\Expression\Window($a, null, new AST\Specification\Window([], [], ...$frame)), [
+        ['ROWS', 'UNBOUNDED PRECEDING', null], ['ROWS', null, 'CURRENT ROW'], ['RANGE', '1 PRECEDING', '1 FOLLOWING'], [null, 'a', 'b'], ['ROWS', null, null], ['', '', ''], ['groups', 'x', null], [null, null, 'b'],
+    ]),
+    'window partition only' => new AST\Expression\Window($a, null, new AST\Specification\Window([$a, $one])), 'window order only' => new AST\Expression\Window($a, null, new AST\Specification\Window([], [new AST\OrderByItem($a)])),
+    'window bad partition' => new AST\Expression\Window($a, null, new AST\Specification\Window(['a'])), 'window bad order' => new AST\Expression\Window($a, null, new AST\Specification\Window([], [$a])),
+    'conditional' => new AST\Expression\Conditional(null, [new AST\Expression\CaseWhen($a, $one)]), 'conditional operand' => new AST\Expression\Conditional($a, [new AST\Expression\CaseWhen($one, $one), new AST\Expression\CaseWhen($a, $a)], new AST\Literal('z')),
+    'conditional else' => new AST\Expression\Conditional(null, [new AST\Expression\CaseWhen($a, $one)], $a), 'conditional nothing' => new AST\Expression\Conditional(null, []), 'conditional only else' => new AST\Expression\Conditional($a, [], $one),
+    'conditional bad when' => new AST\Expression\Conditional(null, [$a]), 'conditional string when' => new AST\Expression\Conditional(null, ['x']), 'conditional keyed' => new AST\Expression\Conditional(null, ['k' => new AST\Expression\CaseWhen($a, $one)]),
+    'conditional binaries' => new AST\Expression\Conditional(new AST\Expression\Binary($a, 'OR', $a), [new AST\Expression\CaseWhen(new AST\Expression\Binary($a, 'OR', $a), new AST\Expression\Binary($a, 'OR', $a))], new AST\Expression\Binary($a, 'OR', $a)),
+    'case when alone' => new AST\Expression\CaseWhen($a, $one), 'custom expression' => $custom, 'aliased custom' => new AST\Expression\Aliased($custom, 'x'), 'binary custom' => new AST\Expression\Binary($a, '=', $custom),
+    'subclass of a node' => new readonly class ('a', 't') extends AST\Reference\Column {
+    },
+    'subclass with a method' => new readonly class (5) extends AST\Literal {
+        public function extra(): string
+        {
+            return 'x';
+        }
+    },
+];
+$operators = ['OR', 'AND', '=', '!=', '<>', '<', '>', '<=', '>=', 'LIKE', 'ILIKE', 'NOT LIKE', 'NOT ILIKE', '+', '-', '||', '*', '/', '%', 'or', 'And', 'like', 'IS', 'IN', '@>', '', ' ', 'XOR', '->', '::', 'not like'];
+foreach ($operators as $outer) {
+    foreach ($operators as $nested) {
+        $expressions['binary ' . $outer . ' over ' . $nested] = [
+            new AST\Expression\Binary(new AST\Expression\Binary($a, $nested, $one), $outer, $a),
+            new AST\Expression\Binary($a, $outer, new AST\Expression\Binary($a, $nested, $one)),
+            new AST\Expression\Binary(new AST\Expression\Binary($a, $nested, $one), $outer, new AST\Expression\Binary($one, $nested, $a)),
+        ];
+    }
+    $expressions['binary ' . $outer . ' over others'] = [
+        new AST\Expression\Binary(new AST\Expression\Unary('-', $a), $outer, new AST\Expression\Unary('NOT', $a)),
+        new AST\Expression\Binary(new AST\Expression\Between($a, $one, $one), $outer, new AST\Expression\In($a, [$one])),
+        new AST\Expression\Binary(new AST\Expression\Aliased($a, 'x'), $outer, new AST\Expression\Subquery($inner)),
+        new AST\Expression\Binary(new AST\Expression\Conditional(null, [new AST\Expression\CaseWhen($a, $one)]), $outer, new AST\Expression\Cast($a, 'INT')),
+        new AST\Expression\Binary(new AST\Expression\Binary(new AST\Expression\Binary($a, $outer, $a), $outer, $a), $outer, new AST\Expression\Binary($a, $outer, new AST\Expression\Binary($a, $outer, $a))),
+    ];
+}
+foreach ([-1, 14, 17, 5] as $precision) {
+    ini_set('precision', (string) $precision);
+    emit('floats at precision ' . $precision, array_map(
+        fn (float $float): array => [outcome(fn () => $serializers['base']->serializeExpression(new AST\Literal($float))), outcome(fn () => $serializers['postgres']->serializeExpression(new AST\Expression\Binary($a, 'AND', new AST\Literal($float))))],
+        [0.0, -0.0, 1.0, 1.5, -2.25, 0.1 + 0.2, 1e15, 1e16, 1e17, 1e-5, 1e-4, 123456789012345678.0, 1e100, PHP_FLOAT_MAX, PHP_FLOAT_MIN, PHP_FLOAT_EPSILON, 100.0, 0.000123456789, INF, -INF, NAN],
+    ));
+}
+ini_restore('precision');
+foreach ($expressions as $name => $expression) {
+    emit('expression ' . $name, is_array($expression) ? array_map(fn (object $each): array => serialized($serializers, $each), $expression) : serialized($serializers, $expression));
+}
+emit('expression as a column', array_map(
+    fn (object $expression): array => serialized($serializers, new AST\Statement\Select([$expression, $expression], new AST\Reference\Table('t'), [], $expression, [$expression], $expression, [new AST\OrderByItem($expression)], $expression, $expression)),
+    array_filter($expressions, is_object(...)),
+));
+
+$table = new AST\Reference\Table('t');
+$statements = [
+    'empty' => new AST\Statement\Select(), 'columns' => new AST\Statement\Select([$a, $one]), 'no columns' => new AST\Statement\Select([], $table), 'distinct' => new AST\Statement\Select([$a], $table, distinct: true),
+    'distinct nothing' => new AST\Statement\Select(distinct: true), 'table alias' => new AST\Statement\Select([$a], new AST\Reference\Table('t', 'u')), 'table schema' => new AST\Statement\Select([$a], new AST\Reference\Table('t', 'u', 's')),
+    'table schema only' => new AST\Statement\Select([$a], new AST\Reference\Table('t', null, 's')), 'table quotes' => new AST\Statement\Select([$a], new AST\Reference\Table('t`"', 'u`"', 's`"')), 'table empty' => new AST\Statement\Select([$a], new AST\Reference\Table('', '', '')),
+    'table bytes' => new AST\Statement\Select([$a], new AST\Reference\Table("\xff", "é\xfe")), 'subquery source' => new AST\Statement\Select([$a], new AST\SubquerySource($inner, 's')), 'subquery source empty alias' => new AST\Statement\Select([$a], new AST\SubquerySource($inner, '')),
+    'subquery source quotes' => new AST\Statement\Select([$a], new AST\SubquerySource($inner, 's`"')), 'where' => new AST\Statement\Select([$a], $table, where: new AST\Expression\Binary($a, '=', $one)), 'where without from' => new AST\Statement\Select([$a], where: $one),
+    'group' => new AST\Statement\Select([$a], $table, groupBy: [$a, $one]), 'having' => new AST\Statement\Select([$a], $table, having: $one), 'group having' => new AST\Statement\Select([$a], $table, groupBy: [$a], having: new AST\Expression\Binary($a, '>', $one)),
+    'limit' => new AST\Statement\Select([$a], $table, limit: new AST\Literal(10)), 'offset' => new AST\Statement\Select([$a], $table, offset: new AST\Literal(5)), 'limit offset' => new AST\Statement\Select([$a], $table, limit: new AST\Placeholder('?'), offset: new AST\Placeholder('?')),
+    'limit expression' => new AST\Statement\Select([$a], $table, limit: new AST\Expression\Binary($a, '+', $one), offset: new AST\Expression\Subquery($inner)), 'limit text' => new AST\Statement\Select([$a], $table, limit: new AST\Literal('x')),
+    'orders' => new AST\Statement\Select([$a], $table, orderBy: array_merge(...array_map(fn (OrderDirection $direction): array => [new AST\OrderByItem($a, $direction), new AST\OrderByItem($a, $direction, NullsPosition::First), new AST\OrderByItem($a, $direction, NullsPosition::Last)], OrderDirection::cases()))),
+    'order by expression' => new AST\Statement\Select([$a], $table, orderBy: [new AST\OrderByItem(new AST\Expression\Binary($a, '+', $one)), new AST\OrderByItem(new AST\Call\Func('RAND'))]),
+    'joins' => new AST\Statement\Select([$a], $table, array_map(fn (string $type): AST\JoinClause => new AST\JoinClause($type, new AST\Reference\Table('u', 'v'), new AST\Expression\Binary($a, '=', $one)), ['JOIN', 'INNER JOIN', 'LEFT JOIN', 'LEFT OUTER JOIN', 'RIGHT JOIN', 'FULL OUTER JOIN', 'CROSS JOIN', 'NATURAL JOIN', 'join', '', 'x', ','])),
+    'joins without condition' => new AST\Statement\Select([$a], $table, array_map(fn (string $type): AST\JoinClause => new AST\JoinClause($type, new AST\Reference\Table('u')), ['JOIN', 'CROSS JOIN', 'NATURAL JOIN', 'LEFT JOIN', '', ','])),
+    'join subquery' => new AST\Statement\Select([$a], $table, [new AST\JoinClause('JOIN', new AST\SubquerySource($inner, 's'), $one), new AST\JoinClause('LEFT JOIN', new AST\SubquerySource($inner, 's'))]),
+    'joins without from' => new AST\Statement\Select([$a], null, [new AST\JoinClause('JOIN', $table, $one)]),
+    'cte' => new AST\Statement\Select([$a], $table, ctes: [new AST\Definition\Cte('c', $inner)]), 'cte columns' => new AST\Statement\Select([$a], $table, ctes: [new AST\Definition\Cte('c', $inner, ['x', 'y`"'])]),
+    'cte recursive' => new AST\Statement\Select([$a], $table, ctes: [new AST\Definition\Cte('c', $inner, [], true)]), 'cte second recursive' => new AST\Statement\Select([$a], $table, ctes: [new AST\Definition\Cte('c', $inner), new AST\Definition\Cte('d', $inner, ['x'], true)]),
+    'cte many' => new AST\Statement\Select([$a], $table, ctes: [new AST\Definition\Cte('c', $inner), new AST\Definition\Cte('d`"', $inner), new AST\Definition\Cte('', $inner)]),
+    'cte nested' => new AST\Statement\Select([$a], $table, ctes: [new AST\Definition\Cte('c', new AST\Statement\Select([$a], ctes: [new AST\Definition\Cte('d', $inner, ['x'], true)]))]),
+    'cte keyed columns' => new AST\Statement\Select([$a], ctes: [new AST\Definition\Cte('c', $inner, ['k' => 'x', 5 => 'y'])]), 'cte integer column' => new AST\Statement\Select([$a], ctes: [new AST\Definition\Cte('c', $inner, [1])]),
+    'cte null column' => new AST\Statement\Select([$a], ctes: [new AST\Definition\Cte('c', $inner, [null])]), 'cte array column' => new AST\Statement\Select([$a], ctes: [new AST\Definition\Cte('c', $inner, [[]])]),
+    'cte float column' => new AST\Statement\Select([$a], ctes: [new AST\Definition\Cte('c', $inner, [1.5])]), 'cte bool column' => new AST\Statement\Select([$a], ctes: [new AST\Definition\Cte('c', $inner, [true])]),
+    'windows' => new AST\Statement\Select([$a], $table, windows: [new AST\Definition\Window('w', $specification), new AST\Definition\Window('v`"', new AST\Specification\Window())]),
+    'everything' => new AST\Statement\Select(
+        [new AST\Expression\Aliased($a, 'x'), new AST\Star('t')],
+        new AST\Reference\Table('t', 'u', 's'),
+        [new AST\JoinClause('LEFT JOIN', new AST\Reference\Table('v'), new AST\Expression\Binary($a, '=', $one))],
+        new AST\Expression\Binary($a, 'AND', new AST\Expression\Binary($a, 'OR', $one)),
+        [$a],
+        new AST\Expression\Binary(new AST\Call\Func('COUNT', [new AST\Star()]), '>', $one),
+        [new AST\OrderByItem($a, OrderDirection::Desc, NullsPosition::Last)],
+        new AST\Literal(10),
+        new AST\Literal(5),
+        true,
+        [new AST\Definition\Cte('c', $inner, ['x'], true)],
+        [new AST\Definition\Window('w', $specification)],
+    ),
+    'bad column' => new AST\Statement\Select(['a']), 'null column' => new AST\Statement\Select([null]), 'table as a column' => new AST\Statement\Select([$table]), 'select as a column' => new AST\Statement\Select([$inner]),
+    'bad join' => new AST\Statement\Select([$a], $table, [$a]), 'string join' => new AST\Statement\Select([$a], $table, ['JOIN']), 'bad group' => new AST\Statement\Select([$a], $table, groupBy: ['a']),
+    'bad order' => new AST\Statement\Select([$a], $table, orderBy: [$a]), 'string order' => new AST\Statement\Select([$a], $table, orderBy: ['a']), 'bad cte' => new AST\Statement\Select([$a], $table, ctes: [$inner]),
+    'bad window' => new AST\Statement\Select([$a], $table, windows: [$specification]), 'string window' => new AST\Statement\Select([$a], $table, windows: ['w']),
+    'bad later' => new AST\Statement\Select([$a, 'x'], $table, [$a], windows: ['w']), 'keyed columns' => new AST\Statement\Select(['x' => $a, 3 => $one]),
+    'subclass' => new readonly class ([$a], $table) extends AST\Statement\Select {
+    },
+    'with' => (new AST\Statement\Select([$a], $table))->with(where: $one, limit: new AST\Literal(1), distinct: true),
+];
+foreach ($statements as $name => $statement) {
+    emit('statement ' . $name, serialized($serializers, $statement));
+}
+
+// Trees deeper and chains longer than a coroutine's stack would take if the extension recursed on it.
+$nest = function (int $depth, callable $wrap) use ($one): AST\Expression {
+    $expression = $one;
+    for ($i = 0; $i < $depth; $i++) {
+        $expression = $wrap($expression);
+    }
+
+    return $expression;
+};
+emit('deep by hand', array_map(fn (int $depth): array => [
+    outcome(fn () => md5($serializers['base']->serializeExpression($nest($depth, fn (AST\Expression $e): AST\Expression => new AST\Expression\Unary('-', $e))))),
+    outcome(fn () => md5($serializers['postgres']->serializeExpression($nest($depth, fn (AST\Expression $e): AST\Expression => new AST\Expression\Binary($e, '+', $one))))),
+    outcome(fn () => md5($serializers['postgres']->serializeExpression($nest($depth, fn (AST\Expression $e): AST\Expression => new AST\Expression\Binary($one, 'OR', $e))))),
+    outcome(fn () => md5($serializers['base']->serializeExpression($nest($depth, fn (AST\Expression $e): AST\Expression => new AST\Expression\Subquery(new AST\Statement\Select([$e])))))),
+    outcome(fn () => md5($serializers['base']->serialize(new AST\Statement\Select([$nest($depth, fn (AST\Expression $e): AST\Expression => new AST\Call\Func('F', [$one, $e]))], where: $nest($depth, fn (AST\Expression $e): AST\Expression => new AST\Expression\In($one, [$e])))))),
+    outcome(fn () => $serializers['base']->serializeExpression($nest($depth, fn (AST\Expression $e): AST\Expression => new AST\Expression\Binary($e, '+', new AST\Expression\CaseWhen($one, $one))))),
+    outcome(fn () => $serializers['base']->serializeExpression($nest($depth, fn (AST\Expression $e): AST\Expression => $e instanceof AST\Literal ? new AST\Call\Func('F', ['x']) : new AST\Expression\Unary('-', $e)))),
+], [1, 10, 63, 64, 65, 300, 3000, 20000]));
+emit('long chains', array_map(fn (int $terms): array => array_map(fn (string $sql): array => outcome(function () use ($parser, $tokenizers, $serializers, $sql) {
+    $read = $parser->parse(Tokenizer\Tokenizer::filter($tokenizers['base']->tokenize($sql)));
+
+    return [md5($serializers['base']->serialize($read)), md5(serialize(exported($read->where ?? $read->columns[0])))];
+}), [
+    'select 1' . str_repeat(' + 1', $terms), 'select a from t where a = 1' . str_repeat(' or a = 1', $terms), 'select a from t where a in (' . str_repeat('1, ', $terms) . '1)',
+    'select f(' . str_repeat('a, ', $terms) . 'a)', 'select 1' . str_repeat(' + 1', $terms) . ' +', 'select a from t where a = 1' . str_repeat(' and (a = 1 or b = 2)', $terms) . ' and',
+    'select ' . str_repeat('not ', min($terms, 1000)) . 'a', 'select ' . str_repeat('- ', min($terms, 1000)) . 'a from t where ' . str_repeat('not ', min($terms, 1000)) . 'a = ' . str_repeat('+', min($terms, 1000)) . '1',
+]), [10, 70, 500, 8000]));
+
+emit('serializer arguments', [
+    outcome(fn () => $serializers['base']->serialize($a)), outcome(fn () => $serializers['base']->serialize(null)), outcome(fn () => $serializers['base']->serialize('select 1')),
+    outcome(fn () => $serializers['base']->serialize(new stdClass())), outcome(fn () => $serializers['base']->serialize()), outcome(fn () => $serializers['base']->serializeExpression($inner)),
+    outcome(fn () => $serializers['base']->serializeExpression(null)), outcome(fn () => $serializers['base']->serializeExpression('a')), outcome(fn () => $serializers['base']->serializeExpression($table)),
+    outcome(fn () => $serializers['base']->serializeExpression(new AST\OrderByItem($a))), outcome(fn () => $serializers['base']->serializeExpression()), outcome(fn () => $serializers['postgres']->serialize([])),
+    outcome(fn () => $serializers['base']->quoteIdentifier('a')), outcome(fn () => (new ReflectionMethod(AST\Serializer::class, 'quoteIdentifier'))->isProtected()),
+    outcome(fn () => (string) (new ReflectionMethod(AST\Serializer::class, 'serialize'))->getParameters()[0]->getType()), outcome(fn () => (string) (new ReflectionMethod(AST\Serializer\PostgreSQL::class, 'serializeExpression'))->getParameters()[0]->getType()),
+    outcome(fn () => (string) (new ReflectionMethod(AST\Parser::class, 'parse'))->getParameters()[0]->getType()),
+]);
+emit('serializer classes', outcome(fn () => [
+    $serializers['mariadb'] instanceof AST\Serializer\MySQL, $serializers['mysql'] instanceof AST\Serializer, $serializers['postgres'] instanceof AST\Serializer\MySQL, $serializers['sqlite'] instanceof AST\Serializer\PostgreSQL,
+    get_parent_class($serializers['clickhouse']), get_parent_class($serializers['sqlite']), get_parent_class($serializers['base']), get_parent_class($parser), $serializers['base'] == new AST\Serializer(), clone $parser == $parser,
+]));
+// A subclass reaches the protected quoteIdentifier() of each dialect, and may override the public methods.
+emit('subclasses', outcome(function () use ($inner, $a): array {
+    $quoted = [];
+    foreach ([AST\Serializer::class, AST\Serializer\MySQL::class, AST\Serializer\MariaDB::class, AST\Serializer\PostgreSQL::class, AST\Serializer\SQLite::class, AST\Serializer\ClickHouse::class] as $class) {
+        $own = eval('return new class () extends \\' . $class . ' { public function quoted(string $name): string { return $this->quoteIdentifier($name); } };');
+        $quoted[] = array_map(fn (string $name): mixed => exported($own->quoted($name)), ['a', 'a`b', 'a"b', '', "\xff`\"", 'a``b', 'é']);
+        $quoted[] = $own->serializeExpression($a);
+    }
+    $loud = new class () extends AST\Serializer\PostgreSQL {
+        public function serialize(AST\Statement\Select $stmt): string
+        {
+            return strtoupper(parent::serialize($stmt)) . ';';
+        }
+    };
+    $quoted[] = [$loud->serialize(new AST\Statement\Select([$a], new AST\Reference\Table('t'))), $loud->serializeExpression($a)];
+    $counting = new class () extends AST\Parser {
+        public int $calls = 0;
+
+        public function parse(array $tokens): AST\Statement\Select
+        {
+            $this->calls++;
+
+            return parent::parse($tokens);
+        }
+    };
+    $quoted[] = [$counting->parse([new Token(TokenType::Keyword, 'SELECT', 0), new Token(TokenType::Integer, '1', 7), new Token(TokenType::Eof, '', 8)])::class, $counting->calls];
+
+    return $quoted;
+}));
+
+// The walker and the visitors stay PHP: they take what the parser made and hand the serializers what they changed.
+emit('walked', outcome(function () use ($parser, $tokenizers, $serializers): array {
+    $read = $parser->parse(Tokenizer\Tokenizer::filter($tokenizers['base']->tokenize('select a, u.b from t join u on t.id = u.id where a in (select c from t) order by a')));
+    $walker = new AST\Walker();
+    $renamed = $walker->walk($read, new AST\Visitor\TableRenamer(['t' => 'renamed', 'u' => 'other']));
+    $filtered = $walker->walk($read, new AST\Visitor\FilterInjector(new AST\Expression\Binary(new AST\Reference\Column('tenant'), '=', new AST\Literal(7))));
+
+    return [
+        $serializers['base']->serialize($renamed), $serializers['postgres']->serialize($filtered), $serializers['base']->serialize($read),
+        outcome(fn () => $walker->walk($read, new AST\Visitor\ColumnValidator(['a', 'b', 'c', 'id']))::class), outcome(fn () => $walker->walk($read, new AST\Visitor\ColumnValidator(['a']))),
+    ];
+}));
+
 // --- The classes themselves ----------------------------------------------------------------
 
 emit('cases', array_map(fn (Type $type): array => [$type->name, $type->value], Type::cases()));
@@ -1266,5 +1679,30 @@ if (isset($extra['throws']) !== $requested) {
 $serialized = outcome(fn () => strlen(serialize(Query::limit(1))) > 0);
 if (isset($serialized['throws']) !== $requested) {
     fwrite(STDERR, 'serialize() gives ' . json_encode($serialized) . ': the known difference changed' . PHP_EOL);
+    exit(1);
+}
+
+// PHP's serialize() calls serializeExpression() and quoteIdentifier() on $this, so a subclass's own take part in a
+// statement; the extension's serializers write a whole statement themselves.
+$own = new class () extends AST\Serializer {
+    public function serializeExpression(AST\Expression $expression): string
+    {
+        return '<' . parent::serializeExpression($expression) . '>';
+    }
+
+    protected function quoteIdentifier(string $name): string
+    {
+        return '[' . $name . ']';
+    }
+};
+$consulted = $own->serialize(new AST\Statement\Select([new AST\Reference\Column('a')], new AST\Reference\Table('t'))) !== 'SELECT `a` FROM `t`';
+if ($consulted === $requested) {
+    fwrite(STDERR, 'A serializer subclass\'s serializeExpression() and quoteIdentifier() are ' . ($consulted ? '' : 'not ') . 'consulted by serialize(): the known difference changed' . PHP_EOL);
+    exit(1);
+}
+// PHP parses a chain of NOT or sign operators as long as its memory allows; the extension stops at 1024.
+$chained = outcome(fn () => (new AST\Parser())->parse(Tokenizer\Tokenizer::filter((new Tokenizer\Tokenizer())->tokenize('select ' . str_repeat('not ', 1100) . 'a'))))['throws'] ?? null;
+if (($chained === null) === $requested) {
+    fwrite(STDERR, 'A chain of 1100 NOTs ' . ($chained === null ? 'parses' : 'is refused') . ': the known difference changed' . PHP_EOL);
     exit(1);
 }

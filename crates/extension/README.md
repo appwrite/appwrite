@@ -179,14 +179,15 @@ package's validators. It asserts these known differences on the extension:
   and the protected static properties `$freeDomains`, `$disposableDomains` and `$providers` do not
   exist: a subclass cannot call or read them. Nothing in Appwrite or Cloud subclasses `Email`.
 
-## Utopia\Query: the classifiers, the tokenizers and Query
+## Utopia\Query: the classifiers, the tokenizers, Query and the AST
 
 Over `crates/utopia/query` (`_APP_EXTENSION_LIBRARIES=query`). `packages/query` is about 300 classes,
 so it moves to the extension one part at a time, and `query` switches on whatever part is here. So
 far that is the statement classifiers a database proxy routes with: the `Classifier` interface,
 `Classifier\SQL` (abstract), `Classifier\MySQL`, `Classifier\PostgreSQL`, `Classifier\MongoDB` and
-the `Type` enum they return; the tokenizers; and `Query`, both below. Every other class of the
-package (`Method` and the other enums, the builders, the schema, the AST) is still its PHP source and
+the `Type` enum they return; the tokenizers; `Query`; and the AST's parser and serializers, each
+below. Every other class of the
+package (`Method` and the other enums, the builders, the schema, the AST's nodes and walker) is still its PHP source and
 works with these unchanged.
 
 The interface and the enum are registered too, not left in PHP: a class registered when the module
@@ -297,6 +298,55 @@ is not consulted there. The three subclasses above do not override them.
 
 One test in `packages/query/tests/API/HelperTest.php` read the `#[\Deprecated]` attribute of
 `contains()` by reflection. It now asserts the deprecation the call raises, on both implementations.
+
+### The AST's parser and serializers
+
+`AST\Grammar`, `AST\Parser`, and `AST\Serializer` with its dialects `MySQL`, `MariaDB`,
+`PostgreSQL`, `SQLite` and `ClickHouse`. The builders are their only callers. The 25 node classes
+stay PHP. They are readonly data that PHP code builds, reads and matches with `instanceof`, and a
+native class would only make `new` slower. `AST\Walker` and the three visitors stay PHP as well,
+because a walk is nothing but calls into a PHP visitor.
+
+The parser returns the package's own node objects and the serializers read them. Both go through
+the nodes' property slots, not their constructors and not their property tables. The constructors
+only assign, and the two that check something (a function's name, a cast's type) check what the
+parser has already checked. The first use in a request verifies that each node class declares the
+properties the extension expects in the order it expects, and throws an `Error` naming the class
+if the package and the extension are out of step.
+
+PHP recurses on its own heap, so it parses and writes a tree as deep as its memory allows. Rust
+recurses on the native stack, which a Swoole coroutine keeps at 2 MB. Reading one level of a tree
+takes 3.1 KB of it in a release build. So the binding measures a tree first, and works on anything
+deeper than 32 levels on a stack allocated for that depth (`stacker`). Nothing that runs there
+calls PHP code. With this, the extension takes every tree PHP takes: the corpus goes to 20,000
+levels, and under a 512 KB or 128 KB fiber stack both implementations stop at the same input,
+where PHP's own engine overflows freeing the objects.
+
+The corpus adds: `Grammar` on names and types with every kind of whitespace and bytes that are not
+UTF-8; 209 statements, valid and not, parsed from two tokenizers and written by all six
+serializers, then parsed again from what was written; each of those statements cut short after
+every token, with every token dropped and every pair swapped, for the parser's errors; token
+arrays that are empty, keyed, gapped, unfiltered or hold other values, and tokens made by hand with
+values a tokenizer never produces; every node made by hand with values a parser never produces,
+every pair of 31 operators nested on either side, floats at four `precision` settings, wrong
+values in every array a node holds, and subclasses of nodes; trees 20,000 levels deep and chains
+8,000 terms long; subclasses of the parser and the serializers; and the PHP walker and visitors
+over parsed statements. It asserts two known differences:
+
+- `serialize()` writes the whole statement itself. PHP's calls `serializeExpression()` and
+  `quoteIdentifier()` on `$this`, so a subclass that overrides either changes the statement. Here
+  the overrides apply only when called directly. The package's dialects are the only subclasses in
+  Appwrite and Cloud.
+- A chain of more than 1,024 `NOT` or sign operators is refused with the package's
+  `ValidationException` (`Expression nesting too deep`). PHP parses it until its memory runs out.
+  A tree deeper than 100,000 levels is refused the same way, past the depth PHP itself survives.
+
+This PR also changes the PHP serializer, for both implementations. `crates/utopia/query` was
+ported from a `Serializer.php` that keeps the parentheses of an equal-precedence right operand,
+and the one on `main` drops them for every operator but `-`, `/` and `%`. So `a = (b = c)` was
+written as `a = b = c`, which reads back as `(a = b) = c`. `packages/query/src/AST/Serializer.php`
+is now the fixed version, with two tests in `tests/AST/SerializerTest.php` that fail on the old
+one.
 
 ## Benchmarks
 

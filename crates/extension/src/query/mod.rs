@@ -2,6 +2,7 @@
 //! so far: the statement classifiers, the tokenizers and `Query` (in `value`). Every other class of the
 //! package is still its PHP source.
 
+pub mod ast;
 pub mod classifier;
 pub mod tokenizer;
 pub mod value;

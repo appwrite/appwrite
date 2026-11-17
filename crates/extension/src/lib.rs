@@ -56,6 +56,14 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
             .class::<query::tokenizer::PostgreSql>()
             .class::<query::tokenizer::Sqlite>()
             .class::<query::tokenizer::ClickHouse>()
+            .class::<query::ast::Grammar>()
+            .class::<query::ast::Parser>()
+            .class::<query::ast::Serializer>()
+            .class::<query::ast::MySqlSerializer>()
+            .class::<query::ast::MariaDbSerializer>()
+            .class::<query::ast::PostgreSqlSerializer>()
+            .class::<query::ast::SqliteSerializer>()
+            .class::<query::ast::ClickHouseSerializer>()
     } else {
         module
     };
@@ -66,5 +74,6 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
 extern "C" fn request_shutdown(kind: i32, module: i32) -> i32 {
     user_agent::request_shutdown();
     query::value::request_shutdown();
+    query::ast::request_shutdown();
     locale::request_shutdown(kind, module)
 }

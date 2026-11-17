@@ -1,6 +1,6 @@
 <?php
 
-// Times the Utopia\Query classifiers, tokenizers and Query on whichever implementation loaded. Compare both with
+// Times the Utopia\Query classifiers, tokenizers, AST parser and serializers, and Query on whichever implementation loaded. Compare both with
 // `python3 crates/extension/bench/run.py crates/extension/bench/query.php . <utopia.so> 5`.
 
 require __DIR__ . '/../../../vendor/autoload.php';
@@ -42,6 +42,22 @@ $command = function (string ...$elements): string {
 $find = $command($element('find', 'users'), $element('$db', 'app'));
 $insert = $command($element('insert', 'users'), $element('$db', 'app'), $element('comment', str_repeat('x', 200)), "\x08startTransaction\x00\x01");
 
+// What the builder hands the AST: a filtered token list to parse, and the statement to write back.
+$parser = new Utopia\Query\AST\Parser();
+$serializer = new Utopia\Query\AST\Serializer();
+$postgresSerializer = new Utopia\Query\AST\Serializer\PostgreSQL();
+$report = 'WITH recent AS (SELECT user_id, count(*) AS events FROM events WHERE time > 100 AND kind IN (\'a\', \'b\', \'c\') GROUP BY user_id HAVING count(*) > 5) '
+    . 'SELECT u.id, u.name, coalesce(r.events, 0) AS events, CASE WHEN u.age >= 18 THEN \'adult\' ELSE \'minor\' END AS band, row_number() OVER (PARTITION BY u.team ORDER BY r.events DESC) AS position '
+    . 'FROM users AS u LEFT JOIN recent AS r ON r.user_id = u.id INNER JOIN teams AS t ON t.id = u.team '
+    . 'WHERE u.status = \'active\' AND (u.age BETWEEN 18 AND 65 OR u.role = \'admin\') AND NOT EXISTS (SELECT 1 FROM bans AS b WHERE b.user_id = u.id) ORDER BY events DESC NULLS LAST, u.name ASC LIMIT 50 OFFSET 100';
+$wide = 'SELECT a FROM t WHERE a = 0' . str_repeat(' OR a = 1', 150);
+$selectTokens = Tokenizer::filter($tokenizer->tokenize($select));
+$reportTokens = Tokenizer::filter($tokenizer->tokenize($report));
+$wideTokens = Tokenizer::filter($tokenizer->tokenize($wide));
+$selectAst = $parser->parse($selectTokens);
+$reportAst = $parser->parse($reportTokens);
+$wideAst = $parser->parse($wideTokens);
+
 $filter = Query::equal('status', ['active', 'pending']);
 $nested = Query::and([Query::equal('status', ['active']), Query::or([Query::greaterThan('age', 18), Query::isNull('name')]), Query::between('time', 1, 2)]);
 $json = $filter->toString();
@@ -65,6 +81,15 @@ $cases = [
     'tokenize mysql # comment' => fn () => $mysqlTokenizer->tokenize($commented . ' # trailing'),
     'tokenize postgres operators' => fn () => $postgresTokenizer->tokenize('SELECT a @> b, c <-> $1, d ?| e FROM "t" WHERE f <=> g'),
     'tokenize CTE (60 tokens)' => fn () => $tokenizer->tokenize($cte),
+
+    'AST parse select (' . count($selectTokens) . ' tokens)' => fn () => $parser->parse($selectTokens),
+    'AST parse report (' . count($reportTokens) . ' tokens)' => fn () => $parser->parse($reportTokens),
+    'AST parse 150 ORs (' . count($wideTokens) . ' tokens)' => fn () => $parser->parse($wideTokens),
+    'AST serialize select' => fn () => $serializer->serialize($selectAst),
+    'AST serialize report' => fn () => $postgresSerializer->serialize($reportAst),
+    'AST serialize 150 ORs' => fn () => $serializer->serialize($wideAst),
+    'AST sql to sql (report)' => fn () => $postgresSerializer->serialize($parser->parse(Tokenizer::filter($tokenizer->tokenize($report)))),
+    'AST Grammar::isType' => fn () => Utopia\Query\AST\Grammar::isType('decimal(10, 2)'),
     // What a request does with the queries it is given: parse them, read them, group them.
     'Query::equal' => fn () => Query::equal('status', ['active', 'pending']),
     'new Query' => fn () => new Query(Method::Equal, 'status', ['active']),

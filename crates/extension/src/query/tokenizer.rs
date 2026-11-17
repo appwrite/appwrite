@@ -17,12 +17,12 @@ const TOKEN: &str = "Utopia\\Query\\Tokenizer\\Token";
 const TOKEN_TYPE: &str = "Utopia\\Query\\Tokenizer\\TokenType";
 
 /// A class of the PHP package, loaded through the autoloader.
-fn class(name: &str) -> PhpResult<&'static ClassEntry> {
+pub(super) fn class(name: &str) -> PhpResult<&'static ClassEntry> {
     ClassEntry::try_find(name).ok_or_else(|| PhpException::new(format!("Class \"{name}\" not found"), 0, ce::error()))
 }
 
 /// The object of the `TokenType` case `kind`.
-fn case(token_type: &ClassEntry, kind: TokenType) -> *mut ZendObject {
+pub(super) fn case(token_type: &ClassEntry, kind: TokenType) -> *mut ZendObject {
     let mut name = ZendStr::new(kind.name(), false);
     // SAFETY: `token_type` is the loaded enum and `kind.name()` is one of its cases, which is
     // what `zend_enum_get_case` requires; the object it returns lives as long as the class.
