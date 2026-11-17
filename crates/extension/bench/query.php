@@ -1,6 +1,6 @@
 <?php
 
-// Times the Utopia\Query classifiers and tokenizers on whichever implementation loaded. Compare both with
+// Times the Utopia\Query classifiers, tokenizers and Query on whichever implementation loaded. Compare both with
 // `python3 crates/extension/bench/run.py crates/extension/bench/query.php . <utopia.so> 5`.
 
 require __DIR__ . '/../../../vendor/autoload.php';
@@ -8,6 +8,8 @@ require __DIR__ . '/../../../vendor/autoload.php';
 use Utopia\Query\Classifier\MongoDB;
 use Utopia\Query\Classifier\MySQL;
 use Utopia\Query\Classifier\PostgreSQL;
+use Utopia\Query\Method;
+use Utopia\Query\Query;
 use Utopia\Query\Tokenizer\Tokenizer;
 
 // A run meant for the extension that gets the PHP classes would time PHP against PHP.
@@ -40,6 +42,13 @@ $command = function (string ...$elements): string {
 $find = $command($element('find', 'users'), $element('$db', 'app'));
 $insert = $command($element('insert', 'users'), $element('$db', 'app'), $element('comment', str_repeat('x', 200)), "\x08startTransaction\x00\x01");
 
+$filter = Query::equal('status', ['active', 'pending']);
+$nested = Query::and([Query::equal('status', ['active']), Query::or([Query::greaterThan('age', 18), Query::isNull('name')]), Query::between('time', 1, 2)]);
+$json = $filter->toString();
+$nestedJson = $nested->toString();
+$list = [$filter, $nested, Query::limit(25), Query::offset(50), Query::orderDesc('time'), Query::select(['name', 'age']), Query::cursorAfter(['$id' => 'x']), Query::count('*', 'total')];
+$jsons = array_map(fn (Query $query): string => $query->toString(), array_slice($list, 0, 5));
+
 $cases = [
     'mysql COM_QUERY select' => fn () => $mysql->classify("\x00\x00\x00\x00\x03" . $select),
     'mysql COM_STMT_EXECUTE' => fn () => $mysql->classify("\x05\x00\x00\x00\x17\x01\x00\x00\x00"),
@@ -56,6 +65,20 @@ $cases = [
     'tokenize mysql # comment' => fn () => $mysqlTokenizer->tokenize($commented . ' # trailing'),
     'tokenize postgres operators' => fn () => $postgresTokenizer->tokenize('SELECT a @> b, c <-> $1, d ?| e FROM "t" WHERE f <=> g'),
     'tokenize CTE (60 tokens)' => fn () => $tokenizer->tokenize($cte),
+    // What a request does with the queries it is given: parse them, read them, group them.
+    'Query::equal' => fn () => Query::equal('status', ['active', 'pending']),
+    'new Query' => fn () => new Query(Method::Equal, 'status', ['active']),
+    'getters' => fn () => [$filter->getMethod(), $filter->getAttribute(), $filter->getValues(), $filter->getAlias()],
+    'parse filter' => fn () => Query::parse($json),
+    'parse nested (and of 3)' => fn () => Query::parse($nestedJson),
+    'parseQueries (5)' => fn () => Query::parseQueries($jsons),
+    'toString' => fn () => $filter->toString(),
+    'toString nested' => fn () => $nested->toString(),
+    'clone nested' => fn () => clone $nested,
+    'groupByType (8)' => fn () => Query::groupByType($list),
+    'getByType' => fn () => Query::getByType($list, [Method::Limit, Method::Offset]),
+    'fingerprint (8)' => fn () => Query::fingerprint($list),
+    'validate (8)' => fn () => Query::validate($list, ['status', 'age', 'name', 'time']),
 ];
 $n = 50000;
 $out = [];

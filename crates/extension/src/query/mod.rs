@@ -1,9 +1,10 @@
 //! `Utopia\Query` over [`utopia_query`], one part of the package at a time. What is here
-//! so far: the statement classifiers and the tokenizers. Every other class of the
+//! so far: the statement classifiers, the tokenizers and `Query` (in `value`). Every other class of the
 //! package is still its PHP source.
 
 pub mod classifier;
 pub mod tokenizer;
+pub mod value;
 
 use ext_php_rs::convert::IntoZval;
 use ext_php_rs::exception::PhpException;

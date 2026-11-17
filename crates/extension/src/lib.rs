@@ -49,6 +49,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
             .class::<query::classifier::MySqlClassifier>()
             .class::<query::classifier::PostgreSqlClassifier>()
             .class::<query::classifier::MongoDbClassifier>()
+            .class::<query::value::Query>()
             .class::<query::tokenizer::Tokenizer>()
             .class::<query::tokenizer::MySql>()
             .class::<query::tokenizer::MariaDb>()
@@ -64,5 +65,6 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
 /// Forgets what the classes hold for the request when it ends, as PHP frees its static state.
 extern "C" fn request_shutdown(kind: i32, module: i32) -> i32 {
     user_agent::request_shutdown();
+    query::value::request_shutdown();
     locale::request_shutdown(kind, module)
 }

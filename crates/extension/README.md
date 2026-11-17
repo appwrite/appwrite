@@ -179,14 +179,15 @@ package's validators. It asserts these known differences on the extension:
   and the protected static properties `$freeDomains`, `$disposableDomains` and `$providers` do not
   exist: a subclass cannot call or read them. Nothing in Appwrite or Cloud subclasses `Email`.
 
-## Utopia\Query: the classifiers and the tokenizers
+## Utopia\Query: the classifiers, the tokenizers and Query
 
 Over `crates/utopia/query` (`_APP_EXTENSION_LIBRARIES=query`). `packages/query` is about 300 classes,
 so it moves to the extension one part at a time, and `query` switches on whatever part is here. So
 far that is the statement classifiers a database proxy routes with: the `Classifier` interface,
 `Classifier\SQL` (abstract), `Classifier\MySQL`, `Classifier\PostgreSQL`, `Classifier\MongoDB` and
-the `Type` enum they return; and the tokenizers, below. Every other class of the package (`Query`,
-`Method`, the builders, the schema, the AST) is still its PHP source and works with these unchanged.
+the `Type` enum they return; the tokenizers; and `Query`, both below. Every other class of the
+package (`Method` and the other enums, the builders, the schema, the AST) is still its PHP source and
+works with these unchanged.
 
 The interface and the enum are registered too, not left in PHP: a class registered when the module
 starts cannot implement a userland interface, and returning the extension's own enum case costs no
@@ -230,6 +231,72 @@ and the scalar arguments PHP converts. It asserts two known differences:
 Five tests in `packages/query/tests/Tokenizer/MySQLTest.php` reached the private
 `replaceHashComments()` by reflection. They now read the rewritten SQL back from `tokenize()`,
 whose tokens cover every byte, so they run on both implementations.
+
+### Query
+
+`Utopia\Query\Query`, the value object every query is. The extension registers its methods and
+state as `Utopia\Query\NativeQuery`, and the package declares `Query` over it
+(`packages/query/src/extension.php` loads `packages/query/extension/Query.php` before the autoloader
+looks for `src/Query.php`). That one PHP class holds the two constants that are arrays,
+`LOGICAL_TYPES` and `GROUP_BY_TIME_BUCKET_INTERVALS`, which a class registered when the module
+starts cannot. `Utopia\Database\Query` reads the first.
+
+A query's values are PHP values (any value, nested queries among them), so the binding keeps them
+as PHP holds them and uses the crate only for what a method is (`utopia_query::Method`): a nested
+query stays the same object, `getValues()` returns the array that was stored, and changing a nested
+query through it changes the one the parent holds. `clone` copies nested queries. `Method`,
+`NullsPosition`, `CursorDirection`, `ParsedQuery` and the exceptions stay PHP; the binding returns
+their cases and constructs them. `json_encode()` and `json_decode()` are PHP's own, called from the
+binding, so `toString()` and `parse()` write and refuse exactly what they did. `contains()` raises
+the deprecation `#[\Deprecated]` raised.
+
+Subclasses are what most of the binding is about. `Utopia\Database\Query`, `Utopia\Audit\Query`
+and `Utopia\Usage\UsageQuery` extend `Query`:
+
+- `new static` makes an object of the class a method was called on, directly when the class keeps
+  the extension's constructor and through its own when it has one, including through `parent::`.
+- Where `Query.php` calls a method through `static` (`parseQuery()` from `parse()` and for nested
+  queries, `isMethod()`, `on()`, `parse()` from `parseQueries()` and `fingerprint()`, `lessThan()`,
+  `greaterThan()` and `between()` from the date helpers, `limit()` and `offset()` from `page()`,
+  `validate()` for nested queries), a subclass's own runs, in the same order.
+  `Utopia\Database\Query::parseQuery()`, which decodes children given as JSON strings, depends on it.
+- Where `Query.php` calls `toArray()` or `shape()` on a query object (`toString()`, nested queries in
+  `toArray()`, `diff()`, `fingerprint()`), a subclass's own runs. `Utopia\Database\Query::toArray()`,
+  which writes a cursor document as its id, depends on it.
+- An override must be compatible with the method it overrides, and PHP checks that against what the
+  extension declares. Each array parameter is declared `array`. The cursor factories take
+  `array|object` and are declared `array`, the nearest type an extension method can declare that an
+  `array|object` override is compatible with; they accept an object all the same.
+- The seven protected properties are declared and getter-backed, so a subclass reads
+  `$this->method` and `var_dump()`, `==` and `(array)` see what they see in PHP.
+
+The corpus adds: every method constructed on the class and on two subclasses, with and without
+values, nested queries and an alias; every factory with arguments it takes and sixty seeded
+argument lists from a pool of thirty values (strings, numbers, `NAN`, arrays, objects, enum cases,
+queries); 470 JSON documents through `parse()`, `parseQuery()`, `parseQueries()` and
+`fingerprint()` on the class and on subclasses, the 0.6 join layouts and malformed JSON among them;
+setters, `getValue()`, `clone`, identity of nested queries; `groupByType()`, `getByType()`,
+`getCursorQueries()`, `merge()`, `diff()`, `validate()` and `page()` over lists of every shape;
+`compile()` through a recording compiler; named arguments; what `var_dump()`, `==`, `(array)` and
+reflection show; a subclass that overrides every method reached through `static` and records the
+order they ran in; and `Utopia\Database\Query` itself, with a `Document` as a cursor and children
+given as JSON strings. It asserts these known differences:
+
+- `Query` has a parent class, `NativeQuery`. In PHP it has none.
+- More arguments than a method declares are an `ArgumentCountError`; PHP ignores the extras.
+- A call that both omits an argument and passes a wrong one raises `ArgumentCountError`, a subclass
+  of the `TypeError` PHP raises for it. The corpus compares the two as `TypeError`.
+- `isset()` on a protected property from outside the class is `true`. Reading it is refused.
+- `serialize()` refuses the object, as it does every class with Rust state. Nothing in Appwrite
+  serializes a query.
+
+One difference the corpus does not assert: `groupByType()`, `getByType()`, `getCursorQueries()`,
+`merge()` and `validate()` read a listed query's method, attribute and values directly, where PHP
+calls its `getMethod()`, `getAttribute()` and `getValues()`. A subclass that overrides those getters
+is not consulted there. The three subclasses above do not override them.
+
+One test in `packages/query/tests/API/HelperTest.php` read the `#[\Deprecated]` attribute of
+`contains()` by reflection. It now asserts the deprecation the call raises, on both implementations.
 
 ## Benchmarks
 
