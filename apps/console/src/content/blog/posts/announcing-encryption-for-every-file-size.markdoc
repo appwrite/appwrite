@@ -25,7 +25,25 @@ Appwrite Storage now encrypts every new file in an encrypted bucket, regardless 
 
 # Encryption during upload
 
-Encryption is on by default for new buckets and can be configured under **Settings > Security settings > Encryption**. Previously, encryption applied only to files up to 20 MB. Larger files in encrypted buckets were stored unencrypted.
+Encryption is on by default for new buckets and can be configured in the **Encryption** card on the bucket's **Settings** tab.
+
+{% only_dark %}
+![Encryption setting on a bucket's Settings tab](/images/blog/announcing-encryption-for-every-file-size/settings-dark.avif)
+{% /only_dark %}
+
+{% only_light %}
+![Encryption setting on a bucket's Settings tab](/images/blog/announcing-encryption-for-every-file-size/settings.avif)
+{% /only_light %}
+
+Previously, encryption applied only to files up to 20 MB. Larger files in encrypted buckets were stored unencrypted. Now a 110 MB video uploaded to an encrypted bucket shows encryption as enabled in its file details.
+
+{% only_dark %}
+![A 110 MB video in an encrypted bucket with encryption enabled](/images/blog/announcing-encryption-for-every-file-size/files-dark.avif)
+{% /only_dark %}
+
+{% only_light %}
+![A 110 MB video in an encrypted bucket with encryption enabled](/images/blog/announcing-encryption-for-every-file-size/files.avif)
+{% /only_light %}
 
 Each new file gets a random 256-bit key. Appwrite encrypts that key with the server's encryption key and stores it in the file's internal metadata. The API never returns the file key.
 
