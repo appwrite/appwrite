@@ -598,10 +598,12 @@ class V25 extends Migration
                         $existed = $this->dbForProject->findCollection($id) !== null;
                         $this->createCollection($id);
                         if ($existed && $id === 'reviews') {
-                            try {
-                                $this->createAttributeFromCollection($this->dbForProject, $id, 'strength');
-                            } catch (Throwable $th) {
-                                Console::warning("Failed to create attribute \"strength\" in collection {$id}: {$th->getMessage()}");
+                            foreach (['strength', 'providerPullRequestAuthor'] as $attribute) {
+                                try {
+                                    $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                                } catch (Throwable $th) {
+                                    Console::warning("Failed to create attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
+                                }
                             }
                         }
                     } finally {

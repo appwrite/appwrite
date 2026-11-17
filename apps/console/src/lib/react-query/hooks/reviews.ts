@@ -19,6 +19,8 @@ import {
 import { sdk } from '@/lib/appwrite/sdk'
 import type {
   Review,
+  ReviewAuthorList,
+  ReviewAuthorRange,
   ReviewEventList,
   ReviewLearningList,
   ReviewList,
@@ -184,6 +186,24 @@ export async function fetchReviewLearnings(
   })
 }
 
+/**
+ * Query function to fetch how the authors of the project's pull requests fared
+ * in review over a range, optionally for one repository.
+ */
+export async function fetchReviewAuthors(
+  projectId: string,
+  range: ReviewAuthorRange,
+  repositoryId: string,
+): Promise<ReviewAuthorList> {
+  if (!projectId) {
+    return { authors: [], total: 0 }
+  }
+
+  return await sdk
+    .forProject(projectId)
+    .reviews.listAuthors({ range, repositoryId: repositoryId || undefined })
+}
+
 // ============================================================================
 // QUERY OPTIONS
 // ============================================================================
@@ -279,6 +299,23 @@ export function reviewLearningsQueryOptions(
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function reviewAuthorsQueryOptions(
+  projectId: string | null | undefined,
+  range: ReviewAuthorRange = '30d',
+  repositoryId: string = '',
+) {
+  return queryOptions({
+    queryKey: ['review-authors', 'project', projectId, range, repositoryId],
+    queryFn: () => fetchReviewAuthors(projectId!, range, repositoryId),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnWindowFocus: false,
     placeholderData: keepPreviousData,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -387,6 +424,24 @@ export function useReviewLearnings(
     isLoading,
     isFetching,
     isPlaceholderData,
+    error,
+  }
+}
+
+export function useReviewAuthors(
+  projectId: string | null | undefined,
+  range: ReviewAuthorRange = '30d',
+  repositoryId: string = '',
+) {
+  const { data, isLoading, isFetching, error } = useQuery(
+    reviewAuthorsQueryOptions(projectId, range, repositoryId),
+  )
+
+  return {
+    authors: data?.authors ?? [],
+    total: data?.total ?? 0,
+    isLoading,
+    isFetching,
     error,
   }
 }

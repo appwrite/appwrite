@@ -704,6 +704,7 @@ class Create extends Action
             'providerRepositoryOwner' => $parsedPayload['owner'] ?? '',
             'providerRepositoryName' => $parsedPayload['repositoryName'] ?? '',
             'providerPullRequestId' => (string) $pullNumber,
+            'providerPullRequestAuthor' => $parsedPayload['pullRequestAuthor'] ?? '',
             'providerCommitHash' => $headSha,
             'trigger' => $trigger['kind'],
             'providerCommentId' => isset($trigger['comment']) ? (string) $trigger['comment']['id'] : '',
