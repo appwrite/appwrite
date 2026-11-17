@@ -4097,4 +4097,22 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'הוסיפו לפחות מארח אחד ו-base DN כדי להפעיל התחברות דרך LDAP.',
   'Add at least one host and a base DN under Settings > Identity servers to enable LDAP sign-in.':
     'הוסיפו לפחות מארח אחד ו-base DN תחת הגדרות > שרתי זהויות כדי להפעיל התחברות דרך LDAP.',
+  'Add note': 'הוספת הערה',
+  'Edit note': 'עריכת הערה',
+  'Delete note': 'מחיקת הערה',
+  'Show notes': 'הצגת הערות',
+  'Note added': 'ההערה נוספה',
+  'Note updated': 'ההערה עודכנה',
+  'Note deleted': 'ההערה נמחקה',
+  'Note text': 'תוכן ההערה',
+  'Notes mark releases, campaigns or incidents on the chart for everyone in the project.':
+    'הערות מסמנות על הגרף גרסאות, קמפיינים או תקלות, לכל מי שבפרויקט.',
+  'Launched the new pricing page': 'השקנו את דף המחירים החדש',
+  'The note is removed from the chart for everyone.':
+    'ההערה תוסר מהגרף עבור כולם.',
+  'Alert me': 'התראה',
+  'Create a monitor on analytics traffic across this project':
+    'יצירת ניטור על תעבורת האנליטיקה בכל הפרויקט',
+  'Analytics events': 'אירועי אנליטיקה',
+  'Analytics pageviews': 'צפיות בדפים באנליטיקה',
 }

@@ -28,6 +28,8 @@ export enum AlertMetric {
   MessagesSmsSent = 'messages.sms.sent',
   MessagesFailed = 'messages.failed',
   AvatarsScreenshotsGenerated = 'avatars.screenshotsGenerated',
+  AnalyticsEvents = 'analytics.events',
+  AnalyticsPageviews = 'analytics.pageviews',
   DedicatedDatabasesCpu = 'dedicatedDatabases.cpu',
   DedicatedDatabasesMemory = 'dedicatedDatabases.memory',
   DedicatedDatabasesStorage = 'dedicatedDatabases.storage',

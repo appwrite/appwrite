@@ -4170,4 +4170,21 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'LDAP サインインを有効にするには、少なくとも 1 つのホストとベース DN を追加してください。',
   'Add at least one host and a base DN under Settings > Identity servers to enable LDAP sign-in.':
     'LDAP サインインを有効にするには、[設定] > [ID サーバー] で少なくとも 1 つのホストとベース DN を追加してください。',
+  'Add note': 'メモを追加',
+  'Edit note': 'メモを編集',
+  'Delete note': 'メモを削除',
+  'Show notes': 'メモを表示',
+  'Note added': 'メモを追加しました',
+  'Note updated': 'メモを更新しました',
+  'Note deleted': 'メモを削除しました',
+  'Note text': 'メモの内容',
+  'Notes mark releases, campaigns or incidents on the chart for everyone in the project.':
+    'メモはリリース、キャンペーン、障害などをグラフ上に記録し、プロジェクトの全員に表示されます。',
+  'Launched the new pricing page': '新しい料金ページを公開',
+  'The note is removed from the chart for everyone.': 'このメモは全員のグラフから削除されます。',
+  'Alert me': 'アラートを設定',
+  'Create a monitor on analytics traffic across this project':
+    'このプロジェクト全体のアナリティクストラフィックにモニターを作成します',
+  'Analytics events': 'アナリティクスイベント',
+  'Analytics pageviews': 'アナリティクスのページビュー',
 }

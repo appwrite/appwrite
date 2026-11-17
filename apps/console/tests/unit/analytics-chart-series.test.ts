@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'bun:test'
 import type { Models } from '@appwrite.io/console'
-import { buildAnalyticsChartPoints } from '@/components/pages/projects/$projectId/analytics/_components/chart-series'
+import {
+  buildAnalyticsChartPoints,
+  groupAnnotationsByBucket,
+} from '@/components/pages/projects/$projectId/analytics/_components/chart-series'
 
 // Built from local dates so the daily bucket grid does not shift by timezone.
 const range = {
@@ -41,5 +44,36 @@ describe('analytics chart series pageviews', () => {
       '1d',
     )
     expect(points[0].pageviews).toBe(0)
+  })
+})
+
+describe('analytics chart annotations', () => {
+  const points = buildAnalyticsChartPoints([], range, '1d')
+  const note = (id: string, date: Date) => ({
+    $id: id,
+    date: date.toISOString(),
+  })
+
+  test('places a note on the bucket its date falls in', () => {
+    const groups = groupAnnotationsByBucket(points, [
+      note('a', new Date(2026, 9, 2, 15, 30)),
+    ])
+    expect([...groups.keys()]).toEqual([1])
+  })
+
+  test('shares one marker between notes in the same bucket', () => {
+    const groups = groupAnnotationsByBucket(points, [
+      note('a', new Date(2026, 9, 3, 1)),
+      note('b', new Date(2026, 9, 3, 22)),
+    ])
+    expect(groups.get(2)?.map((item) => item.$id)).toEqual(['a', 'b'])
+  })
+
+  test('drops notes outside the grid', () => {
+    const groups = groupAnnotationsByBucket(points, [
+      note('before', new Date(2026, 8, 30, 23)),
+      note('after', new Date(2026, 9, 4, 0, 30)),
+    ])
+    expect(groups.size).toBe(0)
   })
 })

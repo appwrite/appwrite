@@ -1,10 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { DateRange } from 'react-day-picker'
 import { differenceInHours } from 'date-fns'
-import { AlertTriangle, Download } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import { AlertTriangle, BellPlus, Download } from 'lucide-react'
 import { ANALYTICS_PRODUCT_ICON } from '@/lib/analytics/product-icon'
 import { propertyType } from '@/lib/analytics-wizard/property-types'
 import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { InstallTrackingDialog } from '../_components/InstallTrackingDialog'
 import { ServiceHeader } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -42,7 +48,11 @@ import {
 } from '@/lib/usage/usage-date-range-presets'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useAnalyticsChartPrefs } from '@/hooks/use-analytics-chart-prefs'
-import { canWriteRules } from '@/lib/console-access-checks'
+import {
+  canCreateAnalyticsProperty,
+  canWriteMonitors,
+  canWriteRules,
+} from '@/lib/console-access-checks'
 import { isCloudProfile } from '@/lib/console-profiles'
 import { AnalyticsOverview } from '../_components/AnalyticsOverview'
 import {
@@ -601,16 +611,52 @@ export function View({
             onRefresh={handleRefresh}
             isRefreshing={isRefreshing}
             afterRefreshButtons={
-              <ExportMenu
-                projectId={projectId}
-                property={property}
-                range={range}
-                interval={resolvedInterval}
-                comparisonRange={comparisonRange}
-                compareLabel={
-                  comparisonRange ? t(compareModeLabel(compareMode)) : null
-                }
-              />
+              <>
+                {features.alerts && canWriteMonitors(access, features) ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="h-9 gap-1.5 border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground"
+                      >
+                        <Link
+                          to="/projects/$projectId/usage/monitors"
+                          params={{ projectId }}
+                          search={{
+                            metric:
+                              resolvedType === AnalyticsPropertyType.Web
+                                ? 'analytics.pageviews'
+                                : 'analytics.events',
+                          }}
+                          aria-label={t('Alert me')}
+                        >
+                          <BellPlus className="h-3.5 w-3.5" />
+                          <span className="hidden @[760px]:inline">
+                            {t('Alert me')}
+                          </span>
+                        </Link>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="text-[12px]">
+                      {t(
+                        'Create a monitor on analytics traffic across this project',
+                      )}
+                    </TooltipContent>
+                  </Tooltip>
+                ) : null}
+                <ExportMenu
+                  projectId={projectId}
+                  property={property}
+                  range={range}
+                  interval={resolvedInterval}
+                  comparisonRange={comparisonRange}
+                  compareLabel={
+                    comparisonRange ? t(compareModeLabel(compareMode)) : null
+                  }
+                />
+              </>
             }
             showToolbarBottomBorder
             fullWidthBorder
@@ -664,6 +710,7 @@ export function View({
               onRefresh={handleRefresh}
               showUsers={showUsersPanel}
               type={resolvedType}
+              canAnnotate={canCreateAnalyticsProperty(access, features)}
             />
 
             <div className="mx-auto w-full max-w-7xl space-y-4 px-4 py-6 sm:px-6">
