@@ -24,10 +24,15 @@ publish = false
 php-std = { path = "crates/support/php-std" }
 utopia-domains = { path = "crates/utopia/domains" }
 utopia-emails = { path = "crates/utopia/emails" }
+utopia-async = { path = "crates/utopia/async" }
 utopia-dsn = { path = "crates/utopia/dsn" }
 utopia-image = { path = "crates/utopia/image", default-features = false }
 utopia-locale = { path = "crates/utopia/locale" }
+utopia-lock = { path = "crates/utopia/lock" }
+utopia-nats = { path = "crates/utopia/nats" }
+utopia-queue = { path = "crates/utopia/queue" }
 utopia-user-agent = { path = "crates/utopia/user-agent" }
+utopia-validators = { path = "crates/utopia/validators" }
 
 # 0.16.5: #[php(sensitive(...))] (extphprs/ext-php-rs#840), which `Utopia\DSN\DSN` needs to keep
 # credentials out of exception traces, and the clone of a PHP subclass (extphprs/ext-php-rs#838).
@@ -75,6 +80,30 @@ kamadak-exif = "0.6"
 libheif-rs = { version = "3", default-features = false, features = ["v1_17"] }
 png = "0.18"
 thiserror = "2"
+# utopia-async (the runtime), utopia-lock, utopia-nats and utopia-queue: a worker outside PHP.
+async-nats = { version = "0.50", default-features = false, features = ["ring", "server_2_10", "jetstream"] }
+async-trait = "0.1"
+base64 = "0.22"
+futures-util = { version = "0.3", default-features = false, features = ["std", "async-await-macro"] }
+hex = "0.4"
+http = "1"
+http-body-util = "0.1"
+hyper = { version = "1", features = ["server", "http1"] }
+hyper-util = "0.1"
+pin-project-lite = "0.2"
+proc-macro2 = { version = "1", default-features = false, features = ["span-locations"] }
+quote = { version = "1", default-features = false }
+rand = { version = "0.10", default-features = false, features = ["thread_rng"] }
+redis = { version = "0.32", default-features = false, features = ["tokio-comp", "aio", "connection-manager", "script"] }
+ring = "0.17"
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+serde = { version = "1", features = ["derive"] }
+socket2 = { version = "0.6", features = ["all"] }
+syn = { version = "2", default-features = false, features = ["full", "parsing", "printing"] }
+tokio = { version = "1", default-features = false }
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12"] }
+tower-service = "0.3"
+webpki-roots = "1"
 # libwebp, built from source and linked statically: lossy WebP. utopia-image's `libwebp` feature.
 webp = { version = "0.3", default-features = false }
 
