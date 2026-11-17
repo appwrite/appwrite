@@ -592,6 +592,8 @@ export const jaSitesDictionary: Record<string, string> = {
   'Required · any one': '必須 · いずれか 1 つ',
   'Add the records below at your DNS provider. Appwrite checks again automatically for 3 days.':
     'DNS プロバイダーで下記のレコードを追加してください。Appwrite が 3 日間、自動的に再確認します。',
+  'Automatic checks have stopped. Fix the records below, then verify again.':
+    '自動確認は停止しました。下記のレコードを修正してから、もう一度検証してください。',
   'All records are verified.': 'すべてのレコードが検証されました。',
   'Appwrite will issue the SSL certificate next.':
     '次に Appwrite が SSL 証明書を発行します。',
