@@ -150,6 +150,7 @@ class Update extends Action
         } catch (Exception $err) {
             $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 '$updatedAt' => DateTime::now(),
+                'records' => $rule->getAttribute('records', []),
             ])));
             $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
             throw $err;
