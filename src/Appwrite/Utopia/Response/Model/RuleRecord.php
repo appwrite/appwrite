@@ -15,6 +15,12 @@ class RuleRecord extends Model
                 'description' => 'DNS record type. Possible values are "CNAME", "A", "AAAA", or "CAA".',
                 'default' => '',
                 'example' => 'CNAME',
+            ])
+            ->addRule('name', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Hostname the record was looked up for.',
+                'default' => '',
+                'example' => 'appwrite.company.com',
             ]);
     }
 
