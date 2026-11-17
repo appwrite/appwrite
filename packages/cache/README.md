@@ -33,7 +33,7 @@ $key    = 'data-from-example.com';
 
 $data   = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
 
-if(!$data) {
+if ($data === false) {
     $data = file_get_contents('https://example.com');
 
     $cache->save($key, $data);
@@ -42,7 +42,7 @@ if(!$data) {
 echo $data;
 ```
 
-A miss loads as `false`. `save()` refuses `''` and `'0'` and returns `false`. It stores an empty array `[]`, except on `Filesystem` and `Storage`, which store strings and refuse it too.
+A miss loads as `false`. `save()` refuses `''` and `'0'` and returns `false`. It stores an empty array `[]` and returns `[]`, so compare the result with `=== false`. `Filesystem` and `Storage` store strings and refuse `[]` too.
 
 ## Adapters
 
