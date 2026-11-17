@@ -68,6 +68,15 @@ describe('getVerificationMethods', () => {
         nameservers: [],
       }),
     ).toEqual(['cname'])
+    expect(
+      getVerificationMethods({
+        domain: 'app.example.com',
+        cloud: false,
+        a: '1.2.3.4',
+        aaaa: '::1',
+        nameservers: [],
+      }),
+    ).toEqual(['a', 'aaaa'])
   })
 })
 
