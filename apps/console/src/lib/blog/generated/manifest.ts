@@ -17,6 +17,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "announcing-force-password-reset",
+    "href": "/blog/post/announcing-force-password-reset",
+    "title": "Announcing force password reset for all your users",
+    "description": "Appwrite Auth can now force every user in a project to reset their password with one click or one API call, so you can respond to a password leak in seconds.",
+    "date": "2026-11-17",
+    "lastUpdated": "2026-11-17",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "announcements, security",
+    "featured": false,
+    "cover": "/images/blog/announcing-force-password-reset/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-activity-reasons",
     "href": "/blog/post/announcing-activity-reasons",
     "title": "Announcing reasons in Activity: see why every change was made",
