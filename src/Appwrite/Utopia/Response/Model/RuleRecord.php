@@ -52,6 +52,12 @@ class RuleRecord extends Model
                 'description' => 'Whether the record must be verified on its own. Records that are not required are alternatives: the domain passes when any one of them is verified.',
                 'default' => false,
                 'example' => false,
+            ])
+            ->addRule('checkedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'When DNS was checked for this record, in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ]);
     }
 
