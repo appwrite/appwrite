@@ -703,6 +703,9 @@ export function VerifyDomainContent({
             <h4 className="text-[14px] font-semibold text-foreground">
               {t('Nameservers')}
             </h4>
+            <Badge variant="outline" className={SECTION_BADGE}>
+              {t('Alternative')}
+            </Badge>
           </div>
           <p className="text-[13px] text-muted-foreground">{nameserverNote}</p>
           <DnsRecordsTable records={getNameserverRecords()} showTtl={false} />
