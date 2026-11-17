@@ -832,7 +832,7 @@ class Videos extends Action
 
             // Silent reporters: failures reach the span through the exception,
             // so the library must not print its own copy to stdout.
-            $probe = new FFprobe();
+            $probe = new FFprobe(protocols: Base::SOURCE_PROTOCOLS, formats: Base::SOURCE_FORMATS);
             $probe->setReporter(new Silent());
             $timeout = $this->timeout(
                 $video,
@@ -841,7 +841,11 @@ class Videos extends Action
             );
             Span::add('encode.timeout', $timeout);
             $threads = $this->threads();
-            $packager = new Packager(new FFmpeg(timeout: $timeout, threads: $threads), probe: $probe, reporter: new Silent());
+            $packager = new Packager(
+                new FFmpeg(timeout: $timeout, threads: $threads, protocols: Base::SOURCE_PROTOCOLS, formats: Base::SOURCE_FORMATS),
+                probe: $probe,
+                reporter: new Silent()
+            );
 
             $stage = 'probe';
             if (!$packager->valid($inPath)) {
@@ -2391,10 +2395,16 @@ class Videos extends Action
     {
         // Silent reporters: failures reach the span through the exception, so
         // the library must not print its own copy to stdout.
-        $probe = new FFprobe();
+        // Sources are user uploads: only plain media containers, opened from
+        // the workspace or a presigned URL, so nothing in them is followed.
+        $probe = new FFprobe(protocols: Base::SOURCE_PROTOCOLS, formats: Base::SOURCE_FORMATS);
         $probe->setReporter(new Silent());
 
-        return new Encoder(new FFmpeg(timeout: $timeout, threads: $this->threads()), $probe, new Silent());
+        return new Encoder(
+            new FFmpeg(timeout: $timeout, threads: $this->threads(), protocols: Base::SOURCE_PROTOCOLS, formats: Base::SOURCE_FORMATS),
+            $probe,
+            new Silent()
+        );
     }
 
     /**
