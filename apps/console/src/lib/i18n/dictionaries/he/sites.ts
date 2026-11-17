@@ -189,6 +189,7 @@ export const heSitesDictionary: Record<string, string> = {
     'ב-Cloudflare זה נקרא CNAME flattening (הגדירו DNS only), וב-Route 53 זה נקרא Alias. יש ספקים שקוראים לזה ANAME.',
   'It points to {found}. Change it to {value}.':
     'היא מפנה אל {found}. שנו אותה ל-{value}.',
+  'and {n} more': 'ועוד {n}',
   'DNS is set up': 'ה-DNS מוגדר',
   'Certificate expired': 'פג תוקף התעודה',
   'Renewal failed': 'חידוש התעודה נכשל',
