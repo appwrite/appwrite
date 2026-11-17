@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   useIsMutating,
   useMutation,
@@ -74,13 +74,6 @@ function readSentAt(accountId: string): number | null {
   return Number.isFinite(value) && value > 0 ? value : null
 }
 
-function isRateLimitError(error: unknown): boolean {
-  return (
-    error instanceof AppwriteException &&
-    error.type === 'general_rate_limit_exceeded'
-  )
-}
-
 /**
  * Seconds until another verification email may be sent. Every send starts the
  * wait, including the automatic one when the page opens.
@@ -103,19 +96,19 @@ function useResendCooldown(accountId: string | undefined) {
     return () => window.clearInterval(timer)
   }, [isCoolingDown])
 
-  const start = useCallback(() => {
+  const start = () => {
     if (!accountId) return
     const at = Date.now()
     sessionStorage.setItem(sentAtKey(accountId), String(at))
     setSentAt(at)
     setNow(at)
-  }, [accountId])
+  }
 
-  const clear = useCallback(() => {
+  const clear = () => {
     if (!accountId) return
     sessionStorage.removeItem(sentAtKey(accountId))
     setSentAt(null)
-  }, [accountId])
+  }
 
   return { secondsLeft, start, clear }
 }
@@ -265,7 +258,10 @@ function VerifyEmailPage() {
     },
   })
 
-  const cooldown = useResendCooldown(accountId)
+  // Opened from the email link, the loader has no account; the link names it.
+  const cooldown = useResendCooldown(
+    accountId ?? getVerificationParamsFromUrl()?.userId,
+  )
 
   const resendMutation = useMutation({
     mutationKey: RESEND_MUTATION_KEY,
@@ -283,9 +279,8 @@ function VerifyEmailPage() {
       toast.success(t('Verification email sent'))
     },
     onError: (error: unknown) => {
-      // Nothing was sent, so let the user retry right away. A rate-limited
-      // request keeps the wait: retrying sooner would only be refused again.
-      if (!isRateLimitError(error)) cooldown.clear()
+      // Nothing was sent, so let the user retry right away.
+      cooldown.clear()
       const message =
         error instanceof AppwriteException
           ? error.message
@@ -344,10 +339,7 @@ function VerifyEmailPage() {
       accountSwitcher={<AuthFlowAccountSwitcher />}
     >
       <VerifyEmail
-        onResend={() => {
-          if (cooldown.secondsLeft > 0 || isResending) return
-          sendVerification()
-        }}
+        onResend={sendVerification}
         isResendLoading={isResending}
         resendCooldown={cooldown.secondsLeft}
         redirect={search.redirect}
