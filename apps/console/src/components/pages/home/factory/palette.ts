@@ -33,7 +33,7 @@ export type FactoryPalette = {
   glass: Color
   /** The panel the service name is printed on. */
   fascia: Color
-  /** Power cables from the Appwrite rack: light pink, glossy. */
+  /** Power cables from the Appwrite rack: a deep, satin brand pink. */
   cable: Color
   carrier: Color
   /** Linear motor channel between the rails. */
@@ -116,7 +116,7 @@ export function createFactoryPalette(
       matte: new Color('#0d0d0f'),
       glass: new Color('#3a3b41'),
       fascia: new Color('#7d818a'),
-      cable: new Color('#a8607a'),
+      cable: new Color('#a83a5c'),
       carrier: new Color('#5b5e67'),
       track: '#121214',
       trackLine: '#232328',
@@ -154,7 +154,7 @@ export function createFactoryPalette(
     matte: new Color('#1b1b1e'),
     glass: new Color('#1d1d21'),
     fascia: new Color('#c4c7ce'),
-    cable: new Color('#d98aa4'),
+    cable: new Color('#d2486f'),
     carrier: new Color('#a9adb6'),
     track: '#2a2a2f',
     trackLine: '#3c3c43',

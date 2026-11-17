@@ -1,7 +1,7 @@
 'use client'
 
 import { createClientOnlyFn } from '@tanstack/react-start'
-import { Globe } from 'lucide-react'
+import { Share2 } from 'lucide-react'
 import {
   useEffect,
   useRef,
@@ -310,7 +310,8 @@ export function FactoryStage({
             />
           )
         })}
-        <Globe
+        {/* Appwrite Network's mark, as in the Docs navigation. */}
+        <Share2
           ref={(node: SVGSVGElement | null) => {
             iconRefs.current[STATION_IDS.length] = node
           }}
