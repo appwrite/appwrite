@@ -6,7 +6,7 @@ cover: /images/blog/announcing-encryption-for-every-file-size/cover.avif
 tags: storage, security
 ---
 
-Appwrite Storage now encrypts every new file in an encrypted bucket before it reaches the storage provider, regardless of file size. The change is live on Appwrite Cloud and requires no code, SDK, or settings changes.
+Encrypted buckets in Appwrite Storage now encrypt every new file before Appwrite stores it, whatever its size. The change is live on Appwrite Cloud and requires no code, SDK, or settings changes.
 
 Existing files remain readable and are not automatically re-encrypted. Files larger than 20 MB uploaded before this change were stored unencrypted, even in encrypted buckets, and remain unencrypted until uploaded again. Buckets used through the S3-compatible API still need encryption turned off.
 
