@@ -356,6 +356,8 @@ const DNS_BANNER_TONES: Record<
 
 type DnsBanner = {
   tone: DnsBannerTone
+  /** Bold lead-in, e.g. "CNAME record" */
+  prefix?: string
   text: string
 }
 
@@ -367,6 +369,11 @@ function DnsBannerAlert({ banner }: { banner: DnsBanner }) {
       <Icon className="h-4 w-4" />
       <AlertDescription className="flex w-full items-start justify-between gap-4 text-[13px]">
         <p className="min-w-0 break-words text-muted-foreground">
+          {banner.prefix && (
+            <span className="font-medium text-foreground">
+              {banner.prefix}:{' '}
+            </span>
+          )}
           {banner.text}
         </p>
       </AlertDescription>
@@ -813,7 +820,7 @@ export function VerifyDomainContent({
       <div className="space-y-3">
         {banners.map((banner) => (
           <DnsBannerAlert
-            key={`${banner.tone}-${banner.text}`}
+            key={`${banner.tone}-${banner.prefix ?? ''}-${banner.text}`}
             banner={banner}
           />
         ))}
