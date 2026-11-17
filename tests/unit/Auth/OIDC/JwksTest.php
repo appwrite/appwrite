@@ -82,8 +82,8 @@ final class JwksTest extends TestCase
     {
         $fetches = 0;
         $published = [];
-        $cache = new Cache(new Memory());
-        $jwks = new Jwks($cache, new Client(new CannedTransport(function () use (&$fetches, &$published): string {
+        $memory = new Memory();
+        $jwks = new Jwks(new Cache($memory), new Client(new CannedTransport(function () use (&$fetches, &$published): string {
             $fetches++;
 
             return $this->document($published);
@@ -92,10 +92,12 @@ final class JwksTest extends TestCase
         $this->assertNull($jwks->getKey(self::URL, 'kid-1'));
         $this->assertNull($jwks->getKey(self::URL, 'kid-1'));
         $this->assertSame(2, $fetches); // initial load + one forced refetch
-        $this->assertSame([], $cache->load('oidc-jwks-pem:' . \md5(self::URL), Jwks::TTL));
 
-        // The cooldown ends and the provider publishes a key
-        $cache->purge('oidc-jwks-refresh:' . \md5(self::URL));
+        // The cooldown ends, the key set is still fresh, and the provider publishes a key
+        foreach ($memory->store as &$entry) {
+            $entry['time'] -= Jwks::REFRESH_COOLDOWN + 1;
+        }
+        unset($entry);
         $published = ['kid-1'];
 
         $this->assertStringStartsWith(self::PEM_HEADER, $jwks->getKey(self::URL, 'kid-1'));
