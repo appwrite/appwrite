@@ -553,7 +553,10 @@ export function VerifyDomainContent({
       <div className={noCard ? '' : `${padX} ${padY}`}>
         <p className="text-[13px] text-muted-foreground">
           {t('A list of domain providers and their DNS settings is available')}{' '}
-          <DocsRouteLink className="inline-flex items-center gap-0.5 font-medium text-foreground underline hover:no-underline" href={DNS_PROVIDERS_LINK}>
+          <DocsRouteLink
+            className="inline-flex items-center gap-0.5 font-medium text-foreground underline hover:no-underline"
+            href={DNS_PROVIDERS_LINK}
+          >
             {t('here')}
             <ExternalLink className="h-3 w-3 shrink-0" />
           </DocsRouteLink>
