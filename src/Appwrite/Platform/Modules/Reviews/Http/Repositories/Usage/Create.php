@@ -13,9 +13,11 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\AnyOf;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Range;
+use Utopia\Validator\Text;
 
 /**
  * Model calls behind the answer to a pull request comment. A chat has no review, so its usage
@@ -45,7 +47,7 @@ class Create extends Base
             ->param('repositoryId', '', new UID(), 'Repository ID.')
             ->param('projectId', '', new UID(), 'Project ID.')
             ->param('pullNumber', 0, new Range(1, PHP_INT_MAX), 'Pull request number.')
-            ->param('commentId', 0, new Range(1, PHP_INT_MAX), 'GitHub ID of the comment that was answered.')
+            ->param('commentId', 0, new AnyOf([new Range(1, PHP_INT_MAX), new Text(64)]), 'Provider ID of the comment that was answered: a number on GitHub, a string on Origin.')
             ->param('usage', [], new ArrayList(new Assoc(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Model calls, each with role, provider, model, inputTokens, outputTokens, durationMs and optional cachedInputTokens and reasoningTokens.')
             ->inject('request')
             ->inject('response')
@@ -60,7 +62,7 @@ class Create extends Base
         string $repositoryId,
         string $projectId,
         int $pullNumber,
-        int $commentId,
+        int|string $commentId,
         array $usage,
         Request $request,
         Response $response,
@@ -74,7 +76,7 @@ class Create extends Base
         $project = $this->getProject($projectId, $dbForPlatform, $authorization);
         $dbForProject = $getProjectDB($project);
 
-        $chat = $authorization->skip(fn () => $dbForProject->getDocument('reviewChats', 'chat-' . $commentId));
+        $chat = $authorization->skip(fn () => $dbForProject->getDocument('reviewChats', $this->getChatId(\strval($commentId))));
 
         if (
             $chat->isEmpty()
@@ -111,5 +113,19 @@ class Create extends Base
         }
 
         $response->noContent();
+    }
+
+    /**
+     * The id of the chat row the webhook handler claimed the comment with (getClaimId() in
+     * VCS/Http/GitHub/Reviews): chat-<comment id>, hashed when that is too long, as Origin's are.
+     */
+    private function getChatId(string $commentId): string
+    {
+        $id = 'chat-' . $commentId;
+        if (\strlen($id) <= 36) {
+            return $id;
+        }
+
+        return 'chat-' . \substr(\hash('sha256', $commentId), 0, 36 - \strlen('chat-'));
     }
 }

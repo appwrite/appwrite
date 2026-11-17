@@ -16,8 +16,8 @@ export const jaReviewsDictionary: Record<string, string> = {
 
   // Empty states
   'Review pull requests with AI': 'AI でプルリクエストをレビュー',
-  'Add a GitHub repository and every pull request gets a review with findings, a verdict, and a merge confidence grade. Mention the app in a comment to ask it anything.':
-    'GitHub リポジトリを追加すると、すべてのプルリクエストに指摘事項、判定、マージの信頼度を含むレビューが付きます。コメントでアプリにメンションすると、何でも質問できます。',
+  'Add a GitHub or Origin repository and every pull request gets a review with findings, a verdict, and a merge confidence grade. Mention the app in a comment to ask it anything.':
+    'GitHub または Origin のリポジトリを追加すると、すべてのプルリクエストに指摘事項、判定、マージの信頼度を含むレビューが付きます。コメントでアプリにメンションすると、何でも質問できます。',
   'No reviews yet': 'まだレビューはありません',
   'Reviews show up here when a pull request is opened or gets new commits in one of your repositories.':
     'リポジトリでプルリクエストが作成されるか、新しいコミットが追加されると、ここにレビューが表示されます。',
@@ -34,6 +34,7 @@ export const jaReviewsDictionary: Record<string, string> = {
     'レビューで指摘事項は見つかりませんでした。',
   'View comment': 'コメントを表示',
   'Open on GitHub': 'GitHub で開く',
+  'Open on Origin': 'Origin で開く',
 
   // Statuses and verdicts
   Reviewing: 'レビュー中',
@@ -59,8 +60,8 @@ export const jaReviewsDictionary: Record<string, string> = {
     'リポジトリのプルリクエストは、作成時と新しいコミットの追加時にレビューされます。',
   'Pull requests in this repository will no longer be reviewed. Past reviews stay in the project.':
     'このリポジトリのプルリクエストはレビューされなくなります。過去のレビューはプロジェクトに残ります。',
-  'Connect a GitHub installation to the project to review its repositories.':
-    'リポジトリをレビューするには、GitHub のインストールをプロジェクトに接続してください。',
+  'Connect a GitHub or Origin installation to the project to review its repositories.':
+    'リポジトリをレビューするには、GitHub または Origin のインストールをプロジェクトに接続してください。',
   'Code review turned on': 'コードレビューを有効にしました',
   'Code review turned off': 'コードレビューを無効にしました',
   'Failed to turn on code review': 'コードレビューを有効にできませんでした',
@@ -180,14 +181,13 @@ export const jaReviewsDictionary: Record<string, string> = {
   'Review all repositories': 'すべてのリポジトリをレビュー',
   'Choose repositories': 'リポジトリを選択',
   'Browse repositories': 'リポジトリを参照',
-  'Search GitHub repositories...': 'GitHub リポジトリを検索...',
   'No repositories match your search': '検索に一致するリポジトリはありません',
   'No repositories reviewed yet': 'レビュー対象のリポジトリはまだありません',
-  'No GitHub installation': 'GitHub のインストールがありません',
-  'Connect GitHub to review pull requests':
-    'GitHub を接続してプルリクエストをレビュー',
-  'Install the GitHub app on your account or organization, then pick the repositories to review.':
-    'アカウントまたは組織に GitHub アプリをインストールし、レビューするリポジトリを選択してください。',
+  'No installation': 'インストールがありません',
+  'Connect a Git provider to review pull requests':
+    'Git プロバイダーを接続してプルリクエストをレビュー',
+  'Install the GitHub or Origin app on your account or organization, then pick the repositories to review.':
+    'アカウントまたは組織に GitHub または Origin アプリをインストールし、レビューするリポジトリを選択してください。',
   'Turn on code review for a repository and its pull requests are reviewed when they are opened or get new commits.':
     'リポジトリのコードレビューを有効にすると、プルリクエストの作成時と新しいコミットの追加時にレビューされます。',
   'Turn on code review for every repository in {organization} ({count}).':

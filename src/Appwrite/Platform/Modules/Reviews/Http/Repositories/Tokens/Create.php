@@ -14,11 +14,12 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Adapter\Git\Origin;
 
 /**
- * A GitHub installation token for the review service, limited to the one repository it reviews
- * and to the permissions reviews need.
- * Appwrite holds the GitHub App's private key; the service never does.
+ * An installation token for the review service, limited to the one repository it reviews and to
+ * the permissions reviews need, on GitHub or Origin.
+ * Appwrite holds each app's private key; the service never does.
  */
 class Create extends Base
 {
@@ -67,33 +68,51 @@ class Create extends Base
         $installation = $authorization->skip(fn () => $dbForPlatform->getDocument('installations', $repository->getAttribute('installationId', '')));
 
         $vcs = $vcsFactory->fromInstallation($installation);
-        if (!$vcs instanceof GitHub) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Code review supports GitHub repositories only.');
-        }
+        $providerRepositoryId = $repository->getAttribute('providerRepositoryId', '');
 
         try {
-            $token = $vcs->createAccessToken(
-                [(int) $repository->getAttribute('providerRepositoryId')],
-                [
-                    'contents' => 'read',
-                    'metadata' => 'read',
-                    'pull_requests' => 'write',
-                    'issues' => 'write',
-                    'checks' => 'write',
-                ],
-            );
+            $token = match (true) {
+                $vcs instanceof GitHub => $vcs->createAccessToken(
+                    [(int) $providerRepositoryId],
+                    [
+                        'contents' => 'read',
+                        'metadata' => 'read',
+                        'pull_requests' => 'write',
+                        'issues' => 'write',
+                        'checks' => 'write',
+                    ],
+                ),
+                $vcs instanceof Origin => $vcs->createAccessToken(
+                    [$providerRepositoryId],
+                    [
+                        'repository:contents:read',
+                        'repository:pull_requests:read',
+                        'repository:pull_requests:reviews:read',
+                        'repository:pull_requests:reviews:write',
+                        'repository:checks:read',
+                        'repository:checks:write',
+                    ],
+                ),
+                default => throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Code review supports GitHub and Origin repositories only.'),
+            };
+        } catch (Exception $error) {
+            throw $error;
         } catch (\Throwable $error) {
             throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to create repository token: ' . $error->getMessage());
         }
 
         // The app the token acts as: the service mentions it as @<appSlug>, and knows its own
-        // comments, reviews and check runs by it.
+        // comments, reviews and check runs by its id.
+        $app = $vcs instanceof Origin
+            ? ['appId' => System::getEnv('_APP_VCS_ORIGIN_CLIENT_ID', ''), 'appSlug' => System::getEnv('_APP_VCS_ORIGIN_APP_NAME', '')]
+            : ['appId' => System::getEnv('_APP_VCS_GITHUB_APP_ID', ''), 'appSlug' => System::getEnv('_APP_VCS_GITHUB_APP_NAME', '')];
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->json([
                 ...$token,
-                'appId' => System::getEnv('_APP_VCS_GITHUB_APP_ID', ''),
-                'appSlug' => System::getEnv('_APP_VCS_GITHUB_APP_NAME', ''),
+                ...$app,
+                'provider' => $installation->getAttribute('provider', ''),
             ]);
     }
 }

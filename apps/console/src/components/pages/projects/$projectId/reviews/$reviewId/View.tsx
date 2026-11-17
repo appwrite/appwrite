@@ -7,8 +7,17 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { MarkdownContent } from '@/components/global/shared/MarkdownContent'
 import type { Review, ReviewFinding } from '@/lib/appwrite/reviews'
-import { isReviewRunning, useReview } from '@/lib/react-query/hooks'
+import {
+  isReviewRunning,
+  useReview,
+  useReviewProvider,
+} from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
+import {
+  getKnownVcsProvider,
+  getProviderPullRequestUrl,
+  getProviderRepositoryUrl,
+} from '@/lib/vcs/providers'
 import { ServiceHeader } from '../../shared/ServiceHeader'
 import { Trace } from '../_components/Trace'
 import {
@@ -34,6 +43,7 @@ export function View({ initialReview }: ViewProps = {}) {
   const { review: reviewFromHook, isLoading } = useReview(projectId, reviewId)
   const review = reviewFromHook ?? initialReview ?? null
   const triggerLabel = useReviewTriggerLabel()
+  const provider = useReviewProvider(projectId, review?.repositoryId)
 
   const findings = useMemo(
     () =>
@@ -64,11 +74,8 @@ export function View({ initialReview }: ViewProps = {}) {
     )
   }
 
-  const repositoryUrl = `https://github.com/${review.providerRepositoryOwner}/${review.providerRepositoryName}`
-  const pullRequestUrl = `${repositoryUrl}/pull/${review.providerPullRequestId}`
-  const reviewUrl = review.providerReviewId
-    ? `${pullRequestUrl}#pullrequestreview-${review.providerReviewId}`
-    : undefined
+  const links = getReviewLinks(provider, review)
+  const providerLabel = getKnownVcsProvider(provider)?.label
 
   return (
     <div className="flex flex-col">
@@ -99,21 +106,23 @@ export function View({ initialReview }: ViewProps = {}) {
           </div>
         }
         titleRightContent={
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-[13px]"
-            asChild
-          >
-            <a
-              href={reviewUrl ?? pullRequestUrl}
-              target="_blank"
-              rel="noreferrer"
+          links.pullRequest && providerLabel ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-[13px]"
+              asChild
             >
-              <ExternalLink className="h-3.5 w-3.5 me-1.5" />
-              {t('Open on GitHub')}
-            </a>
-          </Button>
+              <a
+                href={links.review ?? links.pullRequest}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <ExternalLink className="h-3.5 w-3.5 me-1.5" />
+                {t(`Open on ${providerLabel}`)}
+              </a>
+            </Button>
+          ) : undefined
         }
         fullWidthBorder
       />
@@ -137,15 +146,19 @@ export function View({ initialReview }: ViewProps = {}) {
                 </span>
               </Detail>
               <Detail label={t('Commit')}>
-                {review.providerCommitHash ? (
+                {review.providerCommitHash && links.commit ? (
                   <a
-                    href={`${repositoryUrl}/commit/${review.providerCommitHash}`}
+                    href={links.commit}
                     target="_blank"
                     rel="noreferrer"
                     className="font-mono text-[13px] text-foreground hover:underline"
                   >
                     {review.providerCommitHash.slice(0, 7)}
                   </a>
+                ) : review.providerCommitHash ? (
+                  <span className="font-mono text-[13px] text-foreground">
+                    {review.providerCommitHash.slice(0, 7)}
+                  </span>
                 ) : (
                   <span className="text-[13px] text-muted-foreground">-</span>
                 )}
@@ -233,8 +246,9 @@ export function View({ initialReview }: ViewProps = {}) {
                     <Finding
                       key={finding.$id}
                       finding={finding}
-                      commitUrl={`${repositoryUrl}/blob/${review.providerCommitHash}`}
-                      pullRequestUrl={pullRequestUrl}
+                      fileUrl={links.file}
+                      commentUrl={links.comment}
+                      lineAnchors={links.lineAnchors}
                     />
                   ))}
                 </ul>
@@ -272,12 +286,16 @@ function Detail({
 
 function Finding({
   finding,
-  commitUrl,
-  pullRequestUrl,
+  fileUrl,
+  commentUrl,
+  lineAnchors,
 }: {
   finding: ReviewFinding
-  commitUrl: string
-  pullRequestUrl: string
+  /** The files at the reviewed commit, or null where no link can be built. */
+  fileUrl: string | null
+  commentUrl: (commentId: string) => string | null
+  /** Whether the provider's file pages take `#L1-L2` line anchors. */
+  lineAnchors: boolean
 }) {
   const t = useT()
   const lines =
@@ -300,7 +318,11 @@ function Finding({
       </div>
       <div className="mt-1.5 flex flex-wrap items-center gap-3">
         <a
-          href={`${commitUrl}/${finding.path}#${lines}`}
+          href={
+            fileUrl
+              ? `${fileUrl}/${finding.path}${lineAnchors ? `#${lines}` : ''}`
+              : undefined
+          }
           target="_blank"
           rel="noreferrer"
           className="flex min-w-0 items-center gap-1.5 font-mono text-[12px] text-muted-foreground hover:text-foreground"
@@ -311,9 +333,9 @@ function Finding({
             {finding.endLine !== finding.startLine && `-${finding.endLine}`}
           </span>
         </a>
-        {finding.providerCommentId && (
+        {finding.providerCommentId && commentUrl(finding.providerCommentId) && (
           <a
-            href={`${pullRequestUrl}#discussion_r${finding.providerCommentId}`}
+            href={commentUrl(finding.providerCommentId)!}
             target="_blank"
             rel="noreferrer"
             className="text-[12px] text-muted-foreground hover:text-foreground hover:underline"
@@ -329,4 +351,39 @@ function Finding({
       )}
     </li>
   )
+}
+
+/**
+ * Links to what a review is about on its provider. Each is null until the
+ * provider is known, or where the provider has no such page: only GitHub has
+ * anchors for a submitted review, a review comment and a line range.
+ */
+function getReviewLinks(provider: string, review: Review) {
+  const location = {
+    provider,
+    organization: review.providerRepositoryOwner,
+    repositoryName: review.providerRepositoryName,
+  }
+  const repositoryUrl = getProviderRepositoryUrl(location)
+  const pullRequestUrl = getProviderPullRequestUrl({
+    ...location,
+    pullRequestId: review.providerPullRequestId,
+  })
+  const isGitHub = getKnownVcsProvider(provider)?.id === 'github'
+  const commit = review.providerCommitHash
+
+  return {
+    pullRequest: pullRequestUrl,
+    review:
+      isGitHub && pullRequestUrl && review.providerReviewId
+        ? `${pullRequestUrl}#pullrequestreview-${review.providerReviewId}`
+        : null,
+    commit: repositoryUrl && commit ? `${repositoryUrl}/commit/${commit}` : null,
+    file: repositoryUrl && commit ? `${repositoryUrl}/blob/${commit}` : null,
+    comment: (commentId: string) =>
+      isGitHub && pullRequestUrl
+        ? `${pullRequestUrl}#discussion_r${commentId}`
+        : null,
+    lineAnchors: isGitHub,
+  }
 }

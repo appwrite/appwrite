@@ -16,8 +16,8 @@ export const heReviewsDictionary: Record<string, string> = {
 
   // Empty states
   'Review pull requests with AI': 'סקירת Pull requests עם AI',
-  'Add a GitHub repository and every pull request gets a review with findings, a verdict, and a merge confidence grade. Mention the app in a comment to ask it anything.':
-    'הוסיפו repo מ-GitHub וכל Pull request יקבל סקירה עם ממצאים, החלטה וציון ביטחון למיזוג. תייגו את האפליקציה בתגובה כדי לשאול אותה כל שאלה.',
+  'Add a GitHub or Origin repository and every pull request gets a review with findings, a verdict, and a merge confidence grade. Mention the app in a comment to ask it anything.':
+    'הוסיפו repo מ-GitHub או מ-Origin וכל Pull request יקבל סקירה עם ממצאים, החלטה וציון ביטחון למיזוג. תייגו את האפליקציה בתגובה כדי לשאול אותה כל שאלה.',
   'No reviews yet': 'עדיין אין סקירות',
   'Reviews show up here when a pull request is opened or gets new commits in one of your repositories.':
     'סקירות יופיעו כאן כש-Pull request נפתח או מקבל קומיטים חדשים באחד מה-repos שלכם.',
@@ -33,6 +33,7 @@ export const heReviewsDictionary: Record<string, string> = {
   'The review found nothing to flag.': 'הסקירה לא מצאה דבר שדורש תשומת לב.',
   'View comment': 'הצגת התגובה',
   'Open on GitHub': 'פתיחה ב-GitHub',
+  'Open on Origin': 'פתיחה ב-Origin',
 
   // Statuses and verdicts
   Reviewing: 'בסקירה',
@@ -58,8 +59,8 @@ export const heReviewsDictionary: Record<string, string> = {
     'Pull requests ב-repo ייסקרו כשהם נפתחים או מקבלים קומיטים חדשים.',
   'Pull requests in this repository will no longer be reviewed. Past reviews stay in the project.':
     'Pull requests ב-repo הזה לא ייסקרו יותר. סקירות קודמות יישארו בפרויקט.',
-  'Connect a GitHub installation to the project to review its repositories.':
-    'חברו התקנת GitHub לפרויקט כדי לסקור את ה-repos שלה.',
+  'Connect a GitHub or Origin installation to the project to review its repositories.':
+    'חברו התקנת GitHub או Origin לפרויקט כדי לסקור את ה-repos שלה.',
   'Code review turned on': 'סקירת הקוד הופעלה',
   'Code review turned off': 'סקירת הקוד כובתה',
   'Failed to turn on code review': 'הפעלת סקירת הקוד נכשלה',
@@ -178,14 +179,13 @@ export const heReviewsDictionary: Record<string, string> = {
   'Review all repositories': 'סקירת כל המאגרים',
   'Choose repositories': 'בחירת מאגרים',
   'Browse repositories': 'עיון במאגרים',
-  'Search GitHub repositories...': 'חיפוש מאגרים ב-GitHub...',
   'No repositories match your search': 'אין מאגרים שתואמים לחיפוש',
   'No repositories reviewed yet': 'עדיין אין מאגרים בסקירה',
-  'No GitHub installation': 'אין התקנת GitHub',
-  'Connect GitHub to review pull requests':
-    'חברו את GitHub כדי לסקור Pull requests',
-  'Install the GitHub app on your account or organization, then pick the repositories to review.':
-    'התקינו את אפליקציית GitHub בחשבון או בארגון שלכם, ואז בחרו את המאגרים לסקירה.',
+  'No installation': 'אין התקנה',
+  'Connect a Git provider to review pull requests':
+    'חברו ספק Git כדי לסקור Pull requests',
+  'Install the GitHub or Origin app on your account or organization, then pick the repositories to review.':
+    'התקינו את אפליקציית GitHub או Origin בחשבון או בארגון שלכם, ואז בחרו את המאגרים לסקירה.',
   'Turn on code review for a repository and its pull requests are reviewed when they are opened or get new commits.':
     'הפעילו סקירת קוד למאגר, וה-Pull requests שלו ייסקרו כשהם נפתחים או מקבלים קומיטים חדשים.',
   'Turn on code review for every repository in {organization} ({count}).':
