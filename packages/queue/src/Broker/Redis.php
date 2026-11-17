@@ -291,8 +291,27 @@ class Redis implements Synchronous, Consumer
                 $this->script($this->commands, 'recover', [$registry, "{$queue->namespace}.queue.{$queue->name}", ...$expired], [self::REAP_LIMIT]);
             }
             $this->reap($queue, $this->reapAfter, limit: self::REAP_LIMIT, maxAttempts: $this->reapMaxAttempts, newerThan: $this->reapMaxAge, scan: self::REAP_LIMIT * 2);
+            $this->trimFailed($queue, self::REAP_LIMIT);
         }
     }
+
+    private function trimFailed(Queue $queue, int $limit): void
+    {
+        $failed = "{$queue->namespace}.failed.{$queue->name}";
+        $pids = $this->commands->listRange($failed, $limit, -$limit);
+
+        foreach ($pids as $pid) {
+            if (!\is_string($pid)) {
+                continue;
+            }
+
+            $raw = $this->commands->get("{$queue->namespace}.jobs.{$queue->name}.{$pid}");
+            if (!\is_string($raw)) {
+                $this->commands->listRemove($failed, $pid);
+            }
+        }
+    }
+
 
     /** Idle resource hook used by Utopia\Pools\Pool::maintain(). */
     public function tick(): void
@@ -377,14 +396,14 @@ class Redis implements Synchronous, Consumer
      * Take all jobs from the failed queue and requeue them.
      *
      * @param int|null $limit The amount of jobs to retry
-     * @param int|null $maxAttempts Jobs requeued this many times are parked on
-     *        the dead queue instead of looping forever; null retries unbounded.
      * @param int|null $newerThan Only jobs published within this many seconds
      *        are requeued; older ones are parked on the dead queue. Payloads
      *        never expire by default, so without this bound a sweep would
      *        resurrect arbitrarily old work.
+     * @param int|null $maxAttempts Jobs requeued this many times are parked on
+     *        the dead queue instead of looping forever; null retries unbounded.
      */
-    public function retry(Queue $queue, ?int $limit = null, ?int $maxAttempts = null, ?int $newerThan = null): void
+    public function retry(Queue $queue, ?int $limit = null, ?int $newerThan = null, ?int $maxAttempts = null): void
     {
         $start = time();
         $processed = 0;
@@ -426,6 +445,47 @@ class Redis implements Synchronous, Consumer
         }
     }
 
+    /**
+     * Delete failed jobs from the failed queue.
+     *
+     * @param int|null $olderThan Only delete jobs published more than this many seconds ago.
+     * @param int|null $limit Maximum number of jobs to purge.
+     */
+    public function purge(Queue $queue, ?int $olderThan = null, ?int $limit = null): int
+    {
+        $start = time();
+        $purged = 0;
+        $failed = "{$queue->namespace}.failed.{$queue->name}";
+
+        while ($limit === null || $purged < $limit) {
+            $pid = $this->commands->listRange($failed, 1, -1)[0] ?? null;
+            if (!\is_string($pid)) {
+                break;
+            }
+
+            $jobKey = "{$queue->namespace}.jobs.{$queue->name}.{$pid}";
+            $job = $this->getJob($queue, $pid);
+
+            if ($job === false) {
+                if (!\is_string($this->commands->get($jobKey))) {
+                    $this->commands->listRemove($failed, $pid);
+                    $purged++;
+                    continue;
+                }
+                break;
+            }
+
+            if ($olderThan !== null && $job->getTimestamp() >= $start - $olderThan) {
+                break;
+            }
+
+            $this->commands->listRemove($failed, $pid);
+            $this->commands->remove($jobKey);
+            $purged++;
+        }
+
+        return $purged;
+    }
     /**
      * Recover claims left between receive() and commit/reject(). Live heartbeats
      * protect running handlers; the publish-age gate protects workers without

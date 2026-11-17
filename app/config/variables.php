@@ -2050,6 +2050,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_QUEUE_FAILED_TTL',
+                'description' => 'Time to live, in seconds, for failed queue jobs before their payloads expire in Redis. Defaults to 604800 seconds (7 days).',
+                'introduction' => '2.8.0',
+                'default' => '604800',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_MAINTENANCE_DELAY',
                 'description' => 'Deprecated with 1.6.2 use _APP_MAINTENANCE_START_TIME instead to run the maintenance at a specific time per day.',
                 'introduction' => '1.5.0',

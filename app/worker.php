@@ -111,6 +111,7 @@ $adapter = new Swoole(
 );
 
 $worker = new Server($adapter);
+$worker->setJobTtl((int) System::getEnv('_APP_QUEUE_FAILED_TTL', 604800));
 
 try {
     $worker->init()->action(function () use ($worker, $registerWorkerMessageResources) {

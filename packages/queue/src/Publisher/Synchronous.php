@@ -29,11 +29,15 @@ interface Synchronous
      */
     public function publishMany(Queue $queue, array $payloads): bool;
 
-    /**
+   /**
      * Retries failed jobs.
      */
-    public function retry(Queue $queue, ?int $limit = null): void;
+    public function retry(Queue $queue, ?int $limit = null, ?int $newerThan = null): void;
 
+    /**
+     * Deletes failed jobs.
+     */
+    public function purge(Queue $queue, ?int $olderThan = null, ?int $limit = null): int;
     /**
      * Returns the amount of pending messages in the queue.
      *

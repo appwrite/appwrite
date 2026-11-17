@@ -284,9 +284,14 @@ class Background implements Synchronous, Asynchronous
         }
     }
 
-    public function retry(Queue $queue, ?int $limit = null): void
+    public function retry(Queue $queue, ?int $limit = null, ?int $newerThan = null): void
     {
-        $this->publisher->retry($queue, $limit);
+        $this->publisher->retry($queue, $limit, $newerThan);
+    }
+
+    public function purge(Queue $queue, ?int $olderThan = null, ?int $limit = null): int
+    {
+        return $this->publisher->purge($queue, $olderThan, $limit);
     }
 
     public function getQueueSize(Queue $queue, bool $failedJobs = false): int

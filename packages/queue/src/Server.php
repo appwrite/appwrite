@@ -128,12 +128,19 @@ class Server
     /**
      * Creates an instance of a Queue server.
      */
-    public function __construct(protected Adapter $adapter)
-    {
+    public function __construct(
+        protected Adapter $adapter,
+        protected int $jobTtl = 0,
+    ) {
         $this->job = new Job();
         $this->setTelemetry(new NoTelemetry());
     }
 
+    public function setJobTtl(int $jobTtl): self
+    {
+        $this->jobTtl = $jobTtl;
+        return $this;
+    }
     /**
      * Register a job for a queue. Queue name and concurrency live only here —
      * the adapter is transport (processes, namespace, consumer).
@@ -528,12 +535,13 @@ class Server
                     }
 
                     $queues[] = [
-                        'queue' => new Queue($queueName, $this->adapter->namespace),
+                        'queue' => new Queue($queueName, $this->adapter->namespace, $this->jobTtl),
                         'coroutines' => $coroutines,
                         'prefetch' => $prefetch,
                         'consumer' => $consumer,
                     ];
                 }
+
                 $this->adapter->consume($messageCallback, $successCallback, $errorCallback, $queues);
             });
 
