@@ -181,6 +181,7 @@ class Action extends PlatformAction
         $rule->setAttribute('records', \array_map(fn (array $record) => [
             'type' => $record['type'],
             'name' => $record['name'],
+            'value' => $record['value'],
         ], $records));
 
         // Ensure CAA won't block certificate issuance
