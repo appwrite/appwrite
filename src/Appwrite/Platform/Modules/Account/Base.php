@@ -199,6 +199,7 @@ abstract class Base extends Action
         $emailVerified = false;
         $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $session, $user, $verification, $project, &$claimed, &$emailVerified, $mqtt) {
             $claimed = false; // A retried attempt starts over
+            $emailVerified = false;
             /** @var User $locked */
             $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
 
