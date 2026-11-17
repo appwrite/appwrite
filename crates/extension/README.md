@@ -34,7 +34,8 @@ _APP_EXTENSION_LIBRARIES=<package>,<package>   # those packages' classes from th
 
 A package ported in batches has one switch per batch, `<package>-<batch>`, which needs the
 package's own: `validators,validators-scalar` registers the validators' base and the scalar leaf
-validators, `validators` alone only the base.
+validators, `validators,validators-text` the base and the text ones, `validators` alone only the
+base.
 
 The extension reads it once, when PHP loads the module, so changing it takes a restart and no
 deploy. Each library is canaried on Cloud this way before it becomes the default.
@@ -220,6 +221,48 @@ PHP subclasses of the leaves (overriding `isUnsigned()` that `getFormat()` calls
 protected bounds, skipping the parent constructor); and, from a child process, the declarations
 the engine checks against them. There is no known difference: only `isInternal()`, the file, the
 doc comments and the methods' attributes (`#[\Override]`) differ, by construction.
+
+## Utopia\Validator's text validators
+
+`_APP_EXTENSION_LIBRARIES=validators,validators-text` also registers `Text`, `Identifier` (a `Text`),
+`WhiteList`, `Contains` and `Label` over `crates/utopia/validators`. Outside the package, Appwrite's
+`Compute\Validator\VariableKey` and `Database\Validator\Filename` extend `Text`; they read its
+protected `$length` and call `parent::__construct()`, `parent::getDescription()` and
+`parent::isValid()`, and work unchanged on either implementation.
+
+`src/validators/text.rs` builds them by hand like the scalar batch (shared helpers in
+`src/validators/leaf.rs`), with their state in real typed protected properties, read in PHP's
+order. `Text`'s `NUMBERS`, `ALPHABET_UPPER` and `ALPHABET_LOWER` are persistent immutable arrays, and
+`Label::MAX_LENGTH` is a typed (`int`) constant; each class's own constants come before the ones it
+inherits, as PHP orders them. Comparisons with the PHP values a validator holds go through the
+engine: the loose `in_array()` of `Text`'s allow list and of `WhiteList` (`zend_compare`, or bytes
+when two strings cannot both be numeric), `WhiteList`'s strict `in_array()` (`zend_is_identical`),
+and `(string)` of a list item or a pattern, and `implode()` (`zval_get_string_func`, with its
+`Array to string conversion` warning and its `Error` for an object without `__toString()`). A non-strict
+`WhiteList` copies its list with the engine (`zend_array_dup`, keys and order kept) and lowers the
+values in place. `Text`'s blank check and `Contains`'s case folding are `php-std`'s PCRE2 and
+`mb_strtolower()`, PHP's own.
+
+`crates/extension/tests/validators-text.php` prints a corpus that must be identical on both
+implementations (13,716 lines): each class's reflection (constants with their types, properties,
+methods and their order, parameters); every constructor over arguments of every kind PHP converts or
+rejects, named arguments, strict types (in a child process) and `newInstanceWithoutConstructor()`;
+the getters and `isValid()` of 80 validators over 105 values (multibyte, combining and emoji
+characters, every Unicode separator and format character, final sigma, bytes that are not UTF-8,
+numeric strings, arrays, objects, `Stringable`, a throwing `__toString()`, an enum); every code
+point through the blank check and through `Contains`'s case folding; the character count of every
+two-byte string and of 4,000 seeded random byte strings; allow lists, white lists (strict and not)
+and patterns of every kind of value against values of every kind; dumps, copies, comparisons and
+serialization; Appwrite's two `Text` subclasses; PHP subclasses writing every protected property,
+skipping or catching the parent constructor (a `WhiteList` whose list fails half way); and, from a
+child process, the declarations the engine checks against them. It asserts one known difference:
+
+- The native classes run their regular expressions without PHP's `preg_*` functions, so they leave
+  `preg_last_error()` as it was: after `Text`'s blank check on bytes that are not UTF-8 it is not
+  `PREG_BAD_UTF8_ERROR`, and after `Identifier::isValid()` it is not reset.
+
+A warning PHP raises inside a method (`Array to string conversion`) names the caller's file and line,
+since the class has no PHP source.
 
 ## Benchmarks
 
