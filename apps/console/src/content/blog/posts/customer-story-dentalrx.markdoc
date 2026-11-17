@@ -76,11 +76,9 @@ The **iOS and Android apps** carry the same tools, with the clinic dashboard, se
 
 # Building DentalRx with Appwrite
 
-Nickolas built the first version of DentalRx in FlutterFlow, with Firebase as the database and Algolia synced alongside it for search. That stack let him ship the product quickly. Over time, Firebase became a problem.
+Nickolas built the first version of DentalRx in FlutterFlow, with Firebase as the database and Algolia synced alongside it for search. That stack let him ship the product quickly. Over time, however, Firebase became a problem.
 
 Every tool in DentalRx draws on the same drug database. Most drug databases, including the hospital systems Nickolas manages, are organized around a **drug concept**, the core record each drug starts from. Brand names, generic names, and drug classes are separate tables attached to that concept, so a single drug ends up as a web of relationships that differs from country to country. Firebase's document model eventually stopped fitting that structure.
-
-> "Postgres is the gold standard of how drug databases are set up."
 
 Fixing that started with the app. FlutterFlow can export a project's code, and with today's AI coding tools, Nickolas could take full ownership of that Flutter codebase. Once the app was in his hands, the backend could change too, and Nickolas went looking for something more mature than Firebase.
 
@@ -91,6 +89,8 @@ Appwrite's [migration path from Firebase](/docs/advanced/migrations/firebase) is
 The first move kept the data in its old shape: each drug became a single row in Appwrite, and Algolia still handled search.
 
 The second move changed the product. DentalRx now keeps its drug database in [Appwrite's managed PostgreSQL](/docs/products/databases/postgresql), in the Toronto region, close to its Canadian users.
+
+> "Postgres is the gold standard of how drug databases are set up."
 
 In Firebase, every drug was a document with its own subdocuments. Nickolas describes that model as static: each drug was a self-contained record, not part of the web of relationships that Postgres allows. In Postgres, DentalRx models drugs the way hospital databases do, with the drug concept at the center.
 
