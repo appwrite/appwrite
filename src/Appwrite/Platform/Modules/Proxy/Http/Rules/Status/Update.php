@@ -147,7 +147,7 @@ class Update extends Action
                     $claimed = false;
                 }
             }
-        } catch (Exception $err) {
+        } catch (\Throwable $err) {
             $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 '$updatedAt' => DateTime::now(),
                 'records' => $rule->getAttribute('records', []),
