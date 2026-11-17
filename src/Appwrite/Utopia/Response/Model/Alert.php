@@ -3,10 +3,12 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Alert\Comparator;
+use Appwrite\Alert\Severity;
 use Appwrite\Alert\State;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Config\Config;
+use Utopia\Database\Document;
 
 class Alert extends Model
 {
@@ -89,9 +91,17 @@ class Alert extends Model
                 'example' => ['{"method":"greaterThan","attribute":"network.outbound","values":[5000000]}'],
                 'array' => true,
             ])
+            ->addRule('severity', [
+                'type' => self::TYPE_ENUM,
+                'description' => 'The monitor\'s severity when the alert fired: `info`, `warning`, `error` or `critical`.',
+                'default' => Severity::Warning->value,
+                'example' => Severity::Warning->value,
+                'enum' => Severity::values(),
+                'enumSDKName' => 'AlertSeverity',
+            ])
             ->addRule('critical', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether the monitor was critical when the alert fired.',
+                'description' => 'Deprecated: use `severity`. Whether the monitor was critical when the alert fired.',
                 'default' => false,
                 'example' => false,
             ])
@@ -167,5 +177,15 @@ class Alert extends Model
     public function getType(): string
     {
         return Response::MODEL_ALERT;
+    }
+
+    /**
+     * `critical` predates `severity` and stays for clients that read it.
+     */
+    public function filter(Document $document): Document
+    {
+        $document->setAttribute('critical', $document->getAttribute('severity') === Severity::Critical->value);
+
+        return $document;
     }
 }

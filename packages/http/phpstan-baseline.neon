@@ -1,6 +1,12 @@
 parameters:
 	ignoreErrors:
 		-
+			message: '#^Method Swoole\\Server\:\:getClientInfo\(\) invoked with 3 parameters, 1\-2 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: src/Adapter/Swoole/Response.php
+
+		-
 			message: '#^Method Utopia\\Http\\Adapter\\FPM\\Request\:\:generateCookies\(\) should return array\<string, string\> but returns array\<mixed\>\.$#'
 			identifier: return.type
 			count: 1
@@ -120,11 +126,6 @@ parameters:
 			count: 1
 			path: src/Adapter/Swoole/Request.php
 
-		-
-			message: '#^Method Utopia\\Http\\Adapter\\Swoole\\Response\:\:write\(\) should return bool but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Adapter/Swoole/Response.php
 
 		-
 			message: '#^Cannot access offset ''__utopia__'' on mixed\.$#'

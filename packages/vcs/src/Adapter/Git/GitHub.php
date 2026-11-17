@@ -19,6 +19,8 @@ class GitHub extends Git
 
     public const EVENT_INSTALLATION = 'installation';
 
+    public const EVENT_INSTALLATION_REPOSITORIES = 'installation_repositories';
+
     public const EVENT_ISSUE_COMMENT = 'issue_comment';
 
     public const EVENT_PULL_REQUEST_REVIEW_COMMENT = 'pull_request_review_comment';
@@ -693,16 +695,23 @@ class GitHub extends Git
 
     /**
      * Create an installation access token for a service that acts on the installation's
-     * repositories itself, limited to the given repositories when any are named.
+     * repositories itself, limited to the given repositories and permissions when any are named.
      *
      * @param array<int> $repositoryIds
+     * @param array<string, string> $permissions GitHub permission name to access level, such as ['contents' => 'read']
      * @return array{token: string, expiresAt: string}
      *
      * @throws Exception
      */
-    public function createAccessToken(array $repositoryIds = []): array
+    public function createAccessToken(array $repositoryIds = [], array $permissions = []): array
     {
-        $params = $repositoryIds === [] ? [] : ['repository_ids' => $repositoryIds];
+        $params = [];
+        if ($repositoryIds !== []) {
+            $params['repository_ids'] = $repositoryIds;
+        }
+        if ($permissions !== []) {
+            $params['permissions'] = $permissions;
+        }
 
         $response = $this->call(self::METHOD_POST, '/app/installations/' . $this->installationId . '/access_tokens', ['Authorization' => 'Bearer ' . $this->jwtToken], $params);
         $responseBody = $response['body'] ?? [];
@@ -1306,9 +1315,14 @@ class GitHub extends Git
             'filter' => 'latest',
         ]);
         $headers = \is_array($response['headers'] ?? null) ? $response['headers'] : [];
-        if (($headers['status-code'] ?? 0) === 403) {
+        $statusCode = \is_numeric($headers['status-code'] ?? null) ? (int) $headers['status-code'] : 0;
+        if ($statusCode === 403) {
             parent::updateCheck($owner, $repositoryName, $SHA, $state, $name, $title, '', $detailsUrl);
             return;
+        }
+        // An unread list would start a second run beside the existing one
+        if ($statusCode >= 400) {
+            throw new Exception("Failed to list check runs: HTTP $statusCode", $statusCode);
         }
 
         $body = \is_array($response['body'] ?? null) ? $response['body'] : [];
@@ -1570,10 +1584,26 @@ class GitHub extends Git
                 $action = $payload['action'] ?? '';
                 $userName = $payloadInstallationAccount['login'] ?? '';
 
+                // Repositories that joined or left the installation: chosen in its settings, or
+                // created in an account the installation covers in full.
+                $repositoryIds = static function (mixed $repositories): array {
+                    $ids = [];
+                    foreach (\is_array($repositories) ? $repositories : [] as $repository) {
+                        $id = \is_array($repository) ? ($repository['id'] ?? null) : null;
+                        if (\is_int($id) || (\is_string($id) && \ctype_digit($id))) {
+                            $ids[] = \strval($id);
+                        }
+                    }
+
+                    return $ids;
+                };
+
                 return [[
                     'action' => $action,
                     'installationId' => $installationId,
                     'userName' => $userName,
+                    'repositoriesAdded' => $repositoryIds($payload['repositories_added'] ?? []),
+                    'repositoriesRemoved' => $repositoryIds($payload['repositories_removed'] ?? []),
                 ]];
         }
 

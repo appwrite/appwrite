@@ -16,6 +16,8 @@ import { isFeatureGatedDocsSlugHidden } from '../src/lib/docs/feature-gated-docs
 import {
   buildAgentSkillsDiscoveryDocument,
   buildAiCatalogDocument,
+  buildArdDocument,
+  buildMcpDocsServerCard,
   buildMcpServerCard,
   serializeDiscoveryJson,
 } from '../src/lib/seo/agent-discovery'
@@ -38,6 +40,7 @@ import {
 import type { LlmsContentMeta } from '../src/lib/seo/llms'
 import { buildForAgentsMarkdown } from '../src/lib/for-agents/content'
 import { buildPricingMarkdown } from '../src/lib/pricing/markdown'
+import { buildAuthMarkdown } from '../src/lib/seo/auth-markdown'
 import { MARKDOWN_TWIN_PAGES } from '../src/lib/seo/markdown-twins'
 import { pageHtmlToMarkdown } from '../src/lib/seo/page-markdown'
 import { getProductionRobotsTxt } from '../src/lib/seo/robots'
@@ -352,8 +355,12 @@ async function buildExportFiles(): Promise<ExportFile[]> {
       contents: serializeDiscoveryJson(buildMcpServerCard(SITE_ORIGIN)),
     },
     {
+      relativePath: '.well-known/mcp/docs/server-card.json',
+      contents: serializeDiscoveryJson(buildMcpDocsServerCard(SITE_ORIGIN)),
+    },
+    {
       relativePath: '.well-known/ard.json',
-      contents: serializeDiscoveryJson(buildAiCatalogDocument(SITE_ORIGIN)),
+      contents: serializeDiscoveryJson(buildArdDocument(SITE_ORIGIN)),
     },
     {
       relativePath: '.well-known/ai-catalog.json',
@@ -370,6 +377,10 @@ async function buildExportFiles(): Promise<ExportFile[]> {
     {
       relativePath: 'pricing.md',
       contents: buildPricingMarkdown(SITE_ORIGIN),
+    },
+    {
+      relativePath: 'auth.md',
+      contents: buildAuthMarkdown(SITE_ORIGIN),
     },
     {
       relativePath: 'robots.txt',

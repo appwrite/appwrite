@@ -817,6 +817,7 @@ export function View() {
                 planId: organizationPlan?.$id,
               })}
               resourceName="functions"
+              resourceNameSingular="function"
               orgId={project?.teamId}
               fullWidth={false}
             />

@@ -2,6 +2,8 @@
  * Resolve a browser URL for a deployment's VCS repository (GitHub, GitLab, Bitbucket, or custom host).
  */
 
+import { isRepositoryHost } from '@/lib/vcs/providers'
+
 type DeploymentRepositoryFields = {
   providerRepositoryUrl?: string | null
   providerRepositoryOwner?: string | null
@@ -14,12 +16,11 @@ export function getVcsProviderKind(
 ): 'github' | 'gitlab' | 'bitbucket' | 'origin' | null {
   if (deployment.providerRepositoryUrl) {
     const url = deployment.providerRepositoryUrl.toLowerCase()
-    if (url.includes('github.com')) return 'github'
-    if (url.includes('gitlab.com')) return 'gitlab'
-    if (url.includes('bitbucket.org') || url.includes('bitbucket.com'))
+    if (isRepositoryHost(url, 'github.com')) return 'github'
+    if (isRepositoryHost(url, 'gitlab.com')) return 'gitlab'
+    if (isRepositoryHost(url, 'bitbucket.org', 'bitbucket.com'))
       return 'bitbucket'
-    if (url.includes('cursor.com') || url.includes('origin.cursor.com'))
-      return 'origin'
+    if (isRepositoryHost(url, 'cursor.com')) return 'origin'
   }
   if (deployment.vcsProvider) {
     const p = deployment.vcsProvider.toLowerCase()

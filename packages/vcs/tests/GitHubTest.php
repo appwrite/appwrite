@@ -122,6 +122,48 @@ final class GitHubTest extends Base
         $this->assertSame('1234', $result['installationId']);
     }
 
+    public function testGetEventInstallationRepositories(): void
+    {
+        $payload = (string) json_encode([
+            'action' => 'added',
+            'installation' => [
+                'id' => 1234,
+                'account' => ['login' => 'appwrite'],
+            ],
+            'repository_selection' => 'all',
+            'repositories_added' => [
+                ['id' => 583127841, 'name' => 'appwrite', 'full_name' => 'appwrite/appwrite'],
+                ['id' => '943139433', 'name' => 'console'],
+                ['name' => 'no-id'],
+                'not-a-repository',
+            ],
+            'repositories_removed' => [],
+        ]);
+
+        $events = $this->vcsAdapter->getEvents(GitHub::EVENT_INSTALLATION_REPOSITORIES, $payload);
+
+        $this->assertSame([[
+            'action' => 'added',
+            'installationId' => '1234',
+            'userName' => 'appwrite',
+            'repositoriesAdded' => ['583127841', '943139433'],
+            'repositoriesRemoved' => [],
+        ]], $events);
+    }
+
+    public function testGetEventInstallationHasNoRepositories(): void
+    {
+        $payload = (string) json_encode([
+            'action' => 'deleted',
+            'installation' => ['id' => 1234, 'account' => ['login' => 'appwrite']],
+        ]);
+
+        $events = $this->vcsAdapter->getEvents(GitHub::EVENT_INSTALLATION, $payload);
+
+        $this->assertSame([], $events[0]['repositoriesAdded']);
+        $this->assertSame([], $events[0]['repositoriesRemoved']);
+    }
+
     public function testGetEventIssueCommentOnPullRequest(): void
     {
         $events = $this->vcsAdapter->getEvents(GitHub::EVENT_ISSUE_COMMENT, $this->commentPayload(GitHub::EVENT_ISSUE_COMMENT));
@@ -237,6 +279,32 @@ final class GitHubTest extends Base
         $adapter->updateCheck('owner', 'repo', 'abc123', 'queued', 'Billing', 'Starting...', key: 'project/functions/billing');
 
         $this->assertSame(['method' => 'POST', 'path' => '/repos/owner/repo/check-runs'], $adapter->captured[1]);
+    }
+
+    public function testUpdateCheckFailsWhenRunsCannotBeListed(): void
+    {
+        $adapter = new class (new Cache(new None())) extends GitHub {
+            /** @var list<string> */
+            public array $methods = [];
+
+            protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+            {
+                $this->methods[] = $method;
+
+                return [
+                    'body' => [],
+                    'headers' => ['status-code' => 500],
+                ];
+            }
+        };
+
+        try {
+            $adapter->updateCheck('owner', 'repo', 'abc123', 'queued', 'Billing', 'Starting...');
+            $this->fail('Expected the failed listing to throw');
+        } catch (\Exception) {
+        }
+
+        $this->assertSame(['GET'], $adapter->methods);
     }
 
     public function testUpdateCheckFallsBackToAStatusWithoutChecks(): void
@@ -483,19 +551,19 @@ final class GitHubTest extends Base
         $this->assertSame('appwrite', $adapter->getOwnerName('1234'));
     }
 
-    public function testCreateAccessTokenLimitsItToTheRepositories(): void
+    public function testCreateAccessTokenLimitsItToTheRepositoriesAndPermissions(): void
     {
         $captured = new \stdClass();
         $adapter = $this->accessTokenResponse(201, ['token' => 'ghs_scoped', 'expires_at' => '2026-10-27T16:00:00Z'], $captured);
 
-        $token = $adapter->createAccessToken([42]);
+        $token = $adapter->createAccessToken([42], ['contents' => 'read', 'pull_requests' => 'write']);
 
         $this->assertSame(['token' => 'ghs_scoped', 'expiresAt' => '2026-10-27T16:00:00Z'], $token);
         $this->assertSame([
             'method' => 'POST',
             'path' => '/app/installations/1234/access_tokens',
             'headers' => ['Authorization' => 'Bearer app-token'],
-            'params' => ['repository_ids' => [42]],
+            'params' => ['repository_ids' => [42], 'permissions' => ['contents' => 'read', 'pull_requests' => 'write']],
         ], $captured->request);
     }
 

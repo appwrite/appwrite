@@ -51,7 +51,7 @@ class Get extends Action
             ->setHttpPath('/v1/vcs/origin/authorize')
             ->desc('Create Origin app installation')
             ->groups(['api', 'vcs'])
-            ->label('scope', 'vcs.read')
+            ->label('scope', 'vcs.write')
             ->label('error', APP_VIEWS_DIR . '/general/error.phtml')
             ->label('sdk', new Method(
                 namespace: 'vcs',

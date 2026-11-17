@@ -30,15 +30,22 @@ use Utopia\Agents\Usage;
 use Utopia\Client\Psr18\StreamingClientInterface;
 
 /**
- * OpenAI Chat Completions, and the providers that speak the same protocol.
+ * OpenAI, over the Responses API, which unlike Chat Completions lets reasoning
+ * models reason and call tools in the same request.
  *
- * Streams every request with usage reporting, assembles tool calls from their
- * deltas and reads reasoning from the "reasoning_content" or "reasoning"
- * delta fields that compatible providers use.
+ * Nothing is stored on OpenAI's side: each request carries the whole
+ * conversation. With reasoning on, the encrypted reasoning items come back as
+ * signed reasoning parts and are sent back on the next turn, so a model keeps
+ * its reasoning across tool calls. Reasoning summaries are off unless asked
+ * for through the options: ['openai' => ['reasoning' => ['summary' => 'auto']]].
+ *
+ * The Responses API takes no stop sequences, so a request with any is
+ * refused, and no seed, which is ignored. OpenAI-compatible providers speak
+ * Chat Completions: see the Compatible adapter.
  */
 class OpenAI extends Adapter implements Model
 {
-    protected const string ENDPOINT = 'https://api.openai.com/v1/chat/completions';
+    protected const string ENDPOINT = 'https://api.openai.com/v1/responses';
 
     protected string $endpoint;
 
@@ -77,98 +84,139 @@ class OpenAI extends Adapter implements Model
 
     public function stream(Request $request, callable $listener): Response
     {
-        $text = '';
-        $reasoning = '';
-        /** @var array<int, array{id: string, name: string, arguments: string}> $calls */
+        /** @var array<int, array<mixed>> $items */
+        $items = [];
+        /** @var array<string, array{id: string, name: string}> $calls */
         $calls = [];
-        /** @var FinishReason|null $finish */
-        $finish = null;
         $usage = new Usage();
         $id = '';
         $model = $this->model;
+        $status = '';
+        $reason = '';
 
-        $this->events($this->endpoint, $this->payload($request), function (string $name, array $chunk) use (&$text, &$reasoning, &$calls, &$finish, &$usage, &$id, &$model, $listener): void {
-            if (isset($chunk['error'])) {
-                [$type, $message] = $this->describe(json_encode($chunk) ?: '');
-                throw new Api(ucfirst($this->getName())." API error ({$type}): {$message}", $this->getName(), type: $type);
-            }
+        $this->events($this->endpoint, $this->payload($request), function (string $name, array $event) use (&$items, &$calls, &$usage, &$id, &$model, &$status, &$reason, $listener): void {
+            $type = \is_string($event['type'] ?? null) ? $event['type'] : $name;
 
-            if (isset($chunk['id']) && \is_string($chunk['id'])) {
-                $id = $chunk['id'];
-            }
-            if (isset($chunk['model']) && \is_string($chunk['model'])) {
-                $model = $chunk['model'];
-            }
-            if (isset($chunk['usage']) && \is_array($chunk['usage'])) {
-                $usage = $this->usage($chunk['usage']);
-            }
+            switch ($type) {
+                case 'error':
+                    $error = \is_array($event['error'] ?? null) ? $event['error'] : $event;
+                    throw $this->failure($error);
 
-            $choices = \is_array($chunk['choices'] ?? null) ? $chunk['choices'] : [];
-            $choice = $choices[0] ?? null;
-            if (! \is_array($choice)) {
-                return;
-            }
+                case 'response.failed':
+                    $response = \is_array($event['response'] ?? null) ? $event['response'] : [];
+                    throw $this->failure(\is_array($response['error'] ?? null) ? $response['error'] : []);
 
-            $delta = \is_array($choice['delta'] ?? null) ? $choice['delta'] : [];
-
-            foreach (['reasoning_content', 'reasoning'] as $key) {
-                if (isset($delta[$key]) && \is_string($delta[$key]) && $delta[$key] !== '') {
-                    $reasoning .= $delta[$key];
-                    $listener(new ReasoningDelta($delta[$key]));
+                case 'response.created':
+                case 'response.in_progress':
+                case 'response.completed':
+                case 'response.incomplete':
+                    $response = \is_array($event['response'] ?? null) ? $event['response'] : [];
+                    if (\is_string($response['id'] ?? null)) {
+                        $id = $response['id'];
+                    }
+                    if (\is_string($response['model'] ?? null)) {
+                        $model = $response['model'];
+                    }
+                    if (\is_string($response['status'] ?? null)) {
+                        $status = $response['status'];
+                    }
+                    if (\is_array($response['usage'] ?? null)) {
+                        $usage = $this->usage($response['usage']);
+                    }
+                    $details = \is_array($response['incomplete_details'] ?? null) ? $response['incomplete_details'] : [];
+                    if (\is_string($details['reason'] ?? null)) {
+                        $reason = $details['reason'];
+                    }
+                    // The final response lists every output item: it fills any whose done event was missed.
+                    $output = \is_array($response['output'] ?? null) ? $response['output'] : [];
+                    foreach ($output as $index => $item) {
+                        if (\is_int($index) && \is_array($item)) {
+                            $items[$index] ??= $item;
+                        }
+                    }
                     break;
-                }
-            }
 
-            if (isset($delta['content']) && \is_string($delta['content']) && $delta['content'] !== '') {
-                $text .= $delta['content'];
-                $listener(new TextDelta($delta['content']));
-            }
+                case 'response.output_item.added':
+                    $item = \is_array($event['item'] ?? null) ? $event['item'] : [];
+                    if (($item['type'] ?? null) === 'function_call' && \is_string($item['id'] ?? null)) {
+                        $calls[$item['id']] = [
+                            'id' => \is_string($item['call_id'] ?? null) ? $item['call_id'] : $item['id'],
+                            'name' => \is_string($item['name'] ?? null) ? $item['name'] : '',
+                        ];
+                    }
+                    break;
 
-            $toolCalls = \is_array($delta['tool_calls'] ?? null) ? $delta['tool_calls'] : [];
-            foreach ($toolCalls as $toolCall) {
-                if (! \is_array($toolCall)) {
-                    continue;
-                }
-                $index = \is_int($toolCall['index'] ?? null) ? $toolCall['index'] : \count($calls);
-                $calls[$index] ??= ['id' => '', 'name' => '', 'arguments' => ''];
-                if (isset($toolCall['id']) && \is_string($toolCall['id']) && $toolCall['id'] !== '') {
-                    $calls[$index]['id'] = $toolCall['id'];
-                }
-                $function = \is_array($toolCall['function'] ?? null) ? $toolCall['function'] : [];
-                if (isset($function['name']) && \is_string($function['name']) && $function['name'] !== '') {
-                    $calls[$index]['name'] = $function['name'];
-                }
-                if (isset($function['arguments']) && \is_string($function['arguments']) && $function['arguments'] !== '') {
-                    $calls[$index]['arguments'] .= $function['arguments'];
-                    $listener(new ToolInputDelta($calls[$index]['id'], $calls[$index]['name'], $function['arguments']));
-                }
-            }
+                case 'response.output_item.done':
+                    $item = \is_array($event['item'] ?? null) ? $event['item'] : [];
+                    $index = \is_int($event['output_index'] ?? null) ? $event['output_index'] : \count($items);
+                    $items[$index] = $item;
+                    if (($item['type'] ?? null) === 'function_call') {
+                        $listener(new ToolCallEvent($this->call($item, $index)));
+                    }
+                    break;
 
-            if (isset($choice['finish_reason']) && \is_string($choice['finish_reason'])) {
-                $finish = $this->finish($choice['finish_reason']);
+                case 'response.output_text.delta':
+                case 'response.refusal.delta':
+                    if (\is_string($event['delta'] ?? null) && $event['delta'] !== '') {
+                        $listener(new TextDelta($event['delta']));
+                    }
+                    break;
+
+                case 'response.reasoning_summary_text.delta':
+                case 'response.reasoning_text.delta':
+                    if (\is_string($event['delta'] ?? null) && $event['delta'] !== '') {
+                        $listener(new ReasoningDelta($event['delta']));
+                    }
+                    break;
+
+                case 'response.function_call_arguments.delta':
+                    $call = $calls[\is_string($event['item_id'] ?? null) ? $event['item_id'] : ''] ?? ['id' => '', 'name' => ''];
+                    if (\is_string($event['delta'] ?? null) && $event['delta'] !== '') {
+                        $listener(new ToolInputDelta($call['id'], $call['name'], $event['delta']));
+                    }
+                    break;
             }
         });
 
+        ksort($items);
         $parts = [];
-        if ($reasoning !== '') {
-            $parts[] = new Reasoning($reasoning);
-        }
-        if ($text !== '') {
-            $parts[] = new Text($text);
+        $called = false;
+        foreach ($items as $index => $item) {
+            switch ($item['type'] ?? null) {
+                case 'reasoning':
+                    $text = $this->texts($item['summary'] ?? null, 'summary_text').$this->texts($item['content'] ?? null, 'reasoning_text');
+                    $encrypted = \is_string($item['encrypted_content'] ?? null) && $item['encrypted_content'] !== '' ? $item['encrypted_content'] : null;
+                    if ($text !== '' || $encrypted !== null) {
+                        $parts[] = new Reasoning($text, $encrypted, id: \is_string($item['id'] ?? null) ? $item['id'] : null);
+                    }
+                    break;
+
+                case 'message':
+                    $text = $this->texts($item['content'] ?? null, 'output_text').$this->texts($item['content'] ?? null, 'refusal', 'refusal');
+                    if ($text !== '') {
+                        $parts[] = new Text($text);
+                    }
+                    break;
+
+                case 'function_call':
+                    $parts[] = $this->call($item, $index);
+                    $called = true;
+                    break;
+            }
         }
 
-        ksort($calls);
-        foreach ($calls as $index => $call) {
-            $part = new ToolCall($call['id'] !== '' ? $call['id'] : 'call_'.$index, $call['name'], $this->arguments($call['arguments']));
-            $parts[] = $part;
-            $listener(new ToolCallEvent($part));
-        }
+        $finish = match (true) {
+            $status === 'incomplete' => match ($reason) {
+                'max_output_tokens' => FinishReason::Length,
+                'content_filter' => FinishReason::ContentFilter,
+                default => FinishReason::Other,
+            },
+            $called => FinishReason::ToolCalls,
+            $status === 'completed' => FinishReason::Stop,
+            default => FinishReason::Other,
+        };
 
-        if ($calls !== [] && ($finish === null || $finish === FinishReason::Stop)) {
-            $finish = FinishReason::ToolCalls;
-        }
-
-        return new Response($parts, $finish ?? FinishReason::Other, $usage, $id, $model);
+        return new Response($parts, $finish, $usage, $id, $model);
     }
 
     /**
@@ -176,35 +224,39 @@ class OpenAI extends Adapter implements Model
      */
     protected function payload(Request $request): array
     {
+        if ($request->stop !== []) {
+            throw new Unsupported('The OpenAI Responses API does not accept stop sequences');
+        }
+
         $payload = [
             'model' => $this->model,
-            'messages' => $this->messages($request->messages),
+            'input' => $this->input($request->messages),
             'stream' => true,
-            'stream_options' => ['include_usage' => true],
+            'store' => false,
         ];
 
         if ($request->tools !== []) {
+            // Not strict, as with Chat Completions: strict tools must make every property required.
             $payload['tools'] = array_map(fn (Tool $tool) => [
                 'type' => 'function',
-                'function' => [
-                    'name' => $tool->name,
-                    'description' => $tool->description,
-                    'parameters' => $tool->input->toArray(),
-                ],
+                'name' => $tool->name,
+                'description' => $tool->description,
+                'parameters' => $tool->input->toArray(),
+                'strict' => false,
             ], $request->tools);
         }
 
         if ($request->toolChoice !== null) {
             $payload['tool_choice'] = match ($request->toolChoice->type) {
-                ToolChoice::TOOL => ['type' => 'function', 'function' => ['name' => $request->toolChoice->name]],
+                ToolChoice::TOOL => ['type' => 'function', 'name' => $request->toolChoice->name],
                 default => $request->toolChoice->type,
             };
         }
 
         if ($request->schema !== null) {
-            $payload['response_format'] = [
-                'type' => 'json_schema',
-                'json_schema' => [
+            $payload['text'] = [
+                'format' => [
+                    'type' => 'json_schema',
                     'name' => 'response',
                     'strict' => true,
                     'schema' => $request->schema->toArray(),
@@ -212,14 +264,20 @@ class OpenAI extends Adapter implements Model
             ];
         }
 
+        if ($request->effort !== null) {
+            $payload['reasoning'] = ['effort' => $request->effort->value];
+        }
+
+        // Reasoning kept across turns without storing it: the encrypted items come back to be sent again.
+        if ($request->effort !== null && $request->effort !== Effort::None) {
+            $payload['include'] = ['reasoning.encrypted_content'];
+        }
+
         $sampling = $this->samples($request);
         $settings = [
-            $this->tokens() => $request->maxTokens,
+            'max_output_tokens' => $request->maxTokens,
             'temperature' => $sampling ? $request->temperature : null,
             'top_p' => $sampling ? $request->topP : null,
-            'seed' => $request->seed,
-            'stop' => $request->stop === [] ? null : $request->stop,
-            'reasoning_effort' => $request->effort?->value,
         ];
 
         /** @var array<string, mixed> $merged */
@@ -246,56 +304,58 @@ class OpenAI extends Adapter implements Model
     }
 
     /**
-     * Name of the output token limit parameter.
-     */
-    protected function tokens(): string
-    {
-        return 'max_completion_tokens';
-    }
-
-    /**
+     * The conversation as Responses input items. Reasoning without its
+     * encrypted content can't be sent back, so it is left out.
+     *
      * @param  list<Message>  $messages
      * @return list<array<string, mixed>>
      */
-    protected function messages(array $messages): array
+    protected function input(array $messages): array
     {
-        $formatted = [];
+        $input = [];
 
         foreach ($messages as $message) {
             switch ($message->role) {
                 case Role::System:
-                    $formatted[] = ['role' => 'system', 'content' => $message->text()];
+                    $input[] = ['role' => 'system', 'content' => $message->text()];
                     break;
 
                 case Role::User:
-                    $formatted[] = ['role' => 'user', 'content' => $this->content($message)];
+                    $input[] = ['role' => 'user', 'content' => $this->content($message)];
                     break;
 
                 case Role::Assistant:
-                    $entry = ['role' => 'assistant', 'content' => $message->text() !== '' ? $message->text() : null];
-                    $calls = array_map(fn (ToolCall $call) => [
-                        'id' => $call->id,
-                        'type' => 'function',
-                        'function' => [
-                            'name' => $call->name,
-                            'arguments' => json_encode($this->object($call->arguments)) ?: '{}',
-                        ],
-                    ], $message->toolCalls());
-                    if ($calls !== []) {
-                        $entry['tool_calls'] = $calls;
+                    foreach ($message->parts as $part) {
+                        if ($part instanceof Reasoning && $part->signature !== null) {
+                            $item = ['type' => 'reasoning'];
+                            if ($part->id !== null) {
+                                $item['id'] = $part->id;
+                            }
+                            $item['summary'] = $part->text === '' ? [] : [['type' => 'summary_text', 'text' => $part->text]];
+                            $item['encrypted_content'] = $part->signature;
+                            $input[] = $item;
+                        } elseif ($part instanceof Text && $part->text !== '') {
+                            $input[] = ['role' => 'assistant', 'content' => $part->text];
+                        } elseif ($part instanceof ToolCall) {
+                            $input[] = [
+                                'type' => 'function_call',
+                                'call_id' => $part->id,
+                                'name' => $part->name,
+                                'arguments' => json_encode($this->object($part->arguments)) ?: '{}',
+                            ];
+                        }
                     }
-                    $formatted[] = $entry;
                     break;
 
                 case Role::Tool:
                     foreach ($message->toolResults() as $result) {
-                        $formatted[] = ['role' => 'tool', 'tool_call_id' => $result->id, 'content' => $result->text()];
+                        $input[] = ['type' => 'function_call_output', 'call_id' => $result->id, 'output' => $result->text()];
                     }
                     break;
             }
         }
 
-        return $formatted;
+        return $input;
     }
 
     /**
@@ -311,11 +371,65 @@ class OpenAI extends Adapter implements Model
         }
 
         return array_map(fn (Part $part) => match (true) {
-            $part instanceof Text => ['type' => 'text', 'text' => $part->text],
-            $part instanceof Image => ['type' => 'image_url', 'image_url' => ['url' => $part->url ?? 'data:'.$part->mimeType.';base64,'.$part->base64()]],
-            $part instanceof File && $part->url === null => ['type' => 'file', 'file' => ['filename' => $part->name ?? 'file', 'file_data' => 'data:'.$part->mimeType.';base64,'.$part->base64()]],
-            default => throw new Unsupported(ucfirst($this->getName()).' does not accept '.$part::class.' in user messages'),
+            $part instanceof Text => ['type' => 'input_text', 'text' => $part->text],
+            $part instanceof Image => ['type' => 'input_image', 'image_url' => $part->url ?? 'data:'.$part->mimeType.';base64,'.$part->base64()],
+            $part instanceof File && $part->url !== null => ['type' => 'input_file', 'file_url' => $part->url],
+            $part instanceof File => ['type' => 'input_file', 'filename' => $part->name ?? 'file', 'file_data' => 'data:'.$part->mimeType.';base64,'.$part->base64()],
+            default => throw new Unsupported('OpenAI does not accept '.$part::class.' in user messages'),
         }, $message->parts);
+    }
+
+    /**
+     * A function call output item as a tool call part.
+     *
+     * @param  array<mixed>  $item
+     */
+    protected function call(array $item, int $index): ToolCall
+    {
+        $id = \is_string($item['call_id'] ?? null) && $item['call_id'] !== '' ? $item['call_id'] : 'call_'.$index;
+        $name = \is_string($item['name'] ?? null) ? $item['name'] : '';
+        $arguments = \is_string($item['arguments'] ?? null) ? $item['arguments'] : '';
+
+        return new ToolCall($id, $name, $this->arguments($arguments));
+    }
+
+    /**
+     * The text of every content part of one type, joined.
+     */
+    protected function texts(mixed $parts, string $type, string $key = 'text'): string
+    {
+        if (! \is_array($parts)) {
+            return '';
+        }
+
+        $text = '';
+        foreach ($parts as $part) {
+            if (\is_array($part) && ($part['type'] ?? null) === $type && \is_string($part[$key] ?? null)) {
+                $text .= $part[$key];
+            }
+        }
+
+        return $text;
+    }
+
+    /**
+     * An error reported inside the stream.
+     *
+     * @param  array<mixed>  $error
+     */
+    protected function failure(array $error): Api
+    {
+        $type = '';
+        foreach (['code', 'type'] as $key) {
+            if (isset($error[$key]) && \is_scalar($error[$key]) && (string) $error[$key] !== '' && $error[$key] !== 'error') {
+                $type = (string) $error[$key];
+                break;
+            }
+        }
+        $message = \is_string($error['message'] ?? null) ? $error['message'] : 'Unknown error';
+        $retryable = \in_array($type, ['server_error', 'rate_limit_exceeded'], true);
+
+        return new Api('Openai API error'.($type !== '' ? " ({$type})" : '').": {$message}", $this->getName(), type: $type, retryable: $retryable);
     }
 
     /**
@@ -323,26 +437,15 @@ class OpenAI extends Adapter implements Model
      */
     protected function usage(array $usage): Usage
     {
-        $prompt = \is_array($usage['prompt_tokens_details'] ?? null) ? $usage['prompt_tokens_details'] : [];
-        $completion = \is_array($usage['completion_tokens_details'] ?? null) ? $usage['completion_tokens_details'] : [];
+        $input = \is_array($usage['input_tokens_details'] ?? null) ? $usage['input_tokens_details'] : [];
+        $output = \is_array($usage['output_tokens_details'] ?? null) ? $usage['output_tokens_details'] : [];
 
         return new Usage(
-            input: \is_int($usage['prompt_tokens'] ?? null) ? $usage['prompt_tokens'] : 0,
-            output: \is_int($usage['completion_tokens'] ?? null) ? $usage['completion_tokens'] : 0,
-            cacheRead: \is_int($prompt['cached_tokens'] ?? null) ? $prompt['cached_tokens'] : 0,
-            reasoning: \is_int($completion['reasoning_tokens'] ?? null) ? $completion['reasoning_tokens'] : 0,
+            input: \is_int($usage['input_tokens'] ?? null) ? $usage['input_tokens'] : 0,
+            output: \is_int($usage['output_tokens'] ?? null) ? $usage['output_tokens'] : 0,
+            cacheRead: \is_int($input['cached_tokens'] ?? null) ? $input['cached_tokens'] : 0,
+            reasoning: \is_int($output['reasoning_tokens'] ?? null) ? $output['reasoning_tokens'] : 0,
         );
-    }
-
-    protected function finish(string $reason): FinishReason
-    {
-        return match ($reason) {
-            'stop' => FinishReason::Stop,
-            'length' => FinishReason::Length,
-            'tool_calls', 'function_call' => FinishReason::ToolCalls,
-            'content_filter' => FinishReason::ContentFilter,
-            default => FinishReason::Other,
-        };
     }
 
     protected function headers(): array

@@ -11,6 +11,7 @@ import type {
   AlertMetric as Metric,
   AlertStatus as Status,
   MonitorResourceType,
+  MonitorSeverity as Level,
   MonitorStatus as State,
   MonitorType as Kind,
 } from './api'
@@ -24,14 +25,21 @@ export type AlertComparator = `${Comparator}`
 /** `budget` monitors live on organization routes, where an edition has them. */
 export type MonitorType = `${Kind}`
 
+/** How urgent a monitor's alerts are; only `critical` changes how a push is delivered. */
+export type MonitorSeverity = `${Level}`
+
 export type MonitorStatus = `${State}`
 
 export type AlertStatus = `${Status}`
 
-export type Monitor = Omit<Api.Monitor, 'type' | 'resourceType' | 'status'> & {
+export type Monitor = Omit<
+  Api.Monitor,
+  'type' | 'resourceType' | 'status' | 'severity'
+> & {
   type: MonitorType
   resourceType: AlertResourceType
   status: MonitorStatus
+  severity: MonitorSeverity
 }
 
 export type MonitorList = Omit<Api.MonitorList, 'monitors'> & {
@@ -40,11 +48,12 @@ export type MonitorList = Omit<Api.MonitorList, 'monitors'> & {
 
 export type Alert = Omit<
   Api.Alert,
-  'type' | 'resourceType' | 'status' | 'metric' | 'comparator'
+  'type' | 'resourceType' | 'status' | 'metric' | 'comparator' | 'severity'
 > & {
   type: MonitorType
   resourceType: AlertResourceType
   status: AlertStatus
+  severity: MonitorSeverity
   metric: AlertMetric
   comparator: AlertComparator
 }
@@ -63,7 +72,7 @@ export type MonitorInput = {
   cooldown?: number
   /** Organization roles emailed and notified in the console; none relies on the alert events alone. */
   notify?: string[]
-  /** Push alerts ring through silent and Do Not Disturb on devices that allow critical alerts. */
-  critical?: boolean
+  /** Critical pushes ring through silent and Do Not Disturb on devices that allow critical alerts. */
+  severity?: MonitorSeverity
   enabled?: boolean
 }

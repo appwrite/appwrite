@@ -13,6 +13,8 @@ use Appwrite\Platform\Modules\Project\Http\Project\Keys\Get as GetKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\Update as UpdateKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\XList as ListKeys;
 use Appwrite\Platform\Modules\Project\Http\Project\Labels\Update as UpdateProjectLabels;
+use Appwrite\Platform\Modules\Project\Http\Project\LDAP\Tests\Create as CreateLDAPTest;
+use Appwrite\Platform\Modules\Project\Http\Project\LDAP\Update as UpdateLDAP;
 use Appwrite\Platform\Modules\Project\Http\Project\MockPhone\Create as CreateMockPhone;
 use Appwrite\Platform\Modules\Project\Http\Project\MockPhone\Delete as DeleteMockPhone;
 use Appwrite\Platform\Modules\Project\Http\Project\MockPhone\Get as GetMockPhone;
@@ -66,6 +68,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Vipps\Update as Update
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\VippsSandbox\Update as UpdateOAuth2VippsSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Webflow\Update as UpdateOAuth2Webflow;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\WordPress\Update as UpdateOAuth2WordPress;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\WorkOS\Update as UpdateOAuth2WorkOS;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\X\Update as UpdateOAuth2X;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\XList as ListOAuth2Providers;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Yahoo\Update as UpdateOAuth2Yahoo;
@@ -123,6 +126,11 @@ use Appwrite\Platform\Modules\Project\Http\Project\Variables\Delete as DeleteVar
 use Appwrite\Platform\Modules\Project\Http\Project\Variables\Get as GetVariable;
 use Appwrite\Platform\Modules\Project\Http\Project\Variables\Update as UpdateVariable;
 use Appwrite\Platform\Modules\Project\Http\Project\Variables\XList as ListVariables;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\Create as CreateProfile;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\Delete as DeleteProfile;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\Get as GetProfile;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\Update as UpdateProfile;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\XList as ListProfiles;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -151,6 +159,10 @@ class Http extends Service
         // SMTP
         $this->addAction('updateProjectSMTP', UpdateSMTP::class);
         $this->addAction('createProjectSMTPTest', CreateSMTPTest::class);
+
+        // LDAP
+        $this->addAction('updateProjectLDAP', UpdateLDAP::class);
+        $this->addAction('createProjectLDAPTest', CreateLDAPTest::class);
 
         // Templates
         $this->addAction('listProjectEmailTemplates', ListTemplates::class);
@@ -222,6 +234,13 @@ class Http extends Service
         $this->addAction('updateProjectDenyRealtimeGuestsPolicy', UpdateDenyRealtimeGuestsPolicy::class);
         $this->addAction('updateProjectAccountDevicesPolicy', UpdateAccountDevicesPolicy::class);
 
+        // Profiles
+        $this->addAction(CreateProfile::getName(), new CreateProfile());
+        $this->addAction(ListProfiles::getName(), new ListProfiles());
+        $this->addAction(GetProfile::getName(), new GetProfile());
+        $this->addAction(UpdateProfile::getName(), new UpdateProfile());
+        $this->addAction(DeleteProfile::getName(), new DeleteProfile());
+
         // Auth Methods
         $this->addAction('updateProjectAuthMethod', UpdateAuthMethod::class);
 
@@ -273,6 +292,7 @@ class Http extends Service
         $this->addAction('updateProjectOAuth2Apple', UpdateOAuth2Apple::class);
         $this->addAction('updateProjectOAuth2Microsoft', UpdateOAuth2Microsoft::class);
         $this->addAction('updateProjectOAuth2Hugging Face', UpdateOAuth2HuggingFace::class);
+        $this->addAction('updateProjectOAuth2WorkOS', UpdateOAuth2WorkOS::class);
         $this->addAction('updateProjectOAuth2Resend', UpdateOAuth2Resend::class);
         $this->addAction('updateProjectOAuth2TikTok', UpdateOAuth2TikTok::class);
         $this->addAction('updateProjectOAuth2Kakao', UpdateOAuth2Kakao::class);

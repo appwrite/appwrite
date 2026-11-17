@@ -402,6 +402,8 @@ export function authMethodsRecordFromProject(
     [ProjectAuthMethodId.Jwt]: false,
     // Response formats before 2.4.0 omit passkey from authMethods
     [ProjectAuthMethodId.Passkey]: false,
+    // Response formats before 2.8.0 omit ldap from authMethods; ldapEnabled carries its flag
+    [ProjectAuthMethodId.Ldap]: Boolean(project?.ldapEnabled),
   }
   if (!project?.authMethods?.length) {
     return defaults

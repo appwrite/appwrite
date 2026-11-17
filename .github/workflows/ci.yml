@@ -177,9 +177,9 @@ jobs:
             uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
             with:
               path: .phpstan-cache
-              key: phpstan-${{ github.sha }}
+              key: phpstan-${{ github.workspace }}-${{ github.sha }}
               restore-keys: |
-                phpstan-
+                phpstan-${{ github.workspace }}-
 
       - parallel:
           - name: Audit dependencies
@@ -206,10 +206,6 @@ jobs:
           - name: Run PHPStan
             if: ${{ !cancelled() && steps.install.outcome == 'success' }}
             run: composer analyze -- --no-progress
-
-          - name: Generate specs
-            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-            run: _APP_STORAGE_LIMIT=5368709120 php app/cli.php specs --version=latest --git=no
 
   locale:
     name: Checks / Locale
@@ -371,7 +367,7 @@ jobs:
             fi
           fi
           CHANGED=$(echo "$CHANGED" | tr ' ' '\n' | sort -u \
-            | while read -r package; do [ -d "packages/$package" ] && echo "$package"; done)
+            | while read -r package; do if [ -d "packages/$package" ]; then echo "$package"; fi; done)
 
           # docs-only change: no packages to test
           if [ -z "$CHANGED" ]; then
@@ -444,8 +440,6 @@ jobs:
       - name: Test package${{ matrix.linked && ' (linked)' || '' }}
         run: bin/monorepo test "$PACKAGE" $LINKED
 
-  # The utopia PHP extension (crates/extension): the crates' own checks, then
-  # the PHP packages it replaces classes of, tested with it loaded.
   extension:
     name: Extension
     needs: changes
@@ -463,28 +457,21 @@ jobs:
 
       - name: Check crates
         run: |
-          # rustdoc does not read .cargo/config.toml's rustflags, and a static
-          # musl doctest cannot link the shared libheif.
           docker run --rm --volume "$PWD:/usr/local/src" --env CARGO_TARGET_DIR=/tmp/target \
             --env RUSTDOCFLAGS="-C target-feature=-crt-static" utopia-extension-build sh -c '
             . "$HOME/.cargo/env" &&
             rustup component add clippy rustfmt &&
             cargo fmt --all --check &&
             cargo clippy --workspace --all-targets --all-features --locked -- -D warnings &&
-            cargo test --locked -p php-std -p utopia-image --all-features'
+            cargo test --locked --workspace --exclude utopia-extension --all-features'
 
-      - name: Build the image with the extension
-        run: >-
-          docker build --target development --tag appwrite-utopia
-          --build-arg UTOPIA_EXTENSION=true --build-arg TESTING=true .
+      - name: Build the image
+        run: docker build --target development --tag appwrite-utopia --build-arg TESTING=true .
 
-      - name: Test packages with the extension loaded
+      - name: Test the extension
         run: |
           docker run --rm --volume "$PWD/packages:/usr/src/code/packages" \
-            --volume "$PWD/crates:/usr/src/code/crates" appwrite-utopia sh -c '
-            php --ri utopia &&
-            php crates/extension/tests/image.php &&
-            vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/image/tests'
+            --volume "$PWD/crates:/usr/src/code/crates" appwrite-utopia crates/extension/tests/run.sh
 
   build:
     name: Build
@@ -604,6 +591,11 @@ jobs:
       - name: Run Package Tests
         timeout-minutes: 15
         run: docker compose exec appwrite test --testsuite packages
+
+      # In the image: booting Appwrite needs the utopia extension (Utopia\Locale\Locale).
+      - name: Generate specs
+        timeout-minutes: 10
+        run: docker compose exec -T -e _APP_STORAGE_LIMIT=5368709120 appwrite specs --version=latest --git=no
 
   e2e_general:
     name: Tests / E2E / General
@@ -782,6 +774,11 @@ jobs:
             COMPOSE_PROFILES="${COMPOSE_PROFILES},gitea"
           fi
 
+          # OpenLDAP runs alongside Appwrite only where the Project suite signs in against it.
+          if [ "$SERVICE" = "Project" ]; then
+            COMPOSE_PROFILES="${COMPOSE_PROFILES},openldap"
+          fi
+
           # The embedding container is resource-heavy and off by default, so start it and
           # enable the API only for the suites that exercise the embeddings routes.
           if [ "$EMBEDDING" = "true" ]; then
@@ -809,6 +806,18 @@ jobs:
           echo "::add-mask::$CLIENT_SECRET"
           echo "_APP_VCS_GITEA_CLIENT_ID=$(echo "$CREDS" | jq -r .client_id)" >> $GITHUB_ENV
           echo "_APP_VCS_GITEA_CLIENT_SECRET=$CLIENT_SECRET" >> $GITHUB_ENV
+
+      # The seeder is a one-shot container, so it runs here explicitly rather
+      # than through COMPOSE_PROFILES, where `up --wait` would treat its exit
+      # as a failure. The certificates come first so the directory serves them.
+      - name: Provision OpenLDAP
+        if: matrix.service.name == 'Project'
+        timeout-minutes: 5
+        run: |
+          ./dev/openldap/certs.sh
+          docker compose up -d --wait openldap
+          # --profile would replace COMPOSE_PROFILES and drop the lane's database service
+          COMPOSE_PROFILES="${COMPOSE_PROFILES:+$COMPOSE_PROFILES,}openldap-seed" docker compose run --rm openldap-seed
 
       - name: Load and Start Appwrite
         timeout-minutes: 5

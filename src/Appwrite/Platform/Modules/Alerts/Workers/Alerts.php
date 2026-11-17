@@ -9,6 +9,7 @@ use Appwrite\Alert\Events;
 use Appwrite\Alert\Meter;
 use Appwrite\Alert\Quantity;
 use Appwrite\Alert\Schedules;
+use Appwrite\Alert\Severity;
 use Appwrite\Alert\State;
 use Appwrite\Alert\Status;
 use Appwrite\Alert\Unsubscribe;
@@ -282,7 +283,7 @@ class Alerts extends Action
                 'region' => (string) $monitor->getAttribute('region', ''),
                 'status' => State::Firing->value,
                 'rules' => $monitor->getAttribute('rules', []),
-                'critical' => (bool) $monitor->getAttribute('critical', false),
+                'severity' => $monitor->getAttribute('severity') ?: Severity::Warning->value,
                 'type' => (string) $monitor->getAttribute('type'),
                 'resourceType' => (string) $monitor->getAttribute('resourceType'),
                 'resourceId' => (string) $monitor->getAttribute('resourceId'),
@@ -513,9 +514,12 @@ class Alerts extends Action
                     'title' => ($status === Status::Firing ? 'Firing: ' : 'Resolved: ') . (string) $monitor->getAttribute('name'),
                     'body' => \implode(' ', \array_filter([$email->summary(), $notice['location']])),
                     'tag' => 'alert:' . $alert->getId(),
-                    'critical' => (bool) $monitor->getAttribute('critical', false),
+                    // The severity the alert opened with, so editing the monitor later
+                    // does not change how this alert's pushes are delivered.
+                    'critical' => $alert->getAttribute('severity') === Severity::Critical->value,
                     'data' => [
                         'type' => 'alert',
+                        'severity' => $alert->getAttribute('severity') ?: Severity::Warning->value,
                         'status' => $status === Status::Firing ? State::Firing->value : State::Resolved->value,
                         'alertId' => $alert->getId(),
                         'monitorId' => $monitor->getId(),

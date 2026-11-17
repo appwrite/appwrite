@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\DNS\Tests\E2E\Validator;
 
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\DNS\Message\Record;
 use Utopia\DNS\Validator\DNS;
@@ -72,7 +73,10 @@ final class DNSTest extends TestCase
      *
      * Note: This test may be flaky due to DNS propagation delays.
      * Consider implementing a retry mechanism if tests fail intermittently.
+     *
+     * An apex without CAA records builds a Utopia\Domains\Domain, which only the utopia extension provides.
      */
+    #[RequiresPhpExtension('utopia')]
     public function testCAA(): void
     {
         $digitalOceanIp = '172.64.52.210'; // ping ns1.digitalocean.com

@@ -41,27 +41,23 @@
 //!
 //! | PHP (`Utopia\Image`) | Rust (`utopia_image`) |
 //! |---|---|
-//! | `Image` | [`Image`] |
-//! | `new Image($data)` | [`Image::new`] |
-//! | `Format` (`detect()`, `->value`) | [`Format`] ([`Format::detect`], [`Format::value`]) |
-//! | `Image::GRAVITY_*`, `getGravityTypes()` | [`Gravity`], [`Gravity::ALL`] |
-//! | `crop($width, $height, $gravity, $x, $y)` | [`Image::crop`] with [`FocalPoint`] |
-//! | `setBorder($width, $color)` | [`Image::set_border`] |
-//! | `setBorderRadius($radius)` | [`Image::set_border_radius`] |
-//! | `setOpacity($opacity)` | [`Image::set_opacity`] |
-//! | `setRotation($degree)` | [`Image::set_rotation`] |
-//! | `setBackground($color)` | [`Image::set_background`] |
-//! | `output($type, $quality)` | [`Image::output`] with [`OutputFormat`] |
-//! | `save($path, $type, $quality)` | [`Image::save`] |
-//! | `getSizeByFixedHeight()`, `getSizeByFixedWidth()` | [`Image::size_by_fixed_height`], [`Image::size_by_fixed_width`] |
-//! | `Image::setResourceLimit($type, $value)` | [`set_resource_limit`] with [`Resource`] |
+//! | `Canvas`: `new Canvas($data, $limits)`, `new Canvas(new Blank(...))` | [`Canvas`]: [`Canvas::decode`], [`Canvas::blank`] |
+//! | `$canvas->width`, `->height`, `->orientation`, `->format` | [`Canvas::width`], [`Canvas::height`], [`Canvas::orientation`], [`Canvas::format`] |
+//! | `apply(Transform)` | [`Canvas::apply`] with [`Transform`] |
+//! | `draw(Path\|Text)` | [`Canvas::draw`] with [`Drawing`] |
+//! | `encode(Format, ?int $quality)` | [`Canvas::encode`] with [`OutputFormat`] |
+//! | `Limits` | [`Limits`] |
+//! | `Gravity`, `Point` | [`Gravity`], [`FocalPoint`] |
+//! | `Font::has($character)` | [`has_glyph`] |
 //! | colour strings (`ImagickPixel`) | [`Color`] |
 //! | `Exception\ImageException` and its `UnsupportedFormatException`, `CorruptImageException` and `LimitExceededException`; `InvalidArgumentException`, `DivisionByZeroError` | [`Error`] |
 
 #![warn(missing_docs)]
 
+mod canvas;
 mod color;
 mod decode;
+mod draw;
 mod encode;
 mod error;
 mod format;
@@ -73,11 +69,13 @@ mod jpeg_source;
 mod options;
 mod transform;
 
+pub use crate::canvas::{Canvas, Drawing, Transform};
 pub use crate::color::Color;
+pub use crate::draw::has_glyph;
 pub use crate::error::{Error, Result};
 pub use crate::format::Format;
 pub use crate::image::Image;
-pub use crate::options::{FocalPoint, Gravity, MAX_DIMENSION, OutputFormat, Resource, set_resource_limit};
+pub use crate::options::{FocalPoint, Gravity, Limits, OutputFormat};
 
 /// The getting started guide (`guide.md`), compiled and run with the doctests.
 #[cfg(doctest)]

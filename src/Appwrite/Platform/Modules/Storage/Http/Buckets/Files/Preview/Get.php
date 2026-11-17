@@ -28,7 +28,14 @@ use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\UID;
-use Utopia\Image\Image;
+use Utopia\Image\Border;
+use Utopia\Image\Canvas;
+use Utopia\Image\Exception\ImageException;
+use Utopia\Image\Exception\LimitExceededException;
+use Utopia\Image\Format;
+use Utopia\Image\Gravity;
+use Utopia\Image\Point;
+use Utopia\Image\Transform;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Span\Span;
@@ -44,6 +51,7 @@ class Get extends Action
     use HTTP;
 
     private const GRAVITY_AUTO = 'auto';
+
 
     public static function getName()
     {
@@ -86,7 +94,7 @@ class Get extends Action
             ->param('fileId', '', new UID(), 'File ID')
             ->param('width', 0, new Range(0, 4000), 'Resize preview image width, Pass an integer between 0 to 4000.', true)
             ->param('height', 0, new Range(0, 4000), 'Resize preview image height, Pass an integer between 0 to 4000.', true)
-            ->param('gravity', Image::GRAVITY_CENTER, new WhiteList([self::GRAVITY_AUTO, ...Image::getGravityTypes()]), 'Image crop gravity. Can be one of ' . implode(",", [self::GRAVITY_AUTO, ...Image::getGravityTypes()]), true, enum: new Enum(name: 'ImageGravity'))
+            ->param('gravity', Gravity::Center->value, new WhiteList([self::GRAVITY_AUTO, ...\array_column(Gravity::cases(), 'value')]), 'Image crop gravity. Can be one of ' . implode(",", [self::GRAVITY_AUTO, ...\array_column(Gravity::cases(), 'value')]), true, enum: new Enum(name: 'ImageGravity'))
             ->param('quality', -1, new Range(-1, 100), 'Preview image quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.', true)
             ->param('borderWidth', 0, new Range(0, 100), 'Preview image border in pixels. Pass an integer between 0 to 100. Defaults to 0.', true)
             ->param('borderColor', '', new HexColor(), 'Preview image border color. Use a valid HEX color, no # is needed for prefix.', true)
@@ -138,10 +146,6 @@ class Get extends Action
         callable $cacheControlForStorage,
         AutogravityDetector $autogravity
     ) {
-
-        if (!\extension_loaded('imagick')) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
-        }
 
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -249,27 +253,22 @@ class Get extends Action
 
         $decompressionTime = \microtime(true) - $startTime - $downloadTime - $decryptionTime;
 
-        $maxWidth = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_WIDTH);
-        $maxHeight = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_HEIGHT);
-        $maxArea = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_AREA);
-        $dimensions = \getimagesizefromstring($source);
-        if ($dimensions !== false) {
-            [$sourceWidth, $sourceHeight] = $dimensions;
-            if (
-                ($maxWidth > 0 && $sourceWidth > $maxWidth) ||
-                ($maxHeight > 0 && $sourceHeight > $maxHeight) ||
-                ($maxArea > 0 && $sourceWidth * $sourceHeight > $maxArea)
-            ) {
-                throw new Exception(
-                    Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED,
-                    \sprintf('Image resolution %dx%d exceeds the maximum allowed %dx%d or %d total pixels', $sourceWidth, $sourceHeight, $maxWidth, $maxHeight, $maxArea)
-                );
-            }
-        }
+        $resolutionExceeded = function (LimitExceededException $e) use ($source): Exception {
+            [$sourceWidth, $sourceHeight] = \getimagesizefromstring($source) ?: [0, 0];
 
+            return new Exception(
+                Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED,
+                \sprintf('Image resolution %dx%d exceeds the maximum allowed for processing', $sourceWidth, $sourceHeight),
+                previous: $e
+            );
+        };
+
+        // Reads the header only; the pixels are decoded once, by encode() below.
         try {
-            $image = new Image($source);
-        } catch (\Exception $e) {
+            $image = new Canvas($source, Config::getParam('storage-image-limits'));
+        } catch (LimitExceededException $e) {
+            throw $resolutionExceeded($e);
+        } catch (ImageException $e) {
             throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $e->getMessage());
         }
 
@@ -280,60 +279,72 @@ class Get extends Action
             );
         }
 
-        $focalPoint = null;
+        $focus = null;
         if (
             $gravity === self::GRAVITY_AUTO
             && $width > 0
             && $height > 0
-            && isset($sourceWidth, $sourceHeight)
-            && \abs($width / $height - $sourceWidth / $sourceHeight) > 0.000001
+            && \abs($width / $height - $image->width / $image->height) > 0.000001
         ) {
-            $focalPoint = $autogravity
+            $detected = $autogravity
                 ->get($source)
-                ->unrotate($this->getAutogravityRotation($source));
-            $gravity = Image::GRAVITY_CENTER;
-        } elseif ($gravity === self::GRAVITY_AUTO) {
-            $gravity = Image::GRAVITY_CENTER;
+                ->unrotate(match ($image->orientation) {
+                    3 => 180,
+                    6 => 90,
+                    8 => -90,
+                    default => 0,
+                });
+            $focus = new Point($detected->x, $detected->y);
+        }
+        if ($gravity === self::GRAVITY_AUTO) {
+            $gravity = Gravity::Center->value;
         }
 
-        if ($width > 0 || $height > 0 || $gravity !== Image::GRAVITY_CENTER) {
+        if ($width > 0 || $height > 0 || $gravity !== Gravity::Center->value) {
             Span::add('storage.transform.crop.width', $width);
             Span::add('storage.transform.crop.height', $height);
             Span::add('storage.transform.crop.gravity', $gravity);
-            $image->crop($width, $height, $gravity, x: $focalPoint?->x, y: $focalPoint?->y);
         }
-
         if ($opacity !== 1.0) {
             Span::add('storage.transform.opacity', $opacity);
-            $image->setOpacity($opacity);
         }
-
         if (!empty($background)) {
             Span::add('storage.transform.background', $background);
-            $image->setBackground('#' . $background);
         }
-
         if ($borderWidth > 0) {
             Span::add('storage.transform.border.width', $borderWidth);
             Span::add('storage.transform.border.color', $borderColor);
-            $image->setBorder($borderWidth, '#' . $borderColor);
         }
-
         if ($borderRadius > 0) {
             Span::add('storage.transform.borderRadius', $borderRadius);
-            $image->setBorderRadius($borderRadius);
         }
-
         if ($rotation !== 0) {
             Span::add('storage.transform.rotation', $rotation);
-            $image->setRotation(($rotation + 360) % 360);
         }
-
         if ($quality !== -1) {
             Span::add('storage.transform.quality', $quality);
         }
 
-        $data = $image->output($output, $quality);
+        try {
+            $data = $image
+                ->apply(new Transform(
+                    width: $width,
+                    height: $height,
+                    gravity: Gravity::from($gravity),
+                    focus: $focus,
+                    opacity: $opacity,
+                    background: empty($background) ? null : '#' . $background,
+                    border: $borderWidth > 0 ? new Border($borderWidth, '#' . $borderColor) : null,
+                    radius: $borderRadius,
+                    rotation: ($rotation + 360) % 360,
+                ))
+                ->encode(Format::from($output === 'jpeg' ? 'jpg' : $output), $quality === -1 ? null : $quality);
+        } catch (LimitExceededException $e) {
+            throw $resolutionExceeded($e);
+        } catch (ImageException $e) {
+            // The pixel data is damaged, or this build has no encoder for the format (HEIC).
+            throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $e->getMessage());
+        }
 
         $renderingTime = \microtime(true) - $startTime - $downloadTime - $decryptionTime - $decompressionTime;
 
@@ -387,19 +398,5 @@ class Get extends Action
             ->file($data);
 
         unset($image);
-    }
-
-    private function getAutogravityRotation(string $source): int
-    {
-        $metadata = new \Imagick();
-        $metadata->pingImageBlob($source);
-        $orientation = $metadata->getImageProperties()['exif:Orientation'] ?? null;
-
-        return match ($orientation) {
-            '3' => 180,
-            '6' => 90,
-            '8' => -90,
-            default => 0,
-        };
     }
 }

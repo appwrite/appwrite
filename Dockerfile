@@ -1,7 +1,3 @@
-# true builds the utopia PHP extension (crates/extension) and loads it, so the
-# Utopia classes it registers run in Rust. See crates/extension/README.md.
-ARG UTOPIA_EXTENSION=false
-
 FROM composer:2 AS composer
 
 # Distrust the compromised eMudhra chains before downloading dependencies.
@@ -20,7 +16,58 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:2.2.11@sha256:d4a5d23eef42690bae5d6d00aa0555d22042f1dbfff1bdcc835fd6d144aa147a AS base
+FROM appwrite/base:2.3.0@sha256:e9519544a2315be040f150625d07c0bb24693a043130fc9e5f628411d4dfd5a7 AS ffmpeg
+
+# Same pin as utopia-php/video (docs/design.md, Dockerfile ARG FFMPEG_VERSION).
+# Alpine's apk ffmpeg is an older line and is not what the library CI tests against.
+# GnuTLS gives ffmpeg its https protocol: the videos worker reads S3 sources over
+# a presigned URL, and without a TLS library ffmpeg has no https at all.
+# Cloned from the GitHub mirror at the release tag, like every other pinned source
+# the utopia libraries build; ffmpeg.org drops connections from CI runners.
+ARG FFMPEG_VERSION=8.1.2
+
+RUN apk add --no-cache \
+        build-base nasm pkgconf git \
+        x264-dev x265-dev libvpx-dev opus-dev lame-dev zlib-dev \
+        libtheora-dev libvorbis-dev gnutls-dev \
+    && git clone --depth 1 --branch "n${FFMPEG_VERSION}" https://github.com/FFmpeg/FFmpeg.git /tmp/ffmpeg \
+    && cd /tmp/ffmpeg \
+    && ./configure \
+        --prefix=/opt/ffmpeg \
+        --enable-gpl \
+        --enable-libx264 \
+        --enable-libx265 \
+        --enable-libvpx \
+        --enable-libopus \
+        --enable-libmp3lame \
+        --enable-libtheora \
+        --enable-libvorbis \
+        --enable-gnutls \
+        --disable-debug \
+        --disable-doc \
+        --disable-ffplay \
+    && make -j"$(nproc)" \
+    && make install \
+    && rm -rf /tmp/ffmpeg
+
+# The utopia extension, built against the base image's own PHP headers and
+# libheif so the ABI matches. Alpine's Rust is older than the workspace needs.
+FROM appwrite/base:2.3.1@sha256:8476fd5f134f9953341152c45a7bf1bb5d08b0d039ce76018d062edd20457fd8 AS extension-build
+
+RUN apk add --no-cache rustup clang-dev libheif-dev build-base && \
+    rustup-init -y --profile minimal --default-toolchain 1.97.1
+
+WORKDIR /usr/local/src
+
+COPY Cargo.toml Cargo.lock rustfmt.toml ./
+COPY .cargo ./.cargo
+COPY crates ./crates
+
+RUN . "$HOME/.cargo/env" && \
+    cargo build --release --locked -p utopia-extension && \
+    strip target/release/libutopia.so
+
+FROM appwrite/base:2.3.1@sha256:8476fd5f134f9953341152c45a7bf1bb5d08b0d039ce76018d062edd20457fd8 AS base
 
 LABEL maintainer="team@appwrite.io"
 
@@ -34,6 +81,24 @@ ENV _APP_VERSION=$VERSION \
 RUN if [ "$DEBUG" == "true" ]; then \
     apk add boost boost-dev; \
     fi
+
+# Runtime libs for the source-built ffmpeg 8.1.2; mediainfo is unused by the
+# worker today (probe is ffprobe) but kept until that Dockerfile comment is retired.
+RUN apk add --no-cache \
+        mediainfo \
+        x264-libs \
+        x265-libs \
+        libvpx \
+        opus \
+        lame-libs \
+        libtheora \
+        libvorbis \
+        gnutls \
+        libstdc++ \
+    && rm -rf /var/cache/apk/*
+
+COPY --from=ffmpeg /opt/ffmpeg/bin/ffmpeg /usr/local/bin/ffmpeg
+COPY --from=ffmpeg /opt/ffmpeg/bin/ffprobe /usr/local/bin/ffprobe
 
 WORKDIR /usr/src/code
 
@@ -68,6 +133,8 @@ RUN mkdir -p /storage/uploads && \
     mkdir -p /storage/config && \
     mkdir -p /storage/certificates && \
     mkdir -p /storage/functions && \
+    mkdir -p /storage/videos && \
+    mkdir -p /storage/videos-tmp && \
     mkdir -p /storage/debug && \
     chown -Rf www-data:www-data /storage/uploads && chmod -Rf 0755 /storage/uploads && \
     chown -Rf www-data:www-data /storage/imports && chmod -Rf 0755 /storage/imports && \
@@ -75,6 +142,8 @@ RUN mkdir -p /storage/uploads && \
     chown -Rf www-data:www-data /storage/config && chmod -Rf 0755 /storage/config && \
     chown -Rf www-data:www-data /storage/certificates && chmod -Rf 0755 /storage/certificates && \
     chown -Rf www-data:www-data /storage/functions && chmod -Rf 0755 /storage/functions && \
+    chown -Rf www-data:www-data /storage/videos && chmod -Rf 0755 /storage/videos && \
+    chown -Rf www-data:www-data /storage/videos-tmp && chmod -Rf 0755 /storage/videos-tmp && \
     chown -Rf www-data:www-data /storage/debug && chmod -Rf 0755 /storage/debug
 
 # Executables
@@ -121,44 +190,18 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-notifications && \
     chmod +x /usr/local/bin/worker-migrations && \
+    chmod +x /usr/local/bin/worker-videos && \
     chmod +x /usr/local/bin/worker-stats-resources && \
     chmod +x /usr/local/bin/worker-stats-usage && \
     chmod +x /usr/local/bin/worker-webhooks
 
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 
-# The utopia extension, built against the base image's own PHP headers and
-# libheif so the ABI matches. Alpine's Rust is older than the workspace needs.
-FROM appwrite/base:2.2.11@sha256:d4a5d23eef42690bae5d6d00aa0555d22042f1dbfff1bdcc835fd6d144aa147a AS extension-build
-
-RUN apk add --no-cache rustup clang-dev libheif-dev build-base && \
-    rustup-init -y --profile minimal --default-toolchain 1.97.1
-
-WORKDIR /usr/local/src
-
-COPY Cargo.toml Cargo.lock rustfmt.toml ./
-COPY .cargo ./.cargo
-COPY crates ./crates
-
-RUN . "$HOME/.cargo/env" && \
-    cargo build --release --locked -p utopia-extension && \
-    strip target/release/libutopia.so
-
-# One of the two stages below becomes `runtime`; BuildKit builds only the one
-# UTOPIA_EXTENSION names, so the default build never compiles Rust.
-FROM base AS extension-false
-
-FROM base AS extension-true
-
+# Registers Utopia\Image\Canvas; see crates/extension/README.md.
 COPY --from=extension-build /usr/local/src/target/release/libutopia.so /usr/local/lib/php/utopia.so
-# libheif-x265 is libheif's HEVC encoder plugin: with it HEIC output works, for
-# the extension and for Imagick alike. x265 is GPL-2.0-or-later.
-RUN apk add --no-cache libheif-x265 && \
-    echo 'extension=/usr/local/lib/php/utopia.so' > /usr/local/etc/php/conf.d/utopia.ini
+RUN echo 'extension=/usr/local/lib/php/utopia.so' > /usr/local/etc/php/conf.d/utopia.ini
 
-FROM extension-${UTOPIA_EXTENSION} AS runtime
-
-FROM runtime AS production
+FROM base AS production
 
 RUN rm -rf /usr/src/code/app/config/specs && \
     find /usr -name '*.a' -delete 2>/dev/null || true && \
@@ -169,9 +212,9 @@ EXPOSE 80
 
 CMD [ "php", "app/http.php" ]
 
-FROM appwrite/base:2.2.11-xdebug@sha256:aea31a119dae19d5d3ac41765e8bc5e9d1298c8bc495a89b2f41592f886665bb AS xdebug
+FROM appwrite/base:2.3.1-xdebug@sha256:002619e443c3a259ffa64817c1c85683d2a795acc2263e54c75d8a9a60641bca AS xdebug
 
-FROM runtime AS development
+FROM base AS development
 
 # Revalidate bind-mounted source files when development workers reload.
 RUN printf 'opcache.validate_timestamps=1\nopcache.revalidate_freq=0\n' > /usr/local/etc/php/conf.d/zzz-opcache-dev.ini
@@ -179,7 +222,7 @@ RUN printf 'opcache.validate_timestamps=1\nopcache.revalidate_freq=0\n' > /usr/l
 COPY ./docs /usr/src/code/docs
 COPY ./dev /usr/src/code/dev
 
-# appwrite/base:2.2.11 ships without XDebug, so it cannot reach production or
+# appwrite/base:2.3.1 ships without XDebug, so it cannot reach production or
 # Cloud. The -xdebug tag is the same build with the extension; mounting it
 # rather than copying keeps xdebug.so out of every layer unless DEBUG asked
 # for it, and guarantees an ABI match because both tags are one base build.

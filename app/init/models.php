@@ -164,6 +164,7 @@ use Appwrite\Utopia\Response\Model\OAuth2Twitch;
 use Appwrite\Utopia\Response\Model\OAuth2Vipps;
 use Appwrite\Utopia\Response\Model\OAuth2Webflow;
 use Appwrite\Utopia\Response\Model\OAuth2WordPress;
+use Appwrite\Utopia\Response\Model\OAuth2WorkOS;
 use Appwrite\Utopia\Response\Model\OAuth2X;
 use Appwrite\Utopia\Response\Model\OAuth2Yahoo;
 use Appwrite\Utopia\Response\Model\OAuth2Yandex;
@@ -216,6 +217,7 @@ use Appwrite\Utopia\Response\Model\ResourceToken;
 use Appwrite\Utopia\Response\Model\Review;
 use Appwrite\Utopia\Response\Model\ReviewEvent;
 use Appwrite\Utopia\Response\Model\ReviewFinding;
+use Appwrite\Utopia\Response\Model\ReviewLearning;
 use Appwrite\Utopia\Response\Model\ReviewRepository;
 use Appwrite\Utopia\Response\Model\Row;
 use Appwrite\Utopia\Response\Model\Rule;
@@ -252,6 +254,11 @@ use Appwrite\Utopia\Response\Model\Variable;
 use Appwrite\Utopia\Response\Model\VcsContent;
 use Appwrite\Utopia\Response\Model\VcsNamespace;
 use Appwrite\Utopia\Response\Model\VectorsDBCollection;
+use Appwrite\Utopia\Response\Model\Video;
+use Appwrite\Utopia\Response\Model\VideoCaption;
+use Appwrite\Utopia\Response\Model\VideoCodec;
+use Appwrite\Utopia\Response\Model\VideoProfile;
+use Appwrite\Utopia\Response\Model\VideoRendition;
 use Appwrite\Utopia\Response\Model\Webhook;
 
 // General
@@ -277,6 +284,11 @@ Response::setModel(new BaseList('Logs List', Response::MODEL_LOG_LIST, 'logs', R
 Response::setModel(new BaseList('Files List', Response::MODEL_FILE_LIST, 'files', Response::MODEL_FILE));
 Response::setModel(new BaseList('Buckets List', Response::MODEL_BUCKET_LIST, 'buckets', Response::MODEL_BUCKET));
 Response::setModel(new BaseList('Resource Tokens List', Response::MODEL_RESOURCE_TOKEN_LIST, 'tokens', Response::MODEL_RESOURCE_TOKEN));
+Response::setModel(new BaseList('Videos List', Response::MODEL_VIDEO_LIST, 'videos', Response::MODEL_VIDEO));
+Response::setModel(new BaseList('Video Codecs List', Response::MODEL_VIDEO_CODEC_LIST, 'codecs', Response::MODEL_VIDEO_CODEC));
+Response::setModel(new BaseList('Video Profiles List', Response::MODEL_VIDEO_PROFILE_LIST, 'profiles', Response::MODEL_VIDEO_PROFILE));
+Response::setModel(new BaseList('Video Renditions List', Response::MODEL_VIDEO_RENDITION_LIST, 'renditions', Response::MODEL_VIDEO_RENDITION));
+Response::setModel(new BaseList('Video Captions List', Response::MODEL_VIDEO_CAPTION_LIST, 'captions', Response::MODEL_VIDEO_CAPTION));
 Response::setModel(new BaseList('Teams List', Response::MODEL_TEAM_LIST, 'teams', Response::MODEL_TEAM));
 Response::setModel(new BaseList('Memberships List', Response::MODEL_MEMBERSHIP_LIST, 'memberships', Response::MODEL_MEMBERSHIP));
 Response::setModel(new BaseList('Sites List', Response::MODEL_SITE_LIST, 'sites', Response::MODEL_SITE));
@@ -332,6 +344,7 @@ Response::setModel(new BaseList('Reports List', Response::MODEL_REPORT_LIST, 're
 Response::setModel(new BaseList('Reviews List', Response::MODEL_REVIEW_LIST, 'reviews', Response::MODEL_REVIEW));
 Response::setModel(new BaseList('Review Events List', Response::MODEL_REVIEW_EVENT_LIST, 'events', Response::MODEL_REVIEW_EVENT));
 Response::setModel(new BaseList('Review Repositories List', Response::MODEL_REVIEW_REPOSITORY_LIST, 'repositories', Response::MODEL_REVIEW_REPOSITORY));
+Response::setModel(new BaseList('Review Learnings List', Response::MODEL_REVIEW_LEARNING_LIST, 'learnings', Response::MODEL_REVIEW_LEARNING));
 
 // Entities
 Response::setModel(new Database());
@@ -474,6 +487,7 @@ Response::setModel(new OAuth2Salesforce());
 Response::setModel(new OAuth2Yahoo());
 Response::setModel(new OAuth2Cloudflare());
 Response::setModel(new OAuth2HuggingFace());
+Response::setModel(new OAuth2WorkOS());
 Response::setModel(new OAuth2Linkedin());
 Response::setModel(new OAuth2Disqus());
 Response::setModel(new OAuth2Amazon());
@@ -582,7 +596,15 @@ Response::setModel(new Report());
 Response::setModel(new Review());
 Response::setModel(new ReviewEvent());
 Response::setModel(new ReviewFinding());
+Response::setModel(new ReviewLearning());
 Response::setModel(new ReviewRepository());
+
+// Videos
+Response::setModel(new Video());
+Response::setModel(new VideoCodec());
+Response::setModel(new VideoProfile());
+Response::setModel(new VideoRendition());
+Response::setModel(new VideoCaption());
 
 // Tests (keep last)
 Response::setModel(new Mock());

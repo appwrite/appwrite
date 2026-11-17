@@ -3,6 +3,48 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-account-switching",
+    "href": "/blog/post/announcing-account-switching",
+    "title": "Announcing account switching: one browser, many accounts",
+    "description": "Appwrite Auth now supports account switching, so users can stay signed in to several accounts in one browser or app and switch between them in one call.",
+    "date": "2026-11-17",
+    "lastUpdated": "2026-11-17",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-account-switching/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-encryption-for-every-file-size",
+    "href": "/blog/post/announcing-encryption-for-every-file-size",
+    "title": "Announcing encryption for every file size",
+    "description": "Encrypted buckets in Appwrite Storage now encrypt every file, whatever its size, before Appwrite stores it. The 20 MB limit is gone.",
+    "date": "2026-11-17",
+    "lastUpdated": "2026-11-17",
+    "timeToRead": 4,
+    "author": "chirag-aggarwal",
+    "category": "announcements, security",
+    "featured": false,
+    "cover": "/images/blog/announcing-encryption-for-every-file-size/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-force-password-reset",
+    "href": "/blog/post/announcing-force-password-reset",
+    "title": "Announcing force password reset for all your users",
+    "description": "Appwrite Auth can now force every user in a project to reset their password with one click or one API call, so you can respond to a password leak in seconds.",
+    "date": "2026-11-17",
+    "lastUpdated": "2026-11-17",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "announcements, security",
+    "featured": false,
+    "cover": "/images/blog/announcing-force-password-reset/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "customer-story-dentalrx",
     "href": "/blog/post/customer-story-dentalrx",
     "title": "How DentalRx replaced Firebase and Algolia with Appwrite for 6,000+ users",
@@ -59,6 +101,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "announcing-vipps-mobilepay-login",
+    "href": "/blog/post/announcing-vipps-mobilepay-login",
+    "title": "Announcing Vipps MobilePay login for Appwrite Auth",
+    "description": "Appwrite Auth now supports Vipps MobilePay as an OAuth2 provider, so users in Norway, Denmark, Finland, and Sweden can sign in with the app they pay with.",
+    "date": "2026-11-11",
+    "lastUpdated": "2026-11-11",
+    "timeToRead": 6,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-vipps-mobilepay-login/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-monorepo-support-for-sites",
     "href": "/blog/post/announcing-monorepo-support-for-sites",
     "title": "Announcing monorepo support in Appwrite Sites",
@@ -92,7 +148,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "title": "Add push notifications to your Android app without Firebase",
     "description": "Send push notifications to a Kotlin app with Appwrite Push. Notify customers when an order ships, deliver while the app is closed, and open the order on tap.",
     "date": "2026-11-06",
-    "lastUpdated": "2026-11-06",
+    "lastUpdated": "2026-11-16",
     "timeToRead": 9,
     "author": "atharva",
     "category": "tutorials",
@@ -118,7 +174,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "title": "Add push notifications to your React Native app without Firebase",
     "description": "Send push notifications to an Expo app with Appwrite Push. Notify customers when an order ships, deliver on Android while the app is closed, and open the order on tap.",
     "date": "2026-11-06",
-    "lastUpdated": "2026-11-06",
+    "lastUpdated": "2026-11-16",
     "timeToRead": 9,
     "author": "atharva",
     "category": "tutorials",

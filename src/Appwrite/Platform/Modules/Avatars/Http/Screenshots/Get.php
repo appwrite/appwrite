@@ -17,7 +17,9 @@ use Appwrite\Utopia\Response;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Config\Config;
-use Utopia\Image\Image;
+use Utopia\Image\Canvas;
+use Utopia\Image\Format;
+use Utopia\Image\Transform;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
@@ -84,7 +86,7 @@ class Get extends Action
                         model: Response::MODEL_NONE,
                     )
                 ],
-                contentType: ContentType::IMAGE_PNG
+                contentType: ContentType::IMAGE
             ))
             ->param('url', '', fn (PublicURL $publicURL) => $publicURL, 'Website URL which you want to capture.', false, ['publicURL'], example: 'https://example.com')
             ->param('headers', [], new Assoc(), 'HTTP headers to send with the browser request. Only Accept and Accept-Language are allowed. Defaults to empty.', true, example: '{"Accept-Language":"en-US,en;q=0.9"}')
@@ -114,10 +116,6 @@ class Get extends Action
 
     public function action(string $url, array $headers, int $viewportWidth, int $viewportHeight, float $scale, string $theme, string $userAgent, bool $fullpage, string $locale, string $timezone, float $latitude, float $longitude, float $accuracy, bool $touch, array $permissions, int $sleep, int $width, int $height, int $quality, string $output, Request $request, Response $response, Context $usage)
     {
-        if (!\extension_loaded('imagick')) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
-        }
-
         foreach ($headers as $key => $value) {
             if (!\in_array(\strtolower((string) $key), self::ALLOWED_HEADERS, true)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Header '{$key}' is not allowed. Allowed headers: Accept, Accept-Language.");
@@ -222,13 +220,10 @@ class Get extends Action
 
             if ($needsProcessing) {
                 // Process image with cropping, quality adjustment, or format conversion
-                $image = new Image($screenshot);
-
-                $image->crop($width, $height);
-
                 $output = $output ?: 'png'; // Default to PNG if not specified
-                $resizedScreenshot = $image->output($output, $quality);
-                unset($image);
+                $resizedScreenshot = (new Canvas($screenshot, Config::getParam('storage-image-limits')))
+                    ->apply(new Transform(width: $width, height: $height))
+                    ->encode(Format::from($output === 'jpeg' ? 'jpg' : $output), $quality === -1 ? null : $quality);
             } else {
                 // Return original screenshot without processing
                 $resizedScreenshot = $screenshot;
