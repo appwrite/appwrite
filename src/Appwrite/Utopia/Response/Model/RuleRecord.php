@@ -40,6 +40,12 @@ class RuleRecord extends Model
                 'description' => 'Check status. Possible values are "verified" when the expected value was found, "missing" when no record of the type exists yet, "mismatch" when records exist but none has the expected value, or "failed" when the lookup itself failed.',
                 'default' => '',
                 'example' => 'verified',
+            ])
+            ->addRule('message', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Why the check did not pass. Empty when verified.',
+                'default' => '',
+                'example' => '',
             ]);
     }
 
