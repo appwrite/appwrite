@@ -9,6 +9,7 @@ use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OAuth2;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
+use Appwrite\Bus\Events\EmailVerified;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -32,6 +33,7 @@ use Utopia\Auth\Store;
 use Utopia\Client\Client;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -102,6 +104,7 @@ class Get extends Base
             ->inject('queueForRealtime')
             ->inject('authDevice')
             ->inject('publisherForDeletes')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -134,6 +137,7 @@ class Get extends Base
         Realtime $queueForRealtime,
         ?Document $authDevice,
         DeletePublisher $publisherForDeletes,
+        Bus $bus,
     ): void {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
@@ -770,7 +774,15 @@ class Get extends Base
 
         $user->setAttribute('status', true);
 
+        // The stored row tells whether this sign-in verified the email: only the changed
+        // fields are saved, and a user created by this sign-in was stored verified already
+        $wasVerified = $newUser === null && $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId()))->getAttribute('emailVerification', false);
+
         $dbForProject->updateDocument('users', $user->getId(), new Document($changes));
+
+        if (!$wasVerified && $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId()))->getAttribute('emailVerification', false)) {
+            $bus->dispatch(new EmailVerified(user: $user->getArrayCopy(), project: $project->getArrayCopy()));
+        }
 
         $authorization->addRole(Role::user($user->getId())->toString());
 

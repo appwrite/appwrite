@@ -7,6 +7,7 @@ use Appwrite\Auth\AuthDevice;
 use Appwrite\Auth\LDAP\Client;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\Validator\Phone;
+use Appwrite\Bus\Events\EmailVerified;
 use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
@@ -173,6 +174,9 @@ class Create extends Base
         // it returns is trusted the way a provider's attested email is for OAuth2.
         [$newUser, $newTarget] = $this->resolveUser($user, SESSION_PROVIDER_LDAP, $entry['id'], $entry['email'], true, $entry['name'], $dbForProject, $project, $plan, $proofForPassword, $authorization, $mqtt, $queueForRealtime);
 
+        // The stored row tells whether this sign-in verified the email; a user created by it was stored verified already
+        $wasVerified = $newUser === null && $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId()))->getAttribute('emailVerification', false);
+
         $authorization->addRole(Role::user($user->getId())->toString());
         $authorization->addRole(Role::users()->toString());
 
@@ -270,6 +274,10 @@ class Create extends Base
             ->setParam('sessionId', $session->getId())
             ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken'])
         ;
+
+        if (!$wasVerified && $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId()))->getAttribute('emailVerification', false)) {
+            $bus->dispatch(new EmailVerified(user: $user->getArrayCopy(), project: $project->getArrayCopy()));
+        }
 
         $bus->dispatch(new SessionCreated(
             user: $user->getArrayCopy(),

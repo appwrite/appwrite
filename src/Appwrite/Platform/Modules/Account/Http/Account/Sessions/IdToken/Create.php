@@ -7,6 +7,7 @@ use Appwrite\Auth\AuthDevice;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OIDC\IdTokenVerifier;
 use Appwrite\Auth\OIDC\Jwks;
+use Appwrite\Bus\Events\EmailVerified;
 use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
@@ -299,7 +300,15 @@ class Create extends Base
 
         $user->setAttribute('status', true);
 
+        // The stored row tells whether this sign-in verified the email: only the changed
+        // fields are saved, and a user created by this sign-in was stored verified already
+        $wasVerified = $newUser === null && $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId()))->getAttribute('emailVerification', false);
+
         $dbForProject->updateDocument('users', $user->getId(), new Document($changes));
+
+        if (!$wasVerified && $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId()))->getAttribute('emailVerification', false)) {
+            $bus->dispatch(new EmailVerified(user: $user->getArrayCopy(), project: $project->getArrayCopy()));
+        }
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
