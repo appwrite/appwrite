@@ -372,6 +372,8 @@ $platformCollections = [
             Attribute::string(key: 'owner', size: 16, default: ''),
             Attribute::string(key: 'region', size: 16, required: true),
             Attribute::string(key: 'logs', size: 1000000, default: ''),
+            // Latest DNS record checks from verification
+            Attribute::string(key: 'records', size: 65535, default: [], filters: [Filter::Json]),
         ],
         'indexes' => [
             Index::fulltext(key: '_key_search', attributes: ['search']),
