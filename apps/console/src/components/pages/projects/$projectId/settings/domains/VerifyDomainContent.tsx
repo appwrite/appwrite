@@ -412,6 +412,7 @@ function getDnsBanners(
   t: (text: string) => string,
   rule: Models.ProxyRule,
   pointing: ProxyRuleRecord[],
+  caa: ProxyRuleRecord | undefined,
 ): DnsBanner[] {
   const verified = pointing.find((check) => check.status === 'verified')
   if (!verified) {
@@ -430,6 +431,17 @@ function getDnsBanners(
               'Add the records below at your DNS provider. Appwrite checks again automatically for 3 days.',
             ),
           },
+    ]
+  }
+  if (caa?.required && caa.status !== 'verified') {
+    return [
+      {
+        tone: 'info',
+        prefix: t('CAA record'),
+        text: t(
+          'Your {type} record is set. Add the CAA record below to finish.',
+        ).replace('{type}', verified.type),
+      },
     ]
   }
   return [
@@ -857,7 +869,7 @@ export function VerifyDomainContent({
     ),
   ]
   const offersNameservers = tabOptions.some((tab) => tab.id === 'nameservers')
-  const banners = checks ? getDnsBanners(t, rule, pointingChecks) : []
+  const banners = checks ? getDnsBanners(t, rule, pointingChecks, caaCheck) : []
 
   const checkedRecords = checks ? (
     <div className="space-y-6">
