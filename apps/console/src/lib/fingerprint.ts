@@ -55,6 +55,7 @@ export function resetFingerprintCache(): void {
   state.cache = null
   state.inflight.clear()
   cache = null
+  cachePromise = null
 }
 
 function getServerTimestamp(): number {
@@ -303,14 +304,16 @@ async function getCachedSignals(): Promise<StaticSignals> {
     return cachePromise
   }
 
-  cachePromise = collectStaticSignals()
+  const pending = collectStaticSignals()
+  cachePromise = pending
 
   try {
-    const signals = await cachePromise
-    cache = { signals, collectedAt: now }
+    const signals = await pending
+    // A reset during collection wins; don't cache what was collected before it.
+    if (cachePromise === pending) cache = { signals, collectedAt: now }
     return signals
   } finally {
-    cachePromise = null
+    if (cachePromise === pending) cachePromise = null
   }
 }
 

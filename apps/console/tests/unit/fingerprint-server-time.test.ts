@@ -1,4 +1,12 @@
-import { afterEach, beforeAll, describe, expect, spyOn, test } from 'bun:test'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  spyOn,
+  test,
+} from 'bun:test'
 import {
   ensureFingerprintServerTimeSynced,
   generateFingerprintToken,
@@ -8,8 +16,17 @@ import {
 const SERVER_SECS = 1_800_000_000
 const ENDPOINT = 'https://cloud.example.com/v1'
 
+const STUBBED_GLOBALS = ['window', 'document', 'screen', 'fetch'] as const
+
 let serverSecs = SERVER_SECS
 let fetchCalls = 0
+// Later test files branch on these globals, so put the originals back.
+const originalGlobals = new Map(
+  STUBBED_GLOBALS.map((key) => [
+    key,
+    Object.getOwnPropertyDescriptor(globalThis, key),
+  ]),
+)
 
 beforeAll(() => {
   Object.assign(globalThis, {
@@ -23,6 +40,13 @@ beforeAll(() => {
       headers: { Date: new Date(serverSecs * 1000).toUTCString() },
     })
   }) as unknown as typeof fetch
+})
+
+afterAll(() => {
+  for (const [key, descriptor] of originalGlobals) {
+    if (descriptor) Object.defineProperty(globalThis, key, descriptor)
+    else delete (globalThis as Record<string, unknown>)[key]
+  }
 })
 
 afterEach(() => {
@@ -63,6 +87,16 @@ describe('fingerprint server time', () => {
     expect(fetchCalls).toBe(3)
     expect(await tokenTimestamp()).toBe(serverSecs)
     now.mockRestore()
+  })
+
+  test('a reset during signal collection is not undone by it', async () => {
+    const first = generateFingerprintToken()
+    resetFingerprintCache()
+    await first
+    const createElement = spyOn(document, 'createElement')
+    await generateFingerprintToken()
+    expect(createElement).toHaveBeenCalled()
+    createElement.mockRestore()
   })
 
   test('shares one request between concurrent syncs', async () => {
