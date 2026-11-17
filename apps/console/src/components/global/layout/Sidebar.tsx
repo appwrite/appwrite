@@ -46,6 +46,7 @@ import {
   Users,
   Folder,
   Zap,
+  SquareTerminal,
   MessageSquare,
   Settings,
   BarChart3,
@@ -116,6 +117,7 @@ interface SidebarCopy {
     functions: string
     messaging: string
     videos: string
+    sandboxes: string
     reviews: string
     sites: string
     distribution: string
@@ -205,6 +207,12 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
           label: sidebarCopy.items.functions,
           icon: Zap,
           path: `/projects/${projectId}/functions`,
+        },
+        {
+          id: 'sandboxes',
+          label: sidebarCopy.items.sandboxes,
+          icon: SquareTerminal,
+          path: `/projects/${projectId}/sandboxes`,
         },
         {
           id: 'messaging',
@@ -362,6 +370,11 @@ export function ConsoleSidebar({
             return (
               features.videos && canSeeProjectNavItem(access, features, item.id)
             )
+          if (item.id === 'sandboxes')
+            return (
+              features.sandboxes &&
+              canSeeProjectNavItem(access, features, item.id)
+            )
           if (item.id === 'reviews')
             return (
               features.reviews &&
@@ -493,7 +506,10 @@ export function ConsoleSidebar({
         <span
           key={item.id}
           className={cn(
-            secondarySidebarNavLinkClassName(false, 'cursor-not-allowed text-muted-foreground/50'),
+            secondarySidebarNavLinkClassName(
+              false,
+              'cursor-not-allowed text-muted-foreground/50',
+            ),
             collapsed && !isMobile
               ? SECONDARY_SIDEBAR_NAV_LINK_COLLAPSED_CLASS
               : SECONDARY_SIDEBAR_NAV_LINK_GRID_TRAILING_CLASS,
@@ -541,7 +557,10 @@ export function ConsoleSidebar({
         {...(navAnalytics ? analyticsAttrs(navAnalytics) : {})}
         onClick={() => handleNavClick(item, isMobile)}
         className={cn(
-          secondarySidebarNavLinkClassName(isActive, 'transition-colors duration-150'),
+          secondarySidebarNavLinkClassName(
+            isActive,
+            'transition-colors duration-150',
+          ),
           collapsed && !isMobile
             ? SECONDARY_SIDEBAR_NAV_LINK_COLLAPSED_CLASS
             : SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
@@ -591,7 +610,10 @@ export function ConsoleSidebar({
     <div key={category.label} className="space-y-0.5">
       {(!collapsed || isMobile) && (
         <p
-          className={cn(SECONDARY_SIDEBAR_GROUP_HEADING_CLASS, isMobile && 'px-3')}
+          className={cn(
+            SECONDARY_SIDEBAR_GROUP_HEADING_CLASS,
+            isMobile && 'px-3',
+          )}
         >
           {category.label}
         </p>
@@ -633,7 +655,8 @@ export function ConsoleSidebar({
             ref={navRef}
             className={cn(
               'overlay-scrollbar min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-3 py-4',
-              showHalloweenScene && 'relative z-10 flex flex-col [&>*]:shrink-0',
+              showHalloweenScene &&
+                'relative z-10 flex flex-col [&>*]:shrink-0',
             )}
             onKeyDown={handleKeyDown}
             role="navigation"
@@ -645,7 +668,10 @@ export function ConsoleSidebar({
             )}
 
             {features.projectEnvironments && (
-              <EnvironmentSwitcher projectId={projectId} collapsed={collapsed} />
+              <EnvironmentSwitcher
+                projectId={projectId}
+                collapsed={collapsed}
+              />
             )}
 
             {/* Overview */}

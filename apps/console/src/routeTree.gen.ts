@@ -212,6 +212,7 @@ import { Route as PublicProjectsProjectIdOverviewRouteImport } from './routes/_p
 import { Route as PublicProjectsProjectIdPlaygroundRouteImport } from './routes/_public/projects.$projectId.playground'
 import { Route as PublicProjectsProjectIdRealtimeRouteImport } from './routes/_public/projects.$projectId.realtime'
 import { Route as PublicProjectsProjectIdReviewsRouteImport } from './routes/_public/projects.$projectId.reviews'
+import { Route as PublicProjectsProjectIdSandboxesRouteImport } from './routes/_public/projects.$projectId.sandboxes'
 import { Route as PublicProjectsProjectIdSettingsRouteImport } from './routes/_public/projects.$projectId.settings'
 import { Route as PublicProjectsProjectIdStorageRouteImport } from './routes/_public/projects.$projectId.storage'
 import { Route as PublicProjectsProjectIdStoresRouteImport } from './routes/_public/projects.$projectId.stores'
@@ -267,6 +268,8 @@ import { Route as PublicProjectsProjectIdReviewsIndexRouteImport } from './route
 import { Route as PublicProjectsProjectIdReviewsReviewIdRouteImport } from './routes/_public/projects.$projectId.reviews.$reviewId'
 import { Route as PublicProjectsProjectIdReviewsLearningsRouteImport } from './routes/_public/projects.$projectId.reviews.learnings'
 import { Route as PublicProjectsProjectIdReviewsRepositoriesRouteImport } from './routes/_public/projects.$projectId.reviews.repositories'
+import { Route as PublicProjectsProjectIdSandboxesIndexRouteImport } from './routes/_public/projects.$projectId.sandboxes.index'
+import { Route as PublicProjectsProjectIdSandboxesSandboxIdRouteImport } from './routes/_public/projects.$projectId.sandboxes.$sandboxId'
 import { Route as PublicProjectsProjectIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.settings.index'
 import { Route as PublicProjectsProjectIdSettingsDomainsRouteImport } from './routes/_public/projects.$projectId.settings.domains'
 import { Route as PublicProjectsProjectIdSettingsFirewallRouteImport } from './routes/_public/projects.$projectId.settings.firewall'
@@ -1595,6 +1598,12 @@ const PublicProjectsProjectIdReviewsRoute =
     path: '/reviews',
     getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
+const PublicProjectsProjectIdSandboxesRoute =
+  PublicProjectsProjectIdSandboxesRouteImport.update({
+    id: '/sandboxes',
+    path: '/sandboxes',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
 const PublicProjectsProjectIdSettingsRoute =
   PublicProjectsProjectIdSettingsRouteImport.update({
     id: '/settings',
@@ -1924,6 +1933,18 @@ const PublicProjectsProjectIdReviewsRepositoriesRoute =
     id: '/repositories',
     path: '/repositories',
     getParentRoute: () => PublicProjectsProjectIdReviewsRoute,
+  } as any)
+const PublicProjectsProjectIdSandboxesIndexRoute =
+  PublicProjectsProjectIdSandboxesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdSandboxesRoute,
+  } as any)
+const PublicProjectsProjectIdSandboxesSandboxIdRoute =
+  PublicProjectsProjectIdSandboxesSandboxIdRouteImport.update({
+    id: '/$sandboxId',
+    path: '/$sandboxId',
+    getParentRoute: () => PublicProjectsProjectIdSandboxesRoute,
   } as any)
 const PublicProjectsProjectIdSettingsIndexRoute =
   PublicProjectsProjectIdSettingsIndexRouteImport.update({
@@ -3799,6 +3820,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/playground': typeof PublicProjectsProjectIdPlaygroundRoute
   '/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   '/projects/$projectId/reviews': typeof PublicProjectsProjectIdReviewsRouteWithChildren
+  '/projects/$projectId/sandboxes': typeof PublicProjectsProjectIdSandboxesRouteWithChildren
   '/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsRouteWithChildren
   '/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageRouteWithChildren
   '/projects/$projectId/stores': typeof PublicProjectsProjectIdStoresRouteWithChildren
@@ -3847,6 +3869,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/reviews/$reviewId': typeof PublicProjectsProjectIdReviewsReviewIdRoute
   '/projects/$projectId/reviews/learnings': typeof PublicProjectsProjectIdReviewsLearningsRoute
   '/projects/$projectId/reviews/repositories': typeof PublicProjectsProjectIdReviewsRepositoriesRoute
+  '/projects/$projectId/sandboxes/$sandboxId': typeof PublicProjectsProjectIdSandboxesSandboxIdRoute
   '/projects/$projectId/settings/domains': typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   '/projects/$projectId/settings/firewall': typeof PublicProjectsProjectIdSettingsFirewallRoute
   '/projects/$projectId/settings/identity-servers': typeof PublicProjectsProjectIdSettingsIdentityServersRouteWithChildren
@@ -3875,6 +3898,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/messaging/': typeof PublicProjectsProjectIdMessagingIndexRoute
   '/projects/$projectId/realtime/': typeof PublicProjectsProjectIdRealtimeIndexRoute
   '/projects/$projectId/reviews/': typeof PublicProjectsProjectIdReviewsIndexRoute
+  '/projects/$projectId/sandboxes/': typeof PublicProjectsProjectIdSandboxesIndexRoute
   '/projects/$projectId/settings/': typeof PublicProjectsProjectIdSettingsIndexRoute
   '/projects/$projectId/sites/': typeof PublicProjectsProjectIdSitesIndexRoute
   '/projects/$projectId/storage/': typeof PublicProjectsProjectIdStorageIndexRoute
@@ -4312,6 +4336,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/reviews/$reviewId': typeof PublicProjectsProjectIdReviewsReviewIdRoute
   '/projects/$projectId/reviews/learnings': typeof PublicProjectsProjectIdReviewsLearningsRoute
   '/projects/$projectId/reviews/repositories': typeof PublicProjectsProjectIdReviewsRepositoriesRoute
+  '/projects/$projectId/sandboxes/$sandboxId': typeof PublicProjectsProjectIdSandboxesSandboxIdRoute
   '/projects/$projectId/settings/firewall': typeof PublicProjectsProjectIdSettingsFirewallRoute
   '/projects/$projectId/settings/identity-servers': typeof PublicProjectsProjectIdSettingsIdentityServersRouteWithChildren
   '/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
@@ -4334,6 +4359,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingIndexRoute
   '/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeIndexRoute
   '/projects/$projectId/reviews': typeof PublicProjectsProjectIdReviewsIndexRoute
+  '/projects/$projectId/sandboxes': typeof PublicProjectsProjectIdSandboxesIndexRoute
   '/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsIndexRoute
   '/projects/$projectId/sites': typeof PublicProjectsProjectIdSitesIndexRoute
   '/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageIndexRoute
@@ -4743,6 +4769,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/playground': typeof PublicProjectsProjectIdPlaygroundRoute
   '/_public/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   '/_public/projects/$projectId/reviews': typeof PublicProjectsProjectIdReviewsRouteWithChildren
+  '/_public/projects/$projectId/sandboxes': typeof PublicProjectsProjectIdSandboxesRouteWithChildren
   '/_public/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsRouteWithChildren
   '/_public/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageRouteWithChildren
   '/_public/projects/$projectId/stores': typeof PublicProjectsProjectIdStoresRouteWithChildren
@@ -4791,6 +4818,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/reviews/$reviewId': typeof PublicProjectsProjectIdReviewsReviewIdRoute
   '/_public/projects/$projectId/reviews/learnings': typeof PublicProjectsProjectIdReviewsLearningsRoute
   '/_public/projects/$projectId/reviews/repositories': typeof PublicProjectsProjectIdReviewsRepositoriesRoute
+  '/_public/projects/$projectId/sandboxes/$sandboxId': typeof PublicProjectsProjectIdSandboxesSandboxIdRoute
   '/_public/projects/$projectId/settings/domains': typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   '/_public/projects/$projectId/settings/firewall': typeof PublicProjectsProjectIdSettingsFirewallRoute
   '/_public/projects/$projectId/settings/identity-servers': typeof PublicProjectsProjectIdSettingsIdentityServersRouteWithChildren
@@ -4819,6 +4847,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/messaging/': typeof PublicProjectsProjectIdMessagingIndexRoute
   '/_public/projects/$projectId/realtime/': typeof PublicProjectsProjectIdRealtimeIndexRoute
   '/_public/projects/$projectId/reviews/': typeof PublicProjectsProjectIdReviewsIndexRoute
+  '/_public/projects/$projectId/sandboxes/': typeof PublicProjectsProjectIdSandboxesIndexRoute
   '/_public/projects/$projectId/settings/': typeof PublicProjectsProjectIdSettingsIndexRoute
   '/_public/projects/$projectId/sites/': typeof PublicProjectsProjectIdSitesIndexRoute
   '/_public/projects/$projectId/storage/': typeof PublicProjectsProjectIdStorageIndexRoute
@@ -5242,6 +5271,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/playground'
     | '/projects/$projectId/realtime'
     | '/projects/$projectId/reviews'
+    | '/projects/$projectId/sandboxes'
     | '/projects/$projectId/settings'
     | '/projects/$projectId/storage'
     | '/projects/$projectId/stores'
@@ -5290,6 +5320,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/reviews/$reviewId'
     | '/projects/$projectId/reviews/learnings'
     | '/projects/$projectId/reviews/repositories'
+    | '/projects/$projectId/sandboxes/$sandboxId'
     | '/projects/$projectId/settings/domains'
     | '/projects/$projectId/settings/firewall'
     | '/projects/$projectId/settings/identity-servers'
@@ -5318,6 +5349,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/messaging/'
     | '/projects/$projectId/realtime/'
     | '/projects/$projectId/reviews/'
+    | '/projects/$projectId/sandboxes/'
     | '/projects/$projectId/settings/'
     | '/projects/$projectId/sites/'
     | '/projects/$projectId/storage/'
@@ -5755,6 +5787,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/reviews/$reviewId'
     | '/projects/$projectId/reviews/learnings'
     | '/projects/$projectId/reviews/repositories'
+    | '/projects/$projectId/sandboxes/$sandboxId'
     | '/projects/$projectId/settings/firewall'
     | '/projects/$projectId/settings/identity-servers'
     | '/projects/$projectId/settings/smtp'
@@ -5777,6 +5810,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/messaging'
     | '/projects/$projectId/realtime'
     | '/projects/$projectId/reviews'
+    | '/projects/$projectId/sandboxes'
     | '/projects/$projectId/settings'
     | '/projects/$projectId/sites'
     | '/projects/$projectId/storage'
@@ -6185,6 +6219,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/playground'
     | '/_public/projects/$projectId/realtime'
     | '/_public/projects/$projectId/reviews'
+    | '/_public/projects/$projectId/sandboxes'
     | '/_public/projects/$projectId/settings'
     | '/_public/projects/$projectId/storage'
     | '/_public/projects/$projectId/stores'
@@ -6233,6 +6268,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/reviews/$reviewId'
     | '/_public/projects/$projectId/reviews/learnings'
     | '/_public/projects/$projectId/reviews/repositories'
+    | '/_public/projects/$projectId/sandboxes/$sandboxId'
     | '/_public/projects/$projectId/settings/domains'
     | '/_public/projects/$projectId/settings/firewall'
     | '/_public/projects/$projectId/settings/identity-servers'
@@ -6261,6 +6297,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/messaging/'
     | '/_public/projects/$projectId/realtime/'
     | '/_public/projects/$projectId/reviews/'
+    | '/_public/projects/$projectId/sandboxes/'
     | '/_public/projects/$projectId/settings/'
     | '/_public/projects/$projectId/sites/'
     | '/_public/projects/$projectId/storage/'
@@ -7967,6 +8004,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdReviewsRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
+    '/_public/projects/$projectId/sandboxes': {
+      id: '/_public/projects/$projectId/sandboxes'
+      path: '/sandboxes'
+      fullPath: '/projects/$projectId/sandboxes'
+      preLoaderRoute: typeof PublicProjectsProjectIdSandboxesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
     '/_public/projects/$projectId/settings': {
       id: '/_public/projects/$projectId/settings'
       path: '/settings'
@@ -8351,6 +8395,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$projectId/reviews/repositories'
       preLoaderRoute: typeof PublicProjectsProjectIdReviewsRepositoriesRouteImport
       parentRoute: typeof PublicProjectsProjectIdReviewsRoute
+    }
+    '/_public/projects/$projectId/sandboxes/': {
+      id: '/_public/projects/$projectId/sandboxes/'
+      path: '/'
+      fullPath: '/projects/$projectId/sandboxes/'
+      preLoaderRoute: typeof PublicProjectsProjectIdSandboxesIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSandboxesRoute
+    }
+    '/_public/projects/$projectId/sandboxes/$sandboxId': {
+      id: '/_public/projects/$projectId/sandboxes/$sandboxId'
+      path: '/$sandboxId'
+      fullPath: '/projects/$projectId/sandboxes/$sandboxId'
+      preLoaderRoute: typeof PublicProjectsProjectIdSandboxesSandboxIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSandboxesRoute
     }
     '/_public/projects/$projectId/settings/': {
       id: '/_public/projects/$projectId/settings/'
@@ -11504,6 +11562,24 @@ const PublicProjectsProjectIdReviewsRouteWithChildren =
     PublicProjectsProjectIdReviewsRouteChildren,
   )
 
+interface PublicProjectsProjectIdSandboxesRouteChildren {
+  PublicProjectsProjectIdSandboxesSandboxIdRoute: typeof PublicProjectsProjectIdSandboxesSandboxIdRoute
+  PublicProjectsProjectIdSandboxesIndexRoute: typeof PublicProjectsProjectIdSandboxesIndexRoute
+}
+
+const PublicProjectsProjectIdSandboxesRouteChildren: PublicProjectsProjectIdSandboxesRouteChildren =
+  {
+    PublicProjectsProjectIdSandboxesSandboxIdRoute:
+      PublicProjectsProjectIdSandboxesSandboxIdRoute,
+    PublicProjectsProjectIdSandboxesIndexRoute:
+      PublicProjectsProjectIdSandboxesIndexRoute,
+  }
+
+const PublicProjectsProjectIdSandboxesRouteWithChildren =
+  PublicProjectsProjectIdSandboxesRoute._addFileChildren(
+    PublicProjectsProjectIdSandboxesRouteChildren,
+  )
+
 interface PublicProjectsProjectIdSettingsDomainsRouteChildren {
   PublicProjectsProjectIdSettingsDomainsAddRoute: typeof PublicProjectsProjectIdSettingsDomainsAddRoute
   PublicProjectsProjectIdSettingsDomainsIndexRoute: typeof PublicProjectsProjectIdSettingsDomainsIndexRoute
@@ -11922,6 +11998,7 @@ interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdPlaygroundRoute: typeof PublicProjectsProjectIdPlaygroundRoute
   PublicProjectsProjectIdRealtimeRoute: typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   PublicProjectsProjectIdReviewsRoute: typeof PublicProjectsProjectIdReviewsRouteWithChildren
+  PublicProjectsProjectIdSandboxesRoute: typeof PublicProjectsProjectIdSandboxesRouteWithChildren
   PublicProjectsProjectIdSettingsRoute: typeof PublicProjectsProjectIdSettingsRouteWithChildren
   PublicProjectsProjectIdStorageRoute: typeof PublicProjectsProjectIdStorageRouteWithChildren
   PublicProjectsProjectIdStoresRoute: typeof PublicProjectsProjectIdStoresRouteWithChildren
@@ -11965,6 +12042,8 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
       PublicProjectsProjectIdRealtimeRouteWithChildren,
     PublicProjectsProjectIdReviewsRoute:
       PublicProjectsProjectIdReviewsRouteWithChildren,
+    PublicProjectsProjectIdSandboxesRoute:
+      PublicProjectsProjectIdSandboxesRouteWithChildren,
     PublicProjectsProjectIdSettingsRoute:
       PublicProjectsProjectIdSettingsRouteWithChildren,
     PublicProjectsProjectIdStorageRoute:
@@ -12198,13 +12277,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

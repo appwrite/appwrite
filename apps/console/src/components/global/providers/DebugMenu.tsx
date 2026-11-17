@@ -1771,6 +1771,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
+                'Sandboxes',
+                'Show the Sandboxes product (live workspaces with a terminal and file browser) in projects. Cloud only.',
+                'sandboxes',
+                profileId,
+                features.sandboxes,
+                { category: 'Products' },
+              ),
+              createProfileFeatureFlagItem(
                 'Analytics humans/bots filter',
                 'Clicking Humans or Bots in analytics filters the page (via an empty vs non-empty bot category).',
                 'analyticsTrafficFilter',
@@ -2124,6 +2132,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.analytics,
     features.alerts,
     features.reviews,
+    features.sandboxes,
     features.analyticsTrafficFilter,
     features.appwritePush,
     features.nativeDbsMongo,
