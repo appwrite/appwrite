@@ -11,4 +11,6 @@ export interface ProxyRuleRecord {
   name: string
   /** The value Appwrite expects */
   value: string
+  /** The values DNS returned for this type */
+  found: string[]
 }
