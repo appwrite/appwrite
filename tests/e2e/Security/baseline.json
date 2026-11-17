@@ -421,6 +421,7 @@
         "PATCH /v1/project/oauth2/amazon",
         "PATCH /v1/project/oauth2/apple",
         "PATCH /v1/project/oauth2/appwrite",
+        "PATCH /v1/project/oauth2/atlassian",
         "PATCH /v1/project/oauth2/auth0",
         "PATCH /v1/project/oauth2/authentik",
         "PATCH /v1/project/oauth2/autodesk",
