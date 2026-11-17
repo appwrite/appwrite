@@ -46,6 +46,12 @@ class RuleRecord extends Model
                 'description' => 'Why the check did not pass. Empty when verified.',
                 'default' => '',
                 'example' => '',
+            ])
+            ->addRule('required', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the record must be verified on its own. Records that are not required are alternatives: the domain passes when any one of them is verified.',
+                'default' => false,
+                'example' => false,
             ]);
     }
 
