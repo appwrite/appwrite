@@ -626,6 +626,8 @@ export const heSitesDictionary: Record<string, string> = {
   'Point your domain': 'הפניית הדומיין',
   'Allow the SSL certificate': 'אישור תעודת ה-SSL',
   'Required · any one': 'חובה · אחת מהן',
+  'Add the records below at your DNS provider. Appwrite checks again automatically for 3 days.':
+    'הוסיפו את הרשומות שלמטה אצל ספק ה-DNS שלכם. Appwrite בודק שוב באופן אוטומטי במשך 3 ימים.',
   'Not detected yet': 'עדיין לא זוהתה',
   'Not detected': 'לא זוהתה',
 }
