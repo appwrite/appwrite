@@ -124,6 +124,7 @@ class Update extends Action
             $rule = $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 'logs' => '',
                 'status' => $renewal ? RULE_STATUS_VERIFIED : RULE_STATUS_CERTIFICATE_GENERATING,
+                'records' => $rule->getAttribute('records', []),
             ])));
             $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
 
