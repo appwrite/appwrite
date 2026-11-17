@@ -62,6 +62,7 @@ class OAuth2ProviderList extends Model
                     Response::MODEL_OAUTH2_MICROSOFT,
                     Response::MODEL_OAUTH2_HUGGINGFACE,
                     Response::MODEL_OAUTH2_VERCEL,
+                    Response::MODEL_OAUTH2_WORKOS,
                     Response::MODEL_OAUTH2_RESEND,
                     Response::MODEL_OAUTH2_CLOUDFLARE,
                     Response::MODEL_OAUTH2_TIKTOK,

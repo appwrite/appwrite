@@ -388,6 +388,7 @@ abstract class Base extends Action
             'yahoo' => Yahoo\Update::class,
             'huggingface' => HuggingFace\Update::class,
             'vercel' => Vercel\Update::class,
+            'workos' => WorkOS\Update::class,
             'linkedin' => Linkedin\Update::class,
             'disqus' => Disqus\Update::class,
             'amazon' => Amazon\Update::class,
