@@ -226,7 +226,7 @@ function RecordSection({
               const found = r.check?.status === 'mismatch' ? r.check.found : []
               return (
                 <Fragment key={`${r.type}-${r.value}`}>
-                  <TableRow>
+                  <TableRow className={found.length ? 'border-b-0' : undefined}>
                     <TableCell className="whitespace-normal px-4 py-3 font-mono text-[12px]">
                       {r.type}
                     </TableCell>
