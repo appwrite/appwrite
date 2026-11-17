@@ -239,6 +239,15 @@ class Action extends PlatformAction
         throw new Exception(Exception::RULE_VERIFICATION_FAILED, $explained['message']);
     }
 
+    /**
+     * Look up every DNS record a rule's domain is checked against, without failing on any of them
+     *
+     * The CAA record is required. CNAME, A and AAAA records are alternatives: the domain
+     * points to Appwrite when any one of them is verified.
+     *
+     * @param Document $rule Rule to check
+     * @return array<array{type: string, name: string, value: string, found: array<string>, status: string, message: string, required: bool, error: ?\Throwable}>
+     */
     protected function checkRecords(Document $rule): array
     {
         $dnsValidatorClass = $this->dnsValidatorClass;
