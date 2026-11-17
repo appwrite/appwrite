@@ -201,6 +201,19 @@ emit('subclass', outcome(function () {
 
     return [$sub->shout(), $sub->getSub(), $sub instanceof Domain];
 }));
+emit('subclass with properties clone', outcome(function () {
+    $sub = new class ('Blog.Example.CO.UK') extends Domain {
+        public string $label = 'first';
+
+        public array $seen = [];
+    };
+    $sub->seen[] = $sub->getSub();
+    $copy = clone $sub;
+    $copy->label = 'copy';
+    $copy->seen[] = 'more';
+
+    return [$copy::class === $sub::class, $sub->label, $copy->label, $sub->seen, $copy->seen, $copy->getApex(), properties($copy)];
+}));
 $methods = (new ReflectionClass(Domain::class))->getMethods(ReflectionMethod::IS_PUBLIC);
 usort($methods, fn ($a, $b) => strcmp($a->getName(), $b->getName()));
 emit('methods', outcome(fn () => array_map(fn (ReflectionMethod $method) => [$method->getName(), $method->isStatic(), $method->getNumberOfParameters(), $method->getNumberOfRequiredParameters()], $methods)));

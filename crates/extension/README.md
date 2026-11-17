@@ -140,8 +140,8 @@ the extension:
 - The exception for a URL (`http://`, `https://`) holding bytes that are not UTF-8 shows them as
   U+FFFD; PHP's message keeps the bytes.
 
-Cloning an instance of a PHP subclass is not tested: it hits the ext-php-rs bug in
-extphprs/ext-php-rs#837. Nothing in Appwrite or Cloud subclasses `Domain`.
+A PHP subclass, with properties of its own, clones as in PHP (fixed in ext-php-rs 0.16.5,
+extphprs/ext-php-rs#838); the corpus clones one.
 
 ## Utopia\Emails\Email
 
@@ -165,14 +165,12 @@ change; addresses Appwrite and Cloud see and edge cases (whitespace, case, `0`, 
 literal addresses, IDN, lengths at the limits, bytes that are not UTF-8, URLs as domains); 20,000
 seeded random addresses through `isValid()`, `hasValidLocal()`, `hasValidDomain()` and
 `getCanonical()`; the properties after each getter and after every getter in reverse; the scalar
-arguments PHP converts; `==`, clone, `var_dump()`, reflection, constants, subclasses; and the
+arguments PHP converts; `==`, clone, `var_dump()`, reflection, constants, subclasses and their clones; and the
 package's validators. It asserts these known differences on the extension:
 
 - The protected helpers `initializeProviders()`, `getProviderForDomain()` and `isDomainSupported()`
   and the protected static properties `$freeDomains`, `$disposableDomains` and `$providers` do not
   exist: a subclass cannot call or read them. Nothing in Appwrite or Cloud subclasses `Email`.
-- Cloning an instance of a PHP subclass gives an `Email`, not the subclass (extphprs/ext-php-rs#837);
-  a subclass that declares properties of its own crashes on `clone`, as it does with `Domain`.
 
 ## Benchmarks
 
