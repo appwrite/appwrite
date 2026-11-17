@@ -931,6 +931,13 @@ export function VerifyDomainContent({
   ]
   const offersNameservers = tabOptions.some((tab) => tab.id === 'nameservers')
   const banners = checks ? getDnsBanners(t, rule, pointingChecks, caaCheck) : []
+  const wrongRecord = banners.some((banner) => banner.tone === 'error')
+  const shownError =
+    wrongRecord &&
+    typeof verificationError === 'object' &&
+    verificationError?.pending
+      ? null
+      : verificationError
 
   const checkedRecords = checks ? (
     <div className="space-y-6">
@@ -1063,7 +1070,7 @@ export function VerifyDomainContent({
 
   return (
     <div className={compact ? 'space-y-4' : 'space-y-6'}>
-      <DomainVerificationAlert error={verificationError} />
+      <DomainVerificationAlert error={shownError} />
       {rule.status === 'verifying' && (
         <Alert variant="default" className="border-blue-500/30 bg-blue-500/5">
           <AlertDescription className="text-[13px] text-muted-foreground">
