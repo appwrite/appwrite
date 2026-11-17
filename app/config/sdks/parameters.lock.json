@@ -3543,6 +3543,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Reddit": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Resend": [
             "clientId",
             "clientSecret",
@@ -7904,6 +7909,11 @@
             "enabled"
         ],
         "project.updateOAuth2Podio": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Reddit": [
             "clientId",
             "clientSecret",
             "enabled"
