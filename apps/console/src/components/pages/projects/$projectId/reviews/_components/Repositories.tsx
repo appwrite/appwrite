@@ -30,6 +30,8 @@ import {
   VcsIcon,
   vcsProviderButtonIconClassName,
 } from '@/lib/vcs/providers'
+import type { ReviewInstallation } from '@/lib/appwrite/reviews'
+import { NewRepositories } from './NewRepositories'
 import { RepositoriesTable, type RepositoryRowData } from './RepositoriesTable'
 import { ReviewAll } from './ReviewAll'
 
@@ -63,7 +65,7 @@ export function Repositories({
     () =>
       (installationsData?.installations ?? []).filter(
         (installation) => installation.provider === 'github',
-      ),
+      ) as ReviewInstallation[],
     [installationsData],
   )
   const organizations = useMemo(
@@ -94,6 +96,8 @@ export function Repositories({
       setInstallationId(installations[0]?.$id ?? '')
     }
   }, [installations, installationId])
+
+  const installation = installations.find((i) => i.$id === installationId)
 
   const [reviewAllOpen, setReviewAllOpen] = useState(false)
 
@@ -213,6 +217,14 @@ export function Repositories({
           </div>
         )}
       </div>
+
+      {filter === 'all' && installation && (
+        <NewRepositories
+          projectId={projectId}
+          installation={installation}
+          canWrite={canWrite}
+        />
+      )}
 
       {filter === 'reviewed' ? (
         <ReviewedRepositories

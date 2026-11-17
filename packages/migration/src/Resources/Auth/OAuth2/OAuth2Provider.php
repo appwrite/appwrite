@@ -52,6 +52,7 @@ final class OAuth2Provider extends Resource
         'google' => ['clientId' => ['target' => self::TARGET_APP_ID], 'prompt' => ['target' => self::TARGET_SECRET]],
         'huggingface' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'reddit' => ['clientId' => ['target' => self::TARGET_APP_ID]],
+        'workos' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'kakao' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'keycloak' => [
             'clientId' => ['target' => self::TARGET_APP_ID],

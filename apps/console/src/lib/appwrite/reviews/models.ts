@@ -4,6 +4,8 @@
  * `service.ts` once the generated SDK carries the `reviews` service.
  */
 
+import type { Models } from '@appwrite.io/console'
+
 export type ReviewStatus =
   | 'queued'
   | 'processing'
@@ -219,6 +221,17 @@ export type ReviewRepository = {
    * How hard pull requests are reviewed.
    */
   strength: ReviewStrength
+}
+
+/**
+ * A VCS installation with its code review settings, which the Console SDK's
+ * `Installation` model does not carry yet.
+ */
+export type ReviewInstallation = Models.Installation & {
+  /**
+   * Whether code review is turned on for repositories added to the installation later.
+   */
+  reviewNewRepositories?: boolean
 }
 
 /**
