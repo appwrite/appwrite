@@ -59,5 +59,6 @@ ${RETRIEVAL_BOTS.map(userAgentBlock).join('\n\n')}
 
 Sitemap: https://appwrite.io/sitemap.xml
 Sitemap: https://appwrite.io/sitemap/news.xml
+Schemamap: https://appwrite.io/schemamap.xml
 `
 }

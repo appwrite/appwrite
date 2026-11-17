@@ -652,11 +652,18 @@ abstract class Response
         if ($bodyLength <= self::CHUNK_SIZE) {
             $this->end($body);
         } else {
-            $chunks = str_split($body, self::CHUNK_SIZE);
-            foreach ($chunks as $chunk) {
-                $this->write($chunk);
+            // Stop at the first write the client cannot take: it has gone, or
+            // stopped reading, and the rest would only be buffered for nobody.
+            $written = true;
+            for ($offset = 0; $offset < $bodyLength; $offset += self::CHUNK_SIZE) {
+                if (!$this->write(\substr($body, $offset, self::CHUNK_SIZE))) {
+                    $written = false;
+                    break;
+                }
             }
-            $this->end();
+            if ($written) {
+                $this->end();
+            }
         }
 
         $this->sent = true;

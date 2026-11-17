@@ -9,7 +9,9 @@ parameters:
   bootstrapFiles:
     - app/init/constants.php
   scanFiles:
-    - packages/image/stubs/Image.php
+    - packages/image/stubs/Canvas.php
+    - crates/extension/stubs/DSN.php
+    - crates/extension/stubs/Locale.php
   scanDirectories:
     - vendor/swoole/ide-helper
   excludePaths:

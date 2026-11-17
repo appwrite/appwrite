@@ -45,7 +45,7 @@ async function installRegistry(page: Page): Promise<void> {
             'InvalidStateError',
           )
         if (options.signal?.aborted) return
-        tools.set(name, tool)
+        tools.set(name, { ...tool, signal: options.signal })
         options.signal?.addEventListener('abort', () => tools.delete(name), {
           once: true,
         })
@@ -65,7 +65,11 @@ async function installRegistry(page: Page): Promise<void> {
           },
         }))
       },
-      async executeTool(registered: { name: string }, input: object = {}) {
+      async executeTool(
+        registered: { name: string },
+        input: object = {},
+        options: { signal?: AbortSignal } = {},
+      ) {
         const tool = tools.get(registered.name)
         if (!tool)
           throw new DOMException(
@@ -76,8 +80,29 @@ async function installRegistry(page: Page): Promise<void> {
           input: object,
           options: { signal: AbortSignal },
         ) => unknown
+        // Chrome never delivers the result of a tool unregistered mid-call;
+        // fail fast here so CI catches it instead of hanging.
+        const signal = tool.signal as AbortSignal | undefined
+        const unregistered = new Promise<never>((_, reject) =>
+          signal?.addEventListener(
+            'abort',
+            () =>
+              reject(
+                new DOMException(
+                  `${registered.name} was unregistered before it returned`,
+                  'AbortError',
+                ),
+              ),
+            { once: true },
+          ),
+        )
         return JSON.stringify(
-          await execute(input, { signal: new AbortController().signal }),
+          await Promise.race([
+            execute(input, {
+              signal: options.signal ?? new AbortController().signal,
+            }),
+            unregistered,
+          ]),
         )
       },
     }

@@ -1464,6 +1464,12 @@ trait AvatarsBase
             $this->assertSame('hit', $cached['headers']['x-appwrite-cache']);
             $this->assertEquals('image/png', $cached['headers']['content-type']);
             $this->assertEquals('Accept', $cached['headers']['vary']);
+
+            // An explicit output served from the cache still does not vary by Accept
+            $cached = $screenshot('image/avif', 'webp');
+            $this->assertSame('hit', $cached['headers']['x-appwrite-cache']);
+            $this->assertEquals('image/webp', $cached['headers']['content-type']);
+            $this->assertArrayNotHasKey('vary', $cached['headers']);
         });
 
         /**

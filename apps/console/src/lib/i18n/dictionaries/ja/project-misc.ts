@@ -3202,6 +3202,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   domains: 'ドメイン',
   functions: '関数',
   sites: 'サイト',
+  'firewall rule': 'ファイアウォールルール',
   'firewall rules': 'ファイアウォールルール',
   'Firewall rules': 'ファイアウォールルール',
   Downgraded: 'ダウングレード済み',
@@ -3456,6 +3457,27 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Project environment': 'プロジェクト環境',
   'Switch to production': '本番に切り替え',
   'Environment ID': '環境 ID',
+  // Environments by plan: Pro and above, and the cap per project
+  'Project environments are available on Pro':
+    'プロジェクト環境は Pro プランで利用できます',
+  'does not include project environments. Upgrade to give each project environments such as staging and preview, with resources and users of their own.':
+    'にはプロジェクト環境が含まれていません。アップグレードすると、各プロジェクトに staging や preview などの環境を作成でき、それぞれが独自のリソースとユーザーを持ちます。',
+  environments: '個の環境',
+  'environments per project.': '個の環境をプロジェクトごとに作成できます。',
+  'Delete an environment to create another.':
+    '別の環境を作成するには、環境を 1 つ削除してください。',
+  // Settings of an environment: its name, its ID, and deleting it
+  'Environment name has been updated': '環境名を更新しました',
+  'Failed to update environment name': '環境名の更新に失敗しました',
+  "Access this environment with the project's API Endpoint and Project ID, and the Environment ID that tells it apart from production.":
+    'この環境には、プロジェクトの API エンドポイントとプロジェクト ID に加え、本番と区別するための環境 ID を使用してアクセスします。', // pragma: allowlist secret
+  'Permanently delete this environment with its resources and users. The project it belongs to and its other environments are not affected. This action cannot be undone.':
+    'この環境をリソースとユーザーごと完全に削除します。この環境が属するプロジェクトと他の環境には影響しません。この操作は元に戻せません。',
+  Environment: '環境',
+  'Project:': 'プロジェクト:',
+  'Failed to load migrations': 'マイグレーションの読み込みに失敗しました',
+  'Failed to refresh migrations': 'マイグレーションの更新に失敗しました',
+  'The list below may be out of date.': '以下の一覧は最新でない可能性があります。',
   'An environment with this ID already exists in this project.':
     'この ID の環境はこのプロジェクトに既に存在します。',
   'Use lowercase letters, numbers and hyphens, starting with a letter or a number.':
@@ -4055,4 +4077,97 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Send email, SMS, and push notifications to your users.':
     'ユーザーにメール、SMS、プッシュ通知を送信します。',
   'Auto-deploy on every push': 'push のたびに自動デプロイ',
+  // Identity servers (LDAP)
+  'Identity servers': 'ID サーバー',
+  'Enable LDAP sign-in': 'LDAP サインインを有効化',
+  'When enabled, users can sign in with their directory username and password.':
+    '有効にすると、ユーザーはディレクトリのユーザー名とパスワードでサインインできます。',
+  'Tried in order until one answers, up to 10. Pasting an LDAP URL also fills in encryption, port and base DN.':
+    '応答があるまで順に試します。最大 10 件。LDAP URL を貼り付けると、暗号化、ポート、ベース DN も入力されます。',
+  'Leave empty for 636 with LDAPS, or 389 otherwise.':
+    '空にすると、LDAPS は 636、それ以外は 389 を使用します。',
+  'Use None only on a trusted private network.':
+    '「なし」は信頼できるプライベートネットワークでのみ使用してください。',
+  "Check the directory's certificate before sending any password.":
+    'パスワードを送信する前に、ディレクトリの証明書を検証します。',
+  'The CA or self-signed certificate to trust. Leave empty to use the system trust store.':
+    '信頼する CA 証明書または自己署名証明書。空にするとシステムの信頼ストアを使用します。',
+  'How long to wait for each answer, from 1 to 30.': '各応答を待つ時間。1 から 30 まで。',
+  'Service account for the search, or empty for anonymous.':
+    '検索に使うサービスアカウント。空にすると匿名で検索します。',
+  'Never shown again. Re-enter it when the connection changes.':
+    '再表示されません。接続を変更する際は再入力してください。',
+  'Enter the bind password again to save.': '保存するにはバインドパスワードを再入力してください。',
+  'Only its members can sign in. Leave empty to allow everyone.':
+    'このグループのメンバーだけがサインインできます。空にするとすべてのユーザーを許可します。',
+  'An ID that never changes, such as entryUUID.': '変更されない ID。entryUUID など。',
+  'Attribute holding the display name, usually cn.': '表示名を保持する属性。通常は cn。',
+  'Attribute holding an E.164 phone number. Optional.':
+    'E.164 形式の電話番号を保持する属性。任意。',
+  'Using Active Directory?': 'Active Directory を使用していますか?',
+  'Search identity servers...': 'ID サーバーを検索...',
+  'Identity servers section': 'ID サーバーセクション',
+  'Identity servers navigation': 'ID サーバーナビゲーション',
+  LDAP: 'LDAP',
+  'Let users sign in with the credentials of your LDAP directory, such as Active Directory or OpenLDAP.':
+    'Active Directory や OpenLDAP などの LDAP ディレクトリの認証情報でユーザーがサインインできるようにします。',
+  Directory: 'ディレクトリ',
+  Hosts: 'ホスト',
+  'Use {dn} as the base DN?': '{dn} をベース DN として使用しますか?',
+  Use: '使用',
+  'Verify certificate': '証明書を検証',
+  'Timeout (seconds)': 'タイムアウト (秒)',
+  'Certificate (PEM)': '証明書 (PEM)',
+  'Base DN': 'ベース DN',
+  'Subtree the user search starts from, for example ou=people,dc=example,dc=com.':
+    'ユーザー検索の起点となるサブツリー。例: ou=people,dc=example,dc=com',
+  'Bind DN': 'バインド DN',
+  'Bind password': 'バインドパスワード',
+  'User filter': 'ユーザーフィルター',
+  'Finds the person signing in. {username} is replaced with what they type.':
+    'サインインするユーザーを検索します。{username} は入力された内容に置き換えられます。',
+  'The user filter must contain {username}.':
+    'ユーザーフィルターには {username} を含める必要があります。',
+  'Sign-in rules': 'サインインのルール',
+  'Attribute mapping': '属性のマッピング',
+  'ID attribute': 'ID 属性',
+  'Email attribute': 'メール属性',
+  'Attribute holding the email address, usually mail.':
+    'メールアドレスを保持する属性。通常は mail。',
+  'Name attribute': '名前属性',
+  'Phone attribute': '電話番号属性',
+  'Required group DN': '必須グループ DN',
+  'Port must be between 1 and 65535.':
+    'ポートは 1 から 65535 の範囲で指定してください。',
+  'LDAP settings have been updated.': 'LDAP 設定を更新しました。',
+  'LDAP sign-in has been enabled.': 'LDAP サインインを有効にしました。',
+  'LDAP sign-in has been disabled.': 'LDAP サインインを無効にしました。',
+  'Failed to update LDAP settings': 'LDAP 設定の更新に失敗しました',
+  'Test connection': '接続をテスト',
+  'Update the configuration with at least one host and a base DN before testing the connection.':
+    '接続をテストする前に、少なくとも 1 つのホストとベース DN を設定して更新してください。',
+  'Test LDAP connection': 'LDAP 接続のテスト',
+  'Checks the configuration saved on this project: it connects to the directory, binds as the service account and reads the base DN.':
+    'このプロジェクトに保存された設定を確認します。ディレクトリに接続し、サービスアカウントでバインドして、ベース DN を読み取ります。',
+  'Unsaved changes in the form are not included: update first to test them.':
+    'フォームの未保存の変更は含まれません。テストするには先に更新してください。',
+  'Username (optional)': 'ユーザー名 (任意)',
+  'Also looks this user up and checks the required group.':
+    'このユーザーを検索し、必須グループも確認します。',
+  'Password (optional)': 'パスワード (任意)',
+  'Also verifies the password of that user.':
+    'そのユーザーのパスワードも検証します。',
+  'Run test': 'テストを実行',
+  'Testing the connection…': '接続をテストしています…',
+  'Connection, service account and base DN look good.':
+    '接続、サービスアカウント、ベース DN に問題はありません。',
+  'User found, group check passed, password accepted.':
+    'ユーザーが見つかり、グループの確認に合格し、パスワードが受け入れられました。',
+  'User found, group check passed.':
+    'ユーザーが見つかり、グループの確認に合格しました。',
+  'Failed to test the LDAP connection': 'LDAP 接続のテストに失敗しました',
+  'Add at least one host and a base DN to enable LDAP sign-in.':
+    'LDAP サインインを有効にするには、少なくとも 1 つのホストとベース DN を追加してください。',
+  'Add at least one host and a base DN under Settings > Identity servers to enable LDAP sign-in.':
+    'LDAP サインインを有効にするには、[設定] > [ID サーバー] で少なくとも 1 つのホストとベース DN を追加してください。',
 }

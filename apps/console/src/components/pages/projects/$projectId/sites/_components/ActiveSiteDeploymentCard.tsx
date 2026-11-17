@@ -88,7 +88,11 @@ import {
 } from '@/lib/utils/deployment-status'
 import { proxyRuleServesActiveDeployment } from '@/lib/utils/proxy-domains'
 import { cn } from '@/lib/utils'
-import { getVcsProvider, isEntireRepositoryUrl } from '@/lib/vcs/providers'
+import {
+  getVcsProvider,
+  isEntireRepositoryUrl,
+  isRepositoryHost,
+} from '@/lib/vcs/providers'
 
 function formatSize(bytes: number | bigint): string {
   return formatDecimalBytes(bytes)
@@ -106,19 +110,19 @@ function detectVcsProvider(
 ): { name: string; icon: ReactNode } | null {
   if (deployment.providerRepositoryUrl) {
     const url = deployment.providerRepositoryUrl.toLowerCase()
-    if (url.includes('github.com')) {
+    if (isRepositoryHost(url, 'github.com')) {
       const { label, Icon } = getVcsProvider('github')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
-    if (url.includes('gitlab.com')) {
+    if (isRepositoryHost(url, 'gitlab.com')) {
       const { label, Icon } = getVcsProvider('gitlab')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
-    if (url.includes('bitbucket.org') || url.includes('bitbucket.com')) {
+    if (isRepositoryHost(url, 'bitbucket.org', 'bitbucket.com')) {
       const { label, Icon } = getVcsProvider('bitbucket')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
-    if (url.includes('cursor.com')) {
+    if (isRepositoryHost(url, 'cursor.com')) {
       const { label, Icon } = getVcsProvider('origin')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }

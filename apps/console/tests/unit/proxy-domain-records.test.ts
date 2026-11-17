@@ -39,14 +39,14 @@ describe('getVerificationMethods', () => {
     ).toEqual(['nameservers', 'a', 'aaaa', 'cname'])
   })
 
-  test('leads a subdomain on Cloud with the CNAME and keeps A and AAAA hidden', () => {
+  test('leads a subdomain on Cloud with the CNAME and keeps A, AAAA and nameservers hidden', () => {
     expect(
       getVerificationMethods({
         domain: 'app.example.com',
         cloud: true,
         ...targets,
       }),
-    ).toEqual(['cname', 'nameservers'])
+    ).toEqual(['cname'])
   })
 
   test('leads an apex on self-hosted with A and AAAA', () => {

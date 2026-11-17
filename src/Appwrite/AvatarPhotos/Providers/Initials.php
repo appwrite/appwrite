@@ -4,7 +4,11 @@ namespace Appwrite\AvatarPhotos\Providers;
 
 use Appwrite\AvatarPhotos\Photo;
 use Utopia\Database\Document;
-use Utopia\Image\Image;
+use Utopia\Image\Blank;
+use Utopia\Image\Canvas;
+use Utopia\Image\Font;
+use Utopia\Image\Format;
+use Utopia\Image\Text;
 
 /**
  * Generates a grey square with the initials of the user's name.
@@ -18,6 +22,8 @@ class Initials extends Photo
         private readonly string $background = '',
     ) {
     }
+
+    private ?Font $font = null;
 
     public function getName(): string
     {
@@ -62,9 +68,9 @@ class Initials extends Photo
         // Longer initials shrink to keep fitting the square
         $fontSize = \min($width, $height) * 1.6 / (2 + \mb_strlen($initials, 'UTF-8'));
 
-        return Image::create($width, $height, $background)
-            ->text($initials, $this->getFont(), $fontSize, self::FIGURE, $width / 1.97, ($height / 2) + ($fontSize / 3))
-            ->output('png') ?? '';
+        return (new Canvas(new Blank($width, $height, $background)))
+            ->draw(new Text($initials, $this->getFont(), $fontSize, self::FIGURE, $width / 1.97, ($height / 2) + ($fontSize / 3)))
+            ->encode(Format::Png);
     }
 
     /**
@@ -114,12 +120,12 @@ class Initials extends Photo
         $drawable = '';
 
         foreach (\mb_str_split($letters, 1, 'UTF-8') as $char) {
-            if (!Image::hasGlyph($this->getFont(), $char) && \function_exists('transliterator_transliterate')) {
+            if (!$this->getFont()->has($char) && \function_exists('transliterator_transliterate')) {
                 $latin = (string) \transliterator_transliterate('Any-Latin; Latin-ASCII', $char);
                 $char = \mb_strtoupper(\mb_substr($latin, 0, 1, 'UTF-8'), 'UTF-8');
             }
 
-            if ($char !== '' && Image::hasGlyph($this->getFont(), $char)) {
+            if ($char !== '' && $this->getFont()->has($char)) {
                 $drawable .= $char;
             }
         }
@@ -127,9 +133,12 @@ class Initials extends Photo
         return $drawable;
     }
 
-    private function getFont(): string
+    /**
+     * The bundled font, read from disk once for this provider.
+     */
+    private function getFont(): Font
     {
         // Providers live at src/Appwrite/AvatarPhotos/Providers
-        return \dirname(__DIR__, 4) . self::FONT_PATH;
+        return $this->font ??= new Font(\dirname(__DIR__, 4) . self::FONT_PATH);
     }
 }

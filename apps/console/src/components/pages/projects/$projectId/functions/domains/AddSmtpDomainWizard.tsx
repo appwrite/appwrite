@@ -28,7 +28,8 @@ import {
 } from '@/lib/react-query/hooks'
 import {
   ensureApexDomainInOrganization,
-  isDomainClaimError,
+  getDomainClaimReason,
+  type DomainClaimReason,
   isValidDomain,
 } from '@/lib/utils/proxy-domains'
 import {
@@ -38,10 +39,7 @@ import {
 import type { SmtpProxyRule } from '@/lib/function-smtp-domain'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
-import {
-  getAppwriteErrorInfo,
-  getErrorMessage,
-} from '@/lib/utils/error-formatting'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { isCloudProfile } from '@/lib/console-profiles'
 
@@ -64,7 +62,7 @@ export function AddSmtpDomainWizard() {
     useState<DomainVerificationError | null>(null)
   const [rule, setRule] = useState<SmtpProxyRule | null>(null)
   const [claimDomain, setClaimDomain] = useState<string | null>(null)
-  const [claimRequired, setClaimRequired] = useState(false)
+  const [claimReason, setClaimReason] = useState<DomainClaimReason>('pointed')
   const [registering, setRegistering] = useState(false)
 
   const fallbackPath = `/projects/${projectId}/functions/${functionId}/domains`
@@ -149,10 +147,9 @@ export function AddSmtpDomainWizard() {
     try {
       await createRule(d)
     } catch (err) {
-      if (isDomainClaimError(err)) {
-        setClaimRequired(
-          getAppwriteErrorInfo(err).type === 'rule_claim_required',
-        )
+      const reason = getDomainClaimReason(err)
+      if (reason) {
+        setClaimReason(reason)
         setClaimDomain(d)
         return
       }
@@ -260,7 +257,7 @@ export function AddSmtpDomainWizard() {
       >
         <ClaimDomainContent
           domain={claimDomain}
-          claimRequired={claimRequired}
+          reason={claimReason}
           projectId={projectId!}
           verificationError={verificationError}
         />

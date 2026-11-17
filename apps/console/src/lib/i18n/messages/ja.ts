@@ -165,6 +165,7 @@ export const jaCatalog: EnCatalog = {
           network: 'Network',
           analytics: 'アナリティクス',
           firewall: 'Firewall',
+          mcp1: 'MCP1',
         },
         learn: {
           ...enCatalog.app.footer.expanded.learn,

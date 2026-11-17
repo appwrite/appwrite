@@ -114,4 +114,22 @@ final class LimitTest extends TestCase
             Limit::failures(['projectId', 'url', 'param.email', 'param.userId', 'ip', 'param.phone'], 10)->key($values),
         );
     }
+
+    public function testDirectoryUsernameVariantsShareOneKey(): void
+    {
+        $route = new Route('POST', '/v1/account/sessions/ldap');
+        $limit = Limit::failures(['projectId', 'url', 'param.username'], 10);
+
+        $keys = [];
+        foreach (['alice', 'Alice', 'ALICE', ' aLiCe '] as $username) {
+            $swoole = new SwooleRequest();
+            $swoole->server = ['remote_addr' => '203.0.113.10', 'request_method' => 'POST'];
+            $swoole->post = ['username' => $username];
+
+            $keys[] = $limit->key(Limit::values($route, new Request($swoole), new Document(['$id' => 'project']), new Document(['$id' => 'user']), []));
+        }
+
+        // A directory finds the same entry for every spelling, so they share one failure budget.
+        $this->assertSame(['projectId:project,url:/v1/account/sessions/ldap,param.username:alice'], \array_values(\array_unique($keys)));
+    }
 }

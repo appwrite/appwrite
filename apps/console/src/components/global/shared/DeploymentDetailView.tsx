@@ -84,7 +84,7 @@ import {
   useFunctionDeploymentProxyRules,
 } from '@/lib/react-query/hooks'
 import { getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
-import { getVcsProvider } from '@/lib/vcs/providers'
+import { getVcsProvider, isRepositoryHost } from '@/lib/vcs/providers'
 import {
   SITE_SCREENSHOTS_BUCKET_ID,
   SITE_SCREENSHOT_CARD_WIDTH,
@@ -132,19 +132,19 @@ function detectVcsProvider(
   // Check for providerRepositoryUrl which contains the provider domain
   if (deployment.providerRepositoryUrl) {
     const url = deployment.providerRepositoryUrl.toLowerCase()
-    if (url.includes('github.com')) {
+    if (isRepositoryHost(url, 'github.com')) {
       const { label, Icon } = getVcsProvider('github')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
-    if (url.includes('gitlab.com')) {
+    if (isRepositoryHost(url, 'gitlab.com')) {
       const { label, Icon } = getVcsProvider('gitlab')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
-    if (url.includes('bitbucket.org') || url.includes('bitbucket.com')) {
+    if (isRepositoryHost(url, 'bitbucket.org', 'bitbucket.com')) {
       const { label, Icon } = getVcsProvider('bitbucket')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
-    if (url.includes('cursor.com')) {
+    if (isRepositoryHost(url, 'cursor.com')) {
       const { label, Icon } = getVcsProvider('origin')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
@@ -194,11 +194,11 @@ function getVcsProviderType(
   // Check provider from URL or vcsProvider field
   if (deployment.providerRepositoryUrl) {
     const url = deployment.providerRepositoryUrl.toLowerCase()
-    if (url.includes('github.com')) return 'github'
-    if (url.includes('gitlab.com')) return 'gitlab'
-    if (url.includes('bitbucket.org') || url.includes('bitbucket.com'))
+    if (isRepositoryHost(url, 'github.com')) return 'github'
+    if (isRepositoryHost(url, 'gitlab.com')) return 'gitlab'
+    if (isRepositoryHost(url, 'bitbucket.org', 'bitbucket.com'))
       return 'bitbucket'
-    if (url.includes('cursor.com')) return 'origin'
+    if (isRepositoryHost(url, 'cursor.com')) return 'origin'
   }
 
   // Fallback to vcsProvider field

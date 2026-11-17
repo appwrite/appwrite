@@ -693,16 +693,23 @@ class GitHub extends Git
 
     /**
      * Create an installation access token for a service that acts on the installation's
-     * repositories itself, limited to the given repositories when any are named.
+     * repositories itself, limited to the given repositories and permissions when any are named.
      *
      * @param array<int> $repositoryIds
+     * @param array<string, string> $permissions GitHub permission name to access level, such as ['contents' => 'read']
      * @return array{token: string, expiresAt: string}
      *
      * @throws Exception
      */
-    public function createAccessToken(array $repositoryIds = []): array
+    public function createAccessToken(array $repositoryIds = [], array $permissions = []): array
     {
-        $params = $repositoryIds === [] ? [] : ['repository_ids' => $repositoryIds];
+        $params = [];
+        if ($repositoryIds !== []) {
+            $params['repository_ids'] = $repositoryIds;
+        }
+        if ($permissions !== []) {
+            $params['permissions'] = $permissions;
+        }
 
         $response = $this->call(self::METHOD_POST, '/app/installations/' . $this->installationId . '/access_tokens', ['Authorization' => 'Bearer ' . $this->jwtToken], $params);
         $responseBody = $response['body'] ?? [];

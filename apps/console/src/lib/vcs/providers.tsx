@@ -108,6 +108,16 @@ export const vcsInlineProviderIconClassName = 'size-5 shrink-0'
 /** Provider connect buttons on VCS cards. */
 export const vcsProviderButtonIconClassName = 'size-4'
 
+/**
+ * Columns for a grid of provider connect buttons, so no row is left with a
+ * lone button for as long as two or three columns can avoid it: one row up to
+ * three providers, a 2x2 block for four, rows of three after that.
+ */
+export function getVcsProviderColumns(count: number): 1 | 2 | 3 {
+  if (count <= 1) return 1
+  return count === 2 || count === 4 ? 2 : 3
+}
+
 /** Provider-neutral Git mark for empty states and auth flows (not a host logo). */
 export { GitBranch as GitIcon } from 'lucide-react'
 
@@ -173,7 +183,7 @@ export const VCS_PROVIDERS: Record<VcsProviderId, VcsProviderMeta> = {
 /** Fallback provider for display when a value is unknown or legacy. */
 export const DEFAULT_VCS_OAUTH_PROVIDER: VcsProviderId = 'github'
 
-type VcsConnectFlag = keyof Pick<ConsoleProfileFeatures, 'extraVcsOAuth'>
+type VcsConnectFlag = keyof Pick<ConsoleProfileFeatures, 'vcsOrigin'>
 
 /**
  * The profile flag each provider's Git connect sits behind, or null when it is
@@ -182,7 +192,7 @@ type VcsConnectFlag = keyof Pick<ConsoleProfileFeatures, 'extraVcsOAuth'>
 const VCS_CONNECT_FLAGS: Record<VcsProviderId, VcsConnectFlag | null> = {
   github: null,
   entire: null,
-  origin: 'extraVcsOAuth',
+  origin: 'vcsOrigin',
   gitlab: null,
   bitbucket: null,
   gitea: null,
@@ -258,6 +268,18 @@ export function entireOwnerPath(owner: string): string {
  * entire.com. Compares the parsed host, so a URL that only mentions Entire in
  * its path or another host is not one.
  */
+/** Whether the URL's host is one of `hosts` or a subdomain of one. */
+export function isRepositoryHost(url: string, ...hosts: string[]): boolean {
+  try {
+    const { hostname } = new URL(url)
+    return hosts.some(
+      (host) => hostname === host || hostname.endsWith(`.${host}`),
+    )
+  } catch {
+    return false
+  }
+}
+
 export function isEntireRepositoryUrl(url: string): boolean {
   try {
     return ['entire.com', 'entire.io'].includes(new URL(url).hostname)

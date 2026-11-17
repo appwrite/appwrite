@@ -1837,6 +1837,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   domains: 'דומיינים',
   functions: 'פונקציות',
   sites: 'אתרים',
+  'firewall rule': 'כלל חומת אש',
   'firewall rules': 'כללי חומת אש',
   'Firewall rules': 'כללי חומת אש',
   'Select project': 'בחירת פרויקט',
@@ -3390,6 +3391,27 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Project environment': 'סביבת פרויקט',
   'Switch to production': 'מעבר לפרודקשן',
   'Environment ID': 'מזהה סביבה',
+  // Environments by plan: Pro and above, and the cap per project
+  'Project environments are available on Pro':
+    'סביבות פרויקט זמינות בתוכנית Pro',
+  'does not include project environments. Upgrade to give each project environments such as staging and preview, with resources and users of their own.':
+    'אינה כוללת סביבות פרויקט. שדרגו כדי לתת לכל פרויקט סביבות כמו staging ו-preview, עם משאבים ומשתמשים משלהן.',
+  environments: 'סביבות',
+  'environments per project.': 'סביבות לכל פרויקט.',
+  'Delete an environment to create another.':
+    'מחקו סביבה כדי ליצור סביבה אחרת.',
+  // Settings of an environment: its name, its ID, and deleting it
+  'Environment name has been updated': 'שם הסביבה עודכן',
+  'Failed to update environment name': 'עדכון שם הסביבה נכשל',
+  "Access this environment with the project's API Endpoint and Project ID, and the Environment ID that tells it apart from production.":
+    'הגישה לסביבה הזו היא באמצעות נקודת הקצה של ה-API ומזהה הפרויקט של הפרויקט, יחד עם מזהה הסביבה שמבדיל אותה מפרודקשן.', // pragma: allowlist secret
+  'Permanently delete this environment with its resources and users. The project it belongs to and its other environments are not affected. This action cannot be undone.':
+    'מחיקה לצמיתות של הסביבה הזו, עם המשאבים והמשתמשים שלה. הפרויקט שאליו היא שייכת והסביבות האחרות שלו אינם מושפעים. לא ניתן לבטל פעולה זו.',
+  Environment: 'סביבה',
+  'Project:': 'פרויקט:',
+  'Failed to load migrations': 'טעינת המיגרציות נכשלה',
+  'Failed to refresh migrations': 'רענון המיגרציות נכשל',
+  'The list below may be out of date.': 'ייתכן שהרשימה שלהלן אינה עדכנית.',
   'An environment with this ID already exists in this project.':
     'סביבה עם המזהה הזה כבר קיימת בפרויקט.',
   'Use lowercase letters, numbers and hyphens, starting with a letter or a number.':
@@ -3980,4 +4002,99 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Send email, SMS, and push notifications to your users.':
     'שלחו למשתמשים שלכם אימיילים, הודעות SMS והתראות פוש.',
   'Auto-deploy on every push': 'פריסה אוטומטית בכל push',
+  // Identity servers (LDAP)
+  'Identity servers': 'שרתי זהויות',
+  'Enable LDAP sign-in': 'הפעלת התחברות באמצעות LDAP',
+  'When enabled, users can sign in with their directory username and password.':
+    'כאשר האפשרות מופעלת, משתמשים יכולים להתחבר עם שם המשתמש והסיסמה שלהם בספרייה.',
+  'Tried in order until one answers, up to 10. Pasting an LDAP URL also fills in encryption, port and base DN.':
+    'המארחים מנוסים לפי הסדר עד שאחד מהם עונה, עד 10. הדבקת כתובת URL של LDAP ממלאת גם את ההצפנה, הפורט וה-base DN.',
+  'Leave empty for 636 with LDAPS, or 389 otherwise.':
+    'השאירו ריק עבור 636 עם LDAPS, או 389 אחרת.',
+  'Use None only on a trusted private network.':
+    'השתמשו ב"ללא" רק ברשת פרטית מהימנה.',
+  "Check the directory's certificate before sending any password.":
+    'בדיקת התעודה של הספרייה לפני שליחת סיסמה כלשהי.',
+  'The CA or self-signed certificate to trust. Leave empty to use the system trust store.':
+    'תעודת ה-CA או התעודה בחתימה עצמית שיש לסמוך עליה. השאירו ריק כדי להשתמש במאגר התעודות המהימנות של המערכת.',
+  'How long to wait for each answer, from 1 to 30.':
+    'כמה זמן להמתין לכל תשובה, בין 1 ל-30.',
+  'Service account for the search, or empty for anonymous.':
+    'חשבון השירות לחיפוש, או ריק לחיפוש אנונימי.',
+  'Never shown again. Re-enter it when the connection changes.':
+    'לא מוצגת שוב. הזינו אותה מחדש כשהחיבור משתנה.',
+  'Enter the bind password again to save.':
+    'הזינו שוב את סיסמת ה-Bind כדי לשמור.',
+  'Only its members can sign in. Leave empty to allow everyone.':
+    'רק חברי הקבוצה יכולים להתחבר. השאירו ריק כדי לאפשר לכולם.',
+  'An ID that never changes, such as entryUUID.':
+    'מזהה שאף פעם לא משתנה, כמו entryUUID.',
+  'Attribute holding the display name, usually cn.':
+    'המאפיין שמכיל את שם התצוגה, בדרך כלל cn.',
+  'Attribute holding an E.164 phone number. Optional.':
+    'המאפיין שמכיל מספר טלפון בפורמט E.164. אופציונלי.',
+  'Using Active Directory?': 'משתמשים ב-Active Directory?',
+  'Search identity servers...': 'חיפוש שרתי זהויות...',
+  'Identity servers section': 'אזור שרתי זהויות',
+  'Identity servers navigation': 'ניווט שרתי זהויות',
+  LDAP: 'LDAP',
+  'Let users sign in with the credentials of your LDAP directory, such as Active Directory or OpenLDAP.':
+    'אפשרו למשתמשים להתחבר עם פרטי האימות של ספריית ה-LDAP שלכם, כמו Active Directory או OpenLDAP.',
+  Directory: 'ספרייה',
+  Hosts: 'מארחים',
+  'Use {dn} as the base DN?': 'להשתמש ב-{dn} בתור base DN?',
+  Use: 'שימוש',
+  'Verify certificate': 'אימות תעודה',
+  'Timeout (seconds)': 'Timeout (שניות)',
+  'Certificate (PEM)': 'תעודה (PEM)',
+  'Base DN': 'Base DN',
+  'Subtree the user search starts from, for example ou=people,dc=example,dc=com.':
+    'תת-העץ שממנו מתחיל חיפוש המשתמשים, למשל ou=people,dc=example,dc=com.',
+  'Bind DN': 'Bind DN',
+  'Bind password': 'סיסמת Bind',
+  'User filter': 'מסנן משתמשים',
+  'Finds the person signing in. {username} is replaced with what they type.':
+    'מאתר את מי שמתחבר. {username} מוחלף במה שהוא מקליד.',
+  'The user filter must contain {username}.':
+    'מסנן המשתמשים חייב לכלול את {username}.',
+  'Sign-in rules': 'כללי התחברות',
+  'Attribute mapping': 'מיפוי מאפיינים',
+  'ID attribute': 'מאפיין מזהה',
+  'Email attribute': 'מאפיין אימייל',
+  'Attribute holding the email address, usually mail.':
+    'המאפיין שמכיל את כתובת האימייל, בדרך כלל mail.',
+  'Name attribute': 'מאפיין שם',
+  'Phone attribute': 'מאפיין טלפון',
+  'Required group DN': 'DN של קבוצה נדרשת',
+  'Port must be between 1 and 65535.': 'הפורט חייב להיות בין 1 ל-65535.',
+  'LDAP settings have been updated.': 'הגדרות ה-LDAP עודכנו.',
+  'LDAP sign-in has been enabled.': 'ההתחברות דרך LDAP הופעלה.',
+  'LDAP sign-in has been disabled.': 'ההתחברות דרך LDAP הושבתה.',
+  'Failed to update LDAP settings': 'עדכון הגדרות ה-LDAP נכשל',
+  'Test connection': 'בדיקת חיבור',
+  'Update the configuration with at least one host and a base DN before testing the connection.':
+    'עדכנו את התצורה עם לפחות מארח אחד ו-base DN לפני בדיקת החיבור.',
+  'Test LDAP connection': 'בדיקת חיבור LDAP',
+  'Checks the configuration saved on this project: it connects to the directory, binds as the service account and reads the base DN.':
+    'בודק את התצורה השמורה בפרויקט הזה: מתחבר לספרייה, מבצע bind כחשבון השירות וקורא את ה-base DN.',
+  'Unsaved changes in the form are not included: update first to test them.':
+    'שינויים שלא נשמרו בטופס לא נכללים: עדכנו קודם כדי לבדוק אותם.',
+  'Username (optional)': 'שם משתמש (אופציונלי)',
+  'Also looks this user up and checks the required group.':
+    'בנוסף מאתר את המשתמש הזה ובודק את הקבוצה הנדרשת.',
+  'Password (optional)': 'סיסמה (אופציונלי)',
+  'Also verifies the password of that user.':
+    'בנוסף מאמת את הסיסמה של אותו משתמש.',
+  'Run test': 'הרצת בדיקה',
+  'Testing the connection…': 'בודק את החיבור…',
+  'Connection, service account and base DN look good.':
+    'החיבור, חשבון השירות וה-base DN תקינים.',
+  'User found, group check passed, password accepted.':
+    'המשתמש נמצא, בדיקת הקבוצה עברה, הסיסמה התקבלה.',
+  'User found, group check passed.': 'המשתמש נמצא, בדיקת הקבוצה עברה.',
+  'Failed to test the LDAP connection': 'בדיקת חיבור ה-LDAP נכשלה',
+  'Add at least one host and a base DN to enable LDAP sign-in.':
+    'הוסיפו לפחות מארח אחד ו-base DN כדי להפעיל התחברות דרך LDAP.',
+  'Add at least one host and a base DN under Settings > Identity servers to enable LDAP sign-in.':
+    'הוסיפו לפחות מארח אחד ו-base DN תחת הגדרות > שרתי זהויות כדי להפעיל התחברות דרך LDAP.',
 }

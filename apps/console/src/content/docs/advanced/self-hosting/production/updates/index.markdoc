@@ -28,15 +28,17 @@ Before upgrading, be sure to:
 1. review the [changelog](https://github.com/appwrite/appwrite/releases) for any breaking changes
 1. test the migration process on a non-production instance to make sure your application is working well
 
-# Upgrading to 2.7.1 {% #upgrading-to-latest %}
+# Upgrading to 2.7.2 {% #upgrading-to-latest %}
 
 Back up your data first.
 
-2.7.1 is a security release. It updates the Open Runtimes executor from `1.1.2` to `1.3.1`. The old executor followed symlinks that a function or site planted in its logs, build output or build cache, so a deployment could read files from the executor container, including `_APP_EXECUTOR_SECRET`. With that secret, code in a function can call the executor directly, and the executor controls Docker on the host. If anyone you don't fully trust can deploy functions or sites on your instance, upgrade and then rotate `_APP_EXECUTOR_SECRET`.
+2.7.2 is a security release. It backports the security fixes released since 2.7.1, rebuilds on `appwrite/base` 2.2.11 and ships the 1.2.181 Console. See the [release notes](https://github.com/appwrite/appwrite/releases/tag/2.7.2).
 
-From `2.7.0`, the upgrade only replaces the images. 2.7.1 has no schema changes and keeps the same 1.2.138 Console, so the migration has nothing to change.
+From `2.7.1`, the upgrade only replaces the images. 2.7.2 has no schema changes, so the migration has nothing to change.
 
-Appwrite 2.7.1 upgrades from `1.9.6` or any later version. Run the upgrade command with the `2.7.1` tag, then run the migration.
+From `2.7.0`, the upgrade also brings the executor update from 2.7.1. It updates the Open Runtimes executor from `1.1.2` to `1.3.1`. The old executor followed symlinks that a function or site planted in its logs, build output or build cache, so a deployment could read files from the executor container, including `_APP_EXECUTOR_SECRET`. With that secret, code in a function can call the executor directly, and the executor controls Docker on the host. If anyone you don't fully trust can deploy functions or sites on your instance, upgrade and then rotate `_APP_EXECUTOR_SECRET`.
+
+Appwrite 2.7.2 upgrades from `1.9.6` or any later version. Run the upgrade command with the `2.7.2` tag, then run the migration.
 
 ```sh
 docker run -it --rm \
@@ -44,7 +46,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="upgrade" \
-    appwrite/appwrite:2.7.1
+    appwrite/appwrite:2.7.2
 ```
 
 Then run the migration from the `appwrite` directory.
@@ -77,7 +79,7 @@ If you're upgrading from `2.6.x` or earlier, also check these, which come from 2
 - **Maintenance**: `_APP_MAINTENANCE_INTERVAL` should be a multiple of 300 seconds. The default, 86400, is.
 - **New optional variables**: `_APP_OPENSSL_KEY_V2`, `_APP_OPENSSL_KEY_CURRENT`, `_APP_OPENSSL_KEY_OLDEST`, `_APP_LIMIT_REALTIME_SUBSCRIPTIONS`, `_APP_LIMIT_REALTIME_CHANNELS`, `_APP_LIMIT_REALTIME_QUERIES`, `_APP_DB_MAX_CONNECTIONS` and `_APP_DOMAIN_FUNCTIONS_FALLBACK`.
 
-If you skip releases, also follow the upgrade notes of each release you skip: [`2.0.0`](https://github.com/appwrite/appwrite/releases/tag/2.0.0), [`2.1.0`](https://github.com/appwrite/appwrite/releases/tag/2.1.0), [`2.2.0`](https://github.com/appwrite/appwrite/releases/tag/2.2.0), [`2.3.0`](https://github.com/appwrite/appwrite/releases/tag/2.3.0), [`2.4.0`](https://github.com/appwrite/appwrite/releases/tag/2.4.0), [`2.5.0`](https://github.com/appwrite/appwrite/releases/tag/2.5.0), [`2.6.0`](https://github.com/appwrite/appwrite/releases/tag/2.6.0), [`2.6.1`](https://github.com/appwrite/appwrite/releases/tag/2.6.1), [`2.6.2`](https://github.com/appwrite/appwrite/releases/tag/2.6.2), [`2.7.0`](https://github.com/appwrite/appwrite/releases/tag/2.7.0).
+If you skip releases, also follow the upgrade notes of each release you skip: [`2.0.0`](https://github.com/appwrite/appwrite/releases/tag/2.0.0), [`2.1.0`](https://github.com/appwrite/appwrite/releases/tag/2.1.0), [`2.2.0`](https://github.com/appwrite/appwrite/releases/tag/2.2.0), [`2.3.0`](https://github.com/appwrite/appwrite/releases/tag/2.3.0), [`2.4.0`](https://github.com/appwrite/appwrite/releases/tag/2.4.0), [`2.5.0`](https://github.com/appwrite/appwrite/releases/tag/2.5.0), [`2.6.0`](https://github.com/appwrite/appwrite/releases/tag/2.6.0), [`2.6.1`](https://github.com/appwrite/appwrite/releases/tag/2.6.1), [`2.6.2`](https://github.com/appwrite/appwrite/releases/tag/2.6.2), [`2.7.0`](https://github.com/appwrite/appwrite/releases/tag/2.7.0), [`2.7.1`](https://github.com/appwrite/appwrite/releases/tag/2.7.1).
 
 # Upgrading within the 1.9 line {% #upgrading-1-9 %}
 
@@ -117,7 +119,7 @@ Your Appwrite installation's parent directory name is expected to be `appwrite`.
 {% /info %}
 
 {% info title="Choose an image tag" %}
-Replace `<APPWRITE_VERSION>` below with the specific Appwrite image tag you intend to run (for example, `2.7.1`). Avoid using `latest` in production.
+Replace `<APPWRITE_VERSION>` below with the specific Appwrite image tag you intend to run (for example, `2.7.2`). Avoid using `latest` in production.
 {% /info %}
 
 ## Unix
