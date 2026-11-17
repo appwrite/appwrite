@@ -56,6 +56,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Paypal\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\PaypalSandbox\Update as UpdateOAuth2PaypalSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Podio\Update as UpdateOAuth2Podio;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Resend\Update as UpdateOAuth2Resend;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Roblox\Update as UpdateOAuth2Roblox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Salesforce\Update as UpdateOAuth2Salesforce;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Slack\Update as UpdateOAuth2Slack;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Spotify\Update as UpdateOAuth2Spotify;
@@ -291,6 +292,7 @@ class Http extends Service
         $this->addAction('updateProjectOAuth2Apple', UpdateOAuth2Apple::class);
         $this->addAction('updateProjectOAuth2Microsoft', UpdateOAuth2Microsoft::class);
         $this->addAction('updateProjectOAuth2Hugging Face', UpdateOAuth2HuggingFace::class);
+        $this->addAction('updateProjectOAuth2Roblox', UpdateOAuth2Roblox::class);
         $this->addAction('updateProjectOAuth2Resend', UpdateOAuth2Resend::class);
         $this->addAction('updateProjectOAuth2TikTok', UpdateOAuth2TikTok::class);
         $this->addAction('updateProjectOAuth2Kakao', UpdateOAuth2Kakao::class);
