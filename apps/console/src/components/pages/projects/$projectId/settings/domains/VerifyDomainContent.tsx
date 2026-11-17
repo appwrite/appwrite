@@ -405,6 +405,14 @@ export function VerifyDomainContent({
     'Add the following nameservers on your DNS provider. Note that DNS changes may take up to 48 hours to propagate fully.',
   )
 
+  const aliasNote = (
+    <p className="text-[13px] text-muted-foreground">
+      {t(
+        'Called CNAME flattening on Cloudflare (set it to DNS only) and Alias on Route 53. Some providers name it ANAME.',
+      )}
+    </p>
+  )
+
   // The CAA row: recommended from the console variables, required once the
   // server checks it.
   const caaCheck = findCheck('CAA', '')
@@ -444,6 +452,7 @@ export function VerifyDomainContent({
     return (
       <div className="space-y-3">
         <DnsRecordsTable records={rows} showTtl={true} compact={compact} />
+        {method === 'alias' && aliasNote}
       </div>
     )
   }
