@@ -384,6 +384,8 @@ class Action extends PlatformAction
                 'status' => $status,
                 'message' => match (true) {
                     $verified => '',
+                    // Only an Appwrite exception's text is meant for the caller
+                    $error instanceof Exception => $error->getMessage(),
                     !\is_null($error) => 'DNS ' . $type . ' lookup failed.',
                     default => $validator->getDescription(),
                 },
