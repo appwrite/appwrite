@@ -126,6 +126,10 @@ export type DnsRecord = {
   notNeeded?: string
 }
 
+/** A section label, outlined so it never reads as a record status. */
+const SECTION_BADGE =
+  'border border-border bg-transparent text-[10px] shrink-0 font-medium text-muted-foreground'
+
 const TABLE_HEAD =
   'px-4 py-2.5 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
 
@@ -185,12 +189,15 @@ function RecordStatus({
   }
 }
 
+/** One group of records: a heading, a badge, then the records with their status. */
 function RecordSection({
   title,
+  badge,
   records,
   waiting,
 }: {
   title: string
+  badge: string
   records: DnsRecord[]
   waiting: boolean
 }) {
@@ -199,6 +206,9 @@ function RecordSection({
     <section className="space-y-3">
       <div className="flex items-center gap-2">
         <h4 className="text-[14px] font-semibold text-foreground">{title}</h4>
+        <Badge variant="outline" className={SECTION_BADGE}>
+          {badge}
+        </Badge>
       </div>
       <div className="overflow-hidden rounded-lg border border-border">
         <Table className="table-fixed">
@@ -665,6 +675,7 @@ export function VerifyDomainContent({
       {pointingRecords.length > 0 && (
         <RecordSection
           title={t('Point your domain')}
+          badge={t('Required')}
           records={pointingRecords}
           waiting={isWaitingForDns(rule)}
         />
