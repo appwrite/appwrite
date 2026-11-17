@@ -32,7 +32,7 @@ utopia-user-agent = { path = "crates/utopia/user-agent" }
 # #[php(sensitive(...))] (extphprs/ext-php-rs#840), which `Utopia\DSN\DSN` needs to keep
 # credentials out of exception traces: the PR's commit, which GitHub serves from the upstream
 # repository. Back to a release once it ships in one.
-ext-php-rs = { git = "https://github.com/extphprs/ext-php-rs", rev = "fb34246728d501d81b44348f679c7538f3d1d16a" }
+ext-php-rs = { git = "https://github.com/extphprs/ext-php-rs", rev = "9666f952712babe171954960feeff6a7e7c96e0f" }
 # Multi-needle substring search (utopia-user-agent: the bot table, in one pass).
 aho-corasick = "1"
 argon2 = { version = "0.5", features = ["std"] }
