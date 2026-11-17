@@ -3,6 +3,34 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-account-switching",
+    "href": "/blog/post/announcing-account-switching",
+    "title": "Announcing account switching: one browser, many accounts",
+    "description": "Appwrite Auth now supports account switching, so users can stay signed in to several accounts in one browser or app and switch between them in one call.",
+    "date": "2026-11-17",
+    "lastUpdated": "2026-11-17",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-account-switching/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-force-password-reset",
+    "href": "/blog/post/announcing-force-password-reset",
+    "title": "Announcing force password reset for all your users",
+    "description": "Appwrite Auth can now force every user in a project to reset their password with one click or one API call, so you can respond to a password leak in seconds.",
+    "date": "2026-11-17",
+    "lastUpdated": "2026-11-17",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "announcements, security",
+    "featured": false,
+    "cover": "/images/blog/announcing-force-password-reset/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-activity-reasons",
     "href": "/blog/post/announcing-activity-reasons",
     "title": "Announcing reasons in Activity: see why every change was made",
@@ -92,7 +120,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "title": "Add push notifications to your Android app without Firebase",
     "description": "Send push notifications to a Kotlin app with Appwrite Push. Notify customers when an order ships, deliver while the app is closed, and open the order on tap.",
     "date": "2026-11-06",
-    "lastUpdated": "2026-11-06",
+    "lastUpdated": "2026-11-16",
     "timeToRead": 9,
     "author": "atharva",
     "category": "tutorials",
@@ -118,7 +146,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "title": "Add push notifications to your React Native app without Firebase",
     "description": "Send push notifications to an Expo app with Appwrite Push. Notify customers when an order ships, deliver on Android while the app is closed, and open the order on tap.",
     "date": "2026-11-06",
-    "lastUpdated": "2026-11-06",
+    "lastUpdated": "2026-11-16",
     "timeToRead": 9,
     "author": "atharva",
     "category": "tutorials",

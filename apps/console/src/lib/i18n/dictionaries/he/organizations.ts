@@ -114,6 +114,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'כל המשאבים מלבד ניהול הצוות ופעולות כתיבה בחיוב.',
   'Allow OAuth2 Device Authorization Grant (RFC 8628).':
     'אפשרו OAuth2 Device Authorization Grant (RFC 8628).',
+  'Already in this organization': 'כבר נמצא בארגון הזה',
   Amount: 'סכום',
   'Amount due': 'סכום לתשלום',
   'An error occurred': 'אירעה שגיאה',
@@ -461,6 +462,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Enabled: 'מופעל',
   'Enter a coupon code to update your estimated total. Applied credits expire after a set period and do not roll over.':
     'הזינו קוד קופון לעדכון הסכום המשוער. קרדיטים שהוחלו פגים לאחר תקופה מוגדרת ואינם נצברים.',
+  'Enter a domain like example.com': 'הזינו דומיין כמו example.com',
   'Enter a full domain name (e.g. example.com)':
     'הזינו שם דומיין מלא (למשל example.com)',
   'Enter coupon code': 'הזינו קוד קופון',
@@ -919,6 +921,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Popular integrations from the marketplace catalog.':
     'אינטגרציות פופולריות מקטלוג המרקטפלייס.',
   Port: 'פורט',
+  'Port is required': 'פורט הוא שדה חובה',
+  'Port must be between 0 and 65535': 'הפורט חייב להיות בין 0 ל-65535',
   'Post-logout redirect URIs': 'כתובות URI להפניה לאחר התנתקות',
   'Postal code': 'מיקוד',
   Premium: 'פרימיום',
@@ -935,6 +939,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Primary payment method updated': 'אמצעי התשלום הראשי עודכן',
   Priority: 'עדיפות',
   'Priority for SRV record': 'עדיפות לרשומת SRV',
+  'Priority is required': 'עדיפות היא שדה חובה',
+  'Priority must be between 0 and 65535': 'העדיפות חייבת להיות בין 0 ל-65535',
   'Privacy policy': 'מדיניות פרטיות',
   Project: 'פרויקט',
   'Project (optional)': 'פרויקט (אופציונלי)',
@@ -944,6 +950,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Project keys': 'מפתחות פרויקט',
   'Project pinned': 'הפרויקט הוצמד',
   'Project unpinned': 'הצמדת הפרויקט בוטלה',
+  'Projects subtotal': 'סכום ביניים של הפרויקטים',
   'Projects that will be deleted:': 'פרויקטים שיימחקו:',
   'Promo code': 'קוד קופון',
   Public: 'ציבורי',
@@ -1146,6 +1153,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'האפליקציה מושבתת ואינה יכולה לאמת משתמשים.',
   'This app may have been deleted or you do not have access.':
     'ייתכן שהאפליקציה נמחקה או שאין לכם גישה.',
+  "This domain can't be transferred. Check the name and try again.":
+    'לא ניתן להעביר את הדומיין הזה. בדקו את השם ונסו שוב.',
   'This entire organization will be deleted, including all of its projects and resources.':
     'כל הארגון הזה יימחק, כולל כל הפרויקטים והמשאבים שלו.',
   'Downgrading to the Free plan is temporarily unavailable here while we refine the experience. You can complete this change in the old console.':
@@ -1290,6 +1299,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   "We've received your request and will get back to you as soon as we can.":
     'קיבלנו את הבקשה שלכם ונחזור אליכם בהקדם האפשרי.',
   Weight: 'משקל',
+  'Weight is required': 'משקל הוא שדה חובה',
+  'Weight must be between 0 and 65535': 'המשקל חייב להיות בין 0 ל-65535',
   'What happens next': 'מה קורה בהמשך',
   "What wasn't working for you? Please share anything that influenced your decision to downgrade. This feedback helps us improve the platform.":
     'מה לא עבד עבורכם? שתפו כל דבר שהשפיע על ההחלטה שלכם לשנמך. המשוב הזה עוזר לנו לשפר את הפלטפורמה.',

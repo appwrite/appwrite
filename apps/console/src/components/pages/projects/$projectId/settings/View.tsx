@@ -16,7 +16,8 @@ import { Domains } from './Domains'
 import { Webhooks } from './Webhooks'
 import { Migrations } from './Migrations'
 import { SMTP } from './SMTP'
-import { IdentityServers } from './IdentityServers'
+import { IdentityServersLayout } from './identity-servers/Layout'
+import { LDAP } from './identity-servers/LDAP'
 import { Variables } from './Variables'
 import { Firewall } from '../firewall/Firewall'
 import type { Models } from '@appwrite.io/console'
@@ -143,19 +144,14 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
         to: '/projects/$projectId/settings/smtp',
         params: { projectId: projectId as string },
       },
-      // Preview: the route redirects to the overview while the flag is off.
-      ...(features.identityServers
-        ? [
-            {
-              id: 'identity-servers',
-              label: t('Identity servers'),
-              to: '/projects/$projectId/settings/identity-servers',
-              params: { projectId: projectId as string },
-            },
-          ]
-        : []),
+      {
+        id: 'identity-servers',
+        label: t('Identity servers'),
+        to: '/projects/$projectId/settings/identity-servers/ldap',
+        params: { projectId: projectId as string },
+      },
     ],
-    [projectId, showFirewallTab, t, features.identityServers],
+    [projectId, showFirewallTab, t],
   )
 
   const noDomainsPermission = !canWriteProjectDomains(access, features)
@@ -282,8 +278,10 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
           />
         )}
         {activeTab === 'smtp' && <SMTP projectId={projectId} />}
-        {activeTab === 'identity-servers' && features.identityServers && (
-          <IdentityServers projectId={projectId} />
+        {activeTab === 'identity-servers' && (
+          <IdentityServersLayout projectId={projectId} activeSubTab="ldap">
+            <LDAP projectId={projectId} />
+          </IdentityServersLayout>
         )}
         {activeTab === 'variables' && <Variables />}
         {activeTab === 'firewall' && (

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\UserAgent\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\UserAgent\UserAgent;
 
@@ -83,6 +84,17 @@ final class UserAgentTest extends TestCase
         $this->assertSame('SM-T970', $agent->device()->model);
     }
 
+    public function testBrowserWithoutMobileTokenIsTabletForUnknownModel(): void
+    {
+        // Chrome's reduced UA replaces the model with "K", so only the missing Mobile token marks a tablet.
+        $agent = UserAgent::parse(
+            'Mozilla/5.0 (Linux; Android 10; K) '
+            . 'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        );
+
+        $this->assertSame('tablet', $agent->device()->type);
+    }
+
     public function testTabletModelOverridesMobileToken(): void
     {
         $agent = UserAgent::parse(
@@ -93,6 +105,39 @@ final class UserAgentTest extends TestCase
         $this->assertSame('tablet', $agent->device()->type);
         $this->assertSame('Samsung', $agent->device()->brand);
         $this->assertSame('SM-X910', $agent->device()->model);
+    }
+
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function nativeAndroidProvider(): array
+    {
+        return [
+            'Android SDK phone' => ['io.example.app/1.2.0, Dalvik/2.1.0 (Linux; U; Android 14; Pixel 8 Build/AP2A.240805.005)', 'smartphone'],
+            'Android SDK tablet' => ['io.example.app/1.2.0, Dalvik/2.1.0 (Linux; U; Android 13; SM-X710 Build/TP1A.220624.014)', 'tablet'],
+            'Flutter SDK phone' => ['io.example.app/1.2.0 (Linux; U; Android 14; google Pixel 8)', 'smartphone'],
+            'Flutter SDK Samsung phone' => ['io.example.app/1.2.0 (Linux; U; Android 14; samsung SM-S918B)', 'smartphone'],
+            'Flutter SDK Samsung tablet' => ['io.example.app/1.2.0 (Linux; U; Android 13; samsung SM-X710)', 'tablet'],
+            'Flutter SDK Pixel Tablet' => ['io.example.app/1.2.0 (Linux; U; Android 14; google Pixel Tablet)', 'tablet'],
+            'Android SDK Galaxy Tab S6 Lite' => ['io.example.app/1.2.0, Dalvik/2.1.0 (Linux; U; Android 13; SM-P610 Build/TP1A.220624.014)', 'tablet'],
+            'Android SDK Galaxy Note 10.1' => ['io.example.app/1.2.0, Dalvik/1.6.0 (Linux; U; Android 4.4.2; GT-N8000 Build/KOT49H)', 'tablet'],
+            'Android SDK Galaxy Note 8.0' => ['io.example.app/1.2.0, Dalvik/1.6.0 (Linux; U; Android 4.4.2; GT-N5110 Build/KOT49H)', 'tablet'],
+            'Android SDK Galaxy Note phone' => ['io.example.app/1.2.0, Dalvik/1.6.0 (Linux; U; Android 4.1.2; GT-N7000 Build/JZO54K)', 'smartphone'],
+            'Flutter SDK MediaPad T3' => ['io.example.app/1.2.0 (Linux; U; Android 7.0; huawei AGS-L09)', 'tablet'],
+            'Flutter SDK MediaPad T5' => ['io.example.app/1.2.0 (Linux; U; Android 8.0; huawei AGS2-W09)', 'tablet'],
+            'Flutter SDK MediaPad M5 lite' => ['io.example.app/1.2.0 (Linux; U; Android 8.0; huawei BAH2-W19)', 'tablet'],
+            'Flutter SDK MatePad' => ['io.example.app/1.2.0 (Linux; U; Android 10; huawei MatePad Pro)', 'tablet'],
+            'Flutter SDK Galaxy Tab marketing name' => ['io.example.app/1.2.0 (Linux; U; Android 14; samsung Galaxy Tab S9)', 'tablet'],
+            'Flutter SDK Yoga Tab' => ['io.example.app/1.2.0 (Linux; U; Android 11; lenovo Yoga Tab 13)', 'tablet'],
+            'Flutter SDK vivo Pad' => ['io.example.app/1.2.0 (Linux; U; Android 14; vivo Pad 3)', 'tablet'],
+            'Flutter SDK OPPO Pad' => ['io.example.app/1.2.0 (Linux; U; Android 13; OPPO Pad Air)', 'tablet'],
+        ];
+    }
+
+    #[DataProvider('nativeAndroidProvider')]
+    public function testNativeAndroidClassifiesByModelNotMobileToken(string $userAgent, string $type): void
+    {
+        $this->assertSame($type, UserAgent::parse($userAgent)->device()->type);
     }
 
     public function testBotDetectionDoesNotSuppressClientAndDevice(): void

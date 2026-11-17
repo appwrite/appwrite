@@ -15,9 +15,9 @@ import {
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { useT } from '@/lib/i18n/translate'
 import {
-  RECORD_NUMBER_MAX,
   RECORD_TTL_MAX,
   parseRecordNumber,
+  recordNumberFieldMessage,
 } from '@/lib/domains/record-numeric-fields'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 
@@ -84,6 +84,11 @@ export function CreateRecordDialog({
   const [weight, setWeight] = useState('')
   const [port, setPort] = useState('')
   const [comment, setComment] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<{
+    priority?: string
+    weight?: string
+    port?: string
+  }>({})
   const [error, setError] = useState<string | null>(null)
 
   // Reset form when dialog closes, and drop a previous rejection on reopen.
@@ -98,14 +103,20 @@ export function CreateRecordDialog({
       setWeight('')
       setPort('')
       setComment('')
+      setFieldErrors({})
     }
   }, [open])
 
   const change =
-    (setter: (value: string) => void) =>
+    (setter: (value: string) => void, field?: 'priority' | 'weight' | 'port') =>
     (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       setter(event.target.value)
       setError(null)
+      if (field) {
+        setFieldErrors((prev) =>
+          prev[field] ? { ...prev, [field]: undefined } : prev,
+        )
+      }
     }
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -117,7 +128,32 @@ export function CreateRecordDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (isLoading || !name.trim() || !value.trim()) return
+    // MX defaults to priority 10, so only a value typed in is checked.
+    const priorityError =
+      type === 'SRV' || (type === 'MX' && priority.trim())
+        ? recordNumberFieldMessage(priority, 'priority')
+        : null
+    const weightError =
+      type === 'SRV' ? recordNumberFieldMessage(weight, 'weight') : null
+    const portError =
+      type === 'SRV' ? recordNumberFieldMessage(port, 'port') : null
+
+    setFieldErrors({
+      priority: priorityError ?? undefined,
+      weight: weightError ?? undefined,
+      port: portError ?? undefined,
+    })
+
+    if (
+      isLoading ||
+      !name.trim() ||
+      !value.trim() ||
+      priorityError ||
+      weightError ||
+      portError
+    ) {
+      return
+    }
 
     const parsedTtl = parseRecordNumber(ttl)
     const parsedPriority = parseRecordNumber(priority)
@@ -171,6 +207,11 @@ export function CreateRecordDialog({
                     value={type}
                     onValueChange={(next) => {
                       setType(next)
+                      // MX records almost always use priority 10.
+                      if (next === 'MX' && !priority.trim()) {
+                        setPriority(DEFAULT_MX_PRIORITY.toString())
+                      }
+                      setFieldErrors({})
                       setError(null)
                     }}
                     disabled={isLoading}
@@ -267,14 +308,22 @@ export function CreateRecordDialog({
                       id="priority"
                       type="number"
                       value={priority}
-                      onChange={change(setPriority)}
+                      onChange={change(setPriority, 'priority')}
                       placeholder={
                         type === 'MX' ? DEFAULT_MX_PRIORITY.toString() : '0'
                       }
-                      min="0"
-                      max={RECORD_NUMBER_MAX}
+                      step="any"
                       disabled={isLoading}
+                      aria-invalid={!!fieldErrors.priority}
+                      className={
+                        fieldErrors.priority ? 'border-destructive' : ''
+                      }
                     />
+                    {fieldErrors.priority && (
+                      <p className="text-[12px] text-destructive">
+                        {t(fieldErrors.priority)}
+                      </p>
+                    )}
                     <p className="text-[12px] text-muted-foreground">
                       {type === 'MX'
                         ? t('Lower numbers have higher priority')
@@ -294,12 +343,20 @@ export function CreateRecordDialog({
                         id="weight"
                         type="number"
                         value={weight}
-                        onChange={change(setWeight)}
+                        onChange={change(setWeight, 'weight')}
                         placeholder="10"
-                        min="0"
-                        max={RECORD_NUMBER_MAX}
+                        step="any"
                         disabled={isLoading}
+                        aria-invalid={!!fieldErrors.weight}
+                        className={
+                          fieldErrors.weight ? 'border-destructive' : ''
+                        }
                       />
+                      {fieldErrors.weight && (
+                        <p className="text-[12px] text-destructive">
+                          {t(fieldErrors.weight)}
+                        </p>
+                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -310,12 +367,18 @@ export function CreateRecordDialog({
                         id="port"
                         type="number"
                         value={port}
-                        onChange={change(setPort)}
+                        onChange={change(setPort, 'port')}
                         placeholder="443"
-                        min="0"
-                        max={RECORD_NUMBER_MAX}
+                        step="any"
                         disabled={isLoading}
+                        aria-invalid={!!fieldErrors.port}
+                        className={fieldErrors.port ? 'border-destructive' : ''}
                       />
+                      {fieldErrors.port && (
+                        <p className="text-[12px] text-destructive">
+                          {t(fieldErrors.port)}
+                        </p>
+                      )}
                     </div>
                   </>
                 )}

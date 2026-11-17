@@ -66,7 +66,15 @@ final class ReviewsConsoleClientTest extends Scope
         $this->assertSame(201, $repository['headers']['status-code']);
         $this->assertSame($installationId, $repository['body']['installationId']);
         $this->assertSame($this->providerRepositoryId, $repository['body']['providerRepositoryId']);
+        $this->assertSame('normal', $repository['body']['strength']);
         $repositoryId = $repository['body']['$id'];
+
+        // Review it at expert
+        $strength = $this->client->call(Client::METHOD_PATCH, '/reviews/repositories/' . $repositoryId . '/strength', $this->projectHeaders(), [
+            'strength' => 'expert',
+        ]);
+        $this->assertSame(200, $strength['headers']['status-code']);
+        $this->assertSame('expert', $strength['body']['strength']);
 
         $repositories = $this->client->call(Client::METHOD_GET, '/reviews/repositories', $this->projectHeaders());
         $this->assertSame(200, $repositories['headers']['status-code']);
@@ -84,6 +92,7 @@ final class ReviewsConsoleClientTest extends Scope
         $this->assertSame('opened', $review['trigger']);
         $this->assertSame($repositoryId, $review['repositoryId']);
         $this->assertSame($firstHead, $review['providerCommitHash']);
+        $this->assertSame('expert', $review['strength']);
         $firstReviewId = $review['$id'];
 
         // A push while it is still queued supersedes it with a review of the new head
@@ -146,13 +155,20 @@ final class ReviewsConsoleClientTest extends Scope
         ]);
         $this->assertSame(204, $usage['headers']['status-code']);
 
-        // A push while it runs queues a second review and leaves the running one alone
+        // A push while it runs queues a second review and leaves the running one alone. The new
+        // review takes the strength the repository has now; the running one keeps its own.
+        $strength = $this->client->call(Client::METHOD_PATCH, '/reviews/repositories/' . $repositoryId . '/strength', $this->projectHeaders(), [
+            'strength' => 'basic',
+        ]);
+        $this->assertSame(200, $strength['headers']['status-code']);
         $this->sendPullRequestEvent('synchronize', $pullRequest, \str_repeat('d', 40));
         $queued = $this->listReviews($pullRequest, [Query::equal('status', ['queued'])->toString()]);
         $this->assertSame(1, $queued['body']['total']);
         $this->assertNotSame($reviewId, $queued['body']['reviews'][0]['$id']);
+        $this->assertSame('basic', $queued['body']['reviews'][0]['strength']);
         $review = $this->client->call(Client::METHOD_GET, '/reviews/' . $reviewId, $this->projectHeaders());
         $this->assertSame('processing', $review['body']['status']);
+        $this->assertSame('expert', $review['body']['strength']);
 
         $completed = $this->callService(Client::METHOD_PATCH, '/reviews/' . $reviewId . '/status', [
             'projectId' => $projectId,
@@ -218,7 +234,7 @@ final class ReviewsConsoleClientTest extends Scope
         ];
         $this->assertEventually(function () use ($usageHeaders, $repositoryId) {
             $response = $this->client->call(Client::METHOD_GET, '/usage/events', $usageHeaders, [
-                'metrics' => ['reviews', 'reviews.tokens.input', 'reviews.tokens.output', 'reviews.tokens.claude.input'],
+                'metrics' => ['reviews', 'reviews.expert', 'reviews.tokens.input', 'reviews.tokens.output', 'reviews.tokens.claude.input'],
                 'queries' => [Query::equal('resourceId', [$repositoryId])->toString()],
             ]);
             $this->assertSame(200, $response['headers']['status-code']);
@@ -227,6 +243,8 @@ final class ReviewsConsoleClientTest extends Scope
                 $totals[$series['metric']] = \array_sum(\array_column($series['points'], 'value'));
             }
             $this->assertEquals(1, $totals['reviews']);
+            // Billed at the strength it was queued at, not the repository's current one
+            $this->assertEquals(1, $totals['reviews.expert']);
             $this->assertEquals(1200, $totals['reviews.tokens.input']);
             $this->assertEquals(300, $totals['reviews.tokens.output']);
             $this->assertEquals(1200, $totals['reviews.tokens.claude.input']);
@@ -319,6 +337,17 @@ final class ReviewsConsoleClientTest extends Scope
             'projectId' => 'another-project',
         ]);
         $this->assertSame(404, $pullReviews['headers']['status-code']);
+
+        // A strength the service does not know, and a repository without code review
+        $strength = $this->client->call(Client::METHOD_PATCH, '/reviews/repositories/' . $repositoryId . '/strength', $this->projectHeaders(), [
+            'strength' => 'max',
+        ]);
+        $this->assertSame(400, $strength['headers']['status-code']);
+
+        $strength = $this->client->call(Client::METHOD_PATCH, '/reviews/repositories/missing/strength', $this->projectHeaders(), [
+            'strength' => 'expert',
+        ]);
+        $this->assertSame(404, $strength['headers']['status-code']);
 
         // Code review is on for the repository already
         $duplicate = $this->client->call(Client::METHOD_POST, '/reviews/repositories', $this->projectHeaders(), [

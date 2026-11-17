@@ -79,6 +79,11 @@ return [
         'description' => "The cache could not confirm the request's changes, so they may or may not have been applied. Read the affected resources back before retrying.",
         'code' => 503,
     ],
+    Exception::GENERAL_EMBEDDING_UNAVAILABLE => [
+        'name' => Exception::GENERAL_EMBEDDING_UNAVAILABLE,
+        'description' => 'The embedding service could not generate embeddings for this request. Please try again later.',
+        'code' => 503,
+    ],
     Exception::GENERAL_ARGUMENT_INVALID => [
         'name' => Exception::GENERAL_ARGUMENT_INVALID,
         'description' => 'The request contains one or more invalid arguments. Please refer to the endpoint documentation.',

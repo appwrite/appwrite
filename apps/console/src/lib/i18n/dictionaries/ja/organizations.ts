@@ -546,6 +546,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Please select a state': '州を選択してください',
   'Please select exactly': '正確に選択してください',
   'Please try again.': 'もう一度お試しください。',
+  'Port is required': 'ポートは必須です',
+  'Port must be between 0 and 65535':
+    'ポートは 0 から 65535 の範囲で指定してください',
   'Post-logout redirect URIs': 'ログアウト後のリダイレクト URI',
   'Postal code': '郵便番号',
   'Preparing your organization dashboard.': '組織ダッシュボードを準備中です。',
@@ -553,6 +556,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Previous projects page': '前のプロジェクトページ',
   'Primary payment method updated': '主要な支払い方法を更新しました',
   'Priority for SRV record': 'SRV レコードの優先度',
+  'Priority is required': '優先度は必須です',
+  'Priority must be between 0 and 65535':
+    '優先度は 0 から 65535 の範囲で指定してください',
   'Privacy policy': 'プライバシーポリシー',
   'Project (optional)': 'プロジェクト (任意)',
   'Project ID': 'プロジェクト ID',
@@ -561,6 +567,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Project keys': 'プロジェクトキー',
   'Project pinned': 'プロジェクトをピン留めしました',
   'Project unpinned': 'プロジェクトのピン留めを解除しました',
+  'Projects subtotal': 'プロジェクト小計',
   'Projects that will be deleted:': '削除されるプロジェクト:',
   'Promo code': 'プロモコード',
   'Public client': 'パブリッククライアント',
@@ -713,6 +720,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'View recap': 'まとめを見る',
   'View charges breakdown': '料金内訳を表示',
   'View detailed pricing': '詳細な料金を表示',
+  'Weight is required': '重みは必須です',
+  'Weight must be between 0 and 65535':
+    '重みは 0 から 65535 の範囲で指定してください',
   'View invoice': '請求書を表示',
   'View members': 'メンバーを表示',
   'View project': 'プロジェクトを表示',
@@ -825,6 +835,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'チーム管理と請求の書き込みを除くすべてのリソース。',
   'Allow OAuth2 Device Authorization Grant (RFC 8628).':
     'OAuth2 Device Authorization Grant (RFC 8628) を許可します。',
+  'Already in this organization': 'すでにこの組織にあります',
   'Apply Appwrite credits to your organization. Credits expire after a set period and do not roll over.':
     '組織に Appwrite クレジットを適用します。クレジットは一定期間後に失効し、繰り越されません。',
   'Apps published by your organization.': '組織が公開しているアプリ。',
@@ -919,6 +930,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'プランの上限を超えた追加使用による予期しない課金を防ぐには、予算上限を有効にしてください。支出上限に達すると、サービスは自動的に一時停止されます。',
   'Enter a coupon code to update your estimated total. Applied credits expire after a set period and do not roll over.':
     'クーポンコードを入力すると見積合計が更新されます。適用したクレジットは一定期間後に失効し、繰り越されません。',
+  'Enter a domain like example.com':
+    'example.com のようにドメインを入力してください',
   'Enter a full domain name (e.g. example.com)':
     'ドメイン名をすべて入力してください (例: example.com)',
   'Enter tax ID (e.g., VAT, GST, EIN)':
@@ -1124,6 +1137,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'この組織に参加できなくなります。',
   'This app may have been deleted or you do not have access.':
     'このアプリは削除されたか、アクセス権がない可能性があります。',
+  "This domain can't be transferred. Check the name and try again.":
+    'このドメインは移管できません。名前を確認して、もう一度お試しください。',
   'This entire organization will be deleted, including all of its projects and resources.':
     'この組織全体と、そのすべてのプロジェクトおよびリソースが削除されます。',
   'This invoice is missing authentication details.':

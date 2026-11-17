@@ -207,10 +207,6 @@ jobs:
             if: ${{ !cancelled() && steps.install.outcome == 'success' }}
             run: composer analyze -- --no-progress
 
-          - name: Generate specs
-            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-            run: _APP_STORAGE_LIMIT=5368709120 php app/cli.php specs --version=latest --git=no
-
   locale:
     name: Checks / Locale
     needs: changes
@@ -371,7 +367,7 @@ jobs:
             fi
           fi
           CHANGED=$(echo "$CHANGED" | tr ' ' '\n' | sort -u \
-            | while read -r package; do [ -d "packages/$package" ] && echo "$package"; done)
+            | while read -r package; do if [ -d "packages/$package" ]; then echo "$package"; fi; done)
 
           # docs-only change: no packages to test
           if [ -z "$CHANGED" ]; then
@@ -596,6 +592,11 @@ jobs:
         timeout-minutes: 15
         run: docker compose exec appwrite test --testsuite packages
 
+      # In the image: booting Appwrite needs the utopia extension (Utopia\Locale\Locale).
+      - name: Generate specs
+        timeout-minutes: 10
+        run: docker compose exec -T -e _APP_STORAGE_LIMIT=5368709120 appwrite specs --version=latest --git=no
+
   e2e_general:
     name: Tests / E2E / General
     runs-on: >-
@@ -815,7 +816,8 @@ jobs:
         run: |
           ./dev/openldap/certs.sh
           docker compose up -d --wait openldap
-          docker compose --profile openldap-seed run --rm openldap-seed
+          # --profile would replace COMPOSE_PROFILES and drop the lane's database service
+          COMPOSE_PROFILES="${COMPOSE_PROFILES:+$COMPOSE_PROFILES,}openldap-seed" docker compose run --rm openldap-seed
 
       - name: Load and Start Appwrite
         timeout-minutes: 5

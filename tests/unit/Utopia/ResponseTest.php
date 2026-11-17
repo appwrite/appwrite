@@ -13,8 +13,10 @@ use Appwrite\Utopia\Response\Model\Project as ProjectModel;
 use Appwrite\Utopia\Response\Model\Provider as ProviderModel;
 use Exception;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
+use Swoole\Coroutine;
 use Swoole\Http\Response as SwooleResponse;
 use Tests\Unit\Utopia\Response\Filters\First;
 use Tests\Unit\Utopia\Response\Filters\Second;
@@ -23,6 +25,9 @@ use Utopia\Database\Document;
 final class ResponseTest extends TestCase
 {
     protected ?Response $response = null;
+
+    /** How often a queuedResponse() asked for its connection's queue. */
+    private int $polls = 0;
 
     public function setUp(): void
     {
@@ -400,5 +405,178 @@ final class ResponseTest extends TestCase
         $this->response->setContentDisposition(Response::DISPOSITION_ATTACHMENT, $name);
 
         $this->assertSame([$expected], $this->response->getHeaders()['content-disposition']);
+    }
+
+    /**
+     * A response whose connection reports the queue sizes given, in order,
+     * over a Swoole response that accepts every write.
+     *
+     * @param list<int|false|null> $queues
+     */
+    private function queuedResponse(array $queues, ?SwooleResponse $swoole = null): Response
+    {
+        $swoole ??= $this->createStub(SwooleResponse::class);
+        if ($swoole instanceof \PHPUnit\Framework\MockObject\Stub) {
+            $swoole->method('write')->willReturn(true);
+        }
+
+        $poll = function (): void {
+            $this->polls++;
+        };
+
+        return new class ($swoole, $queues, $poll) extends Response {
+            /** @param list<int|false|null> $queues */
+            public function __construct(SwooleResponse $swoole, private array $queues, private \Closure $poll)
+            {
+                parent::__construct($swoole);
+            }
+
+            protected function queued(): int|false|null
+            {
+                ($this->poll)();
+
+                return \count($this->queues) > 1 ? \array_shift($this->queues) : $this->queues[0];
+            }
+        };
+    }
+
+    private function inCoroutine(callable $test): void
+    {
+        $error = null;
+        Coroutine\run(static function () use ($test, &$error): void {
+            try {
+                $test();
+            } catch (\Throwable $e) {
+                $error = $e;
+            }
+        });
+        if ($error !== null) {
+            throw $error;
+        }
+    }
+
+    #[RunInSeparateProcess]
+    public function testWriteDoesNotAskTheServerUntilTheLimitIsWritten(): void
+    {
+        $this->inCoroutine(function (): void {
+            $response = $this->queuedResponse([Response::$sendQueueLimit + 1]);
+
+            $this->assertTrue($response->write(\str_repeat('a', Response::$sendQueueLimit - 1)));
+            $this->assertSame(0, $this->polls);
+        });
+    }
+
+    #[RunInSeparateProcess]
+    public function testWriteWaitsForAClientToDrainItsQueue(): void
+    {
+        $interval = Response::$sendPollInterval;
+        Response::$sendPollInterval = 0.001;
+        try {
+            $this->inCoroutine(function (): void {
+                $over = Response::$sendQueueLimit + 1;
+                $response = $this->queuedResponse([$over, $over, $over, 0]);
+
+                $this->assertTrue($response->write(\str_repeat('a', Response::$sendQueueLimit)));
+                $this->assertSame(4, $this->polls);
+
+                // A drained queue starts the count again.
+                $this->assertTrue($response->write('a'));
+                $this->assertSame(4, $this->polls);
+            });
+        } finally {
+            Response::$sendPollInterval = $interval;
+        }
+    }
+
+    #[RunInSeparateProcess]
+    public function testWriteClosesAConnectionThatStopsReading(): void
+    {
+        $interval = Response::$sendPollInterval;
+        $timeout = Response::$sendTimeout;
+        Response::$sendPollInterval = 0.001;
+        Response::$sendTimeout = 0.01;
+        try {
+            $this->inCoroutine(function (): void {
+                $swoole = $this->createMock(SwooleResponse::class);
+                $swoole->method('write')->willReturn(true);
+                $swoole->expects($this->once())->method('close');
+                $response = $this->queuedResponse([Response::$sendQueueLimit + 1], $swoole);
+
+                $this->assertFalse($response->write(\str_repeat('a', Response::$sendQueueLimit)));
+            });
+        } finally {
+            Response::$sendPollInterval = $interval;
+            Response::$sendTimeout = $timeout;
+        }
+    }
+
+    #[RunInSeparateProcess]
+    public function testWriteKeepsWaitingWhileTheClientReadsSlowly(): void
+    {
+        $interval = Response::$sendPollInterval;
+        $timeout = Response::$sendTimeout;
+        Response::$sendPollInterval = 0.001;
+        Response::$sendTimeout = 0.0025;
+        try {
+            $this->inCoroutine(function (): void {
+                $limit = Response::$sendQueueLimit;
+                // Each poll the queue shrinks a little: longer in all than the timeout, but never stalled.
+                $queues = [$limit + 7, $limit + 6, $limit + 5, $limit + 4, $limit + 3, $limit + 2, $limit + 1, $limit];
+                $swoole = $this->createMock(SwooleResponse::class);
+                $swoole->method('write')->willReturn(true);
+                $swoole->expects($this->never())->method('close');
+                $response = $this->queuedResponse($queues, $swoole);
+
+                $this->assertTrue($response->write(\str_repeat('a', $limit)));
+            });
+        } finally {
+            Response::$sendPollInterval = $interval;
+            Response::$sendTimeout = $timeout;
+        }
+    }
+
+    #[RunInSeparateProcess]
+    public function testWriteReportsAConnectionThatIsGone(): void
+    {
+        $interval = Response::$sendPollInterval;
+        Response::$sendPollInterval = 0.001;
+        try {
+            $this->inCoroutine(function (): void {
+                $response = $this->queuedResponse([Response::$sendQueueLimit + 1, false]);
+
+                $this->assertFalse($response->write(\str_repeat('a', Response::$sendQueueLimit)));
+            });
+        } finally {
+            Response::$sendPollInterval = $interval;
+        }
+    }
+
+    #[RunInSeparateProcess]
+    public function testWriteWithoutAServerToAskDoesNotWait(): void
+    {
+        $this->inCoroutine(function (): void {
+            $response = $this->queuedResponse([null]);
+
+            $this->assertTrue($response->write(\str_repeat('a', Response::$sendQueueLimit)));
+            $this->assertSame(1, $this->polls);
+        });
+    }
+
+    public function testWriteOutsideACoroutineDoesNotWait(): void
+    {
+        $response = $this->queuedResponse([Response::$sendQueueLimit + 1]);
+
+        $this->assertTrue($response->write(\str_repeat('a', Response::$sendQueueLimit)));
+        $this->assertSame(0, $this->polls);
+    }
+
+    public function testSendStopsAtTheFirstWriteTheClientCannotTake(): void
+    {
+        $swoole = $this->createMock(SwooleResponse::class);
+        $swoole->expects($this->once())->method('write')->willReturn(false);
+        $swoole->expects($this->never())->method('end');
+        $response = new Response($swoole);
+
+        $response->send(\str_repeat('a', Response::CHUNK_SIZE * 3));
     }
 }

@@ -226,6 +226,7 @@ import { Route as PublicOrganizationsOrgIdAppsAppIdRouteImport } from './routes/
 import { Route as PublicOrganizationsOrgIdDomainsIndexRouteImport } from './routes/_public/organizations.$orgId.domains.index'
 import { Route as PublicOrganizationsOrgIdDomainsDomainIdRouteImport } from './routes/_public/organizations.$orgId.domains.$domainId'
 import { Route as PublicOrganizationsOrgIdDomainsBuyRouteImport } from './routes/_public/organizations.$orgId.domains.buy'
+import { Route as PublicOrganizationsOrgIdDomainsContinueRouteImport } from './routes/_public/organizations.$orgId.domains.continue'
 import { Route as PublicOrganizationsOrgIdDomainsTransferInRouteImport } from './routes/_public/organizations.$orgId.domains.transfer-in'
 import { Route as PublicOrganizationsOrgIdMarketplaceIndexRouteImport } from './routes/_public/organizations.$orgId.marketplace.index'
 import { Route as PublicOrganizationsOrgIdSettingsBillingRouteImport } from './routes/_public/organizations.$orgId.settings.billing'
@@ -347,6 +348,7 @@ import { Route as PublicProjectsProjectIdMessagingTopicsIndexRouteImport } from 
 import { Route as PublicProjectsProjectIdMessagingTopicsTopicIdRouteImport } from './routes/_public/projects.$projectId.messaging.topics.$topicId'
 import { Route as PublicProjectsProjectIdSettingsDomainsIndexRouteImport } from './routes/_public/projects.$projectId.settings.domains.index'
 import { Route as PublicProjectsProjectIdSettingsDomainsAddRouteImport } from './routes/_public/projects.$projectId.settings.domains.add'
+import { Route as PublicProjectsProjectIdSettingsIdentityServersLdapRouteImport } from './routes/_public/projects.$projectId.settings.identity-servers.ldap'
 import { Route as PublicProjectsProjectIdSettingsMigrationsIndexRouteImport } from './routes/_public/projects.$projectId.settings.migrations.index'
 import { Route as PublicProjectsProjectIdSettingsMigrationsImportRouteImport } from './routes/_public/projects.$projectId.settings.migrations.import'
 import { Route as PublicProjectsProjectIdSitesSiteIdIndexRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.index'
@@ -1676,6 +1678,12 @@ const PublicOrganizationsOrgIdDomainsBuyRoute =
     path: '/buy',
     getParentRoute: () => PublicOrganizationsOrgIdDomainsRoute,
   } as any)
+const PublicOrganizationsOrgIdDomainsContinueRoute =
+  PublicOrganizationsOrgIdDomainsContinueRouteImport.update({
+    id: '/continue',
+    path: '/continue',
+    getParentRoute: () => PublicOrganizationsOrgIdDomainsRoute,
+  } as any)
 const PublicOrganizationsOrgIdDomainsTransferInRoute =
   PublicOrganizationsOrgIdDomainsTransferInRouteImport.update({
     id: '/transfer-in',
@@ -2401,6 +2409,12 @@ const PublicProjectsProjectIdSettingsDomainsAddRoute =
     id: '/add',
     path: '/add',
     getParentRoute: () => PublicProjectsProjectIdSettingsDomainsRoute,
+  } as any)
+const PublicProjectsProjectIdSettingsIdentityServersLdapRoute =
+  PublicProjectsProjectIdSettingsIdentityServersLdapRouteImport.update({
+    id: '/ldap',
+    path: '/ldap',
+    getParentRoute: () => PublicProjectsProjectIdSettingsIdentityServersRoute,
   } as any)
 const PublicProjectsProjectIdSettingsMigrationsIndexRoute =
   PublicProjectsProjectIdSettingsMigrationsIndexRouteImport.update({
@@ -3793,6 +3807,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/apps/$appId': typeof PublicOrganizationsOrgIdAppsAppIdRouteWithChildren
   '/organizations/$orgId/domains/$domainId': typeof PublicOrganizationsOrgIdDomainsDomainIdRouteWithChildren
   '/organizations/$orgId/domains/buy': typeof PublicOrganizationsOrgIdDomainsBuyRoute
+  '/organizations/$orgId/domains/continue': typeof PublicOrganizationsOrgIdDomainsContinueRoute
   '/organizations/$orgId/domains/transfer-in': typeof PublicOrganizationsOrgIdDomainsTransferInRoute
   '/organizations/$orgId/settings/billing': typeof PublicOrganizationsOrgIdSettingsBillingRoute
   '/organizations/$orgId/settings/compliance': typeof PublicOrganizationsOrgIdSettingsComplianceRoute
@@ -3826,7 +3841,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/reviews/repositories': typeof PublicProjectsProjectIdReviewsRepositoriesRoute
   '/projects/$projectId/settings/domains': typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   '/projects/$projectId/settings/firewall': typeof PublicProjectsProjectIdSettingsFirewallRoute
-  '/projects/$projectId/settings/identity-servers': typeof PublicProjectsProjectIdSettingsIdentityServersRoute
+  '/projects/$projectId/settings/identity-servers': typeof PublicProjectsProjectIdSettingsIdentityServersRouteWithChildren
   '/projects/$projectId/settings/migrations': typeof PublicProjectsProjectIdSettingsMigrationsRouteWithChildren
   '/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
   '/projects/$projectId/settings/variables': typeof PublicProjectsProjectIdSettingsVariablesRoute
@@ -3904,6 +3919,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/messaging/providers/create': typeof PublicProjectsProjectIdMessagingProvidersCreateRoute
   '/projects/$projectId/messaging/topics/$topicId': typeof PublicProjectsProjectIdMessagingTopicsTopicIdRouteWithChildren
   '/projects/$projectId/settings/domains/add': typeof PublicProjectsProjectIdSettingsDomainsAddRoute
+  '/projects/$projectId/settings/identity-servers/ldap': typeof PublicProjectsProjectIdSettingsIdentityServersLdapRoute
   '/projects/$projectId/settings/migrations/import': typeof PublicProjectsProjectIdSettingsMigrationsImportRoute
   '/projects/$projectId/sites/$siteId/deployments': typeof PublicProjectsProjectIdSitesSiteIdDeploymentsRouteWithChildren
   '/projects/$projectId/sites/$siteId/domains': typeof PublicProjectsProjectIdSitesSiteIdDomainsRouteWithChildren
@@ -4259,6 +4275,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId': typeof PublicProjectsProjectIdIndexRoute
   '/organizations/$orgId/agent/$agentId': typeof PublicOrganizationsOrgIdAgentAgentIdRoute
   '/organizations/$orgId/domains/buy': typeof PublicOrganizationsOrgIdDomainsBuyRoute
+  '/organizations/$orgId/domains/continue': typeof PublicOrganizationsOrgIdDomainsContinueRoute
   '/organizations/$orgId/domains/transfer-in': typeof PublicOrganizationsOrgIdDomainsTransferInRoute
   '/organizations/$orgId/settings/billing': typeof PublicOrganizationsOrgIdSettingsBillingRoute
   '/organizations/$orgId/settings/compliance': typeof PublicOrganizationsOrgIdSettingsComplianceRoute
@@ -4287,7 +4304,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/reviews/$reviewId': typeof PublicProjectsProjectIdReviewsReviewIdRoute
   '/projects/$projectId/reviews/repositories': typeof PublicProjectsProjectIdReviewsRepositoriesRoute
   '/projects/$projectId/settings/firewall': typeof PublicProjectsProjectIdSettingsFirewallRoute
-  '/projects/$projectId/settings/identity-servers': typeof PublicProjectsProjectIdSettingsIdentityServersRoute
+  '/projects/$projectId/settings/identity-servers': typeof PublicProjectsProjectIdSettingsIdentityServersRouteWithChildren
   '/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
   '/projects/$projectId/settings/variables': typeof PublicProjectsProjectIdSettingsVariablesRoute
   '/projects/$projectId/settings/webhooks': typeof PublicProjectsProjectIdSettingsWebhooksRoute
@@ -4352,6 +4369,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/messaging/$messageId/settings': typeof PublicProjectsProjectIdMessagingMessageIdSettingsRoute
   '/projects/$projectId/messaging/providers/create': typeof PublicProjectsProjectIdMessagingProvidersCreateRoute
   '/projects/$projectId/settings/domains/add': typeof PublicProjectsProjectIdSettingsDomainsAddRoute
+  '/projects/$projectId/settings/identity-servers/ldap': typeof PublicProjectsProjectIdSettingsIdentityServersLdapRoute
   '/projects/$projectId/settings/migrations/import': typeof PublicProjectsProjectIdSettingsMigrationsImportRoute
   '/projects/$projectId/sites/$siteId/firewall': typeof PublicProjectsProjectIdSitesSiteIdFirewallRoute
   '/projects/$projectId/sites/$siteId/logs': typeof PublicProjectsProjectIdSitesSiteIdLogsRoute
@@ -4731,6 +4749,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/apps/$appId': typeof PublicOrganizationsOrgIdAppsAppIdRouteWithChildren
   '/_public/organizations/$orgId/domains/$domainId': typeof PublicOrganizationsOrgIdDomainsDomainIdRouteWithChildren
   '/_public/organizations/$orgId/domains/buy': typeof PublicOrganizationsOrgIdDomainsBuyRoute
+  '/_public/organizations/$orgId/domains/continue': typeof PublicOrganizationsOrgIdDomainsContinueRoute
   '/_public/organizations/$orgId/domains/transfer-in': typeof PublicOrganizationsOrgIdDomainsTransferInRoute
   '/_public/organizations/$orgId/settings/billing': typeof PublicOrganizationsOrgIdSettingsBillingRoute
   '/_public/organizations/$orgId/settings/compliance': typeof PublicOrganizationsOrgIdSettingsComplianceRoute
@@ -4764,7 +4783,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/reviews/repositories': typeof PublicProjectsProjectIdReviewsRepositoriesRoute
   '/_public/projects/$projectId/settings/domains': typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   '/_public/projects/$projectId/settings/firewall': typeof PublicProjectsProjectIdSettingsFirewallRoute
-  '/_public/projects/$projectId/settings/identity-servers': typeof PublicProjectsProjectIdSettingsIdentityServersRoute
+  '/_public/projects/$projectId/settings/identity-servers': typeof PublicProjectsProjectIdSettingsIdentityServersRouteWithChildren
   '/_public/projects/$projectId/settings/migrations': typeof PublicProjectsProjectIdSettingsMigrationsRouteWithChildren
   '/_public/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
   '/_public/projects/$projectId/settings/variables': typeof PublicProjectsProjectIdSettingsVariablesRoute
@@ -4842,6 +4861,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/messaging/providers/create': typeof PublicProjectsProjectIdMessagingProvidersCreateRoute
   '/_public/projects/$projectId/messaging/topics/$topicId': typeof PublicProjectsProjectIdMessagingTopicsTopicIdRouteWithChildren
   '/_public/projects/$projectId/settings/domains/add': typeof PublicProjectsProjectIdSettingsDomainsAddRoute
+  '/_public/projects/$projectId/settings/identity-servers/ldap': typeof PublicProjectsProjectIdSettingsIdentityServersLdapRoute
   '/_public/projects/$projectId/settings/migrations/import': typeof PublicProjectsProjectIdSettingsMigrationsImportRoute
   '/_public/projects/$projectId/sites/$siteId/deployments': typeof PublicProjectsProjectIdSitesSiteIdDeploymentsRouteWithChildren
   '/_public/projects/$projectId/sites/$siteId/domains': typeof PublicProjectsProjectIdSitesSiteIdDomainsRouteWithChildren
@@ -5227,6 +5247,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/apps/$appId'
     | '/organizations/$orgId/domains/$domainId'
     | '/organizations/$orgId/domains/buy'
+    | '/organizations/$orgId/domains/continue'
     | '/organizations/$orgId/domains/transfer-in'
     | '/organizations/$orgId/settings/billing'
     | '/organizations/$orgId/settings/compliance'
@@ -5338,6 +5359,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/messaging/providers/create'
     | '/projects/$projectId/messaging/topics/$topicId'
     | '/projects/$projectId/settings/domains/add'
+    | '/projects/$projectId/settings/identity-servers/ldap'
     | '/projects/$projectId/settings/migrations/import'
     | '/projects/$projectId/sites/$siteId/deployments'
     | '/projects/$projectId/sites/$siteId/domains'
@@ -5693,6 +5715,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId'
     | '/organizations/$orgId/agent/$agentId'
     | '/organizations/$orgId/domains/buy'
+    | '/organizations/$orgId/domains/continue'
     | '/organizations/$orgId/domains/transfer-in'
     | '/organizations/$orgId/settings/billing'
     | '/organizations/$orgId/settings/compliance'
@@ -5786,6 +5809,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/messaging/$messageId/settings'
     | '/projects/$projectId/messaging/providers/create'
     | '/projects/$projectId/settings/domains/add'
+    | '/projects/$projectId/settings/identity-servers/ldap'
     | '/projects/$projectId/settings/migrations/import'
     | '/projects/$projectId/sites/$siteId/firewall'
     | '/projects/$projectId/sites/$siteId/logs'
@@ -6164,6 +6188,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/apps/$appId'
     | '/_public/organizations/$orgId/domains/$domainId'
     | '/_public/organizations/$orgId/domains/buy'
+    | '/_public/organizations/$orgId/domains/continue'
     | '/_public/organizations/$orgId/domains/transfer-in'
     | '/_public/organizations/$orgId/settings/billing'
     | '/_public/organizations/$orgId/settings/compliance'
@@ -6275,6 +6300,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/messaging/providers/create'
     | '/_public/projects/$projectId/messaging/topics/$topicId'
     | '/_public/projects/$projectId/settings/domains/add'
+    | '/_public/projects/$projectId/settings/identity-servers/ldap'
     | '/_public/projects/$projectId/settings/migrations/import'
     | '/_public/projects/$projectId/sites/$siteId/deployments'
     | '/_public/projects/$projectId/sites/$siteId/domains'
@@ -8026,6 +8052,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsBuyRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdDomainsRoute
     }
+    '/_public/organizations/$orgId/domains/continue': {
+      id: '/_public/organizations/$orgId/domains/continue'
+      path: '/continue'
+      fullPath: '/organizations/$orgId/domains/continue'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsContinueRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdDomainsRoute
+    }
     '/_public/organizations/$orgId/domains/transfer-in': {
       id: '/_public/organizations/$orgId/domains/transfer-in'
       path: '/transfer-in'
@@ -8872,6 +8905,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$projectId/settings/domains/add'
       preLoaderRoute: typeof PublicProjectsProjectIdSettingsDomainsAddRouteImport
       parentRoute: typeof PublicProjectsProjectIdSettingsDomainsRoute
+    }
+    '/_public/projects/$projectId/settings/identity-servers/ldap': {
+      id: '/_public/projects/$projectId/settings/identity-servers/ldap'
+      path: '/ldap'
+      fullPath: '/projects/$projectId/settings/identity-servers/ldap'
+      preLoaderRoute: typeof PublicProjectsProjectIdSettingsIdentityServersLdapRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSettingsIdentityServersRoute
     }
     '/_public/projects/$projectId/settings/migrations/': {
       id: '/_public/projects/$projectId/settings/migrations/'
@@ -10348,6 +10388,7 @@ const PublicOrganizationsOrgIdDomainsDomainIdRouteWithChildren =
 interface PublicOrganizationsOrgIdDomainsRouteChildren {
   PublicOrganizationsOrgIdDomainsDomainIdRoute: typeof PublicOrganizationsOrgIdDomainsDomainIdRouteWithChildren
   PublicOrganizationsOrgIdDomainsBuyRoute: typeof PublicOrganizationsOrgIdDomainsBuyRoute
+  PublicOrganizationsOrgIdDomainsContinueRoute: typeof PublicOrganizationsOrgIdDomainsContinueRoute
   PublicOrganizationsOrgIdDomainsTransferInRoute: typeof PublicOrganizationsOrgIdDomainsTransferInRoute
   PublicOrganizationsOrgIdDomainsIndexRoute: typeof PublicOrganizationsOrgIdDomainsIndexRoute
 }
@@ -10358,6 +10399,8 @@ const PublicOrganizationsOrgIdDomainsRouteChildren: PublicOrganizationsOrgIdDoma
       PublicOrganizationsOrgIdDomainsDomainIdRouteWithChildren,
     PublicOrganizationsOrgIdDomainsBuyRoute:
       PublicOrganizationsOrgIdDomainsBuyRoute,
+    PublicOrganizationsOrgIdDomainsContinueRoute:
+      PublicOrganizationsOrgIdDomainsContinueRoute,
     PublicOrganizationsOrgIdDomainsTransferInRoute:
       PublicOrganizationsOrgIdDomainsTransferInRoute,
     PublicOrganizationsOrgIdDomainsIndexRoute:
@@ -11456,6 +11499,21 @@ const PublicProjectsProjectIdSettingsDomainsRouteWithChildren =
     PublicProjectsProjectIdSettingsDomainsRouteChildren,
   )
 
+interface PublicProjectsProjectIdSettingsIdentityServersRouteChildren {
+  PublicProjectsProjectIdSettingsIdentityServersLdapRoute: typeof PublicProjectsProjectIdSettingsIdentityServersLdapRoute
+}
+
+const PublicProjectsProjectIdSettingsIdentityServersRouteChildren: PublicProjectsProjectIdSettingsIdentityServersRouteChildren =
+  {
+    PublicProjectsProjectIdSettingsIdentityServersLdapRoute:
+      PublicProjectsProjectIdSettingsIdentityServersLdapRoute,
+  }
+
+const PublicProjectsProjectIdSettingsIdentityServersRouteWithChildren =
+  PublicProjectsProjectIdSettingsIdentityServersRoute._addFileChildren(
+    PublicProjectsProjectIdSettingsIdentityServersRouteChildren,
+  )
+
 interface PublicProjectsProjectIdSettingsMigrationsRouteChildren {
   PublicProjectsProjectIdSettingsMigrationsImportRoute: typeof PublicProjectsProjectIdSettingsMigrationsImportRoute
   PublicProjectsProjectIdSettingsMigrationsIndexRoute: typeof PublicProjectsProjectIdSettingsMigrationsIndexRoute
@@ -11477,7 +11535,7 @@ const PublicProjectsProjectIdSettingsMigrationsRouteWithChildren =
 interface PublicProjectsProjectIdSettingsRouteChildren {
   PublicProjectsProjectIdSettingsDomainsRoute: typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   PublicProjectsProjectIdSettingsFirewallRoute: typeof PublicProjectsProjectIdSettingsFirewallRoute
-  PublicProjectsProjectIdSettingsIdentityServersRoute: typeof PublicProjectsProjectIdSettingsIdentityServersRoute
+  PublicProjectsProjectIdSettingsIdentityServersRoute: typeof PublicProjectsProjectIdSettingsIdentityServersRouteWithChildren
   PublicProjectsProjectIdSettingsMigrationsRoute: typeof PublicProjectsProjectIdSettingsMigrationsRouteWithChildren
   PublicProjectsProjectIdSettingsSmtpRoute: typeof PublicProjectsProjectIdSettingsSmtpRoute
   PublicProjectsProjectIdSettingsVariablesRoute: typeof PublicProjectsProjectIdSettingsVariablesRoute
@@ -11492,7 +11550,7 @@ const PublicProjectsProjectIdSettingsRouteChildren: PublicProjectsProjectIdSetti
     PublicProjectsProjectIdSettingsFirewallRoute:
       PublicProjectsProjectIdSettingsFirewallRoute,
     PublicProjectsProjectIdSettingsIdentityServersRoute:
-      PublicProjectsProjectIdSettingsIdentityServersRoute,
+      PublicProjectsProjectIdSettingsIdentityServersRouteWithChildren,
     PublicProjectsProjectIdSettingsMigrationsRoute:
       PublicProjectsProjectIdSettingsMigrationsRouteWithChildren,
     PublicProjectsProjectIdSettingsSmtpRoute:
