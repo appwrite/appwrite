@@ -98,11 +98,10 @@ appwrite-teams = { path = "crates/appwrite/teams" }
 appwrite-storage = { path = "crates/appwrite/storage" }
 
 # Third party
-# The `utopia` PHP extension (crates/extension) on ext-php-rs, with
+# The `utopia` PHP extension (crates/extension) on ext-php-rs. 0.16.5:
 # #[php(sensitive(...))] (extphprs/ext-php-rs#840), which `Utopia\DSN\DSN` needs to keep
-# credentials out of exception traces: the PR's commit, which GitHub serves from the upstream
-# repository. Back to a release once it ships in one.
-ext-php-rs = { git = "https://github.com/extphprs/ext-php-rs", rev = "fb34246728d501d81b44348f679c7538f3d1d16a" }
+# credentials out of exception traces, and the clone of a PHP subclass (extphprs/ext-php-rs#838).
+ext-php-rs = "0.16.5"
 # Multi-needle substring search (utopia-user-agent: the bot table, in one
 # case-insensitive pass); pure Rust, already a dependency of regex.
 aho-corasick = "1"

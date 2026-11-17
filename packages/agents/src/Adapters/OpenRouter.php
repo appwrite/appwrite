@@ -10,7 +10,7 @@ use Utopia\Client\Psr18\StreamingClientInterface;
  * OpenRouter, routing to any provider over an OpenAI-compatible API. Models
  * are addressed as "provider/model", such as "anthropic/claude-sonnet-4.5".
  */
-class OpenRouter extends OpenAI
+class OpenRouter extends Compatible
 {
     protected const string ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
 

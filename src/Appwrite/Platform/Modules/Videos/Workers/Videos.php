@@ -575,11 +575,7 @@ class Videos extends Action
 
             $stage = 'download';
             $phaseStart = \microtime(true);
-            $file = $this->resolveFile(
-                $dbForProject,
-                $caption->getAttribute('bucketId', ''),
-                $caption->getAttribute('fileId', '')
-            );
+            $file = $this->resolveFile($dbForProject, $caption);
             Span::add('caption.source_name', (string) $file->getAttribute('name', ''));
             Span::add('caption.source_path', (string) $file->getAttribute('path', ''));
             Span::add('caption.source_mime', (string) $file->getAttribute('mimeType', ''));
@@ -1858,11 +1854,7 @@ class Videos extends Action
 
         $stage = 'download';
         $phaseStart = \microtime(true);
-        $file = $this->resolveFile(
-            $dbForProject,
-            $video->getAttribute('bucketId', ''),
-            $video->getAttribute('fileId', '')
-        );
+        $file = $this->resolveFile($dbForProject, $video);
         Span::add('source.name', (string) $file->getAttribute('name', ''));
         Span::add('source.path', (string) $file->getAttribute('path', ''));
         Span::add('source.mime', (string) $file->getAttribute('mimeType', ''));
@@ -1973,17 +1965,27 @@ class Videos extends Action
         }
     }
 
-    private function resolveFile(Database $dbForProject, string $bucketId, string $fileId): Document
+    /**
+     * Load the source file a video or caption was created from.
+     *
+     * Bucket and file IDs can be reused once deleted, so the documents found
+     * under them must still carry the internal IDs recorded when access was
+     * checked; anything else is a different file and is treated as missing.
+     * Files uploaded before buckets' internal IDs were recorded on them leave
+     * the bucket's empty, so only a recorded one is compared.
+     */
+    private function resolveFile(Database $dbForProject, Document $source): Document
     {
-        $bucket = $dbForProject->getDocument('buckets', $bucketId);
+        $bucket = $dbForProject->getDocument('buckets', (string) $source->getAttribute('bucketId', ''));
+        $bucketInternalId = (string) $source->getAttribute('bucketInternalId', '');
 
-        if ($bucket->isEmpty()) {
+        if ($bucket->isEmpty() || ($bucketInternalId !== '' && (string) $bucket->getSequence() !== $bucketInternalId)) {
             throw new AppwriteException(AppwriteException::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
+        $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), (string) $source->getAttribute('fileId', ''));
 
-        if ($file->isEmpty()) {
+        if ($file->isEmpty() || (string) $file->getSequence() !== (string) $source->getAttribute('fileInternalId', '')) {
             throw new AppwriteException(AppwriteException::STORAGE_FILE_NOT_FOUND);
         }
 
