@@ -341,6 +341,57 @@ function RecordSection({
   )
 }
 
+type DnsBannerTone = 'info'
+
+const DNS_BANNER_TONES: Record<
+  DnsBannerTone,
+  { className: string; Icon: typeof Info }
+> = {
+  info: {
+    className:
+      'border-blue-500/30 bg-blue-500/5 [&>svg]:text-blue-600 dark:[&>svg]:text-blue-400',
+    Icon: Info,
+  },
+}
+
+type DnsBanner = {
+  tone: DnsBannerTone
+  text: string
+}
+
+/** One problem, or the next step, above the records. */
+function DnsBannerAlert({ banner }: { banner: DnsBanner }) {
+  const { className, Icon } = DNS_BANNER_TONES[banner.tone]
+  return (
+    <Alert variant="default" className={className}>
+      <Icon className="h-4 w-4" />
+      <AlertDescription className="flex w-full items-start justify-between gap-4 text-[13px]">
+        <p className="min-w-0 break-words text-muted-foreground">
+          {banner.text}
+        </p>
+      </AlertDescription>
+    </Alert>
+  )
+}
+
+function getDnsBanners(
+  t: (text: string) => string,
+  pointing: ProxyRuleRecord[],
+): DnsBanner[] {
+  const verified = pointing.find((check) => check.status === 'verified')
+  if (!verified) {
+    return [
+      {
+        tone: 'info',
+        text: t(
+          'Add the records below at your DNS provider. Appwrite checks again automatically for 3 days.',
+        ),
+      },
+    ]
+  }
+  return []
+}
+
 /** Added · Status · Last check, above the records. */
 function DnsCheckMeta({
   rule,
@@ -748,11 +799,25 @@ export function VerifyDomainContent({
     const record = getPointingRecord(tab.id)
     return record ? [record] : []
   })
+  const pointingChecks = [
+    ...pointingRecords.flatMap((record) =>
+      record.check ? [record.check] : [],
+    ),
+  ]
   const offersNameservers = tabOptions.some((tab) => tab.id === 'nameservers')
+  const banners = checks ? getDnsBanners(t, pointingChecks) : []
 
   const checkedRecords = checks ? (
     <div className="space-y-6">
       <DnsCheckMeta rule={rule} checkedAt={rule.$updatedAt} />
+      <div className="space-y-3">
+        {banners.map((banner) => (
+          <DnsBannerAlert
+            key={`${banner.tone}-${banner.text}`}
+            banner={banner}
+          />
+        ))}
+      </div>
       {pointingRecords.length > 0 && (
         <RecordSection
           title={t('Point your domain')}
