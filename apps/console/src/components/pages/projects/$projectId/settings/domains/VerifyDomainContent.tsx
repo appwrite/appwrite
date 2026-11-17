@@ -415,6 +415,18 @@ function getDnsBanners(
   caa: ProxyRuleRecord | undefined,
 ): DnsBanner[] {
   const verified = pointing.find((check) => check.status === 'verified')
+  const banners: DnsBanner[] = []
+  if (caa?.status === 'mismatch') {
+    banners.push({
+      tone: 'error',
+      prefix: t('CAA record'),
+      text: t(
+        'A CAA record on your domain blocks the certificate. Keep it, and add the CAA record below next to it.',
+      ),
+    })
+  }
+  if (banners.length > 0) return banners
+
   if (!verified) {
     return [
       isDnsUnverified(rule) && !isWaitingForDns(rule)
