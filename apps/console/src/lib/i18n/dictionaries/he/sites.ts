@@ -174,6 +174,8 @@ export const heSitesDictionary: Record<string, string> = {
   'Generating certificate': 'מנפיק תעודה',
   'Verification failed': 'האימות נכשל',
   'Certificate generation failed': 'הנפקת התעודה נכשלה',
+  'A DNS record has the wrong value. Open Records to see which one and what to change it to.':
+    'לרשומת DNS יש ערך שגוי. פתחו את הרשומות כדי לראות איזו רשומה ולמה לשנות אותה.',
   'Waiting for DNS': 'ממתין ל-DNS',
   'Appwrite checks the DNS records every few minutes for 3 days after the domain is added. Use Check now to look again right away.':
     'Appwrite בודק את רשומות ה-DNS כל כמה דקות במשך 3 ימים לאחר הוספת הדומיין. לחצו על "בדוק עכשיו" כדי לבדוק מיד.',
