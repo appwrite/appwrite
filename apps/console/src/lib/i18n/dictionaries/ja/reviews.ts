@@ -192,8 +192,8 @@ export const jaReviewsDictionary: Record<string, string> = {
     'リポジトリのコードレビューを有効にすると、プルリクエストの作成時と新しいコミットの追加時にレビューされます。',
   'Turn on code review for every repository in {organization} ({count}).':
     '{organization} のすべてのリポジトリ（{count} 件）でコードレビューを有効にします。',
-  'Repositories added to the installation later are not included.':
-    '後からインストールに追加されたリポジトリは含まれません。',
+  'To review repositories added to the installation later, turn on Review new repositories.':
+    '後からインストールに追加されたリポジトリもレビューするには、「新しいリポジトリをレビュー」を有効にしてください。',
   'Review pull requests in {name}': '{name} のプルリクエストをレビュー',
 
   // Review strength
@@ -211,4 +211,13 @@ export const jaReviewsDictionary: Record<string, string> = {
   'Review strength updated': 'レビュー強度を更新しました',
   'Failed to update review strength': 'レビュー強度を更新できませんでした',
   'Review strength for {name}': '{name} のレビュー強度',
+
+  // New repositories
+  'Review new repositories': '新しいリポジトリをレビュー',
+  'Turn on code review for repositories added to {organization} on GitHub later.':
+    '後から GitHub の {organization} に追加されたリポジトリのコードレビューを有効にします。',
+  'New repositories will be reviewed': '新しいリポジトリをレビューします',
+  'New repositories will not be reviewed': '新しいリポジトリはレビューしません',
+  'Failed to update new repositories':
+    '新しいリポジトリの設定を更新できませんでした',
 }
