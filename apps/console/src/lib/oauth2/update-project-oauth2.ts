@@ -72,6 +72,7 @@ const OAUTH2_UPDATE_BY_PROVIDER: Partial<
     p.updateOAuth2VippsSandbox(b),
   [ProjectOAuthProviderId.Webflow]: (p, b) => p.updateOAuth2Webflow(b),
   [ProjectOAuthProviderId.Wordpress]: (p, b) => p.updateOAuth2WordPress(b),
+  [ProjectOAuthProviderId.Workos]: (p, b) => p.updateOAuth2WorkOS(b),
   [ProjectOAuthProviderId.X]: (p, b) => p.updateOAuth2X(b),
   [ProjectOAuthProviderId.Yahoo]: (p, b) => p.updateOAuth2Yahoo(b),
   [ProjectOAuthProviderId.Yandex]: (p, b) => p.updateOAuth2Yandex(b),

@@ -25,6 +25,7 @@ const DISPLAY_NAME_OVERRIDES: Record<string, string> = {
   [OAuthProvider.Huggingface]: 'Hugging Face',
   [OAuthProvider.Keycloak]: 'Keycloak',
   [OAuthProvider.Wordpress]: 'WordPress',
+  [OAuthProvider.Workos]: 'WorkOS',
 }
 
 export function getOAuth2ProviderDisplayName(providerId: string): string {
@@ -71,6 +72,7 @@ export const OAUTH2_NEW_PROVIDER_LAUNCH_DATES: Partial<Record<string, string>> =
     [OAuthProvider.Tiktok]: '2026-09-08',
     [OAuthProvider.Vipps]: '2026-11-04',
     [OAuthProvider.Webflow]: '2026-09-29',
+    [OAuthProvider.Workos]: '2026-11-17',
   }
 
 function parseUtcDate(isoDate: string): Date {
