@@ -2563,6 +2563,7 @@ dependencies = [
  "utopia-image",
  "utopia-locale",
  "utopia-user-agent",
+ "utopia-validators",
 ]
 
 [[package]]
@@ -2601,6 +2602,13 @@ version = "0.1.0"
 dependencies = [
  "aho-corasick",
  "memchr",
+ "php-std",
+]
+
+[[package]]
+name = "utopia-validators"
+version = "0.1.0"
+dependencies = [
  "php-std",
 ]
 
