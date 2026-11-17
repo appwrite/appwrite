@@ -618,6 +618,7 @@ export const heSitesDictionary: Record<string, string> = {
     'פרסו אתר עובד בכמה קליקים, ואז התאימו אותו לצרכים שלכם.',
   "This site's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
     'התקנת ה-Git של האתר הזה כבר לא מגיעה ל-repo שלו, ולכן Push חדש לא ייפרס. נתקו את ה-repo ואז חברו אותו מחדש דרך ההתקנה שבה הוא נמצא עכשיו.',
+  'Last check': 'בדיקה אחרונה',
   'Found:': 'נמצא:',
   'Wrong value': 'ערך שגוי',
   "Couldn't check": 'לא ניתן לבדוק',
