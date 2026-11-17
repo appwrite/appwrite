@@ -17,6 +17,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "announcing-encryption-for-every-file-size",
+    "href": "/blog/post/announcing-encryption-for-every-file-size",
+    "title": "Announcing encryption for every file size",
+    "description": "Encrypted buckets in Appwrite Storage now encrypt every file, whatever its size, before Appwrite stores it. The 20 MB limit is gone.",
+    "date": "2026-11-17",
+    "lastUpdated": "2026-11-17",
+    "timeToRead": 4,
+    "author": "chirag-aggarwal",
+    "category": "announcements, security",
+    "featured": false,
+    "cover": "/images/blog/announcing-encryption-for-every-file-size/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-force-password-reset",
     "href": "/blog/post/announcing-force-password-reset",
     "title": "Announcing force password reset for all your users",

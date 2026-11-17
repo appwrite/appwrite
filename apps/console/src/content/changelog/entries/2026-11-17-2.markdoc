@@ -1,0 +1,21 @@
+---
+layout: changelog
+title: "Encryption for every file size in Storage"
+date: 2026-11-17
+cover: /images/blog/announcing-encryption-for-every-file-size/cover.avif
+tags: storage, security
+---
+
+Encrypted buckets now encrypt files of every size. Until now, files larger than 20 MB were stored unencrypted, even with encryption turned on.
+
+Encrypted uploads are now about as fast as unencrypted ones, and reading part of an encrypted file is about four times faster. No code changes are needed.
+
+Files larger than 20 MB uploaded before this change stay unencrypted until they're uploaded again.
+
+{% arrow_link href="/blog/post/announcing-encryption-for-every-file-size" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/advanced/security/encryption#storage" %}
+Learn about storage encryption
+{% /arrow_link %}
