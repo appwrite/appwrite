@@ -369,7 +369,7 @@ function DnsCheckMeta({
       <div className="min-w-0">
         <dt className={label}>{t('Last check')}</dt>
         <dd className={value}>
-          <DateTooltip date={checkedAt} />
+          <DateTooltip date={checkedAt} live />
         </dd>
       </div>
     </dl>
