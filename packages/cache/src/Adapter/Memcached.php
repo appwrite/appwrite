@@ -65,7 +65,7 @@ class Memcached implements Adapter, Retryable
      */
     public function save(string $key, array|string $data, string $hash = '', int $ttl = 0): bool|string|array
     {
-        if ($key === '' || $key === '0' || empty($data)) {
+        if ($key === '' || $key === '0' || $data === '' || $data === '0') {
             return false;
         }
 

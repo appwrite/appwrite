@@ -174,11 +174,7 @@ cargo fmt --all --check
 
 ### Compare with PHP
 
-The utopia PHP extension serves this crate as `Utopia\UserAgent\UserAgent`. Its parity corpus, `crates/extension/tests/user-agent.php`, must print the same on PHP's class and on the extension; `crates/extension/tests/run.sh` checks it in the development image. To time both implementations:
-
-```bash
-python3 crates/extension/bench/run.py crates/extension/bench/user-agent.php . target/release/libutopia.so 5
-```
+The utopia PHP extension serves this crate as `Utopia\UserAgent\UserAgent`, which no longer has a PHP implementation. Its parity corpus, `crates/extension/tests/user-agent.php`, must print `crates/extension/tests/user-agent.expected.jsonl`, the output of the PHP class it replaced; `crates/extension/tests/run.sh` checks it, and runs `packages/user-agent/tests`, in the development image.
 
 ## License
 

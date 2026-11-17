@@ -1,5 +1,7 @@
 parameters:
     level: max
+    scanFiles:
+        - stubs/UserAgent.php
     paths:
         - src
         - tests

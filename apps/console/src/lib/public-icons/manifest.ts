@@ -222,6 +222,7 @@ export const PUBLIC_ICON_FILENAMES = [
   'whatsapp.svg',
   'windsurf.svg',
   'wordpress.svg',
+  'workos.svg',
   'x.svg',
   'yahoo.svg',
   'yammer.svg',

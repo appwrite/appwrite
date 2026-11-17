@@ -149,6 +149,31 @@ const TOKENS: &[&str] = &[
     "Tab",
     "Huawei ",
     "MediaPad",
+    "MatePad",
+    "samsung ",
+    "google ",
+    "lenovo ",
+    "huawei ",
+    "oppo ",
+    "vivo ",
+    "honor ",
+    "realme ",
+    "SM-P",
+    "SM-X710",
+    "GT-N8010",
+    "GT-N5110",
+    "AGS3-",
+    "AGS-",
+    "BAH2-",
+    "BAH-",
+    "Galaxy Tab",
+    "Yoga Tab",
+    "OPPO Pad",
+    "vivo Pad",
+    "Honor Pad",
+    "realme Pad",
+    "Mozilla/",
+    "Dalvik/2.1.0",
     "Xiaomi ",
     "Redmi ",
     "Pad",
@@ -459,7 +484,7 @@ fn tests_match_their_patterns() {
     ];
     let fire = compile(br"/Silk\/|\bKF[A-Z0-9]{2,}\b|\bAFT[A-Z0-9]+\b/i");
     let tablet = compile(
-        br"/^(?:SM-[TX]|GT-P|Nexus (?:7|9|10)\b|Pixel (?:C|Tablet)\b|(?:Lenovo )?(?:TB-|YT-|Tab\b)|(?:Huawei )?MediaPad\b|(?:Xiaomi |Redmi |OnePlus )?Pad\b)/i",
+        br"/^(?:(?:samsung|google|lenovo|huawei|xiaomi|oneplus|oppo|vivo|honor|realme) )?(?:SM-[TXP]|GT-(?:P|N80|N51)|AGS\d?-|BAH\d?-|Nexus (?:7|9|10)\b|Pixel (?:C|Tablet)\b|(?:Lenovo )?(?:TB-|YT-|(?:Galaxy |Yoga )?Tab\b)|(?:Huawei )?(?:MediaPad|MatePad)\b|(?:Xiaomi |Redmi |OnePlus |OPPO |vivo |Honor |realme )?Pad\b)/i",
     );
     let tests: Vec<_> = tests.into_iter().map(|(regex, native)| (compile(regex.as_bytes()), regex, native)).collect();
     for s in subjects() {
