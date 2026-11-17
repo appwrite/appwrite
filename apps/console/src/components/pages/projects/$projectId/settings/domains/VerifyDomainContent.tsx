@@ -314,6 +314,28 @@ export function VerifyDomainContent({
     nameservers,
   }).map((id) => ({ id, label: TAB_LABELS[id] }))
 
+  const getRecord = (type: string, value: string): DnsRecord => {
+    return {
+      type,
+      name: getRecordName(rule.domain),
+      value,
+      ttl: 3600,
+    }
+  }
+
+  const getPointingRecord = (method: VerificationMethod): DnsRecord | null => {
+    switch (method) {
+      case 'cname':
+        return cname ? getRecord('CNAME', cname) : null
+      case 'a':
+        return a ? getRecord('A', a) : null
+      case 'aaaa':
+        return aaaa ? getRecord('AAAA', aaaa) : null
+      default:
+        return null
+    }
+  }
+
   const selectedTab =
     activeTab && tabOptions.some((tab) => tab.id === activeTab)
       ? activeTab
@@ -345,29 +367,36 @@ export function VerifyDomainContent({
     'Add the following nameservers on your DNS provider. Note that DNS changes may take up to 48 hours to propagate fully.',
   )
 
-  const getCnameRecords = (): DnsRecord[] => {
-    const rows: DnsRecord[] = [
-      {
-        type: 'CNAME',
-        name: getRecordName(rule.domain),
-        value: cname!,
-        ttl: 3600,
-      },
-    ]
-    if (hasCaa) {
-      rows.push({
+  const caaRecord: DnsRecord | null = hasCaa
+    ? {
         type: 'CAA',
         name: '@',
         value: caa!,
         ttl: 3600,
         badge: 'Recommended',
-      })
-    }
-    return rows
-  }
+      }
+    : null
 
   const getNameserverRecords = (): DnsRecord[] =>
     nameservers.map((ns) => ({ type: 'NS', name: '@', value: ns, ttl: null }))
+
+  const methodContent = (method: VerificationMethod) => {
+    if (method === 'nameservers') {
+      return (
+        <DnsRecordsTable records={getNameserverRecords()} showTtl={false} />
+      )
+    }
+    const record = getPointingRecord(method)
+    const rows = [
+      ...(record ? [record] : []),
+      ...(method === 'cname' && caaRecord ? [caaRecord] : []),
+    ]
+    return (
+      <div className="space-y-3">
+        <DnsRecordsTable records={rows} showTtl={true} />
+      </div>
+    )
+  }
 
   const cardClassName =
     'rounded-xl border border-border bg-card/50 overflow-hidden'
@@ -395,46 +424,7 @@ export function VerifyDomainContent({
             <p className="pb-3 text-[13px] text-muted-foreground">
               {tabOptions[0].id === 'nameservers' ? nameserverNote : recordNote}
             </p>
-            {tabOptions[0].id === 'cname' && (
-              <div className="space-y-3">
-                <DnsRecordsTable
-                  records={getCnameRecords()}
-                  showTtl={true}
-                />
-              </div>
-            )}
-            {tabOptions[0].id === 'nameservers' && (
-              <DnsRecordsTable
-                records={getNameserverRecords()}
-                showTtl={false}
-              />
-            )}
-            {tabOptions[0].id === 'a' && (
-              <DnsRecordsTable
-                records={[
-                  {
-                    type: 'A',
-                    name: getRecordName(rule.domain),
-                    value: a!,
-                    ttl: 3600,
-                  },
-                ]}
-                showTtl={true}
-              />
-            )}
-            {tabOptions[0].id === 'aaaa' && (
-              <DnsRecordsTable
-                records={[
-                  {
-                    type: 'AAAA',
-                    name: getRecordName(rule.domain),
-                    value: aaaa!,
-                    ttl: 3600,
-                  },
-                ]}
-                showTtl={true}
-              />
-            )}
+            {methodContent(tabOptions[0].id)}
           </>
         ) : (
           <Tabs
@@ -457,46 +447,7 @@ export function VerifyDomainContent({
                   <p className="pb-3 text-[13px] text-muted-foreground">
                     {tab.id === 'nameservers' ? nameserverNote : recordNote}
                   </p>
-                  {tab.id === 'cname' && (
-                    <div className="space-y-3">
-                      <DnsRecordsTable
-                        records={getCnameRecords()}
-                        showTtl={true}
-                      />
-                    </div>
-                  )}
-                  {tab.id === 'nameservers' && (
-                    <DnsRecordsTable
-                      records={getNameserverRecords()}
-                      showTtl={false}
-                    />
-                  )}
-                  {tab.id === 'a' && (
-                    <DnsRecordsTable
-                      records={[
-                        {
-                          type: 'A',
-                          name: getRecordName(rule.domain),
-                          value: a!,
-                          ttl: 3600,
-                        },
-                      ]}
-                      showTtl={true}
-                    />
-                  )}
-                  {tab.id === 'aaaa' && (
-                    <DnsRecordsTable
-                      records={[
-                        {
-                          type: 'AAAA',
-                          name: getRecordName(rule.domain),
-                          value: aaaa!,
-                          ttl: 3600,
-                        },
-                      ]}
-                      showTtl={true}
-                    />
-                  )}
+                  {methodContent(tab.id)}
                 </div>
               </TabsContent>
             ))}
