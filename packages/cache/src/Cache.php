@@ -259,7 +259,7 @@ class Cache
      */
     public function saveWithLease(string $key, array|string $data, string $hash, string $version): bool|string|array
     {
-        if ($key === '' || $key === '0' || empty($data) || ! $this->supportsVersioning() || $version === '') {
+        if ($key === '' || $key === '0' || $data === '' || $data === '0' || ! $this->supportsVersioning() || $version === '') {
             return false;
         }
         $key = $this->key($key);
