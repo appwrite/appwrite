@@ -132,6 +132,12 @@ function RecordStatus({ record }: { record: DnsRecord }) {
           {t('Verified')}
         </Badge>
       )
+    case 'missing':
+      return (
+        <Badge variant="info" className={pill}>
+          {t('Not detected')}
+        </Badge>
+      )
     default:
       return <span className="text-muted-foreground">-</span>
   }
