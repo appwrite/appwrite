@@ -223,6 +223,7 @@ function RecordSection({
           </TableHeader>
           <TableBody>
             {records.map((r) => {
+              const found = r.check?.status === 'mismatch' ? r.check.found : []
               return (
                 <Fragment key={`${r.type}-${r.value}`}>
                   <TableRow>
@@ -259,6 +260,27 @@ function RecordSection({
                       <RecordStatus record={r} waiting={waiting} />
                     </TableCell>
                   </TableRow>
+                  {found.length > 0 && (
+                    <TableRow className="hover:bg-transparent">
+                      <TableCell colSpan={2} className="pt-0 pb-3" />
+                      <TableCell
+                        colSpan={3}
+                        className="whitespace-normal px-4 pt-0 pb-3"
+                      >
+                        <p className="text-[12px] text-muted-foreground break-words">
+                          {t('Found:')}{' '}
+                          {found.map((value, i) => (
+                            <Fragment key={value}>
+                              {i > 0 && ', '}
+                              <span className="font-mono text-foreground">
+                                {value}
+                              </span>
+                            </Fragment>
+                          ))}
+                        </p>
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </Fragment>
               )
             })}
