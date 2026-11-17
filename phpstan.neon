@@ -13,6 +13,7 @@ parameters:
     - crates/extension/stubs/DSN.php
     - crates/extension/stubs/Locale.php
     - packages/user-agent/stubs/UserAgent.php
+    - packages/domains/stubs/Domain.php
   scanDirectories:
     - vendor/swoole/ide-helper
   excludePaths:
