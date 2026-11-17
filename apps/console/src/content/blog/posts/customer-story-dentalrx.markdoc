@@ -36,11 +36,9 @@ Nickolas put that expertise behind [DentalRx](https://dentalrx.ca/dental-app), a
 
 Nickolas grew up close to dentistry. A parent is a dental hygienist, and other relatives work in the field. With a pharmacy background on top of that, the idea was straightforward: help dentists prescribe safely and effectively, so they can help more patients in their practice.
 
-Building that reference is a database problem first. Most drug databases, including the hospital systems Nickolas manages, are organized around a **drug concept**, the core record each drug starts from. Brand names, generic names, and drug classes are separate tables attached to that concept. A single drug ends up as a web of relationships, and that web differs from country to country. Canada and the United States regulate and classify some drugs differently, and the same drug is often sold under different brand names.
+That starts with information, and the information dentists rely on is often inconsistent and hard to find. Answers are spread across drug references and treatment guidelines that don't always agree with each other. Canada and the United States regulate and classify some drugs differently, and the same drug is often sold under different brand names, so a source written for one country may not apply in the other.
 
-> "Postgres is the gold standard of how drug databases are set up."
-
-DentalRx did not start there. The first version was built on FlutterFlow, with Firebase as the database and Algolia synced alongside it for search. That stack shipped the product, but it did not fit the data.
+Some of those resources are also out of date, and checking them against each other can take hours. A dentist with a patient in the chair doesn't have that time.
 
 # What is DentalRx?
 
@@ -78,9 +76,13 @@ The **iOS and Android apps** carry the same tools, with the clinic dashboard, se
 
 # Building DentalRx with Appwrite
 
-All of those tools draw on the same drug database. In the original stack, that database lived in Firebase, whose document model didn't fit the data.
+All of those tools draw on the same drug database. Most drug databases, including the hospital systems Nickolas manages, are organized around a **drug concept**, the core record each drug starts from. Brand names, generic names, and drug classes are separate tables attached to that concept. A single drug ends up as a web of relationships, and that web differs from country to country.
 
-Fixing that started with the app. DentalRx was built in FlutterFlow, which can export a project's code, and with today's AI coding tools, Nickolas could take full ownership of that Flutter codebase. Once the app was in his hands, the backend could change too, and Nickolas went looking for something more mature than Firebase.
+> "Postgres is the gold standard of how drug databases are set up."
+
+DentalRx did not start there. The first version was built in FlutterFlow, with Firebase as the database and Algolia synced alongside it for search. That stack shipped the product, but Firebase's document model did not fit the data.
+
+Fixing that started with the app. FlutterFlow can export a project's code, and with today's AI coding tools, Nickolas could take full ownership of that Flutter codebase. Once the app was in his hands, the backend could change too, and Nickolas went looking for something more mature than Firebase.
 
 Appwrite's [migration path from Firebase](/docs/advanced/migrations/firebase) is what first caught the team's attention. Its open-source foundation made the decision easy, and the team never evaluated other Postgres providers like Supabase or Neon.
 
@@ -90,7 +92,7 @@ The first move kept the data in its old shape: each drug became a single row in 
 
 The second move changed the product. DentalRx now keeps its drug database in [Appwrite's managed PostgreSQL](/docs/products/databases/postgresql), in the Toronto region, close to its Canadian users.
 
-In Firebase, every drug was a document with its own subdocuments. Nickolas describes that model as static: each drug was a self-contained record, not part of the web of relationships that Postgres allows. In Postgres, DentalRx models drugs the way hospital databases do, with a drug concept at the center and brand names, generic names, and classes attached as related tables.
+In Firebase, every drug was a document with its own subdocuments. Nickolas describes that model as static: each drug was a self-contained record, not part of the web of relationships that Postgres allows. In Postgres, DentalRx models drugs the way hospital databases do, with the drug concept at the center.
 
 That structure shows up in every search. Typing "amoxic" returns each matching drug concept with all of its brand names attached, so a dentist finds the right drug whether they know it as amoxicillin, Amoxil, or Novamoxin.
 
