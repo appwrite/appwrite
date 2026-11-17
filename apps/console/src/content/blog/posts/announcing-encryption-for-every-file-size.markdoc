@@ -14,7 +14,7 @@ faqs:
   - question: "What happens to files uploaded before this change?"
     answer: "Existing files remain readable and are not automatically re-encrypted. Files up to 20 MB were already encrypted. Larger files in encrypted buckets were stored unencrypted and remain unencrypted until uploaded again."
   - question: "Do I need to change my app or bucket settings?"
-    answer: "No code, SDK, or settings changes are needed. The change is live on Appwrite Cloud. Buckets used through the S3-compatible API still need encryption turned off."
+    answer: "No code, SDK, or settings changes are needed. The change is live on Appwrite Cloud. A bucket that S3 tools access through Connect with S3 still needs encryption turned off."
   - question: "How does encryption affect storage usage?"
     answer: "Storage usage counts the stored file size. The new format adds 28 bytes per 64 KB segment, about 0.04 percent. Previously uploaded files keep their stored size."
   - question: "Can Appwrite read part of an encrypted file?"
@@ -34,7 +34,7 @@ Encrypted uploads now take about as long as unencrypted ones, and reading part o
 ![Encryption setting on a bucket's Settings tab](/images/blog/announcing-encryption-for-every-file-size/settings.avif)
 {% /only_light %}
 
-Encryption is on by default for new buckets and can be configured in the **Encryption** card on the bucket's **Settings** tab. Buckets used through the S3-compatible API still need encryption turned off.
+Encryption is on by default for new buckets and can be configured in the **Encryption** card on the bucket's **Settings** tab. A bucket that S3 tools access through **Connect with S3** still needs encryption turned off.
 
 # Encrypted files
 {% only_dark %}
@@ -62,7 +62,7 @@ Downloads, views, image previews, messaging attachments, and CSV and JSON import
 
 # Our measurements
 
-We measured median times on the same deployment backed by S3-compatible storage, with every request crossing the public internet. Upload figures show the extra time for encryption over an unencrypted upload.
+We measured median times on the same deployment before and after the change, with every request crossing the public internet. Upload figures show the extra time for encryption over an unencrypted upload.
 
 | Measurement | Before | After |
 | --- | --- | --- |
