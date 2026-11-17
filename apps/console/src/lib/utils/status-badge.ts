@@ -436,6 +436,13 @@ export function getRuleStatusBadgeConfig(
   }
   // Not an error while Appwrite still checks the DNS on its own.
   if (isWaitingForDns(rule, now)) {
+    if (hasWrongDnsRecord(rule.records ?? [])) {
+      return {
+        variant: 'error',
+        label: 'Action needed',
+        hint: 'A DNS record has the wrong value. Open Records to see which one and what to change it to.',
+      }
+    }
     return {
       variant: 'warning',
       label: 'Waiting for DNS',
