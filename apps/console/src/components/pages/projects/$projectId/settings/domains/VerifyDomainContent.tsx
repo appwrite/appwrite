@@ -65,6 +65,7 @@ function getAliasCheck(
   const check =
     addresses.find((c) => c.status === 'verified') ??
     addresses.find((c) => c.status === 'mismatch') ??
+    addresses.find((c) => c.status === 'failed') ??
     addresses[0]
   if (!check) return undefined
   return {
