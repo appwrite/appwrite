@@ -202,9 +202,11 @@ export type VerificationMethod =
 
 /**
  * Ways a rule's domain can be pointed at Appwrite, the one to show first
- * leading. Most providers refuse a CNAME on an apex domain, so an apex leads
- * with the nameservers (Cloud only), then the A and AAAA records the server
- * also accepts, and keeps the CNAME last for providers that flatten it.
+ * leading. A subdomain takes a CNAME. An apex takes an ALIAS to the CNAME
+ * target, which providers resolve to addresses when queried, so the server's
+ * A and AAAA checks verify it; on Cloud the nameservers are the alternative.
+ * A and AAAA addresses are offered only when there is no CNAME target at all,
+ * since an address can change under the domain.
  */
 export function getVerificationMethods(input: {
   domain: string
@@ -216,12 +218,11 @@ export function getVerificationMethods(input: {
 }): VerificationMethod[] {
   const apex = getRecordName(input.domain) === '@'
   const methods: VerificationMethod[] = []
-  if (input.cname && !apex) methods.push('cname')
+  if (input.cname) methods.push(apex ? 'alias' : 'cname')
   if (input.cloud && apex && input.nameservers.length > 0)
     methods.push('nameservers')
-  if (input.a && (!input.cloud || apex)) methods.push('a')
-  if (input.aaaa && (!input.cloud || apex)) methods.push('aaaa')
-  if (input.cname && apex) methods.push('cname')
+  if (!input.cname && input.a) methods.push('a')
+  if (!input.cname && input.aaaa) methods.push('aaaa')
   return methods
 }
 
