@@ -193,7 +193,9 @@ cargo fmt --all --check
 
 ### Compare with PHP
 
-Replay the results PHP recorded for every case against Rust, without PHP:
+The utopia PHP extension serves this crate as `Utopia\Domains\Domain`, which no longer has a PHP implementation. Its parity corpus, `crates/extension/tests/domains.php`, checks every rule of `packages/domains/data/data.php` and must print `crates/extension/tests/domains.expected.jsonl`, the output of the PHP class it replaced; `crates/extension/tests/run.sh` checks it, and runs `packages/domains/tests`, in the development image.
+
+The registrars, validators and cache keep their PHP classes. Replay the results PHP recorded for their cases against Rust, without PHP:
 
 ```bash
 COMPAT_SERVICES=1 COMPAT_LIB=domains cargo test -p compat
@@ -208,6 +210,14 @@ tests/compat/domains/services.sh up
 bin/compat run domains
 bin/compat fuzz domains
 bin/compat check domains
+```
+
+### Public Suffix List
+
+`data/public-suffix-list.txt` is `packages/domains/data/data.php` in the crate's format. After refreshing the package's list, regenerate it from the repository root:
+
+```bash
+php crates/utopia/domains/data/export.php > crates/utopia/domains/data/public-suffix-list.txt
 ```
 
 ### Benchmark

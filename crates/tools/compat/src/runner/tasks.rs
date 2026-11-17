@@ -150,7 +150,7 @@ pub fn discover(root: &Path, dir: &str) -> Vec<Entry> {
 
 /// The tasks of a package the PHP driver's image holds (`vendor/`, not on
 /// the host), from what its `$programs` operation read there: `composer.json`
-/// and the PHP files outside `src/`, `tests/` and `vendor/` with their source.
+/// and the PHP files outside `src/`, `stubs/`, `tests/` and `vendor/` with their source.
 pub fn discover_listed(dir: &str, listing: &Value) -> Vec<Entry> {
     let mut files: Vec<String> = listing["files"]
         .as_object()
@@ -258,7 +258,9 @@ fn programs(base: &Path, dir: &Path, out: &mut Vec<String>) {
             continue;
         }
         if path.is_dir() {
-            if dir == base && matches!(name.as_str(), "src" | "tests" | "vendor" | "node_modules") {
+            // `stubs/` declares classes for static analysis (the ones the utopia
+            // extension registers): nothing there runs.
+            if dir == base && matches!(name.as_str(), "src" | "stubs" | "tests" | "vendor" | "node_modules") {
                 continue;
             }
             programs(base, &path, out);

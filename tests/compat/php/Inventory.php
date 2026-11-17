@@ -98,7 +98,7 @@ final class Inventory
                         return false;
                     }
 
-                    return !($file->isDir() && $file->getPath() === $dir && in_array($name, ['src', 'tests', 'vendor', 'node_modules'], true));
+                    return !($file->isDir() && $file->getPath() === $dir && in_array($name, ['src', 'stubs', 'tests', 'vendor', 'node_modules'], true));
                 },
             ));
             foreach ($paths as $file) {

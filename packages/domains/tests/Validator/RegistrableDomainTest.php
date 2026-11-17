@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Utopia\Domains\Tests\Validator;
 
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Domains\Validator\RegistrableDomain;
 
+#[RequiresPhpExtension('utopia')]
 final class RegistrableDomainTest extends TestCase
 {
     /**
