@@ -9,7 +9,7 @@ The `appwrite terminal` command opens your Appwrite projects in an interactive, 
 ![Project overview in the CLI terminal interface](/images/docs/command-line/terminal/overview.avif)
 
 {% info title="CLI version" %}
-`appwrite terminal` is available in Appwrite CLI version 28.12.0 and later. [Update your CLI](/docs/tooling/command-line/installation#update-your-cli) to the latest version before you start.
+`appwrite terminal` is available in Appwrite CLI version 28.13.1 and later. [Update your CLI](/docs/tooling/command-line/installation#update-your-cli) to the latest version before you start.
 {% /info %}
 
 # Open the terminal interface {% #open %}
