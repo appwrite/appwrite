@@ -3487,6 +3487,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Line": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Linkedin": [
             "clientId",
             "primaryClientSecret",
@@ -7848,6 +7853,11 @@
             "enabled"
         ],
         "project.updateOAuth2Kick": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Line": [
             "clientId",
             "clientSecret",
             "enabled"
