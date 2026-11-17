@@ -8,6 +8,7 @@ use Appwrite\Platform\Tasks\Install;
 use Appwrite\Platform\Tasks\Interval;
 use Appwrite\Platform\Tasks\Maintenance;
 use Appwrite\Platform\Tasks\Migrate;
+use Appwrite\Platform\Tasks\ProbeResults;
 use Appwrite\Platform\Tasks\QueueRetry;
 use Appwrite\Platform\Tasks\Schedule;
 use Appwrite\Platform\Tasks\ScheduleAlerts;
@@ -43,6 +44,7 @@ class Tasks extends Service
             ->addAction('screenshot', Screenshot::class)
             ->addAction('schedule', Schedule::class)
             ->addAction('schedule-alerts', ScheduleAlerts::class)
+            ->addAction('probe-results', ProbeResults::class)
             ->addAction('schedule-functions', ScheduleFunctions::class)
             ->addAction('schedule-executions', ScheduleExecutions::class)
             ->addAction('schedule-maintenance', ScheduleMaintenance::class)

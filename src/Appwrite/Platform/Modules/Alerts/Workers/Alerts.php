@@ -10,7 +10,9 @@ use Appwrite\Alert\Figure;
 use Appwrite\Alert\Meter;
 use Appwrite\Alert\Probe;
 use Appwrite\Alert\Probe\Egress;
+use Appwrite\Alert\Probe\Reported;
 use Appwrite\Alert\Probe\Result;
+use Appwrite\Alert\Prober;
 use Appwrite\Alert\Quantity;
 use Appwrite\Alert\Schedules;
 use Appwrite\Alert\Severity;
@@ -22,6 +24,7 @@ use Appwrite\Auth\EncryptionKey;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Alert as AlertMessage;
 use Appwrite\Event\Message\Notification as NotificationMessage;
+use Appwrite\Event\Message\ProbeResult as ProbeResultMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Realtime;
@@ -91,6 +94,13 @@ class Alerts extends Action
         Realtime $queueForRealtime,
         array $platform,
     ): void {
+        // A check the prober ran, handed back by `probe-results` with the project it was scheduled for.
+        if (isset($message->getPayload()['result'])) {
+            $this->report(ProbeResultMessage::fromArray($message->getPayload()), $project, $dbForProject, $dbForPlatform, $publisherForNotifications, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $platform);
+
+            return;
+        }
+
         $monitorId = AlertMessage::fromArray($message->getPayload())->monitorId;
         Span::add('monitor.id', $monitorId);
 
@@ -183,6 +193,10 @@ class Alerts extends Action
      * A failing check fires it and a passing one recovers it, as a usage monitor's
      * reading does; its latency is the alert's reading.
      *
+     * With `_APP_CONNECTIONS_PROBER` set, the prober checks the target instead:
+     * the job is pushed for it, and what it found comes back through
+     * {@see self::report()} as a check already run.
+     *
      * @param array<string, mixed> $platform
      */
     protected function probe(
@@ -198,6 +212,21 @@ class Alerts extends Action
         array $platform,
         ?Database $dbForProject = null,
     ): void {
+        // Unset by default, so this worker runs the checks itself.
+        $dsn = System::getEnv('_APP_CONNECTIONS_PROBER', '');
+        if ($dsn !== '' && !$probe instanceof Reported) {
+            // One connection per job: a single push, with nothing to keep alive between jobs.
+            $redis = Prober::connect($dsn);
+            try {
+                $redis->lPush(Prober::JOBS, (string) \json_encode(Prober::job($monitor, new \DateTimeImmutable())));
+            } finally {
+                $redis->close();
+            }
+            Span::add('monitor.prober', true);
+
+            return;
+        }
+
         // Empty by default, so self-hosted servers can probe their own network.
         $check = $probe->check($monitor, Egress::parse(System::getEnv('_APP_MONITORS_DENIED_NETWORKS', '')));
 
@@ -217,6 +246,46 @@ class Alerts extends Action
 
         // A latency only gets worse as it grows.
         $this->change($monitor, $project, $check->result === Result::Ok ? Status::Ok : Status::Firing, (float) $check->latency, Comparator::GreaterThan, new \DateTimeImmutable(), $reading, $dbForPlatform, $publisherForNotifications, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $platform, $dbForProject);
+    }
+
+    /**
+     * Records a check the prober ran, as one this worker ran is recorded, unless
+     * the monitor no longer runs it: deleted, disabled, moved, or checking another
+     * target since. {@see Prober::check()} drops results that are stale.
+     *
+     * @param array<string, mixed> $platform
+     */
+    private function report(
+        ProbeResultMessage $message,
+        Document $project,
+        Database $dbForProject,
+        Database $dbForPlatform,
+        NotificationPublisher $publisherForNotifications,
+        Event $queueForEvents,
+        Webhook $queueForWebhooks,
+        FunctionPublisher $publisherForFunctions,
+        Realtime $queueForRealtime,
+        array $platform,
+    ): void {
+        Span::add('monitor.id', $message->monitorId);
+
+        if ($project->isEmpty()) {
+            return;
+        }
+
+        $monitor = $dbForPlatform->getDocument('monitors', $message->monitorId);
+        if ($monitor->isEmpty() || !$monitor->getAttribute('enabled', false) || $monitor->getAttribute('projectInternalId') !== (string) $project->getSequence()) {
+            return;
+        }
+
+        $check = Prober::check($monitor, $message->result);
+        if ($check === null) {
+            Span::add('monitor.dropped', (string) ($message->result['result'] ?? ''));
+
+            return;
+        }
+
+        $this->probe($monitor, $project, new Reported($check), $dbForPlatform, $publisherForNotifications, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $platform, $dbForProject);
     }
 
     /**

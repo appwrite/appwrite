@@ -2279,6 +2279,15 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONNECTIONS_PROBER',
+                'description' => 'Redis URL (redis://[user:password@]host:port) that the synthetics-operator prober pops HTTP, DNS, TCP and SMTP monitor checks from, so the prober container runs them instead of the alerts worker. The probe-results task hands what it finds back to the alerts worker. Empty by default, so the alerts worker runs the checks itself.',
+                'introduction' => '2.8.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ],
     ],

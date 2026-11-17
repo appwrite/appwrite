@@ -509,6 +509,7 @@ services:
       - _APP_USAGE_STATS
       - _APP_ALERTS_USAGE_LAG
       - _APP_MONITORS_DENIED_NETWORKS
+      - _APP_CONNECTIONS_PROBER
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
       - _APP_POOL_SIZE_USAGE
@@ -723,6 +724,7 @@ services:
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_INACTIVE_INTERVAL
       - _APP_ALERTS_INTERVAL
+      - _APP_CONNECTIONS_PROBER
 
   appwrite-worker-stats-usage:
     profiles:
@@ -755,6 +757,30 @@ services:
       service: appwrite-task-scheduler
     entrypoint: schedule-alerts
     container_name: appwrite-task-scheduler-alerts
+
+  # Checks HTTP, DNS, TCP and SMTP monitors instead of the alerts worker:
+  # `--profile prober` with _APP_CONNECTIONS_PROBER=redis://redis:6379.
+  appwrite-prober:
+    profiles:
+      - prober
+    image: ${_APP_PROBER_IMAGE:-ghcr.io/loks0n/synthetics-operator-prober:0.12.0}
+    container_name: appwrite-prober
+    restart: unless-stopped
+    networks:
+      - appwrite
+    command:
+      - --redis-url=${_APP_CONNECTIONS_PROBER:-redis://redis:6379}
+      - --denied-networks=${_APP_MONITORS_DENIED_NETWORKS:-}
+    depends_on:
+      - redis
+
+  appwrite-task-probe-results:
+    profiles:
+      - prober
+    extends:
+      service: appwrite-task-scheduler
+    entrypoint: probe-results
+    container_name: appwrite-task-probe-results
 
   appwrite-task-stats-resources:
     profiles:
