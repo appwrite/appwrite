@@ -619,6 +619,14 @@ class V25 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'rules':
+                    // The latest DNS record checks from verification, shown on proxy rules.
+                    if ($collectionType === 'console' && $this->dbForProject->findCollection($id) !== null) {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'records');
+                        $this->dbForProject->purgeCachedCollection($id);
+                    }
+                    break;
+
                 case 'pushLedger':
                     // Added in 2.3.0 for every project; an install upgraded from 2.2.0
                     // has no table yet, and migrating its documents fails without one.
