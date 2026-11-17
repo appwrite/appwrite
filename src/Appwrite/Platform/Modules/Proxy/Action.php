@@ -177,6 +177,11 @@ class Action extends PlatformAction
         $validationStart = \microtime(true);
         $records = $this->checkRecords($rule);
 
+        // Keep the latest checks on the rule before any failure, so the caller's write persists them.
+        $rule->setAttribute('records', \array_map(fn (array $record) => [
+            'type' => $record['type'],
+        ], $records));
+
         // Ensure CAA won't block certificate issuance
         $targets = [];
         foreach ($records as $record) {
