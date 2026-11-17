@@ -312,13 +312,15 @@ export function isWaitingForDns(
 
 /**
  * Whether the last DNS check of a domain found a record with the wrong value:
- * no pointing record verified
+ * a CAA record that blocks the certificate, or no pointing record verified
  * while one points elsewhere. A subdomain points with its CNAME; an apex has
  * no CNAME check, and its ALIAS is verified by the A and AAAA checks.
  */
 export function hasWrongDnsRecord(
   records: Pick<ProxyRuleRecord, 'type' | 'status'>[],
 ): boolean {
+  if (records.some((r) => r.type === 'CAA' && r.status === 'mismatch'))
+    return true
   const pointingTypes = ['CNAME', 'A', 'AAAA']
   if (
     records.some(
