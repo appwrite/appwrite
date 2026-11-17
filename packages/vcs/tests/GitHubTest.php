@@ -122,6 +122,48 @@ final class GitHubTest extends Base
         $this->assertSame('1234', $result['installationId']);
     }
 
+    public function testGetEventInstallationRepositories(): void
+    {
+        $payload = (string) json_encode([
+            'action' => 'added',
+            'installation' => [
+                'id' => 1234,
+                'account' => ['login' => 'appwrite'],
+            ],
+            'repository_selection' => 'all',
+            'repositories_added' => [
+                ['id' => 583127841, 'name' => 'appwrite', 'full_name' => 'appwrite/appwrite'],
+                ['id' => '943139433', 'name' => 'console'],
+                ['name' => 'no-id'],
+                'not-a-repository',
+            ],
+            'repositories_removed' => [],
+        ]);
+
+        $events = $this->vcsAdapter->getEvents(GitHub::EVENT_INSTALLATION_REPOSITORIES, $payload);
+
+        $this->assertSame([[
+            'action' => 'added',
+            'installationId' => '1234',
+            'userName' => 'appwrite',
+            'repositoriesAdded' => ['583127841', '943139433'],
+            'repositoriesRemoved' => [],
+        ]], $events);
+    }
+
+    public function testGetEventInstallationHasNoRepositories(): void
+    {
+        $payload = (string) json_encode([
+            'action' => 'deleted',
+            'installation' => ['id' => 1234, 'account' => ['login' => 'appwrite']],
+        ]);
+
+        $events = $this->vcsAdapter->getEvents(GitHub::EVENT_INSTALLATION, $payload);
+
+        $this->assertSame([], $events[0]['repositoriesAdded']);
+        $this->assertSame([], $events[0]['repositoriesRemoved']);
+    }
+
     public function testGetEventIssueCommentOnPullRequest(): void
     {
         $events = $this->vcsAdapter->getEvents(GitHub::EVENT_ISSUE_COMMENT, $this->commentPayload(GitHub::EVENT_ISSUE_COMMENT));
