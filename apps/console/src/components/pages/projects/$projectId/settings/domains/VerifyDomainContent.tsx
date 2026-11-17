@@ -144,7 +144,14 @@ function RecordStatus({
   const pill = 'text-[10px] shrink-0'
   if (check.status !== 'verified' && notNeeded) {
     return (
-      <Badge variant="inactive" className={pill}>
+      <Badge
+        variant="inactive"
+        className={pill}
+        title={t('Not needed. Your {type} record is set.').replace(
+          '{type}',
+          notNeeded,
+        )}
+      >
         {t('Not needed')}
       </Badge>
     )
