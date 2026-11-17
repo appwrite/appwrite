@@ -2758,9 +2758,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'have been enabled.': 'הופעלו.',
   here: 'כאן',
   installations: 'התקנות',
-  // pragma: allowlist secret
-  "instead. If you're using Cloudflare or another CDN, make sure the proxy is disabled (set to DNS only) for this record, since Appwrite serves your domain through its own CDN.":
-    'במקום זאת. אם אתם משתמשים ב-Cloudflare או ב-CDN אחר, ודאו שהפרוקסי מושבת (מוגדר כ-DNS only) עבור הרשומה הזו, כי Appwrite מגיש את הדומיין שלכם דרך ה-CDN שלו.', // pragma: allowlist secret
   item: 'פריט',
   'key for the API key.': 'בתור מפתח ה-API.',
   nameservers: 'שרתי שמות',
