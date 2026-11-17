@@ -2262,9 +2262,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'have been enabled.': 'を有効にしました。',
   here: 'こちら',
   installations: 'インストール',
-  // pragma: allowlist secret
-  "instead. If you're using Cloudflare or another CDN, make sure the proxy is disabled (set to DNS only) for this record, since Appwrite serves your domain through its own CDN.":
-    'を使用してください。Cloudflare やその他の CDN を使用している場合は、Appwrite が独自の CDN 経由でドメインを配信するため、このレコードのプロキシを無効 (DNS only) にしてください。', // pragma: allowlist secret
   item: '項目',
   'key for the API key.': 'API キーのキー。',
   nameservers: 'ネームサーバー',
