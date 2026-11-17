@@ -21,6 +21,12 @@ class RuleRecord extends Model
                 'description' => 'Hostname the record was looked up for.',
                 'default' => '',
                 'example' => 'appwrite.company.com',
+            ])
+            ->addRule('value', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Value the record is expected to have.',
+                'default' => '',
+                'example' => 'appwrite.network',
             ]);
     }
 
