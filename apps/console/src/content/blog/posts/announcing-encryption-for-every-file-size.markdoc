@@ -23,7 +23,7 @@ faqs:
 
 Encrypted buckets in Appwrite Storage now encrypt every file, whatever its size. Until now, encryption stopped at **20 MB**. A larger file in an encrypted bucket was stored exactly as it was uploaded, so the videos, backups, and archives in that bucket were the files left unencrypted.
 
-Every new file now gets its own key and is encrypted piece by piece as it uploads, before Appwrite stores it. Encrypted uploads take about as long as unencrypted ones, and a video player seeking through a large encrypted video decrypts only the part it plays. The change is live on Appwrite Cloud, and existing apps keep working without code, SDK, or settings changes.
+Encrypted uploads now take about as long as unencrypted ones, and reading part of an encrypted file, such as seeking in a video, is about four times faster. The change is live on Appwrite Cloud, and existing apps keep working without code, SDK, or settings changes.
 
 # Bucket encryption
 {% only_dark %}
