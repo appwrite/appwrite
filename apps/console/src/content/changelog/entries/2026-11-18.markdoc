@@ -1,7 +1,7 @@
 ---
 layout: changelog
 title: "Browse, query, and run your project with the new terminal command in the Appwrite CLI"
-date: 2026-11-16
+date: 2026-11-18
 cover: /images/blog/announcing-cli-terminal/cover.avif
 tags: cli
 ---

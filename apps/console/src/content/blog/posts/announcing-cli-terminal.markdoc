@@ -2,7 +2,7 @@
 layout: post
 title: "Introducing the terminal command in the Appwrite CLI"
 description: The new terminal command in the Appwrite CLI opens your project in an interactive terminal UI to browse resources, query rows, run functions, and watch usage.
-date: 2026-11-16
+date: 2026-11-18
 cover: /images/blog/announcing-cli-terminal/cover.avif
 timeToRead: 7
 author: aditya-oberai
