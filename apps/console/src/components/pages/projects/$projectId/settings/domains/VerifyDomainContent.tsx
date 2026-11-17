@@ -834,10 +834,17 @@ export function VerifyDomainContent({
     }
   }
 
+  // The pointing records are alternatives: any one found verifies the domain.
+  const isMethodVerified = (method: VerificationMethod) =>
+    getPointingRecord(method)?.check?.status === 'verified'
+
+  // The tab whose record verifies the domain opens first.
+  const verifiedMethod = tabOptions.find((tab) => isMethodVerified(tab.id))?.id
+
   const selectedTab =
     activeTab && tabOptions.some((tab) => tab.id === activeTab)
-      ? activeTab
-      : (tabOptions[0]?.id ?? 'cname')
+      ? (activeTab as VerificationMethod)
+      : (verifiedMethod ?? tabOptions[0]?.id ?? 'cname')
 
   if (isLoading) {
     return (
