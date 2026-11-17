@@ -1,7 +1,7 @@
 ---
 layout: changelog
 title: "Stay signed in to several accounts with account switching"
-date: 2026-11-13
+date: 2026-11-17
 cover: /images/blog/announcing-account-switching/cover.avif
 tags: auth, sdk, console
 ---
