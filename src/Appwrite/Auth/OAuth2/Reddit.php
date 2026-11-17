@@ -64,6 +64,7 @@ class Reddit extends OAuth2
                 [
                     'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
                     'Content-Type: application/x-www-form-urlencoded',
+                    $this->getUserAgent(),
                 ],
                 \http_build_query([
                     'grant_type' => 'authorization_code',
@@ -89,6 +90,7 @@ class Reddit extends OAuth2
             [
                 'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
                 'Content-Type: application/x-www-form-urlencoded',
+                $this->getUserAgent(),
             ],
             \http_build_query([
                 'grant_type' => 'refresh_token',
@@ -173,10 +175,25 @@ class Reddit extends OAuth2
             $this->user = \json_decode($this->request(
                 'GET',
                 'https://oauth.reddit.com/api/v1/me',
-                ['Authorization: Bearer ' . \urlencode($accessToken)]
+                [
+                    'Authorization: Bearer ' . \urlencode($accessToken),
+                    $this->getUserAgent(),
+                ]
             ), true) ?? [];
         }
 
         return $this->user;
+    }
+
+    /**
+     * Reddit throttles generic user agents and asks for one unique to the app.
+     *
+     * @link https://github.com/reddit-archive/reddit/wiki/API#rules
+     *
+     * @return string
+     */
+    private function getUserAgent(): string
+    {
+        return 'User-Agent: web:' . $this->appID . ':1.0 (by Appwrite)';
     }
 }
