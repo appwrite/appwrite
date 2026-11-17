@@ -86,6 +86,17 @@ final class HIBPTest extends TestCase
         $this->assertCount(1, $fetch->urls);
     }
 
+    public function testRangeWithNoBreachesIsCached(): void
+    {
+        $fetch = new RangeFetch(body: $this->range([]));
+        $cache = new Cache(new Memory());
+
+        $this->assertTrue((new HIBP($cache, $fetch, self::ENDPOINT))->isValid(self::LEAKED));
+        $this->assertTrue((new HIBP($cache, $fetch, self::ENDPOINT))->isValid(self::LEAKED));
+
+        $this->assertCount(1, $fetch->urls);
+    }
+
     public function testCacheIsScopedToEndpoint(): void
     {
         $fetch = new RangeFetch(body: $this->range([self::LEAKED => 42]));

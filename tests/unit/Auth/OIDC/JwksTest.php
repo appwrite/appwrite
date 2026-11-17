@@ -74,6 +74,34 @@ final class JwksTest extends TestCase
         $this->assertSame(2, $fetches); // initial load + one forced refetch
     }
 
+    /**
+     * A set with no usable keys is cached like any other, so it is not
+     * fetched again on every login. Rotation still works once the cooldown ends.
+     */
+    public function testEmptyKeySetIsCached(): void
+    {
+        $fetches = 0;
+        $published = [];
+        $cache = new Cache(new Memory());
+        $jwks = new Jwks($cache, new Client(new CannedTransport(function () use (&$fetches, &$published): string {
+            $fetches++;
+
+            return $this->document($published);
+        })));
+
+        $this->assertNull($jwks->getKey(self::URL, 'kid-1'));
+        $this->assertNull($jwks->getKey(self::URL, 'kid-1'));
+        $this->assertSame(2, $fetches); // initial load + one forced refetch
+        $this->assertSame([], $cache->load('oidc-jwks-pem:' . \md5(self::URL), Jwks::TTL));
+
+        // The cooldown ends and the provider publishes a key
+        $cache->purge('oidc-jwks-refresh:' . \md5(self::URL));
+        $published = ['kid-1'];
+
+        $this->assertStringStartsWith(self::PEM_HEADER, $jwks->getKey(self::URL, 'kid-1'));
+        $this->assertSame(3, $fetches);
+    }
+
     public function testUnusableKeysAreSkipped(): void
     {
         $jwks = new Jwks(new Cache(new Memory()), new Client(new CannedTransport(fn (): string => \json_encode(['keys' => [
