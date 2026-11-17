@@ -132937,11 +132937,11 @@
           "expect": [
             {
               "transform": "document_read",
-              "query": "/* scope: api.users */\nSELECT * FROM \"${ns}\".\"compat_docs\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+              "query": "/* scope: api.users */\nSELECT * FROM \"${ns}\".\"compat_docs\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid"
             },
             {
               "transform": "document_read",
-              "query": "/* scope: api.users */\nSELECT * FROM \"${ns}\".\"compat_docs\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+              "query": "/* scope: api.users */\nSELECT * FROM \"${ns}\".\"compat_docs\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid"
             }
           ]
         },

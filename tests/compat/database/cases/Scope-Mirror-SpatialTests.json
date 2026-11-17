@@ -14188,7 +14188,7 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
-                "query": "SELECT * FROM \"${ns}\".\"compat__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid",
+                "query": "SELECT * FROM \"${ns}\".\"compat__metadata\" AS \"table_main\" WHERE \"_uid\" COLLATE utf8_ci_ai = :_uid",
                 "bindings": {
                   ":_uid": "distanceWithin"
                 },
