@@ -43,12 +43,18 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     let module = if enabled("emails") { module.class::<emails::Email>() } else { module };
     let module = if enabled("query") {
         module
-            .enumeration::<query::Type>()
-            .interface::<query::PhpInterfaceClassifier>()
-            .class::<query::Sql>()
-            .class::<query::MySqlClassifier>()
-            .class::<query::PostgreSqlClassifier>()
-            .class::<query::MongoDbClassifier>()
+            .enumeration::<query::classifier::Type>()
+            .interface::<query::classifier::PhpInterfaceClassifier>()
+            .class::<query::classifier::Sql>()
+            .class::<query::classifier::MySqlClassifier>()
+            .class::<query::classifier::PostgreSqlClassifier>()
+            .class::<query::classifier::MongoDbClassifier>()
+            .class::<query::tokenizer::Tokenizer>()
+            .class::<query::tokenizer::MySql>()
+            .class::<query::tokenizer::MariaDb>()
+            .class::<query::tokenizer::PostgreSql>()
+            .class::<query::tokenizer::Sqlite>()
+            .class::<query::tokenizer::ClickHouse>()
     } else {
         module
     };

@@ -1,7 +1,7 @@
 <?php
 
 // Parity corpus for the part of Utopia\Query the utopia extension has so far: the statement
-// classifiers and the Type they return. Run it on the PHP classes and on the extension's
+// classifiers with the Type they return, and the tokenizers. Run it on the PHP classes and on the extension's
 // (_APP_EXTENSION_LIBRARIES=query), and diff stdout: every line must match. Stderr names the
 // implementation that ran.
 
@@ -12,12 +12,19 @@ use Utopia\Query\Classifier\MongoDB;
 use Utopia\Query\Classifier\MySQL;
 use Utopia\Query\Classifier\PostgreSQL;
 use Utopia\Query\Classifier\SQL;
+use Utopia\Query\Tokenizer;
+use Utopia\Query\Tokenizer\Token;
+use Utopia\Query\Tokenizer\TokenType;
 use Utopia\Query\Type;
 
-const NATIVE = [Type::class, Classifier::class, SQL::class, MySQL::class, PostgreSQL::class, MongoDB::class];
+const NATIVE = [
+    Type::class, Classifier::class, SQL::class, MySQL::class, PostgreSQL::class, MongoDB::class,
+    Tokenizer\Tokenizer::class, Tokenizer\MySQL::class, Tokenizer\MariaDB::class, Tokenizer\PostgreSQL::class,
+    Tokenizer\SQLite::class, Tokenizer\ClickHouse::class,
+];
 
 $internal = array_map(fn (string $class): bool => (new ReflectionClass($class))->isInternal(), NATIVE);
-fwrite(STDERR, 'Utopia\\Query classifiers: ' . ($internal[0] ? 'utopia extension' : 'PHP') . PHP_EOL);
+fwrite(STDERR, 'Utopia\\Query classifiers and tokenizers: ' . ($internal[0] ? 'utopia extension' : 'PHP') . PHP_EOL);
 // A run meant for the extension that gets the PHP classes would compare PHP with PHP and pass.
 $requested = in_array('query', array_map(trim(...), explode(',', getenv('_APP_EXTENSION_LIBRARIES') ?: '')), true);
 if (array_unique($internal) !== [$requested]) {
@@ -34,6 +41,9 @@ function exported(mixed $value): mixed
     if (is_array($value)) {
         return array_map(exported(...), $value);
     }
+    if ($value instanceof Token) {
+        return [$value->type->name, exported($value->value), $value->position];
+    }
     if ($value instanceof UnitEnum) {
         return ['enum' => $value::class . '::' . $value->name];
     }
@@ -49,6 +59,8 @@ function outcome(callable $run): array
 {
     try {
         return ['value' => exported($run())];
+    } catch (Utopia\Query\Exception $e) {
+        return ['throws' => $e::class, 'message' => exported($e->getMessage())];
     } catch (Throwable $e) {
         return ['throws' => $e::class];
     }
@@ -265,6 +277,121 @@ foreach ($messages as $index => $message) {
     ]);
 }
 
+// --- Tokenizers ----------------------------------------------------------------------------
+
+$sqlTexts = $statements;
+array_push(
+    $sqlTexts,
+    '1', '12', '1.5', '.5', '1.', '1e3', '1E-3', '1e', '1e+', '1.2.3', '0x1F', '1_000', '-1', '+1', '1..2', '.', '..', '1.e3', '9223372036854775808',
+    '?', '??', '?1', ':name', ':1', '::', 'a::int', ':', ':_a1', '$1', '$12', '$', '$a', '$$', '$1a',
+    '= <> != <= >= < > || && | & ^ ~ ! % + - * / @ #', '<=>', '<->', '<#>', '@>', '<@', '?|', '?&', '->', '->>', '#>', '#>>', '@@', '!~*', '<<', '>>', ':=',
+    'a @> b', 'a <@ b', 'a <=> b', 'a <-> b', 'a <#> b', 'a ?| b', 'a ?& b', 'a ? b', 'a < = > b', 'a <- > b', 'a @ > b', 'a ?  | b', '@>@>', '<@>', '<=>>', '<<->',
+    "'a'", "''", "'a''b'", "'a\\'b'", "'a\\\\'", "'a\\", "'", "'a", "'a''", 'E\'a\\n\'', "N'a'", "x'ff'", "'a' 'b'", "'\n'", "'\x00'", "'\xff'",
+    '`a`', '``', '`a``b`', '`a\\`b`', '`', '`a', '"a"', '""', '"a""b"', '"a\\"b"', '"', '"a', '[a]', '`a`.`b`.*', '"a"."b"', 'a.b.c', 'a . b', 'a.*', '.a', 'a.',
+    'select', 'SELECT', 'Select', 'true', 'FALSE', 'null', 'Null', 'nulls', 'truex', '_a', 'a_b1', '1a', 'a1', 'é', 'aé', "a\xffb", 'select_', 'from1',
+    '--', '-- a', "-- a\nb", '--a', '- -', '---', '/**/', '/* a */', '/* a', '/*/', '/* * / */', '/* /* a */ */', '*/', '/', '//', '#', '# a', "# a\nb", "a # b\nc", "'#' # '\n'#'", '`#` # `', '"#" # "', "a#b", '##', "#\n#", "\\'# a", "'a\\'# b'# c",
+    " \t\r\n", "a\tb\rc\nd", "\x0b", "\x0c", "\x00", "a\x00b", "\xc2\xa0", ';', ';;', '()', '(,)', ',', '*', '**', 'a*b', 'count(*)',
+    'SELECT a, b FROM t WHERE c = ? AND d IN (:x, :y) ORDER BY e DESC LIMIT 10 OFFSET $1;',
+    'INSERT INTO `t` (`a`, `b`) VALUES (1, \'x\'), (2.5, NULL) ON DUPLICATE KEY UPDATE `a` = VALUES(`a`)',
+    'SELECT "a"."b"::text, c->>\'d\', e @> \'{"f":1}\'::jsonb FROM "t" WHERE g <-> $1 < 0.5',
+    'SELECT toStartOfHour(time) AS h, count() FROM events PREWHERE tenant = 1 GROUP BY h WITH TOTALS FORMAT JSON',
+    'CREATE TABLE t (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL DEFAULT \'\')',
+);
+$sqlTexts = array_values(array_unique($sqlTexts));
+foreach ($sqlTexts as $text) {
+    if ($text === '' || strlen($text) > 300) {
+        continue;
+    }
+    for ($i = 0; $i < 3; $i++) {
+        $at = mt_rand(0, strlen($text) - 1);
+        $byte = $alphabet[mt_rand(0, strlen($alphabet) - 1)];
+        $sqlTexts[] = match (mt_rand(0, 2)) {
+            0 => substr_replace($text, $byte, $at, 1),
+            1 => substr_replace($text, $byte, $at, 0),
+            2 => substr($text, 0, $at),
+        };
+    }
+}
+$sqlTexts = array_values(array_unique($sqlTexts));
+
+$tokenizers = [
+    'base' => new Tokenizer\Tokenizer(),
+    'mysql' => new Tokenizer\MySQL(),
+    'mariadb' => new Tokenizer\MariaDB(),
+    'postgres' => new Tokenizer\PostgreSQL(),
+    'sqlite' => new Tokenizer\SQLite(),
+    'clickhouse' => new Tokenizer\ClickHouse(),
+];
+foreach ($sqlTexts as $text) {
+    $read = array_map(fn (Tokenizer\Tokenizer $tokenizer): array => outcome(fn () => $tokenizer->tokenize($text)), $tokenizers);
+    emit('tokens ' . (strlen($text) > 200 ? substr($text, 0, 200) . '... ' . strlen($text) . ' ' . md5($text) : $text), [
+        strlen($text) > 2000 ? md5(json_encode($read['base'])) : $read['base'],
+        $read['mysql'] === $read['base'] ? 'as base' : $read['mysql'],
+        $read['mariadb'] === $read['mysql'] ? 'as mysql' : $read['mariadb'],
+        $read['postgres'] === $read['base'] ? 'as base' : $read['postgres'],
+        $read['sqlite'] === $read['postgres'] ? 'as postgres' : $read['sqlite'],
+        $read['clickhouse'] === $read['base'] ? 'as base' : $read['clickhouse'],
+        outcome(fn () => Tokenizer\Tokenizer::filter($tokenizers['mysql']->tokenize($text))),
+    ]);
+}
+
+$tokens = $tokenizers['base']->tokenize("select 1 -- a\n/* b */ from t");
+emit('tokens are the package\'s objects', outcome(fn () => [
+    $tokens[0] instanceof Token, (new ReflectionClass(Token::class))->isInternal(), (new ReflectionClass(TokenType::class))->isInternal(),
+    $tokens[0]->type === TokenType::Keyword, $tokens[0] == new Token(TokenType::Keyword, 'SELECT', 0), array_is_list($tokens),
+]));
+emit('a token is readonly', outcome(function () use ($tokens) {
+    $tokens[0]->value = 'x';
+}));
+emit('filter keeps the same objects', outcome(function () use ($tokens): array {
+    $filtered = Tokenizer\Tokenizer::filter($tokens);
+
+    return [count($tokens), count($filtered), $filtered[0] === $tokens[0], array_is_list($filtered), $filtered];
+}));
+emit('filter from a dialect', outcome(fn () => [
+    count(Tokenizer\MySQL::filter($tokens)), count(Tokenizer\MariaDB::filter($tokens)), count(Tokenizer\PostgreSQL::filter($tokens)),
+    count(Tokenizer\SQLite::filter($tokens)), count(Tokenizer\ClickHouse::filter($tokens)),
+]));
+emit('filter of nothing', outcome(fn () => Tokenizer\Tokenizer::filter([])));
+emit('filter of a keyed array', outcome(fn () => array_keys(Tokenizer\Tokenizer::filter(['a' => $tokens[0], 7 => $tokens[1], 'b' => $tokens[2]]))));
+emit('filter of tokens made by hand', outcome(fn () => Tokenizer\Tokenizer::filter([
+    new Token(TokenType::Whitespace, 'not blank', 5), new Token(TokenType::LineComment, '', 0), new Token(TokenType::BlockComment, 'x', 1),
+    new Token(TokenType::Eof, ' ', 2), new Token(TokenType::String, '-- a', 3),
+])));
+emit('tokenizer hierarchy', outcome(fn () => array_map(fn (object $tokenizer): array => [
+    $tokenizer instanceof Tokenizer\Tokenizer, $tokenizer instanceof Tokenizer\MySQL, $tokenizer instanceof Tokenizer\MariaDB,
+    $tokenizer instanceof Tokenizer\PostgreSQL, $tokenizer instanceof Tokenizer\SQLite, $tokenizer instanceof Tokenizer\ClickHouse,
+    (new ReflectionClass($tokenizer))->getParentClass() ? (new ReflectionClass($tokenizer))->getParentClass()->getName() : null,
+    (new ReflectionClass($tokenizer))->isFinal(), (new ReflectionClass($tokenizer))->isAbstract(),
+], $tokenizers)));
+emit('quote character, from inside a subclass', outcome(function (): array {
+    $quotes = [];
+    foreach ([Tokenizer\Tokenizer::class, Tokenizer\MySQL::class, Tokenizer\MariaDB::class, Tokenizer\PostgreSQL::class, Tokenizer\SQLite::class, Tokenizer\ClickHouse::class] as $class) {
+        $quotes[] = (new ReflectionMethod($class, 'getIdentifierQuoteChar'))->isProtected();
+        $quotes[] = eval('return (new class () extends \\' . $class . ' { public function quote(): string { return $this->getIdentifierQuoteChar(); } })->quote();');
+    }
+
+    return $quotes;
+}));
+emit('a subclass that changes tokenize()', outcome(function (): array {
+    $own = new class () extends Tokenizer\PostgreSQL {
+        public function tokenize(string $sql): array
+        {
+            return array_slice(parent::tokenize($sql), 0, -1);
+        }
+    };
+
+    return [$own->tokenize('a <-> b'), $own instanceof Tokenizer\Tokenizer];
+}));
+emit('tokenizers equal and cloned', outcome(fn () => [
+    new Tokenizer\MySQL() == new Tokenizer\MySQL(), $tokenizers['mysql'] == $tokenizers['mariadb'], clone $tokenizers['sqlite'] == $tokenizers['sqlite'],
+    (clone $tokenizers['postgres'])->tokenize('"a"'),
+]));
+foreach (['int' => 12, 'float' => 1.5, 'true' => true, 'false' => false, 'stringable' => $stringable ?? null, 'null' => null, 'array' => [], 'object' => new stdClass()] as $name => $argument) {
+    emit('tokenize argument ' . $name, [outcome(fn () => $tokenizers['base']->tokenize($argument)), outcome(fn () => Tokenizer\Tokenizer::filter($argument))]);
+}
+emit('tokenize without an argument', [outcome(fn () => $tokenizers['base']->tokenize()), outcome(fn () => Tokenizer\Tokenizer::filter())]);
+
 // --- The classes themselves ----------------------------------------------------------------
 
 emit('cases', array_map(fn (Type $type): array => [$type->name, $type->value], Type::cases()));
@@ -338,5 +465,26 @@ emit('missing argument', [outcome(fn () => $mysql->classify()), outcome(fn () =>
 $enumIsFinal = (new ReflectionClass(Type::class))->isFinal();
 if ($enumIsFinal === $requested) {
     fwrite(STDERR, 'Type is ' . ($enumIsFinal ? '' : 'not ') . 'final: the known difference changed' . PHP_EOL);
+    exit(1);
+}
+
+// PHP keeps the SQL it last read, its length and its position on the tokenizer, so one that has
+// tokenized is not == a new one; the extension's holds nothing.
+$usedEqualsNew = $tokenizers['mysql'] == new Tokenizer\MySQL();
+if ($usedEqualsNew !== $requested) {
+    fwrite(STDERR, 'A used tokenizer is ' . ($usedEqualsNew ? '' : 'not ') . '== a new one: the known difference changed' . PHP_EOL);
+    exit(1);
+}
+// PHP asks getIdentifierQuoteChar() on every tokenize(), so a subclass can change the quote; the
+// extension's dialects are fixed.
+$piped = new class () extends Tokenizer\Tokenizer {
+    protected function getIdentifierQuoteChar(): string
+    {
+        return '|';
+    }
+};
+$consulted = $piped->tokenize('|a|')[0]->type === TokenType::QuotedIdentifier;
+if ($consulted === $requested) {
+    fwrite(STDERR, 'An overridden getIdentifierQuoteChar() is ' . ($consulted ? '' : 'not ') . 'consulted: the known difference changed' . PHP_EOL);
     exit(1);
 }

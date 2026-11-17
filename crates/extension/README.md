@@ -179,14 +179,14 @@ package's validators. It asserts these known differences on the extension:
   and the protected static properties `$freeDomains`, `$disposableDomains` and `$providers` do not
   exist: a subclass cannot call or read them. Nothing in Appwrite or Cloud subclasses `Email`.
 
-## Utopia\Query: the classifiers
+## Utopia\Query: the classifiers and the tokenizers
 
 Over `crates/utopia/query` (`_APP_EXTENSION_LIBRARIES=query`). `packages/query` is about 300 classes,
 so it moves to the extension one part at a time, and `query` switches on whatever part is here. So
 far that is the statement classifiers a database proxy routes with: the `Classifier` interface,
 `Classifier\SQL` (abstract), `Classifier\MySQL`, `Classifier\PostgreSQL`, `Classifier\MongoDB` and
-the `Type` enum they return. Every other class of the package (`Query`, `Method`, the builders, the
-schema, the AST, the tokenizers) is still its PHP source and works with these unchanged.
+the `Type` enum they return; and the tokenizers, below. Every other class of the package (`Query`,
+`Method`, the builders, the schema, the AST) is still its PHP source and works with these unchanged.
 
 The interface and the enum are registered too, not left in PHP: a class registered when the module
 starts cannot implement a userland interface, and returning the extension's own enum case costs no
@@ -206,6 +206,30 @@ the scalar arguments PHP converts. `packages/query/tests` run on the extension t
 
 - `ReflectionClass::isFinal()` is `false` for `Type`; a PHP enum reports `true`. Extending it is
   refused either way.
+
+### The tokenizers
+
+`Tokenizer\Tokenizer` and its dialects `MySQL`, `MariaDB`, `PostgreSQL`, `SQLite` and `ClickHouse`,
+which the AST parser and the builders' statement checks call. `Token` and `TokenType` stay PHP: a
+token is a value object, so `tokenize()` returns the package's own `Token`s, made by its constructor
+with the cases of its enum, and `filter()` returns the objects it was given. An unterminated string
+or identifier throws the package's `ValidationException`.
+
+The corpus adds, on all six dialects: every statement of the classifier corpus; numbers,
+placeholders, operators (PostgreSQL's multi-character ones, and near misses of them), strings and
+identifiers with every escape, comments in all three forms and `#` inside each kind of quote; seeded
+mutations of all of them; `filter()` of tokens it made, of tokens made by hand, of a keyed array and
+of nothing; the class hierarchy; subclasses that read the quote character or change `tokenize()`;
+and the scalar arguments PHP converts. It asserts two known differences:
+
+- A tokenizer holds nothing. PHP keeps the SQL it last read, its length and its position in
+  private properties, so a PHP tokenizer that has tokenized is not `==` a new one.
+- `getIdentifierQuoteChar()` exists and returns the dialect's quote, but `tokenize()` does not ask
+  it: a subclass that overrides it does not change the quote. Nothing in Appwrite or Cloud does.
+
+Five tests in `packages/query/tests/Tokenizer/MySQLTest.php` reached the private
+`replaceHashComments()` by reflection. They now read the rewritten SQL back from `tokenize()`,
+whose tokens cover every byte, so they run on both implementations.
 
 ## Benchmarks
 

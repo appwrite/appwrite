@@ -1,7 +1,5 @@
-//! `Utopia\Query` over [`utopia_query`], one part of the package at a time. What is here
-//! so far: the statement classifiers (`Classifier`, `Classifier\SQL`, `Classifier\MySQL`,
-//! `Classifier\PostgreSQL`, `Classifier\MongoDB`) and the `Type` they return. Every other
-//! class of the package is still its PHP source.
+//! The statement classifiers (`Classifier`, `Classifier\SQL`, `Classifier\MySQL`,
+//! `Classifier\PostgreSQL`, `Classifier\MongoDB`) and the `Type` they return.
 
 use ext_php_rs::flags::ClassFlags;
 use ext_php_rs::prelude::*;

@@ -1,6 +1,6 @@
 <?php
 
-// Times the Utopia\Query classifiers on whichever implementation loaded. Compare both with
+// Times the Utopia\Query classifiers and tokenizers on whichever implementation loaded. Compare both with
 // `python3 crates/extension/bench/run.py crates/extension/bench/query.php . <utopia.so> 5`.
 
 require __DIR__ . '/../../../vendor/autoload.php';
@@ -8,6 +8,7 @@ require __DIR__ . '/../../../vendor/autoload.php';
 use Utopia\Query\Classifier\MongoDB;
 use Utopia\Query\Classifier\MySQL;
 use Utopia\Query\Classifier\PostgreSQL;
+use Utopia\Query\Tokenizer\Tokenizer;
 
 // A run meant for the extension that gets the PHP classes would time PHP against PHP.
 $internal = (new ReflectionClass(MySQL::class))->isInternal();
@@ -20,6 +21,9 @@ if ($internal !== $requested) {
 $mysql = new MySQL();
 $postgres = new PostgreSQL();
 $mongo = new MongoDB();
+$tokenizer = new Tokenizer();
+$mysqlTokenizer = new Utopia\Query\Tokenizer\MySQL();
+$postgresTokenizer = new Utopia\Query\Tokenizer\PostgreSQL();
 
 // What a database proxy sees, one packet at a time: a simple query, a commented one, a CTE,
 // a prepared statement and a MongoDB command.
@@ -46,6 +50,12 @@ $cases = [
     'extractKeyword' => fn () => $mysql->extractKeyword($commented),
     'mongodb find' => fn () => $mongo->classify($find),
     'mongodb insert in a txn' => fn () => $mongo->classify($insert),
+    // What the AST parser does first with every statement it is given.
+    'tokenize select (22 tokens)' => fn () => $tokenizer->tokenize($select),
+    'tokenize + filter' => fn () => Tokenizer::filter($tokenizer->tokenize($select)),
+    'tokenize mysql # comment' => fn () => $mysqlTokenizer->tokenize($commented . ' # trailing'),
+    'tokenize postgres operators' => fn () => $postgresTokenizer->tokenize('SELECT a @> b, c <-> $1, d ?| e FROM "t" WHERE f <=> g'),
+    'tokenize CTE (60 tokens)' => fn () => $tokenizer->tokenize($cte),
 ];
 $n = 50000;
 $out = [];
