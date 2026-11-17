@@ -10,9 +10,9 @@ category: announcements
 featured: false
 faqs:
   - question: "What is the terminal command in the Appwrite CLI?"
-    answer: "`appwrite terminal` is a command in the Appwrite CLI, available from version 28.13.2, that opens your Appwrite projects in an interactive, keyboard-driven interface inside your terminal. You can browse databases, functions, sites, storage, users, teams, and messaging, query and edit rows, execute functions, and see the last 24 hours of usage. See the [terminal docs](/docs/tooling/command-line/terminal)."
+    answer: "`appwrite terminal` is a command in the Appwrite CLI, available from version 28.13.3, that opens your Appwrite projects in an interactive, keyboard-driven interface inside your terminal. You can browse databases, functions, sites, storage, users, teams, and messaging, query and edit rows, execute functions, and see the last 24 hours of usage. See the [terminal docs](/docs/tooling/command-line/terminal)."
   - question: "How do I use the terminal command?"
-    answer: "[Update the Appwrite CLI](/docs/tooling/command-line/installation#update-your-cli) to version 28.13.2 or later, sign in with `appwrite login`, and run `appwrite terminal`. Pass `--project-id` to open a project directly, or run the command in a directory with an `appwrite.config.json` to open that project."
+    answer: "[Update the Appwrite CLI](/docs/tooling/command-line/installation#update-your-cli) to version 28.13.3 or later, sign in with `appwrite login`, and run `appwrite terminal`. Pass `--project-id` to open a project directly, or run the command in a directory with an `appwrite.config.json` to open that project."
   - question: "Does the terminal command work with self-hosted Appwrite?"
     answer: "Yes. Sign in to your instance with `appwrite login --endpoint \"<URL>\"`, then run `appwrite terminal`. It connects to the same endpoint as the rest of the CLI. Usage charts on self-hosted instances require Appwrite 2.7 or later."
   - question: "Can I use the terminal command with an API key instead of a console login?"
@@ -39,7 +39,7 @@ Today, we are introducing the **`appwrite terminal`** command, an interactive in
 
 # Get started in two commands
 
-`appwrite terminal` ships in Appwrite CLI 28.13.2 and later. [Update your CLI](/docs/tooling/command-line/installation#update-your-cli), sign in, and open the interface:
+`appwrite terminal` ships in Appwrite CLI 28.13.3 and later. [Update your CLI](/docs/tooling/command-line/installation#update-your-cli), sign in, and open the interface:
 
 ```sh
 appwrite login
