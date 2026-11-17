@@ -931,7 +931,10 @@ export function VerifyDomainContent({
   ]
   const offersNameservers = tabOptions.some((tab) => tab.id === 'nameservers')
   const banners = checks ? getDnsBanners(t, rule, pointingChecks, caaCheck) : []
+  // A banner that names the wrong record replaces the generic "wait and try
+  // again" alert, and "DNS is set up" already says the certificate is next.
   const wrongRecord = banners.some((banner) => banner.tone === 'error')
+  const dnsSetUp = banners.some((banner) => banner.tone === 'success')
   const shownError =
     wrongRecord &&
     typeof verificationError === 'object' &&
@@ -1071,7 +1074,7 @@ export function VerifyDomainContent({
   return (
     <div className={compact ? 'space-y-4' : 'space-y-6'}>
       <DomainVerificationAlert error={shownError} />
-      {rule.status === 'verifying' && (
+      {rule.status === 'verifying' && !dnsSetUp && (
         <Alert variant="default" className="border-blue-500/30 bg-blue-500/5">
           <AlertDescription className="text-[13px] text-muted-foreground">
             {t(
