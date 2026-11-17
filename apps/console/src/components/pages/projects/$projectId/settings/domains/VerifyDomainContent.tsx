@@ -44,6 +44,13 @@ const TAB_LABELS: Record<VerificationMethod, string> = {
   aaaa: 'AAAA',
 }
 
+/** The tab of each record type that points the domain at Appwrite. */
+const POINTING_METHODS: Record<string, VerificationMethod> = {
+  CNAME: 'cname',
+  A: 'a',
+  AAAA: 'aaaa',
+}
+
 export type DomainVerificationError = {
   title: string
   message: string
@@ -115,6 +122,8 @@ export type DnsRecord = {
   badge?: string
   /** What DNS had for this record at the last check. */
   check?: ProxyRuleRecord
+  /** The record type that already verifies the domain, when this one is an unused alternative. */
+  notNeeded?: string
 }
 
 const TABLE_HEAD =
@@ -454,6 +463,11 @@ export function VerifyDomainContent({
         (type === 'CAA' || normalize(check.value) === normalize(value)),
     )
 
+  // Once one record points the domain at Appwrite, the others are not needed.
+  const verifiedType = checks?.find(
+    (check) => check.type in POINTING_METHODS && check.status === 'verified',
+  )?.type
+
   const getRecord = (type: string, value: string): DnsRecord => {
     const check = findCheck(type, value)
     return {
@@ -462,6 +476,8 @@ export function VerifyDomainContent({
       value,
       ttl: 3600,
       check,
+      notNeeded:
+        check && check.status !== 'verified' ? verifiedType : undefined,
     }
   }
 
