@@ -5,8 +5,8 @@
 //! `Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`,
 //! `Utopia\Locale\Locale`, `Utopia\UserAgent\UserAgent`, `Utopia\Domains\Domain` and
 //! `Utopia\Emails\Email` are always registered: they have no PHP implementation.
-//! A library that still has one registers its class only when
-//! `_APP_EXTENSION_LIBRARIES` names its package, so it can be canaried and
+//! Every other library still has one, and its class is registered only when
+//! `_APP_EXTENSION_LIBRARIES` names its package (`validators`), so each can be canaried and
 //! switched back to PHP with a restart, not a deploy.
 
 mod canvas;
@@ -16,24 +16,22 @@ mod emails;
 mod locale;
 mod string;
 mod user_agent;
+mod validators;
 
 use ext_php_rs::prelude::*;
 
 /// The environment variable listing the packages the extension replaces,
 /// comma separated.
-// No class is switchable while every ported library is always registered; the validators batches
-// (#15733 and the leaf batches after it) each register behind `enabled("<name>")` again.
-#[allow(dead_code)]
 const LIBRARIES: &str = "_APP_EXTENSION_LIBRARIES";
 
 /// Whether `_APP_EXTENSION_LIBRARIES` names `package`.
-#[allow(dead_code)]
 fn enabled(package: &str) -> bool {
     std::env::var(LIBRARIES).is_ok_and(|list| list.split(',').any(|name| name.trim() == package))
 }
 
 /// The module PHP loads: every class of the extension that is switched on.
 #[php_module]
+#[php(startup = startup)]
 pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     let module = module
         .name("utopia")
@@ -45,6 +43,15 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .class::<domains::Domain>()
         .class::<emails::Email>();
     module.request_shutdown_function(request_shutdown)
+}
+
+/// Registers the classes built by hand rather than with `#[php_class]` that are switched on.
+/// Runs in MINIT, before the `#[php_class]` classes are registered.
+fn startup(_kind: i32, _module: i32) -> i32 {
+    if !enabled("validators") {
+        return 0;
+    }
+    ext_php_rs::internal::startup_guard(validators::register)
 }
 
 /// Forgets what the classes hold for the request when it ends, as PHP frees its static state.
