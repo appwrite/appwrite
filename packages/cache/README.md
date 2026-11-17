@@ -42,6 +42,8 @@ if(!$data) {
 echo $data;
 ```
 
+A miss loads as `false`. `save()` refuses `''` and `'0'` and returns `false`. It stores an empty array `[]`, except on `Filesystem` and `Storage`, which store strings and refuse it too.
+
 ## Adapters
 
 | Adapter | Notes |
