@@ -29,6 +29,12 @@ const CLASS: &str = "Utopia\\VCS\\Adapter\\Git\\GitHub";
 /// PHP: `GitHub::EVENT_ISSUE_COMMENT`.
 pub const EVENT_ISSUE_COMMENT: &str = "issue_comment";
 
+/// Repositories joined or left an installation: chosen in its settings, or
+/// created in an account the installation covers in full.
+///
+/// PHP: `GitHub::EVENT_INSTALLATION_REPOSITORIES`.
+pub const EVENT_INSTALLATION_REPOSITORIES: &str = "installation_repositories";
+
 /// A comment on a pull request's diff, in a review thread.
 ///
 /// PHP: `GitHub::EVENT_PULL_REQUEST_REVIEW_COMMENT`.
@@ -843,6 +849,8 @@ impl Adapter for GitHub {
                     ("action", or(at(&payload, "action"), "")),
                     ("installationId", installation_id),
                     ("userName", or(at(&account, "login"), "")),
+                    ("repositoriesAdded", repository_ids(&at(&payload, "repositories_added"))),
+                    ("repositoriesRemoved", repository_ids(&at(&payload, "repositories_removed"))),
                 ])])
             }
             _ => Ok(Vec::new()),
@@ -1483,4 +1491,19 @@ pub(crate) fn contents_listing(body: &Value) -> Result<Vec<Value>> {
 #[allow(dead_code)]
 fn not_supported(method: &str) -> Error {
     unsupported(method, "github")
+}
+
+/// The ids of the repositories an `installation_repositories` event lists, as
+/// strings: entries without an integer or digit-string `id` are skipped.
+fn repository_ids(repositories: &Value) -> Value {
+    let Value::Array(repositories) = repositories else { return php::list(Vec::new()) };
+    let ids = repositories
+        .values()
+        .filter_map(|repository| match at(repository, "id") {
+            id @ Value::Int(_) => Some(s(php::string(&id).as_bytes())),
+            Value::Str(id) if php_std::string::ctype_digit(id.as_bytes()) => Some(Value::Str(id)),
+            _ => None,
+        })
+        .collect();
+    php::list(ids)
 }

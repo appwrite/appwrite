@@ -675,7 +675,136 @@
             {
               "action": "deleted",
               "installationId": "1234",
-              "userName": "vermakhushboo"
+              "userName": "vermakhushboo",
+              "repositoriesAdded": [],
+              "repositoriesRemoved": []
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventInstallationRepositories",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "installation_repositories",
+            "payload": "{\"action\":\"added\",\"installation\":{\"id\":1234,\"account\":{\"login\":\"appwrite\"}},\"repository_selection\":\"all\",\"repositories_added\":[{\"id\":583127841,\"name\":\"appwrite\",\"full_name\":\"appwrite/appwrite\"},{\"id\":\"943139433\",\"name\":\"console\"},{\"name\":\"no-id\"},\"not-a-repository\"],\"repositories_removed\":[]}"
+          },
+          "expect": [
+            {
+              "action": "added",
+              "installationId": "1234",
+              "userName": "appwrite",
+              "repositoriesAdded": [
+                "583127841",
+                "943139433"
+              ],
+              "repositoriesRemoved": []
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventInstallationHasNoRepositories",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "installation",
+            "payload": "{\"action\":\"deleted\",\"installation\":{\"id\":1234,\"account\":{\"login\":\"appwrite\"}}}"
+          },
+          "expect": [
+            {
+              "action": "deleted",
+              "installationId": "1234",
+              "userName": "appwrite",
+              "repositoriesAdded": [],
+              "repositoriesRemoved": []
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "installation repositories with odd shapes",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "installation_repositories",
+            "payload": "{\"action\":\"removed\",\"installation\":{\"id\":\"77\",\"account\":{\"login\":\"x\"}},\"repositories_added\":\"not-a-list\",\"repositories_removed\":[{\"id\":\"\"},{\"id\":\"12a\"},{\"id\":-5},{\"id\":1.5},{\"id\":true},{\"id\":null},{\"id\":\"007\"},[\"id\"],{\"id\":9223372036854775807}]}"
+          },
+          "expect": [
+            {
+              "action": "removed",
+              "installationId": "77",
+              "userName": "x",
+              "repositoriesAdded": [],
+              "repositoriesRemoved": [
+                "-5",
+                "007",
+                "9223372036854775807"
+              ]
             }
           ]
         },
