@@ -398,14 +398,17 @@ export function VerifyDomainContent({
     )
 
   const getRecord = (type: string, value: string): DnsRecord => {
+    const check = findCheck(type, value)
     return {
       type,
       name: getRecordName(rule.domain),
       value,
       ttl: 3600,
+      check,
     }
   }
 
+  // The record each method asks for, with the status of its last check.
   const getPointingRecord = (method: VerificationMethod): DnsRecord | null => {
     switch (method) {
       case 'cname':
