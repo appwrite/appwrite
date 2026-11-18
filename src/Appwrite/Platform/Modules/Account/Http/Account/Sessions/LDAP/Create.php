@@ -174,8 +174,9 @@ class Create extends Base
         // it returns is trusted the way a provider's attested email is for OAuth2.
         [$newUser, $newTarget] = $this->resolveUser($user, SESSION_PROVIDER_LDAP, $entry['id'], $entry['email'], true, $entry['name'], $dbForProject, $project, $plan, $proofForPassword, $authorization, $mqtt, $queueForRealtime, $bus);
 
-        // The stored row tells whether this sign-in verified the email; a user created by it was stored verified already
-        $wasVerified = $newUser === null && $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId()))->getAttribute('emailVerification', false);
+        // Every change to the address below is saved and read back onto the user, and a claim already
+        // dispatched EmailVerified, so the user in hand tells whether this sign-in verified the email
+        $wasVerified = $newUser === null && $user->getAttribute('emailVerification', false);
 
         $authorization->addRole(Role::user($user->getId())->toString());
         $authorization->addRole(Role::users()->toString());
@@ -275,7 +276,7 @@ class Create extends Base
             ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken'])
         ;
 
-        if (!$wasVerified && $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId()))->getAttribute('emailVerification', false)) {
+        if (!$wasVerified && $user->getAttribute('emailVerification', false)) {
             $bus->dispatch(new EmailVerified(user: $user->getArrayCopy(), project: $project->getArrayCopy()));
         }
 

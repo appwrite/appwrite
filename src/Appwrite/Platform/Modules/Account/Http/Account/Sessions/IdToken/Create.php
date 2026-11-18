@@ -250,6 +250,10 @@ class Create extends Base
             throw new Exception(Exception::USER_BLOCKED);
         }
 
+        // Only a user this sign-in created and an address it fills in turn verified from here, and both are
+        // saved below; a claim already dispatched EmailVerified and left the account verified
+        $wasVerified = $newUser === null && $user->getAttribute('emailVerification', false);
+
         $backfilled = empty($user->getAttribute('email')) && !empty($providerEmail);
         if ($backfilled) {
             $this->backfillEmail($user, $providerEmail, $isVerified, $dbForProject, $project, $plan, $authorization);
@@ -300,13 +304,9 @@ class Create extends Base
 
         $user->setAttribute('status', true);
 
-        // The stored row tells whether this sign-in verified the email: only the changed
-        // fields are saved, and a user created by this sign-in was stored verified already
-        $wasVerified = $newUser === null && $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId()))->getAttribute('emailVerification', false);
-
         $dbForProject->updateDocument('users', $user->getId(), new Document($changes));
 
-        if (!$wasVerified && $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId()))->getAttribute('emailVerification', false)) {
+        if (!$wasVerified && $user->getAttribute('emailVerification', false)) {
             $bus->dispatch(new EmailVerified(user: $user->getArrayCopy(), project: $project->getArrayCopy()));
         }
 
