@@ -19,6 +19,7 @@ export const MARKETING_PAGE_PATHS = [
   '/innovation-teams',
   '/education',
   '/for-agents',
+  '/zero',
   '/partners',
   '/enterprise',
   '/affiliates',

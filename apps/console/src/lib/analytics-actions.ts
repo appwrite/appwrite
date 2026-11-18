@@ -120,6 +120,11 @@ export const ANALYTICS_ACTIONS = {
   'for-agents-install-skills': 'For Agents Install Skills Clicked',
   'for-agents-connect-mcp': 'For Agents Connect MCP Clicked',
   'for-agents-view-docs': 'For Agents View Docs Clicked',
+  'zero-copy-command': 'Zero Copy Command Clicked',
+  'zero-copy-entry': 'Zero Copy Entry Clicked',
+  'zero-copy-prompt': 'Zero Copy Prompt Clicked',
+  'zero-open-agent': 'Zero Open Agent Clicked',
+  'zero-sign-up': 'Zero Sign Up Clicked',
 
   // Pricing page CTAs
   'pricing-start-free': 'Pricing Start Free Clicked',
@@ -170,6 +175,7 @@ export const ANALYTICS_ACTIONS = {
   'specs-contact-sales': 'Specifications Contact Sales Clicked',
   'replicas-contact-sales': 'Replicas Contact Sales Clicked',
   'compliance-contact-sales': 'Compliance Contact Sales Clicked',
+  'preview-domains-contact-sales': 'Preview Domains Contact Sales Clicked',
   'support-contact-sales': 'Support Contact Sales Clicked',
   'support-ticket-contact-sales': 'Support Ticket Contact Sales Clicked',
 
@@ -413,6 +419,7 @@ const CONTACT_SALES_ACTIONS: Record<SalesSource, AnalyticsActionId> = {
   specs: 'specs-contact-sales',
   replicas: 'replicas-contact-sales',
   compliance: 'compliance-contact-sales',
+  'preview-domains': 'preview-domains-contact-sales',
   support: 'support-contact-sales',
   'support-ticket': 'support-ticket-contact-sales',
   'plan-picker': 'upgrade-contact-sales',

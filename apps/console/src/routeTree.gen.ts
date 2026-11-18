@@ -31,6 +31,7 @@ import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SetupDotmdRouteImport } from './routes/setup[.]md'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TransferRouteImport } from './routes/transfer'
+import { Route as ZeroDotmdRouteImport } from './routes/zero[.]md'
 import { Route as ApiA2aRouteImport } from './routes/_api/a2a'
 import { Route as ApiAskRouteImport } from './routes/_api/ask'
 import { Route as ApiChangelogDotjsonRouteImport } from './routes/_api/changelog[.]json'
@@ -63,6 +64,7 @@ import { Route as MarketingPricingRouteImport } from './routes/_marketing/pricin
 import { Route as MarketingPrivacyRouteImport } from './routes/_marketing/privacy'
 import { Route as MarketingStartupsRouteImport } from './routes/_marketing/startups'
 import { Route as MarketingTermsRouteImport } from './routes/_marketing/terms'
+import { Route as MarketingZeroRouteImport } from './routes/_marketing/zero'
 import { Route as ProtectedExampleProtectedRouteRouteImport } from './routes/_protected/example-protected-route'
 import { Route as PublicAccountRouteImport } from './routes/_public/account'
 import { Route as PublicAgentRouteImport } from './routes/_public/agent'
@@ -615,6 +617,11 @@ const TransferRoute = TransferRouteImport.update({
   path: '/transfer',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ZeroDotmdRoute = ZeroDotmdRouteImport.update({
+  id: '/zero.md',
+  path: '/zero.md',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiA2aRoute = ApiA2aRouteImport.update({
   id: '/_api/a2a',
   path: '/a2a',
@@ -774,6 +781,11 @@ const MarketingStartupsRoute = MarketingStartupsRouteImport.update({
 const MarketingTermsRoute = MarketingTermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingZeroRoute = MarketingZeroRouteImport.update({
+  id: '/zero',
+  path: '/zero',
   getParentRoute: () => MarketingRoute,
 } as any)
 const ProtectedExampleProtectedRouteRoute =
@@ -3623,6 +3635,7 @@ export interface FileRoutesByFullPath {
   '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/transfer': typeof TransferRoute
+  '/zero.md': typeof ZeroDotmdRoute
   '/a2a': typeof ApiA2aRoute
   '/ask': typeof ApiAskRoute
   '/changelog.json': typeof ApiChangelogDotjsonRoute
@@ -3654,6 +3667,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof MarketingPrivacyRoute
   '/startups': typeof MarketingStartupsRoute
   '/terms': typeof MarketingTermsRoute
+  '/zero': typeof MarketingZeroRoute
   '/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/account': typeof PublicAccountRouteWithChildren
   '/agent': typeof PublicAgentRouteWithChildren
@@ -4118,6 +4132,7 @@ export interface FileRoutesByTo {
   '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/transfer': typeof TransferRoute
+  '/zero.md': typeof ZeroDotmdRoute
   '/a2a': typeof ApiA2aRoute
   '/ask': typeof ApiAskRoute
   '/changelog.json': typeof ApiChangelogDotjsonRoute
@@ -4149,6 +4164,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof MarketingPrivacyRoute
   '/startups': typeof MarketingStartupsRoute
   '/terms': typeof MarketingTermsRoute
+  '/zero': typeof MarketingZeroRoute
   '/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/app': typeof PublicAppRoute
   '/assistant': typeof PublicAssistantRoute
@@ -4566,6 +4582,7 @@ export interface FileRoutesById {
   '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/transfer': typeof TransferRoute
+  '/zero.md': typeof ZeroDotmdRoute
   '/_api/a2a': typeof ApiA2aRoute
   '/_api/ask': typeof ApiAskRoute
   '/_api/changelog.json': typeof ApiChangelogDotjsonRoute
@@ -4597,6 +4614,7 @@ export interface FileRoutesById {
   '/_marketing/privacy': typeof MarketingPrivacyRoute
   '/_marketing/startups': typeof MarketingStartupsRoute
   '/_marketing/terms': typeof MarketingTermsRoute
+  '/_marketing/zero': typeof MarketingZeroRoute
   '/_protected/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/_public/account': typeof PublicAccountRouteWithChildren
   '/_public/agent': typeof PublicAgentRouteWithChildren
@@ -5066,6 +5084,7 @@ export interface FileRouteTypes {
     | '/setup.md'
     | '/sitemap.xml'
     | '/transfer'
+    | '/zero.md'
     | '/a2a'
     | '/ask'
     | '/changelog.json'
@@ -5097,6 +5116,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/startups'
     | '/terms'
+    | '/zero'
     | '/example-protected-route'
     | '/account'
     | '/agent'
@@ -5561,6 +5581,7 @@ export interface FileRouteTypes {
     | '/setup.md'
     | '/sitemap.xml'
     | '/transfer'
+    | '/zero.md'
     | '/a2a'
     | '/ask'
     | '/changelog.json'
@@ -5592,6 +5613,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/startups'
     | '/terms'
+    | '/zero'
     | '/example-protected-route'
     | '/app'
     | '/assistant'
@@ -6008,6 +6030,7 @@ export interface FileRouteTypes {
     | '/setup.md'
     | '/sitemap.xml'
     | '/transfer'
+    | '/zero.md'
     | '/_api/a2a'
     | '/_api/ask'
     | '/_api/changelog.json'
@@ -6039,6 +6062,7 @@ export interface FileRouteTypes {
     | '/_marketing/privacy'
     | '/_marketing/startups'
     | '/_marketing/terms'
+    | '/_marketing/zero'
     | '/_protected/example-protected-route'
     | '/_public/account'
     | '/_public/agent'
@@ -6510,6 +6534,7 @@ export interface RootRouteChildren {
   SetupDotmdRoute: typeof SetupDotmdRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TransferRoute: typeof TransferRoute
+  ZeroDotmdRoute: typeof ZeroDotmdRoute
   ApiA2aRoute: typeof ApiA2aRoute
   ApiAskRoute: typeof ApiAskRoute
   ApiChangelogDotjsonRoute: typeof ApiChangelogDotjsonRoute
@@ -6698,6 +6723,13 @@ declare module '@tanstack/react-router' {
       path: '/transfer'
       fullPath: '/transfer'
       preLoaderRoute: typeof TransferRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/zero.md': {
+      id: '/zero.md'
+      path: '/zero.md'
+      fullPath: '/zero.md'
+      preLoaderRoute: typeof ZeroDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_api/a2a': {
@@ -6922,6 +6954,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof MarketingTermsRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/zero': {
+      id: '/_marketing/zero'
+      path: '/zero'
+      fullPath: '/zero'
+      preLoaderRoute: typeof MarketingZeroRouteImport
       parentRoute: typeof MarketingRoute
     }
     '/_protected/example-protected-route': {
@@ -10101,6 +10140,7 @@ interface MarketingRouteChildren {
   MarketingPrivacyRoute: typeof MarketingPrivacyRoute
   MarketingStartupsRoute: typeof MarketingStartupsRoute
   MarketingTermsRoute: typeof MarketingTermsRoute
+  MarketingZeroRoute: typeof MarketingZeroRoute
   MarketingIndexRoute: typeof MarketingIndexRoute
   MarketingAlternativeToCompetitorRoute: typeof MarketingAlternativeToCompetitorRoute
   MarketingBlogPageRoute: typeof MarketingBlogPageRoute
@@ -10139,6 +10179,7 @@ const MarketingRouteChildren: MarketingRouteChildren = {
   MarketingPrivacyRoute: MarketingPrivacyRoute,
   MarketingStartupsRoute: MarketingStartupsRoute,
   MarketingTermsRoute: MarketingTermsRoute,
+  MarketingZeroRoute: MarketingZeroRoute,
   MarketingIndexRoute: MarketingIndexRoute,
   MarketingAlternativeToCompetitorRoute: MarketingAlternativeToCompetitorRoute,
   MarketingBlogPageRoute: MarketingBlogPageRoute,
@@ -12162,6 +12203,7 @@ const rootRouteChildren: RootRouteChildren = {
   SetupDotmdRoute: SetupDotmdRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TransferRoute: TransferRoute,
+  ZeroDotmdRoute: ZeroDotmdRoute,
   ApiA2aRoute: ApiA2aRoute,
   ApiAskRoute: ApiAskRoute,
   ApiChangelogDotjsonRoute: ApiChangelogDotjsonRoute,
