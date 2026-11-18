@@ -11,6 +11,7 @@ use Utopia\Client\Adapter\Curl\Client;
 use Utopia\Client\Destinations\IPRange;
 use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Client\Exception\DestinationException;
+use Utopia\Client\Exception\NetworkException;
 use Utopia\Client\Tests\Adapter\AdapterContract;
 use Utopia\Client\Tests\Server\Http;
 use Utopia\Psr7\ContentType;
@@ -158,6 +159,25 @@ final class ClientTest extends AdapterContract
             'body' => (string) $response->getBody(),
             'peak' => memory_get_peak_usage() - $baseline,
         ];
+    }
+
+    public function testTheMaximumFileSizeCapsTheDecodedBody(): void
+    {
+        Http::serve(function (int $port): void {
+            // 280 KB of text compresses to well under the 10 KB cap, so cURL's own wire check passes.
+            $client = new Client(options: [\CURLOPT_MAXFILESIZE_LARGE => 10_000]);
+            $request = new \Utopia\Psr7\Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/gzip?repeat=40000');
+
+            try {
+                $client->sendRequest($request);
+                $this->fail('A decoded body past the maximum file size was accepted.');
+            } catch (NetworkException $exception) {
+                $this->assertSame(\CURLE_FILESIZE_EXCEEDED, $exception->getCode());
+            }
+
+            $small = new \Utopia\Psr7\Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/gzip?repeat=64');
+            $this->assertSame(64 * 7, \strlen((string) $client->sendRequest($small)->getBody()));
+        });
     }
 
     public function testAnEnvironmentProxyCannotCarryARequestPastTheDestination(): void
