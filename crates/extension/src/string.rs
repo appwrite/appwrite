@@ -64,7 +64,12 @@ impl<'a> From<&'a str> for PhpString<'a> {
 }
 
 impl StubLiteral for PhpString<'_> {
+    /// ext-php-rs asks for this on every call of a method with a default, not once, so the
+    /// usual default (plain text, most often empty) is written without escaping it.
     fn stub_literal(&self) -> String {
-        String::from_utf8_lossy(&self.0).as_ref().stub_literal()
+        match std::str::from_utf8(&self.0) {
+            Ok(plain) if !plain.contains(['\\', '\'']) => ["'", plain, "'"].concat(),
+            _ => String::from_utf8_lossy(&self.0).as_ref().stub_literal(),
+        }
     }
 }

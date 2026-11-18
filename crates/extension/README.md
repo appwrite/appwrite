@@ -247,9 +247,12 @@ as PHP holds them and uses the crate only for what a method is (`utopia_query::M
 query stays the same object, `getValues()` returns the array that was stored, and changing a nested
 query through it changes the one the parent holds. `clone` copies nested queries. `Method`,
 `NullsPosition`, `CursorDirection`, `ParsedQuery` and the exceptions stay PHP; the binding returns
-their cases and constructs them. `json_encode()` and `json_decode()` are PHP's own, called from the
-binding, so `toString()` and `parse()` write and refuse exactly what they did. `contains()` raises
-the deprecation `#[\Deprecated]` raised.
+their cases and constructs them. `json_decode()` is PHP's own, called from the binding, so
+`parse()` accepts and refuses exactly what it did. `toString()` writes the JSON itself when the
+query holds only nulls, booleans, integers, UTF-8 strings and queries like it, which takes half of
+PHP's time. Anything else (a float, an array, an object, a string that is not UTF-8, a subclass with
+its own `toArray()`) goes to PHP's `json_encode()` as before. `contains()` raises the deprecation
+`#[\Deprecated]` raised.
 
 Subclasses are what most of the binding is about. `Utopia\Database\Query`, `Utopia\Audit\Query`
 and `Utopia\Usage\UsageQuery` extend `Query`:

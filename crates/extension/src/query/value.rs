@@ -19,6 +19,7 @@ use ext_php_rs::flags::DataType;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendClassObject, ZendHashTable, ZendObject, ZendStr, Zval};
 use ext_php_rs::zend::{ClassEntry, ExecutorGlobals, ce};
+use php_std::json;
 use utopia_query::Method;
 
 use crate::emails::{construct, string, thrown};
@@ -657,6 +658,53 @@ impl Query {
         shape
     }
 
+    /// `json_encode($this->toArray())` appended to `out`, for a query holding only what is
+    /// plain to write: nulls, booleans, integers, UTF-8 strings and queries like itself.
+    /// `false` leaves the query to PHP's encoder, which has an answer for everything else.
+    fn json(&self, out: &mut Vec<u8>, depth: usize) -> bool {
+        if depth > 64 {
+            return false;
+        }
+        out.extend_from_slice(b"{\"method\":");
+        let mut plain = json::push_string(out, self.method.as_str().as_bytes());
+        if !self.attribute.is_empty() && self.attribute != b"0" {
+            out.extend_from_slice(b",\"attribute\":");
+            plain &= json::push_string(out, &self.attribute);
+        }
+        if !self.alias.is_empty() {
+            out.extend_from_slice(b",\"alias\":");
+            plain &= json::push_string(out, &self.alias);
+        }
+        out.extend_from_slice(b",\"values\":[");
+        for (index, value) in self.values().enumerate() {
+            if index > 0 {
+                out.push(b',');
+            }
+            plain &= if value.is_null() {
+                out.extend_from_slice(b"null");
+                true
+            } else if let Some(flag) = value.bool() {
+                out.extend_from_slice(if flag { b"true" } else { b"false" });
+                true
+            } else if let Some(number) = value.long() {
+                json::push_int(out, number);
+                true
+            } else if let Some(text) = value.zend_str() {
+                json::push_string(out, text.as_bytes())
+            } else {
+                // A subclass with its own `toArray()` is PHP's to encode.
+                query_of(value).is_some_and(|query| {
+                    !overridden(query.std.get_class_entry(), "toarray") && query.json(out, depth + 1)
+                })
+            };
+            if !plain {
+                return false;
+            }
+        }
+        out.extend_from_slice(b"]}");
+        plain
+    }
+
     /// `toArray()`.
     fn array(&self) -> PhpResult<Zval> {
         let mut array = ZendHashTable::new();
@@ -1198,6 +1246,10 @@ impl Query {
 
     #[php(name = "toString")]
     pub fn to_string(self_: &mut ZendClassObject<Query>) -> PhpResult<Zval> {
+        let mut plain = Vec::with_capacity(128);
+        if !overridden(self_.std.get_class_entry(), "toarray") && self_.json(&mut plain, 0) {
+            return Ok(string(&plain));
+        }
         let mut this = Zval::new();
         this.set_object(self_.get_mut_zend_obj());
         match call("json_encode", vec![&array_of(&this)?, &JSON_THROW_ON_ERROR]) {

@@ -1164,6 +1164,27 @@ emit('helper arguments', [
 ]);
 emit('page', array_map(fn (array $arguments): array => outcome(fn () => exported(Query::page(...$arguments))), [[1], [2], [3, 10], [0], [-1], [1, 0], [1, -5], ['2', '10'], [2.0], [2.5], ['x'], [null], [], [PHP_INT_MAX, 2], [true]]));
 
+// `toString()` writes its own JSON for plain values and leaves the rest to `json_encode()`: both
+// have to escape, refuse and nest as PHP does.
+$encoded = [];
+foreach (['', '0', 'a/b', 'quo"te', 'back\\slash', "tab\tnl\n\x01\x7f", 'é ü 日本 😀', "\xff bad", "<a href='x'>&</a>", "\u{2028}\u{2029}", '1.5', str_repeat('x', 300), "nul\0byte"] as $text) {
+    $encoded[] = outcome(fn () => Query::equal($text, [$text])->toString());
+    $encoded[] = outcome(fn () => Query::crossJoin($text === '' ? 't' : $text, $text)->toString());
+    $encoded[] = outcome(fn () => Query::and([Query::equal('a', [$text, 1]), Query::or([Query::search($text, $text)])])->toString());
+}
+foreach ([null, true, false, 0, -1, PHP_INT_MAX, PHP_INT_MIN, 1.5, 0.1 + 0.2, NAN, [], [1, 2], ['a' => 1], new stdClass(), Query::limit(1)] as $held) {
+    $encoded[] = outcome(fn () => (new Query('equal', 'a', [$held, 'x', $held]))->toString());
+    $encoded[] = outcome(fn () => Query::and([new Query('equal', 'a', ['k' => $held])])->toString());
+}
+$deep = Query::equal('a', [1]);
+for ($level = 0; $level < 300; $level++) {
+    $deep = Query::and([$deep]);
+    if (in_array($level, [10, 63, 64, 65, 200, 255, 256, 299], true)) {
+        $encoded[] = outcome(fn () => md5($deep->toString()));
+    }
+}
+emit('toString encodings', $encoded);
+
 // --- AST -----------------------------------------------------------------------------------
 
 $grammarWords = [
