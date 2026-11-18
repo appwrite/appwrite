@@ -11,6 +11,7 @@ import { useVerifyDomain } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
+import { canRetryRule } from '@/lib/utils/proxy-domains'
 import {
   VerifyDomainContent,
   dnsPendingVerificationError,
@@ -94,22 +95,35 @@ export function RetryDomainDialog({
           />
         </div>
 
+        {/* The rule updates live: once DNS passes, there is nothing to retry. */}
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={verifyDomainMutation.isPending}
-          >
-            {t('Cancel')}
-          </Button>
-          <Button
-            type="button"
-            onClick={handleRetry}
-            disabled={verifyDomainMutation.isPending}
-          >
-            {t('Retry')}
-          </Button>
+          {canRetryRule(rule) ? (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={verifyDomainMutation.isPending}
+              >
+                {t('Cancel')}
+              </Button>
+              <Button
+                type="button"
+                onClick={handleRetry}
+                disabled={verifyDomainMutation.isPending}
+              >
+                {t('Retry')}
+              </Button>
+            </>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
+              {t('Close')}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

@@ -512,7 +512,11 @@ function getDnsBanners(
       text:
         rule.status === 'verified'
           ? t('All records are verified.')
-          : t('Appwrite will issue the SSL certificate next.'),
+          : rule.status === 'verifying'
+            ? t(
+                'SSL certificate is being issued. This usually takes a couple of minutes.',
+              )
+            : t('Appwrite will issue the SSL certificate next.'),
     },
   ]
 }
