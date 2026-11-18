@@ -37,6 +37,7 @@ export interface DomainTargetCardProps {
   /** Redirect URL when behaviour is 'redirect' */
   redirectUrl?: string
   onRedirectUrlChange?: (v: string) => void
+  redirectUrlError?: string
   /** Status code when behaviour is 'redirect' */
   statusCode?: string
   onStatusCodeChange?: (v: string) => void
@@ -56,6 +57,7 @@ export function DomainTargetCard({
   onBranchChange,
   redirectUrl = '',
   onRedirectUrlChange,
+  redirectUrlError,
   statusCode = '302',
   onStatusCodeChange,
   projectId,
