@@ -601,8 +601,8 @@ export const jaSitesDictionary: Record<string, string> = {
   'Required · any one': '必須 · いずれか 1 つ',
   "We couldn't check DNS. This is on our side; Appwrite will try again.":
     'DNS を確認できませんでした。Appwrite 側の問題のため、Appwrite が再試行します。',
-  'A CAA record on your domain blocks the certificate. Keep it, and add the CAA record below next to it.':
-    'ドメインの CAA レコードが証明書の発行を妨げています。そのレコードは残したまま、下記の CAA レコードを追加してください。',
+  'A CAA record on your domain blocks the certificate. Add the CAA record below next to it (recommended), or delete your existing CAA records.':
+    'ドメインの CAA レコードが証明書の発行を妨げています。下記の CAA レコードを追加する（推奨）か、既存の CAA レコードを削除してください。',
   'Add the records below at your DNS provider. Appwrite checks again automatically for 3 days.':
     'DNS プロバイダーで下記のレコードを追加してください。Appwrite が 3 日間、自動的に再確認します。',
   'Automatic checks have stopped. Fix the records below, then verify again.':

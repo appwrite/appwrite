@@ -639,8 +639,8 @@ export const heSitesDictionary: Record<string, string> = {
   'Required · any one': 'חובה · אחת מהן',
   "We couldn't check DNS. This is on our side; Appwrite will try again.":
     'לא הצלחנו לבדוק את ה-DNS. הבעיה אצלנו, ו-Appwrite ינסה שוב.',
-  'A CAA record on your domain blocks the certificate. Keep it, and add the CAA record below next to it.':
-    'רשומת CAA בדומיין שלכם חוסמת את התעודה. השאירו אותה והוסיפו לצדה את רשומת ה-CAA שלמטה.',
+  'A CAA record on your domain blocks the certificate. Add the CAA record below next to it (recommended), or delete your existing CAA records.':
+    'רשומת CAA בדומיין שלכם חוסמת את התעודה. הוסיפו לצדה את רשומת ה-CAA שלמטה (מומלץ), או מחקו את רשומות ה-CAA הקיימות.',
   'Add the records below at your DNS provider. Appwrite checks again automatically for 3 days.':
     'הוסיפו את הרשומות שלמטה אצל ספק ה-DNS שלכם. Appwrite בודק שוב באופן אוטומטי במשך 3 ימים.',
   'Automatic checks have stopped. Fix the records below, then verify again.':

@@ -431,7 +431,7 @@ function getDnsBanners(
       tone: 'error',
       prefix: t('CAA record'),
       text: t(
-        'A CAA record on your domain blocks the certificate. Keep it, and add the CAA record below next to it.',
+        'A CAA record on your domain blocks the certificate. Add the CAA record below next to it (recommended), or delete your existing CAA records.',
       ),
     })
   }
