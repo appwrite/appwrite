@@ -1213,4 +1213,5 @@ export const heVideosDictionary: Record<string, string> = {
   'Visitors get an error here. You can watch because you are a project member.':
     'מבקרים יקבלו כאן שגיאה. אתם יכולים לצפות כי אתם חברי הפרויקט.',
   'Open access settings': 'פתיחת הגדרות הגישה',
+  'Failed to download thumbnails': 'הורדת התמונות הממוזערות נכשלה',
 }

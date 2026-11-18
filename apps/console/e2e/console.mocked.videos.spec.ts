@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import { gunzipSync } from 'node:zlib'
 import type { Locator, Page, Request, Route } from '@playwright/test'
 import type { Models } from '@appwrite.io/console'
 import { expect, test } from './fixtures'
@@ -862,6 +863,38 @@ test.describe('videos (mocked API)', () => {
     expect(colors).toEqual(['red', 'blue'])
 
     await screenshot(page, 'videos-timeline.png')
+  })
+
+  test('downloads the timeline file and thumbnails', async ({ page }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page)
+    await open(page, `/${VIDEO_ID}/timeline`, (page) =>
+      page.getByText('Timeline file', { exact: true }),
+    )
+    const download = (card: string) =>
+      page
+        .locator('section')
+        .filter({ has: page.getByRole('heading', { name: card }) })
+        .getByRole('button', { name: 'Download' })
+
+    const [vtt] = await Promise.all([
+      page.waitForEvent('download'),
+      download('Timeline file').click(),
+    ])
+    expect(vtt.suggestedFilename()).toBe('launch-keynote-timeline.vtt')
+    expect(readFileSync(await vtt.path(), 'utf8')).toBe(TIMELINE)
+
+    const [archive] = await Promise.all([
+      page.waitForEvent('download'),
+      download('Thumbnails').click(),
+    ])
+    expect(archive.suggestedFilename()).toBe('launch-keynote-thumbnails.tar.gz')
+    const tar = gunzipSync(readFileSync(await archive.path()))
+    const listing = tar.toString('latin1')
+    expect(listing).toContain('timeline.vtt')
+    expect(listing).toContain('sprite-1.png#xywh=160,0,160,90')
+    // The sheet is stored byte for byte.
+    expect(tar.includes(THUMBNAIL)).toBe(true)
   })
 
   test('skips a black opening frame for the poster', async ({ page }) => {

@@ -1244,4 +1244,5 @@ export const jaVideosDictionary: Record<string, string> = {
   'Visitors get an error here. You can watch because you are a project member.':
     '訪問者にはここでエラーが表示されます。あなたはプロジェクトメンバーなので視聴できます。',
   'Open access settings': 'アクセス設定を開く',
+  'Failed to download thumbnails': 'サムネイルをダウンロードできませんでした',
 }

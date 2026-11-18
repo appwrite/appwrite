@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Download,
   GalleryHorizontal,
   Loader2,
 } from 'lucide-react'
@@ -34,6 +35,15 @@ import {
 import { cn } from '@/lib/utils'
 import { formatPlaybackTime } from '@/lib/utils/video-format'
 import { useT } from '@/lib/i18n/translate'
+import { toast } from 'sonner'
+import { downloadBlob } from '@/lib/analytics/export/archive'
+import { downloadTextFile } from '@/lib/videos/subtitle-download'
+import {
+  buildTimelineArchive,
+  fetchTimelineSheet,
+  videoFileSlug,
+} from '@/lib/videos/timeline-download'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 
 function publicUrl(url: string): string {
   try {
@@ -69,7 +79,27 @@ export function View() {
       ? timeline.cues[0].end - timeline.cues[0].start
       : 0
 
+  const [archiving, setArchiving] = useState(false)
+
   if (!video) return null
+
+  const slug = videoFileSlug(video.name)
+
+  const downloadThumbnails = async () => {
+    if (!timeline) return
+    setArchiving(true)
+    try {
+      const { blob, extension } = await buildTimelineArchive(
+        timeline.cues,
+        fetchTimelineSheet,
+      )
+      downloadBlob(blob, `${slug}-thumbnails.${extension}`)
+    } catch (error) {
+      toast.error(getErrorMessage(error) || t('Failed to download thumbnails'))
+    } finally {
+      setArchiving(false)
+    }
+  }
 
   return (
     <VideoPage title={t('Timeline')} term="timeline">
@@ -84,6 +114,23 @@ export function View() {
             description={t(
               'Scroll through the thumbnails and hover one to see its time range and sprite region.',
             )}
+            actions={
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1.5 text-[13px]"
+                disabled={archiving}
+                onClick={() => void downloadThumbnails()}
+              >
+                {archiving ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <Download className="size-3.5" />
+                )}
+                {t('Download')}
+              </Button>
+            }
           >
             <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-4">
               {[
@@ -125,6 +172,24 @@ export function View() {
               'A WebVTT file that maps time ranges to sprite sheet regions. Point your player thumbnail option at this URL.',
             )}
             bodyClassName="space-y-3"
+            actions={
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1.5 text-[13px]"
+                onClick={() =>
+                  downloadTextFile(
+                    timeline.vtt,
+                    `${slug}-timeline.vtt`,
+                    'text/vtt',
+                  )
+                }
+              >
+                <Download className="size-3.5" />
+                {t('Download')}
+              </Button>
+            }
           >
             <div className="divide-y divide-border">
               <VideoUrlRow
