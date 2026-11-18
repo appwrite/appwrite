@@ -36,6 +36,12 @@ class Update extends Action
         'webp',
     ];
 
+    private const ALLOWED_MIME_TYPES = [
+        'image/png',
+        'image/jpeg',
+        'image/webp',
+    ];
+
     public static function getName(): string
     {
         return 'updateTeamPhoto';
