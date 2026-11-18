@@ -75,7 +75,7 @@ final class QueuePublisher implements Synchronous
     }
 
     #[\Override]
-    public function retry(Queue $queue, ?int $limit = null): void
+    public function retry(Queue $queue, ?int $limit = null, ?int $newerThan = null): void
     {
     }
 
@@ -102,6 +102,12 @@ final class QueuePublisher implements Synchronous
 
     #[\Override]
     public function getFailedCount(Queue $queue): int
+    {
+        return 0;
+    }
+
+    #[\Override]
+    public function purge(Queue $queue, ?int $olderThan = null, ?int $limit = null): int
     {
         return 0;
     }

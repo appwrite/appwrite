@@ -1754,7 +1754,7 @@ class Nats implements Synchronous, Consumer, Bounded
 
     public function purge(Queue $queue, ?int $olderThan = null, ?int $limit = null): int
     {
-        return 0;
+        throw new \LogicException('Purging failed jobs is not supported by the NATS broker.');
     }
     
     /**

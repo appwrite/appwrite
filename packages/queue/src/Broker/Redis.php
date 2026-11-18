@@ -472,10 +472,10 @@ class Redis implements Synchronous, Consumer
                     $purged++;
                     continue;
                 }
-                break;
-            }
-
-            if ($olderThan !== null && $job->getTimestamp() >= $start - $olderThan) {
+                if ($olderThan !== null) {
+                    break;
+                }
+            } elseif ($olderThan !== null && $job->getTimestamp() >= $start - $olderThan) {
                 break;
             }
 
