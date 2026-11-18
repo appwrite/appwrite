@@ -11,7 +11,7 @@ use std::sync::atomic::{AtomicPtr, Ordering};
 
 use ext_php_rs::args::ArgInfoTables;
 use ext_php_rs::types::{ZendObject, Zval};
-use ext_php_rs::zend::{ClassEntry, ExecuteData};
+use ext_php_rs::zend::{ClassEntry, ExecuteData, ExecutorGlobals};
 use utopia_auth::scrypt::Failure;
 
 use super::{BASE, STATIC, args, base_class, exact, fail, name_of, option_of, options_of, return_this, set_option_on};
@@ -569,8 +569,10 @@ fn scrypt_of(this: &mut ZendObject, value: &[u8]) -> Option<Vec<u8>> {
     match utopia_auth::scrypt::scrypt(value, &salt, cpu, memory, parallel, length) {
         Ok(key) => Some(php_std::encoding::bin2hex(&key).into_bytes()),
         Err(failure) => {
+            // `scrypt()`'s `Error`, or an error handler that threw on its warning, ends
+            // `hash()` there; otherwise its `false` is the class's `RuntimeException`.
             scrypt_failed(&failure);
-            if !matches!(failure, Failure::Error(_)) {
+            if !ExecutorGlobals::has_exception() {
                 fail("RuntimeException", "Failed to hash using scrypt");
             }
             None
@@ -749,8 +751,11 @@ fn scrypt_modified_derive_of(this: &mut ZendObject, value: &[u8]) -> Option<Vec<
     match utopia_auth::firebase::derived_key(&value, &salt, &separator) {
         Ok(key) => Some(key),
         Err(failure) => {
+            // As in `Scrypt`: an `Error`, or a warning's handler that threw, ends it there.
             scrypt_failed(&failure);
-            fail("RuntimeException", "Failed to generate derived key using scrypt");
+            if !ExecutorGlobals::has_exception() {
+                fail("RuntimeException", "Failed to generate derived key using scrypt");
+            }
             None
         }
     }

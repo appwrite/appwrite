@@ -333,7 +333,7 @@ SHA-crypt, DES and extended DES through `crypt()`. `MD5`, `Sha`, `Plaintext`, `S
 `ScryptModified` and `PHPass`'s portable hash compare with `hash_equals()`'s constant time.
 
 `crates/extension/tests/auth.php` prints a corpus that must be identical on both implementations
-(1,354 lines): each class's reflection; the option API over keys PHP converts (`'1'`, `'01'`, `'-0'`,
+(1,356 lines): each class's reflection; the option API over keys PHP converts (`'1'`, `'01'`, `'-0'`,
 binary) and values of every type; arguments of the wrong kind; `MD5`, all nine `Sha` versions and
 `Plaintext` over passwords that are empty, UTF-8, not UTF-8, with NUL bytes and past 72 bytes;
 `Sha` with versions only `setOption()` stores; `Scrypt` over its parameters and every PECL failure

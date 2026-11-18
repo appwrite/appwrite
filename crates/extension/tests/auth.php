@@ -1000,3 +1000,17 @@ class IntKeyMD5 extends MD5
 foreach ([LooseKeyMD5::class, IntKeyMD5::class] as $class) {
     emit('subclass ' . $class . ' int key', outcome(fn () => (new $class())->setOptions([3 => 'three', '4' => 'four', 'k' => 'v'])->getOptions()));
 }
+
+// An error handler that throws on scrypt()'s warning: the hash stops with its exception.
+foreach (['r*p 2^30' => ['costCpu' => 2, 'costMemory' => 1 << 15, 'costParallel' => 1 << 15], 'N huge' => ['costCpu' => 1 << 62, 'costMemory' => 1, 'costParallel' => 1]] as $case => $options) {
+    emit('Scrypt throwing handler ' . $case, outcome(function () use ($options) {
+        set_error_handler(fn (int $level, string $message) => throw new ErrorException($message));
+        try {
+            return (new Scrypt())->setOptions(['salt' => 'fixed salt'] + $options)->hash('pw');
+        } catch (Throwable $e) {
+            return [$e::class, $e->getMessage(), $e->getPrevious()?->getMessage()];
+        } finally {
+            restore_error_handler();
+        }
+    }));
+}
