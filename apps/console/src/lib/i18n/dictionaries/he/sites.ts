@@ -170,6 +170,7 @@ export const heSitesDictionary: Record<string, string> = {
   Records: 'רשומות',
   'Update domain': 'עדכון דומיין',
   'Its DNS records and certificate stay the same.': 'רשומות ה-DNS והתעודה שלו יישארו ללא שינוי.',
+  'Domain has been updated': 'הדומיין עודכן',
   'Domain has been deleted': 'הדומיין נמחק',
   'Loading domains...': 'טוען דומיינים...',
   Verified: 'מאומת',
