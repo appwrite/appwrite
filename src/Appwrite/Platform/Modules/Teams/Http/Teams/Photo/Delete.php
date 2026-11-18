@@ -6,25 +6,18 @@ use Appwrite\Abuse\Limit;
 use Appwrite\AvatarPhotos\Providers\Fallback;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Utopia\Console\Console;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Utopia\Database\Id;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
 
-class Delete extends Action
+class Delete extends Base
 {
-    use HTTP;
-
     private const RESOLUTION = 1024;
 
     public static function getName(): string
@@ -83,32 +76,7 @@ class Delete extends Action
 
         // The placeholder becomes the team's own photo, the way it does for a user
         $photo = (new Fallback())->render(self::RESOLUTION, self::RESOLUTION);
-        $photoId = Id::unique();
-        $path = $deviceForFiles->getPath(APP_STORAGE_TEAM_PHOTOS . '/' . $teamId . '/' . $photoId);
-
-        $deviceForFiles->upload(new Stream($photo), $path, 'image/png');
-
-        try {
-            $dbForProject->updateDocument('teams', $teamId, new Document([
-                'photoId' => $photoId,
-                'photoSize' => \strlen($photo),
-            ]));
-        } catch (\Throwable $th) {
-            $deviceForFiles->delete($path);
-
-            throw $th;
-        }
-
-        // The placeholder is live, so a file left behind here only waits for team deletion to remove the team's photo folder
-        $previous = $team->getAttribute('photoId', '');
-
-        if ($previous !== '') {
-            try {
-                $deviceForFiles->delete($deviceForFiles->getPath(APP_STORAGE_TEAM_PHOTOS . '/' . $teamId . '/' . $previous));
-            } catch (\Throwable $th) {
-                Console::warning('Failed to remove previous team photo ' . $previous . ': ' . $th->getMessage());
-            }
-        }
+        $this->replacePhoto($team, new Stream($photo), \strlen($photo), 'image/png', $dbForProject, $deviceForFiles);
 
         $queueForEvents->setParam('teamId', $teamId);
 
