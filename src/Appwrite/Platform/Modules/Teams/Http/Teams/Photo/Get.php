@@ -87,6 +87,12 @@ class Get extends Action
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
+        $profile = new Document([
+            '$id' => $team->getId(),
+            'name' => $team->getAttribute('name', ''),
+            'photoId' => $team->getAttribute('photoId', ''),
+        ]);
+
     }
 
 }
