@@ -455,6 +455,7 @@
         "PATCH /v1/project/oauth2/notion",
         "PATCH /v1/project/oauth2/oidc",
         "PATCH /v1/project/oauth2/okta",
+        "PATCH /v1/project/oauth2/patreon",
         "PATCH /v1/project/oauth2/paypal",
         "PATCH /v1/project/oauth2/paypalSandbox",
         "PATCH /v1/project/oauth2/podio",
