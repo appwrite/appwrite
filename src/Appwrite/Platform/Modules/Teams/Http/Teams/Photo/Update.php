@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Modules\Teams\Http\Teams\Photo;
 use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -13,22 +12,16 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Request\Validator\File;
 use Appwrite\Utopia\Response;
-use Utopia\Console\Console;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Utopia\Database\Id;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
 use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
 
-class Update extends Action
+class Update extends Base
 {
-    use HTTP;
-
     private const ALLOWED_EXTENSIONS = [
         FileExt::TYPE_PNG,
         FileExt::TYPE_JPG,
@@ -143,32 +136,7 @@ class Update extends Action
             throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'Photo must be a PNG, JPEG, or WebP image');
         }
 
-        $photoId = Id::unique();
-        $path = $deviceForFiles->getPath(APP_STORAGE_TEAM_PHOTOS . '/' . $teamId . '/' . $photoId);
-
-        $deviceForFiles->upload($deviceForLocal->read($fileTmpName), $path, $mimeType);
-
-        try {
-            $updated = $dbForProject->updateDocument('teams', $teamId, new Document([
-                'photoId' => $photoId,
-                'photoSize' => $size,
-            ]));
-        } catch (\Throwable $th) {
-            $deviceForFiles->delete($path);
-
-            throw $th;
-        }
-
-        // The new photo is live, so a file left behind here only waits for team deletion to remove the team's photo folder
-        $previous = $team->getAttribute('photoId', '');
-
-        if ($previous !== '') {
-            try {
-                $deviceForFiles->delete($deviceForFiles->getPath(APP_STORAGE_TEAM_PHOTOS . '/' . $teamId . '/' . $previous));
-            } catch (\Throwable $th) {
-                Console::warning('Failed to remove previous team photo ' . $previous . ': ' . $th->getMessage());
-            }
-        }
+        $updated = $this->replacePhoto($team, $deviceForLocal->read($fileTmpName), $size, $mimeType, $dbForProject, $deviceForFiles);
 
         $queueForEvents->setParam('teamId', $teamId);
 
