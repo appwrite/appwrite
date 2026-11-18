@@ -3589,6 +3589,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Vercel": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Webflow": [
             "clientId",
             "clientSecret",
@@ -3605,6 +3610,11 @@
             "enabled"
         ],
         "project.updateOAuth2WordPress": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2WorkOS": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -3813,6 +3823,9 @@
             "providerRepositoryId",
             "strength"
         ],
+        "reviews.deleteLearning": [
+            "learningId"
+        ],
         "reviews.deleteRepository": [
             "repositoryId"
         ],
@@ -3828,9 +3841,17 @@
             "queries",
             "total"
         ],
+        "reviews.listLearnings": [
+            "queries",
+            "total"
+        ],
         "reviews.listRepositories": [
             "queries",
             "total"
+        ],
+        "reviews.updateInstallation": [
+            "installationId",
+            "newRepositories"
         ],
         "reviews.updateRepositoryStrength": [
             "repositoryId",
@@ -7954,6 +7975,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Vercel": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Webflow": [
             "clientId",
             "clientSecret",
@@ -7970,6 +7996,11 @@
             "enabled"
         ],
         "project.updateOAuth2WordPress": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2WorkOS": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -8148,6 +8179,9 @@
             "providerRepositoryId",
             "strength"
         ],
+        "reviews.deleteLearning": [
+            "learningId"
+        ],
         "reviews.deleteRepository": [
             "repositoryId"
         ],
@@ -8163,9 +8197,17 @@
             "queries",
             "total"
         ],
+        "reviews.listLearnings": [
+            "queries",
+            "total"
+        ],
         "reviews.listRepositories": [
             "queries",
             "total"
+        ],
+        "reviews.updateInstallation": [
+            "installationId",
+            "newRepositories"
         ],
         "reviews.updateRepositoryStrength": [
             "repositoryId",

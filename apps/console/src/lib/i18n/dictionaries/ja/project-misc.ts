@@ -3799,7 +3799,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Greater than': 'より大きい',
   'Greater than or equal': '以上',
   'Inbound bandwidth': '受信帯域幅',
-  'Know when usage crosses a line': '使用量がしきい値を超えたら把握する',
+  'Know when something needs attention': '対応が必要なときに把握する',
   'Last value': '最新の値',
   'Less than': 'より小さい',
   'Less than or equal': '以下',
@@ -3899,8 +3899,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   '{percent}% of {budget}': '{budget} の {percent}%',
   'Managed by budget': '予算で管理',
   'Last sent': '最終送信',
-  'A monitor raises an alert when its rules hold, and resolves it when usage recovers.':
-    'モニターはルールが成立するとアラートを発生させ、使用量が回復すると解決します。',
   Alert: 'アラート',
   'Alert not found': 'アラートが見つかりません',
   'Budget monitors': '予算モニター',
@@ -3925,8 +3923,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Monitor has been updated': 'モニターを更新しました',
   'Monitor not found': 'モニターが見つかりません',
   Monitors: 'モニター',
-  'Monitors watch your project usage and notify you when a metric crosses the threshold you set.':
-    'モニターはプロジェクトの使用量を監視し、メトリクスが設定したしきい値を超えると通知します。',
+  'Monitors watch your project usage and your endpoints, and notify you when a metric crosses your threshold or a check fails.':
+    'モニターはプロジェクトの使用量とエンドポイントを監視し、メトリクスがしきい値を超えたときやチェックが失敗したときに通知します。',
   'No alerts yet': 'まだアラートはありません',
   Ongoing: '継続中',
   Peak: 'ピーク',
@@ -3946,8 +3944,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Acknowledged with an API key': 'API キーで確認済み',
   'Failed to acknowledge the alert': 'アラートを確認済みにできませんでした',
   'Failed to undo the acknowledgement': '確認済みを取り消せませんでした',
-  'Let your team know someone is on it. It keeps firing until usage recovers.':
-    '誰かが対応中であることをチームに知らせます。使用量が回復するまでアラートは発生し続けます。',
+  'Let your team know someone is on it. It keeps firing until its monitor recovers.':
+    '誰かが対応中であることをチームに知らせます。モニターが回復するまでアラートは発生し続けます。',
   'Nobody has acknowledged this alert':
     'このアラートはまだ誰も確認していません',
   "You don't have permission to manage monitors.":
@@ -4170,6 +4168,89 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'LDAP サインインを有効にするには、少なくとも 1 つのホストとベース DN を追加してください。',
   'Add at least one host and a base DN under Settings > Identity servers to enable LDAP sign-in.':
     'LDAP サインインを有効にするには、[設定] > [ID サーバー] で少なくとも 1 つのホストとベース DN を追加してください。',
+  // Probe monitors
+  'Enter a URL starting with http:// or https://.':
+    'http:// または https:// で始まる URL を入力してください。',
+  'Write each header on its own line as Name: value.':
+    'ヘッダーは 1 行に 1 つずつ Name: value の形式で記述してください。',
+  'Enter status codes between 100 and 599.':
+    '100 から 599 までのステータスコードを入力してください。',
+  'Enter the domain to query.': 'クエリするドメインを入力してください。',
+  'Enter the host to connect to.': '接続先のホストを入力してください。',
+  'Enter a port between 1 and 65535.':
+    '1 から 65535 までのポートを入力してください。',
+  'The timeout must not be longer than the interval.':
+    'タイムアウトはチェック間隔より長くできません。',
+  'Monitor type': 'モニターの種類',
+  'Expected status codes': '想定するステータスコード',
+  'Separate codes with commas.': 'コードはカンマで区切ります。',
+  'Any 2xx status': '任意の 2xx ステータス',
+  'Certificate expiry warning': '証明書の有効期限の警告',
+  'Days before an HTTPS certificate expires to fire. 0 never warns early.':
+    'HTTPS 証明書の有効期限の何日前に発生させるか。0 の場合は事前に警告しません。',
+  'One per line, as Name: value.':
+    '1 行に 1 つ、Name: value の形式で記述します。',
+  'Record type': 'レコードタイプ',
+  'Expected answer': '想定する応答',
+  'Leave empty to accept any answer.': '空欄の場合はどの応答も受け入れます。',
+  Resolver: 'リゾルバー',
+  "Leave empty to use the server's resolver.":
+    '空欄の場合はサーバーのリゾルバーを使用します。',
+  Checks: 'チェック',
+  'The monitor fires when a check fails, and resolves when one passes again.':
+    'チェックが失敗するとモニターが発生し、再び成功すると解決します。',
+  'Check every': 'チェック間隔',
+  'Check interval': 'チェック間隔',
+  'and fail after': 'タイムアウト',
+  'Check timeout': 'チェックのタイムアウト',
+  'Last check': '最新のチェック',
+  'Code {code}': 'コード {code}',
+  'Every {interval}, failing after {timeout}':
+    '{interval}ごと、{timeout}でタイムアウト',
+  Expects: '想定',
+  Certificate: '証明書',
+  'No certificate seen yet': 'まだ証明書は確認されていません',
+  'fires {days} days before it expires': '有効期限の {days} 日前に発生',
+  'Any answer': '任意の応答',
+  "The server's resolver": 'サーバーのリゾルバー',
+  'Checks run on the monitor interval, so this monitor is not being checked.':
+    'チェックはモニターの間隔で実行されるため、このモニターはチェックされていません。',
+  '{type} check': '{type} チェック',
+  'Check that your endpoints respond': 'エンドポイントが応答しているか確認する',
+  '{type} monitor': '{type} モニター',
+  'Latest latency': '最新のレイテンシ',
+  'Peak latency': '最大レイテンシ',
+  Result: '結果',
+  'Resolves when a check passes again.': 'チェックが再び成功すると解決します。',
+  'A monitor raises an alert when its rules hold or its check fails, and resolves it when they recover.':
+    'モニターはルールが成立するかチェックが失敗するとアラートを発生させ、回復すると解決します。',
+  'peak latency': '最大レイテンシ',
+  'Get notified when a URL stops answering with the status you expect, or its certificate is about to expire.':
+    'URL が想定したステータスで応答しなくなったとき、または証明書の有効期限が近づいたときに通知を受け取ります。',
+  'Get notified when a domain stops resolving, or stops answering with the value you expect.':
+    'ドメインが名前解決できなくなったとき、または想定した値で応答しなくなったときに通知を受け取ります。',
+  'Get notified when a host stops accepting connections on a port.':
+    'ホストがポートへの接続を受け付けなくなったときに通知を受け取ります。',
+  'Get notified when a mail server stops accepting sessions or its TLS handshake fails.':
+    'メールサーバーがセッションを受け付けなくなったとき、または TLS ハンドシェイクが失敗したときに通知を受け取ります。',
+  Responding: '応答あり',
+  'Name did not resolve': '名前解決に失敗',
+  'Connection refused': '接続が拒否されました',
+  'Connection timed out': '接続がタイムアウトしました',
+  'TLS handshake failed': 'TLS ハンドシェイクに失敗',
+  'TLS certificate expiring': 'TLS 証明書の有効期限切れ間近',
+  'Unexpected status code': '想定外のステータスコード',
+  'Unexpected answer': '想定外の応答',
+  'Server refused the session': 'サーバーがセッションを拒否しました',
+  'Target is in a denied network': '対象が拒否されたネットワーク内にあります',
+  'Timed out': 'タイムアウトしました',
+  '30 seconds': '30 秒',
+  '1 minute': '1 分',
+  '5 seconds': '5 秒',
+  '10 seconds': '10 秒',
+  'From the port': 'ポートから判断',
+  'Upgrade with STARTTLS': 'STARTTLS でアップグレード',
+  'Implicit TLS': '暗黙的 TLS',
   'Add note': 'メモを追加',
   'Edit note': 'メモを編集',
   'Delete note': 'メモを削除',

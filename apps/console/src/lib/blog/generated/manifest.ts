@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-cli-terminal",
+    "href": "/blog/post/announcing-cli-terminal",
+    "title": "Introducing the terminal command in the Appwrite CLI",
+    "description": "The new terminal command in the Appwrite CLI opens your project in an interactive terminal UI to browse resources, query rows, run functions, and watch usage.",
+    "date": "2026-11-18",
+    "lastUpdated": "2026-11-18",
+    "timeToRead": 7,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-cli-terminal/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-account-switching",
     "href": "/blog/post/announcing-account-switching",
     "title": "Announcing account switching: one browser, many accounts",
@@ -42,6 +56,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements, security",
     "featured": false,
     "cover": "/images/blog/announcing-force-password-reset/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "customer-story-dentalrx",
+    "href": "/blog/post/customer-story-dentalrx",
+    "title": "How DentalRx replaced Firebase and Algolia with Appwrite for 6,000+ users",
+    "description": "Learn how pharmacist Nickolas Steel moved DentalRx from Firebase and Algolia to Postgres on Appwrite to run a free drug reference for 6,000+ dental users.",
+    "date": "2026-11-17",
+    "lastUpdated": "2026-11-17",
+    "timeToRead": 7,
+    "author": "aditya-oberai",
+    "category": "customer-stories",
+    "featured": false,
+    "cover": "/images/blog/customer-story-dentalrx/cover.avif",
     "hasCover": true
   },
   {

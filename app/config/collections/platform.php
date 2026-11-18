@@ -406,6 +406,8 @@ $platformCollections = [
             Attribute::text(key: 'personalAccessToken', size: 65535, filters: ['encrypt']),
             Attribute::datetime(key: 'personalAccessTokenExpiry'),
             Attribute::text(key: 'personalRefreshToken', size: 65535, filters: ['encrypt']),
+            // Code review only: whether repositories added to the installation later are reviewed.
+            Attribute::boolean(key: 'reviewNewRepositories', default: false),
         ],
         'indexes' => [
             Index::key(key: '_key_projectInternalId', attributes: ['projectInternalId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),
