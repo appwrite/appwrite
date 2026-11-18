@@ -103,6 +103,11 @@ class Update extends Action
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
+        // Photos fit in one chunk, so a chunked upload is refused rather than stored as a partial image
+        if (!empty($request->getHeaderLine('content-range'))) {
+            throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE, 'Photo must be sent in a single request');
+        }
+
 
         $response->dynamic($updated, Response::MODEL_TEAM);
     }
