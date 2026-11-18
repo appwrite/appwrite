@@ -134,6 +134,7 @@ export const PUBLIC_ICON_FILENAMES = [
   'naver.svg',
   'neo4j.svg',
   'neon.svg',
+  'netlify.svg',
   'nestjs.svg',
   'nextjs.svg',
   'nhost.svg',
