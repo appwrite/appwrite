@@ -19,14 +19,17 @@ use Utopia\Validator\WhiteList;
 
 /**
  * Settles findings of a pull request: fixed by a later commit, or dismissed in a conversation or
- * by a maintainer resolving the thread. With `from`, only findings still in that status move, so
- * one settled meanwhile is left as it is. Findings of other pull requests are ignored.
+ * by a maintainer resolving the thread. `settlement` records which of those it was. With `from`,
+ * only findings still in that status move, so one settled meanwhile is left as it is. Findings
+ * of other pull requests are ignored.
  */
 class Update extends Base
 {
     use HTTP;
 
     private const array STATUSES = ['posted', 'dropped', 'resolved', 'dismissed'];
+
+    private const array SETTLEMENTS = ['commit', 'chat', 'thread'];
 
     public static function getName()
     {
@@ -52,6 +55,7 @@ class Update extends Base
             ->param('status', '', new WhiteList(self::STATUSES, true), 'Finding status.')
             ->param('reason', '', new Text(2048, 0), 'Why the findings moved.', true)
             ->param('from', '', new WhiteList(['', ...self::STATUSES], true), 'Only move findings still in this status.', true)
+            ->param('settlement', '', new WhiteList(['', ...self::SETTLEMENTS], true), 'What settled the findings: commit (fixed by a later commit), chat (fixed or declined in its thread) or thread (a maintainer resolved the thread without a change).', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForPlatform')
@@ -68,6 +72,7 @@ class Update extends Base
         string $status,
         string $reason,
         string $from,
+        string $settlement,
         Request $request,
         Response $response,
         Database $dbForPlatform,
@@ -93,9 +98,11 @@ class Update extends Base
                 continue;
             }
 
+            // A finding moved back to posted is open again, and nothing settled it.
             $authorization->skip(fn () => $dbForProject->updateDocument('reviewFindings', $finding->getId(), new Document([
                 'status' => $status,
                 'dropReason' => $reason,
+                'settlement' => $status === 'resolved' || $status === 'dismissed' ? $settlement : '',
             ])));
         }
 

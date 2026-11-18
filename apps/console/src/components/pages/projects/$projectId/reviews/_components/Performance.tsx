@@ -7,6 +7,7 @@ import {
   Bug,
   GitPullRequest,
   Loader2,
+  ThumbsUp,
   Wrench,
   type LucideIcon,
 } from 'lucide-react'
@@ -29,10 +30,15 @@ import {
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
-import type { ReviewAuthor, ReviewAuthorRange } from '@/lib/appwrite/reviews'
+import type {
+  ReviewAuthor,
+  ReviewAuthorRange,
+  ReviewCategory,
+} from '@/lib/appwrite/reviews'
 import {
   fetchRepository,
   useReviewAuthors,
+  useReviewCategories,
   useReviewRepositories,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_STALE_TIME } from '@/lib/react-query/hooks/constants'
@@ -57,6 +63,15 @@ const REPOSITORY_FILTER_LIMIT = 100
 
 const ALL_REPOSITORIES = 'all'
 
+/**
+ * Judged findings a category needs before its noise share is flagged: below
+ * it, one dismissal reads as a trend.
+ */
+const NOISY_MIN_JUDGED = 3
+
+/** Share of judged findings at or above which a category is flagged noisy. */
+const NOISY_SHARE = 0.5
+
 /** Tiers worst first, so a tier sorts by its index. */
 const TIERS = ['F', 'D', 'C', 'B', 'A', 'S']
 
@@ -67,6 +82,7 @@ type SortKey =
   | 'findingsPerPull'
   | 'severe'
   | 'fixRate'
+  | 'useful'
   | 'tier'
   | 'lastReviewAt'
 
@@ -76,6 +92,14 @@ function ratio(part: number, whole: number): number | null {
 
 function formatPercent(value: number | null): string {
   return value === null ? '-' : `${Math.round(value * 100)}%`
+}
+
+/**
+ * Share of the findings people judged that were useful. Open findings nobody
+ * reacted to are not judged, so they count for neither side.
+ */
+function usefulRate(item: { useful: number; noisy: number }): number | null {
+  return ratio(item.useful, item.useful + item.noisy)
 }
 
 function formatNumber(value: number | null): string {
@@ -96,6 +120,8 @@ function sortValue(author: ReviewAuthor, key: SortKey): number | string {
       return author.critical + author.major
     case 'fixRate':
       return ratio(author.resolved, author.findings) ?? -1
+    case 'useful':
+      return usefulRate(author) ?? -1
     case 'tier':
       return TIERS.indexOf(author.tier)
     case 'lastReviewAt':
@@ -179,6 +205,7 @@ export function Performance({ projectId }: { projectId: string }) {
     range,
     repositoryId,
   )
+  const { categories } = useReviewCategories(projectId, range, repositoryId)
 
   // A repository row stores GitHub's ID only; its name comes from GitHub, as
   // on the repositories tab, whose cache this shares.
@@ -218,6 +245,8 @@ export function Performance({ projectId }: { projectId: string }) {
           critical: sum.critical + author.critical,
           major: sum.major + author.major,
           resolved: sum.resolved + author.resolved,
+          useful: sum.useful + author.useful,
+          noisy: sum.noisy + author.noisy,
         }),
         {
           pulls: 0,
@@ -227,6 +256,8 @@ export function Performance({ projectId }: { projectId: string }) {
           critical: 0,
           major: 0,
           resolved: 0,
+          useful: 0,
+          noisy: 0,
         },
       ),
     [authors],
@@ -352,7 +383,7 @@ export function Performance({ projectId }: { projectId: string }) {
         />
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             <StatCard
               icon={GitPullRequest}
               label={t('Pull requests reviewed')}
@@ -388,6 +419,14 @@ export function Performance({ projectId }: { projectId: string }) {
                 String(totals.resolved),
               )}
             />
+            <StatCard
+              icon={ThumbsUp}
+              label={t('Useful findings')}
+              value={formatPercent(usefulRate(totals))}
+              hint={t('{useful} useful, {noisy} noisy')
+                .replace('{useful}', String(totals.useful))
+                .replace('{noisy}', String(totals.noisy))}
+            />
           </div>
 
           <div className="rounded-lg border border-border bg-card overflow-hidden">
@@ -401,6 +440,7 @@ export function Performance({ projectId }: { projectId: string }) {
                   {header('findingsPerPull', t('Findings / PR'))}
                   {header('severe', t('Critical / major'))}
                   {header('fixRate', t('Fixed'))}
+                  {header('useful', t('Useful'))}
                   {header('tier', t('Confidence'))}
                   {header('lastReviewAt', t('Last review'))}
                 </TableRow>
@@ -443,6 +483,9 @@ export function Performance({ projectId }: { projectId: string }) {
                     <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums">
                       {formatPercent(ratio(author.resolved, author.findings))}
                     </TableCell>
+                    <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums">
+                      {formatPercent(usefulRate(author))}
+                    </TableCell>
                     <TableCell className="px-4 py-3 text-end">
                       <div className="flex justify-end">
                         <ReviewTierBadge tier={author.tier} />
@@ -461,13 +504,96 @@ export function Performance({ projectId }: { projectId: string }) {
               </TableBody>
             </Table>
           </div>
+          {categories.length > 0 && <Categories categories={categories} />}
           <p className="text-[12px] text-muted-foreground">
             {t(
               'Counts completed reviews in the range. Approval and confidence go by each pull request’s latest review; fixed counts findings resolved by a later commit.',
+            )}{' '}
+            {t(
+              'A finding is useful when people liked it with 👍 or fixed it, and noisy when they disliked it with 👎, dismissed it or resolved its thread without a change. Reactions decide when they lean one way. Reactions are read whenever Hansi reviews or answers on the pull request.',
             )}
           </p>
         </>
       )}
+    </div>
+  )
+}
+
+/**
+ * How the findings of each category landed, noisiest first: the signal for
+ * which kinds of findings the reviewer should flag less, or a learning should
+ * narrow.
+ */
+function Categories({ categories }: { categories: ReviewCategory[] }) {
+  const t = useT()
+  return (
+    <div className="space-y-2">
+      <div>
+        <h3 className="text-[14px] font-semibold text-foreground">
+          {t('Findings by category')}
+        </h3>
+        <p className="text-[12px] text-muted-foreground">
+          {t(
+            'Categories people often dismiss or dislike are candidates for a learning that tells the reviewer to flag them less.',
+          )}
+        </p>
+      </div>
+      <div className="rounded-lg border border-border bg-card overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent border-b border-border">
+              <TableHead className={HEAD_CLASS}>{t('Category')}</TableHead>
+              <TableHead className={cn(HEAD_CLASS, 'text-end')}>
+                {t('Findings')}
+              </TableHead>
+              <TableHead className={cn(HEAD_CLASS, 'text-end')}>
+                {t('Useful')}
+              </TableHead>
+              <TableHead className={cn(HEAD_CLASS, 'text-end')}>
+                {t('Noisy')}
+              </TableHead>
+              <TableHead className={cn(HEAD_CLASS, 'text-end')}>
+                {t('Reactions')}
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {categories.map((category) => {
+              const judged = category.useful + category.noisy
+              const noisy =
+                judged >= NOISY_MIN_JUDGED &&
+                category.noisy / judged >= NOISY_SHARE
+              return (
+                <TableRow
+                  key={category.category}
+                  className="border-b border-border/50"
+                >
+                  <TableCell className="px-4 py-3 text-[13px] font-medium text-foreground">
+                    {category.category}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums">
+                    {category.findings}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums">
+                    {formatPercent(usefulRate(category))}
+                  </TableCell>
+                  <TableCell
+                    className={cn(
+                      'px-4 py-3 text-end text-[13px] tabular-nums',
+                      noisy && 'text-destructive',
+                    )}
+                  >
+                    {category.noisy}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums text-muted-foreground">
+                    👍 {category.upvotes} · 👎 {category.downvotes}
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   )
 }

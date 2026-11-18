@@ -263,4 +263,16 @@ export const jaReviewsDictionary: Record<string, string> = {
     'レビューが完了すると、プルリクエストの作成者ごとのレビュー結果がここに表示されます。より長い期間か別のリポジトリをお試しください。',
   'Counts completed reviews in the range. Approval and confidence go by each pull request’s latest review; fixed counts findings resolved by a later commit.':
     '期間内に完了したレビューを集計します。承認と信頼度は各プルリクエストの最新のレビューに基づき、修正済みは後のコミットで解決された指摘を数えます。',
+
+  // Finding outcomes
+  'Useful findings': '有用な指摘',
+  '{useful} useful, {noisy} noisy': '有用 {useful} 件、ノイズ {noisy} 件',
+  Useful: '有用',
+  Noisy: 'ノイズ',
+  Reactions: 'リアクション',
+  'Findings by category': 'カテゴリ別の指摘',
+  'Categories people often dismiss or dislike are candidates for a learning that tells the reviewer to flag them less.':
+    'よく却下されたり低評価されたりするカテゴリは、レビュアーに指摘を控えさせる学習の候補です。',
+  'A finding is useful when people liked it with 👍 or fixed it, and noisy when they disliked it with 👎, dismissed it or resolved its thread without a change. Reactions decide when they lean one way. Reactions are read whenever Hansi reviews or answers on the pull request.':
+    '指摘は、👍 で高評価されたか修正された場合に有用、👎 で低評価された、却下された、または変更なしでスレッドが解決された場合にノイズとみなします。リアクションがどちらかに傾いている場合はリアクションで判断します。リアクションは Hansi がプルリクエストでレビューまたは回答するたびに読み取られます。',
 }

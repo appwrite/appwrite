@@ -3,6 +3,7 @@ import { View } from '@/components/pages/projects/$projectId/reviews/View'
 import {
   projectQueryOptions,
   reviewAuthorsQueryOptions,
+  reviewCategoriesQueryOptions,
   reviewRepositoriesQueryOptions,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -19,6 +20,7 @@ export const Route = createFileRoute(
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
     await Promise.all([
       queryClient.ensureQueryData(reviewAuthorsQueryOptions(projectId)),
+      queryClient.ensureQueryData(reviewCategoriesQueryOptions(projectId)),
       queryClient.ensureQueryData(reviewRepositoriesQueryOptions(projectId)),
     ])
   },

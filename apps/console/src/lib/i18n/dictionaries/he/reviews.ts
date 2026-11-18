@@ -259,4 +259,16 @@ export const heReviewsDictionary: Record<string, string> = {
     'כאן מוצג איך מחברי בקשות המשיכה שלכם מצליחים בסקירה, לאחר שהסקירות מושלמות. נסו טווח ארוך יותר או מאגר אחר.',
   'Counts completed reviews in the range. Approval and confidence go by each pull request’s latest review; fixed counts findings resolved by a later commit.':
     'נספרות סקירות שהושלמו בטווח. אישור וביטחון נקבעים לפי הסקירה האחרונה של כל בקשת משיכה; תוקנו סופר ממצאים שנפתרו בקומיט מאוחר יותר.',
+
+  // Finding outcomes
+  'Useful findings': 'ממצאים מועילים',
+  '{useful} useful, {noisy} noisy': '{useful} מועילים, {noisy} רועשים',
+  Useful: 'מועילים',
+  Noisy: 'רועשים',
+  Reactions: 'תגובות',
+  'Findings by category': 'ממצאים לפי קטגוריה',
+  'Categories people often dismiss or dislike are candidates for a learning that tells the reviewer to flag them less.':
+    'קטגוריות שאנשים דוחים או לא אוהבים לעיתים קרובות הן מועמדות ללמידה שתורה לסוקר לסמן אותן פחות.',
+  'A finding is useful when people liked it with 👍 or fixed it, and noisy when they disliked it with 👎, dismissed it or resolved its thread without a change. Reactions decide when they lean one way. Reactions are read whenever Hansi reviews or answers on the pull request.':
+    'ממצא נחשב מועיל כשאנשים סימנו אותו ב-👍 או תיקנו אותו, ורועש כשסימנו אותו ב-👎, דחו אותו או פתרו את השרשור שלו בלי שינוי. כשהתגובות נוטות לצד אחד, הן קובעות. התגובות נקראות בכל פעם ש-Hansi סוקר או עונה בבקשת המשיכה.',
 }
