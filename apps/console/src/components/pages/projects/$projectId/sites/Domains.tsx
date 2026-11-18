@@ -261,6 +261,7 @@ export function View() {
                       rule={rule}
                       onViewLogs={handleViewLogs}
                       onRetry={handleRetry}
+                        onUpdate={setUpdateRule}
                       onRecords={handleRecords}
                       onDelete={handleDelete}
                     >
