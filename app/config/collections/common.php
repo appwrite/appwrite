@@ -300,6 +300,7 @@ return [
             Attribute::string(key: 'prefs', size: 65535, default: new \stdClass(), filters: [Filter::Json]),
             Attribute::string(key: 'labels', size: 128, array: true),
             Attribute::string(key: 'photoId'),
+            Attribute::integer(key: 'photoSize', width: IntegerWidth::Bits64, default: 0),
         ],
         'indexes' => [
             Index::fulltext(key: '_key_search', attributes: ['search']),
