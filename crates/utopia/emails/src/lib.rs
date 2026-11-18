@@ -33,11 +33,12 @@
 //! The `utopia` PHP extension builds `Utopia\Emails\Email` on [`Email`] and
 //! asks PHP's `Utopia\Domains\Domain` for the rest, as PHP does.
 //!
-//! The lists are embedded in the crate (`data/*-domains.txt`) and parsed
-//! once, on first use. The `emails-import` task refreshes them from their
-//! sources (see the guide); `data/export.php` writes them from the PHP
-//! package's `data/*-domains.php`, which hold the same domains in the same
-//! order.
+//! The lists are embedded in the crate (`data/*-domains.txt`) with hash
+//! tables of their lines built at compile time (`build.rs`), so a lookup
+//! allocates nothing and both live in the library's read-only pages, shared by
+//! every process. The `emails-import` task refreshes them from their sources
+//! (see the guide); `data/export.php` writes them from the PHP package's
+//! `data/*-domains.php`, which hold the same domains in the same order.
 
 #![warn(missing_docs)]
 

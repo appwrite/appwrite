@@ -8,9 +8,13 @@ use std::borrow::Cow;
 use php_std::Value;
 use php_std::filter::{FILTER_VALIDATE_EMAIL, FILTER_VALIDATE_URL};
 use php_std::json::{self as php_json, DEFAULT_DEPTH, Flags};
-use php_std::string::{TRIM_CHARACTERS, strtolower, trim};
 use php_std::url::parse_url;
 
+use crate::compose::{
+    FCM_DESCRIPTION, FCM_EMAIL_ERROR, FCM_KEY_ERROR, FCM_OPTIONAL, FCM_REQUIRED, FCM_TYPE_ERROR, FCM_URL,
+    JSON_DESCRIPTION, fcm_optional_error, fcm_required_error, fcm_url_error, https_scheme, json_array_description,
+    json_length, json_object_description, non_empty, pem_private_key,
+};
 use crate::input::{View, filter_str};
 use crate::{Error, Input, Type, Validator, Verdict, is_valid_via_validate};
 
@@ -29,7 +33,7 @@ pub struct Json;
 impl Validator for Json {
     /// Returns "Value must be a valid JSON string".
     fn description(&self) -> String {
-        "Value must be a valid JSON string".to_owned()
+        JSON_DESCRIPTION.to_owned()
     }
 
     is_valid_via_validate!();
@@ -50,12 +54,18 @@ impl Validator for Json {
 }
 
 /// `strlen($encoded) <= $length` (0 = any length); a failed encoding fails.
-fn fits(length: usize, encoded: Option<usize>) -> bool {
-    length == 0 || encoded.is_some_and(|n| n <= length)
+fn fits(length: usize, encoded: Option<&[u8]>) -> bool {
+    json_length(php_length(length), encoded)
 }
 
-fn length_suffix(length: usize) -> String {
-    if length > 0 { format!(" no longer than {length} characters when encoded") } else { String::new() }
+/// A length limit as the PHP `int` the validators hold.
+fn php_length(length: usize) -> i64 {
+    i64::try_from(length).unwrap_or(i64::MAX)
+}
+
+/// A description built from UTF-8 strings.
+fn utf8(description: Vec<u8>) -> String {
+    String::from_utf8_lossy(&description).into_owned()
 }
 
 /// A JSON array: a list, or a string that decodes to one, of at most `length`
@@ -73,7 +83,7 @@ pub struct Array {
 impl Validator for Array {
     /// `Value must be a valid JSON array`, followed by the length limit when there is one.
     fn description(&self) -> String {
-        format!("Value must be a valid JSON array{}", length_suffix(self.length))
+        utf8(json_array_description(php_length(self.length)))
     }
 
     is_valid_via_validate!();
@@ -81,9 +91,10 @@ impl Validator for Array {
     /// Valid for a list, or a string that decodes to a JSON array, within the length limit.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         Ok(Verdict::of(match value.view() {
-            View::Str(s) => fits(self.length, Some(s.len())) && matches!(decode(s), Some(Value::Array(_))),
+            View::Str(s) => fits(self.length, Some(s)) && matches!(decode(s), Some(Value::Array(_))),
             View::Array(e) => {
-                (e.len() == 0 || value.is_list()) && fits(self.length, value.json_encode().map(|j| j.len()))
+                (e.len() == 0 || value.is_list())
+                    && fits(self.length, value.json_encode().as_deref().map(str::as_bytes))
             }
             _ => false,
         }))
@@ -115,7 +126,7 @@ pub struct Object {
 impl Validator for Object {
     /// `Value must be a valid JSON object`, followed by the length limit when there is one.
     fn description(&self) -> String {
-        format!("Value must be a valid JSON object{}", length_suffix(self.length))
+        utf8(json_object_description(php_length(self.length)))
     }
 
     is_valid_via_validate!();
@@ -123,10 +134,11 @@ impl Validator for Object {
     /// Valid for an object, a map, or a string that decodes to a JSON object, within the length limit.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         Ok(Verdict::of(match value.view() {
-            View::Str(s) => fits(self.length, Some(s.len())) && matches!(decode(s), Some(Value::Object(_))),
-            View::Object(_) => fits(self.length, value.json_encode().map(|j| j.len())),
+            View::Str(s) => fits(self.length, Some(s)) && matches!(decode(s), Some(Value::Object(_))),
+            View::Object(_) => fits(self.length, value.json_encode().as_deref().map(str::as_bytes)),
             View::Array(e) => {
-                (e.len() == 0 || !value.is_list()) && fits(self.length, value.json_encode().map(|j| j.len()))
+                (e.len() == 0 || !value.is_list())
+                    && fits(self.length, value.json_encode().as_deref().map(str::as_bytes))
             }
             _ => false,
         }))
@@ -137,60 +149,6 @@ impl Validator for Object {
         Type::Object
     }
 }
-
-/// Fields required to authenticate and address an FCM HTTP v1 request, and
-/// the description reported when one is missing.
-const REQUIRED_FIELDS: [(&str, &str); 5] = [
-    (
-        "type",
-        "FCM service account JSON must include a non-empty 'type' field, which identifies the credentials as a Google service account.",
-    ),
-    (
-        "project_id",
-        "FCM service account JSON must include a non-empty 'project_id' field, which identifies the Firebase project receiving messages.",
-    ),
-    (
-        "private_key",
-        "FCM service account JSON must include a non-empty 'private_key' field, which signs the OAuth access-token request.",
-    ),
-    (
-        "client_email",
-        "FCM service account JSON must include a non-empty 'client_email' field, which identifies the service account used for authentication.",
-    ),
-    (
-        "token_uri",
-        "FCM service account JSON must include a non-empty 'token_uri' field, which identifies the OAuth token endpoint.",
-    ),
-];
-
-/// Standard service account fields validated when present.
-const OPTIONAL_FIELDS: [(&str, &str); 6] = [
-    ("private_key_id", "FCM service account JSON field 'private_key_id' must be a non-empty string when provided."),
-    ("client_id", "FCM service account JSON field 'client_id' must be a non-empty string when provided."),
-    ("auth_uri", "FCM service account JSON field 'auth_uri' must be a non-empty string when provided."),
-    (
-        "auth_provider_x509_cert_url",
-        "FCM service account JSON field 'auth_provider_x509_cert_url' must be a non-empty string when provided.",
-    ),
-    (
-        "client_x509_cert_url",
-        "FCM service account JSON field 'client_x509_cert_url' must be a non-empty string when provided.",
-    ),
-    ("universe_domain", "FCM service account JSON field 'universe_domain' must be a non-empty string when provided."),
-];
-
-/// Fields that must be HTTPS URLs when present.
-const URL_FIELDS: [(&str, &str); 4] = [
-    ("auth_uri", "FCM service account JSON field 'auth_uri' must contain a valid HTTPS URL."),
-    ("token_uri", "FCM service account JSON field 'token_uri' must contain a valid HTTPS URL."),
-    (
-        "auth_provider_x509_cert_url",
-        "FCM service account JSON field 'auth_provider_x509_cert_url' must contain a valid HTTPS URL.",
-    ),
-    ("client_x509_cert_url", "FCM service account JSON field 'client_x509_cert_url' must contain a valid HTTPS URL."),
-];
-
-const DESCRIPTION: &str = "Value must be valid Google service account JSON for FCM";
 
 /// Google service account credentials for the Firebase Cloud Messaging (FCM)
 /// HTTP v1 API: a map, an object, or a string that decodes to one.
@@ -207,51 +165,47 @@ pub struct Fcm;
 
 /// A non-empty string after `trim()`.
 fn non_empty_string(value: Option<Input<'_>>) -> Option<&[u8]> {
-    value.and_then(Input::as_str).filter(|s| !trim(s, TRIM_CHARACTERS).is_empty())
+    value.and_then(Input::as_str).filter(|s| non_empty(s))
 }
 
 fn https_url(url: &[u8]) -> bool {
-    filter_str(url, FILTER_VALIDATE_URL, 0)
-        && parse_url(url).and_then(|u| u.scheme()).is_some_and(|s| strtolower(&s).as_ref() == b"https")
+    filter_str(url, FILTER_VALIDATE_URL, 0) && parse_url(url).and_then(|u| u.scheme()).is_some_and(|s| https_scheme(&s))
 }
 
 impl Fcm {
     /// The credentials' fields: `None` when the value is not credentials at all.
-    fn check(value: Input<'_>) -> Option<Result<(), &'static str>> {
+    fn check(value: Input<'_>) -> Option<Result<(), Cow<'static, str>>> {
         // A stdClass, or an array that is not a non-empty list.
         let credentials = value.is_object() || (value.is_array() && (is_empty(value) || !value.is_list()));
         if !credentials {
             return None;
         }
-        for (field, error) in REQUIRED_FIELDS {
+        for (field, purpose) in FCM_REQUIRED {
             if non_empty_string(value.get(field)).is_none() {
-                return Some(Err(error));
+                return Some(Err(Cow::Owned(fcm_required_error(field, purpose))));
             }
         }
-        for (field, error) in OPTIONAL_FIELDS {
+        for field in FCM_OPTIONAL {
             if let Some(v) = value.get(field)
                 && non_empty_string(Some(v)).is_none()
             {
-                return Some(Err(error));
+                return Some(Err(Cow::Owned(fcm_optional_error(field))));
             }
         }
         let field = |name| non_empty_string(value.get(name)).unwrap_or_default();
         if field("type") != b"service_account" {
-            return Some(Err("FCM service account JSON field 'type' must be 'service_account'."));
+            return Some(Err(Cow::Borrowed(FCM_TYPE_ERROR)));
         }
         if !filter_str(field("client_email"), FILTER_VALIDATE_EMAIL, 0) {
-            return Some(Err("FCM service account JSON field 'client_email' must contain a valid email address."));
+            return Some(Err(Cow::Borrowed(FCM_EMAIL_ERROR)));
         }
-        let key = field("private_key");
-        if !key.starts_with(b"-----BEGIN PRIVATE KEY-----")
-            || !trim(key, TRIM_CHARACTERS).ends_with(b"-----END PRIVATE KEY-----")
-        {
-            return Some(Err("FCM service account JSON field 'private_key' must contain a PEM-encoded private key."));
+        if !pem_private_key(field("private_key")) {
+            return Some(Err(Cow::Borrowed(FCM_KEY_ERROR)));
         }
-        for (name, error) in URL_FIELDS {
+        for name in FCM_URL {
             // isset(): present and not null; present fields are non-empty strings by now.
             if value.get(name).is_some_and(|v| !v.is_null()) && !https_url(field(name)) {
-                return Some(Err(error));
+                return Some(Err(Cow::Owned(fcm_url_error(name))));
             }
         }
         Some(Ok(()))
@@ -265,7 +219,7 @@ fn is_empty(value: Input<'_>) -> bool {
 impl Validator for Fcm {
     /// Returns "Value must be valid Google service account JSON for FCM".
     fn description(&self) -> String {
-        DESCRIPTION.to_owned()
+        FCM_DESCRIPTION.to_owned()
     }
 
     is_valid_via_validate!();
@@ -288,7 +242,7 @@ impl Validator for Fcm {
         Ok(match Self::check(value) {
             None => Verdict::decided(false, None),
             Some(Ok(())) => Verdict::decided(true, None),
-            Some(Err(error)) => Verdict::decided(false, Some(Cow::Borrowed(error))),
+            Some(Err(error)) => Verdict::decided(false, Some(error)),
         })
     }
 

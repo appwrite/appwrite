@@ -101,6 +101,21 @@
 //! [`url_description`] ([`Url`]), [`phone`] and [`phone_normalize`]
 //! ([`Phone`]). [`Domain`]'s restrictions stay with each caller: here
 //! [`Restriction`], and the PHP engine in the extension.
+//!
+//! # Composing checks
+//!
+//! The [`compose`] module does the same for what the composing validators
+//! decide by themselves: [`array_list_description`] ([`ArrayList`]),
+//! [`ASSOC_DESCRIPTION`] ([`Assoc`]), [`JSON_DESCRIPTION`] ([`Json`]),
+//! [`json_array_description`], [`json_object_description`] and
+//! [`json_length`] ([`json::Array`], [`json::Object`]), [`FCM_REQUIRED`],
+//! [`FCM_OPTIONAL`], [`FCM_URL`], their errors, [`non_empty`],
+//! [`pem_private_key`] and [`https_scheme`] ([`json::Fcm`]), and
+//! [`globstar_regex`], [`exclusion`] and [`wildcard`] ([`Globstar`]). Asking
+//! the wrapped validators, and the PHP functions whose state is observable
+//! (`json_decode()`, `preg_match()`, `filter_var()`), stays with each caller:
+//! here [`AllOf`], [`AnyOf`], [`NoneOf`], [`Multiple`] and the validators
+//! above, and the PHP engine in the extension.
 
 #![warn(missing_docs)]
 
@@ -116,7 +131,8 @@ pub use php_std::value as php;
 pub struct GettingStarted;
 
 mod address;
-mod compose;
+pub mod compose;
+mod composite;
 mod error;
 mod hostname;
 mod input;
@@ -132,7 +148,13 @@ use std::borrow::Cow;
 use std::sync::Arc;
 
 pub use address::{Domain, Ip, IpVersion, Port, Restriction, Url};
-pub use compose::{AllOf, AnyOf, Multiple, NoneOf};
+pub use compose::{
+    ASSOC_DESCRIPTION, FCM_DESCRIPTION, FCM_EMAIL_ERROR, FCM_KEY_ERROR, FCM_OPTIONAL, FCM_REQUIRED, FCM_TYPE_ERROR,
+    FCM_URL, GLOBSTAR_DESCRIPTION, JSON_DESCRIPTION, PEM_BEGIN, PEM_END, array_list_description, exclusion,
+    fcm_optional_error, fcm_required_error, fcm_url_error, globstar_regex, https_scheme, json_array_description,
+    json_length, json_object_description, non_empty, pem_private_key, preg_quote, trim, wildcard,
+};
+pub use composite::{AllOf, AnyOf, Multiple, NoneOf};
 pub use error::Error;
 pub use hostname::{Host, Hostname, Label};
 pub use input::{Entries, Input, View};

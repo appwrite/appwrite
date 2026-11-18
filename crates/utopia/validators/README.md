@@ -256,6 +256,8 @@ The extension serves the text leaf validators (`Text`, `Identifier`, `WhiteList`
 
 The extension serves the network leaf validators (`Hostname`, `Domain`, `Host`, `IP`, `URL`, `Phone`) from this crate's `network` module when `_APP_EXTENSION_LIBRARIES` names `validators,validators-network`. Those functions run `php-std`'s ports of `filter_var()`, `parse_url()` and `Uri\Rfc3986\Uri`, so a value is accepted exactly when PHP accepts it: hostname shape and allow-list wildcards, domain format and label counts, IP versions, URL encoding, components and private-use schemes, loopback hosts, E.164 phone numbers and their normalization, and every description. `Domain`'s restrictions are left to the PHP engine there; this crate's `Hostname`, `Domain`, `Host`, `Ip`, `Url` and `Phone` run the same functions. Its parity corpus is `crates/extension/tests/validators-network.php`.
 
+The extension serves the composing validators (`Nullable`, `ArrayList`, `AllOf`, `AnyOf`, `NoneOf`, `Multiple`, `Assoc`, `JSON`, `JSON\ArrayValidator`, `JSON\ObjectValidator`, `JSON\FCM`, `Globstar`) when `_APP_EXTENSION_LIBRARIES` names `validators,validators-compose`, with what they decide by themselves from this crate's `compose` module: the `ArrayList`, `Assoc`, `JSON` and `Globstar` descriptions, the JSON validators' descriptions and length limit, `FCM`'s fields, errors, PEM and HTTPS checks, and the regular expression `Globstar` hands `preg_match()` (a port of `matchGlobstar()` and of `preg_quote()`). Asking the validators they wrap, and the PHP functions whose state is observable (`json_decode()`, `json_last_error()`, `preg_match()` and its warnings, `filter_var()`), is left to the PHP engine there; this crate's `ArrayList`, `Assoc`, `Json`, `json::Array`, `json::Object`, `json::Fcm` and `Globstar` run the same functions, and its `AllOf`, `AnyOf`, `NoneOf` and `Multiple` ask their rules themselves. Its parity corpus is `crates/extension/tests/validators-compose.php`.
+
 ```rust
 use utopia_validators::scalar::{Input, Integer};
 use utopia_validators::{Number, range};
@@ -270,6 +272,11 @@ use utopia_validators::text::{identifier, label, text_description};
 assert!(identifier(b"_user1"));
 assert!(!label(b"-api"));
 assert_eq!(text_description(10, 1, None, true), b"Value must be a valid string and at least 1 chars and no longer than 10 chars and not be blank");
+
+use utopia_validators::compose::{globstar_regex, json_length};
+
+assert_eq!(globstar_regex(b"src/**/*.rs"), b"~^src/(?:.+/)?[^/]*\\.rs$~");
+assert!(!json_length(2, Some(b"[1]")));
 ```
 
 ### Benchmark

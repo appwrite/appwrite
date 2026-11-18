@@ -1,303 +1,276 @@
-//! Validators made of other validators.
+//! The composing validators' own logic: what `ArrayList`, `Assoc`, `JSON`,
+//! `JSON\ArrayValidator`, `JSON\ObjectValidator`, `JSON\FCM` and `Globstar` decide by
+//! themselves. Asking the validators they wrap, and the PHP functions whose state is
+//! observable (`json_decode()` and `json_last_error()`, `preg_match()` and its warnings,
+//! `filter_var()`), is left to the PHP engine.
 
-use std::borrow::Cow;
+/// `Assoc::getDescription()`.
+pub const ASSOC_DESCRIPTION: &str = "Value must be a valid object.";
 
-use crate::{Error, Input, Type, Validator, Verdict, is_valid_via_validate};
+/// `JSON::getDescription()`.
+pub const JSON_DESCRIPTION: &str = "Value must be a valid JSON string";
 
-/// The rules of a composite validator.
-pub type Rules<'a> = Vec<Box<dyn Validator + 'a>>;
+/// `Globstar::getDescription()`.
+pub const GLOBSTAR_DESCRIPTION: &str =
+    "Value must match a specific inclusion, or a wildcard inclusion not overridden by any exclusion.";
 
-/// The verdict of a composite that `rules[index]` decided. Unless the rule's
-/// verdict carries a description, the rule is described only when the
-/// verdict is ([`Validator::rule_description`]).
-fn decided_by(index: usize, rule: &dyn Validator, valid: bool, verdict: Verdict) -> Verdict {
-    Verdict { valid, description: verdict.into_description(rule), decided: true, rule: Some(index) }
-}
+/// `FCM::getDescription()` before a check has failed.
+pub const FCM_DESCRIPTION: &str = "Value must be valid Google service account JSON for FCM";
 
-/// `rules[index]`'s description, for a verdict that rule decided.
-fn rule_description(rules: &Rules<'_>, index: usize) -> Option<String> {
-    rules.get(index).map(|rule| rule.description())
-}
-
-/// The verdict of a composite no rule decided: PHP describes the first rule,
-/// as its validation left it.
-fn undecided(valid: bool, first: Option<Cow<'static, str>>) -> Verdict {
-    Verdict { valid, description: first, decided: false, rule: None }
-}
-
-/// The description of the first rule (`$this->validators[0]->getDescription()`).
-/// PHP throws `Error` for an empty list ([`try_first`]); this describes it as empty.
-fn first(rules: &Rules<'_>) -> String {
-    rules.first().map(|r| r.description()).unwrap_or_default()
-}
-
-fn try_first(rules: &Rules<'_>) -> Result<String, Error> {
-    match rules.first() {
-        Some(rule) => rule.try_description(),
-        None => Err(Error::Engine("Call to a member function getDescription() on null".into())),
+/// `ArrayList::getDescription()`: `item` is the wrapped validator's description, `None` when
+/// it is `''` or `'0'` (which PHP leaves out).
+pub fn array_list_description(length: i64, item: Option<&[u8]>) -> Vec<u8> {
+    let mut message = b"Value must a valid array".to_vec();
+    if length > 0 {
+        message.extend_from_slice(format!(" no longer than {length} items").as_bytes());
     }
+    if let Some(item) = item {
+        message.extend_from_slice(b" and ");
+        message.extend_from_slice(item);
+    }
+    message
 }
 
-macro_rules! composite {
-    ($name:ident, $doc:literal, $php:literal) => {
-        #[doc = $doc]
-        #[doc = ""]
-        #[doc = concat!("PHP: `Utopia\\Validator\\", $php, "`.")]
-        pub struct $name<'a> {
-            rules: Rules<'a>,
-            kind: Type,
+/// `JSON\ArrayValidator::getDescription()`.
+pub fn json_array_description(length: i64) -> Vec<u8> {
+    json_description("Value must be a valid JSON array", length)
+}
+
+/// `JSON\ObjectValidator::getDescription()`.
+pub fn json_object_description(length: i64) -> Vec<u8> {
+    json_description("Value must be a valid JSON object", length)
+}
+
+fn json_description(message: &str, length: i64) -> Vec<u8> {
+    let mut message = message.as_bytes().to_vec();
+    if length > 0 {
+        message.extend_from_slice(format!(" no longer than {length} characters when encoded").as_bytes());
+    }
+    message
+}
+
+/// `hasValidLength()` of the JSON validators: `encoded` is `None` for `false`.
+pub fn json_length(length: i64, encoded: Option<&[u8]>) -> bool {
+    if length == 0 {
+        return true;
+    }
+    encoded.is_some_and(|encoded| i64::try_from(encoded.len()).is_ok_and(|len| len <= length))
+}
+
+/// PHP `trim($value)`: the default characters (`" \t\n\r\0\x0B"`) from both ends.
+pub fn trim(value: &[u8]) -> &[u8] {
+    const WHITESPACE: &[u8] = b" \t\n\r\0\x0B";
+    let start = value.iter().position(|b| !WHITESPACE.contains(b)).unwrap_or(value.len());
+    let end = value.iter().rposition(|b| !WHITESPACE.contains(b)).map_or(start, |i| i + 1);
+    &value[start..end]
+}
+
+/// `FCM::isNonEmptyString()` of a string.
+pub fn non_empty(value: &[u8]) -> bool {
+    !trim(value).is_empty()
+}
+
+/// `FCM::REQUIRED_FIELDS`: each field and what it is for, in PHP's order.
+pub const FCM_REQUIRED: [(&str, &str); 5] = [
+    ("type", "identifies the credentials as a Google service account"),
+    ("project_id", "identifies the Firebase project receiving messages"),
+    ("private_key", "signs the OAuth access-token request"),
+    ("client_email", "identifies the service account used for authentication"),
+    ("token_uri", "identifies the OAuth token endpoint"),
+];
+
+/// `FCM::OPTIONAL_FIELDS`.
+pub const FCM_OPTIONAL: [&str; 6] = [
+    "private_key_id",
+    "client_id",
+    "auth_uri",
+    "auth_provider_x509_cert_url",
+    "client_x509_cert_url",
+    "universe_domain",
+];
+
+/// `FCM::URL_FIELDS`.
+pub const FCM_URL: [&str; 4] = ["auth_uri", "token_uri", "auth_provider_x509_cert_url", "client_x509_cert_url"];
+
+/// The error `FCM::isValid()` records for a required field that is missing or blank.
+pub fn fcm_required_error(field: &str, purpose: &str) -> String {
+    format!("FCM service account JSON must include a non-empty '{field}' field, which {purpose}.")
+}
+
+/// The error for an optional field given but not a non-empty string.
+pub fn fcm_optional_error(field: &str) -> String {
+    format!("FCM service account JSON field '{field}' must be a non-empty string when provided.")
+}
+
+/// The error for a `type` other than `service_account`.
+pub const FCM_TYPE_ERROR: &str = "FCM service account JSON field 'type' must be 'service_account'.";
+/// The error for a `client_email` `filter_var()` refuses.
+pub const FCM_EMAIL_ERROR: &str = "FCM service account JSON field 'client_email' must contain a valid email address.";
+/// The error for a `private_key` that is not PEM.
+pub const FCM_KEY_ERROR: &str = "FCM service account JSON field 'private_key' must contain a PEM-encoded private key.";
+
+/// The error for a URL field that is not an HTTPS URL.
+pub fn fcm_url_error(field: &str) -> String {
+    format!("FCM service account JSON field '{field}' must contain a valid HTTPS URL.")
+}
+
+/// The first line of a PEM private key.
+pub const PEM_BEGIN: &str = concat!("-----", "BEGIN PRIVATE", " KEY-----");
+/// The last line of a PEM private key.
+pub const PEM_END: &str = concat!("-----", "END PRIVATE", " KEY-----");
+
+/// `str_starts_with($key, PEM_BEGIN) && str_ends_with(trim($key), PEM_END)`.
+pub fn pem_private_key(key: &[u8]) -> bool {
+    key.starts_with(PEM_BEGIN.as_bytes()) && trim(key).ends_with(PEM_END.as_bytes())
+}
+
+/// PHP `strtolower($scheme) === 'https'` (ASCII lowercasing, as PHP 8 does).
+pub fn https_scheme(scheme: &[u8]) -> bool {
+    scheme.eq_ignore_ascii_case(b"https")
+}
+
+/// PHP `preg_quote($value, '~')` of one byte, appended to `out`.
+fn quote(out: &mut Vec<u8>, byte: u8) {
+    match byte {
+        b'.' | b'\\' | b'+' | b'*' | b'?' | b'[' | b'^' | b']' | b'$' | b'(' | b')' | b'{' | b'}' | b'=' | b'!'
+        | b'>' | b'<' | b'|' | b':' | b'-' | b'#' | b'~' => {
+            out.push(b'\\');
+            out.push(byte);
         }
-
-        impl<'a> $name<'a> {
-            /// A composite of `rules`, expecting [`Type::Mixed`].
-            pub fn new(rules: Rules<'a>) -> Self {
-                Self { rules, kind: Type::Mixed }
-            }
-
-            /// A composite of `rules`, expecting values of type `kind`.
-            pub fn with_type(rules: Rules<'a>, kind: Type) -> Self {
-                Self { rules, kind }
-            }
-
-            /// The rules, in order.
-            ///
-            /// PHP: `getValidators()`.
-            pub fn validators(&self) -> &[Box<dyn Validator + 'a>] {
-                &self.rules
-            }
-        }
-    };
-}
-
-composite!(AllOf, "Passes when every rule passes; the first failing rule describes the failure.", "AllOf");
-composite!(AnyOf, "Passes when one rule passes; the last rule tried describes the result.", "AnyOf");
-composite!(NoneOf, "Passes when no rule passes; the first passing rule describes the failure.", "NoneOf");
-
-impl Validator for AllOf<'_> {
-    /// The description of the first rule; empty without rules.
-    fn description(&self) -> String {
-        first(&self.rules)
-    }
-
-    /// The description of the first rule, or [`Error::Engine`] without rules.
-    fn try_description(&self) -> Result<String, Error> {
-        try_first(&self.rules)
-    }
-
-    /// The description of the rule at `index`.
-    fn rule_description(&self, index: usize) -> Option<String> {
-        rule_description(&self.rules, index)
-    }
-
-    is_valid_via_validate!();
-
-    /// Validates against each rule in turn and stops at the first that fails,
-    /// which decides the description. When every rule passes, nothing is decided.
-    fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
-        let mut first = None;
-        for (i, rule) in self.rules.iter().enumerate() {
-            let v = rule.validate(value)?;
-            if !v.valid {
-                return Ok(decided_by(i, rule.as_ref(), false, v));
-            }
-            if i == 0 {
-                first = v.into_description(rule.as_ref());
-            }
-        }
-        Ok(undecided(true, first))
-    }
-
-    /// Always `true`: the validator expects an array.
-    fn is_array(&self) -> bool {
-        true
-    }
-
-    /// The type given to `with_type`; [`Type::Mixed`] otherwise.
-    fn kind(&self) -> Type {
-        self.kind
+        0 => out.extend_from_slice(b"\\000"),
+        _ => out.push(byte),
     }
 }
 
-impl Validator for AnyOf<'_> {
-    /// The description of the first rule; empty without rules.
-    fn description(&self) -> String {
-        first(&self.rules)
+/// PHP `preg_quote($value, '~')`.
+pub fn preg_quote(value: &[u8]) -> Vec<u8> {
+    let mut out = Vec::with_capacity(value.len());
+    for &byte in value {
+        quote(&mut out, byte);
     }
-
-    /// The description of the first rule, or [`Error::Engine`] without rules.
-    fn try_description(&self) -> Result<String, Error> {
-        try_first(&self.rules)
-    }
-
-    /// The description of the rule at `index`.
-    fn rule_description(&self, index: usize) -> Option<String> {
-        rule_description(&self.rules, index)
-    }
-
-    is_valid_via_validate!();
-
-    /// Validates against each rule in turn and stops at the first that passes.
-    /// Every rule tried decides the description, so the last one tried describes
-    /// the result; without rules the value is invalid.
-    fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
-        // Every rule tried decides; the last one tried stays.
-        let mut last = Verdict::INVALID;
-        for (i, rule) in self.rules.iter().enumerate() {
-            let v = rule.validate(value)?;
-            let valid = v.valid;
-            last = decided_by(i, rule.as_ref(), valid, v);
-            if valid {
-                break;
-            }
-        }
-        Ok(last)
-    }
-
-    /// Always `true`: the validator expects an array.
-    fn is_array(&self) -> bool {
-        true
-    }
-
-    /// The type given to `with_type`; [`Type::Mixed`] otherwise.
-    fn kind(&self) -> Type {
-        self.kind
-    }
+    out
 }
 
-impl Validator for NoneOf<'_> {
-    /// The description of the first rule; empty without rules.
-    fn description(&self) -> String {
-        first(&self.rules)
-    }
-
-    /// The description of the first rule, or [`Error::Engine`] without rules.
-    fn try_description(&self) -> Result<String, Error> {
-        try_first(&self.rules)
-    }
-
-    /// The description of the rule at `index`.
-    fn rule_description(&self, index: usize) -> Option<String> {
-        rule_description(&self.rules, index)
-    }
-
-    is_valid_via_validate!();
-
-    /// Validates against each rule in turn and stops at the first that passes,
-    /// which makes the value invalid and decides the description. When no rule
-    /// passes, the value is valid and nothing is decided.
-    fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
-        let mut first = None;
-        for (i, rule) in self.rules.iter().enumerate() {
-            let v = rule.validate(value)?;
-            if v.valid {
-                return Ok(decided_by(i, rule.as_ref(), false, v));
-            }
-            if i == 0 {
-                first = v.into_description(rule.as_ref());
-            }
-        }
-        Ok(undecided(true, first))
-    }
-
-    /// Always `true`: the validator expects an array.
-    fn is_array(&self) -> bool {
-        true
-    }
-
-    /// The type given to `with_type`; [`Type::Mixed`] otherwise.
-    fn kind(&self) -> Type {
-        self.kind
-    }
+/// Whether a `Globstar` pattern is an exclusion (`!…`).
+pub fn exclusion(pattern: &[u8]) -> bool {
+    pattern.starts_with(b"!")
 }
 
-/// Passes when every rule passes; the description lists every rule's,
-/// numbered.
-///
-/// PHP: `Utopia\Validator\Multiple`.
-pub struct Multiple<'a> {
-    rules: Rules<'a>,
-    kind: Type,
+/// Whether a `Globstar` pattern holds a wildcard (`*`, `?` or `[`).
+pub fn wildcard(pattern: &[u8]) -> bool {
+    pattern.iter().any(|b| matches!(b, b'*' | b'?' | b'['))
 }
 
-impl<'a> Multiple<'a> {
-    /// A composite of `rules`, expecting [`Type::Mixed`].
-    pub fn new(rules: Rules<'a>) -> Self {
-        Self { rules, kind: Type::Mixed }
-    }
-
-    /// A composite of `rules`, expecting values of type `kind`.
-    pub fn with_type(rules: Rules<'a>, kind: Type) -> Self {
-        Self { rules, kind }
-    }
-
-    /// Adds a rule after the others.
-    ///
-    /// PHP: `addRule()`.
-    pub fn add_rule(&mut self, rule: Box<dyn Validator + 'a>) -> &mut Self {
-        self.rules.push(rule);
-        self
-    }
-
-    fn describe<'d>(&self, descriptions: impl Iterator<Item = Cow<'d, str>>) -> String {
-        let mut out = String::new();
-        for (i, d) in descriptions.enumerate() {
-            out.push_str(&format!("{}. {} \n", i + 1, d));
+/// The regular expression `Globstar::matchGlobstar()` hands `preg_match()` for `pattern`,
+/// delimiters and anchors included (`~^…$~`).
+pub fn globstar_regex(pattern: &[u8]) -> Vec<u8> {
+    let len = pattern.len();
+    let mut regex = b"~^".to_vec();
+    let mut i = 0;
+    while i < len {
+        let char = pattern[i];
+        if char == b'\\' && i + 1 < len {
+            quote(&mut regex, pattern[i + 1]);
+            i += 2;
+        } else if char == b'[' {
+            let mut j = i + 1;
+            let mut content = Vec::new();
+            let mut negated = false;
+            // A negation marker (`!` or `^`), unless `]` follows it: `[!]` and `[^]` hold it.
+            if j < len && (pattern[j] == b'!' || pattern[j] == b'^') {
+                let marker = pattern[j];
+                j += 1;
+                if !(j < len && pattern[j] == b']') {
+                    negated = true;
+                }
+                content.push(marker);
+            }
+            // `]` first in the class (or first after the negation marker) is a member.
+            if j < len && pattern[j] == b']' && (content.is_empty() || negated) {
+                content.push(b']');
+                j += 1;
+            }
+            while j < len && pattern[j] != b']' {
+                content.push(pattern[j]);
+                j += 1;
+            }
+            if j < len {
+                regex.push(b'[');
+                if negated && content.first() == Some(&b'!') {
+                    regex.push(b'^');
+                    regex.extend_from_slice(&content[1..]);
+                } else if !negated && content.first() == Some(&b'^') {
+                    regex.extend_from_slice(b"\\^");
+                    regex.extend_from_slice(&content[1..]);
+                } else {
+                    regex.extend_from_slice(&content);
+                }
+                regex.push(b']');
+                i = j + 1;
+            } else {
+                // An unclosed class: `[` is a literal.
+                quote(&mut regex, b'[');
+                i += 1;
+            }
+        } else if char == b'*' && i + 1 < len && pattern[i + 1] == b'*' {
+            let after_slash = i == 0 || pattern[i - 1] == b'/';
+            let before_slash = i + 2 < len && pattern[i + 2] == b'/';
+            if after_slash && before_slash {
+                // `a/**/b`: any number of directories between.
+                regex.extend_from_slice(b"(?:.+/)?");
+                i += 3;
+            } else {
+                regex.extend_from_slice(b".*");
+                i += 2;
+            }
+        } else if char == b'*' {
+            regex.extend_from_slice(b"[^/]*");
+            i += 1;
+        } else if char == b'?' {
+            regex.extend_from_slice(b"[^/]");
+            i += 1;
+        } else {
+            quote(&mut regex, char);
+            i += 1;
         }
-        out
     }
+    regex.extend_from_slice(b"$~");
+    regex
 }
 
-impl Validator for Multiple<'_> {
-    /// Every rule's description, numbered, one per line.
-    fn description(&self) -> String {
-        self.describe(self.rules.iter().map(|r| Cow::Owned(r.description())))
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn regexes() {
+        assert_eq!(globstar_regex(b"a/**/b"), b"~^a/(?:.+/)?b$~");
+        assert_eq!(globstar_regex(b"**"), b"~^.*$~");
+        assert_eq!(globstar_regex(b"*.md"), b"~^[^/]*\\.md$~");
+        assert_eq!(globstar_regex(b"[!a]?"), b"~^[^a][^/]$~");
+        assert_eq!(globstar_regex(b"[!]"), b"~^[!]$~");
+        assert_eq!(globstar_regex(b"[^]"), b"~^[\\^]$~");
+        assert_eq!(globstar_regex(b"[]a]"), b"~^[]a]$~");
+        assert_eq!(globstar_regex(b"[!]a]"), b"~^[!]a\\]$~");
+        assert_eq!(globstar_regex(b"[abc"), b"~^\\[abc$~");
+        assert_eq!(globstar_regex(b"\\*"), b"~^\\*$~");
+        assert_eq!(globstar_regex(b"a\\"), b"~^a\\\\$~");
+        assert_eq!(globstar_regex(b"\0~"), b"~^\\000\\~$~");
     }
 
-    /// Every rule's description, numbered, or the first error a rule returns describing itself.
-    fn try_description(&self) -> Result<String, Error> {
-        let descriptions = self.rules.iter().map(|r| r.try_description()).collect::<Result<Vec<_>, _>>()?;
-        Ok(self.describe(descriptions.into_iter().map(Cow::Owned)))
-    }
-
-    is_valid_via_validate!();
-
-    /// Validates against each rule in turn and stops at the first that fails. The
-    /// description lists every rule's, each as its own validation left it.
-    fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
-        // Each rule keeps its own decision; the description lists them all.
-        let mut described: Vec<Option<Cow<'static, str>>> = Vec::new();
-        let mut valid = true;
-        let mut decided = false;
-        for (i, rule) in self.rules.iter().enumerate() {
-            let v = rule.validate(value)?;
-            decided |= v.decided;
-            let rule_valid = v.valid;
-            if let Some(d) = v.into_description(rule.as_ref()) {
-                described.resize(i + 1, None);
-                described[i] = Some(d);
-            }
-            if !rule_valid {
-                valid = false;
-                break;
-            }
-        }
-        if described.is_empty() {
-            return Ok(Verdict { decided, ..Verdict::of(valid) });
-        }
-        let descriptions = self.rules.iter().enumerate().map(|(i, r)| match described.get(i) {
-            Some(Some(d)) => Cow::Borrowed(d.as_ref()),
-            _ => Cow::Owned(r.description()),
-        });
-        Ok(Verdict { valid, description: Some(Cow::Owned(self.describe(descriptions))), decided, rule: None })
-    }
-
-    /// Always `true`: the validator expects an array.
-    fn is_array(&self) -> bool {
-        true
-    }
-
-    /// The type given to `with_type`; [`Type::Mixed`] otherwise.
-    fn kind(&self) -> Type {
-        self.kind
+    #[test]
+    fn helpers() {
+        assert_eq!(trim(b" \t\x0Bab\0 "), b"ab");
+        assert_eq!(trim(b"  "), b"");
+        assert!(!non_empty(b" \n"));
+        let key = format!("{PEM_BEGIN}\nx\n{PEM_END}\n");
+        assert!(pem_private_key(key.as_bytes()));
+        assert!(!pem_private_key(format!(" {PEM_BEGIN}{PEM_END}").as_bytes()));
+        assert!(json_length(0, None));
+        assert!(!json_length(3, None));
+        assert!(json_length(3, Some(b"[1]")));
+        assert!(!json_length(2, Some(b"[1]")));
+        assert_eq!(array_list_description(0, None), b"Value must a valid array");
+        assert_eq!(array_list_description(2, Some(b"x")), b"Value must a valid array no longer than 2 items and x");
     }
 }

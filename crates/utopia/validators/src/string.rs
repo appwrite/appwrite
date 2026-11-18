@@ -4,11 +4,10 @@
 use std::borrow::Cow;
 
 use php_std::pcre;
-use php_std::pcre::preg_quote;
 use php_std::value::numeric_str;
 
 use crate::input::loose_str_eq;
-use crate::{Error, Input, Type, Validator, Verdict, is_valid_via_validate, network, scalar, text};
+use crate::{Error, Input, Type, Validator, Verdict, compose, is_valid_via_validate, network, scalar, text};
 
 /// `preg_match($pattern, $subject) === 1`.
 pub(crate) fn preg_matches(pattern: &[u8], subject: &[u8]) -> bool {
@@ -247,97 +246,21 @@ impl Globstar {
         Self { patterns }
     }
 
-    fn is_wildcard(pattern: &[u8]) -> bool {
-        pattern.iter().any(|b| matches!(b, b'*' | b'?' | b'['))
-    }
-
-    fn quote(byte: u8, regex: &mut Vec<u8>) {
-        regex.extend_from_slice(&preg_quote(&[byte], Some(b"~")));
-    }
-
     /// Whether `subject` matches the glob `pattern`, through the PCRE pattern PHP builds.
     fn matches(subject: &[u8], pattern: &[u8]) -> bool {
-        let len = pattern.len();
-        let mut regex = b"~^".to_vec();
-        let mut i = 0;
-        while i < len {
-            let c = pattern[i];
-            if c == b'\\' && i + 1 < len {
-                Self::quote(pattern[i + 1], &mut regex);
-                i += 2;
-            } else if c == b'[' {
-                let mut j = i + 1;
-                let mut content = Vec::new();
-                let mut negated = false;
-                if j < len && (pattern[j] == b'!' || pattern[j] == b'^') {
-                    let marker = pattern[j];
-                    j += 1;
-                    // `[!]` and `[^]`: the marker is a literal member.
-                    negated = !(j < len && pattern[j] == b']');
-                    content.push(marker);
-                }
-                // `]` right after `[` (or the negation marker) is a member.
-                if j < len && pattern[j] == b']' && (content.is_empty() || negated) {
-                    content.push(b']');
-                    j += 1;
-                }
-                while j < len && pattern[j] != b']' {
-                    content.push(pattern[j]);
-                    j += 1;
-                }
-                if j < len {
-                    regex.push(b'[');
-                    if negated && content.starts_with(b"!") {
-                        regex.push(b'^');
-                        regex.extend_from_slice(&content[1..]);
-                    } else if !negated && content.starts_with(b"^") {
-                        regex.extend_from_slice(b"\\^");
-                        regex.extend_from_slice(&content[1..]);
-                    } else {
-                        regex.extend_from_slice(&content);
-                    }
-                    regex.push(b']');
-                    i = j + 1;
-                } else {
-                    // An unclosed bracket is a literal `[`.
-                    Self::quote(b'[', &mut regex);
-                    i += 1;
-                }
-            } else if c == b'*' && i + 1 < len && pattern[i + 1] == b'*' {
-                let prev_slash = i == 0 || pattern[i - 1] == b'/';
-                let next_slash = i + 2 < len && pattern[i + 2] == b'/';
-                if prev_slash && next_slash {
-                    regex.extend_from_slice(b"(?:.+/)?");
-                    i += 3;
-                } else {
-                    regex.extend_from_slice(b".*");
-                    i += 2;
-                }
-            } else if c == b'*' {
-                regex.extend_from_slice(b"[^/]*");
-                i += 1;
-            } else if c == b'?' {
-                regex.extend_from_slice(b"[^/]");
-                i += 1;
-            } else {
-                Self::quote(c, &mut regex);
-                i += 1;
-            }
-        }
-        regex.extend_from_slice(b"$~");
-        preg_matches(&regex, subject)
+        preg_matches(&compose::globstar_regex(pattern), subject)
     }
 }
 
 /// The excluded pattern of a `!` pattern.
 fn exclusion(pattern: &[u8]) -> Option<&[u8]> {
-    pattern.strip_prefix(b"!")
+    compose::exclusion(pattern).then(|| &pattern[1..])
 }
 
 impl Validator for Globstar {
     /// Returns "Value must match a specific inclusion, or a wildcard inclusion not overridden by any exclusion.".
     fn description(&self) -> String {
-        "Value must match a specific inclusion, or a wildcard inclusion not overridden by any exclusion.".to_owned()
+        compose::GLOBSTAR_DESCRIPTION.to_owned()
     }
 
     is_valid_via_validate!();
@@ -355,7 +278,7 @@ impl Validator for Globstar {
         if patterns().all(|p| exclusion(p).is_some()) {
             return Ok(Verdict::of(patterns().all(|p| !Self::matches(subject, exclusion(p).unwrap_or(p)))));
         }
-        if patterns().any(|p| exclusion(p).is_none() && !Self::is_wildcard(p) && Self::matches(subject, p)) {
+        if patterns().any(|p| exclusion(p).is_none() && !compose::wildcard(p) && Self::matches(subject, p)) {
             return Ok(Verdict::VALID);
         }
         // The last matching wildcard inclusion or exclusion wins; literal
@@ -364,7 +287,7 @@ impl Validator for Globstar {
         for p in patterns() {
             match exclusion(p) {
                 Some(excluded) if Self::matches(subject, excluded) => state = false,
-                None if Self::is_wildcard(p) && Self::matches(subject, p) => state = true,
+                None if compose::wildcard(p) && Self::matches(subject, p) => state = true,
                 _ => {}
             }
         }

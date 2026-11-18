@@ -6,7 +6,7 @@ use php_std::string::strtolower;
 use php_std::{Str, Value};
 
 use crate::input::{View, loose_str_eq};
-use crate::{Error, Input, Type, Validator, Verdict, is_valid_via_validate, text};
+use crate::{Error, Input, Type, Validator, Verdict, compose, is_valid_via_validate, text};
 
 /// A value that is one of a list of allowed values.
 ///
@@ -141,15 +141,10 @@ impl<V: Validator> ArrayList<V> {
     }
 
     fn describe(&self, inner: &str) -> String {
-        let mut msg = String::from("Value must a valid array");
-        if self.length > 0 {
-            msg.push_str(&format!(" no longer than {} items", self.length));
-        }
-        if !inner.is_empty() && inner != "0" {
-            msg.push_str(" and ");
-            msg.push_str(inner);
-        }
-        msg
+        let item = (!inner.is_empty() && inner != "0").then_some(inner.as_bytes());
+        let length = i64::try_from(self.length).unwrap_or(i64::MAX);
+        // Built from UTF-8 strings only.
+        String::from_utf8_lossy(&compose::array_list_description(length, item)).into_owned()
     }
 
     /// The verdict after the inner validator's: the description wraps the inner one.
@@ -237,7 +232,7 @@ impl Default for Assoc {
 impl Validator for Assoc {
     /// Returns "Value must be a valid object.".
     fn description(&self) -> String {
-        "Value must be a valid object.".to_owned()
+        compose::ASSOC_DESCRIPTION.to_owned()
     }
 
     is_valid_via_validate!();
