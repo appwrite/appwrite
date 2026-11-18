@@ -5,6 +5,10 @@ import {
   getFirstAllowedOrgSettingsPath,
 } from '@/lib/console-access-checks'
 import { deriveAccessFromRolesScopes } from '@/lib/console-roles'
+import {
+  getVerifiedEmailDomains,
+  isInternalEmail,
+} from '@/lib/email-domain-affiliation'
 
 const owner = deriveAccessFromRolesScopes(
   ['owner'],
@@ -60,5 +64,23 @@ describe('getEmailDomainRecord', () => {
     expect(getEmailDomainRecord('mail.example.co.uk', 'org1').name).toBe(
       '_appwrite.mail',
     )
+  })
+})
+
+describe('isInternalEmail', () => {
+  const verified = getVerifiedEmailDomains([
+    { domain: 'MyCompany.com', status: 'verified' },
+    { domain: 'pending.com', status: 'unverified' },
+  ])
+
+  test('a member on a verified domain is internal', () => {
+    expect(isInternalEmail('Jay@mycompany.COM', verified)).toBe(true)
+  })
+
+  test('other domains, unverified domains and subdomains are external', () => {
+    expect(isInternalEmail('jay@gmail.com', verified)).toBe(false)
+    expect(isInternalEmail('jay@pending.com', verified)).toBe(false)
+    expect(isInternalEmail('jay@dev.mycompany.com', verified)).toBe(false)
+    expect(isInternalEmail('', verified)).toBe(false)
   })
 })

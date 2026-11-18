@@ -70,6 +70,7 @@ import {
   useResendMembershipInvite,
   useUpdateMembershipRole,
   useRemoveTeamMember,
+  useOrganizationEmailDomains,
   syncConsoleAccountAfterMutation,
   updateAccountPrefs,
   mapProjectToListItem,
@@ -243,7 +244,11 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
 import { EnterpriseBadge } from '@/components/global/shared/EnterpriseBadge'
-import { GripVertical } from 'lucide-react'
+import { GripVertical, TriangleAlert } from 'lucide-react'
+import {
+  getVerifiedEmailDomains,
+  isInternalEmail,
+} from '@/lib/email-domain-affiliation'
 import { useServiceListViewMode } from '@/hooks/use-service-list-view-mode'
 import { ServiceListViewToggle } from '@/components/pages/projects/$projectId/shared/ServiceListViewToggle'
 import { useT } from '@/lib/i18n/translate'
@@ -338,6 +343,29 @@ function OrgRoleBadge({ role }: { role: string }) {
     >
       <Icon className="h-3 w-3 shrink-0" aria-hidden />
       {t(label)}
+    </Badge>
+  )
+}
+
+/** Single sign-on preview: whether a member's email is on a verified domain. */
+function MemberAffiliationBadge({ internal }: { internal: boolean }) {
+  const t = useT()
+  return internal ? (
+    <Badge
+      variant="secondary"
+      className="text-[11px] font-medium border px-2 py-0.5 shrink-0"
+      title={t('Email on a verified domain')}
+    >
+      {t('Internal')}
+    </Badge>
+  ) : (
+    <Badge
+      variant="warning"
+      className="text-[11px] font-medium px-2 py-0.5 shrink-0"
+      title={t('Email not on a verified domain')}
+    >
+      <TriangleAlert aria-hidden />
+      {t('External')}
     </Badge>
   )
 }
@@ -1820,6 +1848,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     () =>
       mapOrganizationMembershipsToTeamMembers(displayedMembershipsRaw, orgId),
     [displayedMembershipsRaw, orgId],
+  )
+  // Single sign-on preview: Internal / External once the org has a verified domain.
+  const { domains: emailDomains } = useOrganizationEmailDomains(
+    canShowOrgSsoSettings(access, features) ? orgId : null,
+  )
+  const verifiedEmailDomains = useMemo(
+    () => getVerifiedEmailDomains(emailDomains),
+    [emailDomains],
   )
   // Projects named by any member's project-specific roles on this page.
   // Resolved by id rather than read off the org's project list, which is
@@ -3719,6 +3755,15 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                       >
                                                         {t('Pending')}
                                                       </Badge>
+                                                    )}
+                                                    {verifiedEmailDomains.size >
+                                                      0 && (
+                                                      <MemberAffiliationBadge
+                                                        internal={isInternalEmail(
+                                                          member.userEmail,
+                                                          verifiedEmailDomains,
+                                                        )}
+                                                      />
                                                     )}
                                                   </div>
                                                   <div className="mt-0.5">

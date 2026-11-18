@@ -1660,6 +1660,9 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'שרתי השמות של הדומיין הזה כבר לא מפנים ל-Appwrite. סטטוס הדומיין עודכן.',
   // Single sign-on
   'Single sign-on': 'התחברות יחידה (SSO)',
+  'Internal': 'פנימי',
+  'Email on a verified domain': 'אימייל בדומיין מאומת',
+  'Email not on a verified domain': 'אימייל שאינו בדומיין מאומת',
   'Verify your company domain so teammates join on sign-up.':
     'אמתו את הדומיין של החברה כדי שחברי הצוות יצטרפו בהרשמה.',
   'People who sign up with a verified email on these domains join this organization automatically, with the roles you choose.':

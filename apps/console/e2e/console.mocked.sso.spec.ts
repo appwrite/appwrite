@@ -88,6 +88,40 @@ function rule(domain: string, roles: string[], status: Rule['status']): Rule {
   }
 }
 
+type Member = {
+  $id: string
+  $createdAt: string
+  userId: string
+  userName: string
+  userEmail: string
+  teamId: string
+  roles: string[]
+  joined: string
+  confirm: boolean
+  mfa: boolean
+}
+
+function member(
+  name: string,
+  email: string,
+  roles: string[],
+  confirm = true,
+): Member {
+  const id = email.replace(/[^a-z0-9]/gi, '')
+  return {
+    $id: `membership-${id}`,
+    $createdAt: NOW,
+    userId: `user-${id}`,
+    userName: name,
+    userEmail: email,
+    teamId: ORGANIZATION.$id,
+    roles,
+    joined: confirm ? NOW : '',
+    confirm,
+    mfa: false,
+  }
+}
+
 interface Mock {
   /** The organization's team rules, as the list answers */
   rules: Rule[]
@@ -95,6 +129,8 @@ interface Mock {
   published: Set<string>
   /** The organization role of the signed-in account */
   role: 'owner' | 'developer'
+  /** The organization's members */
+  members: Member[]
   sent: {
     creates: Array<{ domain: string; teamId: string; roles: string[] }>
     verifies: string[]
@@ -116,12 +152,13 @@ function corsHeaders(route: Route): Record<string, string> {
 
 async function mockAppwriteApi(
   page: Page,
-  options: Partial<Pick<Mock, 'role' | 'rules'>> = {},
+  options: Partial<Pick<Mock, 'role' | 'rules' | 'members'>> = {},
 ): Promise<Mock> {
   const mock: Mock = {
     rules: options.rules ?? [rule('acme.com', ['developer'], 'verified')],
     published: new Set(),
     role: options.role ?? 'owner',
+    members: options.members ?? [],
     sent: {
       creates: [],
       verifies: [],
@@ -176,7 +213,10 @@ async function mockAppwriteApi(
     )
       return json(200, ORGANIZATION)
     if (apiPath.endsWith('/memberships'))
-      return json(200, { total: 0, memberships: [] })
+      return json(200, {
+        total: mock.members.length,
+        memberships: mock.members,
+      })
     if (apiPath === '/projects' || apiPath === '/organization/projects')
       return json(200, { total: 0, projects: [] })
 
@@ -384,5 +424,56 @@ test.describe('organization single sign-on', () => {
     await expect.poll(() => mock.sent.deletes).toEqual(['rule-acme.com'])
     await expect(page.getByRole('row', { name: /acme\.com/ })).toHaveCount(0)
     await expect(page.getByText('No email domains yet')).toBeVisible()
+  })
+
+  test('marks members Internal or External by the verified domains', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, {
+      rules: [
+        rule('acme.com', ['developer'], 'verified'),
+        rule('acme.dev', ['developer'], 'unverified'),
+      ],
+      members: [
+        member('Demo Owner', 'owner@acme.com', ['owner']),
+        member('Sara Lee', 'Sara@ACME.com', ['developer']),
+        member('Alex Contractor', 'alex@gmail.com', ['developer']),
+        member('Kim Park', 'kim@dev.acme.com', ['analyst']),
+        member('', 'new@acme.dev', ['developer'], false),
+      ],
+    })
+    await enableSso(page)
+    await page.goto(`${SETTINGS}/members`, { waitUntil: 'domcontentloaded' })
+
+    const row = (name: string) => page.getByRole('row', { name })
+    await expect(row('Demo Owner')).toContainText('Internal', {
+      timeout: 45_000,
+    })
+    await expect(row('Sara Lee')).toContainText('Internal')
+    await expect(row('Alex Contractor')).toContainText('External')
+    // A subdomain is its own domain, verified on its own
+    await expect(row('Kim Park')).toContainText('External')
+    // Unverified domains do not count
+    await expect(row('new@acme.dev')).toContainText('External')
+  })
+
+  test('shows no Internal or External without a verified domain', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, {
+      rules: [rule('acme.com', ['developer'], 'unverified')],
+      members: [
+        member('Demo Owner', 'owner@acme.com', ['owner']),
+        member('Alex Contractor', 'alex@gmail.com', ['developer']),
+      ],
+    })
+    await enableSso(page)
+    await page.goto(`${SETTINGS}/members`, { waitUntil: 'domcontentloaded' })
+
+    await expect(
+      page.getByRole('row', { name: 'Alex Contractor' }),
+    ).toBeVisible({ timeout: 45_000 })
+    await expect(page.getByText('External', { exact: true })).toHaveCount(0)
+    await expect(page.getByText('Internal', { exact: true })).toHaveCount(0)
   })
 })
