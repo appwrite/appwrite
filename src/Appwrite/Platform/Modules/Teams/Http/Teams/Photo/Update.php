@@ -137,6 +137,12 @@ class Update extends Action
             throw new Exception(Exception::STORAGE_INVALID_FILE_SIZE, 'Photo must be at most 5MB');
         }
 
+        $mimeType = $deviceForLocal->getFileMimeType($fileTmpName);
+
+        if (!\in_array($mimeType, self::ALLOWED_MIME_TYPES, true)) {
+            throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'Photo must be a PNG, JPEG, or WebP image');
+        }
+
 
         $response->dynamic($updated, Response::MODEL_TEAM);
     }
