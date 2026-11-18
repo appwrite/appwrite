@@ -66,7 +66,7 @@ foreach ($args as $arg) {
     }
 }
 
-/** @var array<string, array{queue: string, queueEnv?: string, coroutines?: int}> $workersConfig */
+/** @var array<string, array{queue: string, queueEnv?: string, coroutines?: int, prefetch?: int, maxInFlight?: int}> $workersConfig */
 $workersConfig = Config::getParam('workers', []);
 $known = \array_keys($workersConfig);
 
@@ -146,17 +146,18 @@ Console::title($combined ? 'Worker V1 (combined)' : 'Worker V1 (' . $workerName 
 Console::success(APP_NAME . ' worker v1 has started');
 Console::info('Mode: ' . ($combined ? 'combined — all queues in one process' : 'dedicated — single queue'));
 Console::info('Workers: ' . \count($jobs) . '  |  processes: ' . System::getEnv('_APP_WORKERS_NUM', 1));
-Console::info(str_pad('queue', 16) . str_pad('redis key', 28) . str_pad('coroutines', 14) . 'prefetch');
-Console::info(str_repeat('-', 70));
+Console::info(str_pad('queue', 16) . str_pad('redis key', 28) . str_pad('coroutines', 14) . str_pad('prefetch', 14) . 'max in flight');
+Console::info(str_repeat('-', 86));
 foreach ($jobs as $name => $job) {
     Console::info(
         str_pad($name, 16)
         . str_pad($job['queue'], 28)
         . str_pad((string) $job['coroutines'], 14)
-        . (string) $worker->prefetch($job['queue'])
+        . str_pad((string) $worker->prefetch($job['queue']), 14)
+        . (string) $worker->maxInFlight($job['queue'])
     );
 }
-Console::info(str_repeat('-', 70));
+Console::info(str_repeat('-', 86));
 Console::success('Listening for jobs…');
 
 $worker

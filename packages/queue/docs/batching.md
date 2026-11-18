@@ -41,7 +41,7 @@ Keep JetStream responsible for pending deliveries, retry accounting, and recover
 
 ### Swoole and public APIs
 
-Consolidate the two receive loops. Refill a bounded delivery buffer independently of processing coroutines, and renew all outstanding deliveries from one queue-level loop. A coroutine can begin the next handler while an earlier completion awaits confirmation. Each message retains its own context and success hook; success hooks follow their own confirmation and may run after a later handler has started.
+Consolidate the two receive loops. Refill a bounded receive buffer independently of processing coroutines, with a separate `maxInFlight` limit on all held messages. NATS hands off arrivals incrementally while the pull is pending, so dispatch, acknowledgement, and renewal can progress under broker backpressure. Renew all outstanding deliveries from one queue-level loop. A coroutine can begin the next handler while an earlier completion awaits confirmation. Each message retains its own context and success hook; success hooks follow their own confirmation and may run after a later handler has started.
 
 Keep `receive`, `commit` (acknowledgement), and `reject` (retry/dead-letter policy) contracts per message. Internal Redis operations use explicit `commit`, `reject`, and `release` names rather than optional success flags or numeric outcomes. `extend` accepts multiple messages. Optional `release` returns prefetched work that never entered a handler on graceful stop, without incrementing attempts. Existing third-party consumers with single-message renewal still receive individual renewal calls; consumers without release support rely on their broker's recovery. No new renewal capability is required in queue 5; retain single-message detection for existing third-party implementations.
 
@@ -59,7 +59,7 @@ For stats-usage, validate buffered ClickHouse writes versus acknowledgement timi
 
 ## Release and rollout order
 
-1. NATS transport support is released as [1.4.0](https://github.com/utopia-php/nats/releases/tag/1.4.0). The queue now requires `^1.5`, the first release with `NoRespondersException`, which the broker's publish retry depends on.
+1. NATS transport support is released as [1.4.0](https://github.com/utopia-php/nats/releases/tag/1.4.0). Queue 7 requires NATS client `^1.7` for incremental `fetchEach()` delivery; release that client before queue 7 and its Platform update.
 2. Merge and release queue as a new major version: custom Redis connections must implement `execute`, and Cluster requires shared key placement. Release Platform requiring queue 5 and its updated job configuration.
 3. Prepare Appwrite's package/lock updates, then Cloud's package/lock updates. Rename job configuration keys from `maxCoroutines`/`batch` to `coroutines`/`prefetch`, including named calls. Keep deployment environment names unchanged; map their values to `prefetch: max($batch, $coroutines)` to preserve the previous effective limit, or omit prefetch to use coroutines. Remove the old upper clamp. Keep restrictions for adapters that cannot consume batches. Cloud must not enable this behavior against queue 4.
 4. Test both Redis and NATS integrations in staging; current NATS-backed staging traffic cannot validate the Redis path.

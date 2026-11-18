@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Utopia\Queue\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\PreserveGlobalState;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\TestCase;
 use Swoole\Coroutine;
-use Swoole\Event;
 use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Consumer;
 use Utopia\Queue\Message;
@@ -19,7 +19,7 @@ use Utopia\Queue\Server;
 #[PreserveGlobalState(false)]
 final class PrefetchTest extends TestCase
 {
-    public function testReadyConfirmationsRefillTogether(): void
+    public function testReceiveBufferRefillsBeforeAcknowledgement(): void
     {
         $consumer = null;
         $confirmed = 0;
@@ -29,11 +29,15 @@ final class PrefetchTest extends TestCase
                 /** @var list<int> */
                 public array $batches = [];
                 public int $received = 0;
+                public int $confirmed = 0;
+                public ?int $confirmedAtRefill = null;
+                public Coroutine\Channel $refilled;
                 public Coroutine\Channel $confirmations;
 
                 public function __construct()
                 {
                     $this->confirmations = new Coroutine\Channel(4);
+                    $this->refilled = new Coroutine\Channel(1);
                 }
 
                 public function receive(Queue $queue, int $timeout, int $n = 1): array
@@ -48,6 +52,10 @@ final class PrefetchTest extends TestCase
                         $messages[] = new Message(['pid' => (string) ++$this->received, 'queue' => $queue->name, 'timestamp' => time()]);
                     }
                     $this->batches[] = \count($messages);
+                    if ($this->received === 8) {
+                        $this->confirmedAtRefill = $this->confirmed;
+                        $this->refilled->push(true);
+                    }
                     return $messages;
                 }
 
@@ -55,9 +63,10 @@ final class PrefetchTest extends TestCase
                 {
                     $reply = new Coroutine\Channel(1);
                     $this->confirmations->push($reply);
-                    if ($reply->pop(1.0) !== true) {
+                    if ($reply->pop(3.0) !== true) {
                         throw new \RuntimeException('Confirmation did not arrive');
                     }
+                    $this->confirmed++;
                 }
 
                 public function reject(Queue $queue, Message $message): never
@@ -77,14 +86,13 @@ final class PrefetchTest extends TestCase
                         $this->assertInstanceOf(Coroutine\Channel::class, $reply);
                         $replies[] = $reply;
                     }
-                    // Deliver one transport response after the receiver has parked.
-                    Event::defer(static function () use ($replies): void {
-                        Coroutine::create(static function () use ($replies): void {
-                            foreach ($replies as $reply) {
-                                $reply->push(true);
-                            }
-                        });
-                    });
+                    if ($batch === 0) {
+                        // A refill must not depend on completing this acknowledgement batch.
+                        $consumer->refilled->pop(1.0);
+                    }
+                    foreach ($replies as $reply) {
+                        $reply->push(true);
+                    }
                 }
             });
             $adapter = new Swoole($consumer, 1);
@@ -105,19 +113,30 @@ final class PrefetchTest extends TestCase
         $this->assertSame([], $errors);
         $this->assertSame(8, $confirmed);
         $this->assertNotNull($consumer);
-        $this->assertSame([4, 4], $consumer->batches, 'A ready confirmation batch must not cause a one-message refill');
+        $this->assertSame([4, 4], $consumer->batches);
+        $this->assertSame(0, $consumer->confirmedAtRefill, 'Handing work to a handler releases buffer capacity before acknowledgement');
     }
 
-    public function testUnconfirmedMessagesCountAgainstPrefetch(): void
+    public static function limits(): \Iterator
+    {
+        yield 'overlapping confirmations' => [1, 2, 4];
+        yield 'buffer smaller than concurrency' => [4, 1, 8];
+        yield 'in-flight limit smaller than buffer' => [2, 8, 3];
+    }
+
+    #[DataProvider('limits')]
+    public function testUnconfirmedMessagesCountAgainstInFlightLimit(int $coroutines, int $prefetch, int $maxInFlight): void
     {
         $consumer = new class () implements Consumer {
             public int $outstanding = 0;
+            public int $largestRequest = 0;
             public int $peak = 0;
             public int $confirmed = 0;
             private int $received = 0;
 
             public function receive(Queue $queue, int $timeout, int $n = 1): array
             {
+                $this->largestRequest = max($this->largestRequest, $n);
                 if ($this->received === 20) {
                     Coroutine::sleep(0.001);
                     return [];
@@ -148,9 +167,9 @@ final class PrefetchTest extends TestCase
             }
         };
         $running = $peak = $handled = 0;
-        $confirmationsAtFourthHandler = null;
+        $confirmationsAtLimit = null;
         $errors = [];
-        Coroutine\run(function () use ($consumer, &$running, &$peak, &$handled, &$confirmationsAtFourthHandler, &$errors): void {
+        Coroutine\run(function () use ($consumer, $coroutines, $prefetch, $maxInFlight, &$running, &$peak, &$handled, &$confirmationsAtLimit, &$errors): void {
             $adapter = new class ($consumer, 1) extends Swoole {
                 public function start(): self
                 {
@@ -161,10 +180,10 @@ final class PrefetchTest extends TestCase
                 }
             };
             $server = new Server($adapter);
-            $server->job('jobs', coroutines: 1, prefetch: 4)->action(function () use ($consumer, &$running, &$peak, &$handled, &$confirmationsAtFourthHandler): void {
+            $server->job('jobs', coroutines: $coroutines, prefetch: $prefetch, maxInFlight: $maxInFlight)->action(function () use ($consumer, $maxInFlight, &$running, &$peak, &$handled, &$confirmationsAtLimit): void {
                 $peak = max($peak, ++$running);
-                if (++$handled === 4) {
-                    $confirmationsAtFourthHandler = $consumer->confirmed;
+                if (++$handled === $maxInFlight) {
+                    $confirmationsAtLimit = $consumer->confirmed;
                 }
                 Coroutine::sleep(0.001);
                 $running--;
@@ -183,10 +202,11 @@ final class PrefetchTest extends TestCase
         $this->assertSame([], $errors);
         $this->assertSame(20, $handled);
         $this->assertSame(20, $consumer->confirmed);
-        $this->assertSame(4, $consumer->peak, 'Waiting, running and unconfirmed messages share one limit');
+        $this->assertSame($maxInFlight, $consumer->peak, 'The independent in-flight limit includes buffered, running and unconfirmed messages');
         $this->assertSame(0, $consumer->outstanding);
-        $this->assertSame(1, $peak);
-        $this->assertSame(0, $confirmationsAtFourthHandler, 'Handlers continue while confirmations are pending');
+        $this->assertLessThanOrEqual($coroutines, $peak);
+        $this->assertLessThanOrEqual($prefetch, $consumer->largestRequest);
+        $this->assertSame(0, $confirmationsAtLimit, 'Handlers continue while confirmations are pending');
     }
 
     /**
@@ -242,7 +262,7 @@ final class PrefetchTest extends TestCase
             };
             $release = new Coroutine\Channel(3);
             $server = new Server($adapter);
-            $server->job('jobs', coroutines: 4)->inject('message')->action(function (Message $message) use ($consumer, $release): void {
+            $server->job('jobs', coroutines: 4, maxInFlight: 4)->inject('message')->action(function (Message $message) use ($consumer, $release): void {
                 if ($message->getPid() === 'short') {
                     $consumer->longRunningWhenShortRan = $consumer->longRunning;
                     for ($i = 0; $i < 3; $i++) {

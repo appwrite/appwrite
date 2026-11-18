@@ -5,7 +5,11 @@
  *
  * Keys are Platform worker Action names. Each entry is the same shape a single
  * worker used to get from env + defaults — queue name (overridable) and
- * coroutines. databases must stay at 1 (ordered writes / adapter locks).
+ * coroutines. Optional prefetch limits buffered work; maxInFlight limits all
+ * held messages. They default to coroutines and coroutines + prefetch.
+ * Dedicated workers can override them with _APP_WORKER_PREFETCH and
+ * _APP_WORKER_MAX_IN_FLIGHT; combined workers use per-queue configuration.
+ * databases must stay at 1 coroutine (ordered writes / adapter locks).
  */
 
 use Appwrite\Event\Event;

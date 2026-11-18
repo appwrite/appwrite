@@ -14,10 +14,38 @@ use Utopia\Queue\Broker\Nats;
 use Utopia\Queue\Broker\Redis;
 use Utopia\Queue\Connection\Locking;
 use Utopia\Queue\Connection\Redis as RedisConnection;
+use Utopia\Queue\Message;
 use Utopia\Queue\Queue;
 
 final class PrefetchTest extends TestCase
 {
+    public function testStreamingPullProgressesThroughBrokerBackpressure(): void
+    {
+        $received = $attempts = [];
+        $remaining = null;
+        \Swoole\Coroutine\run(static function () use (&$received, &$attempts, &$remaining): void {
+            $broker = new Nats(fn (): NatsConnection => NatsConnection::connect(new ConnectionOptions(
+                servers: 'nats://127.0.0.1:14225',
+                transportFactory: fn (): SwooleTransport => new SwooleTransport(),
+            )), ackWait: 0.2, maxAckPending: 2);
+            $queue = new Queue('streaming_' . bin2hex(random_bytes(6)));
+            $broker->publishMany($queue, array_map(static fn (int $id): array => ['id' => $id], range(1, 5)));
+
+            // The broker cannot deliver this whole pull before earlier messages are acked.
+            $broker->receiveEach($queue, 1, 5, static function (Message $message) use ($broker, $queue, &$received, &$attempts): void {
+                $received[] = $message->getPayload()['id'];
+                $attempts[] = $message->getAttempts();
+                $broker->commit($queue, $message);
+            });
+
+            $remaining = $broker->getQueueSize($queue);
+            $broker->close();
+        });
+        $this->assertSame(range(1, 5), $received);
+        $this->assertSame(array_fill(0, 5, 0), $attempts);
+        $this->assertSame(0, $remaining);
+    }
+
     public static function brokers(): \Iterator
     {
         yield ['redis'];
