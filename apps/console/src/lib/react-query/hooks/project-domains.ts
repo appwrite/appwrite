@@ -382,6 +382,9 @@ export function useUpdateDomainRule(
       await queryClient.refetchQueries({
         queryKey: ['proxy-rules'],
       })
+      queryClient.invalidateQueries({
+        queryKey: Dependencies.DOMAINS,
+      })
     },
   })
 }
