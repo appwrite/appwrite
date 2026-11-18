@@ -357,6 +357,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Naver',
     ],
+    'netlify' => [
+        'name' => 'Netlify',
+        'developers' => 'https://docs.netlify.com/api-and-cli-guides/api-guides/get-started-with-api/',
+        'icon' => 'icon-netlify',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Netlify',
+    ],
     'notion' => [
         'name' => 'Notion',
         'developers' => 'https://developers.notion.com/docs',
