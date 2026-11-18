@@ -3866,6 +3866,10 @@
             "queries",
             "total"
         ],
+        "reviews.listAuthors": [
+            "range",
+            "repositoryId"
+        ],
         "reviews.listEvents": [
             "reviewId",
             "queries",
@@ -8251,6 +8255,10 @@
         "reviews.list": [
             "queries",
             "total"
+        ],
+        "reviews.listAuthors": [
+            "range",
+            "repositoryId"
         ],
         "reviews.listEvents": [
             "reviewId",
