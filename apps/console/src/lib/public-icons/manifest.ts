@@ -18,6 +18,7 @@ export const PUBLIC_ICON_FILENAMES = [
   'appwrite-white.svg',
   'appwrite.svg',
   'astro.svg',
+  'atlassian.svg',
   'auth0.svg',
   'authentik.svg',
   'autodesk.svg',
