@@ -99,13 +99,14 @@ export function DomainTargetCard({
           <button
             type="button"
             onClick={() => onBehaviourChange('active')}
-            disabled={disabled}
+            disabled={disabled || deploymentLocked}
+            title={deploymentLocked ? lockedReason : undefined}
             className={cn(
               'text-start rounded-lg border p-4 transition-all cursor-pointer',
               behaviour === 'active'
                 ? 'border-foreground bg-primary/5'
                 : 'border-border hover:border-muted-foreground/50',
-              disabled && 'opacity-50 cursor-not-allowed',
+              (disabled || deploymentLocked) && 'opacity-50 cursor-not-allowed',
             )}
           >
             <Rocket className="h-5 w-5 text-muted-foreground mb-2" />
