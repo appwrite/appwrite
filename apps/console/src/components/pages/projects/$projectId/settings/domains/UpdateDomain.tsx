@@ -73,8 +73,9 @@ export function UpdateDomain({
     if (!canSubmit) return
 
     const trimmedUrl = redirectUrl.trim()
+    const lowerUrl = trimmedUrl.toLowerCase()
     const url =
-      trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')
+      lowerUrl.startsWith('http://') || lowerUrl.startsWith('https://')
         ? trimmedUrl
         : `https://${trimmedUrl}`
     // Browsers percent-encode a space in the host instead of rejecting it
