@@ -108,6 +108,8 @@ class Update extends Action
             throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE, 'Photo must be sent in a single request');
         }
 
+        $file = $request->getFiles('file');
+
 
         $response->dynamic($updated, Response::MODEL_TEAM);
     }
