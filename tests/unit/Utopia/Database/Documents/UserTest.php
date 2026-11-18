@@ -10,6 +10,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Auth\Proofs\Code;
 use Utopia\Auth\Proofs\Token;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Id;
@@ -678,5 +679,31 @@ final class UserTest extends TestCase
         $this->assertContains(Role::team(Id::custom('def'), 'guest')->toString(), $roles);
         $this->assertContains(Role::member(Id::custom('def'))->toString(), $roles);
         $this->assertContains(Role::member(Id::custom('abc'))->toString(), $roles);
+    }
+
+    public function testRevokeCredentialsLocksTheUserBeforeAnyRead(): void
+    {
+        $calls = [];
+        $database = $this->createStub(Database::class);
+        $database->method('withTransaction')->willReturnCallback(fn (callable $callback): mixed => $callback());
+        $database->method('getDocument')->willReturnCallback(function (string $collection, string $id, array $queries = [], bool $forUpdate = false) use (&$calls) {
+            $calls[] = "getDocument:{$collection}:" . ($forUpdate ? 'forUpdate' : 'read');
+            return new Document();
+        });
+        $database->method('deleteDocuments')->willReturnCallback(function (string $collection) use (&$calls) {
+            $calls[] = "deleteDocuments:{$collection}";
+            return 0;
+        });
+        $database->method('updateDocument')->willReturnCallback(function (string $collection) use (&$calls) {
+            $calls[] = "updateDocument:{$collection}";
+            return new Document();
+        });
+
+        $user = new User(['$id' => 'user', '$sequence' => '1', 'status' => true]);
+        User::revokeCredentials($database, $user, new Document(['$id' => 'project']));
+
+        // Under repeatable read the first plain read fixes the snapshot, so the lock must come before it
+        $this->assertSame('getDocument:users:forUpdate', $calls[0]);
+        $this->assertSame('updateDocument:users', \end($calls));
     }
 }
