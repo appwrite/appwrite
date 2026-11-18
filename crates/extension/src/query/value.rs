@@ -449,7 +449,7 @@ fn shape_of(zval: &Zval) -> PhpResult<Vec<u8>> {
         thrown()?;
         return Ok(shape.ok().as_ref().and_then(bytes).map(<[u8]>::to_vec).unwrap_or_default());
     }
-    Ok(typed(zval)?.shaped())
+    typed(zval)?.shaped()
 }
 
 /// The `Method`s among `types`.
@@ -568,6 +568,22 @@ fn make(scope: &'static ClassEntry, method: Method, attribute: &[u8], values: Zv
     object.into_zval(false).map_err(PhpException::from)
 }
 
+/// The engine's check before a call goes a level deeper, and its `Error` once the native
+/// stack is nearly used. A query that holds itself would otherwise run off the end of it.
+fn overflowed() -> Option<PhpException> {
+    let globals = ExecutorGlobals::get();
+    let here = 0_u8;
+    if globals.stack_limit.is_null() || std::ptr::from_ref(&here) as usize > globals.stack_limit as usize {
+        return None;
+    }
+    let size = (globals.stack_base as usize).saturating_sub(globals.stack_limit as usize);
+    let message = format!(
+        "Maximum call stack size of {size} bytes (zend.max_allowed_stack_size - zend.reserved_stack_size) reached. \
+         Infinite recursion?"
+    );
+    Some(PhpException::new(message, 0, ce::error()))
+}
+
 /// The query behind `zval`, when it is one (a `Query` or a PHP subclass of it).
 fn query_of(zval: &Zval) -> Option<&ZendClassObject<Query>> {
     let object: &ZendObject = zval.object()?;
@@ -596,10 +612,19 @@ pub struct Query {
 impl Clone for Query {
     /// `__clone()`: the nested queries are cloned too, so a copy shares none with its source.
     fn clone(&self) -> Self {
+        // Too deep to go on: the error is thrown, and what is left is shared, not cloned.
+        let deeper = match overflowed() {
+            Some(error) => {
+                error.throw();
+                false
+            }
+            None => true,
+        };
         let mut values = ZendHashTable::new();
         if let Some(source) = self.values.array() {
             for (key, value) in source {
-                let copied = if query_of(value).is_some() { clone_object(value) } else { value.shallow_clone() };
+                let nested = deeper && query_of(value).is_some();
+                let copied = if nested { clone_object(value) } else { value.shallow_clone() };
                 let _ = values.insert(key, copied);
             }
         }
@@ -644,18 +669,20 @@ impl Query {
     }
 
     /// `shape()`: the method and attribute, and for a logical query its children's shapes, sorted.
-    fn shaped(&self) -> Vec<u8> {
+    fn shaped(&self) -> PhpResult<Vec<u8>> {
+        overflowed().map_or(Ok(()), Err)?;
         let mut shape = self.method.as_str().as_bytes().to_vec();
         shape.push(b':');
         shape.extend_from_slice(&self.attribute);
         if self.logical() {
-            let mut children: Vec<Vec<u8>> = self.values().filter_map(query_of).map(|child| child.shaped()).collect();
+            let mut children =
+                self.values().filter_map(query_of).map(|child| child.shaped()).collect::<PhpResult<Vec<_>>>()?;
             children.sort();
             shape.push(b'(');
             shape.extend_from_slice(&children.join(&b'|'));
             shape.push(b')');
         }
-        shape
+        Ok(shape)
     }
 
     /// `json_encode($this->toArray())` appended to `out`, for a query holding only what is
@@ -711,6 +738,7 @@ impl Query {
 
     /// `toArray()`.
     fn array(&self) -> PhpResult<Zval> {
+        overflowed().map_or(Ok(()), Err)?;
         let mut array = ZendHashTable::new();
         array.insert("method", self.method.as_str()).map_err(PhpException::from)?;
         if !self.attribute.is_empty() && self.attribute != b"0" {
@@ -950,6 +978,7 @@ fn validate(
     allowed: &Zval,
     errors: &mut Vec<Zval>,
 ) -> PhpResult<()> {
+    overflowed().map_or(Ok(()), Err)?;
     let Some(allowed_table) = allowed.array() else { return Ok(()) };
     let permitted = |name: &Zval| allowed_table.values().any(|allowed| allowed.is_identical(name));
     for query in queries.values() {
@@ -1195,8 +1224,8 @@ impl Query {
         call("md5", vec![&string(&shapes.join(&b'|'))]).map_err(|_| PhpException::from_message("md5() failed".into()))
     }
 
-    pub fn shape(&self) -> crate::emails::Text {
-        crate::emails::Text(self.shaped())
+    pub fn shape(&self) -> PhpResult<crate::emails::Text> {
+        self.shaped().map(crate::emails::Text)
     }
 
     #[php(name = "toArray")]

@@ -293,6 +293,11 @@ given as JSON strings. It asserts these known differences:
 - `isset()` on a protected property from outside the class is `true`. Reading it is refused.
 - `serialize()` refuses the object, as it does every class with Rust state. Nothing in Appwrite
   serializes a query.
+- A query that holds itself (`$query->setValues([$query])`) ends `toString()`, `toArray()`,
+  `shape()`, `fingerprint()` and `validate()` with the engine's `Error` for infinite recursion. PHP
+  builds arrays until memory runs out, which is fatal. `clone`, `groupByType()` and `getByType()`
+  end with that `Error` on both. The extension asks the engine's own stack limit before each level,
+  so the answer follows the stack it is on: the process's, a fiber's or a coroutine's.
 
 One difference the corpus does not assert: `groupByType()`, `getByType()`, `getCursorQueries()`,
 `merge()` and `validate()` read a listed query's method, attribute and values directly, where PHP

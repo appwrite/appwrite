@@ -1185,6 +1185,15 @@ for ($level = 0; $level < 300; $level++) {
 }
 emit('toString encodings', $encoded);
 
+// A query that holds itself. Cloning one ends in the engine's error for infinite recursion on both.
+$looped = Query::and([Query::equal('a', [1])]);
+$looped->setValues([$looped]);
+emit('a query that holds itself', [
+    outcome(fn () => clone $looped),
+    outcome(fn () => Query::groupByType([$looped])),
+    outcome(fn () => Query::getByType([$looped], [Method::And])),
+]);
+
 // --- AST -----------------------------------------------------------------------------------
 
 $grammarWords = [
@@ -2358,4 +2367,22 @@ $refused = isset(outcome(fn () => $unused->create())['throws']);
 if ($refused !== $requested) {
     fwrite(STDERR, 'A MongoDB blueprint with an unused string that is not UTF-8 is ' . ($refused ? '' : 'not ') . 'refused: the known difference changed' . PHP_EOL);
     exit(1);
+}
+// Reading a query that holds itself: PHP builds arrays until memory runs out, which is fatal. The extension
+// throws the engine's error for infinite recursion, so only the extension can run these.
+if ($requested) {
+    $reads = [
+        'toString' => fn () => $looped->toString(),
+        'toArray' => fn () => $looped->toArray(),
+        'shape' => fn () => $looped->shape(),
+        'fingerprint' => fn () => Query::fingerprint([$looped]),
+        'validate' => fn () => Query::validate([$looped], ['a']),
+    ];
+    foreach ($reads as $name => $read) {
+        $ended = outcome($read);
+        if (($ended['throws'] ?? null) !== Error::class) {
+            fwrite(STDERR, $name . '() of a query that holds itself gives ' . json_encode($ended) . ': the known difference changed' . PHP_EOL);
+            exit(1);
+        }
+    }
 }
