@@ -584,6 +584,38 @@ trait TeamsBase
         $this->assertEquals(404, $response['headers']['status-code']);
     }
 
+    public function testDeleteTeamPhoto(): void
+    {
+        $team = $this->createTeamHelper('Photo Team');
+        $headers = $this->getTeamPhotoHeaders();
+        $logo = (string) \file_get_contents(__DIR__ . '/../../../resources/logo.png');
+
+        $initials = $this->client->call(Client::METHOD_GET, '/teams/' . $team['teamUid'] . '/photo', $headers)['body'];
+
+        $response = $this->uploadTeamPhoto($team['teamUid'], $logo, 'logo.png');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $team['teamUid'] . '/photo', $headers);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $team['teamUid'] . '/photo', $headers);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotSame($initials, $response['body']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . Id::unique() . '/photo', $headers);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+    }
+
     /**
      * @return array<string, string>
      */
