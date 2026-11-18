@@ -3558,6 +3558,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Railway": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Reddit": [
             "clientId",
             "clientSecret",
@@ -7965,6 +7970,11 @@
             "enabled"
         ],
         "project.updateOAuth2Podio": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Railway": [
             "clientId",
             "clientSecret",
             "enabled"
