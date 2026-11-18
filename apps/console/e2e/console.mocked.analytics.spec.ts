@@ -20,6 +20,8 @@ const OWNER_SCOPES = [
   'analytics.write',
   'billing.read',
   'monitors.write',
+  'sites.read',
+  'sites.write',
 ] satisfies Models.Roles['scopes']
 
 const ACCOUNT = {
@@ -54,6 +56,7 @@ const ORGANIZATION = {
 
 const PROJECT_ID = 'proj0000000000000000001'
 const PROPERTY_ID = 'prop0000000000000000001'
+const SITE_ID = 'site0000000000000000001'
 
 const PROJECT = {
   $id: PROJECT_ID,
@@ -81,6 +84,25 @@ function property(identifyUsers: boolean, type?: AnalyticsPropertyType) {
     accessedAt: NOW,
     firstAccessedAt: NOW,
   } satisfies Partial<Models.AnalyticsProperty>
+}
+
+/** A site whose first analytics toggle links the property. */
+function site(analyticsEnabled: boolean) {
+  return {
+    $id: SITE_ID,
+    $createdAt: NOW,
+    $updatedAt: NOW,
+    name: 'Acme site',
+    enabled: true,
+    live: true,
+    logging: true,
+    framework: 'react',
+    deploymentId: '',
+    scopes: [],
+    vars: [],
+    analyticsEnabled,
+    analyticsPropertyId: analyticsEnabled ? PROPERTY_ID : '',
+  } satisfies Partial<Models.Site>
 }
 
 function row(
@@ -130,6 +152,7 @@ type Mock = {
   metrics: URL[]
   patches: Request[]
   annotations: Annotation[]
+  siteAnalytics: Request[]
 }
 
 function corsHeaders(route: Route): Record<string, string> {
@@ -219,7 +242,13 @@ async function mockAppwriteApi(
   options: MockOptions = {},
 ): Promise<Mock> {
   let identifyUsers = options.identifyUsers ?? false
-  const mock: Mock = { metrics: [], patches: [], annotations: [] }
+  let siteAnalyticsEnabled = false
+  const mock: Mock = {
+    metrics: [],
+    patches: [],
+    annotations: [],
+    siteAnalytics: [],
+  }
   const localOrigin = new URL(String(test.info().project.use.baseURL)).origin
 
   await page.route('**/*', async (route) => {
@@ -296,6 +325,21 @@ async function mockAppwriteApi(
         total: 1,
         properties: [property(identifyUsers, options.type)],
       })
+
+    if (apiPath === `/sites/${SITE_ID}/analytics`) {
+      mock.siteAnalytics.push(request)
+      siteAnalyticsEnabled = request.postDataJSON().enabled
+      return json(200, site(siteAnalyticsEnabled))
+    }
+    if (apiPath === `/sites/${SITE_ID}`)
+      return json(200, site(siteAnalyticsEnabled))
+    // The rest of what the site settings loader waits for.
+    if (apiPath.endsWith('/variables'))
+      return json(200, { total: 0, variables: [] })
+    if (apiPath === '/sites/frameworks')
+      return json(200, { total: 0, frameworks: [] })
+    if (apiPath === '/vcs/installations')
+      return json(200, { total: 0, installations: [] })
 
     if (apiPath === '/account') return json(200, ACCOUNT)
     if (apiPath === '/account/prefs') {
@@ -672,5 +716,35 @@ test.describe('analytics property (mocked API)', () => {
       { identifyUsers: true },
     ])
     await attachScreenshot(page, 'settings-identify-users')
+  })
+
+  test('turns analytics on for a site', async ({ page }) => {
+    const mock = await mockAppwriteApi(page)
+    await page.goto(`/projects/${PROJECT_ID}/sites/${SITE_ID}/settings`, {
+      waitUntil: 'domcontentloaded',
+    })
+
+    const toggle = page.locator('#site-analytics')
+    await expect(toggle).not.toBeChecked({ timeout: 30_000 })
+    await expect(
+      page.getByRole('link', { name: 'View analytics' }),
+    ).toHaveCount(0)
+    await toggle.click()
+    await page
+      .locator('div.rounded-xl')
+      .filter({ has: toggle })
+      .getByRole('button', { name: 'Update', exact: true })
+      .click()
+    await expect(page.getByText('Analytics enabled')).toBeVisible()
+    expect(mock.siteAnalytics.map((patch) => patch.postDataJSON())).toEqual([
+      { enabled: true },
+    ])
+    await expect(
+      page.getByRole('link', { name: 'View analytics' }),
+    ).toHaveAttribute(
+      'href',
+      `/projects/${PROJECT_ID}/analytics/${PROPERTY_ID}`,
+    )
+    await attachScreenshot(page, 'site-settings-analytics')
   })
 })
