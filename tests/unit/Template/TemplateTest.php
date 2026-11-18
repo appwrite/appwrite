@@ -31,6 +31,25 @@ final class TemplateTest extends TestCase
         $this->assertEquals('Hello WORLD', $this->object->render());
     }
 
+    public function testRenderKeepsPlaceholdersInValuesLiteral(): void
+    {
+        $template = Template::fromString('<a href="{{redirect}}">{{team}}</a>');
+        $template
+            ->setParam('{{redirect}}', 'https://{{team}}.example.com/join?secret=abc')
+            ->setParam('{{team}}', 'evil.com/x?');
+
+        $this->assertSame('<a href="https://{{team}}.example.com/join?secret=abc">evil.com/x?</a>', $template->render(useContent: true));
+    }
+
+    public function testRenderDoesNotExpandSelfReferences(): void
+    {
+        $value = \str_repeat('{{client}}', 100);
+        $template = Template::fromString('{{client}} {{client}}');
+        $template->setParam('{{client}}', $value);
+
+        $this->assertSame($value . ' ' . $value, $template->render(useContent: true));
+    }
+
     public function testParseURL(): void
     {
         $url = $this->object->parseURL('https://appwrite.io/demo');

@@ -1,0 +1,130 @@
+---
+layout: integration
+title: Django with managed PostgreSQL and MySQL
+description: Use the Django ORM with an Appwrite native PostgreSQL or MySQL database
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/sql-django/cover.avif
+category: databases
+product:
+    vendor: Django
+    description: 'Django is a Python web framework with a built-in ORM, migrations, and an admin interface, maintained by the Django Software Foundation.'
+platform:
+    - 'Cloud'
+---
+
+[Django](https://www.djangoproject.com/) is a Python web framework with a built-in ORM, schema migrations, and an admin interface. Its database layer supports PostgreSQL and MySQL through official backends.
+
+# How does the integration work?
+
+Appwrite native PostgreSQL and MySQL databases are standard engines that Appwrite provisions in your project's region, each with its own hostname, credentials, and TLS. Django's ORM connects to them through its regular `django.db.backends.postgresql` and `django.db.backends.mysql` backends, so models, migrations, and the admin work with no Appwrite-specific configuration.
+
+Migrations run on the direct engine port. Application traffic can use the direct port with persistent connections, or the connection pooler for short-lived runtimes.
+
+{% info title="Available on Appwrite Cloud" %}
+Native PostgreSQL and MySQL databases run in every Appwrite Cloud region and are available on paid plans.
+{% /info %}
+
+# How to implement
+
+To connect Django to an Appwrite native database, there are several steps you must complete:
+
+## Step 1: Create a native database
+
+[Create an account on Appwrite Cloud](/sign-up) if you haven't already. In your project, go to **Databases**, click **Create database**, and select **PostgreSQL** or **MySQL** from the **Native databases** group. Pick a specification and click **Create database**. The database becomes `ready` within a few minutes.
+
+For PostgreSQL, open the database and click **Credentials** to copy the host, user, password, and database name from the **Details** tab. For MySQL, read them from the database object with `mysql.get()` and an API key that has the `databases.read` scope. The MySQL username is `admin.<hash>` and the database name is always `default`.
+
+## Step 2: Install a driver
+
+Use psycopg 3 for PostgreSQL or mysqlclient, Django's recommended MySQL driver:
+
+{% tabs %}
+{% tabsitem #driver-postgresql title="PostgreSQL" %}
+```bash
+pip install "psycopg[binary]"
+```
+{% /tabsitem %}
+
+{% tabsitem #driver-mysql title="MySQL" %}
+```bash
+pip install mysqlclient
+```
+
+If the build fails, install the MySQL development headers and `pkg-config` for your operating system first.
+{% /tabsitem %}
+{% /tabs %}
+
+## Step 3: Configure DATABASES
+
+Read every value from the environment and require TLS through `OPTIONS`. Appwrite Cloud terminates TLS at the edge with a certificate signed by a public certificate authority, so no extra certificate files are needed:
+
+{% tabs %}
+{% tabsitem #settings-postgresql title="PostgreSQL" %}
+```python
+import os
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ["DB_NAME"],
+        "USER": os.environ["DB_USER"],          # admin
+        "PASSWORD": os.environ["DB_PASSWORD"],
+        "HOST": os.environ["DB_HOST"],          # db-<hash>.<region>.appwrite.center
+        "PORT": os.environ["DB_PORT"],          # 5432
+        "OPTIONS": {"sslmode": "require"},
+    }
+}
+```
+{% /tabsitem %}
+
+{% tabsitem #settings-mysql title="MySQL" %}
+```python
+import os
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": os.environ["DB_NAME"],          # default
+        "USER": os.environ["DB_USER"],          # admin.<hash>
+        "PASSWORD": os.environ["DB_PASSWORD"],
+        "HOST": os.environ["DB_HOST"],          # db-<hash>.<region>.appwrite.center
+        "PORT": os.environ["DB_PORT"],          # 3306
+        "OPTIONS": {
+            "charset": "utf8mb4",
+            "ssl_mode": os.environ.get("DB_SSL_MODE", "REQUIRED"),
+        },
+    }
+}
+```
+{% /tabsitem %}
+{% /tabs %}
+
+For full certificate verification, use `"sslmode": "verify-full"` with an `sslrootcert` on PostgreSQL, or `DB_SSL_MODE=VERIFY_IDENTITY` on MySQL.
+
+## Step 4: Run migrations
+
+Generate and apply migrations against the direct engine port (`5432` or `3306`), never through the transaction-mode pooler, because `migrate` needs a session connection with DDL privileges:
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+## Step 5: Choose a connection strategy
+
+On a long-running WSGI server such as Gunicorn, reuse connections with `CONN_MAX_AGE = 60` and `CONN_HEALTH_CHECKS = True`, and keep them on the direct port or a session-mode pooler. For serverless or short-lived runtimes, point `HOST` and `PORT` at the transaction-mode pooler instead: port `6432` with `DISABLE_SERVER_SIDE_CURSORS = True` on PostgreSQL, or port `6033` with `CONN_MAX_AGE = 0` on MySQL.
+
+To test migrations in CI, create a [PostgreSQL](/docs/products/databases/postgresql/branches) or [MySQL](/docs/products/databases/mysql/branches) branch, export its details as the `DB_*` variables, run `python manage.py migrate` and your test suite, then delete the branch.
+
+# Read more about Django and Appwrite Databases
+
+If you would like to learn more about Django and Appwrite Databases, we have some resources that you should visit:
+
+- [Use Django with a native PostgreSQL database](/docs/products/databases/postgresql/integrations/django)
+- [Use Django with a native MySQL database](/docs/products/databases/mysql/integrations/django)
+- [Managed PostgreSQL on Appwrite](/docs/products/databases/postgresql)
+- [Native MySQL databases on Appwrite](/docs/products/databases/mysql)
+- [Django databases documentation](https://docs.djangoproject.com/en/stable/ref/databases/)

@@ -59,7 +59,28 @@ final class MqttTest extends TestCase
         $mqtt->recordDeliveries('', 3);
         $mqtt->recordDeliveries('project-a', 0);
         $mqtt->recordDeliveries('project-a', -2);
+        $mqtt->recordAcks('', 1);
+        $mqtt->recordAcks('project-a', 0);
+        $mqtt->recordAcks('project-a', -1);
 
+        $this->assertSame([], $mqtt->flushUsage());
+    }
+
+    public function testCountsAcksApartFromDeliveries(): void
+    {
+        $mqtt = $this->adapter();
+
+        $mqtt->recordDeliveries('project-a', 3);
+        $mqtt->recordAcks('project-a', 1);
+        $mqtt->recordAcks('project-a', 1);
+        $mqtt->recordDeliveries('project-b', 2);
+
+        $usage = $mqtt->flushUsage();
+
+        $this->assertSame(3, $usage['project-a']['delivered']);
+        $this->assertSame(2, $usage['project-a']['acked']);
+        $this->assertSame(2, $usage['project-b']['delivered']);
+        $this->assertArrayNotHasKey('acked', $usage['project-b']);
         $this->assertSame([], $mqtt->flushUsage());
     }
 

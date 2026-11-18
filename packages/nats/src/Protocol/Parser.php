@@ -6,6 +6,7 @@ namespace Utopia\NATS\Protocol;
 
 use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\ProtocolException;
+use Utopia\NATS\Exception\TimeoutException;
 use Utopia\NATS\Transport\Transport;
 
 final class Parser
@@ -24,12 +25,25 @@ final class Parser
         return $this->buffer !== '';
     }
 
+    /** Whether a whole protocol line is buffered, so the next operation can start without a transport read. */
+    public function hasCompleteLine(): bool
+    {
+        return str_contains($this->buffer, "\n");
+    }
+
+    /** Whether a failed frame read has left the stream unparseable, so the next read raises at once. */
+    public function isPoisoned(): bool
+    {
+        return $this->poisoned;
+    }
+
     /**
-     * Read and parse the next server operation.
+     * Read and parse the next server operation. $headerTimeout bounds the wait
+     * for the operation line, and $timeout every read of a frame body.
      *
      * @return array{0: ServerOp, 1: mixed} Tuple of [operation, parsed data]
      */
-    public function next(?float $timeout = null): array
+    public function next(?float $timeout = null, ?float $headerTimeout = null): array
     {
         // Once a frame body has been partially consumed the buffer no longer
         // starts on a frame boundary, so nothing after that point can be parsed.
@@ -37,7 +51,7 @@ final class Parser
             throw new ConnectionException('Parser desynced from the stream; the connection must be rebuilt');
         }
 
-        $line = $this->readLine($timeout);
+        $line = $this->readLine($headerTimeout ?? $timeout);
         $line = rtrim($line, "\r\n");
 
         if ($line === '') {
@@ -171,9 +185,11 @@ final class Parser
             return $line;
         }
 
-        // Read from transport until we get a line
         while (true) {
             $data = $this->transport->read(65536, $timeout);
+            if ($data === '') {
+                throw new TimeoutException('Read timed out');
+            }
             $this->buffer .= $data;
 
             $pos = strpos($this->buffer, "\n");

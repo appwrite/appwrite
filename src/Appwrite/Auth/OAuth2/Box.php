@@ -32,9 +32,7 @@ class Box extends OAuth2
     /**
      * @var array
      */
-    protected array $scopes = [
-        'manage_app_users',
-    ];
+    protected array $scopes = [];
 
     /**
      * @return string
@@ -49,16 +47,19 @@ class Box extends OAuth2
      */
     public function getLoginURL(): string
     {
-        $url = $this->endpoint . 'authorize?' .
-            \http_build_query([
-                'response_type' => 'code',
-                'client_id' => $this->appID,
-                'scope' => \implode(',', $this->getScopes()),
-                'redirect_uri' => $this->callback,
-                'state' => \json_encode($this->state),
-            ]);
+        $params = [
+            'response_type' => 'code',
+            'client_id' => $this->appID,
+            'redirect_uri' => $this->callback,
+            'state' => \json_encode($this->state),
+        ];
 
-        return $url;
+        $scopes = $this->getScopes();
+        if (!empty($scopes)) {
+            $params['scope'] = \implode(' ', $scopes);
+        }
+
+        return $this->endpoint . 'authorize?' . \http_build_query($params);
     }
 
     /**
@@ -75,12 +76,11 @@ class Box extends OAuth2
                 $this->endpoint . 'token',
                 $headers,
                 \http_build_query([
-                    "client_id" => $this->appID,
-                    "client_secret" => $this->appSecret,
-                    "code" => $code,
-                    "grant_type" => "authorization_code",
-                    "scope" => \implode(',', $this->getScopes()),
-                    "redirect_uri" => $this->callback
+                    'client_id' => $this->appID,
+                    'client_secret' => $this->appSecret,
+                    'code' => $code,
+                    'grant_type' => 'authorization_code',
+                    'redirect_uri' => $this->callback,
                 ])
             ), true);
         }
@@ -101,10 +101,10 @@ class Box extends OAuth2
             $this->endpoint . 'token',
             $headers,
             \http_build_query([
-                "client_id" => $this->appID,
-                "client_secret" => $this->appSecret,
-                "refresh_token" => $refreshToken,
-                "grant_type" => "refresh_token",
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'refresh_token' => $refreshToken,
+                'grant_type' => 'refresh_token',
             ])
         ), true);
 
@@ -191,7 +191,7 @@ class Box extends OAuth2
         if (empty($this->user)) {
             $user = $this->request(
                 'GET',
-                $this->resourceEndpoint . 'me',
+                $this->resourceEndpoint . 'users/me',
                 $header
             );
             $this->user = \json_decode($user, true);

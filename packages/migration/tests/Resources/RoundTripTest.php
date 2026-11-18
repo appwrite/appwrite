@@ -25,18 +25,20 @@ final class RoundTripTest extends TestCase
         $this->assertNull($topic->getExpiry());
     }
 
-    public function testPoliciesCarryPwnedRotationAndPasskey(): void
+    public function testPoliciesCarryPwnedRotationPasskeyAndRealtimeGuests(): void
     {
         $policies = Policies::fromArray((new Policies(
             'project',
             passwordPwned: ['enabled' => true, 'sessions' => false, 'users' => true],
             passwordRotation: ['enabled' => true, 'maxAge' => 86400],
             passkeyRpId: 'example.com',
+            denyRealtimeGuests: true,
         ))->jsonSerialize());
 
         $this->assertSame(['enabled' => true, 'sessions' => false, 'users' => true], $policies->getPasswordPwned());
         $this->assertSame(['enabled' => true, 'maxAge' => 86400], $policies->getPasswordRotation());
         $this->assertSame('example.com', $policies->getPasskeyRpId());
+        $this->assertTrue($policies->getDenyRealtimeGuests());
     }
 
     public function testPoliciesFromAnOlderSourceLeaveTheNewOnesUnreported(): void
@@ -46,6 +48,7 @@ final class RoundTripTest extends TestCase
         $this->assertNull($policies->getPasswordPwned());
         $this->assertNull($policies->getPasswordRotation());
         $this->assertNull($policies->getPasskeyRpId());
+        $this->assertNull($policies->getDenyRealtimeGuests());
     }
 
     public function testEnvironmentCarriesItsName(): void

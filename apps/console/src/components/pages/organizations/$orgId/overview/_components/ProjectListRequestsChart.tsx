@@ -37,6 +37,14 @@ export const PROJECT_LIST_REQUESTS_SECTION_MIN_HEIGHT =
   10 + PROJECT_LIST_REQUESTS_CONTENT_MIN_HEIGHT
 
 const CHART_COLOR = 'var(--chart-brand)'
+const CHART_STROKE_WIDTH = 1.5
+const SKELETON_CHART_STROKE_WIDTH = 0.75
+/**
+ * Stroke is drawn centered on the path. A series that sits on 0 is flush
+ * with the plot edge, so the wrapper clips the lower half and the line
+ * looks thinner wherever it touches the baseline.
+ */
+const CHART_BASELINE_INSET = Math.ceil(CHART_STROKE_WIDTH)
 /** Soft greyscale placeholder - border-toned line, whisper-light fill. */
 const SKELETON_CHART_STROKE = 'hsl(var(--border))'
 const SKELETON_CHART_FILL = 'hsl(var(--muted-foreground))'
@@ -266,7 +274,9 @@ function RequestsChartArea({
   const fillBottomOpacity = isSkeleton
     ? SKELETON_CHART_FILL_BOTTOM_OPACITY
     : 0
-  const strokeWidth = isSkeleton ? 0.75 : 1.5
+  const strokeWidth = isSkeleton
+    ? SKELETON_CHART_STROKE_WIDTH
+    : CHART_STROKE_WIDTH
 
   return (
     <div
@@ -285,7 +295,12 @@ function RequestsChartArea({
       >
         <AreaChart
           data={chartData}
-          margin={{ top: 4, right: 0, left: 0, bottom: 0 }}
+          margin={{
+            top: 4,
+            right: 0,
+            left: 0,
+            bottom: CHART_BASELINE_INSET,
+          }}
           style={{ cursor: 'pointer' }}
         >
           <defs>

@@ -121,12 +121,6 @@ parameters:
 			path: src/Broker/Nats.php
 
 		-
-			message: '#^Parameter \#1 \$messages of method Utopia\\NATS\\JetStream\\JetStream\:\:ackBatch\(\) expects list\<Utopia\\NATS\\JetStream\\JetStreamMessage\>, array given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Broker/Nats.php
-
-		-
 			message: '#^Cannot cast mixed to float\.$#'
 			identifier: cast.double
 			count: 1
@@ -1065,12 +1059,6 @@ parameters:
 		-
 			message: '#^Cannot cast array\|string\|null to string\.$#'
 			identifier: cast.string
-			count: 1
-			path: tests/E2E/RedisBrokerRecoveryTest.php
-
-		-
-			message: '#^Method Utopia\\Queue\\Connection\\Redis@anonymous/tests/E2E/RedisBrokerRecoveryTest\.php\:228\:\:get\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
 			count: 1
 			path: tests/E2E/RedisBrokerRecoveryTest.php
 

@@ -1,0 +1,135 @@
+---
+layout: post
+title: "How to connect your AI coding agent to Appwrite"
+description: Connect Claude Code, Codex, or Cursor to Appwrite with one plugin, then build your first feature by chatting with your agent.
+date: 2026-11-03
+cover: /images/blog/connect-ai-coding-assistant-to-appwrite/cover.avif
+timeToRead: 4
+author: atharva
+category: tutorials
+featured: false
+faqs:
+  - question: "Which AI tools have an official Appwrite plugin?"
+    answer: "Claude Code, Codex, ChatGPT, and Cursor. Each plugin includes the [Appwrite MCP server](/docs/tooling/ai/mcp-servers) and [Appwrite Skills](/docs/tooling/ai/skills). Other tools connect with the MCP server URL, `https://mcp.appwrite.io/`, and `npx skills add appwrite/skills`."
+  - question: "Do I need an API key to connect my AI agent to Appwrite Cloud?"
+    answer: "No. Your browser opens the Appwrite sign-in, and you choose which projects your agent can use."
+  - question: "What is the difference between the Appwrite MCP server and Appwrite Skills?"
+    answer: "The MCP server lets your agent work in your Appwrite project, for example to create tables or look up your users. Skills teach it the current Appwrite SDKs, so the code it writes in your app is up to date. The plugins include both."
+  - question: "How do I disconnect an AI tool from my Appwrite account?"
+    answer: "In the Appwrite Console, open the account menu, go to **Account** > **Applications**, and click **Revoke** next to the tool."
+---
+
+Your AI coding agent can build your Appwrite backend with you. Connect it once, and it creates databases and tables, sets permissions, and writes the Appwrite code in your app, all from the chat.
+
+One install does it. The **Appwrite plugin** gives your agent the **Appwrite MCP server**, which lets it work in your project, and **Appwrite Skills**, which teach it the current Appwrite SDKs.
+
+{% only_dark %}
+![Diagram: your AI tool loads the Appwrite plugin. Its Skills shape the code in your app, and its MCP server reaches your Appwrite project after you approve the sign-in](/images/blog/connect-ai-coding-assistant-to-appwrite/dark/plugin-flow.avif)
+{% /only_dark %}
+{% only_light %}
+![Diagram: your AI tool loads the Appwrite plugin. Its Skills shape the code in your app, and its MCP server reaches your Appwrite project after you approve the sign-in](/images/blog/connect-ai-coding-assistant-to-appwrite/plugin-flow.avif)
+{% /only_light %}
+
+You need an Appwrite project to connect to. If you don't have one yet, [create one in the Console](/sign-in).
+
+# Step 1: Install the Appwrite plugin {% #install-plugin %}
+
+{% tabs %}
+{% tabsitem #claude-code title="Claude Code" %}
+
+```bash
+claude plugin install appwrite@claude-plugins-official
+```
+
+Then run `/reload-plugins` in Claude Code to load it, run `/mcp`, select the Appwrite server, and choose **Authenticate**.
+
+{% /tabsitem %}
+{% tabsitem #codex title="Codex" %}
+
+In Codex, run `/plugins`, open the **OpenAI Curated** marketplace, search for **Appwrite**, and install it. In the Codex desktop app, the marketplace is under **Plugins** in the sidebar.
+
+{% /tabsitem %}
+{% tabsitem #cursor title="Cursor" %}
+
+Install the [Appwrite plugin](https://cursor.com/marketplace/appwrite) from the Cursor Marketplace.
+
+{% /tabsitem %}
+{% tabsitem #other-tools title="Other tools" %}
+
+Add `https://mcp.appwrite.io/` as an MCP server. The [MCP server docs](/docs/tooling/ai/mcp-servers#installation) have the setup for VS Code, Windsurf, Zed, OpenCode, and more.
+
+Then add Appwrite Skills from your app's folder:
+
+```bash
+npx skills add appwrite/skills
+```
+
+{% /tabsitem %}
+{% /tabs %}
+
+# Step 2: Sign in to Appwrite {% #sign-in %}
+
+{% only_dark %}
+![Appwrite sign-in screen with Project access and Organization access each set to one choice, and the Authorize button below](/images/blog/connect-ai-coding-assistant-to-appwrite/dark/consent-project-access.avif)
+{% /only_dark %}
+{% only_light %}
+![Appwrite sign-in screen with Project access and Organization access each set to one choice, and the Authorize button below](/images/blog/connect-ai-coding-assistant-to-appwrite/consent-project-access.avif)
+{% /only_light %}
+
+The first time your agent uses Appwrite, your browser opens the Appwrite sign-in.
+
+1. Under **Project access**, click **Change** and choose the project you're building.
+2. Under **Organization access**, click **Change** and choose that project's organization.
+3. Click **Authorize**.
+
+Your agent is now connected. You can see every tool you've connected in the Console under **Account** > **Applications**.
+
+{% info title="Working on a remote machine?" %}
+If your agent runs over SSH, follow [Authenticate from a remote machine](/docs/tooling/ai/mcp-servers#remote) to finish the sign-in.
+{% /info %}
+
+# Step 3: Connect your app {% #connect-app %}
+
+Open your app's folder in your AI tool and ask:
+
+```text
+Set up Appwrite in this app and connect it to my <PROJECT_NAME> project.
+```
+
+Your agent installs the Appwrite SDK and adds the client setup, with your project's endpoint and ID filled in.
+
+# Step 4: Create a table {% #create-table %}
+
+{% only_dark %}
+![Columns tab of a tasks table in the Appwrite Console, with title, done, and dueDate columns](/images/blog/connect-ai-coding-assistant-to-appwrite/dark/table-columns.avif)
+{% /only_dark %}
+{% only_light %}
+![Columns tab of a tasks table in the Appwrite Console, with title, done, and dueDate columns](/images/blog/connect-ai-coding-assistant-to-appwrite/table-columns.avif)
+{% /only_light %}
+
+Describe the data your feature needs:
+
+```text
+Create a tasks table in Appwrite with a title, a done flag, and a due date. Signed-in users can add tasks, and each user can only see and change their own.
+```
+
+Your agent creates the database, the table, its columns, and its permissions. Open **Databases** in the Console to see them.
+
+# Step 5: Build the feature {% #build-feature %}
+
+Now ask for the feature itself:
+
+```text
+Add a page where signed-in users can add tasks, see their list, and mark tasks as done. Add sign-up and sign-in if the app doesn't have them yet.
+```
+
+Run your app, sign up, and add a task. It appears as a new row in your table in the Console.
+
+# Keep building {% #keep-building %}
+
+Your agent now knows your project, so keep asking it for the next feature. When you want to know more about what it's building, these guides walk through each part:
+
+- [Create your first Appwrite database](/blog/post/create-your-first-appwrite-database)
+- [Deploy your first Appwrite site and function](/blog/post/deploy-your-first-appwrite-function-and-site)
+- [Appwrite MCP server docs](/docs/tooling/ai/mcp-servers)
+- [Appwrite Skills docs](/docs/tooling/ai/skills)

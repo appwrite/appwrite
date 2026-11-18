@@ -79,11 +79,20 @@ export const loadReferenceNavServiceCountsFn = createServerFn({ method: 'GET' })
     const { loadReferenceNavServiceCounts } = await import(
       '@/server/api-reference/reference-nav'
     )
+    const { isReferenceVersion } = await import(
+      '@/lib/docs/references/constants'
+    )
     const { isReferenceNotFoundError } = await import(
       '@/lib/docs/references/errors'
     )
+    if (!isReferenceVersion(data.version)) {
+      throw new Error('API_REFERENCE_NOT_FOUND')
+    }
     try {
-      const counts = await loadReferenceNavServiceCounts(data.version, data.mode)
+      const counts = await loadReferenceNavServiceCounts(
+        data.version,
+        data.mode,
+      )
       return Array.from(counts.entries()) as Array<[ReferenceService, number]>
     } catch (error) {
       if (isReferenceNotFoundError(error)) {
@@ -99,7 +108,9 @@ export const loadReferenceOpenApiSpecFn = createServerFn({ method: 'GET' })
     const { loadReferenceOpenApiSpecByMode } = await import(
       '@/server/api-reference/load-spec'
     )
-    const { isReferenceVersion } = await import('@/lib/docs/references/constants')
+    const { isReferenceVersion } = await import(
+      '@/lib/docs/references/constants'
+    )
     const { isReferenceNotFoundError } = await import(
       '@/lib/docs/references/errors'
     )

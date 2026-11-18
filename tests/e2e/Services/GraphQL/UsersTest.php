@@ -594,4 +594,5 @@ final class UsersTest extends Scope
         $this->assertIsNotArray($user['body']);
         $this->assertEquals(204, $user['headers']['status-code']);
     }
+
 }

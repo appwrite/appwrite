@@ -176,7 +176,6 @@ export const jaPricingDictionary: Record<string, string> = {
   'Private WHOIS': 'プライベート WHOIS',
   '50': '50',
   'Email support': 'メールサポート',
-  'Everything in Pro, plus:': 'Pro のすべてに加えて:',
   'Firewall': 'Firewall',
   'Firewall rules': 'ファイアウォールルール',
   'From $0.05 per 1M tokens': '1M トークンあたり $0.05 から',

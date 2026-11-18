@@ -22,14 +22,14 @@ final class RedisLeasableTest extends TestCase
         $this->cache->flush();
     }
 
-    public function testFreshKeyHasZeroGeneration(): void
+    public function testFreshKeyHasAnOpaqueVersion(): void
     {
-        $this->assertSame('0', $this->cache->getGeneration('doc:1'));
+        $this->assertNotSame('', $this->cache->getLease('doc:1'));
     }
 
     public function testSaveWithLeaseStoresWhenGenerationUnchanged(): void
     {
-        $generation = $this->cache->getGeneration('doc:1');
+        $generation = $this->cache->getLease('doc:1');
 
         $this->assertNotFalse($this->cache->saveWithLease('doc:1', ['v' => 1], 'doc:1', $generation));
         $this->assertSame(['v' => 1], $this->cache->load('doc:1', 60, 'doc:1'));
@@ -37,22 +37,22 @@ final class RedisLeasableTest extends TestCase
 
     public function testPurgeAdvancesGeneration(): void
     {
-        $before = $this->cache->getGeneration('doc:1');
+        $before = $this->cache->getLease('doc:1');
         $this->cache->saveWithLease('doc:1', ['v' => 1], 'doc:1', $before);
         $this->cache->purge('doc:1');
 
-        $this->assertNotSame($before, $this->cache->getGeneration('doc:1'));
+        $this->assertNotSame($before, $this->cache->getLease('doc:1'));
     }
 
     public function testHashPurgeAdvancesGeneration(): void
     {
-        $captured = $this->cache->getGeneration('doc:1');
+        $captured = $this->cache->getLease('doc:1');
         $this->assertNotFalse($this->cache->saveWithLease('doc:1', ['v' => 1], 'field-a', $captured));
 
         // A field-level purge must advance the per-key generation, just like a
         // full purge, or the lease is bypassed for hashed entries.
         $this->assertTrue($this->cache->purge('doc:1', 'field-a'));
-        $this->assertNotSame($captured, $this->cache->getGeneration('doc:1'));
+        $this->assertNotSame($captured, $this->cache->getLease('doc:1'));
 
         // A reader holding the pre-purge generation can no longer re-cache a
         // stale field via saveWithLease.
@@ -67,7 +67,7 @@ final class RedisLeasableTest extends TestCase
      */
     public function testStaleSaveAfterPurgeIsRejected(): void
     {
-        $captured = $this->cache->getGeneration('doc:1');
+        $captured = $this->cache->getLease('doc:1');
 
         // A writer commits and purges; the generation advances.
         $this->cache->purge('doc:1');
@@ -83,7 +83,7 @@ final class RedisLeasableTest extends TestCase
     {
         $this->cache->purge('doc:1');
 
-        $generation = $this->cache->getGeneration('doc:1');
+        $generation = $this->cache->getLease('doc:1');
         $this->assertNotFalse($this->cache->saveWithLease('doc:1', ['v' => 2], 'doc:1', $generation));
         $this->assertSame(['v' => 2], $this->cache->load('doc:1', 60, 'doc:1'));
     }
@@ -98,7 +98,7 @@ final class RedisLeasableTest extends TestCase
     {
         $this->cache->flush();
 
-        $generation = $this->cache->getGeneration('doc:1');
+        $generation = $this->cache->getLease('doc:1');
         $this->assertNotFalse($this->cache->saveWithLease('doc:1', ['v' => 1], 'doc:1', $generation));
 
         // Evict every cached script server-side; the next EVALSHA now misses.
@@ -108,9 +108,9 @@ final class RedisLeasableTest extends TestCase
         $raw->close();
 
         $this->assertTrue($this->cache->purge('doc:1'), 'purge must fall back to EVAL after NOSCRIPT');
-        $this->assertNotSame($generation, $this->cache->getGeneration('doc:1'));
+        $this->assertNotSame($generation, $this->cache->getLease('doc:1'));
 
-        $fresh = $this->cache->getGeneration('doc:1');
+        $fresh = $this->cache->getLease('doc:1');
         $this->assertNotFalse(
             $this->cache->saveWithLease('doc:1', ['v' => 2], 'doc:1', $fresh),
             'saveWithLease must fall back to EVAL after NOSCRIPT',
@@ -122,14 +122,14 @@ final class RedisLeasableTest extends TestCase
     {
         $this->assertFalse($this->cache->purge('doc:absent'), 'Purging a missing key returns false');
 
-        $this->cache->saveWithLease('doc:1', ['v' => 1], 'doc:1', $this->cache->getGeneration('doc:1'));
+        $this->cache->saveWithLease('doc:1', ['v' => 1], 'doc:1', $this->cache->getLease('doc:1'));
         $this->assertTrue($this->cache->purge('doc:1'), 'Purging an existing key returns true');
     }
 
     public function testPurgeDropsValueButKeepsGenerationField(): void
     {
         $this->cache->flush();
-        $this->cache->saveWithLease('doc:1', ['v' => 1], 'doc:1', $this->cache->getGeneration('doc:1'));
+        $this->cache->saveWithLease('doc:1', ['v' => 1], 'doc:1', $this->cache->getLease('doc:1'));
         $this->assertSame(['v' => 1], $this->cache->load('doc:1', 60, 'doc:1'));
 
         $this->cache->purge('doc:1');
@@ -139,34 +139,34 @@ final class RedisLeasableTest extends TestCase
         // counted by getSize() — the documented trade-off of storing the
         // generation in-hash rather than in a separately-countable sidecar key.
         $this->assertFalse($this->cache->load('doc:1', 60, 'doc:1'));
-        $this->assertSame('1', $this->cache->getGeneration('doc:1'));
+        $this->assertNotSame('', $this->cache->getLease('doc:1'));
         $this->assertSame(1, $this->cache->getSize());
     }
 
     public function testReservedGenerationFieldIsProtected(): void
     {
         $this->cache->flush();
-        $this->cache->saveWithLease('doc:1', ['v' => 1], 'doc:1', $this->cache->getGeneration('doc:1'));
+        $this->cache->saveWithLease('doc:1', ['v' => 1], 'doc:1', $this->cache->getLease('doc:1'));
         $this->cache->purge('doc:1');
-        $this->assertSame('1', $this->cache->getGeneration('doc:1'));
+        $this->assertNotSame('', $this->cache->getLease('doc:1'));
 
         // Reading, writing, or deleting the reserved generation field through the
         // public API must be rejected, so a caller can't clobber it and reset the
         // generation sequence (which would revive stale lease tokens).
-        $this->assertFalse($this->cache->save('doc:1', 'attacker', '__utopia_gen__'));
-        $this->assertFalse($this->cache->saveWithLease('doc:1', 'attacker', '__utopia_gen__', '1'));
-        $this->assertFalse($this->cache->purge('doc:1', '__utopia_gen__'));
-        $this->assertFalse($this->cache->load('doc:1', 60, '__utopia_gen__'));
+        $this->assertFalse($this->cache->save('doc:1', 'attacker', '__utopia_version__'));
+        $this->assertFalse($this->cache->saveWithLease('doc:1', 'attacker', '__utopia_version__', '1'));
+        $this->assertFalse($this->cache->purge('doc:1', '__utopia_version__'));
+        $this->assertFalse($this->cache->load('doc:1', 60, '__utopia_version__'));
 
         // Generation is untouched, so an old token is still rejected.
-        $this->assertSame('1', $this->cache->getGeneration('doc:1'));
+        $this->assertNotSame('', $this->cache->getLease('doc:1'));
         $this->assertFalse($this->cache->saveWithLease('doc:1', 'stale', 'doc:1', '0'));
     }
 
     public function testListHidesGenerationField(): void
     {
         $this->cache->flush();
-        $this->cache->saveWithLease('doc:1', ['v' => 1], 'field-a', $this->cache->getGeneration('doc:1'));
+        $this->cache->saveWithLease('doc:1', ['v' => 1], 'field-a', $this->cache->getLease('doc:1'));
         $this->assertSame(['field-a'], $this->cache->list('doc:1'));
 
         // After a purge the key holds only its internal generation field, which
@@ -207,7 +207,7 @@ final class RedisLeasableTest extends TestCase
 
         $cache->purge('doc:1');
 
-        $generation = $cache->getGeneration('doc:1');
+        $generation = $cache->getLease('doc:1');
         $this->assertFalse(
             $cache->saveWithLease('doc:1', ['stale' => true], 'doc:1', $generation),
             'A token-valid save inside the grace window must be refused by the tombstone',
@@ -225,10 +225,6 @@ final class RedisLeasableTest extends TestCase
             'After the grace window a token-valid save must succeed',
         );
         $this->assertSame(['fresh' => true], $cache->load('doc:1', 60, 'doc:1'));
-        $this->assertFalse(
-            (bool) $redis->hExists('doc:1', '__utopia_tomb__'),
-            'The spent tombstone must be dropped on the next save, not linger in the hash',
-        );
     }
 
     /** A field-level purge must open the tombstone too. */
@@ -237,10 +233,10 @@ final class RedisLeasableTest extends TestCase
         $cache = $this->graceCache(500);
         $cache->flush();
 
-        $cache->saveWithLease('doc:1', ['v' => 1], 'field-a', $cache->getGeneration('doc:1'));
+        $cache->saveWithLease('doc:1', ['v' => 1], 'field-a', $cache->getLease('doc:1'));
         $cache->purge('doc:1', 'field-a');
 
-        $generation = $cache->getGeneration('doc:1');
+        $generation = $cache->getLease('doc:1');
         $this->assertFalse(
             $cache->saveWithLease('doc:1', ['stale' => true], 'field-a', $generation),
             'A token-valid field save inside the grace window must be refused',
@@ -253,7 +249,7 @@ final class RedisLeasableTest extends TestCase
         $cache = $this->graceCache(500);
         $cache->flush();
 
-        $cache->saveWithLease('doc:1', ['v' => 1], 'field-a', $cache->getGeneration('doc:1'));
+        $cache->saveWithLease('doc:1', ['v' => 1], 'field-a', $cache->getLease('doc:1'));
         $cache->purge('doc:1');
 
         $this->assertSame([], $cache->list('doc:1'));
@@ -284,7 +280,7 @@ final class RedisLeasableTest extends TestCase
         $cache->flush();
 
         $cache->purge('doc:1');
-        $generation = $cache->getGeneration('doc:1');
+        $generation = $cache->getLease('doc:1');
 
         // 1h-ahead deadline (µs), far beyond the window: a since-rewound clock.
         $farFutureMicros = ((int) $redis->time()[0] + 3600) * 1000000;

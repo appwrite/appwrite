@@ -133,7 +133,7 @@ final class ConsumerFetchLifecycleTest extends TestCase
         $this->assertLessThan(
             StreamConfig::secondsToNanos($timeout),
             $expires,
-            'A message dispatched at a shared boundary is dropped client-side while the server counts the delivery',
+            'The server has to end a waiting fetch within the timeout the caller gave',
         );
     }
 
@@ -154,12 +154,8 @@ final class ConsumerFetchLifecycleTest extends TestCase
         $conn = $this->connect($fake);
         $consumer = $this->consumer($conn);
 
-        try {
-            $consumer->fetch(1, 0.02);
-            $this->fail('Expected the oversized pull request to raise');
-        } catch (MaxPayloadException) {
-            // expected — not ConnectionException from the dying unsubscribe
-        }
+        $this->expectException(MaxPayloadException::class);
+        $consumer->fetch(1, 0.02);
     }
 
     public function testFetchSurfacesUnsubscribeFailureAfterASuccessfulPull(): void

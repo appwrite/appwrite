@@ -31,6 +31,7 @@ class Exception extends \Exception
      * - Keys
      * - Platform
      * - Domain
+     * * Video
      * - GraphQL
      * - Migrations
      */
@@ -49,6 +50,9 @@ class Exception extends \Exception
     public const string GENERAL_SMTP_DISABLED = 'general_smtp_disabled';
     public const string GENERAL_PHONE_DISABLED = 'general_phone_disabled';
     public const string GENERAL_PWNED_PASSWORDS_UNAVAILABLE = 'general_pwned_passwords_unavailable';
+    public const string GENERAL_CACHE_UNAVAILABLE = 'general_cache_unavailable';
+    public const string GENERAL_EMBEDDING_UNAVAILABLE = 'general_embedding_unavailable';
+    public const string GENERAL_EMBEDDING_TEXT_TOO_LONG = 'general_embedding_text_too_long';
     public const string GENERAL_ARGUMENT_INVALID = 'general_argument_invalid';
     public const string GENERAL_COLUMN_QUERY_LIMIT_EXCEEDED = 'general_column_query_limit_exceeded';
     public const string GENERAL_ATTRIBUTE_QUERY_LIMIT_EXCEEDED = 'general_attribute_query_limit_exceeded';
@@ -92,6 +96,8 @@ class Exception extends \Exception
     public const string USER_EMAIL_NOT_CANONICAL = 'user_email_not_canonical';
     public const string USER_PASSWORD_MISMATCH = 'user_password_mismatch';
     public const string USER_SESSION_NOT_FOUND = 'user_session_not_found';
+    public const string USER_DEVICE_NOT_FOUND = 'user_device_not_found';
+    public const string USER_DEVICE_SESSION_NOT_FOUND = 'user_device_session_not_found';
     public const string USER_IDENTITY_NOT_FOUND = 'user_identity_not_found';
     public const string USER_UNAUTHORIZED = 'user_unauthorized';
     public const string USER_AUTH_METHOD_UNSUPPORTED = 'user_auth_method_unsupported';
@@ -117,6 +123,7 @@ class Exception extends \Exception
     public const string USER_OAUTH2_TOKEN_INVALID = 'user_oauth2_token_invalid';
     public const string USER_OAUTH2_STATE_INVALID = 'user_oauth2_state_invalid';
     public const string USER_OAUTH2_PROVIDER_ERROR = 'user_oauth2_provider_error';
+    public const string USER_LDAP_DIRECTORY_ERROR = 'user_ldap_directory_error';
     public const string USER_OAUTH2_PROVIDER_FAILURE = 'user_oauth2_provider_failure';
     public const string USER_EMAIL_ALREADY_VERIFIED = 'user_email_already_verified';
     public const string USER_PHONE_ALREADY_VERIFIED = 'user_phone_already_verified';
@@ -234,12 +241,10 @@ class Exception extends \Exception
     /** Collections */
     public const string COLLECTION_NOT_FOUND = 'collection_not_found';
     public const string COLLECTION_ALREADY_EXISTS = 'collection_already_exists';
-    public const string COLLECTION_LIMIT_EXCEEDED = 'collection_limit_exceeded';
 
     /** Tables */
     public const string TABLE_NOT_FOUND = 'table_not_found';
     public const string TABLE_ALREADY_EXISTS = 'table_already_exists';
-    public const string TABLE_LIMIT_EXCEEDED = 'table_limit_exceeded';
 
     /** Documents */
     public const string DOCUMENT_NOT_FOUND = 'document_not_found';
@@ -327,9 +332,15 @@ class Exception extends \Exception
     public const string PROJECT_INVALID_FAILURE_URL = 'project_invalid_failure_url';
     public const string PROJECT_RESERVED_PROJECT = 'project_reserved_project';
     public const string PROJECT_KEY_EXPIRED = 'project_key_expired';
+    public const string TRANSFER_NOT_FOUND = 'transfer_not_found';
+    public const string TRANSFER_INVALID_SECRET = 'transfer_invalid_secret';
+    public const string TRANSFER_EXPIRED = 'transfer_expired';
+    public const string TRANSFER_RECIPIENT_MISMATCH = 'transfer_recipient_mismatch';
+    public const string TRANSFER_ALREADY_OWNED = 'transfer_already_owned';
     public const string ACCOUNT_KEY_EXPIRED = 'account_key_expired';
 
     public const string PROJECT_SMTP_CONFIG_INVALID = 'project_smtp_config_invalid';
+    public const string PROJECT_LDAP_CONFIG_INVALID = 'project_ldap_config_invalid';
 
     public const string PROJECT_TEMPLATE_DEFAULT_DELETION = 'project_template_default_deletion';
 
@@ -339,6 +350,17 @@ class Exception extends \Exception
     public const string WEBHOOK_NOT_FOUND = 'webhook_not_found';
     public const string WEBHOOK_ALREADY_EXISTS = 'webhook_already_exists';
     public const string WEBHOOK_DELIVERY_FAILED = 'webhook_delivery_failed';
+
+    /** Monitors */
+    public const string MONITOR_NOT_FOUND = 'monitor_not_found';
+    public const string MONITOR_ALREADY_EXISTS = 'monitor_already_exists';
+    public const string MONITOR_RULES_INVALID = 'monitor_rules_invalid';
+    public const string MONITOR_TYPE_MISMATCH = 'monitor_type_mismatch';
+    public const string MONITOR_RESOURCE_NOT_FOUND = 'monitor_resource_not_found';
+
+    /** Alerts */
+    public const string ALERT_NOT_FOUND = 'alert_not_found';
+    public const string ALERT_RESOLVED = 'alert_resolved';
 
     /** Router */
     public const string ROUTER_HOST_NOT_FOUND = 'router_host_not_found';
@@ -365,6 +387,27 @@ class Exception extends \Exception
     public const string PLATFORM_NOT_FOUND = 'platform_not_found';
     public const string PLATFORM_METHOD_UNSUPPORTED = 'platform_method_unsupported';
     public const string PLATFORM_ALREADY_EXISTS = 'platform_already_exists';
+
+    /** Video */
+    public const string VIDEO_NOT_FOUND = 'video_not_found';
+    public const string VIDEO_NOT_VALID = 'video_not_valid';
+    public const string VIDEO_PROFILE_NOT_FOUND = 'video_profile_not_found';
+    public const string VIDEO_PROFILE_ALREADY_EXISTS = 'video_profile_already_exists';
+    public const string VIDEO_CODEC_DISABLED = 'video_codec_disabled';
+    public const string VIDEO_CODEC_OUTPUT_UNSUPPORTED = 'video_codec_output_unsupported';
+    public const string VIDEO_RENDITION_NOT_FOUND = 'video_rendition_not_found';
+    public const string VIDEO_RENDITION_ALREADY_EXISTS = 'video_rendition_already_exists';
+    public const string VIDEO_RENDITION_IN_PROGRESS = 'video_rendition_in_progress';
+    public const string VIDEO_RENDITION_SEGMENT_NOT_FOUND = 'video_rendition_segment_not_found';
+    public const string VIDEO_CAPTION_NOT_FOUND = 'video_caption_not_found';
+    public const string VIDEO_CAPTION_NOT_VALID = 'video_caption_not_valid';
+    public const string VIDEO_CAPTION_IN_PROGRESS = 'video_caption_in_progress';
+    public const string VIDEO_CAPTION_SEGMENT_NOT_FOUND = 'video_caption_segment_not_found';
+    public const string VIDEO_LANGUAGE_CODE_NOT_VALID = 'video_language_code_not_valid';
+    public const string VIDEO_THUMBNAIL_NOT_FOUND = 'video_thumbnail_not_found';
+    public const string VIDEO_TIMELINES_NOT_FOUND = 'video_timelines_not_found';
+    public const string VIDEO_TIMELINE_IN_PROGRESS = 'video_timeline_in_progress';
+    public const string VIDEO_SECOND_OUT_OF_RANGE = 'video_second_out_of_range';
 
     /** GraphqQL */
     public const string GRAPHQL_NO_QUERY = 'graphql_no_query';
@@ -443,6 +486,13 @@ class Exception extends \Exception
     /** Reports */
     public const string REPORT_NOT_FOUND = 'report_not_found';
     public const string REPORT_ALREADY_EXISTS = 'report_already_exists';
+
+    /** Reviews */
+    public const string REVIEW_NOT_FOUND = 'review_not_found';
+    public const string REVIEW_CHAT_NOT_FOUND = 'review_chat_not_found';
+    public const string REVIEW_LEARNING_NOT_FOUND = 'review_learning_not_found';
+    public const string REVIEW_STATUS_INVALID = 'review_status_invalid';
+    public const string REVIEW_REPOSITORY_ALREADY_EXISTS = 'review_repository_already_exists';
 
     protected string $type = '';
     protected array $errors = [];

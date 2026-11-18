@@ -262,6 +262,11 @@ async function expectOrganization(page: Page, organization = ORGANIZATION) {
   await expect(page).toHaveURL(
     new RegExp(`/organizations/${organization.$id}/?(?:\\?|$)`),
   )
+  // The organization has no projects, so the first project dialog opens over it.
+  await page
+    .getByRole('dialog', { name: 'Create your first project' })
+    .getByRole('button', { name: 'Cancel', exact: true })
+    .click()
   await expect(
     page.getByRole('heading', { name: organization.name, exact: true }),
   ).toBeVisible()
@@ -473,9 +478,7 @@ test.describe('Education enrollment (mocked API)', () => {
       '/education/join',
     )
 
-    await page
-      .getByRole('button', { name: 'Resend verification email', exact: true })
-      .click()
+    // The page mails the link by itself on arrival.
     const verification = new URL(await api.verificationEmail)
     verification.searchParams.set('userId', account.$id)
     verification.searchParams.set('secret', 'mock-education-verification')

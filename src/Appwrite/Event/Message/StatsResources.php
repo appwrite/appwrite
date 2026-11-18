@@ -16,6 +16,7 @@ final class StatsResources extends Base
     ) {
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [
@@ -24,6 +25,7 @@ final class StatsResources extends Base
         ];
     }
 
+    #[\Override]
     public static function fromArray(array $data): static
     {
         return new self(

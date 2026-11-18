@@ -2,6 +2,8 @@
 
 namespace Appwrite\Messaging;
 
+use Appwrite\Network\Validator\PublicHostname;
+use Appwrite\SMTP\Validator\Host;
 use Utopia\Database\Document;
 use Utopia\Database\Id;
 use Utopia\DSN\DSN;
@@ -11,6 +13,10 @@ use Utopia\Messaging\Adapter\Email\Resend;
 use Utopia\Messaging\Adapter\Email\Sendgrid;
 use Utopia\Messaging\Adapter\Email\SES;
 use Utopia\Messaging\Adapter\Email\SMTP;
+use Utopia\Messaging\Adapter\Push\APNS;
+use Utopia\Messaging\Adapter\Push as PushAdapter;
+use Utopia\Messaging\Adapter\Push\FCM;
+use Utopia\Messaging\Adapter\Push\Mock as PushMock;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Messaging\Adapter\SMS\Fast2SMS;
 use Utopia\Messaging\Adapter\SMS\GEOSMS;
@@ -31,13 +37,17 @@ use Utopia\Telemetry\Adapter as Telemetry;
  * by _APP_SMS_PROVIDER. Both reach the same adapter, so the DSN becomes a provider document
  * and takes the same path.
  *
- * Push is absent on purpose: its Appwrite provider needs the message and the project
- * database, so a provider document alone does not describe it.
+ * A project's push providers are absent on purpose: the Appwrite provider needs the message
+ * and the project database, so a provider document alone does not describe it. The platform's
+ * own push, which alerts console users' devices, is described by _APP_NOTIFICATIONS_PUSH_APNS
+ * and _APP_NOTIFICATIONS_PUSH_FCM.
  */
 class Provider
 {
-    public function __construct(private readonly Telemetry $telemetry)
-    {
+    public function __construct(
+        private readonly Telemetry $telemetry,
+        private readonly PublicHostname $hostname,
+    ) {
     }
 
     public function sms(Document $provider): ?SMSAdapter
@@ -98,13 +108,14 @@ class Provider
         $adapter = match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
             'smtp' => new SMTP(
-                $credentials['host'] ??  '',
+                $credentials['host'] ?? '',
                 $credentials['port'] ?? 25,
                 $credentials['username'] ?? '',
                 $credentials['password'] ?? '',
                 $options['encryption'] ?? '',
-                $options['autoTLS'] ??  false,
-                $options['mailer'] ??  '',
+                $options['autoTLS'] ?? false,
+                $options['mailer'] ?? '',
+                addresses: new Host($this->hostname)->addresses($credentials['host'] ?? ''),
             ),
             'mailgun' => new Mailgun(
                 $apiKey,
@@ -189,6 +200,56 @@ class Provider
             $geosms->setLocal($callingCode, $adapter);
         }
         return $geosms;
+    }
+
+    /**
+     * The adapter console notifications push to `$service`'s devices through, from its variable:
+     * `_APP_NOTIFICATIONS_PUSH_APNS` as `apns://[KEY_ID]:[TEAM_ID]@[BUNDLE_ID]?sandbox=true` with the
+     * .p8 auth key in `_APP_NOTIFICATIONS_PUSH_APNS_KEY`, `_APP_NOTIFICATIONS_PUSH_FCM` as
+     * `fcm://[FIREBASE_PROJECT_ID]` with the service account JSON in `_APP_NOTIFICATIONS_PUSH_FCM_KEY`,
+     * or either as `mock://[HOST]:[PORT]/[PATH]` to post every push to a request catcher. Unset
+     * disables pushes to that service's devices.
+     */
+    public function internalPush(PushService $service): ?PushAdapter
+    {
+        $value = System::getEnv($service->variable(), '');
+        if ($value === '') {
+            return null;
+        }
+
+        $dsn = new DSN($value);
+        $key = System::getEnv($service->variable() . '_KEY', '');
+
+        $adapter = match ([$service, $dsn->getScheme()]) {
+            [PushService::APNS, 'apns'] => new APNS(
+                authKey: $key,
+                authKeyId: (string) $dsn->getUser(),
+                teamId: (string) $dsn->getPassword(),
+                bundleId: $dsn->getHost(),
+                sandbox: $dsn->getParam('sandbox') === 'true',
+            ),
+            [PushService::FCM, 'fcm'] => $this->fcm($dsn->getHost(), $key),
+            [PushService::APNS, 'mock'], [PushService::FCM, 'mock'] => (new PushMock())->setEndpoint('http://' . $dsn->getHost() . ($dsn->getPort() ? ':' . $dsn->getPort() : '') . '/' . $dsn->getPath()),
+            default => throw new \InvalidArgumentException('Unsupported push adapter for ' . $service->variable() . ': ' . $dsn->getScheme()),
+        };
+
+        $adapter->setTelemetry($this->telemetry);
+
+        return $adapter;
+    }
+
+    /**
+     * The FCM adapter for the service account in `$key`, which has to belong to the Firebase
+     * project the DSN names, so a key pasted from another project fails at boot, not on every push.
+     */
+    private function fcm(string $project, string $key): FCM
+    {
+        $account = \json_decode($key, true);
+        if (!\is_array($account) || ($account['project_id'] ?? null) !== $project) {
+            throw new \InvalidArgumentException('_APP_NOTIFICATIONS_PUSH_FCM_KEY is not a service account of the Firebase project ' . $project);
+        }
+
+        return new FCM($key);
     }
 
     private function fromDSN(DSN $dsn): Document

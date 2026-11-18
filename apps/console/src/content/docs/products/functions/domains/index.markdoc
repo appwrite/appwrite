@@ -62,3 +62,7 @@ Learn more about edge network
 DNS records can take up to 48 hours to propagate.
 
 When both **VERIFICATION STATUS** and **CERTIFICATE STATUS** are green, the new domain is ready to use.
+
+{% info title="Receive email on a domain" %}
+A domain can also receive email for your function. Email domains use `MX` and `TXT` records instead of a `CNAME` record. [Learn about email triggers](/docs/products/functions/email).
+{% /info %}

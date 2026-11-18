@@ -100,7 +100,7 @@ type Segment = {
  * couldn't tell), everything else is automated.
  */
 function classifyTrafficType(
-  value: string | undefined,
+  value: string | null | undefined,
 ): 'human' | 'bot' | 'unclassified' {
   const normalized = value?.trim().toLowerCase() ?? ''
   if (!normalized) return 'unclassified'
@@ -288,6 +288,28 @@ export function TrafficSplit({
     )
   }, [comparisonRange, comparisonTrafficTypes, measure, humanShare, total])
 
+  const visibleSegments = segments.filter((segment) => segment.value > 0)
+
+  /** What clicking a bar segment does, or `undefined` when it can't filter. */
+  const segmentFilter = (segment: Segment): (() => void) | undefined => {
+    if (segment.category) {
+      const category = segment.category
+      return () => addEqualFilter('botCategory', category)
+    }
+    if (!trafficFilterEnabled) return undefined
+    const kind = segment.kind === 'human' ? 'human' : 'bot'
+    return () => toggleTrafficKind(kind)
+  }
+  const isSegmentActive = (segment: Segment): boolean => {
+    if (segment.kind === 'human') return trafficKind === 'human'
+    // Bots only covers every bot segment, named categories included.
+    if (trafficKind === 'bot') return true
+    return segment.category
+      ? isFilterActive('botCategory', segment.category)
+      : false
+  }
+  const anySegmentActive = visibleSegments.some(isSegmentActive)
+
   const botSegments = segments.filter(
     (segment) => segment.kind === 'bot' && segment.value > 0,
   )
@@ -464,11 +486,13 @@ export function TrafficSplit({
         </TrafficKindMenu>
       </div>
 
-      {/* The bar */}
+      {/* The bar. Each segment is a filter: a bot type → that category;
+          behind the flag, humans → humans only and "Other bots" → bots only.
+          The hit area is taller than the drawn bar so it's easy to click. */}
       <TooltipProvider delayDuration={0}>
         <div
-          className="relative flex h-2.5 w-full gap-[2px] overflow-hidden rounded-full bg-muted"
-          role="img"
+          className="relative -my-2 flex h-[26px] w-full items-center gap-[2px]"
+          role="group"
           aria-label={
             hasData
               ? `${t('Humans')} ${formatShare(humanShare)}, ${t('Bots')} ${formatShare(botShare)}`
@@ -476,49 +500,72 @@ export function TrafficSplit({
           }
         >
           {isPending ? (
-            <div className="h-full w-full animate-pulse bg-muted" />
+            <div className="h-2.5 w-full animate-pulse rounded-full bg-muted" />
           ) : hasData ? (
-            segments
-              .filter((segment) => segment.value > 0)
-              .map((segment) => {
-                const width = share(segment.value, total)
-                return (
-                  <Tooltip key={segment.key}>
-                    <TooltipTrigger asChild>
+            visibleSegments.map((segment, index) => {
+              const width = share(segment.value, total)
+              const onSelect = segmentFilter(segment)
+              const active = isSegmentActive(segment)
+              const first = index === 0
+              const last = index === visibleSegments.length - 1
+              const bar = (
+                <span
+                  className={cn(
+                    'block h-2.5 w-full transition-[height,opacity] duration-150 motion-reduce:transition-none',
+                    first && 'rounded-s-full',
+                    last && 'rounded-e-full',
+                    onSelect && 'group-hover:h-3.5 group-focus-visible:h-3.5',
+                    active && 'h-3.5',
+                  )}
+                  style={{
+                    backgroundColor: segment.color,
+                    // A filter on one segment dims the rest.
+                    opacity: anySegmentActive && !active ? 0.35 : 1,
+                  }}
+                />
+              )
+              const tooltip = (
+                <TooltipContent side="top" className="text-[12px]">
+                  <span className="font-medium">{segment.label}</span>{' '}
+                  · {formatShare(width)} · {formatNumber(segment.value)}{' '}
+                  {measure === 'visitors' ? t('visitors') : t('events')}
+                  {onSelect ? (
+                    <span className="mt-0.5 block text-[11px] opacity-70">
+                      {active ? t('Click to remove filter') : t('Click to filter')}
+                    </span>
+                  ) : null}
+                </TooltipContent>
+              )
+              return (
+                <Tooltip key={segment.key}>
+                  <TooltipTrigger asChild>
+                    {onSelect ? (
+                      <button
+                        type="button"
+                        onClick={onSelect}
+                        aria-pressed={active}
+                        aria-label={`${segment.label} · ${formatShare(width)} · ${formatNumber(segment.value)} ${measure === 'visitors' ? t('visitors') : t('events')}`}
+                        className="group flex h-full min-w-[2px] cursor-pointer items-center rounded-sm transition-[width] duration-700 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none"
+                        style={{ width: `${width}%` }}
+                      >
+                        {bar}
+                      </button>
+                    ) : (
                       <div
-                        // A bot type → that category. Behind the flag:
-                        // humans → humans only, "Other bots" → bots only.
-                        onClick={
-                          segment.category
-                            ? () => addEqualFilter('botCategory', segment.category!)
-                            : trafficFilterEnabled
-                              ? () =>
-                                  toggleTrafficKind(
-                                    segment.kind === 'human' ? 'human' : 'bot',
-                                  )
-                              : undefined
-                        }
-                        className={cn(
-                          'h-full min-w-[2px] transition-[width,opacity] duration-700 ease-out first:rounded-s-full last:rounded-e-full hover:opacity-80 motion-reduce:transition-none',
-                          (segment.category || trafficFilterEnabled) &&
-                            'cursor-pointer',
-                        )}
-                        style={{
-                          width: `${width}%`,
-                          backgroundColor: segment.color,
-                          opacity: segment.kind === 'unclassified' ? 0.4 : 1,
-                        }}
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="text-[12px]">
-                      <span className="font-medium">{segment.label}</span>{' '}
-                      · {formatShare(width)} · {formatNumber(segment.value)}{' '}
-                      {measure === 'visitors' ? t('visitors') : t('events')}
-                    </TooltipContent>
-                  </Tooltip>
-                )
-              })
-          ) : null}
+                        className="flex h-full min-w-[2px] items-center transition-[width] duration-700 ease-out motion-reduce:transition-none"
+                        style={{ width: `${width}%` }}
+                      >
+                        {bar}
+                      </div>
+                    )}
+                  </TooltipTrigger>
+                  {tooltip}
+                </Tooltip>
+              )
+            })
+          ) : (
+            <div className="h-2.5 w-full rounded-full bg-muted" />
+          )}
         </div>
       </TooltipProvider>
 

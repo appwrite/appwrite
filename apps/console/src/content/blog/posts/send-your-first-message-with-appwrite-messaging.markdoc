@@ -1,0 +1,102 @@
+---
+layout: post
+title: "Send your first email, SMS or push with Appwrite Messaging"
+description: Connect an email provider and send your first email to one of your users from the Appwrite Console, then add SMS and push when your app needs them.
+date: 2026-11-03
+cover: /images/blog/send-your-first-message-with-appwrite-messaging/cover.avif
+timeToRead: 3
+author: atharva
+category: tutorials
+featured: false
+faqs:
+  - question: "Which providers does Appwrite Messaging support?"
+    answer: "For email: Mailgun, Resend, SendGrid, Amazon SES and any SMTP server. For SMS: Twilio, MSG91, Telesign, Textmagic and Vonage. For push: Firebase Cloud Messaging and Apple Push Notification service. See the [providers docs](/docs/products/messaging/providers)."
+  - question: "Do my users need to do anything to receive email?"
+    answer: "No. Every user who signs up with an email address, or who you create with one in the Console or the Users API, can receive email from Messaging right away."
+  - question: "Can I send messages from my backend?"
+    answer: "Yes. Call `messaging.createEmail`, `createSms` or `createPush` from a server SDK or an [Appwrite Function](/docs/products/functions), with an API key that has the `messages.write` scope. [Send email messages](/docs/products/messaging/send-email-messages) shows the code."
+  - question: "Can I schedule a message for later?"
+    answer: "Yes. In the Console, save your draft, click **Schedule** and pick a time. From a server SDK, pass `scheduledAt` with a future date when you create the message."
+---
+
+Appwrite Messaging sends email, SMS and push notifications to your users through one API. You connect the service that delivers them, called a **provider**, and Appwrite takes care of sending.
+
+This guide starts with email. In a few minutes you'll have an email provider connected and your first email delivered to one of your users, all from the Console and without changing your app.
+
+{% info title="Building with an AI coding agent?" %}
+Your agent can do every step in this guide for you through the Appwrite MCP server. [Connect your AI coding agent to Appwrite](/blog/post/connect-ai-coding-assistant-to-appwrite), then describe what you want in the chat.
+{% /info %}
+
+You need an Appwrite project and an account with an email service, such as Resend, SendGrid, Mailgun, Amazon SES or any SMTP server, with a domain you verified there. If you don't have a project yet, [create one in the Console](/sign-in).
+
+# Step 1: Add an email provider {% #add-provider %}
+
+{% only_dark %}
+![SMTP provider form with the name, host, credentials, sender name and sender email filled in above the Create provider button](/images/blog/send-your-first-message-with-appwrite-messaging/dark/provider-form.avif)
+{% /only_dark %}
+{% only_light %}
+![SMTP provider form with the name, host, credentials, sender name and sender email filled in above the Create provider button](/images/blog/send-your-first-message-with-appwrite-messaging/provider-form.avif)
+{% /only_light %}
+
+1. In the Console, open **Messaging** > **Providers** and click **Create provider**.
+2. Under **Email**, pick your service.
+3. Give the provider a name and fill in your service's credentials.
+4. Set **Sender name** to your app's name and **Sender email** to an address on the domain you verified.
+5. Click **Create provider**.
+
+Your provider now shows **Enabled** in the **Providers** tab. The [provider docs](/docs/products/messaging/providers) list the fields for each service.
+
+{% info title="Using Resend?" %}
+On Appwrite Cloud, Resend has a **One-click setup**. Click **Connect with Resend**, pick your verified domain and click **Generate API key**. Appwrite creates a sending-only key for that domain and fills in the form for you.
+{% /info %}
+
+# Step 2: Send your first email {% #send-email %}
+
+{% only_dark %}
+![Email draft with one user added under Users, below the Schedule, Update draft and Send message buttons](/images/blog/send-your-first-message-with-appwrite-messaging/dark/message-draft.avif)
+{% /only_dark %}
+{% only_light %}
+![Email draft with one user added under Users, below the Schedule, Update draft and Send message buttons](/images/blog/send-your-first-message-with-appwrite-messaging/message-draft.avif)
+{% /only_light %}
+
+Every user who signs up with an email address can get email from Messaging. To try it on yourself first, create a user with your own email address in **Auth** > **Users**.
+
+1. Open **Messaging** > **Messages**, click **Create message** and choose **Email**. The Console opens a new draft.
+2. Write a subject and a body.
+3. Under **Users**, click **Add** and pick the user to send to.
+4. Click **Update draft** to save it.
+5. Click **Send message**, then **Send**.
+
+# Step 3: See it delivered {% #see-delivered %}
+
+{% only_dark %}
+![Messages list with two emails marked Sent, one scheduled email and one draft](/images/blog/send-your-first-message-with-appwrite-messaging/dark/messages-list.avif)
+{% /only_dark %}
+{% only_light %}
+![Messages list with two emails marked Sent, one scheduled email and one draft](/images/blog/send-your-first-message-with-appwrite-messaging/messages-list.avif)
+{% /only_light %}
+
+Go back to **Messaging** > **Messages**. Your email shows **Sent**, and **Delivered at** tells you when it went out.
+
+**Sent** means your provider accepted the email. Check your inbox for your first Appwrite email.
+
+# Step 4: Send to a group {% #send-to-group %}
+
+When the same email goes to many users, such as product updates or a weekly digest, send it to a **topic**: a named list of subscribers you reach in one send.
+
+1. Open **Messaging** > **Topics**, click **Create topic** and give it a name.
+2. On the topic's **Subscribers** tab, click **Add subscriber**, select your users' email addresses and click **Save selection**.
+3. In your next message, click **Add** under **Topics** and pick the topic.
+
+Your app can also let users subscribe themselves. The [topics docs](/docs/products/messaging/topics#subscribe-targets-to-topics) show how.
+
+# Keep building {% #keep-building %}
+
+Your email provider now works for every user in your project. SMS works the same way: add an SMS provider, then send to users who have a phone number. Push also needs your app to register each device, and the push guide shows how.
+
+When your app needs more channels, or you want to send from your own code, these guides walk you through each one:
+
+- [Send SMS messages](/docs/products/messaging/send-sms-messages)
+- [Send push notifications](/docs/products/messaging/send-push-notifications)
+- [Send email from your backend](/docs/products/messaging/send-email-messages)
+- [Messaging explained](/blog/post/messaging-explained)

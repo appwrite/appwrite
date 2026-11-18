@@ -11,6 +11,7 @@ import {
 import {
   getBlogBreadcrumbSchema,
   getBlogFaqSchema,
+  getBlogPostDiscordEmbed,
   getBlogPostSchema,
 } from '@/lib/blog/seo'
 import { getBlogPostRouteHead } from '@/lib/blog/route-meta'
@@ -20,6 +21,7 @@ import {
   MARKETING_PAGE_ROUTE_STATIC_DATA,
   marketingRouteLifetime,
 } from '@/lib/marketing/route-static-data'
+import { getDiscordEmbedScript } from '@/lib/seo/discord-embed'
 import { stringifyJsonLd } from '@/lib/seo/json-ld'
 import { NOINDEX_ROBOTS_META, NOINDEX_ROBOTS_HEADER } from '@/lib/seo/indexing'
 import { BLOG_RSS_PATH } from '@/lib/seo/rss'
@@ -106,6 +108,9 @@ export const Route = createFileRoute('/_marketing/blog/post/$slug')({
       })
     }
 
+    const discordEmbed = getDiscordEmbedScript(
+      getBlogPostDiscordEmbed(loaderData.post, authors, seoOptions),
+    )
     const seo = getBlogPostRouteHead(loaderData.post, authors, seoOptions)
 
     return {
@@ -138,7 +143,7 @@ export const Route = createFileRoute('/_marketing/blog/post/$slug')({
           href: `${loaderData.post.href}.md`,
         },
       ],
-      scripts,
+      scripts: discordEmbed ? [...scripts, discordEmbed] : scripts,
     }
   },
   component: BlogPostPage,

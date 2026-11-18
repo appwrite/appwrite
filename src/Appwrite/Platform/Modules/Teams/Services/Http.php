@@ -14,6 +14,9 @@ use Appwrite\Platform\Modules\Teams\Http\Teams\Create as CreateTeam;
 use Appwrite\Platform\Modules\Teams\Http\Teams\Delete as DeleteTeam;
 use Appwrite\Platform\Modules\Teams\Http\Teams\Get as GetTeam;
 use Appwrite\Platform\Modules\Teams\Http\Teams\Name\Update as UpdateTeamName;
+use Appwrite\Platform\Modules\Teams\Http\Teams\Photo\Delete as DeleteTeamPhoto;
+use Appwrite\Platform\Modules\Teams\Http\Teams\Photo\Get as GetTeamPhoto;
+use Appwrite\Platform\Modules\Teams\Http\Teams\Photo\Update as UpdateTeamPhoto;
 use Appwrite\Platform\Modules\Teams\Http\Teams\XList as ListTeams;
 use Utopia\Platform\Service;
 
@@ -24,22 +27,25 @@ class Http extends Service
         $this->type = Service::TYPE_HTTP;
 
         // Teams
-        $this->addAction(CreateTeam::getName(), new CreateTeam());
-        $this->addAction(GetTeam::getName(), new GetTeam());
-        $this->addAction(ListTeams::getName(), new ListTeams());
-        $this->addAction(DeleteTeam::getName(), new DeleteTeam());
-        $this->addAction(UpdateTeamName::getName(), new UpdateTeamName());
+        $this->addAction('createTeam', CreateTeam::class);
+        $this->addAction('getTeam', GetTeam::class);
+        $this->addAction('listTeams', ListTeams::class);
+        $this->addAction('deleteTeam', DeleteTeam::class);
+        $this->addAction('updateTeamName', UpdateTeamName::class);
+        $this->addAction('getTeamPhoto', GetTeamPhoto::class);
+        $this->addAction('updateTeamPhoto', UpdateTeamPhoto::class);
+        $this->addAction('deleteTeamPhoto', DeleteTeamPhoto::class);
 
         // Preferences
-        $this->addAction(GetPreferences::getName(), new GetPreferences());
-        $this->addAction(UpdatePreferences::getName(), new UpdatePreferences());
+        $this->addAction('getTeamPreferences', GetPreferences::class);
+        $this->addAction('updateTeamPreferences', UpdatePreferences::class);
 
         // Memberships
-        $this->addAction(CreateMembership::getName(), new CreateMembership());
-        $this->addAction(GetMembership::getName(), new GetMembership());
-        $this->addAction(ListMemberships::getName(), new ListMemberships());
-        $this->addAction(UpdateMembership::getName(), new UpdateMembership());
-        $this->addAction(DeleteMembership::getName(), new DeleteMembership());
-        $this->addAction(UpdateMembershipStatus::getName(), new UpdateMembershipStatus());
+        $this->addAction('createTeamMembership', CreateMembership::class);
+        $this->addAction('getTeamMembership', GetMembership::class);
+        $this->addAction('listTeamMemberships', ListMemberships::class);
+        $this->addAction('updateTeamMembership', UpdateMembership::class);
+        $this->addAction('deleteTeamMembership', DeleteMembership::class);
+        $this->addAction('updateTeamMembershipStatus', UpdateMembershipStatus::class);
     }
 }

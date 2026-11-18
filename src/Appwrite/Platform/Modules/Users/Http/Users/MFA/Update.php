@@ -4,12 +4,14 @@ namespace Appwrite\Platform\Modules\Users\Http\Users\MFA;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
@@ -76,10 +78,12 @@ class Update extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
+            ->inject('project')
+            ->inject('mqtt')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, bool $mfa, Response $response, Database $dbForProject, Event $queueForEvents): void
+    public function action(string $userId, bool $mfa, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Mqtt $mqtt): void
     {
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -90,6 +94,13 @@ class Update extends Action
         $user->setAttribute('mfa', $mfa);
 
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['mfa' => $user->getAttribute('mfa')]));
+
+        // A session left short of factors no longer authorizes its MQTT connections.
+        try {
+            $mqtt->revoke($project->getId(), $user->getId());
+        } catch (\Throwable $error) {
+            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+        }
 
         $queueForEvents->setParam('userId', $user->getId());
 

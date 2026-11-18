@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Workers;
 
+use Appwrite\Alert\Monitors;
 use Appwrite\Event\Message\Database as DatabaseMessage;
 use Appwrite\Event\Realtime;
 use Exception;
@@ -13,7 +14,9 @@ use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Restricted;
+use Utopia\Database\Exception\Schema;
 use Utopia\Database\Exception\Structure;
+use Utopia\Database\Exception\Unique;
 use Utopia\Database\Index as IndexObject;
 use Utopia\Database\Query;
 use Utopia\Database\Relationship;
@@ -93,6 +96,11 @@ class Databases extends Action
         }
 
         Span::add('database.id', $database->getId());
+
+        if (\strval($type) === DATABASE_TYPE_DELETE_DATABASE) {
+            // Monitors scoped to the database go with it; their alert history stays.
+            (new Monitors($dbForPlatform))->deleteWatching($project, 'database', $database);
+        }
 
         match (\strval($type)) {
             DATABASE_TYPE_DELETE_DATABASE => $this->deleteDatabase($database, $dbForProject, $dbForDatabases),
@@ -238,6 +246,12 @@ class Databases extends Action
                     $relatedAttribute->getId(),
                     $relatedAttribute->setAttribute('status', 'failed')
                 );
+            }
+
+            if ($this->isRejection($e)) {
+                Span::add('database.attribute.rejected', $e->getMessage());
+
+                return;
             }
 
             throw $e;
@@ -478,6 +492,12 @@ class Databases extends Action
                 $index->setAttribute('status', 'failed')
             );
 
+            if ($this->isRejection($e)) {
+                Span::add('database.index.rejected', $e->getMessage());
+
+                return;
+            }
+
             throw $e;
         } finally {
             $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collectionId);
@@ -523,6 +543,11 @@ class Databases extends Action
             }
             $dbForProject->deleteDocument('indexes', $index->getId());
             $index->setAttribute('status', 'deleted');
+        } catch (NotFound $e) {
+            Span::add('database.index.not_found', $e->getMessage());
+
+            $dbForProject->deleteDocument('indexes', $index->getId());
+            $index->setAttribute('status', 'deleted');
         } catch (\Throwable $e) {
             if ($e instanceof DatabaseException) {
                 $index->setAttribute('error', $e->getMessage());
@@ -549,6 +574,21 @@ class Databases extends Action
      * @return void
      * @throws Exception
      */
+    /**
+     * Whether the database refused the attribute or index the customer asked for, rather than
+     * failing to build it: a definition that breaks the schema rules (row width, index length,
+     * relationship) or a unique index over rows that already repeat. The failed status and its
+     * error are the job's result; failing the job as well would report the customer's request
+     * as a worker fault.
+     *
+     * Any other Duplicate (the column or index already exists) still fails the job: it points
+     * at a build left half done, which is ours to look at, not the customer's.
+     */
+    private function isRejection(\Throwable $e): bool
+    {
+        return $e instanceof Schema || $e instanceof Unique;
+    }
+
     protected function deleteDatabase(Document $database, Database $dbForProject, Database $dbForDatabases): void
     {
         $this->deleteByGroup('database_' . $database->getSequence(), [], $dbForProject, function ($collection) use ($database, $dbForProject, $dbForDatabases) {

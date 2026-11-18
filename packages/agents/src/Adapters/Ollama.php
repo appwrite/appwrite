@@ -4,231 +4,97 @@ namespace Utopia\Agents\Adapters;
 
 use Psr\Http\Client\ClientInterface;
 use Utopia\Agents\Adapter;
-use Utopia\Agents\Message;
+use Utopia\Agents\Embedder;
+use Utopia\Agents\Embeddings;
+use Utopia\Agents\Exception\Api;
 use Utopia\Client\Psr18\StreamingClientInterface;
 
-class Ollama extends Adapter
+/**
+ * Embeddings from an Ollama server.
+ */
+class Ollama extends Adapter implements Embedder
 {
-    /**
-     * EmbeddingGemma - Gemma embedding model for Ollama
-     */
-    public const MODEL_EMBEDDING_GEMMA = 'embeddinggemma';
-
-    protected string $model;
-
-    private string $endpoint = 'http://ollama:11434/api/embed';
-
-    public const MODELS = [self::MODEL_EMBEDDING_GEMMA];
+    public const string MODEL_EMBEDDING_GEMMA = 'embeddinggemma';
 
     /**
-     * Embedding dimensions of specific embedding model
+     * Vector length of known models; pass $dimension for others.
      */
-    protected const DIMENSIONS = [
+    public const array DIMENSIONS = [
         self::MODEL_EMBEDDING_GEMMA => 768,
+        'nomic-embed-text' => 768,
+        'mxbai-embed-large' => 1024,
+        'all-minilm' => 384,
     ];
 
-    /**
-     * Create a new Ollama adapter (no API key required for local call)
-     */
+    protected const string ENDPOINT = 'http://ollama:11434/api/embed';
+
+    protected string $endpoint;
+
+    protected int $dimension;
+
     public function __construct(
-        string $model = self::MODEL_EMBEDDING_GEMMA,
+        protected string $model = self::MODEL_EMBEDDING_GEMMA,
+        ?int $dimension = null,
+        ?string $endpoint = null,
         int $timeout = 90000,
-        (ClientInterface&StreamingClientInterface)|null $client = null
+        (ClientInterface&StreamingClientInterface)|null $client = null,
     ) {
-        if (! in_array($model, self::MODELS, true)) {
-            throw new \InvalidArgumentException("Invalid model: {$model}. Supported models: ".implode(', ', self::MODELS));
+        $dimension ??= self::DIMENSIONS[$model] ?? null;
+        if ($dimension === null) {
+            throw new \InvalidArgumentException("Unknown dimension for model {$model}; pass it explicitly");
         }
 
-        $this->model = $model;
+        $this->dimension = $dimension;
+        $this->endpoint = $endpoint ?? static::ENDPOINT;
+        $this->timeout = $timeout;
         $this->client = $client;
-        $this->setTimeout($timeout);
     }
 
-    /**
-     * Embedding generation (Ollama only supports embeddings, not chat)
-     *
-     * @return array{
-     *     embedding: array<int, float>,
-     *     tokensProcessed: int|null,
-     *     totalDuration: int|null ,
-     *     modelLoadingDuration: int|null
-     * }
-     *
-     * @throws \Exception
-     */
-    public function embed(string $text): array
-    {
-        $payload = [
-            'model' => $this->model,
-            'input' => $text,
-        ];
-        $response = $this->post($this->getEndpoint(), $payload);
-        $json = json_decode((string) $response->getBody(), true);
-
-        if (! is_array($json)) {
-            throw new \Exception('Invalid response format received from the API');
-        }
-
-        if (isset($json['error'])) {
-            throw new \Exception(is_string($json['error']) ? $json['error'] : 'Unknown error', $response->getStatusCode());
-        }
-
-        // totalDuration is entire duration including the modelLoadingDuration
-        $embeddings = isset($json['embeddings']) && is_array($json['embeddings']) ? $json['embeddings'] : [];
-        /** @var array<int, float> $firstEmbedding */
-        $firstEmbedding = isset($embeddings[0]) && is_array($embeddings[0]) ? $embeddings[0] : [];
-
-        return [
-            'embedding' => $firstEmbedding,
-            'tokensProcessed' => isset($json['prompt_eval_count']) && is_int($json['prompt_eval_count']) ? $json['prompt_eval_count'] : null,
-            'totalDuration' => isset($json['total_duration']) && is_int($json['total_duration']) ? $json['total_duration'] : null,
-            'modelLoadingDuration' => isset($json['load_duration']) && is_int($json['load_duration']) ? $json['load_duration'] : null,
-        ];
-    }
-
-    /**
-     * Batch embedding for Ollama — its embed endpoint takes one input, so loop and aggregate.
-     *
-     * @param  array<int, string>  $texts
-     * @return array{
-     *     embeddings: array<int, array<int, float>>,
-     *     tokensProcessed: int|null,
-     *     totalDuration: int|null
-     * }
-     *
-     * @throws \Exception
-     */
-    public function bulkEmbed(array $texts): array
-    {
-        if (empty($texts)) {
-            throw new \InvalidArgumentException('bulkEmbed requires at least one text');
-        }
-
-        $embeddings = [];
-        $tokens = null;
-        $duration = null;
-
-        foreach ($texts as $text) {
-            $result = $this->embed($text);
-            $embeddings[] = $result['embedding'];
-            if (isset($result['tokensProcessed'])) {
-                $tokens = ($tokens ?? 0) + $result['tokensProcessed'];
-            }
-            if (isset($result['totalDuration'])) {
-                $duration = ($duration ?? 0) + $result['totalDuration'];
-            }
-        }
-
-        return [
-            'embeddings' => $embeddings,
-            'tokensProcessed' => $tokens,
-            'totalDuration' => $duration,
-        ];
-    }
-
-    /**
-     * Get available models for embeddings (for now, only embeddinggemma)
-     *
-     * @return array<string>
-     */
-    public function getModels(): array
-    {
-        return self::MODELS;
-    }
-
-    /**
-     * Get currently selected embedding model
-     */
-    public function getModel(): string
-    {
-        return $this->model;
-    }
-
-    /**
-     * get embedding dimenion of the current model
-     */
-    public function getEmbeddingDimension(): int
-    {
-        return self::DIMENSIONS[$this->model];
-    }
-
-    /**
-     * Set model to use for embedding
-     */
-    public function setModel(string $model): self
-    {
-        if (! in_array($model, self::MODELS, true)) {
-            throw new \InvalidArgumentException("Invalid model: {$model}. Supported models: ".implode(', ', self::MODELS));
-        }
-        $this->model = $model;
-
-        return $this;
-    }
-
-    /**
-     * Not applicable for embedding-only adapters.
-     *
-     * @param  array<\Utopia\Agents\Message>  $messages
-     *
-     * @throws \Exception
-     */
-    public function send(array $messages, ?callable $listener = null): Message
-    {
-        throw new \Exception('OllamaAdapter does not support chat or messages. Use embed() instead.');
-    }
-
-    /**
-     * Embeddings do not support schema.
-     */
-    public function isSchemaSupported(): bool
-    {
-        return false;
-    }
-
-    /**
-     * Get the adapter name
-     */
     public function getName(): string
     {
         return 'ollama';
     }
 
-    /**
-     * Error formatter (minimal)
-     *
-     * @param  mixed  $json
-     */
-    protected function formatErrorMessage($json): string
+    public function getModel(): string
     {
-        if (! is_array($json)) {
-            return '(unknown_error) Unknown error';
-        }
-
-        $errorValue = $json['error'] ?? ($json['message'] ?? 'Unknown error');
-
-        return is_string($errorValue) ? $errorValue : 'Unknown error';
+        return $this->model;
     }
 
-    /**
-     * Get the API endpoint
-     */
     public function getEndpoint(): string
     {
         return $this->endpoint;
     }
 
-    /**
-     * Set the API endpoint
-     */
-    public function setEndpoint(string $endpoint): self
+    public function getDimension(): int
     {
-        $this->endpoint = $endpoint;
-
-        return $this;
+        return $this->dimension;
     }
 
-    public function getSupportForEmbeddings(): bool
+    public function embed(array $texts): Embeddings
     {
-        return true;
+        if ($texts === []) {
+            throw new \InvalidArgumentException('Embedding needs at least one text');
+        }
+
+        $json = $this->post($this->endpoint, ['model' => $this->model, 'input' => $texts]);
+
+        $rows = \is_array($json['embeddings'] ?? null) ? $json['embeddings'] : [];
+        $vectors = [];
+        foreach ($rows as $row) {
+            if (! \is_array($row) || $row === []) {
+                throw new Api('Embedding response has an empty or invalid vector', $this->getName());
+            }
+            $vectors[] = $this->vector($row);
+        }
+
+        if (\count($vectors) !== \count($texts)) {
+            throw new Api('Embedding count does not match the input count', $this->getName());
+        }
+
+        return new Embeddings(
+            $vectors,
+            \is_int($json['prompt_eval_count'] ?? null) ? $json['prompt_eval_count'] : null,
+            \is_int($json['total_duration'] ?? null) ? $json['total_duration'] : null,
+        );
     }
 }

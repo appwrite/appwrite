@@ -117,7 +117,7 @@ const PROJECT_CREATE: CommandEntry[] = [
     icon: UserPlus,
     shortcut: 'C U',
     resourceType: 'user',
-    fallbackPath: (id) => `/projects/${id}/auth`,
+    fallbackPath: (id) => `/projects/${id}/auth/users`,
     permission: (ctx) => canCreateUser(ctx.access, ctx.features),
     permissionMessage: "You don't have permission to create users.",
     keywords: ['account', 'auth'],

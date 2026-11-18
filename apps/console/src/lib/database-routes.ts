@@ -237,8 +237,8 @@ export function dbNavLink(kind: DatabaseRouteKind) {
 
 export type DedicatedDatabaseLinkInput = {
   $id: string
-  api?: string
-  engine?: string
+  api?: string | null
+  engine?: string | null
 }
 
 export type TanStackNavLink = {

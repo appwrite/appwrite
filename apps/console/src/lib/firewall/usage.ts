@@ -10,6 +10,7 @@ import {
   type UsageEventBreakdownDimension,
 } from '@/lib/usage/usage-events-common'
 import {
+  FIREWALL_CONDITION_ATTRIBUTES,
   FIREWALL_CONDITION_OPERATORS,
   isConditionDraftComplete,
   isNoValueOperator,
@@ -200,7 +201,10 @@ export function canApplyUsageFiltersAsFirewallRule(
     if (!attribute) return false
     if (!isFirewallConditionOperator(key.o)) return false
     if (!isOperatorAllowedForAttribute(attribute, key.o)) return false
-    if (!isNoValueOperator(key.o) && compactFilterValue(key).trim().length === 0) {
+    if (
+      !isNoValueOperator(key.o) &&
+      compactFilterValue(key).trim().length === 0
+    ) {
       return false
     }
   }
@@ -221,8 +225,7 @@ export function draftsFromUsageFilterMap(
     const attribute = toFirewallConditionAttribute(String(key.c))!
     const operator = key.o as FirewallConditionOperator
     const rawValue = compactFilterValue(key).trim()
-    const value =
-      attribute === 'country' ? rawValue.toUpperCase() : rawValue
+    const value = attribute === 'country' ? rawValue.toUpperCase() : rawValue
 
     return {
       id: `cond_${Math.random().toString(36).slice(2, 10)}`,
@@ -263,6 +266,33 @@ export function countUnestimableFirewallConditions(
     (draft) =>
       isConditionDraftComplete(draft) && isUnestimableFirewallCondition(draft),
   ).length
+}
+
+/**
+ * Display labels for the complete conditions the estimate cannot include, so
+ * the preview can name them: the attribute when usage has no such field,
+ * otherwise the operator ("Does not contain").
+ */
+export function listUnestimableFirewallConditionLabels(
+  conditions: FirewallConditionDraft[],
+): string[] {
+  const labels = new Set<string>()
+  for (const draft of conditions) {
+    if (!isConditionDraftComplete(draft)) continue
+    if (!isUnestimableFirewallCondition(draft)) continue
+    if (toUsageAttribute(draft.attribute) == null) {
+      labels.add(
+        FIREWALL_CONDITION_ATTRIBUTES.find((a) => a.value === draft.attribute)
+          ?.label ?? draft.attribute,
+      )
+    } else {
+      labels.add(
+        FIREWALL_CONDITION_OPERATORS.find((o) => o.value === draft.operator)
+          ?.label ?? draft.operator,
+      )
+    }
+  }
+  return [...labels]
 }
 
 /** usage.listEvents allows up to 10 queries; leave room for resource filters. */
@@ -508,8 +538,7 @@ export async function fetchFirewallRuleImpact(
   const to = options.dateRange?.to ?? new Date()
   const from = options.dateRange?.from ?? subHours(to, 24)
   const dateRange: DateRange = { from, to }
-  const chartInterval =
-    options.chartInterval ?? DEFAULT_USAGE_CHART_INTERVAL
+  const chartInterval = options.chartInterval ?? DEFAULT_USAGE_CHART_INTERVAL
   const logRetentionHours = options.logRetentionHours
 
   const conditionQueries = buildFirewallConditionUsageQueries(
@@ -582,7 +611,8 @@ export async function fetchFirewallRuleImpact(
       activitySeries.get(activityConfig.metric)?.chartPoints ?? []
     const total = sumUsageChartPoints(countPoints)
     const solveTimePoints =
-      activitySeries.get(FIREWALL_CHALLENGE_SOLVE_TIME_METRIC)?.chartPoints ?? []
+      activitySeries.get(FIREWALL_CHALLENGE_SOLVE_TIME_METRIC)?.chartPoints ??
+      []
     const solveTimeTotal = sumUsageChartPoints(solveTimePoints)
     activity = {
       action: options.action,

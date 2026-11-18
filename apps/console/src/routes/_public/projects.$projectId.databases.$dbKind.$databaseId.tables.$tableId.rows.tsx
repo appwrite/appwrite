@@ -188,19 +188,27 @@ export const Route = createFileRoute(
       const sortBy = sort?.sortBy ?? '$createdAt'
       const sortOrder = sort?.sortOrder ?? 'desc'
 
+      const { columns } = await columnsPromise
+
+      // A saved layout can still name a renamed or deleted column, and selecting
+      // it fails the whole list. Must match RowsSpreadsheet's filter (one query key).
+      const availableColumnKeys = new Set(
+        columns
+          .map((column) => column as { key?: unknown; status?: unknown })
+          .filter((c) => c.status === undefined || c.status === 'available')
+          .map((c) => c.key),
+      )
       const acct = getConsoleAccountFromCache(queryClient)
       const listSelectAttrKeys =
         acct?.prefs && databaseId && tableId
-          ? parseTablesDbRowsListColumnsFromPrefs(
+          ? (parseTablesDbRowsListColumnsFromPrefs(
               acct.prefs as Record<string, unknown>,
               databaseId,
               tableId,
-            )
+            )?.filter((key) => availableColumnKeys.has(key)) ?? null)
           : null
 
-      const relationshipKeys = getRelationshipColumnKeys(
-        (await columnsPromise).columns,
-      )
+      const relationshipKeys = getRelationshipColumnKeys(columns)
 
       await Promise.all([
         tablesPromise,

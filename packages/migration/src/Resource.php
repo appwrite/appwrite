@@ -90,6 +90,7 @@ abstract class Resource implements \JsonSerializable
     public const TYPE_PROJECT_VARIABLE = 'project-variable';
     public const TYPE_PROJECT_PROTOCOLS = 'project-protocols';
     public const TYPE_PROJECT_LABELS = 'project-labels';
+    public const TYPE_PROJECT_PREFERENCES = 'project-preferences';
     public const TYPE_PROJECT_SERVICES = 'project-services';
     public const TYPE_PROJECT_EMAIL_TEMPLATE = 'project-email-template';
     public const TYPE_PROJECT_ENVIRONMENT = 'project-environment';
@@ -145,6 +146,7 @@ abstract class Resource implements \JsonSerializable
         self::TYPE_PROJECT_VARIABLE,
         self::TYPE_PROJECT_PROTOCOLS,
         self::TYPE_PROJECT_LABELS,
+        self::TYPE_PROJECT_PREFERENCES,
         self::TYPE_PROJECT_SERVICES,
         self::TYPE_PROJECT_EMAIL_TEMPLATE,
         self::TYPE_PROJECT_ENVIRONMENT,
@@ -337,6 +339,19 @@ abstract class Resource implements \JsonSerializable
     public function setUpdatedAt(string $date): self
     {
         $this->updatedAt = $date;
+
+        return $this;
+    }
+    protected string $description = '';
+
+    public function getDescription(): string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(string $description): static
+    {
+        $this->description = $description;
 
         return $this;
     }

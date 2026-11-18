@@ -57,7 +57,7 @@ services:
       retries: 60
 
   forgejo:
-    image: codeberg.org/forgejo/forgejo:9
+    image: data.forgejo.org/forgejo/forgejo:9
     environment:
       - USER_UID=1000
       - USER_GID=1000
@@ -80,7 +80,7 @@ services:
       start_period: 10s
 
   forgejo-bootstrap:
-    image: codeberg.org/forgejo/forgejo:9
+    image: data.forgejo.org/forgejo/forgejo:9
     volumes:
       - forgejo-data:/data
       - ./tests/.tokens:/tokens

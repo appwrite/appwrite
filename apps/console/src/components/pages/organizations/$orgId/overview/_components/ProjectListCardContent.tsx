@@ -4,14 +4,10 @@ import { Badge } from '@/components/ui/badge'
 import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { cn } from '@/lib/utils'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import type {
-  ProjectListItem,
-  ProjectListPlatformsEntry,
-} from '@/lib/react-query/hooks/projects'
+import type { ProjectListItem } from '@/lib/react-query/hooks/projects'
 import { ProjectListCardActionsMenu } from './ProjectListCardActionsMenu'
 import { useT } from '@/lib/i18n/translate'
 import { ProjectListName } from './ProjectListName'
-import { ProjectListPlatformAvatars } from './ProjectListPlatformAvatars'
 import { ProjectBlockedBadge } from '@/components/global/shared/ProjectBlockedBadge'
 
 type ProjectListCardMainProps = {
@@ -77,14 +73,10 @@ export function ProjectListCardMain({
 export function ProjectListCardFooter({
   project,
   showSettingsTab,
-  platformsByProjectId,
 }: {
   project: ProjectListItem
   showSettingsTab: boolean
-  platformsByProjectId: Map<string, ProjectListPlatformsEntry>
 }) {
-  const platformsEntry = platformsByProjectId.get(project.$id)
-
   return (
     <div
       className={cn(
@@ -92,14 +84,7 @@ export function ProjectListCardFooter({
         'relative pointer-events-none',
       )}
     >
-      <div className="relative flex min-w-0 items-center gap-2">
-        <ProjectListPlatformAvatars
-          projectId={project.$id}
-          platforms={platformsEntry?.platforms ?? []}
-          isLoading={platformsEntry?.isLoading ?? true}
-          unavailable={platformsEntry?.unavailable === true}
-          className="min-w-0 flex-1 pointer-events-auto"
-        />
+      <div className="relative flex min-w-0 items-center justify-end gap-2">
         <div className="relative z-10 shrink-0 pointer-events-auto">
           <ProjectListCardActionsMenu
             project={project}
@@ -113,7 +98,6 @@ export function ProjectListCardFooter({
 
 type ProjectListCardContentProps = ProjectListCardMainProps & {
   showSettingsTab: boolean
-  platformsByProjectId: Map<string, ProjectListPlatformsEntry>
 }
 
 export function ProjectListCardContent({
@@ -121,7 +105,6 @@ export function ProjectListCardContent({
   failedInvoiceWarning,
   budgetLimitReached,
   showSettingsTab,
-  platformsByProjectId,
 }: ProjectListCardContentProps) {
   return (
     <>
@@ -133,7 +116,6 @@ export function ProjectListCardContent({
       <ProjectListCardFooter
         project={project}
         showSettingsTab={showSettingsTab}
-        platformsByProjectId={platformsByProjectId}
       />
     </>
   )

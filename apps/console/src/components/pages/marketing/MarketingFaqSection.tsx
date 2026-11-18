@@ -1,3 +1,4 @@
+import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from 'react'
 import { ArrowUpRight } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import {
@@ -32,6 +33,41 @@ export function MarketingFaqSection({
   description,
 }: MarketingFaqSectionProps) {
   const t = useT()
+  const [open, setOpen] = useState('item-0')
+  const held = useRef<{ element: HTMLElement; top: number } | null>(null)
+
+  const pinTrigger = (event: MouseEvent<HTMLButtonElement>) => {
+    held.current = {
+      element: event.currentTarget,
+      top: event.currentTarget.getBoundingClientRect().top,
+    }
+  }
+
+  // Correct before paint. Closing the answer above this question, and the
+  // browser's scroll anchoring, both move the question even though its own
+  // answer opens underneath it.
+  useLayoutEffect(() => {
+    const current = held.current
+    if (!current) return
+    const delta = current.element.getBoundingClientRect().top - current.top
+    if (Math.abs(delta) > 0.5) window.scrollBy(0, delta)
+  }, [open])
+
+  useEffect(() => {
+    const current = held.current
+    if (!current) return
+    const started = performance.now()
+    let frame = 0
+    const step = () => {
+      const delta = current.element.getBoundingClientRect().top - current.top
+      if (Math.abs(delta) > 0.5) window.scrollBy(0, delta)
+      if (performance.now() - started < 280) frame = requestAnimationFrame(step)
+      else held.current = null
+    }
+    frame = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(frame)
+  }, [open])
+
   return (
     <section className="py-16 sm:py-20">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
@@ -43,10 +79,16 @@ export function MarketingFaqSection({
             description={description}
           />
 
-          <Accordion type="single" collapsible defaultValue="item-0" className="w-full">
+          <Accordion
+            type="single"
+            collapsible
+            value={open}
+            onValueChange={setOpen}
+            className="w-full"
+          >
             {items.map((item, index) => (
               <AccordionItem key={item.question} value={`item-${index}`}>
-                <AccordionTrigger className="py-5 text-start hover:no-underline">
+                <AccordionTrigger className="py-5 text-start hover:no-underline" onClick={pinTrigger}>
                   <span className="pe-4 text-[14px] font-medium text-foreground">
                     {t(item.question)}
                   </span>

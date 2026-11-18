@@ -21,6 +21,19 @@ export async function fetchConsoleVariables(
   return variables
 }
 
+/**
+ * Code review runs only where the review service is set up. Servers that
+ * predate the variable have no review API, so a missing value reads as off.
+ */
+export function isReviewsEnabled(
+  vars: Models.ConsoleVariables | undefined,
+): boolean {
+  return (
+    (vars as unknown as Record<string, unknown> | undefined)
+      ?._APP_REVIEWS_ENABLED === true
+  )
+}
+
 export function consoleVariablesQueryOptions(region?: string) {
   return queryOptions({
     queryKey: ['console-variables', region ?? 'default'],
@@ -60,11 +73,14 @@ export function useConsoleVariables(region?: string) {
     emailDomain: (vars as unknown as Record<string, string | undefined>)
       ?._APP_DOMAIN_EMAIL,
     computeSizeLimit: vars?._APP_COMPUTE_SIZE_LIMIT,
+    storageLimit: vars?._APP_STORAGE_LIMIT,
     // Undefined until loaded (or on older servers): callers treat undefined
     // as "no capability info", not as "no provider supports it".
+    vcsProviders: vars?._APP_VCS_PROVIDERS,
     vcsProvidersWithRepositoryCreation:
       vars?._APP_VCS_PROVIDERS_WITH_REPOSITORY_CREATION,
     vcsProvidersWithPublicRepositories:
       vars?._APP_VCS_PROVIDERS_WITH_PUBLIC_REPOSITORIES,
+    reviewsEnabled: isReviewsEnabled(vars),
   }
 }

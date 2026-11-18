@@ -56,7 +56,7 @@ class Site extends Resource
      */
     public static function fromArray(array $array): self
     {
-        return new self(
+        return (new self(
             $array['id'],
             $array['name'],
             $array['framework'],
@@ -75,7 +75,7 @@ class Site extends Resource
             $array['startCommand'] ?? '',
             $array['deploymentRetention'] ?? 0,
             $array['scopes'] ?? []
-        );
+        ))->setDescription(\is_string($array['description'] ?? null) ? $array['description'] : '');
     }
 
     /**
@@ -84,6 +84,7 @@ class Site extends Resource
     public function jsonSerialize(): array
     {
         return [
+            'description' => $this->description,
             'id' => $this->id,
             'name' => $this->name,
             'framework' => $this->framework,

@@ -1,15 +1,25 @@
-import { useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
+import {
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react'
 import { useQueries } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import type { DateRange } from 'react-day-picker'
 import {
   Area,
   CartesianGrid,
   ComposedChart,
   Line,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
 } from 'recharts'
-import type { Models } from '@appwrite.io/console'
+import { AnalyticsPropertyType, type Models } from '@appwrite.io/console'
+import { BellRing, MessageSquarePlus } from 'lucide-react'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { createCompactCountAxisTickFormatter } from '@/lib/usage/format-metric'
@@ -23,6 +33,8 @@ import {
 } from '@/components/global/shared/ChartXAxis'
 import { ChartSeriesDot } from '@/components/global/shared/ChartSeriesDot'
 import { AnimatedCounter } from '@/components/global/shared/AnimatedCounter'
+import { ConfirmActionDialog } from '@/components/global/shared/ConfirmActionDialog'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip as UiTooltip,
@@ -38,9 +50,12 @@ import {
   overviewChartPanelErrorClass,
 } from '../../overview/chart-panel'
 import {
-  ANALYTICS_PAGEVIEW_EVENT,
   analyticsStatsQueryOptions,
+  useAnalyticsAnnotationAuthors,
+  useAnalyticsAnnotations,
   useAnalyticsEventMetrics,
+  useDeleteAnalyticsAnnotation,
+  useProject,
   useAnalyticsStats,
   type AnalyticsChartInterval,
   type AnalyticsCompareMode,
@@ -49,14 +64,18 @@ import {
 import { compareModeLabel, formatAnalyticsRangeLabel } from './CompareControl'
 import { MetricInfo, type AnalyticsMetricInfoKey } from './MetricInfo'
 import { useAnalyticsFilters } from './analytics-filters-context'
-import { ActiveFilterChips } from './ActiveFilterChips'
+import { AnalyticsFilterChips } from './AnalyticsFilterChips'
 import { ChangeBadge } from './ChangeBadge'
+import { AnnotationMarker } from './AnnotationMarker'
+import { SaveAnnotation } from './SaveAnnotation'
 import { ANALYTICS_FILTER_UNSUPPORTED_MESSAGE } from '@/lib/analytics/analytics-filters'
 import { useT } from '@/lib/i18n/translate'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   analyticsChangePercent,
   buildAnalyticsChartPoints,
   buildBucketWindows,
+  groupAnnotationsByBucket,
   type AnalyticsBucketWindow,
   type AnalyticsChartPoint,
 } from './chart-series'
@@ -84,20 +103,22 @@ export type AnalyticsChartMetric =
   | 'visitors'
   | 'visits'
   | 'pageviews'
+  | 'events'
+  | 'users'
   | 'viewsPerVisit'
   | 'bounceRate'
   | 'visitDuration'
   | 'engagementTime'
 
-type SeriesMetric = 'visitors' | 'visits' | 'pageviews'
+type SeriesMetric = 'visitors' | 'visits' | 'pageviews' | 'events' | 'users'
 type AggregateMetric = Exclude<AnalyticsChartMetric, SeriesMetric>
 
 /**
- * The tabs at the top of the overview: the seven metrics that matter most for
- * a website (scroll depth stays in the exports). Every tab drives the chart,
+ * The tabs at the top of the overview: the metrics that matter most for a
+ * website (scroll depth stays in the exports). Every tab drives the chart,
  * from one of two sources:
- * - `series`: the API's interval series (visitors, visits; pageviews via the
- *   pageview event), one request for the whole chart.
+ * - `series`: the API's interval series (visitors, visits, pageviews, events,
+ *   users), one request for the whole chart.
  * - `aggregate`: rates and durations only exist on the flat aggregate, so the
  *   chart reads it per bucket window (see `buildBucketWindows`).
  */
@@ -115,21 +136,45 @@ const OVERVIEW_METRICS: {
   { key: 'visitors', label: 'Unique visitors', info: 'uniqueVisitors', format: formatNumber, source: 'series', axis: 'count' },
   { key: 'visits', label: 'Visits', info: 'visits', format: formatNumber, source: 'series', axis: 'count' },
   { key: 'pageviews', label: 'Pageviews', info: 'pageviews', format: formatNumber, source: 'series', axis: 'count' },
+  { key: 'events', label: 'Events', info: 'events', format: formatNumber, source: 'series', axis: 'count' },
+  { key: 'users', label: 'Users', info: 'users', format: formatNumber, source: 'series', axis: 'count' },
   { key: 'viewsPerVisit', label: 'Views per visit', info: 'viewsPerVisit', format: formatRatio, source: 'aggregate', axis: 'ratio' },
   { key: 'bounceRate', label: 'Bounce rate', info: 'bounceRate', format: formatPercent, source: 'aggregate', axis: 'percent', invert: true },
   { key: 'visitDuration', label: 'Visit duration', info: 'visitDuration', format: formatDuration, source: 'aggregate', axis: 'duration' },
   { key: 'engagementTime', label: 'Engagement time', info: 'engagementTime', format: formatDuration, source: 'aggregate', axis: 'duration' },
 ]
 
+// In display order; the first leads the chart. Flutter's lifecycle events
+// never interact, so bounce rate reads oddly on apps. Agents relay from
+// servers, where visitors mean little.
+const METRICS_BY_TYPE: Record<
+  AnalyticsPropertyType,
+  readonly AnalyticsChartMetric[]
+> = {
+  [AnalyticsPropertyType.Web]: OVERVIEW_METRICS.map(({ key }) => key),
+  [AnalyticsPropertyType.Mobile]: [
+    'visitors',
+    'visits',
+    'pageviews',
+    'events',
+    'users',
+    'viewsPerVisit',
+    'visitDuration',
+    'engagementTime',
+  ],
+  [AnalyticsPropertyType.Agent]: ['events', 'visits', 'users', 'visitDuration'],
+}
+
 /** Value of a series-backed metric for one bucket. */
 function bucketValue(
   metric: SeriesMetric,
   base: AnalyticsChartPoint | undefined,
-  pageviews: AnalyticsChartPoint | undefined,
 ): number | undefined {
   if (metric === 'visitors') return base?.visitors
   if (metric === 'visits') return base?.sessions
-  return pageviews?.events
+  if (metric === 'events') return base?.events
+  if (metric === 'users') return base?.users
+  return base?.pageviews
 }
 
 function axisFormatter(
@@ -169,6 +214,8 @@ function MetricTab({
   value,
   format,
   exact,
+  previousExact,
+  compareLabel,
   change,
   invert,
   isActive,
@@ -182,6 +229,10 @@ function MetricTab({
   format: (value: number) => string
   /** Exact digits shown on hover when the displayed value is compact (1.2K). */
   exact?: string
+  /** Comparison-window value, formatted for the tooltip. */
+  previousExact?: string
+  /** "Previous period" / "Same period last year" / custom label. */
+  compareLabel?: string
   change: number | undefined
   invert?: boolean
   isActive: boolean
@@ -191,12 +242,22 @@ function MetricTab({
   /** Omitted for aggregate-only metrics: the tab shows a value, no plot. */
   onClick?: () => void
 }) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [infoHovered, setInfoHovered] = useState(false)
   const interactive = !!onClick
-  // Card-owned tooltip: exact count, or why the figure is unavailable.
-  // Not on the value itself so hover works anywhere on the metric.
-  const tooltip = hint ?? exact
+  // Card-owned tooltip: exact count, the comparison-window number, or why
+  // the figure is unavailable. Not on the value itself so hover works
+  // anywhere on the metric.
+  const comparison =
+    previousExact !== undefined && compareLabel
+      ? `${t('vs')} ${previousExact} · ${compareLabel}`
+      : undefined
+  // Compact counts already have an exact line. When comparing, always show
+  // the current figure too so the tooltip is a pair, not just the baseline.
+  const currentLabel =
+    exact ?? (value !== undefined && comparison ? format(value) : undefined)
+  const tooltip = hint ?? (currentLabel || comparison ? { exact: currentLabel, comparison } : undefined)
   const card = (
     <div
       // A div with button semantics, because the info hint inside it is
@@ -272,7 +333,18 @@ function MetricTab({
         side="top"
         className={cn('text-[12px]', !hint && 'tabular-nums')}
       >
-        {tooltip}
+        {typeof tooltip === 'string' ? (
+          tooltip
+        ) : (
+          <span className="flex flex-col gap-0.5">
+            {tooltip.exact ? <span>{tooltip.exact}</span> : null}
+            {tooltip.comparison ? (
+              <span className={tooltip.exact ? 'text-background/70' : undefined}>
+                {tooltip.comparison}
+              </span>
+            ) : null}
+          </span>
+        )}
       </TooltipContent>
     </UiTooltip>
   )
@@ -313,6 +385,11 @@ type AnalyticsOverviewProps = {
   comparisonRange: AnalyticsRange | null
   /** "Try again" in the chart's error state. */
   onRefresh: () => void
+  /** Include the Users tab (see useShowUsersPanel). */
+  showUsers: boolean
+  type: AnalyticsPropertyType
+  /** Add, edit and delete chart notes. */
+  canAnnotate: boolean
 }
 
 /**
@@ -337,10 +414,14 @@ export function AnalyticsOverview({
   compareMode,
   comparisonRange,
   onRefresh,
+  showUsers,
+  type,
+  canAnnotate,
 }: AnalyticsOverviewProps) {
   const t = useT()
   const [hasRevealed, setHasRevealed] = useState(false)
   const isComparing = comparisonRange !== null
+  const { features, isCloud } = useConsoleProfile()
   // Hooks can't be conditional: with comparison off, pass a null property ID
   // so the comparison queries stay disabled, and any range as a placeholder.
   const comparePropertyId = isComparing ? propertyId : null
@@ -370,15 +451,6 @@ export function AnalyticsOverview({
   )
   const previousStats = isComparing ? comparisonStats : undefined
 
-  // Aggregate metrics can't be read with a page / event filter, so while one
-  // is active the chart falls back to visitors (the tab explains why).
-  const requestedMetric =
-    OVERVIEW_METRICS.find((metric) => metric.key === activeSeries) ?? OVERVIEW_METRICS[0]
-  const activeMetric =
-    requestedMetric.source === 'aggregate' && statsUnsupported
-      ? OVERVIEW_METRICS[0]
-      : requestedMetric
-
   const {
     data: seriesFromHook,
     isLoading: seriesLoading,
@@ -404,10 +476,54 @@ export function AnalyticsOverview({
   )
   const previousSeriesData = isComparing ? comparisonSeriesData : undefined
 
+  // `users` counts identified traffic only, so it stays hidden on properties
+  // that never record a user ID rather than showing a permanent 0.
+  const metrics = METRICS_BY_TYPE[type]
+    .filter((key) => showUsers || key !== 'users')
+    .map((key) => OVERVIEW_METRICS.find((metric) => metric.key === key)!)
+
+  // Aggregate metrics can't be read with some filters, so while one is
+  // active the chart falls back to the first tab (the tab explains why).
+  const requestedMetric =
+    metrics.find((metric) => metric.key === activeSeries) ?? metrics[0]
+  const activeMetric =
+    requestedMetric.source === 'aggregate' && statsUnsupported
+      ? metrics[0]
+      : requestedMetric
+  // Monitors read the project's metered analytics usage, which only Cloud records.
+  const alertMetric =
+    isCloud &&
+    features.alerts &&
+    (activeMetric.key === 'pageviews' || activeMetric.key === 'events')
+      ? (`analytics.${activeMetric.key}` as const)
+      : undefined
+
   const chartPoints = useMemo(
     () => buildAnalyticsChartPoints(seriesData?.points ?? [], range, interval),
     [seriesData, range, interval],
   )
+  const { annotations } = useAnalyticsAnnotations(projectId, propertyId, range)
+  const annotationBuckets = useMemo(
+    () => groupAnnotationsByBucket(chartPoints, annotations, interval),
+    [chartPoints, annotations, interval],
+  )
+  const { project } = useProject(projectId)
+  const authorIds = useMemo(
+    () =>
+      [...new Set(annotations.map((note) => note.userId).filter(Boolean))].sort(),
+    [annotations],
+  )
+  const { authors } = useAnalyticsAnnotationAuthors(project?.teamId, authorIds)
+  const [noteDraft, setNoteDraft] = useState<{
+    annotation?: Models.AnalyticsAnnotation
+    date: string
+  } | null>(null)
+  const [deletingNote, setDeletingNote] =
+    useState<Models.AnalyticsAnnotation | null>(null)
+  const deleteNote = useDeleteAnalyticsAnnotation(projectId, propertyId)
+  // A drag that zooms the range also ends in a click, which must not add a note.
+  const brushCommitted = useRef(false)
+
   const previousPoints = useMemo(
     () =>
       previousSeriesData && comparisonRange
@@ -418,40 +534,6 @@ export function AnalyticsOverview({
           )
         : [],
     [previousSeriesData, comparisonRange, interval],
-  )
-
-  // Pageviews per bucket = the series filtered to the pageview event. Only
-  // fetched when it's needed: Pageviews is plotted, or the flat aggregate
-  // can't give the total (page / event filter active).
-  const needsPageviews = activeMetric.key === 'pageviews' || statsUnsupported
-  const { data: pageviewSeriesData, error: pageviewError } =
-    useAnalyticsEventMetrics(
-      projectId,
-      needsPageviews ? propertyId : null,
-      ANALYTICS_PAGEVIEW_EVENT,
-      range,
-      interval,
-      filters,
-    )
-  const { data: comparisonPageviewData } = useAnalyticsEventMetrics(
-    projectId,
-    needsPageviews && isComparing ? propertyId : null,
-    ANALYTICS_PAGEVIEW_EVENT,
-    compareRange,
-    interval,
-    filters,
-  )
-  const pageviewPoints = useMemo(
-    () =>
-      buildAnalyticsChartPoints(pageviewSeriesData?.points ?? [], range, interval),
-    [pageviewSeriesData, range, interval],
-  )
-  const previousPageviewPoints = useMemo(
-    () =>
-      isComparing && comparisonPageviewData && comparisonRange
-        ? buildAnalyticsChartPoints(comparisonPageviewData.points, comparisonRange, interval)
-        : [],
-    [isComparing, comparisonPageviewData, comparisonRange, interval],
   )
 
   // ── Aggregate-backed metrics: one flat read per bucket window ──
@@ -508,15 +590,12 @@ export function AnalyticsOverview({
   const hasSeries =
     activeMetric.source === 'aggregate'
       ? windowsSettled
-      : (activeMetric.key === 'pageviews' ? pageviewSeriesData : seriesData) !==
-        undefined
+      : seriesData !== undefined
   const comparisonReady =
     !isComparing ||
     (activeMetric.source === 'aggregate'
       ? comparisonWindowsSettled
-      : activeMetric.key === 'pageviews'
-        ? comparisonPageviewData !== undefined
-        : previousSeriesData !== undefined)
+      : previousSeriesData !== undefined)
   // First paint waits for the current series and, when compare is on (the
   // default), the comparison series too. Otherwise the dashed previous-period
   // line lands from cache first, then the area remounts onto the full series.
@@ -528,7 +607,7 @@ export function AnalyticsOverview({
   const loadError =
     activeMetric.source === 'aggregate'
       ? (windowsError ?? statsError)
-      : (statsError ?? (activeMetric.key === 'pageviews' ? pageviewError : seriesError))
+      : (statsError ?? seriesError)
   const showError = !!loadError && !hasSeries
   const showSkeleton = !showError && !revealed
   const showComparisonLine = isComparing && comparisonReady && !showSkeleton
@@ -543,8 +622,7 @@ export function AnalyticsOverview({
     activeMetric.source === 'aggregate'
       ? windowValues(chartPoints.length, windows, windowData, metricKey as AggregateMetric)
       : chartPoints.map(
-          (point, index) =>
-            bucketValue(metricKey as SeriesMetric, point, pageviewPoints[index]) ?? 0,
+          (point) => bucketValue(metricKey as SeriesMetric, point) ?? 0,
         )
   const previousValues: (number | null)[] = !showComparisonLine
     ? []
@@ -556,9 +634,7 @@ export function AnalyticsOverview({
           metricKey as AggregateMetric,
         )
       : previousPoints.map(
-          (point, index) =>
-            bucketValue(metricKey as SeriesMetric, point, previousPageviewPoints[index]) ??
-            null,
+          (point) => bucketValue(metricKey as SeriesMetric, point) ?? null,
         )
   const chartData = chartPoints.map((point, index) => ({
     ...point,
@@ -573,20 +649,21 @@ export function AnalyticsOverview({
   // deduplicates visitors / visits across the whole window (summing a daily
   // series would count a returning visitor once per day). Summed buckets are
   // only a fallback while the aggregate loads, or when a filter rules it out.
-  const sum = (points: AnalyticsChartPoint[], key: 'visitors' | 'sessions' | 'events') =>
-    points.reduce((total, point) => total + point[key], 0)
+  const sum = (
+    points: AnalyticsChartPoint[],
+    key: 'visitors' | 'sessions' | 'pageviews' | 'events',
+  ) => points.reduce((total, point) => total + point[key], 0)
   const metricTotal = (
     key: AnalyticsChartMetric,
     aggregate: Models.AnalyticsMetric | undefined,
     base: AnalyticsChartPoint[],
-    pageviews: AnalyticsChartPoint[],
     hasBase: boolean,
-    hasPageviews: boolean,
   ): number | undefined => {
     if (aggregate) return aggregate[key] ?? 0
     if (key === 'visitors') return hasBase ? sum(base, 'visitors') : undefined
     if (key === 'visits') return hasBase ? sum(base, 'sessions') : undefined
-    if (key === 'pageviews') return hasPageviews ? sum(pageviews, 'events') : undefined
+    if (key === 'pageviews') return hasBase ? sum(base, 'pageviews') : undefined
+    if (key === 'events') return hasBase ? sum(base, 'events') : undefined
     return undefined // bounce rate / duration only exist on the aggregate
   }
 
@@ -608,7 +685,10 @@ export function AnalyticsOverview({
   } = useUsageChartBrushSelect({
     points: brushPoints,
     chartInterval: interval,
-    onDateRangeChange,
+    onDateRangeChange: (next) => {
+      brushCommitted.current = true
+      onDateRangeChange(next)
+    },
   })
 
   const axisMax = chartData.reduce(
@@ -620,34 +700,37 @@ export function AnalyticsOverview({
   const activeSeriesLabel = t(activeMetric.label)
 
   // ── Metric tabs ──
-  const tabs = OVERVIEW_METRICS.map((metric) => {
+  const tabs = metrics.map((metric) => {
     const value = metricTotal(
       metric.key,
       stats,
       chartPoints,
-      pageviewPoints,
       seriesData !== undefined,
-      pageviewSeriesData !== undefined,
     )
     const previous = isComparing
       ? metricTotal(
           metric.key,
           previousStats,
           previousPoints,
-          previousPageviewPoints,
           previousSeriesData !== undefined,
-          comparisonPageviewData !== undefined,
         )
       : undefined
-    // Aggregate-only metrics can't be shown with a page / event filter; say
-    // so rather than quietly showing unfiltered numbers.
+    // Aggregate-only metrics can't be shown with some filters; say so rather
+    // than quietly showing unfiltered numbers.
     const blockedByFilter = metric.source === 'aggregate' && statsUnsupported
+    // Per-bucket distinct users don't add up to a range total, so Users has
+    // no fallback total; its chart still plots per bucket.
+    const totalBlocked = metric.key === 'users' && statsUnsupported
     return {
       ...metric,
       value,
+      previous,
       change: isComparing ? analyticsChangePercent(value, previous) : undefined,
       unavailable: value === undefined,
-      hint: blockedByFilter ? t(ANALYTICS_FILTER_UNSUPPORTED_MESSAGE) : undefined,
+      hint:
+        blockedByFilter || totalBlocked
+          ? t(ANALYTICS_FILTER_UNSUPPORTED_MESSAGE)
+          : undefined,
       blockedByFilter,
     }
   })
@@ -655,13 +738,18 @@ export function AnalyticsOverview({
   return (
     <div className="w-full">
       {/* Active filters, removable in place. Hidden when none. */}
-      <ActiveFilterChips />
+      <AnalyticsFilterChips />
 
       {/* Series totals. Filters, interval, date range, comparison and
           refresh live in the standard ServiceHeader toolbar above. */}
       <div className="border-b border-border px-4 py-3 sm:px-6">
-        {/* One row of seven on wide screens; wraps to 4 / 2 columns. */}
-        <div className="-mx-3 grid min-w-0 grid-cols-2 gap-1 sm:grid-cols-4 xl:grid-cols-7">
+        {/* One row on wide screens; wraps to 4 / 2 columns. */}
+        <div
+          className={cn(
+            '-mx-3 grid min-w-0 grid-cols-2 gap-1 sm:grid-cols-4',
+            tabs.length > 8 ? 'xl:grid-cols-9' : 'xl:grid-cols-8',
+          )}
+        >
           {tabs.map((tab) => (
             <MetricTab
               key={tab.key}
@@ -674,6 +762,14 @@ export function AnalyticsOverview({
                   ? formatExactNumber(tab.value)
                   : undefined
               }
+              previousExact={
+                tab.previous === undefined
+                  ? undefined
+                  : tab.axis === 'count'
+                    ? formatExactNumber(tab.previous)
+                    : tab.format(tab.previous)
+              }
+              compareLabel={isComparing ? compareLabel : undefined}
               change={tab.change}
               invert={tab.invert}
               isActive={activeMetric.key === tab.key}
@@ -718,6 +814,40 @@ export function AnalyticsOverview({
               </div>
             ) : null}
           </div>
+          {canAnnotate ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-[12px] text-muted-foreground"
+              onClick={() =>
+                setNoteDraft({
+                  date: new Date(
+                    Math.min(Date.now(), new Date(range.endAt).getTime()),
+                  ).toISOString(),
+                })
+              }
+            >
+              <MessageSquarePlus className="size-3.5" />
+              {t('Add note')}
+            </Button>
+          ) : null}
+          {alertMetric ? (
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="h-7 gap-1.5 px-2 text-[12px] text-muted-foreground"
+            >
+              <Link
+                to="/projects/$projectId/usage/monitors"
+                params={{ projectId }}
+                search={{ metric: alertMetric }}
+              >
+                <BellRing className="h-3.5 w-3.5" />
+                {t('Alert me')}
+              </Link>
+            </Button>
+          ) : null}
         </div>
 
         <ChartArea>
@@ -745,6 +875,9 @@ export function AnalyticsOverview({
                 !showSkeleton && USAGE_CHART_FADE_IN_CLASS_NAME,
               )}
               aria-busy={showSkeleton || undefined}
+              onPointerDownCapture={() => {
+                brushCommitted.current = false
+              }}
               aria-label={
                 showSkeleton
                   ? t('Loading analytics data')
@@ -761,6 +894,16 @@ export function AnalyticsOverview({
                   data={chartData}
                   margin={{ top: 8, right: 12, left: 0, bottom: 4 }}
                   {...chartProps}
+                  onClick={
+                    canAnnotate && !showSkeleton
+                      ? (state) => {
+                          const point =
+                            chartPoints[Number(state.activeTooltipIndex)]
+                          if (!point || brushCommitted.current) return
+                          setNoteDraft({ date: point.day.toISOString() })
+                        }
+                      : undefined
+                  }
                 >
                   <defs>
                     {showSkeleton ? (
@@ -919,6 +1062,41 @@ export function AnalyticsOverview({
                     }
                     {...CHART_ANIMATION_DISABLED}
                   />
+                  {showSkeleton
+                    ? null
+                    : [...annotationBuckets].map(([index, notes]) => (
+                        <ReferenceLine
+                          key={notes[0].$id}
+                          x={index}
+                          stroke="var(--muted-foreground)"
+                          strokeOpacity={0.6}
+                          strokeDasharray="2 3"
+                          label={{
+                            content: ({ viewBox }) => {
+                              const { x = 0, y = 0 } = (viewBox ?? {}) as {
+                                x?: number
+                                y?: number
+                              }
+                              return (
+                                <AnnotationMarker
+                                  x={x}
+                                  y={y}
+                                  annotations={notes}
+                                  authors={authors}
+                                  canWrite={canAnnotate}
+                                  onEdit={(annotation) =>
+                                    setNoteDraft({
+                                      annotation,
+                                      date: annotation.date,
+                                    })
+                                  }
+                                  onDelete={setDeletingNote}
+                                />
+                              )
+                            },
+                          }}
+                        />
+                      ))}
                   <UsageChartBrushReferenceArea
                     left={brushLeft}
                     right={brushRight}
@@ -939,6 +1117,42 @@ export function AnalyticsOverview({
           )}
         </ChartArea>
       </div>
+
+      {canAnnotate ? (
+        <>
+          <SaveAnnotation
+            open={noteDraft !== null}
+            onOpenChange={(open) => {
+              if (!open) setNoteDraft(null)
+            }}
+            projectId={projectId}
+            propertyId={propertyId}
+            annotation={noteDraft?.annotation}
+            date={noteDraft?.date ?? range.endAt}
+          />
+          <ConfirmActionDialog
+            open={deletingNote !== null}
+            onOpenChange={(open) => {
+              if (!open) setDeletingNote(null)
+            }}
+            title={t('Delete note')}
+            description={t('The note is removed from the chart for everyone.')}
+            confirmLabel={t('Delete')}
+            confirmVariant="destructive"
+            isConfirming={deleteNote.isPending}
+            onConfirm={() => {
+              if (!deletingNote) return
+              deleteNote.mutate(deletingNote.$id, {
+                onSuccess: () => {
+                  toast.success(t('Note deleted'))
+                  setDeletingNote(null)
+                },
+                onError: (error) => toast.error(getErrorMessage(error)),
+              })
+            }}
+          />
+        </>
+      ) : null}
     </div>
   )
 }

@@ -58,6 +58,7 @@ import {
   mapToQueryParam,
   queryParamToMap,
   findCompactFilterKeyInMap,
+  withFilter,
   getSelectedActivitySdkSources,
   toggleActivitySdkSourceInMap,
   type ActivitySdkSource,
@@ -74,10 +75,15 @@ import {
   getDefaultActivityDateRangePreset,
   hasFiniteActivityLogRetention,
 } from '@/lib/activity/activity-log-retention'
-import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
+import {
+  getPlanNameFromTier,
+  isSelfServiceProPlan,
+} from '@/lib/utils/plan-filter'
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
+import { EnterpriseBadge } from '@/components/global/shared/EnterpriseBadge'
 import { ActivityLogDrawer } from '@/components/pages/projects/$projectId/activity/ActivityLogDrawer'
 import { ActivityLogVolumeChart } from '@/components/pages/projects/$projectId/activity/_components/ActivityLogVolumeChart'
-import { ActivityActiveFilterChips } from '@/components/pages/projects/$projectId/activity/_components/ActivityActiveFilterChips'
+import { ActiveFilterChips } from '@/components/global/shared/ActiveFilterChips'
 import { ActivitySdkSourceQuickFilters } from '@/components/pages/projects/$projectId/activity/_components/ActivitySdkSourceQuickFilters'
 import { ActivityResourceIdentity } from '@/components/pages/projects/$projectId/activity/_components/ActivityResourceIdentity'
 import {
@@ -88,6 +94,7 @@ import { ActivityEmptyState } from '@/components/pages/projects/$projectId/activ
 import {
   getActivityCountryCode,
   getActivityCountryDisplayName,
+  getActivityReason,
   hasHumanEmail,
   isCliSdkActivity,
   isMcpSdkActivity,
@@ -172,6 +179,7 @@ const ACTIVITY_COL_EVENT = 'min-w-[18rem]'
 const ACTIVITY_COL_ACTOR = 'min-w-[16rem]'
 const ACTIVITY_COL_TYPE = 'min-w-[12rem]'
 const ACTIVITY_COL_RESOURCE = 'min-w-[18rem]'
+const ACTIVITY_COL_REASON = 'w-[20rem] min-w-[20rem] max-w-[20rem]'
 const ACTIVITY_COL_IP = 'min-w-[10rem]'
 const ACTIVITY_COL_COUNTRY = 'min-w-[8rem]'
 const ACTIVITY_COL_TIME = 'min-w-[8.5rem]'
@@ -185,6 +193,7 @@ function ActivityLogsTableColGroup() {
       <col className={ACTIVITY_COL_ACTOR} />
       <col className={ACTIVITY_COL_TYPE} />
       <col className={ACTIVITY_COL_RESOURCE} />
+      <col className={ACTIVITY_COL_REASON} />
       <col className={ACTIVITY_COL_IP} />
       <col className={ACTIVITY_COL_COUNTRY} />
       <col className={ACTIVITY_COL_TIME} />
@@ -229,6 +238,14 @@ function ActivityLogsTableHead() {
           )}
         >
           {t('Resource')}
+        </TableHead>
+        <TableHead
+          className={cn(
+            'sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider shadow-[inset_0_-1px_0_var(--border)]',
+            ACTIVITY_COL_REASON,
+          )}
+        >
+          {t('Reason')}
         </TableHead>
         <TableHead
           className={cn(
@@ -300,6 +317,9 @@ function ActivityLogsSkeletonRows({ rowCount }: { rowCount: number }) {
                 <Skeleton className="h-3 w-14 max-w-full" />
               </div>
             </div>
+          </TableCell>
+          <TableCell className="min-w-0 px-4 py-3">
+            <Skeleton className="h-3.5 w-56 max-w-full" />
           </TableCell>
           <TableCell className="min-w-0 px-4 py-3">
             <Skeleton className="h-3.5 w-28 max-w-full" />
@@ -435,6 +455,8 @@ interface DisplayActivity {
   resourceId: string
   resourceName: string
   description: string | null
+  /** Why the actor made the request; empty when none was given. */
+  reason: string
   ipAddress: string | null
   countryCode: string | null
   countryName: string | null
@@ -618,6 +640,7 @@ function toDisplayActivity(
     resourceId: event.resourceId || '',
     resourceName: resourceLabelFromEvent(event),
     description: event.event,
+    reason: getActivityReason(event),
     ipAddress: event.ip?.trim() || null,
     countryCode: getActivityCountryCode(event),
     countryName: getActivityCountryDisplayName(event, countryLookups),
@@ -694,6 +717,11 @@ export function View({ projectId, initialData }: ViewProps) {
   const filterMap = useMemo(
     () => queryParamToMap(queryFromSearch ?? null),
     [queryFromSearch],
+  )
+  // The date range stays on the picker, not in the filter chips.
+  const chipFilterMap = useMemo(
+    () => new Map(Array.from(filterMap).filter(([key]) => key.c !== 'time')),
+    [filterMap],
   )
   const selectedSdkSources = useMemo(
     () => getSelectedActivitySdkSources(filterMap),
@@ -859,9 +887,12 @@ export function View({ projectId, initialData }: ViewProps) {
               normalizedKey.v,
             )
           : queryStr
-      const next = new Map(filterMap)
-      if (replaceKey) next.delete(replaceKey)
-      next.set(normalizedKey, normalizedQueryStr)
+      const next = withFilter(
+        filterMap,
+        normalizedKey,
+        normalizedQueryStr,
+        replaceKey,
+      )
       navigate({
         search: (prev) => ({
           ...prev,
@@ -1231,6 +1262,26 @@ export function View({ projectId, initialData }: ViewProps) {
                     ? activityLogRetentionHours
                     : null
                 }
+                retentionNote={
+                  isSelfServiceProPlan(organizationPlan) ? (
+                    <>
+                      <EnterpriseBadge />
+                      {t('Your plan includes')}{' '}
+                      <span className="font-medium text-foreground">
+                        {t(activityLogRetentionLabel)}
+                      </span>{' '}
+                      {t('of activity history.')}{' '}
+                      {t('Longer retention is available on Enterprise.')}{' '}
+                      <ContactSalesLink
+                        source="activity"
+                        orgId={project?.teamId}
+                        className="font-medium text-foreground underline hover:no-underline"
+                      >
+                        {t('Contact sales')}
+                      </ContactSalesLink>
+                    </>
+                  ) : undefined
+                }
               />
             </div>
           }
@@ -1275,7 +1326,7 @@ export function View({ projectId, initialData }: ViewProps) {
                   {isFreePlan && (
                     <>
                       {' '}
-                      {t('Upgrade or contact sales for longer retention.')}
+                      {t('Upgrade for longer retention.')}
                     </>
                   )}
                 </p>
@@ -1293,10 +1344,11 @@ export function View({ projectId, initialData }: ViewProps) {
           hideToolbar={showsFirstRunEmptyState}
         />
         {!showsFirstRunEmptyState ? (
-          <ActivityActiveFilterChips
-            filterMap={filterMap}
+          <ActiveFilterChips
+            filterMap={chipFilterMap}
             columns={activityFilterColumns}
             countryLookups={countryLookups}
+            onApplyFilter={applyFilter}
             onRemoveFilter={removeFilter}
             onClearAllFilters={clearAllFilters}
           />
@@ -1392,7 +1444,7 @@ export function View({ projectId, initialData }: ViewProps) {
                   {visibleEvents.length === 0 ? (
                     <TableRow className="hover:bg-transparent">
                       <TableCell
-                        colSpan={8}
+                        colSpan={9}
                         className="px-6 py-8 text-center text-[13px] text-muted-foreground"
                       >
                         {t('No matching activities on this page')}
@@ -1581,6 +1633,25 @@ export function View({ projectId, initialData }: ViewProps) {
                             </ActivityFilterValue>
                           )}
                         />
+                      </TableCell>
+                      <TableCell
+                        className={cn(
+                          'whitespace-normal px-4 py-3',
+                          ACTIVITY_COL_REASON,
+                        )}
+                      >
+                        {activity.reason ? (
+                          <span
+                            className="line-clamp-2 text-[13px] leading-snug text-foreground"
+                            title={activity.reason}
+                          >
+                            {activity.reason}
+                          </span>
+                        ) : (
+                          <span className="font-mono text-[12px] text-muted-foreground">
+                            -
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell className="min-w-0 px-4 py-3">
                         {activity.ipAddress ? (

@@ -16,6 +16,8 @@ export type MarketingPagePath =
   | '/partners'
   | '/education'
   | '/startups'
+  | '/agencies'
+  | '/innovation-teams'
   | '/enterprise'
   | '/affiliates'
   | '/community'

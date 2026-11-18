@@ -37,10 +37,6 @@ final class InitialsTest extends TestCase
      */
     public function testGetRendersZeroName(): void
     {
-        if (!\extension_loaded('imagick')) {
-            $this->markTestSkipped('Imagick is required to render initials.');
-        }
-
         $this->assertNotNull((new Initials())->get(new Document(['name' => '0']), 100, 100, 'g'));
     }
 
@@ -50,10 +46,6 @@ final class InitialsTest extends TestCase
      */
     public function testGetDeclinesUnprintableName(): void
     {
-        if (!\extension_loaded('imagick')) {
-            $this->markTestSkipped('Imagick is required to render initials.');
-        }
-
         $this->assertNull((new Initials())->get(new Document(['name' => '-']), 100, 100, 'g'));
     }
 
@@ -75,10 +67,6 @@ final class InitialsTest extends TestCase
     #[DataProvider('provideMultibyteNames')]
     public function testGetRendersMultibyteNames(string $name, bool $renders): void
     {
-        if (!\extension_loaded('imagick')) {
-            $this->markTestSkipped('Imagick is required to render initials.');
-        }
-
         $photo = (new Initials())->get(new Document(['name' => $name]), 100, 100, 'g');
 
         $this->assertSame($renders, $photo !== null);
@@ -136,63 +124,57 @@ final class InitialsTest extends TestCase
     public function testGetDrawsOnNeutralSurface(): void
     {
         foreach (['Walter White', 'Jesse Pinkman', '0'] as $name) {
-            $image = new \Imagick();
-            $image->readImageBlob($this->render($name));
+            $pixels = $this->pixels($this->render($name));
 
-            $color = $image->getImagePixelColor(2, 2)->getColor();
-
-            $this->assertSame([79, 79, 79], [$color['r'], $color['g'], $color['b']]);
-            $this->assertContains([255, 255, 255], $this->colors($image), 'No letters were drawn on the surface.');
+            $this->assertSame([79, 79, 79], $pixels[2][2]);
+            $this->assertContains([255, 255, 255], \array_merge(...$pixels), 'No letters were drawn on the surface.');
         }
     }
 
     public function testGetHonoursBackgroundOverride(): void
     {
-        $image = new \Imagick();
-        $image->readImageBlob((new Initials('123456'))->render('Walter White', 100, 100));
+        $pixels = $this->pixels((new Initials('123456'))->render('Walter White', 100, 100));
 
-        $color = $image->getImagePixelColor(2, 2)->getColor();
-
-        $this->assertSame([0x12, 0x34, 0x56], [$color['r'], $color['g'], $color['b']]);
+        $this->assertSame([0x12, 0x34, 0x56], $pixels[2][2]);
     }
 
     /**
      * Pixel signature of a rendered name — identical initials render
-     * identically, and the signature ignores the metadata Imagick stamps
-     * into each blob.
+     * identically, and the signature ignores any metadata in the blob.
      */
     private function signature(string $name): string
     {
-        $image = new \Imagick();
-        $image->readImageBlob($this->render($name));
-
-        return $image->getImageSignature();
+        return \hash('sha256', \json_encode($this->pixels($this->render($name), true)));
     }
 
     private function render(string $name): string
     {
-        if (!\extension_loaded('imagick')) {
-            $this->markTestSkipped('Imagick is required to render initials.');
-        }
-
         return (new Initials())->render($name, 100, 100);
     }
 
     /**
-     * Every colour present in the image, as [r, g, b] triplets.
+     * The image decoded by GD: rows of [r, g, b] triplets, indexed [y][x],
+     * with the alpha channel appended when asked for.
      *
-     * @return array<array<int>>
+     * @return array<array<array<int>>>
      */
-    private function colors(\Imagick $image): array
+    private function pixels(string $blob, bool $alpha = false): array
     {
-        $colors = [];
+        $image = \imagecreatefromstring($blob);
+        $this->assertNotFalse($image, 'The render is not a decodable image.');
 
-        foreach ($image->getImageHistogram() as $pixel) {
-            $color = $pixel->getColor();
-            $colors[] = [$color['r'], $color['g'], $color['b']];
+        $pixels = [];
+
+        for ($y = 0; $y < \imagesy($image); $y++) {
+            for ($x = 0; $x < \imagesx($image); $x++) {
+                $color = \imagecolorsforindex($image, \imagecolorat($image, $x, $y));
+                $pixels[$y][$x] = $alpha
+                    ? [$color['red'], $color['green'], $color['blue'], $color['alpha']]
+                    : [$color['red'], $color['green'], $color['blue']];
+            }
         }
 
-        return $colors;
+        return $pixels;
     }
 
     public function testGetIgnoresEmail(): void

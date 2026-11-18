@@ -129,7 +129,7 @@ parameters:
 		-
 			message: '#^Cannot access offset ''data'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
+			count: 2
 			path: src/Certificates/Provider/FastlyTls.php
 
 		-
@@ -140,12 +140,6 @@ parameters:
 
 		-
 			message: '#^Cannot access offset ''id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Certificates/Provider/FastlyTls.php
-
-		-
-			message: '#^Cannot access offset ''not_after'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: src/Certificates/Provider/FastlyTls.php
@@ -164,12 +158,6 @@ parameters:
 
 		-
 			message: '#^Cannot access offset ''tls_authorizations'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Certificates/Provider/FastlyTls.php
-
-		-
-			message: '#^Cannot access offset ''tls_certificates'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: src/Certificates/Provider/FastlyTls.php

@@ -270,7 +270,7 @@ class SQLite extends SQL implements Json, ConditionalAggregates, StringAggregate
         $operator = $values[1];
         $value = $values[2];
 
-        if (!\preg_match('/^[a-zA-Z0-9_.\[\]]+$/', $path)) {
+        if (!\preg_match('/^[a-zA-Z0-9_.\[\]]+$/D', $path)) {
             throw new ValidationException('Invalid JSON path: ' . $path);
         }
 
@@ -319,5 +319,11 @@ class SQLite extends SQL implements Json, ConditionalAggregates, StringAggregate
         // SQLite's compound-SELECT parser rejects parenthesised members,
         // so emit the bare SELECT and rely on the UNION keyword alone.
         return $sql;
+    }
+
+    #[\Override]
+    protected function quoteString(string $value): string
+    {
+        return "'" . \str_replace("'", "''", $value) . "'";
     }
 }

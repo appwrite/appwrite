@@ -10,15 +10,13 @@ import {
   createRootRouteWithContext,
   redirect,
 } from '@tanstack/react-router'
-import {
-  getRuntimeConfig,
-  getRuntimeConfigScript,
-} from '@/lib/runtime-config'
+import { getRuntimeConfig, getRuntimeConfigScript } from '@/lib/runtime-config'
 import { getSsrClientIpScript } from '@/lib/ssr-client-ip'
 import { getSsrVisitorCountryScript } from '@/lib/ssr-visitor-country'
 import { getLocalePrefetchScript } from '@/lib/locale/prefetch-locale'
 
 import type { QueryClient } from '@tanstack/react-query'
+import type { Models } from '@appwrite.io/console'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { Toaster } from '@/components/ui/sonner'
@@ -28,10 +26,7 @@ import {
   applyFaviconVariant,
   getDefaultFaviconVariant,
 } from '@/lib/favicon'
-import {
-  isLegacyTheme,
-  LEGACY_ICON_SRC,
-} from '@/lib/legacy-theme-assets'
+import { isLegacyTheme, LEGACY_ICON_SRC } from '@/lib/legacy-theme-assets'
 import { AgentChatProvider } from '@/components/global/providers/AgentChat'
 import { DocsPreviewProvider } from '@/components/global/providers/DocsPreviewProvider'
 import { DocsContentHmrRefresh } from '@/lib/docs/DocsContentHmrRefresh'
@@ -45,6 +40,7 @@ import { DebugMenuMount } from '@/components/global/providers/DebugMenuMount'
 import { PromoBannerProvider } from '@/components/global/providers/PromoBanner'
 import { CookieConsentProvider } from '@/components/global/providers/CookieConsent'
 import { CommunitySupportPromptProvider } from '@/components/global/providers/CommunitySupportPromptProvider'
+import { GithubStarPromptProvider } from '@/components/global/providers/GithubStarPromptProvider'
 import { PasswordBreachCurtain } from '@/components/global/shared/PasswordBreachCurtain'
 import { DebugModeProvider } from '@/components/global/providers/DebugMode'
 import { ScreenshotModeProvider } from '@/components/global/providers/ScreenshotMode'
@@ -61,6 +57,11 @@ import {
 import { useInitialLoader } from '@/hooks/use-initial-loader'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import { isConsoleImpersonationActive } from '@/lib/console-impersonation'
+import {
+  linkSignUpSources,
+  saveReferrerAndUtmSource,
+} from '@/lib/marketing/utm'
 import { PreLaunchRedirect } from '@/components/global/auth/PreLaunchRedirect'
 import { SelfHostedRouteRedirect } from '@/components/global/auth/SelfHostedRouteRedirect'
 import {
@@ -91,10 +92,7 @@ import {
   withPageTitleNameContext,
 } from '@/lib/utils/page-title'
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
-import {
-  getSeoRobotsMetaTags,
-  NOINDEX_ROBOTS_META,
-} from '@/lib/seo/indexing'
+import { getSeoRobotsMetaTags, NOINDEX_ROBOTS_META } from '@/lib/seo/indexing'
 import { isSearchNonIndexablePath } from '@/lib/seo/non-indexable-paths'
 import { I18nProvider } from '@/lib/i18n'
 import { isMarketingPage } from '@/lib/marketing/is-marketing-page'
@@ -113,13 +111,13 @@ interface MyRouterContext {
 /**
  * Inline script that runs before first paint (via ScriptOnce). Applies theme
  * class to <html> so the initial loader respects user choice first, then
- * system preference. Must match next-themes storageKey ("theme") and logic.
+ * defaults to dark. Must match next-themes storageKey ("theme") and logic.
  */
 const THEME_SCRIPT = `(function(){
   try {
-    var t = localStorage.getItem('theme') || 'system';
-    if (t === 'classic') { localStorage.setItem('theme', 'dark'); t = 'dark'; }
-    var r = t === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t;
+    var t = localStorage.getItem('theme') || 'dark';
+    if (t === 'classic' || t === 'system') { localStorage.setItem('theme', 'dark'); t = 'dark'; }
+    var r = t;
     var e = document.documentElement;
     ['light','dark','system','crazy','stealth','classic','premium','high-contrast','barbie','nineties','legacy'].forEach(function(c){e.classList.remove(c);});
     e.classList.add(r);
@@ -219,61 +217,61 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       : getSeoRobotsMetaTags(getRequestSiteOrigin())
 
     return {
-    meta: [
-      {
-        name: 'viewport',
-        content:
-          'width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover',
-      },
-      {
-        title: 'Appwrite Console',
-      },
-      ...robotsMeta,
-    ],
-    links: [
-      {
-        rel: 'icon',
-        href: import.meta.env.DEV ? '/logo-theme.svg' : '/logo.svg',
-        type: 'image/svg+xml',
-      },
-      ...(import.meta.env.DEV
-        ? []
-        : [
-            {
-              rel: 'shortcut icon' as const,
-              href: '/favicon.ico',
-            },
-          ]),
-      {
-        rel: 'apple-touch-icon',
-        href: '/apple-touch-icon.png',
-        sizes: '180x180',
-      },
-      ...getHeadFontPreloads(),
-      // TanStack Start dev manifest omits CSS assets (styles load only after JS).
-      // Production prerender/SSR gets stylesheet links from router.tsx → entry manifest.
-      ...(import.meta.env.DEV
-        ? [
-            {
-              rel: 'stylesheet' as const,
-              href: '/src/styles.css?direct',
-              type: 'text/css',
-            },
-          ]
-        : []),
-    ],
-    scripts: [...scripts],
+      meta: [
+        {
+          name: 'viewport',
+          content:
+            'width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover',
+        },
+        {
+          title: 'Appwrite Console',
+        },
+        ...robotsMeta,
+      ],
+      links: [
+        {
+          rel: 'icon',
+          href: import.meta.env.DEV ? '/logo-theme.svg' : '/logo.svg',
+          type: 'image/svg+xml',
+        },
+        ...(import.meta.env.DEV
+          ? []
+          : [
+              {
+                rel: 'shortcut icon' as const,
+                href: '/favicon.ico',
+              },
+            ]),
+        {
+          rel: 'apple-touch-icon',
+          href: '/apple-touch-icon.png',
+          sizes: '180x180',
+        },
+        ...getHeadFontPreloads(),
+        // TanStack Start dev manifest omits CSS assets (styles load only after JS).
+        // Production prerender/SSR gets stylesheet links from router.tsx → entry manifest.
+        ...(import.meta.env.DEV
+          ? [
+              {
+                rel: 'stylesheet' as const,
+                href: '/src/styles.css?direct',
+                type: 'text/css',
+              },
+            ]
+          : []),
+      ],
+      scripts: [...scripts],
     }
   },
 
   shellComponent: RootDocument,
 })
 
-/** Remap removed debug theme so old localStorage values do not leave stale classes. */
+/** Remap removed themes so old localStorage values do not leave stale classes. */
 function MigrateRemovedThemes() {
   const { theme, setTheme } = useTheme()
   useEffect(() => {
-    if (theme === 'classic') setTheme('dark')
+    if (theme === 'classic' || theme === 'system') setTheme('dark')
   }, [theme, setTheme])
   return null
 }
@@ -320,13 +318,12 @@ function ClientThemeProvider({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider
       attribute="class"
-      defaultTheme="system"
-      enableSystem
+      defaultTheme="dark"
+      enableSystem={false}
       disableTransitionOnChange
       themes={[
         'light',
         'dark',
-        'system',
         'crazy',
         'stealth',
         'premium',
@@ -374,14 +371,14 @@ function ContextualDocumentTitle() {
           | undefined)
       : undefined
     const organization = orgId
-      ? (queryClient.getQueryData(['organization', orgId]) as
+      ? ((queryClient.getQueryData(['organization', orgId]) as
           | { name?: string }
           | undefined) ??
         (
           queryClient.getQueryData(['organizations', 'console']) as
             | { teams?: { $id?: string; name?: string }[] }
             | undefined
-        )?.teams?.find((team) => team.$id === orgId)
+        )?.teams?.find((team) => team.$id === orgId))
       : undefined
     const organizationName = organization?.name
       ? isScreenshotModeActive()
@@ -466,8 +463,7 @@ function RootInitialLoadCoordinator({
     readScreenshotModeOpen(),
   )
 
-  const loaderVisible =
-    showFullscreenLoader || (!skipStaticLoader && isLoading)
+  const loaderVisible = showFullscreenLoader || (!skipStaticLoader && isLoading)
   const shellRef = useRef<HTMLDivElement>(null)
   const shellRevealedRef = useRef(!loaderVisible)
   const [shellRevealed, setShellRevealed] = useState(() => !loaderVisible)
@@ -505,6 +501,8 @@ function RootInitialLoadCoordinator({
     })
     animation.onfinish = () => {
       if (cancelled) return
+      animation.commitStyles()
+      animation.cancel()
       shellRevealedRef.current = true
       setShellRevealed(true)
     }
@@ -556,6 +554,41 @@ function RootInitialLoadCoordinator({
 
 function RootBrowserApi() {
   useEffect(() => installBrowserApi(), [])
+  return null
+}
+
+function RootAcquisitionSource() {
+  const auth = useAuth()
+  const account = auth.account as
+    | (Models.User & { impersonatorUserId?: string })
+    | undefined
+  // Client redirects (e.g. guest console paths to /sign-in) can drop the
+  // landing query before the account check settles.
+  const [landingUrl] = useState(() =>
+    typeof window === 'undefined' ? undefined : new URL(window.location.href),
+  )
+  const accountId = account?.$id
+  const createdAt = account?.$createdAt
+  // Retried on verification in case Cloud rejects unverified accounts.
+  const emailVerified = account?.emailVerification
+  const impersonating = isConsoleImpersonationActive(account)
+
+  useEffect(() => {
+    if (!auth.isFetched) return
+    if (!accountId) {
+      saveReferrerAndUtmSource(landingUrl)
+    } else if (!impersonating && createdAt) {
+      void linkSignUpSources(createdAt)
+    }
+  }, [
+    auth.isFetched,
+    accountId,
+    createdAt,
+    emailVerified,
+    impersonating,
+    landingUrl,
+  ])
+
   return null
 }
 
@@ -647,6 +680,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <RootInitialLoadCoordinator>
             <RootBrowserApi />
             <RootAnalyticsTracker />
+            <RootAcquisitionSource />
             <RootConsoleScopesPrefetch />
             <ClientThemeProvider>
               <PreLaunchRedirect />
@@ -664,6 +698,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                                 <RootAppProviders>{children}</RootAppProviders>
                                 <ClientOnly>
                                   <CommunitySupportPromptProvider />
+                                </ClientOnly>
+                                <ClientOnly>
+                                  <GithubStarPromptProvider />
                                 </ClientOnly>
                                 <ClientOnly>
                                   <PasswordBreachCurtain />

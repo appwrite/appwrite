@@ -157,7 +157,7 @@ export function MessageScheduleDialog({
     [message, topics],
   )
 
-  const buildDefaultIso = (iso?: string) => {
+  const buildDefaultIso = (iso?: string | null) => {
     if (iso) {
       const d = new Date(iso)
       if (!Number.isNaN(d.getTime())) {
