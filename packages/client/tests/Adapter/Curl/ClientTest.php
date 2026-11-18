@@ -171,8 +171,8 @@ final class ClientTest extends AdapterContract
             try {
                 $client->sendRequest($request);
                 $this->fail('A decoded body past the maximum file size was accepted.');
-            } catch (NetworkException $exception) {
-                $this->assertSame(\CURLE_FILESIZE_EXCEEDED, $exception->getCode());
+            } catch (NetworkException $networkException) {
+                $this->assertSame(\CURLE_FILESIZE_EXCEEDED, $networkException->getCode());
             }
 
             $small = new \Utopia\Psr7\Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/gzip?repeat=64');

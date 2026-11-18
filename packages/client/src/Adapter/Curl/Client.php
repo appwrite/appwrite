@@ -351,6 +351,7 @@ class Client implements Adapter, ResponseStreamingClientInterface
         // to the bytes handed to the sink, which are the decoded ones.
         $limit = $this->options[\CURLOPT_MAXFILESIZE_LARGE] ?? $this->options[\CURLOPT_MAXFILESIZE] ?? null;
         $limit = \is_int($limit) && $limit > 0 ? $limit : null;
+
         $received = 0;
 
         $options = [
