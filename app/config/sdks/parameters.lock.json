@@ -3548,6 +3548,11 @@
             "enabled",
             "prompt"
         ],
+        "project.updateOAuth2Patreon": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Paypal": [
             "clientId",
             "secretKey",
@@ -7968,6 +7973,11 @@
             "authorizationServerId",
             "enabled",
             "prompt"
+        ],
+        "project.updateOAuth2Patreon": [
+            "clientId",
+            "clientSecret",
+            "enabled"
         ],
         "project.updateOAuth2Paypal": [
             "clientId",
