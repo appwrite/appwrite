@@ -100,11 +100,8 @@ class DNS extends BaseDNS
         if (
             $failedValidator === null
             || ($validator->reason !== '' && $failedValidator->reason === '')
-            || (
-                $failedValidator->reason === ''
-                && $validator->reason === ''
-                && $validator->count > $failedValidator->count
-            )
+            // Past the clauses above, both reasons are empty: prefer the failure that saw records.
+            || ($failedValidator->reason === '' && $validator->count > $failedValidator->count)
         ) {
             $failedValidator = $validator;
         }
