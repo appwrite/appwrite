@@ -35,7 +35,8 @@ _APP_EXTENSION_LIBRARIES=<package>,<package>   # those packages' classes from th
 A package ported in batches has one switch per batch, `<package>-<batch>`, which needs the
 package's own: `validators,validators-scalar` registers the validators' base and the scalar leaf
 validators, `validators,validators-text` the base and the text ones, `validators,validators-network`
-the base and the network ones, `validators` alone only the base.
+the base and the network ones, `validators` alone only the base. `auth` registers the password
+hashes of `packages/auth` (`Utopia\Auth\Hash` and `Utopia\Auth\Hashes\*`).
 
 The extension reads it once, when PHP loads the module, so changing it takes a restart and no
 deploy. Each library is canaried on Cloud this way before it becomes the default.
@@ -203,7 +204,7 @@ Methods read the properties on every call, in PHP's order (an uninitialized one 
 `Error`), straight from the object's slot on an object of the class itself and through the engine
 otherwise. Arguments go through the engine's own conversions, and a rejected one throws the
 `TypeError` or `ArgumentCountError` of a userland function, `called in` file and line included.
-`src/validators/engine.rs` holds the engine calls ext-php-rs does not wrap, which are worth
+`src/classes/engine.rs` holds the engine calls ext-php-rs does not wrap, which are worth
 proposing upstream: typed property declarations, union and untyped argument types (the engine
 copies a typed method's argument info at registration, so they are patched in its copy after the
 inheritance checks), and `FunctionHandler`, which is not exported.
@@ -231,7 +232,7 @@ protected `$length` and call `parent::__construct()`, `parent::getDescription()`
 `parent::isValid()`, and work unchanged on either implementation.
 
 `src/validators/text.rs` builds them by hand like the scalar batch (shared helpers in
-`src/validators/leaf.rs`), with their state in real typed protected properties, read in PHP's
+`src/classes/leaf.rs`), with their state in real typed protected properties, read in PHP's
 order. `Text`'s `NUMBERS`, `ALPHABET_UPPER` and `ALPHABET_LOWER` are persistent immutable arrays, and
 `Label::MAX_LENGTH` is a typed (`int`) constant; each class's own constants come before the ones it
 inherits, as PHP orders them. Comparisons with the PHP values a validator holds go through the
@@ -303,6 +304,58 @@ difference:
 
 - `Phone` runs its regular expressions without PHP's `preg_*` functions, so `isValid()` and
   `normalize()` leave `preg_last_error()` as it was.
+
+## Utopia\Auth\Hash and the password hashes
+
+`_APP_EXTENSION_LIBRARIES=auth` registers the abstract `Utopia\Auth\Hash` and its eight hashes,
+`Argon2`, `Bcrypt`, `MD5`, `PHPass`, `Plaintext`, `Scrypt`, `ScryptModified` and `Sha`, over
+`php-std` (`password_hash()`, `password_verify()`, `crypt()`, `hash()`, `base64_*()`,
+`mb_convert_encoding()`) and `crates/utopia/auth` (PECL `scrypt()`, Firebase's modified scrypt, phpass).
+The proofs, tokens, issuers, verifiers and passkeys of the package stay PHP; `Proofs\Password`
+takes the native `Hash`, which is why the base is native too, and PHP subclasses (the package's
+tests, any app's) extend it and the hashes as they would the PHP classes.
+
+`src/auth/` builds them by hand like the validators, with the helpers they share in
+`src/classes/` (`engine.rs`, `leaf.rs`). `$options` (and `PHPass::$itoa64`) are real typed
+protected properties; a method PHP calls through `$this` (`setOption()` from the constructors and
+`setOptions()`, `getOption()`/`getOptions()` from `hash()`, `getName()`, `hash()` from the
+`verify()` that hashes again, PHPass's `getRandomBytes()` and `encode64()`) runs a subclass's override.
+Options are read as PHP reads them: `password_hash()`'s checks, order and messages (`zval_get_long()`
+of any option, the ignored `salt` warning), `$options['key']` with its `Undefined array key`
+warning, PHPass's arithmetic on whatever its options hold (the engine's `+`, `/`, `%`, `min()`,
+`intval()` and string offsets), and `Hash.php`'s `strict_types` for `setOptions()` with integer keys.
+
+The hashes PHP made verify on the extension and the extension's verify on PHP: `Argon2`
+(`$argon2id$`, `$argon2i$`) and `Bcrypt` (`$2y$`; `$2a$`, `$2b$`, `$2x$` through `crypt()`) hash with
+`password_hash()`'s salt (`php_password_make_salt()`) and verify with `password_verify()`; `PHPass`
+makes blowfish (`$2a$`) and portable (`$P$`, with `$H$` accepted) hashes, and verifies MD5-crypt,
+SHA-crypt, DES and extended DES through `crypt()`. `MD5`, `Sha`, `Plaintext`, `Scrypt`,
+`ScryptModified` and `PHPass`'s portable hash compare with `hash_equals()`'s constant time.
+
+`crates/extension/tests/auth.php` prints a corpus that must be identical on both implementations
+(1,354 lines): each class's reflection; the option API over keys PHP converts (`'1'`, `'01'`, `'-0'`,
+binary) and values of every type; arguments of the wrong kind; `MD5`, all nine `Sha` versions and
+`Plaintext` over passwords that are empty, UTF-8, not UTF-8, with NUL bytes and past 72 bytes;
+`Sha` with versions only `setOption()` stores; `Scrypt` over its parameters and every PECL failure
+(`Error`, warning, `false`); `ScryptModified` with Firebase's vector, other options and missing ones;
+`Argon2` and `Bcrypt` over every `password_hash()` option error, each hash checked by the class and
+by PHP's own `password_verify()` and `crypt()`; 84 hashes PHP made (`password_hash()`, every
+`crypt()` scheme, portable phpass) and 39 malformed ones through every `verify()`; `PHPass` made
+deterministic by a subclass's `getRandomBytes()`, over its options, alphabet and helpers; subclasses
+overriding `setOption()`, `getOption()`, `getOptions()`, `getName()`, `hash()` and `encode64()`;
+and dumps, clones, comparisons and serialization. Its known differences, which no caller depends on:
+
+- `setOptions()` with an integer key throws `Hash.php`'s `TypeError` without PHP's
+  `, called in .../Hash.php on line N`.
+- `Scrypt` and `ScryptModified` work without the PECL `scrypt` extension, where PHP throws
+  `RuntimeException('The scrypt extension is required...')`; a key length PHP cannot allocate is a
+  fatal error there and `false` here (then `RuntimeException`).
+- `Argon2` refuses more than 4 GiB of memory with `ValueError('Memory allocation error')`, where
+  libargon2 tries to allocate it.
+- `PHPass::getRandomBytes()` reads `/dev/urandom` without consulting `open_basedir`.
+- `Argon2` hashes run their lanes one after the other, where libargon2 runs `threads` of them in
+  parallel: the default (3 threads, 64 MiB, 4 passes) takes about twice the wall-clock time,
+  for the same CPU time.
 
 ## Benchmarks
 

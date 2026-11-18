@@ -10,8 +10,6 @@
 //! constructor of its own would inherit the throwing one. Built by hand, a class has no
 //! constructor (unless PHP's has one) and no object handlers, as a class declared in PHP.
 
-mod engine;
-mod leaf;
 pub mod network;
 pub mod scalar;
 pub mod text;
@@ -22,6 +20,8 @@ use ext_php_rs::flags::{ClassFlags, ConstantFlags, DataType, MethodFlags};
 use std::sync::atomic::{AtomicPtr, Ordering};
 
 use ext_php_rs::zend::ClassEntry;
+
+use crate::classes::{engine, leaf};
 
 /// The base class's name, which the leaves extend.
 pub const BASE: &str = "Utopia\\Validator\\Validator";
