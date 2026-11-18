@@ -61,6 +61,7 @@ class Get extends Action
                 contentType: ContentType::IMAGE
             ))
             ->param('teamId', '', new UID(), 'Team ID.')
+            ->param('width', 256, new Range(0, 2000), 'Output image width in pixels. Pass an integer between 0 and 2000. Defaults to 256.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('deviceForFiles')
