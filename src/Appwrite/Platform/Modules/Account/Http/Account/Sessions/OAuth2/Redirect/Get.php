@@ -457,7 +457,12 @@ class Get extends Base
                         // Proving an unverified address claims the account, so whoever registered it keeps no other way in.
                         // The claim takes the user row lock, so of two concurrent claims only the first revokes, and a
                         // request that re-checks the account under the same lock finds it already claimed
+                        $address = $user->getAttribute('email');
                         $claimed = $authorization->skip(fn () => User::claim($dbForProject, $user, $project, mqtt: $mqtt));
+
+                        if ($user->getAttribute('email') !== $address) {
+                            $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                        }
 
                         if ($claimed) {
                             $dbForProject->purgeCachedDocument('users', $user->getId());
@@ -585,7 +590,8 @@ class Get extends Base
             $failureRedirect(Exception::USER_BLOCKED); // User is in status blocked
         }
 
-        if (empty($user->getAttribute('email')) && !empty($providerEmail)) {
+        $backfilled = empty($user->getAttribute('email')) && !empty($providerEmail);
+        if ($backfilled) {
             $emailMetadata = [
                 'emailCanonical' => null,
                 'emailIsCanonical' => null,
@@ -748,13 +754,21 @@ class Get extends Base
             ]));
         }
 
+        // Only what this request changed: its copy predates any claim or password change that landed since
+        $changes = ['status' => true];
+
         if (empty($user->getAttribute('name'))) {
             $user->setAttribute('name', $oauth2->getUserName($accessToken));
+            $changes['name'] = $user->getAttribute('name');
+        }
+
+        if ($backfilled) {
+            $changes += \array_intersect_key($user->getArrayCopy(), \array_flip(['email', 'emailVerification', 'emailCanonical', 'emailIsCanonical', 'emailIsCorporate', 'emailIsDisposable', 'emailIsFree']));
         }
 
         $user->setAttribute('status', true);
 
-        $dbForProject->updateDocument('users', $user->getId(), $user);
+        $dbForProject->updateDocument('users', $user->getId(), new Document($changes));
 
         $authorization->addRole(Role::user($user->getId())->toString());
 
