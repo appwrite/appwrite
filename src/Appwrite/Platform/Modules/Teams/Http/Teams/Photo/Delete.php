@@ -40,6 +40,8 @@ class Delete extends Action
             ->groups(['api', 'teams'])
             ->label('event', 'teams.[teamId].update')
             ->label('scope', 'teams.write')
+            ->label('audits.event', 'team.update')
+            ->label('audits.resource', 'team/{request.teamId}')
             ->param('teamId', '', new UID(), 'Team ID.')
             ->inject('response')
             ->inject('dbForProject')
