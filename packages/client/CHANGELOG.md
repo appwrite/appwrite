@@ -15,18 +15,6 @@ This project follows semantic versioning.
 - `Utopia\Client\Destinations` decides where a client may connect. `Client` takes one as an optional second constructor argument and through `withDestinations()`; the default is `Anywhere`.
 - `Destinations\Anywhere` (any address, any proxy), `Destinations\PublicInternet` (refuses private, reserved and special-use ranges, except the `IPRange`s it is given), and `Destinations\IPRange` (validated in its constructor).
 - `Utopia\Client\PHPStan\DisallowRawCurlExtension`, a PHPStan extension that reports `curl_init()` and `curl_multi_init()` outside the cURL adapter.
-
-### Removed
-
-- Remove the `Utopia\Client` and `Utopia\Psr18\StreamingClientInterface` aliases that 0.5 kept for the old names. Use `Utopia\Client\Client` and `Utopia\Client\Psr18\StreamingClientInterface`.
-
-### Changed
-
-- Move `Utopia\Client` to `Utopia\Client\Client` and `Utopia\Psr18\StreamingClientInterface` to `Utopia\Client\Psr18\StreamingClientInterface`, so the package declares a single `Utopia\Client\` prefix. The old names remained available as aliases in 0.5.
-- Require `utopia-php/psr7` `^0.2.1` so `Request\Factory::multipart` always sets `Content-Type` with the body boundary.
-
-### Added
-
 - `withFollowRedirects()` takes an optional `int $maxHops` (default `Redirect::MAX_HOPS`, 50) that caps how many redirects are followed before a `ProtocolException`. Callers need no change; custom `Adapter` implementations must add the parameter to their `withFollowRedirects()` signature.
 - Initial PSR-18 HTTP client wrapper: `Utopia\Client`.
 - Immutable client defaults for headers, base URI, basic auth, and bearer auth.
@@ -47,3 +35,17 @@ This project follows semantic versioning.
 - Opt-in W3C Trace Context propagation via `withTracePropagation()` (off by default): forwards the active `utopia-php/span` trace downstream as a `traceparent` header.
 - `Utopia\Client\Decorator` base class for composing adapter decorators.
 - PHP 8.4+ tooling with Pint, PHPStan level 10, Rector, PHPUnit, Composer audit, and GitHub Actions CI.
+
+### Removed
+
+- Remove the `Utopia\Client` and `Utopia\Psr18\StreamingClientInterface` aliases that 0.5 kept for the old names. Use `Utopia\Client\Client` and `Utopia\Client\Psr18\StreamingClientInterface`.
+
+### Changed
+
+- Move `Utopia\Client` to `Utopia\Client\Client` and `Utopia\Psr18\StreamingClientInterface` to `Utopia\Client\Psr18\StreamingClientInterface`, so the package declares a single `Utopia\Client\` prefix. The old names remained available as aliases in 0.5.
+- Require `utopia-php/psr7` `^0.2.1` so `Request\Factory::multipart` always sets `Content-Type` with the body boundary.
+- `Decorator\Retry::stream()` always passes an `onResponse` callback to an adapter that supports response streaming, so every request it streams through the cURL adapter parses headers before the body and rejects a final status outside `200`–`599` with an `InvalidResponseException`.
+
+### Fixed
+
+- `Decorator\Retry::stream()` now retries a transient error response that carries a body, such as a proxy's `503` error page, when the adapter supports response streaming. Up to 64 KiB of the error body is held until the strategy decides, then discarded on retry or delivered to the sink once; a longer error body streams through and is not retried. Previously the body counted as delivered bytes, so the strategy was never consulted.

@@ -12,6 +12,17 @@ if ($marker === false) {
 $requests = $marker . '.requests';
 $count = file_exists($requests) ? (int) file_get_contents($requests) : 0;
 file_put_contents($requests, (string) ($count + 1));
+if ($path === '/unavailable-once') {
+    if ($count === 0) {
+        http_response_code(503);
+        header('Content-Type: text/plain');
+        echo 'upstream connect error or disconnect/reset before headers. reset reason: connection termination';
+        return;
+    }
+    header('Content-Type: application/octet-stream');
+    echo 'abcdefgh';
+    return;
+}
 if ($path === '/truncated') {
     header('Content-Length: 65536');
     echo str_repeat('x', 12345);
