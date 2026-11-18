@@ -8,6 +8,7 @@
 import { Account, Activities, Affiliates, Analytics, Apps, Avatars, Backups, Client, Console, Functions, Growth, ImageFormat, Locale, Manager, Messaging, Migrations, Oauth2, Project, Project as ProjectApi, Projects, Proxy, Realtime, Storage, Teams, Users, Vcs, Sites, Tokens, TablesDB, DocumentsDB, VectorsDB, Postgresql, Mysql, Mongo, Domains, Organization, Organizations, Presences, Usage, Webhooks, Notifications, Waf } from '@appwrite.io/console'
 import { Agent } from '@/lib/appwrite/agent'
 import { Reviews } from '@/lib/appwrite/reviews'
+import { TeamRules } from '@/lib/appwrite/team-rules'
 import { Zero } from '@/lib/appwrite/zero'
 import {
   getDebugEndpointBaseUrl,
@@ -196,6 +197,9 @@ function createConsoleSdkRaw(client: Client) {
     teams: new Teams(client),
     users: new Users(client),
     migrations: new Migrations(client),
+    proxy: new Proxy(client),
+    // Hand-written until a Console SDK release carries createTeamRule and updateTeamRule.
+    teamRules: new TeamRules(client),
     console: new Console(client),
     agent: new Agent(client),
     sites: new Sites(client),

@@ -317,6 +317,7 @@ export const ANALYTICS_ACTIONS = {
   'add-subscriber': 'Add Subscriber Clicked',
   'create-api-key': 'Create API Key Clicked',
   'create-org-api-key': 'Create Org API Key Clicked',
+  'create-email-domain': 'Create Email Domain Clicked',
   'create-webhook': 'Create Webhook Clicked',
   'add-project-domain': 'Add Project Domain Clicked',
   'add-platform': 'Add Platform Clicked',

@@ -30,6 +30,7 @@ import {
   Settings,
   KeyRound,
   Handshake,
+  LockKeyhole,
   Pin,
   PinOff} from '@/lib/icons'
 import { useSequentialShortcuts } from '@/hooks/use-keyboard-shortcuts'
@@ -97,6 +98,7 @@ import {
   canAccessOrgSettingsBilling,
   canAccessOrgSettingsCompliance,
   canShowOrgApiKeysSettings,
+  canShowOrgSsoSettings,
   canShowOrgOAuthAppsSettings,
   getFirstAllowedOrgSettingsPath,
   canInviteOrgMember,
@@ -190,6 +192,7 @@ import { useOrganizationDomainsPlanLimit } from '../domains/_components/useOrgan
 import { View as MarketplaceView } from '../marketplace/View'
 import { View as OrgAppsView } from '../apps/View'
 import { Partners } from '../settings/Partners'
+import { SingleSignOn } from '../settings/SingleSignOn'
 import { EnterpriseSuccessManager } from '@/components/pages/projects/$projectId/shared/EnterpriseSuccessManager'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { PlanLimitWarning } from '@/components/pages/projects/$projectId/shared/PlanLimitWarning'
@@ -211,7 +214,10 @@ import { CreateOrganizationDialog } from './CreateOrganization'
 import { CreateProjectDialog } from './CreateProjectDialog'
 import { useCreateOrganization } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { isUsageStatsCapabilityResolved } from '@/lib/console-profiles'
+import {
+  getActiveProfileFeatures,
+  isUsageStatsCapabilityResolved,
+} from '@/lib/console-profiles'
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
 import {
   SettingsCardsList,
@@ -254,6 +260,7 @@ type OrgRoutePath =
   | '/organizations/$orgId/settings/compliance'
   | '/organizations/$orgId/settings/oauth-apps'
   | '/organizations/$orgId/settings/partners'
+  | '/organizations/$orgId/settings/sso'
 import { analyticsAttrs, getOrgTabAnalyticsAction } from '@/lib/analytics-actions'
 
 /** Pro orgs with at least this many members see the Enterprise access line. */
@@ -600,7 +607,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     return 'projects'
   }, [tabProp, resolvedPathname, isDomainDetailRoute, isAppDetailRoute])
 
-  // Settings sub-tab (when on settings): 'overview' | 'members' | 'billing' | 'compliance' | 'oauth-apps' | 'partners'
+  // Settings sub-tab (when on settings): 'overview' | 'members' | 'billing' | 'compliance' | 'oauth-apps' | 'partners' | 'sso'
   const settingsSubTab = useMemo(() => {
     const pathParts = resolvedPathname.split('/').filter(Boolean)
     const orgIndex = pathParts.findIndex((part) => part === 'organizations')
@@ -611,6 +618,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       if (subTab === 'compliance') return 'compliance'
       if (subTab === 'oauth-apps') return 'oauth-apps'
       if (subTab === 'partners') return 'partners'
+      if (subTab === 'sso') return 'sso'
       return 'overview'
     }
     return 'overview'
@@ -677,6 +685,16 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               keywords: ['partners', 'api', 'keys', 'credentials', 'partners keys']},
           ]
         : []),
+      ...(features.sso
+        ? [
+            {
+              id: 'sso',
+              label: t('Single sign-on'),
+              to: '/organizations/$orgId/settings/sso',
+              icon: LockKeyhole,
+              keywords: ['sso', 'single sign-on', 'domains', 'email domains', 'auto join', 'company email']},
+          ]
+        : []),
     ]
 
     const filtered = features.orgRoles
@@ -691,6 +709,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             return canShowOrgOAuthAppsSettings(access, features)
           if (item.id === 'partners')
             return canShowOrgApiKeysSettings(access, features)
+          if (item.id === 'sso') return canShowOrgSsoSettings(access, features)
           return true
         })
       : allNavItems
@@ -777,6 +796,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   // Redirect from disabled settings sub-tabs (feature flags or role-based)
   useEffect(() => {
+    // Experiments switched on in this browser reach `features` one render late,
+    // so a link straight to their tab would bounce; read them as they are now.
+    const showSso = canShowOrgSsoSettings(access, getActiveProfileFeatures())
     if (settingsSubTab === 'billing' && !features.billing) {
       navigate({
         to: '/organizations/$orgId/settings',
@@ -788,7 +810,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       (settingsSubTab === 'compliance' && !features.compliance) ||
       (settingsSubTab === 'oauth-apps' &&
         !canShowOrgOAuthAppsSettings(access, features)) ||
-      (settingsSubTab === 'partners' && !features.orgApiKeys)
+      (settingsSubTab === 'partners' && !features.orgApiKeys) ||
+      (settingsSubTab === 'sso' && !showSso)
     ) {
       navigate({
         to: '/organizations/$orgId/settings',
@@ -807,7 +830,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         (settingsSubTab === 'oauth-apps' &&
           canShowOrgOAuthAppsSettings(access, features)) ||
         (settingsSubTab === 'partners' &&
-          canShowOrgApiKeysSettings(access, features))
+          canShowOrgApiKeysSettings(access, features)) ||
+        (settingsSubTab === 'sso' && showSso)
       if (!allowed) {
         const firstAllowed = getFirstAllowedOrgSettingsPath(
           access,
@@ -834,6 +858,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         'settings/compliance': '/organizations/$orgId/settings/compliance',
         'settings/oauth-apps': '/organizations/$orgId/settings/oauth-apps',
         'settings/partners': '/organizations/$orgId/settings/partners',
+        'settings/sso': '/organizations/$orgId/settings/sso',
       } as const satisfies Record<string, OrgRoutePath>
 
       const route = tabRoutes[tab as keyof typeof tabRoutes]
@@ -2125,6 +2150,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       compliance: '/organizations/$orgId/settings/compliance',
       'oauth-apps': '/organizations/$orgId/settings/oauth-apps',
       partners: '/organizations/$orgId/settings/partners',
+      sso: '/organizations/$orgId/settings/sso',
     } as const satisfies Record<string, OrgRoutePath>
     const settingsSubRoute =
       activeTab === 'settings'
@@ -3495,6 +3521,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       <OrgAppsView />
                     ) : settingsSubTab === 'partners' ? (
                       <Partners />
+                    ) : settingsSubTab === 'sso' ? (
+                      <SingleSignOn />
                     ) : settingsSubTab === 'members' ? (
                       <>
                         {/* Error State */}
