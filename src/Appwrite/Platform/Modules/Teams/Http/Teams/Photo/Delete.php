@@ -110,6 +110,7 @@ class Delete extends Action
             }
         }
 
+        $queueForEvents->setParam('teamId', $teamId);
 
         $response->noContent();
     }
