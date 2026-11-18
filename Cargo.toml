@@ -22,6 +22,7 @@ publish = false
 
 [workspace.dependencies]
 php-std = { path = "crates/support/php-std" }
+utopia-auth = { path = "crates/utopia/auth" }
 utopia-domains = { path = "crates/utopia/domains" }
 utopia-emails = { path = "crates/utopia/emails" }
 utopia-dsn = { path = "crates/utopia/dsn" }
@@ -57,6 +58,9 @@ serde = "1"
 serde_json = { version = "1", features = ["raw_value", "preserve_order", "float_roundtrip"] }
 sha1 = "0.10"
 sha2 = "0.10"
+# Firebase's modified scrypt (utopia-auth): AES-256 in CTR mode, and wiping derived keys.
+aes = "0.8"
+zeroize = "1"
 sha3 = "0.10"
 unsafe-libyaml = "0.2"
 whirlpool = "0.10"

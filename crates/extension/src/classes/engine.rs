@@ -652,7 +652,12 @@ pub fn interned(bytes: &[u8]) -> Zval {
 
 /// A persistent immutable list of strings (`['0', '1', ...]`), as a constant of an internal
 /// class holds an array: nothing counts references to it, and it lives for the process.
+///
+/// Not for an empty list: opcache frees the data of an initialized empty table it persists
+/// (a PHP subclass's copy of an inherited default) as if the engine's allocator held it, so
+/// `[]` is [`empty_array`].
 pub fn string_list(items: &[&str]) -> Zval {
+    debug_assert!(!items.is_empty(), "an empty list is `empty_array()`");
     // SAFETY: called in MINIT; the table is allocated persistently and never freed, its
     // values are interned strings, and the flags mark it immutable so the engine copies the
     // zval without touching a reference count.
@@ -731,11 +736,27 @@ pub fn declare_constant_as(
 /// Moves the constants `names` (the parent's, which the engine inherits as it registers the
 /// class) after the ones the class declares itself, the order PHP gives a class's constants.
 pub fn inherited_constants_last(class: &mut ClassEntry, names: &[&str]) {
-    // SAFETY: called in MINIT; the table maps names to the engine's constant pointers and
-    // frees nothing when an entry goes (an internal class's constants table has no
-    // destructor), so each pointer is taken out and put back at the end.
+    // SAFETY: called in MINIT, on the class's own table.
+    unsafe { entries_last(&raw mut class.constants_table, names) }
+}
+
+/// Moves the inherited properties `names` after `class`'s own in its property table, the
+/// order reflection and `var_dump()` list them in for a PHP subclass (the engine copies the
+/// parent's into an internal class when it registers it, before the class declares its own).
+pub fn inherited_properties_last(class: &mut ClassEntry, names: &[&str]) {
+    // SAFETY: as in [`inherited_constants_last`]; the property table of an internal class
+    // has no destructor either.
+    unsafe { entries_last(&raw mut class.properties_info, names) }
+}
+
+/// Moves the entries `names` of `table`, a table of pointers with no destructor, to its end.
+///
+/// # Safety
+///
+/// `table` is a live table of `IS_PTR` entries that frees nothing when an entry goes.
+unsafe fn entries_last(table: *mut HashTable, names: &[&str]) {
+    // SAFETY: each pointer is taken out and put back at the end.
     unsafe {
-        let table = &raw mut class.constants_table;
         for name in names {
             let found = zend_hash_str_find(table, name.as_ptr().cast(), name.len());
             let Some(entry) = found.as_ref() else { continue };
@@ -756,6 +777,15 @@ pub fn inherited_constants_last(class: &mut ClassEntry, names: &[&str]) {
 pub fn value_name(value: &Zval) -> String {
     // SAFETY: `value` is a live zval; the engine returns a static or interned name.
     unsafe { CStr::from_ptr(zend_zval_value_name(value)) }.to_string_lossy().into_owned()
+}
+
+/// Raises the `E_DEPRECATED` `message`, as the engine raises one.
+pub fn deprecated(message: &str) {
+    /// `E_DEPRECATED`.
+    const E_DEPRECATED: i32 = 1 << 13;
+    let message = CString::new(message.replace('\0', "")).unwrap_or_default();
+    // SAFETY: the engine formats `%s` with a NUL-terminated string.
+    unsafe { zend_error(E_DEPRECATED, c"%s".as_ptr(), message.as_ptr()) };
 }
 
 /// Raises the `E_WARNING` `message`, as the engine raises one.
@@ -789,15 +819,6 @@ pub fn dimension_index(container: &Zval, index: i64) -> Option<Zval> {
     // SAFETY: as in [`dimension`].
     unsafe { zend_fetch_dimension_const(&raw mut result, &raw mut container, &raw mut dim, 0) };
     if ExecutorGlobals::has_exception() { None } else { Some(result) }
-}
-
-/// Raises the `E_DEPRECATED` `message`, as the engine raises one.
-pub fn deprecated(message: &str) {
-    /// `E_DEPRECATED`.
-    const E_DEPRECATED: i32 = 1 << 13;
-    let message = CString::new(message.replace('\0', "")).unwrap_or_default();
-    // SAFETY: the engine formats `%s` with a NUL-terminated string.
-    unsafe { zend_error(E_DEPRECATED, c"%s".as_ptr(), message.as_ptr()) };
 }
 
 /// PHP `$a + $b`: the engine's addition, with its coercions, warnings and `TypeError`s;
@@ -1069,4 +1090,210 @@ pub fn foreach_items(list: &Zval) -> Option<Zval> {
     }
     warning(&format!("foreach() argument must be of type array|object, {} given", value_name(list)));
     Some(empty_array())
+}
+
+// ---------------------------------------------------------------------------------------
+// What the auth hashes need beyond the validators: arrays read and written as PHP keys them,
+// methods called on `$this` as PHP dispatches them, and a few of the engine's operators.
+
+unsafe extern "C" {
+    fn zval_get_long_func(op: *const zval, is_strict: bool) -> i64;
+    fn div_function(result: *mut zval, op1: *mut zval, op2: *mut zval) -> i32;
+    fn mod_function(result: *mut zval, op1: *mut zval, op2: *mut zval) -> i32;
+    fn zend_hash_str_update(ht: *mut HashTable, key: *const c_char, len: usize, value: *mut zval) -> *mut zval;
+}
+
+/// PHP's `zval_get_long()`: an option read as an integer the way `password_hash()` reads
+/// its options (`"12"` is 12, `"abc"` 0, `1.9` 1, `true` 1, an array 1 when not empty).
+pub fn long_value(value: &Zval) -> i64 {
+    let value = value.dereference();
+    if let Some(i) = value.long() {
+        return i;
+    }
+    // SAFETY: a live zval; the engine only reads it (an object's cast may warn).
+    unsafe { zval_get_long_func(std::ptr::from_ref(value).cast(), false) }
+}
+
+/// The engine's `$a / $b` and `$a % $b`, with their coercions, warnings and errors; `None`
+/// with an exception pending.
+pub fn divide(a: &Zval, b: &Zval) -> Option<Zval> {
+    binary(div_function, a, b)
+}
+
+/// See [`divide`].
+pub fn modulo(a: &Zval, b: &Zval) -> Option<Zval> {
+    binary(mod_function, a, b)
+}
+
+fn binary(op: unsafe extern "C" fn(*mut zval, *mut zval, *mut zval) -> i32, a: &Zval, b: &Zval) -> Option<Zval> {
+    let mut result = Zval::new();
+    let (mut a, mut b) = (a.dereference().shallow_clone(), b.dereference().shallow_clone());
+    // SAFETY: live zvals; the engine writes the result into `result`, which the returned `Zval`
+    // owns.
+    unsafe { op(&raw mut result, &raw mut a, &raw mut b) };
+    if ExecutorGlobals::has_exception() { None } else { Some(result) }
+}
+
+/// An array key as PHP stores it: a string holding a canonical decimal integer (`"7"`,
+/// `"-3"`, not `"07"`, `"-0"` or one past `PHP_INT_MAX`) is that integer.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Key {
+    Index(i64),
+    Name(Vec<u8>),
+}
+
+impl Key {
+    /// The key PHP stores `$array[$bytes]` under (`ZEND_HANDLE_NUMERIC_STR`).
+    pub fn of(bytes: &[u8]) -> Self {
+        let digits = bytes.strip_prefix(b"-").unwrap_or(bytes);
+        let canonical = !digits.is_empty()
+            && digits.iter().all(u8::is_ascii_digit)
+            && (digits[0] != b'0' || (digits.len() == 1 && digits.len() == bytes.len()));
+        if canonical && let Some(i) = std::str::from_utf8(bytes).ok().and_then(|s| s.parse::<i64>().ok()) {
+            return Key::Index(i);
+        }
+        Key::Name(bytes.to_vec())
+    }
+}
+
+/// `$array[$key]`, without a warning when it is missing; the element's reference resolved.
+pub fn array_get<'a>(array: &'a Zval, key: &Key) -> Option<&'a Zval> {
+    let ht = array.dereference().array()?;
+    // SAFETY: the table lives as long as `array`; the engine returns a pointer into it.
+    let found = unsafe {
+        match key {
+            Key::Index(i) => ext_php_rs::ffi::zend_hash_index_find(std::ptr::from_ref(ht).cast(), *i as u64),
+            Key::Name(name) => zend_hash_str_find(std::ptr::from_ref(ht).cast(), name.as_ptr().cast(), name.len()),
+        }
+    };
+    unsafe { found.cast::<Zval>().as_ref() }.map(Zval::dereference)
+}
+
+/// A copy of `array` with `$copy[$key] = $value` (the copy is PHP's separation: `array`
+/// itself is left as it is).
+pub fn array_with(array: &Zval, key: &Key, mut value: Zval) -> Zval {
+    // SAFETY: the engine copies the table (a new one, which the returned zval owns) and takes
+    // `value` into it, the copy's slot owning what `value` held.
+    unsafe {
+        let source = array.dereference().array().map_or(std::ptr::addr_of!(ext_php_rs::ffi::zend_empty_array), |ht| {
+            std::ptr::from_ref(ht).cast::<HashTable>()
+        });
+        let copy = zend_array_dup(source.cast_mut());
+        match key {
+            Key::Index(i) => {
+                ext_php_rs::ffi::zend_hash_index_update(copy, *i as u64, std::ptr::from_mut(&mut value).cast());
+            }
+            Key::Name(name) => {
+                zend_hash_str_update(copy, name.as_ptr().cast(), name.len(), std::ptr::from_mut(&mut value).cast());
+            }
+        }
+        std::mem::forget(value);
+        let mut zval = Zval::new();
+        zval.set_hashtable(ZBox::from_raw(copy));
+        zval
+    }
+}
+
+/// `$array`'s keys and values in order (what `foreach ($array as $key => $value)` visits),
+/// the values' references resolved.
+pub fn entries(ht: &ZendHashTable) -> Vec<(Key, Zval)> {
+    (0..ht.nNumUsed as usize)
+        .filter_map(|i| {
+            // SAFETY: within the used slots; a packed table's keys are the slot indexes, a
+            // bucket's are its `key` string or, when that is null, its `h`.
+            unsafe {
+                let value = &*slot(ht, i);
+                if value.u1.type_info == 0 {
+                    return None;
+                }
+                let key = if ht.u.flags & HASH_FLAG_PACKED != 0 {
+                    Key::Index(i as i64)
+                } else {
+                    let bucket = &*ht.__bindgen_anon_1.arData.add(i);
+                    match bucket.key.cast::<ZendStr>().as_ref() {
+                        Some(name) => Key::Name(name.as_bytes().to_vec()),
+                        None => Key::Index(bucket.h as i64),
+                    }
+                };
+                Some((key, value.dereference().shallow_clone()))
+            }
+        })
+        .collect()
+}
+
+/// `$this->name(...$args)` from a method of the class itself, by name (unlike [`call_method`]):
+/// the method of `this`'s own class (a subclass's override), whatever its visibility. `None` with
+/// an exception pending.
+pub fn call_own_method(this: &mut ZendObject, name: &str, args: &[&Zval]) -> Option<Zval> {
+    let class = this.ce;
+    // SAFETY: the object's class and its function table live as long as the object.
+    let function = unsafe {
+        zend_hash_str_find_ptr_lc(&raw const (*class).function_table, name.as_ptr().cast(), name.len())
+            .cast::<zend_function>()
+    };
+    if function.is_null() {
+        return None;
+    }
+    let mut params: Vec<Zval> = args.iter().map(|arg| arg.dereference().shallow_clone()).collect();
+    let mut retval = Zval::new();
+    let count = u32::try_from(params.len()).unwrap_or(u32::MAX);
+    // SAFETY: a method of the object's class, called on the object with live arguments; the
+    // engine writes the result into `retval`, which the returned `Zval` owns.
+    unsafe {
+        ext_php_rs::ffi::zend_call_known_function(
+            function,
+            std::ptr::from_mut(this),
+            class,
+            std::ptr::from_mut(&mut retval).cast(),
+            count,
+            params.as_mut_ptr().cast(),
+            std::ptr::null_mut(),
+        );
+    }
+    if ExecutorGlobals::has_exception() { None } else { Some(retval) }
+}
+
+/// PHP `$container[$dim]` read, for any key: the engine's fetch, with its warnings
+/// (`Uninitialized string offset 70`, `Undefined array key`) and errors; `None` with an
+/// exception pending.
+pub fn dimension_of(container: &Zval, dim: &Zval) -> Option<Zval> {
+    let mut result = Zval::new();
+    let mut container = container.dereference().shallow_clone();
+    let mut dim = dim.dereference().shallow_clone();
+    // SAFETY: as in [`dimension`].
+    unsafe { zend_fetch_dimension_const(&raw mut result, &raw mut container, &raw mut dim, 0) };
+    if ExecutorGlobals::has_exception() { None } else { Some(result) }
+}
+
+/// Declares the private constant `name` of `class`, with `value` and type `mask`, as
+/// [`declare_constant`] declares a public one.
+pub fn declare_private_constant(class: &mut ClassEntry, name: &str, mut value: Zval, mask: u32) {
+    // SAFETY: as in [`declare_constant`].
+    unsafe {
+        let init = ext_php_rs::ffi::zend_string_init_interned.expect("zend_string_init_interned");
+        let name = init(name.as_ptr().cast(), name.len(), true);
+        let flags: i32 =
+            ext_php_rs::flags::ConstantFlags::Private.bits().try_into().expect("constant flags fit an int");
+        zend_declare_typed_class_constant(
+            class,
+            name,
+            &raw mut value,
+            flags,
+            std::ptr::null_mut(),
+            zend_type { ptr: std::ptr::null_mut(), type_mask: mask },
+        );
+    }
+    std::mem::forget(value);
+}
+
+/// Types a parameter or return as the class `name` (`self`, a class): a named type, as the
+/// engine stores an internal function's class type once registered.
+pub fn set_class_type(info: &mut ArgInfo, name: &str) {
+    // SAFETY: called in MINIT; the interned name lives for the process.
+    unsafe {
+        let init = ext_php_rs::ffi::zend_string_init_interned.expect("zend_string_init_interned");
+        info.type_.ptr = init(name.as_ptr().cast(), name.len(), true).cast();
+    }
+    info.type_.type_mask = (info.type_.type_mask & !(MAY_BE_ANY | ext_php_rs::ffi::_ZEND_TYPE_LITERAL_NAME_BIT))
+        | ext_php_rs::ffi::_ZEND_TYPE_NAME_BIT;
 }

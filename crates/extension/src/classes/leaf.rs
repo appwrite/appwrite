@@ -1,4 +1,4 @@
-//! What every hand-built leaf validator class shares: its methods' description ([`Method`]),
+//! What every hand-built class shares: its methods' description ([`Method`]),
 //! building and registering the class ([`build`], [`patch`]), and the small pieces each
 //! method's handler needs (its `$this`, its `$value`, the return value).
 
@@ -30,6 +30,7 @@ pub struct Method {
 }
 
 pub const PUBLIC: MethodFlags = MethodFlags::Public;
+pub const PROTECTED: MethodFlags = MethodFlags::Protected;
 pub const PRIVATE: MethodFlags = MethodFlags::Private;
 
 /// `$value`, typed `mixed`.
@@ -49,7 +50,7 @@ pub const VALIDATOR: u32 = 1 << 30;
 /// parent's (`int` stands in for `int|float`, `mixed` for untyped).
 fn data_type(mask: u32) -> DataType {
     match mask {
-        VALIDATOR => DataType::object(super::BASE),
+        VALIDATOR => DataType::object(crate::validators::BASE),
         MAY_BE_BOOL => DataType::Bool,
         MAY_BE_LONG | NUMBER => DataType::Long,
         MAY_BE_STRING => DataType::String,
@@ -66,7 +67,13 @@ pub fn build(
     methods: &[Method],
     register: fn(&'static mut ClassEntry, ArgInfoTables),
 ) -> ext_php_rs::error::Result<()> {
-    let mut class = ClassBuilder::new(name).extends(parent);
+    class(name, methods).extends(parent).registration(register).register()
+}
+
+/// The class `name` with `methods`, to register as [`build`] does (or with a parent, flags
+/// or abstract methods of its own).
+pub fn class(name: &str, methods: &[Method]) -> ClassBuilder {
+    let mut class = ClassBuilder::new(name);
     for method in methods {
         let mut function = FunctionBuilder::new(method.name, method.handler);
         let required = method.params.iter().take_while(|(_, _, default)| default.is_none()).count();
@@ -86,7 +93,7 @@ pub fn build(
         };
         class = class.method(function, method.flags);
     }
-    class.registration(register).register()
+    class
 }
 
 /// Sets the exact types of `methods`' parameters and returns on `class` (the `int|float`
@@ -115,10 +122,10 @@ pub fn patch(class: &ClassEntry, methods: &[Method], tables: ArgInfoTables, unpr
 /// The class entry stored in `slot` at registration.
 pub fn stored(slot: &AtomicPtr<ClassEntry>) -> &'static ClassEntry {
     // SAFETY: set once, in MINIT, to a class entry the engine keeps for the process.
-    unsafe { slot.load(Ordering::Acquire).as_ref().expect("validator class registered") }
+    unsafe { slot.load(Ordering::Acquire).as_ref().expect("class registered in MINIT") }
 }
 
-/// The method's `$this` (a validator's methods are never static).
+/// The method's `$this` (the hand-built classes' methods are never static).
 pub fn this(ex: &mut ExecuteData) -> Option<&'static mut ZendObject> {
     // SAFETY: the object outlives the call.
     ex.get_self().map(|object| unsafe { &mut *std::ptr::from_mut(object) })
