@@ -33,7 +33,7 @@ class Webhook extends Resource
      */
     public static function fromArray(array $array): self
     {
-        return new self(
+        return (new self(
             $array['id'],
             $array['name'],
             $array['url'],
@@ -44,7 +44,7 @@ class Webhook extends Resource
             (bool) ($array['enabled'] ?? true),
             createdAt: $array['createdAt'] ?? '',
             updatedAt: $array['updatedAt'] ?? '',
-        );
+        ))->setDescription(\is_string($array['description'] ?? null) ? $array['description'] : '');
     }
 
     /**
@@ -53,6 +53,7 @@ class Webhook extends Resource
     public function jsonSerialize(): array
     {
         return [
+            'description' => $this->description,
             'id' => $this->id,
             'name' => $this->name,
             'url' => $this->url,

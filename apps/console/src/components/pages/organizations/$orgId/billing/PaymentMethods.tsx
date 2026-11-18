@@ -29,8 +29,11 @@ import {
   useBillingPlans,
   useOrganizationPlan,
   usePaymentMethods,
+  useSetupPaymentMethodMandate,
   useUpdateOrganizationPaymentMethod} from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useAuth } from '@/components/global/auth/RequireAuth'
 import type { Models } from '@appwrite.io/console'
 import { CannotRemovePrimaryPaymentMethodModal } from './CannotRemovePrimaryPaymentMethodModal'
 import { OrgPaymentMethodContextMenu } from './OrgPaymentMethodContextMenu'
@@ -535,6 +538,27 @@ function PaymentMethodCard({
   const hasError = method.failed || method.expired
   const errorMessage = hasError ? method.lastError || null : null
 
+  const { account } = useAuth()
+  const setupMandateMutation = useSetupPaymentMethodMandate()
+  const needsMandate =
+    method.country?.toLowerCase() === 'in' && !method.mandateId
+  // The setup endpoint only accepts the signed-in user's own cards.
+  const ownsCard = method.userId === (account as Models.User | undefined)?.$id
+
+  const handleSetupMandate = async () => {
+    try {
+      await setupMandateMutation.mutateAsync({
+        paymentMethodId: method.$id,
+        providerMethodId: method.providerMethodId,
+        name: method.name ?? '',
+        state: method.state || undefined,
+      })
+      toast.success(t('Auto-pay is set up'))
+    } catch (error) {
+      toast.error(getErrorMessage(error, t('Failed to set up auto-pay')))
+    }
+  }
+
   return (
     <OrgPaymentMethodContextMenu
       method={method}
@@ -582,6 +606,48 @@ function PaymentMethodCard({
               <AlertCircle className="h-3.5 w-3.5 shrink-0 translate-y-px" />
               <span>{errorMessage}</span>
             </p>
+          )}
+          {needsMandate && (
+            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+              <p className="text-[12px] leading-4 text-muted-foreground">
+                {t(
+                  'The bank asks for an OTP on automatic payments with this card. Set up auto-pay so payments up to $150 go through without one.',
+                )}
+              </p>
+              {ownsCard ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-[12px]"
+                  onClick={handleSetupMandate}
+                  disabled={setupMandateMutation.isPending}
+                >
+                  {t('Set up auto-pay')}
+                </Button>
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span tabIndex={0}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-[12px]"
+                          disabled
+                        >
+                          {t('Set up auto-pay')}
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-[12px]">
+                        {t('Only the card owner can set up auto-pay')}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
           )}
         </div>
       </div>

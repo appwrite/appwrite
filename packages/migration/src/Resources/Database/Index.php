@@ -71,11 +71,12 @@ class Index extends Resource
      *     orders: ?array<string>,
      *     createdAt: string,
      *     updatedAt: string,
+     *     description?: string,
      * } $array
      */
     public static function fromArray(array $array): self
     {
-        return new self(
+        return (new self(
             $array['id'],
             $array['key'],
             Table::fromArray($array['table'] ?? $array['collection']),
@@ -85,7 +86,7 @@ class Index extends Resource
             $array['orders'] ?? [],
             createdAt: $array['createdAt'] ?? '',
             updatedAt: $array['updatedAt'] ?? '',
-        );
+        ))->setDescription($array['description'] ?? '');
     }
 
     /**
@@ -94,6 +95,7 @@ class Index extends Resource
     public function jsonSerialize(): array
     {
         return [
+            'description' => $this->description,
             'id' => $this->getId(),
             'key' => $this->key,
             'table' => $this->table,

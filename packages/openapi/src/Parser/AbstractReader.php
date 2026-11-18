@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\OpenAPI\Parser;
 
+use Utopia\OpenAPI\Exception\CircularReference;
 use Utopia\OpenAPI\Exception\InvalidSpecification;
 use Utopia\OpenAPI\Model\Contact;
 use Utopia\OpenAPI\Model\Encoding;
@@ -28,6 +29,12 @@ use Utopia\OpenAPI\Version;
 abstract class AbstractReader implements Reader
 {
     protected LocalResolver $resolver;
+
+    /** @var array<string, Header> */
+    private array $referencedHeaders = [];
+
+    /** @var list<string> */
+    private array $expandingHeaders = [];
 
     /** @param array<string, mixed> $document */
     public function __construct(
@@ -198,26 +205,63 @@ abstract class AbstractReader implements Reader
     {
         $headers = [];
         foreach (Value::object($raw, $location) as $name => $item) {
-            $data = $this->resolveObject($item, "{$location}/{$name}");
-            $schema = null;
-            if (\array_key_exists('schema', $data)) {
-                $schema = $this->schemas->read($data['schema'], "{$location}/{$name}/schema");
-            } elseif ($openApi2 && isset($data['type'])) {
-                $schema = $this->schemas->readParameterFields($data, "{$location}/{$name}");
-            }
-            $headers[(string) $name] = new Header(
-                description: Value::optionalString($data, 'description') ?? '',
-                required: (bool) ($data['required'] ?? false),
-                deprecated: (bool) ($data['deprecated'] ?? false),
-                schema: $schema,
-                content: isset($data['content']) ? $this->parseMediaTypes($data['content'], "{$location}/{$name}/content") : [],
-                style: Value::optionalString($data, 'style'),
-                explode: \array_key_exists('explode', $data) ? (bool) $data['explode'] : null,
-                extensions: Value::extensions($data),
-            );
+            $headers[(string) $name] = $this->parseHeader($item, "{$location}/{$name}", $openApi2);
         }
 
         return $headers;
+    }
+
+    /**
+     * A referenced header is expanded once and shared, so references that fan
+     * out through media-type encodings cost linear work, and one that reaches
+     * itself through its own content is reported as circular.
+     */
+    private function parseHeader(mixed $item, string $location, bool $openApi2): Header
+    {
+        $reference = \is_array($item) && \is_string($item['$ref'] ?? null) ? $item['$ref'] : null;
+        if ($reference === null) {
+            return $this->buildHeader($this->resolveObject($item, $location), $location, $openApi2);
+        }
+
+        if (isset($this->referencedHeaders[$reference])) {
+            return $this->referencedHeaders[$reference];
+        }
+
+        if (\in_array($reference, $this->expandingHeaders, true)) {
+            $trail = implode(' -> ', [...$this->expandingHeaders, $reference]);
+            throw new CircularReference("Circular reference: {$trail}");
+        }
+
+        $this->expandingHeaders[] = $reference;
+        try {
+            $header = $this->buildHeader($this->resolveObject($item, $location), $location, $openApi2);
+        } finally {
+            array_pop($this->expandingHeaders);
+        }
+
+        return $this->referencedHeaders[$reference] = $header;
+    }
+
+    /** @param array<string, mixed> $data */
+    private function buildHeader(array $data, string $location, bool $openApi2): Header
+    {
+        $schema = null;
+        if (\array_key_exists('schema', $data)) {
+            $schema = $this->schemas->read($data['schema'], "{$location}/schema");
+        } elseif ($openApi2 && isset($data['type'])) {
+            $schema = $this->schemas->readParameterFields($data, $location);
+        }
+
+        return new Header(
+            description: Value::optionalString($data, 'description') ?? '',
+            required: (bool) ($data['required'] ?? false),
+            deprecated: (bool) ($data['deprecated'] ?? false),
+            schema: $schema,
+            content: isset($data['content']) ? $this->parseMediaTypes($data['content'], "{$location}/content") : [],
+            style: Value::optionalString($data, 'style'),
+            explode: \array_key_exists('explode', $data) ? (bool) $data['explode'] : null,
+            extensions: Value::extensions($data),
+        );
     }
 
     /** @return array<string, mixed> */

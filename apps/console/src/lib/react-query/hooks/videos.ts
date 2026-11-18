@@ -14,18 +14,19 @@ import {
   useQueryClient,
   keepPreviousData,
 } from '@tanstack/react-query'
-import { Query, VideoOutput } from '@appwrite.io/console'
-import type { Models } from '@appwrite.io/console'
+import { Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { DEFAULT_STALE_TIME, GRID_DEFAULT_PAGE_SIZE } from './constants'
 import { Dependencies } from './dependencies'
+import { VideoOutput } from '@/lib/appwrite/videos'
+import type { Video, VideoProfileList, VideoRendition, VideoRenditionList, VideoSubtitleList } from '@/lib/appwrite/videos'
 
 export const VIDEOS_DEFAULT_SORT_BY = '$createdAt'
 export const VIDEOS_DEFAULT_SORT_ORDER: 'asc' | 'desc' = 'desc'
 
 /** True when probe metadata is available on the video document. */
 export function isVideoMetadataReady(
-  video: Pick<Models.Video, 'width' | 'height'> | null | undefined,
+  video: Pick<Video, 'width' | 'height'> | null | undefined,
 ): boolean {
   if (!video) return false
   return (video.width ?? 0) > 0 && (video.height ?? 0) > 0
@@ -62,7 +63,7 @@ export type VideoEncodingStatus = 'none' | 'encoding' | 'ready' | 'error'
 
 /** Videos carry no status of their own; summarize their renditions instead. */
 export function getVideoEncodingStatus(
-  renditions: Pick<Models.VideoRendition, 'status'>[],
+  renditions: Pick<VideoRendition, 'status'>[],
 ): VideoEncodingStatus {
   if (renditions.some((r) => isVideoRenditionActive(r.status))) {
     return 'encoding'
@@ -130,7 +131,7 @@ export async function fetchProjectVideos(
   filterQueries?: string[],
   sortBy: string = VIDEOS_DEFAULT_SORT_BY,
   sortOrder: 'asc' | 'desc' = VIDEOS_DEFAULT_SORT_ORDER,
-): Promise<{ videos: Models.Video[]; total: number }> {
+): Promise<{ videos: Video[]; total: number }> {
   if (!projectId) return { videos: [], total: 0 }
   const orderQuery =
     sortOrder === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy)
@@ -149,27 +150,27 @@ export async function fetchProjectVideos(
 export async function fetchProjectVideo(
   projectId: string,
   videoId: string,
-): Promise<Models.Video> {
+): Promise<Video> {
   return await sdk.forProject(projectId).videos.get({ videoId })
 }
 
 export async function fetchVideoRenditions(
   projectId: string,
   videoId: string,
-): Promise<Models.VideoRenditionList> {
+): Promise<VideoRenditionList> {
   return await sdk.forProject(projectId).videos.listRenditions({ videoId })
 }
 
 export async function fetchVideoSubtitles(
   projectId: string,
   videoId: string,
-): Promise<Models.VideoSubtitleList> {
+): Promise<VideoSubtitleList> {
   return await sdk.forProject(projectId).videos.listSubtitles({ videoId })
 }
 
 export async function fetchVideoProfiles(
   projectId: string,
-): Promise<Models.VideoProfileList> {
+): Promise<VideoProfileList> {
   return await sdk.forProject(projectId).videos.listProfiles()
 }
 
@@ -683,7 +684,7 @@ export type VideoProfileInput = {
 
 /** True when probe metadata includes an audio stream (after prepare / encode probe). */
 export function videoSourceHasAudio(
-  video: Pick<Models.Video, 'audioCodec' | 'duration' | 'status'> | null | undefined,
+  video: Pick<Video, 'audioCodec' | 'duration' | 'status'> | null | undefined,
 ): boolean {
   if (!video) return false
   if (video.audioCodec?.trim()) return true

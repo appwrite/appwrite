@@ -34,6 +34,7 @@ class Bucket extends Resource
         private readonly bool $antiVirus = false,
         private readonly bool $updateLimits = false,
         private readonly bool $transformations = false,
+        private readonly bool $stripMetadata = false,
     ) {
         $this->id = $id;
         $this->permissions = $permissions;
@@ -45,7 +46,7 @@ class Bucket extends Resource
      */
     public static function fromArray(array $array): self
     {
-        return new self(
+        return (new self(
             $array['id'],
             $array['name'] ?? '',
             $array['permissions'] ?? [],
@@ -57,8 +58,9 @@ class Bucket extends Resource
             $array['encryption'] ?? false,
             $array['antiVirus'] ?? false,
             $array['updateLimits'] ?? false,
-            $array['transformations'] ?? false
-        );
+            $array['transformations'] ?? false,
+            \is_bool($array['stripMetadata'] ?? null) ? $array['stripMetadata'] : false,
+        ))->setDescription(\is_string($array['description'] ?? null) ? $array['description'] : '');
     }
 
     /**
@@ -67,6 +69,7 @@ class Bucket extends Resource
     public function jsonSerialize(): array
     {
         return [
+            'description' => $this->description,
             'id' => $this->id,
             'name' => $this->name,
             'fileSecurity' => $this->fileSecurity,
@@ -78,6 +81,7 @@ class Bucket extends Resource
             'antiVirus' => $this->antiVirus,
             'updateLimits' => $this->updateLimits,
             'transformations' => $this->transformations,
+            'stripMetadata' => $this->stripMetadata,
         ];
     }
 
@@ -139,5 +143,9 @@ class Bucket extends Resource
     public function getTransformations(): bool
     {
         return $this->transformations;
+    }
+    public function getStripMetadata(): bool
+    {
+        return $this->stripMetadata;
     }
 }

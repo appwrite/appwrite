@@ -19,14 +19,7 @@ class Options
 
     protected ?Schema $schema = null;
 
-    /**
-     * @var array<string, string>
-     */
-    protected array $instructions = [];
-
-    protected string $description = '';
-
-    protected string $userId = 'diff-check-user';
+    protected string $instructions = '';
 
     protected bool $trimResponse = true;
 
@@ -113,55 +106,16 @@ class Options
     }
 
     /**
-     * @return array<string, string>
+     * System instructions for the agent reviewing the diff.
      */
-    public function getInstructions(): array
+    public function getInstructions(): string
     {
         return $this->instructions;
     }
 
-    /**
-     * @param  array<string, string>  $instructions
-     */
-    public function setInstructions(array $instructions): self
+    public function setInstructions(string $instructions): self
     {
         $this->instructions = $instructions;
-
-        return $this;
-    }
-
-    public function addInstruction(string $name, string $content): self
-    {
-        $this->instructions[$name] = $content;
-
-        return $this;
-    }
-
-    public function getDescription(): string
-    {
-        return $this->description;
-    }
-
-    public function setDescription(string $description): self
-    {
-        $this->description = $description;
-
-        return $this;
-    }
-
-    public function getUserId(): string
-    {
-        return $this->userId;
-    }
-
-    public function setUserId(string $userId): self
-    {
-        $userId = trim($userId);
-        if ($userId === '') {
-            throw new \InvalidArgumentException('userId must not be empty');
-        }
-
-        $this->userId = $userId;
 
         return $this;
     }

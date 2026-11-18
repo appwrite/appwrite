@@ -16,7 +16,7 @@ class Http extends Service
     {
         $this->type = Service::TYPE_HTTP;
 
-        $this->addAction(Timeout::getName(), new Timeout());
+        $this->addAction('projectDatabaseTimeout', Timeout::class);
 
         foreach ([
             LegacyRegistry::class,

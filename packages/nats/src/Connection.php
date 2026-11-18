@@ -24,6 +24,7 @@ use Utopia\NATS\Internal\CallbackException;
 use Utopia\NATS\Protocol\Parser;
 use Utopia\NATS\Protocol\ServerOp;
 use Utopia\NATS\Protocol\Writer;
+use Utopia\NATS\Transport\Pollable;
 use Utopia\NATS\Transport\TcpTransport;
 use Utopia\NATS\Transport\TlsTransport;
 use Utopia\NATS\Transport\Transport;
@@ -41,11 +42,20 @@ final class Connection
     private const CLIENT_LANG = 'php';
     private const CLIENT_VERSION = '0.1.0';
 
-    // Bounds on the read tick() does to collect its own PONGs. Short enough
-    // that a sweep over an idle pool stays in the low milliseconds, and capped
-    // so a connection with live subscription traffic cannot hold maintenance.
+    // Bounds on the reads tick() does. Short enough that a sweep over an idle
+    // pool costs tens of milliseconds a connection once every maintenance
+    // interval, and capped so a connection with live subscription traffic
+    // cannot hold maintenance.
     private const float TICK_READ_TIMEOUT = 0.05;
     private const int TICK_MAX_READS = 4;
+
+    /**
+     * Budget for acting on what the server already sent before a request is
+     * written. What a parked connection holds (an INFO, a PING, an -ERR, EOF)
+     * takes far less; the cap only bites under live subscription traffic, so
+     * that traffic cannot hold a request back past its own timeout.
+     */
+    public const float SETTLE_TIMEOUT = 0.05;
 
     /**
      * Server -ERR substrings after which NATS closes the connection. Lowercase;
@@ -99,12 +109,10 @@ final class Connection
     private int $outstandingPings = 0;
     private float $lastPingTime = 0.0;
 
-    // Mux inbox for request-reply
     private ?Subscription $inboxSub = null;
     private string $inboxPrefix = '';
     private bool $collecting = false;
 
-    // Reconnection
     /** @var list<string> */
     private array $serverPool = [];
     private string $currentServer = '';
@@ -257,6 +265,7 @@ final class Connection
         if ($requests === []) {
             return;
         }
+        $this->settle(min($timeout, self::SETTLE_TIMEOUT));
         $pending = [];
         $publishing = $written = false;
         $this->collecting = true;
@@ -341,12 +350,12 @@ final class Connection
      */
     public function requestMany(string $subject, string $data = '', array $opts = []): array
     {
-        $this->assertReadable();
-        $this->ensureConnected();
-
         $max = $opts['max'] ?? null;
         $timeout = $opts['timeout'] ?? $this->options->requestTimeout;
         $stall = $opts['stall'] ?? null;
+
+        $this->settle(min($timeout, self::SETTLE_TIMEOUT));
+        $this->ensureConnected();
 
         // Dedicated inbox subscription so replies never touch the mux inbox used
         // by the single-reply request().
@@ -392,12 +401,18 @@ final class Connection
     }
 
     /**
-     * Drive connection maintenance without consuming a message: send the
-     * keepalive PING when it is due, and recycle the connection when the server
-     * has stopped answering. A holder that keeps a connection open without
-     * reading from it -- a pooled publisher, say -- must call this on an
-     * interval shorter than the server's ping deadline, because nothing else
-     * in this class runs on its own.
+     * Drive connection maintenance: send the keepalive PING when it is due,
+     * recycle the connection when the server has stopped answering, and take a
+     * short, bounded read so a socket the server has closed is noticed and
+     * rebuilt here rather than by the next command. A holder that keeps a
+     * connection open without reading from it -- a pooled publisher, say --
+     * must call this on an interval shorter than the server's ping deadline,
+     * because nothing else in this class runs on its own.
+     *
+     * The read dispatches whatever it finds, exactly as processMessage() does:
+     * subscription messages already waiting are delivered from here, so a
+     * callback subscription's closure runs inside the tick, and an exception
+     * it throws propagates out of it.
      *
      * This reads the socket, so the caller must hold the connection
      * exclusively for the call. Pool maintenance satisfies that by sweeping
@@ -408,11 +423,12 @@ final class Connection
     {
         $this->assertReadable();
         $this->checkPings();
-        $this->collectPongs();
+        $this->readReady();
     }
 
     /**
-     * Consume the PONGs owed for the keepalive PINGs this connection has sent.
+     * Read whatever the socket has for us: the PONGs owed for the keepalive
+     * PINGs this connection has sent, and anything else already waiting.
      *
      * checkPings() only writes: it is the read path that clears
      * $outstandingPings, and a holder that never reads has none. Ticking such a
@@ -420,17 +436,92 @@ final class Connection
      * perfectly healthy socket stale -- the keepalive would cause the outage it
      * exists to prevent. Reading here closes that loop.
      *
-     * Bounded, and only while a PONG is actually owed, so maintenance can never
-     * turn into a receive loop on a connection carrying subscription traffic.
+     * The first read is taken whether or not a PONG is owed, because a read is
+     * the only thing that can see a socket the server has closed. A server that
+     * restarts, is evicted, or has the connection reaped by an intermediary
+     * leaves one that still reads as connected with no outstanding pings, so
+     * neither checkPings() nor checkStale() can tell. Without a read here the
+     * close was instead found by the next request, whose mid-collection read
+     * refuses to reconnect because an ambiguous write must never be replayed --
+     * so a recoverable server event reached the caller as "Connection closed by
+     * server" and left the connection dead. Taken here it lands in
+     * readMessage(), which rebuilds the connection and returns.
+     *
+     * Bounded, so maintenance can never turn into a receive loop on a
+     * connection carrying subscription traffic.
      */
-    private function collectPongs(): void
+    private function readReady(): void
     {
+        // Only a connection that claims to be live. One the server closed for
+        // something a reconnect cannot fix was deliberately left dead, and
+        // reading it would rebuild it on every maintenance sweep.
+        if ($this->status !== self::STATUS_CONNECTED) {
+            return;
+        }
+
         // readMessage() rather than processMessage(): the latter checks the
         // keepalive on entry, so draining through it would send a fresh PING
         // for every PONG collected and the outstanding count could never fall.
-        for ($read = 0; $this->outstandingPings > 0 && $read < self::TICK_MAX_READS; $read++) {
+        for ($read = 0; $read < self::TICK_MAX_READS; $read++) {
             $this->readMessage(self::TICK_READ_TIMEOUT);
+
+            if ($this->outstandingPings === 0) {
+                return;
+            }
         }
+    }
+
+    /**
+     * Act on what the server has already sent, reconnecting if it closed the socket.
+     * Reads the socket, so the caller must hold the connection exclusively.
+     * Returns once nothing is waiting, or after $timeout (default {@see self::SETTLE_TIMEOUT}).
+     */
+    public function settle(?float $timeout = null): void
+    {
+        $this->assertReadable();
+        $this->absorb($timeout ?? self::SETTLE_TIMEOUT);
+    }
+
+    /**
+     * @return NatsException|null the first -ERR read that left the connection usable
+     */
+    private function absorb(float $timeout): ?NatsException
+    {
+        $deadline = hrtime(true) / 1e9 + $timeout;
+        $kept = null;
+
+        while ($this->status === self::STATUS_CONNECTED && $this->pending()) {
+            $remaining = $deadline - hrtime(true) / 1e9;
+            if ($remaining <= 0) {
+                break;
+            }
+
+            $received = $this->receive($remaining, headerTimeout: min($remaining, self::TICK_READ_TIMEOUT));
+            if ($received === null) {
+                break;
+            }
+
+            [$operation, $data] = $received;
+            if ($operation !== ServerOp::Err) {
+                $this->dispatchOp($operation, $data);
+                continue;
+            }
+
+            $error = $this->serverError($data);
+            if (!$this->isConnected()) {
+                throw $error;
+            }
+            $kept ??= $error;
+        }
+
+        return $kept;
+    }
+
+    private function pending(): bool
+    {
+        return $this->parser->isPoisoned()
+            || $this->parser->hasCompleteLine()
+            || ($this->transport instanceof Pollable && $this->transport->poll());
     }
 
     /**
@@ -450,8 +541,16 @@ final class Connection
      */
     private function readMessage(?float $timeout = null, bool $reconnect = true): ?Message
     {
+        $operation = $this->receive($timeout, $reconnect);
+
+        return $operation === null ? null : $this->dispatchOp(...$operation);
+    }
+
+    /** @return array{0: ServerOp, 1: mixed}|null */
+    private function receive(?float $timeout, bool $reconnect = true, ?float $headerTimeout = null): ?array
+    {
         try {
-            [$op, $data] = $this->parser->next($timeout);
+            return $this->parser->next($timeout, $headerTimeout);
         } catch (TimeoutException $error) {
             if (!$reconnect) {
                 throw $error;
@@ -462,10 +561,16 @@ final class Connection
                 $this->attemptReconnect();
                 return null;
             }
+
+            // Not rebuilding it is no reason to keep claiming it. Left at
+            // connected, the next publish() writes into the dead socket and
+            // returns success.
+            if ($this->status !== self::STATUS_CLOSED) {
+                $this->recycleDeadConnection(false);
+            }
+
             throw $e;
         }
-
-        return $this->dispatchOp($op, $data);
     }
 
     /**
@@ -499,8 +604,9 @@ final class Connection
     public function flush(?float $timeout = null): void
     {
         $this->assertReadable();
-        $this->ensureConnected();
         $timeout ??= $this->options->connectTimeout;
+        $error = $this->absorb(min($timeout, self::SETTLE_TIMEOUT));
+        $this->ensureConnected();
 
         $this->send($this->writer->ping());
         $deadline = microtime(true) + $timeout;
@@ -511,12 +617,15 @@ final class Connection
                 throw new TimeoutException('Flush timed out');
             }
 
-            [$op, $data] = $this->parser->next($remaining);
-            if ($op === ServerOp::Pong) {
+            [$operation, $data] = $this->parser->next($remaining);
+            if ($operation === ServerOp::Pong) {
                 $this->outstandingPings = 0;
+                if ($error instanceof NatsException) {
+                    throw $error;
+                }
                 return;
             }
-            $this->dispatchOp($op, $data);
+            $this->dispatchOp($operation, $data);
         }
     }
 
@@ -615,8 +724,6 @@ final class Connection
     {
         return $this->status;
     }
-
-    // --- Internal ---
 
     private function doConnect(): void
     {
@@ -721,17 +828,15 @@ final class Connection
         // Merge connect_urls into server pool
         foreach ($this->serverInfo->connectUrls as $connectUrl) {
             if (!\in_array($connectUrl, $this->serverPool, true)) {
-                $this->serverPool[] = $this->normalizeUrl($connectUrl);
+                $this->serverPool[] = $this->normalizeUrl($connectUrl, $this->isSecure($scheme));
             }
         }
 
         // TLS upgrade over a plaintext TCP connection: when the server requires
-        // TLS, or when the caller opted in and the server advertises it is
-        // available. A TlsTransport / custom transport handles its own TLS.
+        // TLS, or when the caller opted in, whatever the server advertises. A
+        // TlsTransport / custom transport handles its own TLS.
         if ($this->transport instanceof TcpTransport && $scheme !== 'tls') {
-            $wantsUpgrade = $this->serverInfo->tlsRequired
-                || ($this->options->tls && $this->serverInfo->tlsAvailable);
-            if ($wantsUpgrade) {
+            if ($this->serverInfo->tlsRequired || $this->options->tls) {
                 $this->transport->upgradeTls($this->tlsOptions());
             }
         }
@@ -867,6 +972,11 @@ final class Connection
 
     private function handleError(mixed $data): never
     {
+        throw $this->serverError($data);
+    }
+
+    private function serverError(mixed $data): NatsException
+    {
         $message = \is_string($data) ? $data : 'Unknown server error';
         $error = self::mapServerError($message);
 
@@ -879,7 +989,7 @@ final class Connection
             $this->notify($this->options->onError, new NatsException($message));
         }
 
-        throw $error;
+        return $error;
     }
 
     /**
@@ -990,8 +1100,9 @@ final class Connection
 
             // Async INFO may advertise additional cluster members; fold any new
             // ones into the pool so failover has somewhere to go.
+            $secure = $this->isSecure($this->parseUrl($this->currentServer)['scheme']);
             foreach ($this->serverInfo->connectUrls as $connectUrl) {
-                $normalized = $this->normalizeUrl($connectUrl);
+                $normalized = $this->normalizeUrl($connectUrl, $secure);
                 if (!\in_array($normalized, $this->serverPool, true)) {
                     $this->serverPool[] = $normalized;
                 }
@@ -1118,7 +1229,7 @@ final class Connection
                     $this->options->reconnectWait,
                     $this->options->maxReconnectWait,
                 );
-                $wait = $backoff + (lcg_value() * $this->options->reconnectJitter);
+                $wait = $backoff + mt_rand() / mt_getrandmax() * $this->options->reconnectJitter;
                 usleep((int) ($wait * 1_000_000));
             }
 
@@ -1339,12 +1450,22 @@ final class Connection
         return $opts;
     }
 
-    private function normalizeUrl(string $url): string
+    /**
+     * Scheme-less URLs come from INFO connect_urls; $secure carries the TLS of
+     * the server that advertised them, so a TLS connection never fails over to
+     * a plaintext one.
+     */
+    private function normalizeUrl(string $url, bool $secure = false): string
     {
         if (!preg_match('#^(nats|tls|ws|wss)://#', $url)) {
-            return 'nats://' . $url;
+            return ($secure ? 'tls://' : 'nats://') . $url;
         }
         return $url;
+    }
+
+    private function isSecure(string $scheme): bool
+    {
+        return $scheme === 'tls' || $scheme === 'wss' || $this->options->tls;
     }
 
     /**

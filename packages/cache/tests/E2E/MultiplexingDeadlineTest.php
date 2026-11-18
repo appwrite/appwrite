@@ -186,14 +186,18 @@ final class MultiplexingDeadlineTest extends TestCase
             $cache = new Cache($this->makeAdapter(readTimeout: 0.05, livenessTimeout: 5.0));
             $cache->setTelemetry($telemetry);
 
-            $generation = $cache->getGeneration('leased');
+            $generation = $cache->getLease('leased');
 
             $this->pauseServer();
 
             try {
                 $this->assertFalse($cache->save('slow', 'value', 'slow'));
                 $this->assertFalse($cache->saveMany('slow', ['field' => 'value']));
-                $this->assertFalse($cache->saveWithLease('leased', 'value', 'leased', $generation));
+                try {
+                    $cache->saveWithLease('leased', 'value', 'leased', $generation);
+                    $this->fail('A failed conditional write must throw');
+                } catch (\Utopia\Cache\Adapter\Redis\TimeoutException) {
+                }
             } finally {
                 $this->resumeServer();
             }
@@ -201,7 +205,7 @@ final class MultiplexingDeadlineTest extends TestCase
             $this->assertSame([
                 ['operation' => 'save', 'error' => 'TimeoutException'],
                 ['operation' => 'saveMany', 'error' => 'TimeoutException'],
-                ['operation' => 'saveWithLease', 'error' => 'TimeoutException'],
+                ['operation' => 'compareAndSwap', 'error' => 'TimeoutException'],
             ], $failures->attributes);
         });
     }

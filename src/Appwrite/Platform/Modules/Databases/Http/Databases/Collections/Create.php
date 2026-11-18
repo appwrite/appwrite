@@ -31,6 +31,7 @@ use Utopia\Database\Validator\IndexDefinition as IndexValidator;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Http\Http;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -95,10 +96,11 @@ class Create extends Action
             ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->inject('authorization')
+            ->inject('plan')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, array $attributes, array $indexes, string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, array $attributes, array $indexes, string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization, array $plan): void
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -134,8 +136,6 @@ class Create extends Action
             ]));
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException(), params: [$collectionId]);
-        } catch (LimitException) {
-            throw new Exception($this->getLimitException(), params: [$databaseId]);
         } catch (NotFoundException) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
@@ -158,6 +158,22 @@ class Create extends Action
             if (($attribute['type'] ?? '') === ColumnType::Relationship->value) {
                 $dbForProject->deleteDocument($databaseKey, $collection->getId());
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Relationship attributes cannot be created inline. Use the create relationship endpoint instead.');
+            }
+
+            // Loose match, as the attribute response filter reads it, so no filters shape skips the checks
+            if (!\in_array('encrypt', (array) ($attribute['filters'] ?? []))) {
+                continue;
+            }
+
+            $resources = $this->isCollectionsAPI() ? 'attributes' : 'columns';
+            if (!Http::isDevelopment() && !empty($plan) && !($plan['databasesAllowEncrypt'] ?? false)) {
+                $dbForProject->deleteDocument($databaseKey, $collection->getId());
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Encrypted ' . $resources . ' are not available on your plan. Please upgrade to create encrypted ' . $resources . '.');
+            }
+
+            if (AttributeDefinition::resolve($attribute)['size'] < APP_DATABASE_ENCRYPT_SIZE_MIN) {
+                $dbForProject->deleteDocument($databaseKey, $collection->getId());
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Size too small. Encrypted strings require a minimum size of ' . APP_DATABASE_ENCRYPT_SIZE_MIN . ' characters.');
             }
         }
 
@@ -222,9 +238,13 @@ class Create extends Action
         } catch (IndexException $e) {
             $dbForProject->deleteDocument($databaseKey, $collection->getId());
             throw new Exception($this->getInvalidIndexException(), $e->getMessage());
-        } catch (LimitException) {
+        } catch (LimitException $e) {
+            // The only limits left are on this collection's own columns: their count,
+            // and the row width they add up to. Too many indexes is already refused by
+            // the indexes validator above, so it can never reach this. The library
+            // message names which of the two it was and by how much, so forward it.
             $dbForProject->deleteDocument($databaseKey, $collection->getId());
-            throw new Exception($this->getLimitException(), params: [$collectionId]);
+            throw new Exception($this->getColumnLimitException(), $e->getMessage());
         } catch (\Throwable $e) {
             $dbForProject->deleteDocument($databaseKey, $collection->getId());
             throw $e;

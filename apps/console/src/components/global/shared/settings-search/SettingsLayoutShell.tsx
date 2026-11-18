@@ -1,4 +1,5 @@
 import {
+  Fragment,
   useEffect,
   useMemo,
   useRef,
@@ -18,7 +19,9 @@ import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
@@ -49,6 +52,25 @@ export type SettingsLayoutNavItem = {
   params?: Record<string, string>
   /** Optional trailing content (e.g. warning icon) after the label. */
   endAdornment?: ReactNode
+  /** Heading shown above the first item of each run of items with the same group. */
+  group?: string
+}
+
+/** Whether `navItems[index]` starts a new group, so its heading is shown above it. */
+function startsGroup(navItems: SettingsLayoutNavItem[], index: number) {
+  const group = navItems[index].group
+  return Boolean(group) && navItems[index - 1]?.group !== group
+}
+
+/** Consecutive items with the same group, in order; ungrouped items form runs without a label. */
+function groupNavItems(navItems: SettingsLayoutNavItem[]) {
+  const groups: { label?: string; items: SettingsLayoutNavItem[] }[] = []
+  for (const item of navItems) {
+    const last = groups[groups.length - 1]
+    if (last && last.label === item.group) last.items.push(item)
+    else groups.push({ label: item.group, items: [item] })
+  }
+  return groups
 }
 
 type SettingsLayoutShellProps = {
@@ -70,6 +92,8 @@ type SettingsLayoutShellProps = {
    * (for in-surface hosts like the agent right pane).
    */
   useRouteLinks?: boolean
+  /** Shown under the desktop nav items. */
+  navFooter?: ReactNode
 }
 
 function SettingsSearchInput({
@@ -119,12 +143,14 @@ function SettingsLayoutShellContent({
   desktopNavAriaLabel = 'Settings navigation',
   navWidthClassName = SETTINGS_LAYOUT_NAV_WIDTH_CLASS,
   useRouteLinks = true,
+  navFooter,
 }: Omit<SettingsLayoutShellProps, 'searchQuery' | 'onSearchQueryChange'>) {
   const t = useT()
   const { query, setQuery } = useSettingsSearch()
   const q = query.trim().toLowerCase()
 
   const sectionIds = useMemo(() => navItems.map((item) => item.id), [navItems])
+  const navGroups = useMemo(() => groupNavItems(navItems), [navItems])
 
   const navMatchBySection = useMemo(() => {
     if (!q) return new Map<string, boolean>()
@@ -202,18 +228,27 @@ function SettingsLayoutShellContent({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {navItems.map((item) => (
-                <SelectItem
-                  key={item.id}
-                  value={item.id}
-                  className="text-[13px]"
-                >
-                  <span className="flex items-center gap-2">
-                    <item.icon className="h-4 w-4 shrink-0" />
-                    {t(item.label)}
-                    {item.endAdornment}
-                  </span>
-                </SelectItem>
+              {navGroups.map((group) => (
+                <SelectGroup key={group.items[0].id}>
+                  {group.label ? (
+                    <SelectLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                      {t(group.label)}
+                    </SelectLabel>
+                  ) : null}
+                  {group.items.map((item) => (
+                    <SelectItem
+                      key={item.id}
+                      value={item.id}
+                      className="text-[13px]"
+                    >
+                      <span className="flex items-center gap-2">
+                        <item.icon className="h-4 w-4 shrink-0" />
+                        {t(item.label)}
+                        {item.endAdornment}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               ))}
             </SelectContent>
           </Select>
@@ -229,41 +264,51 @@ function SettingsLayoutShellContent({
             onChange={setQuery}
             placeholder={searchPlaceholder}
           />
-          {navItems.map((item) => {
+          {navItems.map((item, index) => {
             const Icon = item.icon
             const className = navLinkClassName(
               item.id,
               activeSectionId === item.id,
             )
+            const groupHeading = startsGroup(navItems, index) ? (
+              <p className="px-3 pt-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                {t(item.group!)}
+              </p>
+            ) : null
             if (!useRouteLinks) {
               return (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={cn(className, 'w-full text-start')}
-                  onClick={() => onNavigateToSection(item.id)}
-                >
-                  <Icon className="h-4 w-4 shrink-0" />
-                  <span className="min-w-0 flex-1 truncate">
-                    {t(item.label)}
-                  </span>
-                  {item.endAdornment}
-                </button>
+                <Fragment key={item.id}>
+                  {groupHeading}
+                  <button
+                    type="button"
+                    className={cn(className, 'w-full text-start')}
+                    onClick={() => onNavigateToSection(item.id)}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="min-w-0 flex-1 truncate">
+                      {t(item.label)}
+                    </span>
+                    {item.endAdornment}
+                  </button>
+                </Fragment>
               )
             }
             return (
-              <Link
-                key={item.id}
-                to={item.to as '/'}
-                params={item.params}
-                className={className}
-              >
-                <Icon className="h-4 w-4 shrink-0" />
-                <span className="min-w-0 flex-1 truncate">{t(item.label)}</span>
-                {item.endAdornment}
-              </Link>
+              <Fragment key={item.id}>
+                {groupHeading}
+                <Link
+                  to={item.to as '/'}
+                  params={item.params}
+                  className={className}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span className="min-w-0 flex-1 truncate">{t(item.label)}</span>
+                  {item.endAdornment}
+                </Link>
+              </Fragment>
             )
           })}
+          {navFooter}
         </nav>
 
         <DeferEmptyResultsProvider deferEmptyResults={deferEmptyResults}>

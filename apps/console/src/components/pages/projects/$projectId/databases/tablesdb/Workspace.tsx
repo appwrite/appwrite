@@ -2010,7 +2010,7 @@ export function Workspace({
                 />
               </>
             )}
-            {activeTab === 'columns' && (
+            {activeTab === 'columns' && selectedTable ? (
               <ColumnsSpreadsheet
                 table={selectedTable}
                 canWriteTables={!noCreateTablePermission}
@@ -2026,8 +2026,8 @@ export function Workspace({
                     : undefined
                 }
               />
-            )}
-            {activeTab === 'indexes' && (
+            ) : null}
+            {activeTab === 'indexes' && selectedTable ? (
               <IndexesSpreadsheet
                 table={selectedTable}
                 canWriteTables={!noCreateTablePermission}
@@ -2044,7 +2044,7 @@ export function Workspace({
                 }
                 onIndexesAbilityChange={setCanCreateIndex}
               />
-            )}
+            ) : null}
             {activeTab === 'security' && selectedTable ? (
               <TableSecurity table={selectedTable} />
             ) : null}

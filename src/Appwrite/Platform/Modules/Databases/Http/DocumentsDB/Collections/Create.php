@@ -72,6 +72,7 @@ class Create extends CollectionCreate
             ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->inject('authorization')
+            ->inject('plan')
             ->callback($this->action(...));
     }
 }

@@ -193,7 +193,7 @@ function mapGaugeBreakdownGroups(
       : dimension === 'resourceType'
         ? resourceType
         : resourceId
-    if (!key) continue
+    if (!key || !group.time) continue
 
     const timeMs = parseISO(group.time).getTime()
     const existing = latestByKey.get(key)
@@ -272,6 +272,7 @@ function getLatestUsageGaugeValueInRange(
   let latestTimeMs = -1
 
   for (const group of groups) {
+    if (!group.time) continue
     const timeMs = parseISO(group.time).getTime()
     if (timeMs < startMs || timeMs > endMs) {
       continue
@@ -342,6 +343,7 @@ function mergeGaugeValuesByTime(
 ): Map<string, number> {
   const merged = new Map<string, number>()
   for (const group of groups) {
+    if (!group.time) continue
     merged.set(group.time, (merged.get(group.time) ?? 0) + group.value)
   }
   return merged
@@ -372,7 +374,7 @@ function mergeGaugeValuesByTimePerSeries(
     const seriesKey = seriesKeyByResourceType.get(
       group.resourceType?.trim() ?? '',
     )
-    if (!seriesKey) continue
+    if (!seriesKey || !group.time) continue
 
     const byTime = merged.get(seriesKey)!
     byTime.set(group.time, (byTime.get(group.time) ?? 0) + group.value)

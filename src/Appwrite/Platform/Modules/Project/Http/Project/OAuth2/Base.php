@@ -387,6 +387,19 @@ abstract class Base extends Action
             'salesforce' => Salesforce\Update::class,
             'yahoo' => Yahoo\Update::class,
             'huggingface' => HuggingFace\Update::class,
+            'instagram' => Instagram\Update::class,
+            'patreon' => Patreon\Update::class,
+            'strava' => Strava\Update::class,
+            'vk' => VK\Update::class,
+            'netlify' => Netlify\Update::class,
+            'railway' => Railway\Update::class,
+            'reddit' => Reddit\Update::class,
+            'vercel' => Vercel\Update::class,
+            'atlassian' => Atlassian\Update::class,
+            'line' => Line\Update::class,
+            'linear' => Linear\Update::class,
+            'roblox' => Roblox\Update::class,
+            'workos' => WorkOS\Update::class,
             'linkedin' => Linkedin\Update::class,
             'disqus' => Disqus\Update::class,
             'amazon' => Amazon\Update::class,
@@ -407,9 +420,12 @@ abstract class Base extends Action
             'kick' => Kick\Update::class,
             'kakao' => Kakao\Update::class,
             'tiktok' => TikTok\Update::class,
+            'naver' => Naver\Update::class,
             'apple' => Apple\Update::class,
             'microsoft' => Microsoft\Update::class,
             'resend' => Resend\Update::class,
+            'vipps' => Vipps\Update::class,
+            'vippsSandbox' => VippsSandbox\Update::class,
         ];
     }
 
@@ -480,6 +496,27 @@ abstract class Base extends Action
         }
 
         return !empty($secret);
+    }
+
+    /**
+     * The stored client secret is write-only, so it is only kept while every
+     * endpoint it is sent to stays the same. Changing one requires the secret
+     * again.
+     *
+     * @param array<string, mixed> $existing Decoded stored secret.
+     * @param array<string, ?string> $endpoints Stored key => new value, null when not provided.
+     */
+    protected function requireSecretOnEndpointChange(?string $clientSecret, array $existing, array $endpoints): void
+    {
+        if (!\is_null($clientSecret) || empty($existing['clientSecret'] ?? '')) {
+            return;
+        }
+
+        foreach ($endpoints as $key => $value) {
+            if (!\is_null($value) && $value !== ($existing[$key] ?? '')) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Param "' . static::getClientSecretParamName() . '" is required when changing the provider endpoint.');
+            }
+        }
     }
 
     /**

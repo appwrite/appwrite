@@ -7,11 +7,9 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\WhiteList;
 
@@ -57,26 +55,7 @@ class XList extends Base
 
     public function action(string $type, bool $includeTotal, Response $response, array $plan)
     {
-        $allSpecs = Config::getParam('specifications', []);
-        $planKey = $type === 'builds' ? 'buildSpecifications' : 'runtimeSpecifications';
-
-        $specs = [];
-        foreach ($allSpecs as $spec) {
-            $spec['enabled'] = true;
-
-            if (array_key_exists($planKey, $plan) && !in_array($spec['slug'], $plan[$planKey], true)) {
-                continue;
-            }
-
-            $maxCpus = System::getEnv('_APP_COMPUTE_CPUS', 0);
-            $maxMemory = System::getEnv('_APP_COMPUTE_MEMORY', 0);
-
-            // Only add specs that are within the limits set by environment variables
-            // Treat 0 as no limit
-            if ((empty($maxCpus) || $spec['cpus'] <= $maxCpus) && (empty($maxMemory) || $spec['memory'] <= $maxMemory)) {
-                $specs[] = $spec;
-            }
-        }
+        $specs = $this->getPlanSpecifications($plan, $type === 'builds' ? 'buildSpecifications' : 'runtimeSpecifications');
 
         $response->dynamic(new Document([
             'specifications' => $specs,

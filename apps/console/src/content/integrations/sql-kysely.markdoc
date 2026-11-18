@@ -1,0 +1,123 @@
+---
+layout: integration
+title: Kysely with managed PostgreSQL and MySQL
+description: Write type-safe SQL with Kysely against an Appwrite native PostgreSQL or MySQL database
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/sql-kysely/cover.avif
+category: databases
+product:
+    vendor: Kysely
+    description: 'Kysely is an open-source, type-safe SQL query builder for TypeScript with dialects for PostgreSQL and MySQL.'
+platform:
+    - 'Cloud'
+---
+
+[Kysely](https://kysely.dev/) is a type-safe SQL query builder for TypeScript. You describe your tables as interfaces, and Kysely checks table names, columns, and result types at compile time while producing plain SQL.
+
+# How does the integration work?
+
+Appwrite native PostgreSQL and MySQL databases are standard engines that Appwrite provisions in your project's region, each with its own hostname, credentials, and TLS. Kysely connects to them through its built-in `PostgresDialect` with a `pg` pool, or `MysqlDialect` with a `mysql2` pool, so there is no Appwrite-specific dialect or driver.
+
+Runtime queries go through the database's connection pooler, while kysely-ctl runs migrations over a direct connection to the engine.
+
+{% info title="Available on Appwrite Cloud" %}
+Native PostgreSQL and MySQL databases run in every Appwrite Cloud region and are available on paid plans.
+{% /info %}
+
+# How to implement
+
+To use Kysely with an Appwrite native database, there are several steps you must complete:
+
+## Step 1: Create a native database
+
+[Create an account on Appwrite Cloud](/sign-up) if you haven't already. In your project, go to **Databases**, click **Create database**, and select **PostgreSQL** or **MySQL** from the **Native databases** group. Pick a specification and click **Create database**. The database becomes `ready` within a few minutes.
+
+For PostgreSQL, open the database, click **Credentials**, and copy the connection string from the **DSN** or **.env** tab. For MySQL, read `connectionString` from the database object with `mysql.get()` and an API key that has the `databases.read` scope.
+
+## Step 2: Set the connection strings
+
+Put a pooled `DATABASE_URL` and a direct `DIRECT_URL` in your environment:
+
+{% tabs %}
+{% tabsitem #env-postgresql title="PostgreSQL" %}
+```env
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?sslmode=require"
+DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+```
+{% /tabsitem %}
+
+{% tabsitem #env-mysql title="MySQL" %}
+```env
+DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default"
+DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
+```
+{% /tabsitem %}
+{% /tabs %}
+
+## Step 3: Install and configure Kysely
+
+Install `kysely` with `pg` or `mysql2`, plus `kysely-ctl` as a dev dependency, then create the instance with your typed database interface:
+
+{% tabs %}
+{% tabsitem #config-postgresql title="PostgreSQL" %}
+```ts
+import { Kysely, PostgresDialect } from 'kysely';
+import { Pool } from 'pg';
+
+export const db = new Kysely<Database>({
+    dialect: new PostgresDialect({
+        pool: new Pool({ connectionString: process.env.DATABASE_URL, max: 10 })
+    })
+});
+```
+{% /tabsitem %}
+
+{% tabsitem #config-mysql title="MySQL" %}
+```ts
+import { Kysely, MysqlDialect } from 'kysely';
+import { createPool } from 'mysql2';
+
+export const db = new Kysely<Database>({
+    dialect: new MysqlDialect({
+        pool: createPool({
+            uri: process.env.DATABASE_URL,
+            ssl: { rejectUnauthorized: true },
+            connectionLimit: 10
+        })
+    })
+});
+```
+{% /tabsitem %}
+{% /tabs %}
+
+Mark database-generated columns with `Generated<T>` in your table interfaces so insert payloads typecheck. On serverless, keep the pool at `1` or a small single-digit size per instance.
+
+## Step 4: Run migrations
+
+Create a `kysely.config.ts` whose dialect connects with `DIRECT_URL`, because migrations issue DDL that needs a session-level connection, then generate and apply migrations:
+
+```bash
+npx kysely migrate make create_users
+npx kysely migrate latest
+```
+
+Kysely's built-in `Migrator` API works the same way if you prefer to migrate from code. After the schema exists, you can generate table types with `npx kysely-codegen` instead of writing them by hand.
+
+## Step 5: Test the integration
+
+Insert a row and read it back. On PostgreSQL, `.returningAll()` returns the inserted row. On MySQL, read the row back with `insertId` from the insert result.
+
+Advisory locks, `LISTEN`/`NOTIFY`, user variables, temporary tables, and `SET LOCAL` need the direct port or a session-mode pooler. To test migrations in CI, run `kysely migrate latest` against a [PostgreSQL](/docs/products/databases/postgresql/branches) or [MySQL](/docs/products/databases/mysql/branches) branch.
+
+# Read more about Kysely and Appwrite Databases
+
+If you would like to learn more about Kysely and Appwrite Databases, we have some resources that you should visit:
+
+- [Use Kysely with a native PostgreSQL database](/docs/products/databases/postgresql/integrations/kysely)
+- [Use Kysely with a native MySQL database](/docs/products/databases/mysql/integrations/kysely)
+- [Managed PostgreSQL on Appwrite](/docs/products/databases/postgresql)
+- [Native MySQL databases on Appwrite](/docs/products/databases/mysql)
+- [Kysely documentation](https://kysely.dev/docs/intro)

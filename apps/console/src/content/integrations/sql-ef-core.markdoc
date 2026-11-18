@@ -1,0 +1,120 @@
+---
+layout: integration
+title: Entity Framework Core with managed PostgreSQL and MySQL
+description: Use Entity Framework Core in .NET apps with an Appwrite native PostgreSQL or MySQL database
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/sql-ef-core/cover.avif
+category: databases
+product:
+    vendor: Microsoft
+    description: 'Entity Framework Core is the open-source object-relational mapper for .NET, maintained by Microsoft, with LINQ queries and code-first migrations.'
+platform:
+    - 'Cloud'
+---
+
+[Entity Framework Core](https://learn.microsoft.com/ef/core/) (EF Core) is the object-relational mapper for .NET. You model data as C# classes, query it with LINQ, and evolve the schema with code-first migrations through the `dotnet ef` tools.
+
+# How does the integration work?
+
+Appwrite native PostgreSQL and MySQL databases are standard engines that Appwrite provisions in your project's region, each with its own hostname, credentials, and TLS. EF Core connects to them through its regular providers, Npgsql for PostgreSQL and Oracle's `MySql.EntityFrameworkCore` for MySQL, so `DbContext`, migrations, and LINQ queries work with no Appwrite-specific configuration.
+
+A long-running ASP.NET server connects to the engine directly and relies on the driver's built-in connection pool. Many short-lived instances can share the database's connection pooler instead.
+
+{% info title="Available on Appwrite Cloud" %}
+Native PostgreSQL and MySQL databases run in every Appwrite Cloud region and are available on paid plans.
+{% /info %}
+
+# How to implement
+
+To connect EF Core to an Appwrite native database, there are several steps you must complete:
+
+## Step 1: Create a native database
+
+[Create an account on Appwrite Cloud](/sign-up) if you haven't already. In your project, go to **Databases**, click **Create database**, and select **PostgreSQL** or **MySQL** from the **Native databases** group. Pick a specification and click **Create database**. The database becomes `ready` within a few minutes.
+
+For PostgreSQL, open the database and click **Credentials** to copy the host, user, password, and database name from the **Details** tab. For MySQL, read them from the database object with `mysql.get()` and an API key that has the `databases.read` scope. The MySQL username is `admin.<hash>` and the database name is always `default`.
+
+## Step 2: Install the provider
+
+{% tabs %}
+{% tabsitem #install-postgresql title="PostgreSQL" %}
+```bash
+dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL
+dotnet add package Microsoft.EntityFrameworkCore.Design
+dotnet tool install --global dotnet-ef
+```
+{% /tabsitem %}
+
+{% tabsitem #install-mysql title="MySQL" %}
+```bash
+dotnet add package MySql.EntityFrameworkCore
+dotnet add package Microsoft.EntityFrameworkCore.Design
+dotnet new tool-manifest
+dotnet tool install dotnet-ef
+```
+{% /tabsitem %}
+{% /tabs %}
+
+Keep the provider and design packages on the same major version as your app's EF Core packages.
+
+## Step 3: Set the connection string
+
+ADO.NET providers use key/value connection strings. Store it in `appsettings.json` under `ConnectionStrings`, and keep the password in user secrets or an environment variable:
+
+{% tabs %}
+{% tabsitem #connection-postgresql title="PostgreSQL" %}
+```text
+Host=db-<hash>.<region>.appwrite.center;Port=5432;Database=<database>;Username=admin;Password=<password>;SSL Mode=Require
+```
+
+For full certificate and hostname verification, use `SSL Mode=VerifyFull`. The certificate is signed by a public CA, so no `Root Certificate` parameter is needed.
+{% /tabsitem %}
+
+{% tabsitem #connection-mysql title="MySQL" %}
+```text
+Server=db-<hash>.<region>.appwrite.center;Port=3306;Database=default;User=admin.<hash>;Password=<password>;SslMode=Required
+```
+
+For full certificate and hostname verification, use `SslMode=VerifyFull`.
+{% /tabsitem %}
+{% /tabs %}
+
+## Step 4: Register the DbContext
+
+Register your `DbContext` in `Program.cs` with the provider's entry point, `UseNpgsql(...)` or `UseMySQL(...)`:
+
+```csharp
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+
+// MySQL:
+// options.UseMySQL(builder.Configuration.GetConnectionString("Default")!)
+```
+
+## Step 5: Run migrations
+
+Run migrations against the direct port (`5432` or `3306`), never through the pooler, because they need a session connection with DDL privileges:
+
+```bash
+dotnet ef migrations add InitialCreate
+dotnet ef database update
+```
+
+If you installed `dotnet-ef` as a local tool, as the MySQL guide does, run the same commands as `dotnet tool run dotnet-ef migrations add InitialCreate` and `dotnet tool run dotnet-ef database update`. In CI or production, generate an idempotent script with `dotnet ef migrations script --idempotent` and apply it as a deploy step.
+
+## Step 6: Size the connection pool
+
+Npgsql and Connector/NET pool connections per process by default. Cap each process with `Maximum Pool Size` (PostgreSQL) or `Max Pool Size` (MySQL) so the sum across processes stays under your specification's connection limit. For many short-lived instances, connect through the pooler instead: port `6432` with `Max Auto Prepare=0` on PostgreSQL, or port `6033` on MySQL. To test migrations in CI, run `dotnet ef database update` against a [PostgreSQL](/docs/products/databases/postgresql/branches) or [MySQL](/docs/products/databases/mysql/branches) branch.
+
+# Read more about Entity Framework Core and Appwrite Databases
+
+If you would like to learn more about Entity Framework Core and Appwrite Databases, we have some resources that you should visit:
+
+- [Use EF Core with a native PostgreSQL database](/docs/products/databases/postgresql/integrations/ef-core)
+- [Use EF Core with a native MySQL database](/docs/products/databases/mysql/integrations/ef-core)
+- [Managed PostgreSQL on Appwrite](/docs/products/databases/postgresql)
+- [Native MySQL databases on Appwrite](/docs/products/databases/mysql)
+- [Entity Framework Core documentation](https://learn.microsoft.com/ef/core/)

@@ -1,6 +1,14 @@
+import { formatDate } from '@/lib/date-utils'
 import { MARKETING_SITE_ORIGIN } from '@/lib/marketing/urls'
 import { getSeoSiteOrigin, resolveSiteAssetUrl } from '@/lib/marketing/site-origin'
 import { getCoverImageDimensions } from '@/lib/seo/cover-dimensions'
+import {
+  DISCORD_EMBED_ACCENT_COLOR,
+  escapeDiscordMarkdown,
+  getDiscordLinkButton,
+  truncateDiscordText,
+  type DiscordContainer,
+} from '@/lib/seo/discord-embed'
 import {
   buildOgCoverUrl,
   buildOgImageUrl,
@@ -82,6 +90,50 @@ export function getChangelogEntryMetaTags(
     { name: 'twitter:description', content: description },
     { name: 'twitter:image', content: ogImage },
   ]
+}
+
+/** Discord link preview for a changelog entry: cover, title, summary, date, and links back. */
+export function getChangelogEntryDiscordEmbed(
+  entry: ChangelogEntry,
+  options?: ChangelogSeoOptions,
+): DiscordContainer {
+  const siteOrigin = getSeoSiteOrigin(options?.siteOrigin)
+  // Most entries have no description; the generic fallback adds nothing to a preview.
+  const description = entry.description?.trim()
+
+  return {
+    type: 17,
+    accent_color: DISCORD_EMBED_ACCENT_COLOR,
+    components: [
+      ...(entry.cover
+        ? [
+            {
+              type: 12 as const,
+              items: [{ media: { url: buildOgCoverUrl(entry.cover, siteOrigin) } }],
+            },
+          ]
+        : []),
+      {
+        type: 10,
+        content: [
+          `### ${escapeDiscordMarkdown(truncateDiscordText(entry.title, 120))}`,
+          description && description !== entry.title
+            ? escapeDiscordMarkdown(truncateDiscordText(description, 200))
+            : undefined,
+          `-# Changelog · ${formatDate(entry.date)}`,
+        ]
+          .filter(Boolean)
+          .join('\n'),
+      },
+      {
+        type: 1,
+        components: [
+          getDiscordLinkButton('Read update', getChangelogCanonicalUrl(entry.href)),
+          getDiscordLinkButton('All updates', getChangelogCanonicalUrl('/changelog')),
+        ],
+      },
+    ],
+  }
 }
 
 export function getChangelogEntrySchema(entry: ChangelogEntry) {

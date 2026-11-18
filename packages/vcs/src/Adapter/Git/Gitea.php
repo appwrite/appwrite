@@ -988,6 +988,18 @@ class Gitea extends Git
 
         $responseHeaders = $response['headers'] ?? [];
         $responseHeadersStatusCode = $responseHeaders['status-code'] ?? 0;
+        if ($responseHeadersStatusCode === 404) {
+            throw new RepositoryNotFound("Branch not found: {$branch}");
+        }
+        if ($responseHeadersStatusCode >= 500) {
+            // Some versions answer a missing branch with a server error, so the branch itself is checked.
+            $path = \implode('/', \array_map(\rawurlencode(...), \explode('/', $branch)));
+            $lookup = $this->call(self::METHOD_GET, "/repos/{$owner}/{$repositoryName}/branches/{$path}", ['Authorization' => "token $this->accessToken"]);
+            $lookupHeaders = $lookup['headers'] ?? [];
+            if (\is_array($lookupHeaders) && ($lookupHeaders['status-code'] ?? 0) === 404) {
+                throw new RepositoryNotFound("Branch not found: {$branch}");
+            }
+        }
         if ($responseHeadersStatusCode >= 400) {
             throw new Exception("Latest commit response failed with status code {$responseHeadersStatusCode}", $responseHeadersStatusCode);
         }
@@ -1029,7 +1041,12 @@ class Gitea extends Git
         $url = "/repos/{$owner}/{$repositoryName}/statuses/{$commitHash}";
 
         $body = [
-            'state' => $state,
+            // A commit status knows no queue or cancellation
+            'state' => match ($state) {
+                'queued', 'in_progress' => 'pending',
+                'cancelled' => 'error',
+                default => $state,
+            },
         ];
 
         if ($description !== '' && $description !== '0') {
@@ -1101,7 +1118,8 @@ class Gitea extends Git
                 $branchDeleted = $payload['deleted'] ?? false;
                 $repositoryId = \strval($payloadRepository['id'] ?? '');
                 $repositoryName = $payloadRepository['name'] ?? '';
-                $branch = str_replace('refs/heads/', '', $payload['ref'] ?? '');
+                $ref = \is_string($payload['ref'] ?? null) ? $payload['ref'] : '';
+                $branch = str_starts_with($ref, 'refs/heads/') ? substr($ref, \strlen('refs/heads/')) : $ref;
                 $repositoryUrl = $payloadRepository['html_url'] ?? '';
                 $branchUrl = !empty($repositoryUrl) && !empty($branch) ? $repositoryUrl . '/src/branch/' . $branch : '';
                 $commitHash = $payload['after'] ?? '';

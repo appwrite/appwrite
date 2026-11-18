@@ -8,7 +8,7 @@ use Utopia\Migration\Transfer;
 /**
  * Singleton auth resource carrying the project's security policies:
  * password rules, session behavior, user limits, membership privacy, MFA
- * factors and email denial.
+ * factors, email denial and realtime guest access.
  *
  * A null policy was not reported by the source, so the destination keeps its own.
  */
@@ -47,6 +47,8 @@ class Policies extends Resource
         private readonly ?array $passwordPwned = null,
         private readonly ?array $passwordRotation = null,
         private readonly ?string $passkeyRpId = null,
+        private readonly ?bool $denyRealtimeGuests = null,
+        private readonly ?bool $accountDevices = null,
     ) {
         $this->id = $id;
         $this->createdAt = $createdAt;
@@ -85,6 +87,8 @@ class Policies extends Resource
             passwordPwned: $array['passwordPwned'] ?? null,
             passwordRotation: $array['passwordRotation'] ?? null,
             passkeyRpId: $array['passkeyRpId'] ?? null,
+            denyRealtimeGuests: $array['denyRealtimeGuests'] ?? null,
+            accountDevices: $array['accountDevices'] ?? null,
         );
     }
 
@@ -118,6 +122,8 @@ class Policies extends Resource
             'passwordPwned' => $this->passwordPwned,
             'passwordRotation' => $this->passwordRotation,
             'passkeyRpId' => $this->passkeyRpId,
+            'denyRealtimeGuests' => $this->denyRealtimeGuests,
+            'accountDevices' => $this->accountDevices,
             'createdAt' => $this->createdAt,
             'updatedAt' => $this->updatedAt,
         ];
@@ -258,5 +264,15 @@ class Policies extends Resource
     public function getPasskeyRpId(): ?string
     {
         return $this->passkeyRpId;
+    }
+
+    public function getDenyRealtimeGuests(): ?bool
+    {
+        return $this->denyRealtimeGuests;
+    }
+
+    public function getAccountDevices(): ?bool
+    {
+        return $this->accountDevices;
     }
 }

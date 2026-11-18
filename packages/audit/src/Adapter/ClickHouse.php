@@ -438,6 +438,7 @@ class ClickHouse extends SQL
             Attribute::string(key: 'deviceName'),
             Attribute::string(key: 'deviceBrand'),
             Attribute::string(key: 'deviceModel'),
+            Attribute::string(key: 'reason'),
         ];
     }
 

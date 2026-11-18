@@ -1,5 +1,11 @@
 import { useState } from 'react'
-import { Loader2, AlertTriangle, Settings, Unplug } from 'lucide-react'
+import {
+  Loader2,
+  AlertTriangle,
+  ChevronDown,
+  Settings,
+  Unplug,
+} from 'lucide-react'
 import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Query } from '@appwrite.io/console'
 import { toast } from 'sonner'
@@ -8,6 +14,7 @@ import {
   useVcsInstallations,
   useDeleteVcsInstallation,
 } from '@/lib/react-query/hooks/vcs'
+import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   closeDialogBeforeOverlayUnmount,
@@ -28,6 +35,7 @@ import {
   MenuItemContent,
 } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { VcsProviderButtons } from '@/components/global/shared/VcsProviderButtons'
 import { Button } from '@/components/ui/button'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
@@ -144,7 +152,8 @@ export function GitConfigurationCard({
 }: GitConfigurationCardProps) {
   const t = useT()
   const { features } = useConsoleProfile()
-  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features.extraVcsOAuth)
+  const { vcsProviders } = useConsoleVariables()
+  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features, vcsProviders)
   const queryClient = useQueryClient()
   // Fall back to the GitHub-only helper when a generalized builder isn't provided.
   const vcsAuthUrl = (
@@ -256,29 +265,18 @@ export function GitConfigurationCard({
             <p className="mb-4 text-[13px] text-muted-foreground">
               {t('Add an installation to connect repositories')}
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              {vcsOAuthProviders.map((provider) => (
-                <Button
-                  key={provider.id}
-                  variant="secondary"
-                  size="sm"
-                  className="h-9 text-[13px]"
-                  asChild
+            <VcsProviderButtons
+              providers={vcsOAuthProviders}
+              link={(provider, content) => (
+                <a
+                  href={vcsAuthUrl(provider.id)}
+                  target="_blank"
+                  rel="noreferrer"
                 >
-                  <a
-                    href={vcsAuthUrl(provider.id)}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <VcsIcon
-                      type={provider.id}
-                      className={vcsProviderButtonIconClassName}
-                    />
-                    {t(`Connect to ${provider.label}`)}
-                  </a>
-                </Button>
-              ))}
-            </div>
+                  {content}
+                </a>
+              )}
+            />
           </div>
         </div>
       </div>
@@ -358,13 +356,16 @@ export function GitConfigurationCard({
                   <Table>
                     <TableHeader>
                       <TableRow className="hover:bg-transparent border-b border-border">
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[150px] max-w-[500px]">
+                        {/* Owner takes what the dates leave and truncates, and the
+                            dates drop out on narrow cards, so the row menu
+                            stays in view instead of scrolling off */}
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-full max-w-0">
                           {t('Owner')}
                         </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[150px] max-w-[500px]">
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider hidden min-w-[150px] @4xl:table-cell">
                           {t('Created')}
                         </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[150px] max-w-[500px]">
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider hidden min-w-[150px] @2xl:table-cell">
                           {t('Updated')}
                         </TableHead>
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[60px]" />
@@ -388,8 +389,8 @@ export function GitConfigurationCard({
                             onDisconnect={handleOpenDisconnectModal}
                           >
                             <TableRow>
-                              <TableCell className="px-4 py-3">
-                                <div className="flex items-center gap-2">
+                              <TableCell className="max-w-0 px-4 py-3">
+                                <div className="flex min-w-0 items-center gap-2">
                                   <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
                                     <VcsIcon
                                       type={installation.provider}
@@ -401,21 +402,25 @@ export function GitConfigurationCard({
                                       href={providerUrl}
                                       target="_blank"
                                       rel="noreferrer"
-                                      className="text-[13px] font-medium link-neutral"
+                                      title={installation.organization}
+                                      className="truncate text-[13px] font-medium link-neutral"
                                     >
                                       {installation.organization}
                                     </a>
                                   ) : (
-                                    <span className="text-[13px] font-medium text-foreground">
+                                    <span
+                                      title={installation.organization}
+                                      className="truncate text-[13px] font-medium text-foreground"
+                                    >
                                       {installation.organization}
                                     </span>
                                   )}
                                 </div>
                               </TableCell>
-                              <TableCell className="px-4 py-3">
+                              <TableCell className="hidden px-4 py-3 @4xl:table-cell">
                                 <DateTooltip date={installation.$createdAt} />
                               </TableCell>
-                              <TableCell className="px-4 py-3">
+                              <TableCell className="hidden px-4 py-3 @2xl:table-cell">
                                 <DateTooltip date={installation.$updatedAt} />
                               </TableCell>
                               <TableCell className="px-4 py-3">
@@ -478,31 +483,60 @@ export function GitConfigurationCard({
             </div>
           </div>
         </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end">
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-            {vcsOAuthProviders.map((provider) => (
+        {vcsOAuthProviders.length > 0 && (
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end">
+            {/* One button whatever the number of providers, so the footer
+                never outgrows the card */}
+            {vcsOAuthProviders.length === 1 ? (
               <Button
-                key={provider.id}
                 variant="secondary"
                 size="sm"
                 className="h-9 w-full text-[13px] sm:w-auto"
                 asChild
               >
                 <a
-                  href={vcsAuthUrl(provider.id)}
+                  href={vcsAuthUrl(vcsOAuthProviders[0].id)}
                   target="_blank"
                   rel="noreferrer"
                 >
                   <VcsIcon
-                    type={provider.id}
+                    type={vcsOAuthProviders[0].id}
                     className={vcsProviderButtonIconClassName}
                   />
-                  {t(`Connect with ${provider.label}`)}
+                  {t(`Connect with ${vcsOAuthProviders[0].label}`)}
                 </a>
               </Button>
-            ))}
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="h-9 w-full text-[13px] sm:w-auto"
+                  >
+                    {t('Add installation')}
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-[220px]">
+                  {vcsOAuthProviders.map((provider) => (
+                    <DropdownMenuItem key={provider.id} asChild>
+                      <a
+                        href={vcsAuthUrl(provider.id)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={menuItemRowClassName}
+                      >
+                        <provider.Icon className="size-4 shrink-0" />
+                        <span className="min-w-0 flex-1">{provider.label}</span>
+                      </a>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
-        </div>
+        )}
       </div>
 
       {/* Disconnect Modal */}

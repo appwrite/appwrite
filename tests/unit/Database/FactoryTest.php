@@ -43,13 +43,37 @@ final class FactoryTest extends TestCase
         );
     }
 
-    private function factory(): Factory
+    public function testFactoryPreservesTheSuppliedCacheNamespace(): void
+    {
+        $cache = new Cache(new MemoryCache());
+        $cache->save('setting', 'unprefixed');
+        $cache->save('v2:setting', 'warm');
+        $database = $this->factory($cache->withNamespace('v2:'))->project($this->project());
+
+        $this->assertSame('warm', $database->getCache()->load('setting', 60));
+        $database->getCache()->save('setting', 'updated');
+        $this->assertSame('updated', $cache->load('v2:setting', 60));
+        $this->assertSame('unprefixed', $cache->load('setting', 60));
+    }
+
+    public function testFactoryKeepsOrdinaryUnprefixedCacheEntriesWarm(): void
+    {
+        $cache = new Cache(new MemoryCache());
+        $cache->save('setting', 'warm');
+        $database = $this->factory($cache)->project($this->project());
+
+        $this->assertSame('warm', $database->getCache()->load('setting', 60));
+        $database->getCache()->save('setting', 'updated');
+        $this->assertSame('updated', $cache->load('setting', 60));
+    }
+
+    private function factory(?Cache $cache = null): Factory
     {
         $adapter = (new ConnectedMemory())->setHostname('mariadb');
         $pools = new Group();
         $pools->add(new Pool(new Stack(), 'database_db_main', 1, static fn (): ConnectedMemory => $adapter, 1.0));
 
-        return new Factory($pools, new Cache(new MemoryCache()), new Authorization());
+        return new Factory($pools, $cache ?? new Cache(new MemoryCache()), new Authorization());
     }
 
     private function project(): Document
