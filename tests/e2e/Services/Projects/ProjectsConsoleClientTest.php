@@ -1873,6 +1873,9 @@ final class ProjectsConsoleClientTest extends Scope
         $this->assertStringContainsStringIgnoringCase('251 Little Falls Drive', $email1['html']);
         $this->assertStringContainsString(APP_EMAIL_LOGO_URL, (string) $email1['html']);
         $this->assertStringContainsString('images/mails/social/github.png', (string) $email1['html']);
+        // Bodies set light-mode colours inline, so the template must not ship a dark palette of its own
+        $this->assertStringContainsString('<meta name="color-scheme" content="light">', (string) $email1['html']);
+        $this->assertStringNotContainsString('prefers-color-scheme', (string) $email1['html']);
         $this->assertEquals('custommailer@appwrite.io', $email2['from'][0]['address']);
 
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/smtp/tests', array_merge([
