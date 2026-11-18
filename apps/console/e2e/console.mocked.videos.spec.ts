@@ -325,6 +325,10 @@ async function mockAppwriteApi(
       })
     }
 
+    if (apiPath.startsWith(`/videos/${VIDEO_ID}/outputs/`)) {
+      // Leave stream manifests pending: the player stays loading, with controls.
+      return
+    }
     if (apiPath === '/account') return json(200, ACCOUNT)
     if (apiPath === '/account/prefs') return json(200, ACCOUNT.prefs)
     if (apiPath === '/account/sessions')
@@ -504,6 +508,58 @@ test.describe('videos (mocked API)', () => {
     expect(calls.sourceViews).toHaveLength(0)
 
     await screenshot(page, 'videos-player-locked.png')
+  })
+
+  test('docks a small player while scrolling the overview', async ({
+    page,
+  }) => {
+    await enableVideos(page)
+    await page.setViewportSize({ width: 1280, height: 720 })
+    await mockAppwriteApi(page)
+    await open(page, `/${VIDEO_ID}`, (page) => page.locator('video'))
+    const player = page.locator('[data-player-docked]')
+    await expect(player).toHaveCount(0)
+
+    const video = page.locator('video')
+    const fullHeight = (await video.boundingBox())!.height
+    // Scroll the page area that holds the player.
+    const scrollBy = (dy: number) =>
+      video.evaluate((node, dy) => {
+        let el = node.parentElement
+        while (
+          el &&
+          !['auto', 'scroll'].includes(getComputedStyle(el).overflowY)
+        )
+          el = el.parentElement
+        el?.scrollBy(0, dy)
+      }, dy)
+
+    // The inspector below loads after the player; scroll once there is room.
+    await expect
+      .poll(async () => {
+        await scrollBy(600)
+        return player.count()
+      })
+      .toBe(1)
+    await expect
+      .poll(async () => (await video.boundingBox())!.height)
+      .toBeLessThan(fullHeight / 2)
+    // Stays pinned to the top of the scroll area.
+    const docked = (await player.boundingBox())!
+    await scrollBy(300)
+    await expect
+      .poll(async () => (await player.boundingBox())!.y)
+      .toBeCloseTo(docked.y, 0)
+    // The controls sit beside the picture, not over it.
+    const play = player.getByRole('button', { name: 'Play', exact: true })
+    await expect(play).toBeVisible()
+    expect((await play.boundingBox())!.x).toBeGreaterThan(
+      (await video.boundingBox())!.x,
+    )
+    await screenshot(page, 'videos-player-docked.png')
+
+    await scrollBy(-5000)
+    await expect(player).toHaveCount(0)
   })
 
   test('asks for a rendition when a video has none', async ({ page }) => {

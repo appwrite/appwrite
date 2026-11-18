@@ -8,6 +8,7 @@ import {
   type CSSProperties,
 } from 'react'
 import { createPortal } from 'react-dom'
+import { DockedPlayerControls } from './DockedPlayerControls'
 import { Lock, Pause, Play, SquareArrowOutUpRight } from 'lucide-react'
 import { sdk } from '@/lib/appwrite/sdk'
 import { isEmbedUnauthorizedMessage } from '@/lib/videos/embed-player-errors'
@@ -64,6 +65,23 @@ export interface VideoStreamPlayerProps {
   layout?: 'console' | 'embed'
   /** Seek once when the stream is ready (`?start=` on the embed URL). */
   initialStartSeconds?: number
+}
+
+/** Height of the docked player strip. */
+const COMPACT_PLAYER_HEIGHT = 72
+/** Docked strip: the player plus its `py-2` padding and bottom border. */
+const DOCKED_STRIP_HEIGHT = COMPACT_PLAYER_HEIGHT + 16 + 1
+/** Scrolling back this far above the docking point undocks the player. */
+const UNDOCK_SLACK_PX = 16
+
+function findScrollParent(node: HTMLElement | null): HTMLElement | null {
+  let current = node?.parentElement ?? null
+  while (current) {
+    const overflowY = getComputedStyle(current).overflowY
+    if (overflowY === 'auto' || overflowY === 'scroll') return current
+    current = current.parentElement
+  }
+  return null
 }
 
 export function VideoStreamPlayer({
@@ -438,9 +456,15 @@ export function VideoStreamPlayer({
 
   // `cqh` is the visible height of the VideoPage scroll area. Controls sit on
   // the picture, so the frame can use almost the full area.
-  const playerMaxHeight = featured
-    ? 'max(240px, min(800px, calc(100cqh - 32px)))'
-    : 'max(240px, min(800px, calc(100cqh - 24px)))'
+  // Scrolled past the top, the featured player docks as a small sticky strip
+  // so the tools below get the room; its controls move beside the picture.
+  const [compact, setCompact] = useState(false)
+  const [dockSpacer, setDockSpacer] = useState(0)
+  const playerMaxHeight = compact
+    ? `${COMPACT_PLAYER_HEIGHT}px`
+    : featured
+      ? 'max(240px, min(800px, calc(100cqh - 32px)))'
+      : 'max(240px, min(800px, calc(100cqh - 24px)))'
   const viewportAspect = useMemo(() => {
     if (mediaPixelSize) {
       return mediaPixelSize
@@ -458,15 +482,56 @@ export function VideoStreamPlayer({
         : getVideoPlayerViewportStyle(
             viewportAspect,
             playerMaxHeight,
-            featured ? 'width' : 'height',
+            featured && !compact ? 'width' : 'height',
           ),
-    [embed, featured, viewportAspect, playerMaxHeight],
+    [embed, featured, compact, viewportAspect, playerMaxHeight],
   )
 
   const audioOnly = (video.duration ?? 0) > 0 && !isVideoMetadataReady(video)
 
   const playerContainerRef = useRef<HTMLDivElement | null>(null)
   const [fullscreen, setFullscreen] = useState(false)
+  // A locked or failed player has nothing to control from the strip.
+  const canDock =
+    featured && !embed && !fullscreen && !!playerSource && !state.fatalError
+
+  useEffect(() => {
+    if (!canDock) {
+      setCompact(false)
+      setDockSpacer(0)
+      return
+    }
+    const scroller = findScrollParent(playerContainerRef.current)
+    if (!scroller) return
+    // Docking keeps the page the same height (a spacer stands in for the
+    // full player), so nothing below jumps and the scroll position holds.
+    let dockAt: number | null = null
+    const onScroll = () => {
+      const top = scroller.scrollTop
+      const player = playerContainerRef.current
+      if (!player) return
+      if (dockAt == null) {
+        const offset =
+          player.getBoundingClientRect().top -
+          scroller.getBoundingClientRect().top +
+          top
+        const height = player.offsetHeight
+        // Dock once the full player has scrolled up to the size of the strip.
+        const at = offset + height - DOCKED_STRIP_HEIGHT
+        if (height <= DOCKED_STRIP_HEIGHT || top <= at) return
+        dockAt = at
+        setDockSpacer(height - DOCKED_STRIP_HEIGHT)
+        setCompact(true)
+      } else if (top < dockAt - UNDOCK_SLACK_PX) {
+        dockAt = null
+        setDockSpacer(0)
+        setCompact(false)
+      }
+    }
+    onScroll()
+    scroller.addEventListener('scroll', onScroll, { passive: true })
+    return () => scroller.removeEventListener('scroll', onScroll)
+  }, [canDock])
 
   useEffect(() => {
     const onChange = () => {
@@ -663,7 +728,9 @@ export function VideoStreamPlayer({
             : undefined
         }
         className={
-          controlsVisible ? 'pointer-events-auto' : 'pointer-events-none'
+          controlsVisible || compact
+            ? 'pointer-events-auto'
+            : 'pointer-events-none'
         }
       />
     ) : null
@@ -752,8 +819,11 @@ export function VideoStreamPlayer({
     >
       <div
         ref={playerContainerRef}
+        data-player-docked={compact || undefined}
         className={cn(
           'min-w-0',
+          compact &&
+            'animate-in fade-in-0 slide-in-from-top-1 sticky top-0 z-20 -mx-4 border-b border-border bg-background px-4 py-2 shadow-sm duration-200 sm:-mx-6 sm:px-6',
           embed && 'relative flex min-h-0 flex-1 flex-col dark bg-black',
           (fullscreen || overlayControls) && 'dark relative bg-black',
           (fullscreen || overlayControls) && !controlsVisible && 'cursor-none',
@@ -763,6 +833,7 @@ export function VideoStreamPlayer({
           className={cn(
             'flex w-full min-w-0',
             featured && !fullscreen ? 'justify-stretch' : 'justify-center',
+            compact && 'items-center gap-4',
             embed && 'min-h-0 flex-1',
             (fullscreen || overlayControls) && 'absolute inset-0',
           )}
@@ -830,9 +901,12 @@ export function VideoStreamPlayer({
             <div
               className={cn(
                 'animate-player-fade-in relative flex min-w-0 max-w-full flex-col overflow-hidden',
+                compact && 'shrink-0',
                 fullscreen
                   ? 'size-full min-h-0'
-                  : 'rounded-xl border border-border shadow-sm',
+                  : compact
+                    ? 'rounded-md border border-border'
+                    : 'rounded-xl border border-border shadow-sm',
               )}
               style={fullscreen ? undefined : { width: viewportStyle.width }}
             >
@@ -898,7 +972,7 @@ export function VideoStreamPlayer({
                   </div>
                 ) : null}
                 {frameMessage}
-                {playerControls ? (
+                {playerControls && !compact ? (
                   <div
                     ref={controlsRef}
                     className={cn(
@@ -912,6 +986,9 @@ export function VideoStreamPlayer({
               </div>
             </div>
           )}
+          {compact ? (
+            <DockedPlayerControls videoRef={videoRef} title={video.name} />
+          ) : null}
         </div>
         {fullscreen && !embed ? (
           <div
@@ -925,6 +1002,9 @@ export function VideoStreamPlayer({
           </div>
         ) : null}
       </div>
+      {dockSpacer > 0 ? (
+        <div aria-hidden style={{ height: dockSpacer }} className="!mt-0" />
+      ) : null}
 
       {showInlineInspector
         ? streamInspector({
