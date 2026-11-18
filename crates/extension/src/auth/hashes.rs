@@ -223,8 +223,11 @@ extern "C" fn argon2_hash(ex: &mut ExecuteData, retval: &mut Zval) {
         return fail("ValueError", "Invalid number of threads");
     }
     warn_salt(&options);
+    let Ok(drawn) = utopia_auth::password_salt(16) else {
+        return fail("Random\\RandomException", utopia_auth::random::RandomError::MESSAGE);
+    };
     let mut salt = [0u8; 16];
-    salt.copy_from_slice(&utopia_auth::password_salt(16));
+    salt.copy_from_slice(&drawn);
     match php_std::string::password_hash_argon2id(&args[0], memory, time, threads, &salt) {
         Ok(hashed) => set_str(retval, &hashed),
         Err(error) => fail("ValueError", error.message()),
@@ -303,7 +306,10 @@ extern "C" fn bcrypt_hash(ex: &mut ExecuteData, retval: &mut Zval) {
     }
     warn_salt(&options);
     let mut setting = format!("$2y${cost:02}$").into_bytes();
-    setting.extend(utopia_auth::password_salt(22));
+    let Ok(drawn) = utopia_auth::password_salt(22) else {
+        return fail("Random\\RandomException", utopia_auth::random::RandomError::MESSAGE);
+    };
+    setting.extend(drawn);
     set_str(retval, &php_std::string::crypt(&args[0], &setting));
 }
 
@@ -531,7 +537,10 @@ fn scrypt_register(class: &'static mut ClassEntry, tables: ArgInfoTables) {
 extern "C" fn scrypt_construct(ex: &mut ExecuteData, _: &mut Zval) {
     let class = stored(&SCRYPT);
     let Some(this) = this(ex) else { return };
-    let salt = php_std::encoding::bin2hex(&utopia_auth::random::random_bytes(16));
+    let Ok(drawn) = utopia_auth::random::random_bytes(16) else {
+        return fail("Random\\RandomException", utopia_auth::random::RandomError::MESSAGE);
+    };
+    let salt = php_std::encoding::bin2hex(&drawn);
     let _ = set_type(this, class, "scrypt")
         .and_then(|()| set(this, class, "costCpu", long(8)))
         .and_then(|()| set(this, class, "costMemory", long(14)))
@@ -720,11 +729,14 @@ extern "C" fn scrypt_modified_construct(ex: &mut ExecuteData, _: &mut Zval) {
     let class = stored(&SCRYPT_MODIFIED);
     let Some(this) = this(ex) else { return };
     let encode = |bytes: Vec<u8>| string(php_std::encoding::base64_encode(&bytes).as_bytes());
-    let (salt, separator, signer) = (
+    let drawn = (
         utopia_auth::random::random_bytes(16),
         utopia_auth::random::random_bytes(16),
         utopia_auth::random::random_bytes(32),
     );
+    let (Ok(salt), Ok(separator), Ok(signer)) = drawn else {
+        return fail("Random\\RandomException", utopia_auth::random::RandomError::MESSAGE);
+    };
     let _ = set_type(this, class, "scryptMod")
         .and_then(|()| set(this, class, "salt", encode(salt)))
         .and_then(|()| set(this, class, "saltSeparator", encode(separator)))

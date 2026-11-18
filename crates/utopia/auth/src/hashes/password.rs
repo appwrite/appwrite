@@ -24,10 +24,10 @@ fn salt() -> [u8; 16] {
 
 /// `php_password_make_salt(16)`, the salt `password_hash()` gives Argon2:
 /// 13 random bytes in base64, `+` as `.`, cut to 16 characters.
-fn argon2_salt() -> [u8; 16] {
+fn argon2_salt() -> Result<[u8; 16], Error> {
     let mut salt = [0u8; 16];
-    salt.copy_from_slice(&crate::password_salt(16));
-    salt
+    salt.copy_from_slice(&crate::password_salt(16).map_err(|e| Error::Engine(e.to_string()))?);
+    Ok(salt)
 }
 
 /// `password_hash($value, PASSWORD_BCRYPT, $options)`: reads `cost` (12 when absent).
@@ -43,7 +43,7 @@ pub(crate) fn hash_argon2id(value: &[u8], options: &Options) -> Result<Vec<u8>, 
         options.long_or("memory_cost", 65536),
         options.long_or("time_cost", 4),
         options.long_or("threads", 1),
-        &argon2_salt(),
+        &argon2_salt()?,
     )
     .map_err(engine)
 }
@@ -65,7 +65,7 @@ mod tests {
     #[test]
     fn argon2_salts_are_php_salts() {
         for _ in 0..100 {
-            let salt = argon2_salt();
+            let salt = argon2_salt().unwrap();
             assert!(salt.iter().all(|b| b.is_ascii_alphanumeric() || *b == b'.' || *b == b'/'), "{salt:?}");
         }
     }

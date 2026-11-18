@@ -50,11 +50,11 @@ RUN apk add --no-cache \
     && make install \
     && rm -rf /tmp/ffmpeg
 
-# The utopia extension, built against the base image's own PHP headers and
-# libheif so the ABI matches. Alpine's Rust is older than the workspace needs.
+# The utopia extension, built against the base image's own PHP headers,
+# libheif and OpenSSL (utopia-auth's RSA keys) so the ABI matches. Alpine's Rust is older than the workspace needs.
 FROM appwrite/base:2.3.2@sha256:24a6c6f4c1ddb10a72dd61e16303d94c6f55a412b601f1fff0fe236749817a2d AS extension-build
 
-RUN apk add --no-cache rustup clang-dev libheif-dev build-base && \
+RUN apk add --no-cache rustup clang-dev libheif-dev openssl-dev build-base && \
     rustup-init -y --profile minimal --default-toolchain 1.97.1
 
 WORKDIR /usr/local/src
