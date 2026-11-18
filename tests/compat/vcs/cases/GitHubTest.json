@@ -392,6 +392,7 @@
               "headCommitUrl": "${vcs}/~${ns}/github/test-owner/test-repo/commits/def456",
               "external": false,
               "pullRequestNumber": 42,
+              "pullRequestAuthor": "test-owner",
               "action": "opened"
             }
           ]
@@ -441,6 +442,7 @@
               "headCommitUrl": "${vcs}/~${ns}/github/test-owner/test-repo/commits/def456",
               "external": true,
               "pullRequestNumber": 42,
+              "pullRequestAuthor": "someone-else",
               "action": "opened"
             }
           ]
@@ -845,6 +847,7 @@
               "owner": "vermakhushboo",
               "installationId": "9876",
               "pullRequestNumber": 42,
+              "pullRequestAuthor": "",
               "action": "created",
               "commentId": 1001,
               "commentKind": "issue",
@@ -926,6 +929,7 @@
               "owner": "vermakhushboo",
               "installationId": "9876",
               "pullRequestNumber": 42,
+              "pullRequestAuthor": "",
               "action": "created",
               "commentId": 1001,
               "commentKind": "review",
@@ -975,6 +979,7 @@
               "owner": "",
               "installationId": "",
               "pullRequestNumber": 0,
+              "pullRequestAuthor": "",
               "action": "",
               "commentId": 0,
               "commentKind": "issue",
@@ -1003,6 +1008,7 @@
               "owner": "",
               "installationId": "",
               "pullRequestNumber": 0,
+              "pullRequestAuthor": "",
               "action": "",
               "commentId": 0,
               "commentKind": "review",
