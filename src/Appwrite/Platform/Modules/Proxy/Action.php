@@ -106,6 +106,15 @@ class Action extends PlatformAction
         }
 
         $authorization->skip(fn () => $dbForPlatform->deleteDocument('rules', $existingRule->getId()));
+
+        // The rest of what the deletes worker does for a deleted rule, since this
+        // delete queues no job. The claiming rule is issued a certificate of its
+        // own, so this one only ever belonged to the released rule.
+        $certificateId = $existingRule->getAttribute('certificateId', '');
+        if ($certificateId !== '') {
+            $authorization->skip(fn () => $dbForPlatform->deleteDocument('certificates', $certificateId));
+        }
+
         $bus->dispatch(new RuleDeleted($existingRule->getArrayCopy()));
 
         return true;
