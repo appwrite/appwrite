@@ -2,7 +2,8 @@
 //! and the four methods a validator implements. It holds nothing, so a PHP subclass (each
 //! validator in `packages/validators` still in PHP, Appwrite's and utopia-php/database's)
 //! extends it as it would extend `Exception`, and works the same on either implementation.
-//! The leaf validators ported so far are in [`scalar`], [`text`] and [`network`].
+//! The leaf validators are in [`scalar`], [`text`] and [`network`]; the validators that compose
+//! others, the JSON ones and `Globstar` are in [`compose`].
 //!
 //! The classes are built with [`ClassBuilder`] rather than `#[php_class]`: that macro gives
 //! every class a Rust object behind it and a public `__construct`, which throws when the
@@ -10,6 +11,7 @@
 //! constructor of its own would inherit the throwing one. Built by hand, a class has no
 //! constructor (unless PHP's has one) and no object handlers, as a class declared in PHP.
 
+pub mod compose;
 mod engine;
 mod leaf;
 pub mod network;
