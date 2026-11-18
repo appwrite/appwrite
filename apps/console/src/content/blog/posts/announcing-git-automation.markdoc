@@ -41,7 +41,11 @@ Today, we are announcing **Git automation** for Appwrite Sites and Functions: a 
 
 # Configure Git automation in the Console
 
-Open a site or function that's connected to a repository, and go to **Settings** > **Version control (Git)**. The **Git automation** card holds four settings:
+Open a site or function that's connected to a repository, and go to **Settings** > **Version control (Git)**.
+
+![The Git automation card in a site's Version control settings in the Appwrite Console](/images/blog/announcing-git-automation/git-automation.avif)
+
+The **Git automation** card holds four settings:
 
 - **Deploy on push.** Build every push that matches your branch and path rules.
 - **Production branch.** Pushes to this branch go live, and other branches get preview deployments.

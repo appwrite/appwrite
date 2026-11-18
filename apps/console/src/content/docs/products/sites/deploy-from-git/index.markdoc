@@ -42,7 +42,16 @@ If you need to update your Git configuration, navigate to **Sites** > your site 
 
 ## Git automation {% #git-automation %}
 
-Git automation controls what Appwrite does when you push to the connected repository. Once your site is connected to a repository, open its **Settings** > **Version control (Git)** and find the **Git automation** card. It holds the **Production branch** and three switches, all on by default:
+Git automation controls what Appwrite does when you push to the connected repository. Once your site is connected to a repository, open its **Settings** > **Version control (Git)** and find the **Git automation** card.
+
+{% only_dark %}
+![Git automation card in the Appwrite Console](/images/docs/sites/dark/git-automation.avif)
+{% /only_dark %}
+{% only_light %}
+![Git automation card in the Appwrite Console](/images/docs/sites/git-automation.avif)
+{% /only_light %}
+
+The card holds the **Production branch** and three switches, all on by default:
 
 {% table %}
 * Switch
