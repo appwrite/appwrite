@@ -143,6 +143,11 @@ class Update extends Action
             throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'Photo must be a PNG, JPEG, or WebP image');
         }
 
+        $photoId = Id::unique();
+        $path = $deviceForFiles->getPath(APP_STORAGE_TEAM_PHOTOS . '/' . $teamId . '/' . $photoId);
+
+        $deviceForFiles->upload($deviceForLocal->read($fileTmpName), $path, $mimeType);
+
 
         $response->dynamic($updated, Response::MODEL_TEAM);
     }
