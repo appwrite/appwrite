@@ -43,6 +43,22 @@ class Delete extends Action
             ->label('audits.event', 'team.update')
             ->label('audits.resource', 'team/{request.teamId}')
             ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
+            ->label('sdk', new Method(
+                namespace: 'teams',
+                group: 'teams',
+                name: 'deletePhoto',
+                description: <<<'EOT'
+                Delete the photo of a team and store the built-in static placeholder in its place. The placeholder is the team's photo from then on, so it takes priority over the initials of the team name until a new photo is uploaded with teams.updatePhoto.
+                EOT,
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_NOCONTENT,
+                        model: Response::MODEL_NONE,
+                    ),
+                ],
+                contentType: ContentType::NONE
+            ))
             ->param('teamId', '', new UID(), 'Team ID.')
             ->inject('response')
             ->inject('dbForProject')
