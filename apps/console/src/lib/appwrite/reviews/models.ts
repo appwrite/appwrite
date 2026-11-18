@@ -1,6 +1,6 @@
 /**
  * Reviews response models, copied from `Review`, `ReviewFinding`,
- * `ReviewRepository`, `ReviewLearning` and `ReviewAuthor` in `src/Appwrite/Utopia/Response/Model`. Delete with
+ * `ReviewRepository`, `ReviewLearning`, `ReviewAuthor` and `ReviewCategory` in `src/Appwrite/Utopia/Response/Model`. Delete with
  * `service.ts` once the generated SDK carries the `reviews` service.
  */
 
@@ -71,6 +71,20 @@ export type ReviewFinding = {
    * VCS comment the finding was posted as.
    */
   providerCommentId: string
+  /**
+   * What settled the finding: commit (fixed by a later commit), chat (fixed or
+   * declined in its thread) or thread (a maintainer resolved its thread without
+   * a change). Empty while it is open.
+   */
+  settlement: '' | 'commit' | 'chat' | 'thread'
+  /**
+   * 👍 reactions on the finding's comment.
+   */
+  upvotes: number
+  /**
+   * 👎 reactions on the finding's comment.
+   */
+  downvotes: number
 }
 
 /**
@@ -328,6 +342,13 @@ export type ReviewAuthor = {
   resolved: number
   /** Findings settled in their thread or dismissed by a maintainer. */
   dismissed: number
+  /** Findings people found useful: liked with more 👍 than 👎, or, without either, fixed. */
+  useful: number
+  /**
+   * Findings people found noisy: disliked with more 👎 than 👍, or, without
+   * either, dismissed or resolved without a change.
+   */
+  noisy: number
   /** Average merge confidence tier of the latest reviews, S to F; empty when none has one. */
   tier: string
   /** Date of the latest review in ISO 8601 format. */
@@ -346,4 +367,40 @@ export type ReviewAuthorList = {
    * Authors with the most reviewed pull requests first.
    */
   authors: ReviewAuthor[]
+}
+
+/**
+ * Review Category: how the findings of one category landed over a range.
+ */
+export type ReviewCategory = {
+  /** Finding category, such as bug, security or performance. */
+  category: string
+  /** Findings of the category posted on pull requests. */
+  findings: number
+  /** Findings people found useful: liked, or, without reactions, fixed. */
+  useful: number
+  /** Findings people found noisy: disliked, or, without reactions, dismissed. */
+  noisy: number
+  /** Findings fixed by a later commit or said fixed in their thread. */
+  resolved: number
+  /** Findings declined in their thread or resolved without a change. */
+  dismissed: number
+  /** 👍 reactions on the findings' comments. */
+  upvotes: number
+  /** 👎 reactions on the findings' comments. */
+  downvotes: number
+}
+
+/**
+ * Review Categories List
+ */
+export type ReviewCategoryList = {
+  /**
+   * Total number of categories.
+   */
+  total: number
+  /**
+   * Categories with the most noisy findings first.
+   */
+  categories: ReviewCategory[]
 }

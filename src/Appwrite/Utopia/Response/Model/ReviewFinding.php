@@ -87,6 +87,24 @@ class ReviewFinding extends Model
                 'description' => 'VCS (Version Control System) comment the finding was posted as.',
                 'default' => '',
                 'example' => '',
+            ])
+            ->addRule('settlement', [
+                'type' => self::TYPE_STRING,
+                'description' => 'What settled the finding. Possible values: commit (fixed by a later commit), chat (fixed or declined in its thread), thread (a maintainer resolved its thread without a change). Empty while it is open, and for findings settled before this was recorded.',
+                'default' => '',
+                'example' => 'commit',
+            ])
+            ->addRule('upvotes', [
+                'type' => self::TYPE_INTEGER,
+                'description' => '👍 reactions on the finding\'s comment.',
+                'default' => 0,
+                'example' => 2,
+            ])
+            ->addRule('downvotes', [
+                'type' => self::TYPE_INTEGER,
+                'description' => '👎 reactions on the finding\'s comment.',
+                'default' => 0,
+                'example' => 0,
             ]);
     }
 

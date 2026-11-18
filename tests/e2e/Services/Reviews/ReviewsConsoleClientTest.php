@@ -930,6 +930,182 @@ final class ReviewsConsoleClientTest extends Scope
         $this->client->call(Client::METHOD_DELETE, '/reviews/repositories/' . $repositoryId, $this->projectHeaders());
     }
 
+    public function testFindingOutcomes(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $installationId = $this->setupInstallation();
+
+        $repository = $this->client->call(Client::METHOD_POST, '/reviews/repositories', $this->projectHeaders(), [
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->providerRepositoryId,
+        ]);
+        $this->assertSame(201, $repository['headers']['status-code']);
+        $repositoryId = $repository['body']['$id'];
+
+        $pull = \random_int(1000, 9_999_999);
+        $other = $pull + 1;
+        $author = 'dana-' . \bin2hex(\random_bytes(4));
+
+        $this->sendPullRequestEvent('opened', $pull, \str_repeat('a', 40), $author);
+        $reviewId = $this->listReviews($pull)['body']['reviews'][0]['$id'];
+        $this->completeReview($projectId, $reviewId, 'request_changes', 'C', [
+            ['severity' => 'major', 'status' => 'posted', 'category' => 'bug'],
+            ['severity' => 'minor', 'status' => 'posted', 'category' => 'style'],
+            ['severity' => 'minor', 'status' => 'posted', 'category' => 'style'],
+            ['severity' => 'info', 'status' => 'posted', 'category' => 'docs'],
+            ['severity' => 'minor', 'status' => 'dropped', 'category' => 'style'],
+            ['severity' => 'major', 'status' => 'posted', 'category' => 'security'],
+        ]);
+
+        $this->sendPullRequestEvent('opened', $other, \str_repeat('c', 40), $author);
+        $otherReviewId = $this->listReviews($other)['body']['reviews'][0]['$id'];
+        $this->completeReview($projectId, $otherReviewId, 'approve', 'A', [
+            ['severity' => 'minor', 'status' => 'posted', 'category' => 'style'],
+        ]);
+
+        $findingsPath = '/reviews/repositories/' . $repositoryId . '/pulls/' . $pull . '/findings';
+        $ids = \array_column($this->callService(Client::METHOD_GET, $findingsPath, ['projectId' => $projectId])['body']['findings'], 'id');
+        $otherId = $this->callService(Client::METHOD_GET, '/reviews/repositories/' . $repositoryId . '/pulls/' . $other . '/findings', [
+            'projectId' => $projectId,
+        ])['body']['findings'][0]['id'];
+
+        /**
+         * Test for SUCCESS
+         */
+
+        // Fixed by a later commit, declined by resolving the thread, declined in the chat
+        $settle = fn (string $id, string $status, string $settlement) => $this->callService(Client::METHOD_PATCH, $findingsPath . '/status', [
+            'projectId' => $projectId,
+            'findingIds' => [$id],
+            'status' => $status,
+            'reason' => 'Settled.',
+            'from' => 'posted',
+            'settlement' => $settlement,
+        ]);
+        $this->assertSame(204, $settle($ids[0], 'resolved', 'commit')['headers']['status-code']);
+        $this->assertSame(204, $settle($ids[1], 'dismissed', 'thread')['headers']['status-code']);
+        $this->assertSame(204, $settle($ids[5], 'dismissed', 'chat')['headers']['status-code']);
+
+        // A 👎 on an open finding, and 👍 on one declined in the chat. Another pull request's
+        // finding is left alone.
+        $reactions = $this->callService(Client::METHOD_PATCH, $findingsPath . '/reactions', [
+            'projectId' => $projectId,
+            'reactions' => [
+                ['findingId' => $ids[2], 'upvotes' => 0, 'downvotes' => 2],
+                ['findingId' => $ids[5], 'upvotes' => 2, 'downvotes' => 0],
+                ['findingId' => $otherId, 'upvotes' => 5, 'downvotes' => 0],
+            ],
+        ]);
+        $this->assertSame(204, $reactions['headers']['status-code']);
+
+        $findings = $this->callService(Client::METHOD_GET, $findingsPath, ['projectId' => $projectId])['body']['findings'];
+        $this->assertSame(['commit', 'thread', null, null, null, 'chat'], \array_column($findings, 'settlement'));
+        $this->assertSame([0, 0, 0, 0, 0, 2], \array_column($findings, 'upvotes'));
+        $this->assertSame([0, 0, 2, 0, 0, 0], \array_column($findings, 'downvotes'));
+
+        $otherFindings = $this->callService(Client::METHOD_GET, '/reviews/repositories/' . $repositoryId . '/pulls/' . $other . '/findings', [
+            'projectId' => $projectId,
+        ])['body']['findings'];
+        $this->assertSame(0, $otherFindings[0]['upvotes']);
+
+        // The Console sees them on the review
+        $review = $this->client->call(Client::METHOD_GET, '/reviews/' . $reviewId, $this->projectHeaders());
+        $this->assertSame(200, $review['headers']['status-code']);
+        $byId = \array_column($review['body']['findings'], null, '$id');
+        $this->assertSame('commit', $byId[$ids[0]]['settlement']);
+        $this->assertSame(2, $byId[$ids[2]]['downvotes']);
+
+        // Moving a finding back to posted clears what settled it
+        $reopened = $this->callService(Client::METHOD_PATCH, $findingsPath . '/status', [
+            'projectId' => $projectId,
+            'findingIds' => [$ids[1]],
+            'status' => 'posted',
+            'settlement' => 'thread',
+        ]);
+        $this->assertSame(204, $reopened['headers']['status-code']);
+        $this->assertNull($this->callService(Client::METHOD_GET, $findingsPath, ['projectId' => $projectId])['body']['findings'][1]['settlement']);
+        $this->assertSame(204, $settle($ids[1], 'dismissed', 'thread')['headers']['status-code']);
+
+        // Useful: fixed, and declined but liked. Noisy: resolved without a change, and disliked.
+        // Open without reactions and dropped findings count as neither.
+        $authors = $this->client->call(Client::METHOD_GET, '/reviews/authors', $this->projectHeaders(), [
+            'repositoryId' => $repositoryId,
+        ]);
+        $this->assertSame(200, $authors['headers']['status-code']);
+        $dana = \array_column($authors['body']['authors'], null, 'author')[$author];
+        $this->assertSame(6, $dana['findings']);
+        $this->assertSame(2, $dana['useful']);
+        $this->assertSame(2, $dana['noisy']);
+
+        $categories = $this->client->call(Client::METHOD_GET, '/reviews/categories', $this->projectHeaders(), [
+            'repositoryId' => $repositoryId,
+        ]);
+        $this->assertSame(200, $categories['headers']['status-code']);
+        $this->assertSame(4, $categories['body']['total']);
+        // The noisiest category comes first
+        $this->assertSame('style', $categories['body']['categories'][0]['category']);
+        $byCategory = \array_column($categories['body']['categories'], null, 'category');
+        $this->assertSame(['findings' => 3, 'useful' => 0, 'noisy' => 2, 'resolved' => 0, 'dismissed' => 1, 'upvotes' => 0, 'downvotes' => 2], \array_intersect_key($byCategory['style'], \array_flip(['findings', 'useful', 'noisy', 'resolved', 'dismissed', 'upvotes', 'downvotes'])));
+        $this->assertSame(1, $byCategory['bug']['useful']);
+        $this->assertSame(1, $byCategory['bug']['resolved']);
+        $this->assertSame(1, $byCategory['security']['useful']);
+        $this->assertSame(1, $byCategory['security']['dismissed']);
+        $this->assertSame(2, $byCategory['security']['upvotes']);
+        $this->assertSame(0, $byCategory['docs']['useful'] + $byCategory['docs']['noisy']);
+
+        $week = $this->client->call(Client::METHOD_GET, '/reviews/categories', $this->projectHeaders(), [
+            'repositoryId' => $repositoryId,
+            'range' => '7d',
+        ]);
+        $this->assertSame(4, $week['body']['total']);
+
+        /**
+         * Test for FAILURE
+         */
+
+        $negative = $this->callService(Client::METHOD_PATCH, $findingsPath . '/reactions', [
+            'projectId' => $projectId,
+            'reactions' => [['findingId' => $ids[0], 'upvotes' => -1, 'downvotes' => 0]],
+        ]);
+        $this->assertSame(400, $negative['headers']['status-code']);
+
+        $missing = $this->callService(Client::METHOD_PATCH, $findingsPath . '/reactions', [
+            'projectId' => $projectId,
+            'reactions' => [['upvotes' => 1, 'downvotes' => 0]],
+        ]);
+        $this->assertSame(400, $missing['headers']['status-code']);
+
+        $unsigned = $this->client->call(Client::METHOD_PATCH, $findingsPath . '/reactions', [
+            'content-type' => 'application/json',
+        ], [
+            'projectId' => $projectId,
+            'reactions' => [['findingId' => $ids[0], 'upvotes' => 9, 'downvotes' => 0]],
+        ]);
+        $this->assertSame(401, $unsigned['headers']['status-code']);
+
+        $unknownSettlement = $this->callService(Client::METHOD_PATCH, $findingsPath . '/status', [
+            'projectId' => $projectId,
+            'findingIds' => [$ids[3]],
+            'status' => 'dismissed',
+            'settlement' => 'magic',
+        ]);
+        $this->assertSame(400, $unknownSettlement['headers']['status-code']);
+
+        $invalidRange = $this->client->call(Client::METHOD_GET, '/reviews/categories', $this->projectHeaders(), [
+            'range' => '1y',
+        ]);
+        $this->assertSame(400, $invalidRange['headers']['status-code']);
+
+        // Another project sees none of them
+        $categories = $this->client->call(Client::METHOD_GET, '/reviews/categories', $this->projectHeaders($this->getProject(true)['$id']), [
+            'repositoryId' => $repositoryId,
+        ]);
+        $this->assertSame(200, $categories['headers']['status-code']);
+        $this->assertSame(0, $categories['body']['total']);
+
+        $this->client->call(Client::METHOD_DELETE, '/reviews/repositories/' . $repositoryId, $this->projectHeaders());
+    }
+
     public function testServiceNeedsTheSecret(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -1032,7 +1208,7 @@ final class ReviewsConsoleClientTest extends Scope
     /**
      * Starts and completes a review the way the review service does.
      *
-     * @param array<array{severity: string, status: string}> $findings
+     * @param array<array{severity: string, status: string, category?: string}> $findings
      */
     private function completeReview(string $projectId, string $reviewId, string $verdict, string $tier, array $findings = []): void
     {
@@ -1054,7 +1230,7 @@ final class ReviewsConsoleClientTest extends Scope
                 'startLine' => $index + 1,
                 'endLine' => $index + 1,
                 'severity' => $finding['severity'],
-                'category' => 'bug',
+                'category' => $finding['category'] ?? 'bug',
                 'title' => 'Finding ' . $index,
                 'body' => 'Something is off.',
                 'suggestion' => null,

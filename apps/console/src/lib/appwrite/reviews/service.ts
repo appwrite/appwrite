@@ -11,6 +11,7 @@ import type {
   Review,
   ReviewAuthorList,
   ReviewAuthorRange,
+  ReviewCategoryList,
   ReviewEventList,
   ReviewInstallation,
   ReviewLearningList,
@@ -284,6 +285,34 @@ export class Reviews {
     return this.client.call(
       'get',
       this.uri('/reviews/authors'),
+      this.headers(),
+      payload,
+    )
+  }
+
+  /**
+   * List the categories of the findings posted on the project's pull
+   * requests with how many people found useful and how many noisy, noisiest
+   * first.
+   *
+   * @param {ReviewAuthorRange} params.range - Date range of the reviews. Defaults to 30d.
+   * @param {string} params.repositoryId - Count only the reviews of this repository.
+   * @throws {AppwriteException}
+   * @returns {Promise<ReviewCategoryList>}
+   */
+  listCategories(
+    params: { range?: ReviewAuthorRange; repositoryId?: string } = {},
+  ): Promise<ReviewCategoryList> {
+    const payload: Record<string, unknown> = {}
+    if (typeof params.range !== 'undefined') {
+      payload['range'] = params.range
+    }
+    if (params.repositoryId) {
+      payload['repositoryId'] = params.repositoryId
+    }
+    return this.client.call(
+      'get',
+      this.uri('/reviews/categories'),
       this.headers(),
       payload,
     )

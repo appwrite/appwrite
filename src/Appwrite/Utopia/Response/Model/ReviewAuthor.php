@@ -70,6 +70,18 @@ class ReviewAuthor extends Model
                 'default' => 0,
                 'example' => 4,
             ])
+            ->addRule('useful', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Findings people found useful: liked with more 👍 than 👎, or, without either, fixed.',
+                'default' => 0,
+                'example' => 20,
+            ])
+            ->addRule('noisy', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Findings people found noisy: disliked with more 👎 than 👍, or, without either, dismissed or resolved without a change.',
+                'default' => 0,
+                'example' => 3,
+            ])
             ->addRule('tier', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Average merge confidence tier of the pull requests\' latest reviews: S, A, B, C, D or F. Empty when none has one.',

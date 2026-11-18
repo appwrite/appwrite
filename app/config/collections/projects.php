@@ -666,6 +666,12 @@ return [
             // The comment the finding was posted as, the root of its thread. Empty when it was
             // listed in the review body instead.
             Attribute::string(key: 'providerCommentId'),
+            // What settled it: commit (fixed by a later commit), chat (fixed or declined in its
+            // thread) or thread (a maintainer resolved the thread without a change). Empty while open.
+            Attribute::string(key: 'settlement', size: 16),
+            // 👍 and 👎 on its comment when the review service last read them.
+            Attribute::integer(key: 'upvotes', signed: false, default: 0),
+            Attribute::integer(key: 'downvotes', signed: false, default: 0),
         ],
         'indexes' => [
             Index::key(key: '_key_reviewInternalId', attributes: ['reviewInternalId']),

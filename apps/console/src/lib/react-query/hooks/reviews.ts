@@ -21,6 +21,7 @@ import type {
   Review,
   ReviewAuthorList,
   ReviewAuthorRange,
+  ReviewCategoryList,
   ReviewEventList,
   ReviewLearningList,
   ReviewList,
@@ -204,6 +205,24 @@ export async function fetchReviewAuthors(
     .reviews.listAuthors({ range, repositoryId: repositoryId || undefined })
 }
 
+/**
+ * Query function to fetch how the findings of each category landed with the
+ * people they were posted for over a range, optionally for one repository.
+ */
+export async function fetchReviewCategories(
+  projectId: string,
+  range: ReviewAuthorRange,
+  repositoryId: string,
+): Promise<ReviewCategoryList> {
+  if (!projectId) {
+    return { categories: [], total: 0 }
+  }
+
+  return await sdk
+    .forProject(projectId)
+    .reviews.listCategories({ range, repositoryId: repositoryId || undefined })
+}
+
 // ============================================================================
 // QUERY OPTIONS
 // ============================================================================
@@ -312,6 +331,23 @@ export function reviewAuthorsQueryOptions(
   return queryOptions({
     queryKey: ['review-authors', 'project', projectId, range, repositoryId],
     queryFn: () => fetchReviewAuthors(projectId!, range, repositoryId),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnWindowFocus: false,
+    placeholderData: keepPreviousData,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function reviewCategoriesQueryOptions(
+  projectId: string | null | undefined,
+  range: ReviewAuthorRange = '30d',
+  repositoryId: string = '',
+) {
+  return queryOptions({
+    queryKey: ['review-categories', 'project', projectId, range, repositoryId],
+    queryFn: () => fetchReviewCategories(projectId!, range, repositoryId),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -443,6 +479,21 @@ export function useReviewAuthors(
     isLoading,
     isFetching,
     error,
+  }
+}
+
+export function useReviewCategories(
+  projectId: string | null | undefined,
+  range: ReviewAuthorRange = '30d',
+  repositoryId: string = '',
+) {
+  const { data, isLoading } = useQuery(
+    reviewCategoriesQueryOptions(projectId, range, repositoryId),
+  )
+
+  return {
+    categories: data?.categories ?? [],
+    isLoading,
   }
 }
 
