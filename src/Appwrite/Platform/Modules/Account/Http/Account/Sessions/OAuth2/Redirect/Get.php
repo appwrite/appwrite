@@ -79,6 +79,7 @@ class Get extends Base
             ->param('state', '', new Text(2048 + 512), 'OAuth2 state params.', true)
             ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
             ->param('error_description', '', new Text(2048, 0), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
+            ->param('device_id', '', new Text(256, 0), 'Device ID returned from the OAuth2 provider.', true)
             ->inject('request')
             ->inject('response')
             ->inject('project')
@@ -110,6 +111,7 @@ class Get extends Base
         string $state,
         string $error,
         string $error_description,
+        string $device_id,
         Request $request,
         Response $response,
         Project $project,
@@ -283,6 +285,8 @@ class Get extends Base
         $refreshToken = '';
         $accessTokenExpiry = 0;
         $oauth2ID = '';
+
+        $oauth2->setDeviceId($device_id);
 
         try {
             $accessToken = $oauth2->getAccessToken($code);
