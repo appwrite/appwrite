@@ -38,6 +38,7 @@ class Delete extends Action
             ->setHttpPath('/v1/teams/:teamId/photo')
             ->desc('Delete photo')
             ->groups(['api', 'teams'])
+            ->label('scope', 'teams.write')
             ->param('teamId', '', new UID(), 'Team ID.')
             ->inject('response')
             ->inject('dbForProject')
