@@ -9,6 +9,7 @@ import {
   ExternalLink,
   Globe,
   Mail,
+  Pencil,
 } from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
@@ -33,11 +34,13 @@ import {
 import {
   useFunctionDomains,
   useProject,
+  useProjectFunction,
   useOrganizationDomains,
 } from '@/lib/react-query/hooks'
 import { VerifyDomain } from './_components/VerifyDomain'
 import { DomainRecordsDialog } from '@/components/pages/projects/$projectId/settings/domains/DomainRecords'
 import { ViewLogsDialog } from '@/components/pages/projects/$projectId/settings/domains/ViewLogs'
+import { UpdateDomain } from '@/components/pages/projects/$projectId/settings/domains/UpdateDomain'
 import { DeleteDomainDialog } from '@/components/pages/projects/$projectId/settings/domains/DeleteDomain'
 import { ProxyRuleContextMenu } from '@/components/pages/projects/$projectId/settings/domains/ProxyRuleContextMenu'
 import { RuleStatusBadge } from '@/components/pages/projects/$projectId/settings/domains/RuleStatusBadge'
@@ -78,6 +81,8 @@ export function View() {
   const [smtpVerifyOpen, setSmtpVerifyOpen] = useState(false)
   const [viewLogsOpen, setViewLogsOpen] = useState(false)
   const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)
+  const [updateRule, setUpdateRule] = useState<Models.ProxyRule | null>(null)
+  const { data: func } = useProjectFunction(projectId, functionId)
   const [selectedRule, setSelectedRule] = useState<Models.ProxyRule | null>(
     null,
   )
@@ -167,6 +172,10 @@ export function View() {
       setViewLogsRule(rule)
       setViewLogsOpen(true)
     })
+  }
+
+  const handleUpdate = (rule: Models.ProxyRule) => {
+    openDialogAfterOverlayCloses(() => setUpdateRule(rule))
   }
 
   const handleDelete = (rule: Models.ProxyRule) => {
@@ -267,6 +276,7 @@ export function View() {
                       rule={rule}
                       onViewLogs={handleViewLogs}
                       onRetry={handleRetry}
+                      onUpdate={isSmtpRule(rule) ? undefined : setUpdateRule}
                       onRecords={handleRecords}
                       onDelete={handleDelete}
                     >
@@ -370,6 +380,15 @@ export function View() {
                                     </MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
+                                {!isSmtpRule(rule) && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleUpdate(rule)}
+                                  >
+                                    <MenuItemContent icon={Pencil}>
+                                      {t('Update')}
+                                    </MenuItemContent>
+                                  </DropdownMenuItem>
+                                )}
                                 <DropdownMenuItem
                                   onClick={() => handleRecords(rule)}
                                 >
@@ -457,6 +476,22 @@ export function View() {
             }}
           />
         </>
+      )}
+      {updateRule && (
+        <UpdateDomain
+          key={updateRule.$id}
+          open
+          onOpenChange={(open) => {
+            if (!open) setUpdateRule(null)
+          }}
+          projectId={projectId ?? ''}
+          region={project?.region}
+          rule={updateRule}
+          resourceType="function"
+          resourceId={functionId ?? ''}
+          installationId={func?.installationId}
+          providerRepositoryId={func?.providerRepositoryId}
+        />
       )}
       {viewLogsRule && (
         <ViewLogsDialog

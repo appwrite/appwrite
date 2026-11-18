@@ -25,6 +25,7 @@ export type MetricCategory =
   | 'webhooks'
   | 'avatars'
   | 'dedicatedDatabases'
+  | 'analytics'
 
 type MetricDefinition = {
   label: string
@@ -62,6 +63,7 @@ export const METRIC_CATEGORIES: { value: MetricCategory; label: string }[] = [
   { value: 'webhooks', label: 'Webhooks' },
   { value: 'avatars', label: 'Avatars' },
   { value: 'dedicatedDatabases', label: 'Dedicated databases' },
+  { value: 'analytics', label: 'Analytics' },
 ]
 
 /** MB-seconds in a GB-hour, as the usage page converts them. */
@@ -280,6 +282,23 @@ export const METRICS: Partial<Record<AlertMetric, MetricDefinition>> = {
     counter: false,
     category: 'dedicatedDatabases',
     resourceTypes: ['dedicatedDatabase'],
+  },
+  // Project-wide across properties, bot traffic excluded, as billing meters them.
+  'analytics.events': {
+    label: 'Analytics events',
+    unit: 'count',
+    suffix: 'events',
+    counter: true,
+    category: 'analytics',
+    resourceTypes: ['project'],
+  },
+  'analytics.pageviews': {
+    label: 'Analytics pageviews',
+    unit: 'count',
+    suffix: 'pageviews',
+    counter: true,
+    category: 'analytics',
+    resourceTypes: ['project'],
   },
 }
 

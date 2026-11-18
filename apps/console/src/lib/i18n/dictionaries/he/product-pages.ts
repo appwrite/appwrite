@@ -1167,6 +1167,137 @@ export const heProductPagesDictionary: Record<string, string> = {
   'Specifications docs': 'תיעוד מפרטים',
   'Use the same hostname and credentials with Prisma, Drizzle, Sequelize, TypeORM, SQLAlchemy, psql, and the rest of your PostgreSQL toolchain. Copy DSN, .env, and ORM snippets from the Console Credentials tab, or follow integration guides in the docs.':
     'השתמשו באותו hostname ובאותם credentials עם Prisma, Drizzle, Sequelize, TypeORM, SQLAlchemy, psql ושאר כלי ה-PostgreSQL שלכם. העתיקו DSN, .env וקטעי ORM מהלשונית Credentials בקונסול, או עקבו אחר מדריכי האינטגרציה בתיעוד.',
+
+  // Videos product page
+  'Stream video and audio with Appwrite Videos. Turn files in Storage into adaptive HLS, DASH, and CMAF streams with encoding profiles, subtitles, and scrubbing thumbnails.':
+    'הזרימו וידאו ואודיו עם Appwrite Videos. הפכו קבצים באחסון לסטרימים אדפטיביים ב-HLS, DASH ו-CMAF עם פרופילי קידוד, כתוביות ותמונות תצוגה מקדימה בציר הזמן.',
+  'Adaptive video streaming from your Storage files':
+    'סטרימינג וידאו אדפטיבי מהקבצים שבאחסון',
+  'Turn video and audio files into HLS, DASH, and CMAF streams with an encoding ladder, subtitles, and scrubbing thumbnails. First frame under 100 ms, by design. One API, in the same project as your Auth, Databases, and Storage.':
+    'הפכו קבצי וידאו ואודיו לסטרימים ב-HLS, DASH ו-CMAF עם סולם קידוד, כתוביות ותמונות תצוגה מקדימה בציר הזמן. פריים ראשון מתחת ל-100 ms, לפי העיצוב. API אחד, באותו פרויקט עם האימות, מסדי הנתונים והאחסון שלכם.',
+  'Start streaming with Videos': 'התחילו להזרים וידאו',
+  'Upload a file to Storage, create a video, and get an adaptive stream URL for any HLS or DASH player.':
+    'העלו קובץ לאחסון, צרו סרטון וקבלו כתובת סטרים אדפטיבית לכל נגן HLS או DASH.',
+  'Which files can I turn into a video?': 'אילו קבצים אפשר להפוך לסרטון?',
+  'Any video or audio file in an Appwrite Storage bucket. Create a video from the bucket and file IDs, and the source file stays in Storage untouched. Audio-only sources stream the same way but have no timeline thumbnails.':
+    'כל קובץ וידאו או אודיו בבאקט של Appwrite Storage. צרו סרטון מתוך מזהי הבאקט והקובץ, וקובץ המקור נשאר באחסון ללא שינוי. מקורות אודיו בלבד מוזרמים באותה דרך, אבל אין להם תמונות תצוגה מקדימה בציר הזמן.',
+  'What is the difference between a profile and a rendition?':
+    'מה ההבדל בין פרופיל לגרסת קידוד?',
+  'A profile is a reusable encoding target with a resolution, video and audio bitrate, and codec. A rendition is one encode of a video against a profile, packaged for one output. Each video has at most one rendition per profile and output. Updating a profile does not re-encode existing renditions.':
+    'פרופיל הוא יעד קידוד לשימוש חוזר עם רזולוציה, קצב סיביות לווידאו ולאודיו וקודק. גרסת קידוד היא קידוד אחד של סרטון לפי פרופיל, שנארז לפלט אחד. לכל סרטון יש לכל היותר גרסת קידוד אחת לכל צירוף של פרופיל ופלט. עדכון פרופיל לא מקודד מחדש גרסאות קידוד קיימות.',
+  'Which streaming formats are supported?': 'אילו פורמטים של סטרימינג נתמכים?',
+  'HLS, DASH, and CMAF. HLS uses MPEG-TS segments, DASH uses fMP4 segments, and CMAF encodes fMP4 once and exposes both an HLS and a DASH master manifest. Players request the master manifest and follow it to renditions, segments, and subtitles.':
+    'HLS, DASH ו-CMAF. HLS משתמש בסגמנטים של MPEG-TS, DASH משתמש בסגמנטים של fMP4, ו-CMAF מקודד fMP4 פעם אחת וחושף גם מניפסט ראשי של HLS וגם של DASH. נגנים מבקשים את המניפסט הראשי ועוקבים אחריו לגרסאות הקידוד, לסגמנטים ולכתוביות.',
+  'How do subtitles work?': 'איך כתוביות עובדות?',
+  'Upload a WebVTT or SubRip file to Storage and attach it to a video with a name and an ISO 639-2 language code. Uploads are converted to WebVTT and segmented for streaming. Subtitle tracks embedded in the source are extracted automatically during the first encoding job, and you can retag their language at any time.':
+    'העלו קובץ WebVTT או SubRip לאחסון וצרפו אותו לסרטון עם שם וקוד שפה לפי ISO 639-2. קבצים שהועלו מומרים ל-WebVTT ומחולקים לסגמנטים לסטרימינג. רצועות כתוביות שמוטמעות בקובץ המקור מחולצות אוטומטית במהלך משימת הקידוד הראשונה, ותוכלו לתייג מחדש את השפה שלהן בכל עת.',
+  'What happens when I delete a video?': 'מה קורה כשמוחקים סרטון?',
+  'Deleting a video removes its renditions, subtitles, previews, and transcoded segments. Deleting a profile keeps the renditions that were already encoded with it.':
+    'מחיקת סרטון מסירה את גרסאות הקידוד, הכתוביות, התצוגות המקדימות והסגמנטים המקודדים שלו. מחיקת פרופיל משאירה את גרסאות הקידוד שכבר קודדו איתו.',
+  'How do you reach a first frame under 100 ms?': 'איך מגיעים לפריים ראשון מתחת ל-100 ms?',
+  'The pipeline is designed for that startup budget. Players load a small master manifest, pick a rendition from the ladder that the connection can fetch immediately, and request a short first segment instead of the source file. Use the inspector to watch time to first frame on a real session.':
+    'הצינור תוכנן לתקציב הפתיחה הזה. נגנים טוענים מניפסט ראשי קטן, בוחרים גרסת קידוד מהסולם שהחיבור יכול להביא מיד, ומבקשים סגמנט ראשון קצר במקום את קובץ המקור. השתמשו בבודק כדי לעקוב אחרי הזמן עד לפריים הראשון בסשן אמיתי.',
+  'Who can manage videos in my organization?': 'מי יכול לנהל סרטונים בארגון שלי?',
+  'Videos follows your organization roles. The videos.read and videos.write scopes control who can view and manage videos, profiles, renditions, and subtitles.':
+    'שירות הסרטונים פועל לפי התפקידים בארגון שלכם. ההרשאות videos.read ו-videos.write קובעות מי יכול לצפות ולנהל סרטונים, פרופילים, גרסאות קידוד וכתוביות.',
+  'Start from any file in Storage': 'התחילו מכל קובץ באחסון',
+  'Create a video from a file that is already in a Storage bucket. The first encoding job probes codecs, resolution, frame rate, duration, and bitrate, so you never parse media metadata yourself.':
+    'צרו סרטון מקובץ שכבר נמצא בבאקט באחסון. משימת הקידוד הראשונה מזהה קודקים, רזולוציה, קצב פריימים, משך וקצב סיביות, כך שלא תצטרכו לנתח מטא-דאטה של מדיה בעצמכם.',
+  'Encode an adaptive bitrate ladder': 'קדדו סולם קצבי סיביות אדפטיבי',
+  'Every new project starts with a default ladder of encoding profiles. Renditions encode in the background and report status and progress until they are ready to stream. Add your own profiles when you need a different resolution or bitrate.':
+    'כל פרויקט חדש מתחיל עם סולם ברירת מחדל של פרופילי קידוד. גרסאות קידוד מקודדות ברקע ומדווחות על סטטוס והתקדמות עד שהן מוכנות לסטרימינג. הוסיפו פרופילים משלכם כשאתם צריכים רזולוציה או קצב סיביות אחרים.',
+  'HLS, DASH, and CMAF from one source': 'HLS, DASH ו-CMAF ממקור אחד',
+  'Package each rendition for the players you support. Every output has a master manifest that players follow to the right rendition for each viewer and connection.':
+    'ארזו כל גרסת קידוד עבור הנגנים שאתם תומכים בהם. לכל פלט יש מניפסט ראשי שנגנים עוקבים אחריו אל גרסת הקידוד המתאימה לכל צופה ולכל חיבור.',
+  'Subtitles, uploaded or extracted': 'כתוביות, מועלות או מחולצות',
+  'Upload WebVTT or SubRip files from Storage, or use the tracks already embedded in the source. Tag each track with a language, choose a default, and players pick it up from the manifest.':
+    'העלו קבצי WebVTT או SubRip מהאחסון, או השתמשו ברצועות שכבר מוטמעות בקובץ המקור. תייגו כל רצועה בשפה, בחרו ברירת מחדל, והנגנים יקבלו אותה מהמניפסט.',
+  'Scrubbing thumbnails on the timeline': 'תמונות תצוגה מקדימה בציר הזמן',
+  'Generate sprite sheets with a WebVTT index so viewers see a preview frame while they scrub. The same sprites give every video a poster image.':
+    'צרו גיליונות ספרייט עם אינדקס WebVTT כדי שצופים יראו פריים לדוגמה בזמן שהם גוללים בציר הזמן. אותם ספרייטים מספקים לכל סרטון גם תמונת פוסטר.',
+  'Play anywhere': 'ניגון בכל מקום',
+  'Hand the master manifest URL to hls.js, dash.js, Shaka Player, AVPlayer, or ExoPlayer. Or copy an embed snippet from the Console and drop it into any page.':
+    'העבירו את כתובת המניפסט הראשי ל-hls.js, dash.js, Shaka Player, AVPlayer או ExoPlayer. או העתיקו קוד הטמעה מהקונסולה והוסיפו אותו לכל עמוד.',
+  'One rendition per profile and output. Encode the same profile for more than one output.':
+    'גרסת קידוד אחת לכל פרופיל ופלט. אפשר לקדד את אותו פרופיל ליותר מפלט אחד.',
+  'For Safari, iOS, tvOS, and hls.js on every other browser.':
+    'עבור Safari, iOS, tvOS ו-hls.js בכל דפדפן אחר.',
+  'For dash.js, Shaka Player, ExoPlayer, and smart TVs.':
+    'עבור dash.js, Shaka Player, ExoPlayer וטלוויזיות חכמות.',
+  'Encode fMP4 segments once and serve both an HLS and a DASH master.':
+    'קדדו סגמנטים של fMP4 פעם אחת והגישו גם מניפסט ראשי של HLS וגם של DASH.',
+  'Uploads are converted to WebVTT and segmented for streaming. Retag an embedded track from und to its real language without replacing the file.':
+    'קבצים שהועלו מומרים ל-WebVTT ומחולקים לסגמנטים לסטרימינג. תייגו מחדש רצועה מוטמעת מ-und לשפה האמיתית שלה בלי להחליף את הקובץ.',
+  English: 'אנגלית',
+  Hebrew: 'עברית',
+  'Scrubbing preview': 'תצוגה מקדימה בגלילה',
+  Encode: 'קידוד',
+  Stream: 'סטרים',
+  'Probed metadata': 'מטא-דאטה שזוהתה',
+  'Welcome to the launch': 'ברוכים הבאים להשקה',
+  '3 outputs': '3 פלטים',
+  'HLS, DASH, and CMAF': 'HLS, DASH ו-CMAF',
+  Adaptive: 'אדפטיבי',
+  'Default bitrate ladder': 'סולם קצבי סיביות ברירת מחדל',
+  'Uploaded or extracted': 'מועלות או מחולצות',
+  Timeline: 'ציר זמן',
+  'Scrubbing thumbnails': 'תמונות תצוגה מקדימה בגלילה',
+  'Any player': 'כל נגן',
+  'Web, iOS, and Android': 'Web, iOS ו-Android',
+  'From the first encode': 'מהקידוד הראשון',
+  'Source stays in Storage': 'המקור נשאר באחסון',
+  'The original file is never replaced': 'קובץ המקור אף פעם לא מוחלף',
+  'Default project ladder': 'סולם ברירת המחדל של הפרויקט',
+  'Add a profile for any other bitrate': 'הוסיפו פרופיל לכל קצב סיביות אחר',
+  'Upload or extract': 'העלאה או חילוץ',
+  'Retag an embedded track without replacing the file':
+    'תייגו מחדש רצועה מוטמעת בלי להחליף את הקובץ',
+  'Poster frame included': 'כולל תמונת פוסטר',
+  'Same sprites, same index': 'אותם ספרייטים, אותו אינדקס',
+  'Master manifest URL': 'כתובת המניפסט הראשי',
+  Excerpt: 'קטע',
+  'Demo video by McPix22': 'סרטון הדגמה של McPix22',
+  'Inspect quality as viewers play': 'בדקו את איכות הניגון',
+  'Pop the inspector out beside any video in the Console. Watch a live experience score for that session, then drill into buffer, bitrate, dropped frames, and diagnostics when a stream misses the sub 100 ms first frame.':
+    'פתחו את הבודק לצד כל סרטון בקונסולה. עקבו אחרי ציון חוויה חי לסשן הזה, ואז בדקו באפר, קצב סיביות, פריימים שנפלו ואבחון כשסטרים מפספס את הפריים הראשון מתחת ל-100 ms.',
+  'Live experience score': 'ציון חוויה בזמן אמת',
+  'Follows the playing video': 'עוקב אחרי הסרטון שמתנגן',
+  'Pop out beside the player': 'נפתח לצד הנגן',
+  '100 ms': '100 ms',
+  'To first frame': 'עד לפריים הראשון',
+  'First frame': 'פריים ראשון',
+  'First frame in 100 ms': 'פריים ראשון ב-100 ms',
+  'Web, mobile, and native': 'Web, מובייל ו-Native',
+  'Embed a built-in player': 'הטמיעו נגן מובנה',
+  'Copy an iframe from the Console and drop the Appwrite player on any page. Set a start time, choose captions, lock a rendition, or leave quality on Auto. The stream is designed for a first frame in under 100 ms.':
+    'העתיקו iframe מהקונסולה והטמיעו את נגן Appwrite בכל עמוד. הגדירו זמן התחלה, בחרו כתוביות, נעלו גרסת קידוד או השאירו איכות על Auto. הסטרים תוכנן לפריים ראשון מתחת ל-100 ms.',
+  'Use any player on any platform': 'השתמשו בכל נגן בכל פלטפורמה',
+  'Prefer your own player? The same master manifest works with hls.js, Shaka Player, and Video.js on the web, AVPlayer on Apple platforms, ExoPlayer on Android, and the usual Flutter and React Native players.':
+    'מעדיפים נגן משלכם? אותו מניפסט ראשי עובד עם hls.js, Shaka Player ו-Video.js ב-Web, AVPlayer בפלטפורמות Apple, ExoPlayer ב-Android, ונגני Flutter ו-React Native הרגילים.',
+  Autoplay: 'ניגון אוטומטי',
+  Captions: 'כתוביות',
+  Quality: 'איכות',
+  'Embed on any page': 'הטמעה בכל עמוד',
+  'Flutter · React Native': 'Flutter · React Native',
+  'First frame under 100 ms': 'פריים ראשון מתחת ל-100 ms',
+  'Press play, see picture in under 100 ms': 'לוחצים Play, רואים תמונה תוך פחות מ-100 ms',
+  'No waiting on the whole file. Streams open from a few kilobytes and one short segment, so picture lands before anyone notices.':
+    'בלי לחכות לכל הקובץ. סטרימים נפתחים מכמה קילובייטים וסגמנט קצר אחד, כך שהתמונה מופיעה לפני שמישהו שם לב.',
+  'Master manifest': 'מניפסט ראשי',
+  'First segment': 'סגמנט ראשון',
+  'Under 100 ms': 'מתחת ל-100 ms',
+  'Appwrite stream': 'סטרים של Appwrite',
+  'Init segment': 'סגמנט init',
+  'Progressive download': 'הורדה פרוגרסיבית',
+  'Whole file first': 'קודם כל הקובץ',
+  'Still downloading, no picture yet': 'עדיין מוריד, עוד אין תמונה',
+  budget: 'תקציב',
+  'to spare': 'מרווח',
+  'Manifest to map the stream': 'מניפסט שממפה את הסטרים',
+  'Starting rung, 1080p next': 'שלב פתיחה, ואחריו 1080p',
+  'Segment to paint a frame': 'סגמנט עד לפריים',
+  'Picture on screen': 'תמונה על המסך',
+  'Climbs the ladder': 'מטפס בסולם',
 }
 
 

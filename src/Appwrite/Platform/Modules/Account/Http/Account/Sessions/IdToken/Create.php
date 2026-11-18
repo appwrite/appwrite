@@ -7,6 +7,7 @@ use Appwrite\Auth\AuthDevice;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OIDC\IdTokenVerifier;
 use Appwrite\Auth\OIDC\Jwks;
+use Appwrite\Bus\Events\EmailVerified;
 use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
@@ -239,7 +240,7 @@ class Create extends Base
         $newUser = null;
         $newTarget = null;
         if ($user->isEmpty()) {
-            [$newUser, $newTarget] = $this->resolveUser($user, $provider, $sub, $providerEmail, $isVerified, $name, $dbForProject, $project, $plan, $proofForPassword, $authorization, $mqtt, $queueForRealtime);
+            [$newUser, $newTarget] = $this->resolveUser($user, $provider, $sub, $providerEmail, $isVerified, $name, $dbForProject, $project, $plan, $proofForPassword, $authorization, $mqtt, $queueForRealtime, $bus);
         }
 
         $authorization->addRole(Role::user($user->getId())->toString());
@@ -249,7 +250,12 @@ class Create extends Base
             throw new Exception(Exception::USER_BLOCKED);
         }
 
-        if (empty($user->getAttribute('email')) && !empty($providerEmail)) {
+        // Only a user this sign-in created and an address it fills in turn verified from here, and both are
+        // saved below; a claim already dispatched EmailVerified and left the account verified
+        $wasVerified = $newUser === null && $user->getAttribute('emailVerification', false);
+
+        $backfilled = empty($user->getAttribute('email')) && !empty($providerEmail);
+        if ($backfilled) {
             $this->backfillEmail($user, $providerEmail, $isVerified, $dbForProject, $project, $plan, $authorization);
         }
 
@@ -284,13 +290,25 @@ class Create extends Base
             'photo' => $photo ?: null,
         ], $changes, $dbForProject, $authorization, $newUser, $newTarget);
 
+        // Only what this request changed: its copy predates any claim or password change that landed since
+        $changes = ['status' => true];
+
         if (empty($user->getAttribute('name'))) {
             $user->setAttribute('name', $name);
+            $changes['name'] = $name;
+        }
+
+        if ($backfilled) {
+            $changes += \array_intersect_key($user->getArrayCopy(), \array_flip(['email', 'emailVerification', 'emailCanonical', 'emailIsCanonical', 'emailIsCorporate', 'emailIsDisposable', 'emailIsFree']));
         }
 
         $user->setAttribute('status', true);
 
-        $dbForProject->updateDocument('users', $user->getId(), $user);
+        $dbForProject->updateDocument('users', $user->getId(), new Document($changes));
+
+        if (!$wasVerified && $user->getAttribute('emailVerification', false)) {
+            $bus->dispatch(new EmailVerified(user: $user->getArrayCopy(), project: $project->getArrayCopy()));
+        }
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -430,7 +448,6 @@ class Create extends Base
         }
     }
 
-
     /**
      * Attach the provider email to a user created without one (e.g. an
      * anonymous account being linked). Never downgrades an already-verified
@@ -482,7 +499,4 @@ class Create extends Base
             }
         }
     }
-
-
-
 }

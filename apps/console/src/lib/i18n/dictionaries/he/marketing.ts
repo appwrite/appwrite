@@ -1749,11 +1749,12 @@ export const heMarketingDictionary: Record<string, string> = {
   'Project rules to deny, rate limit, and redirect traffic.':
     'כללי פרויקט לחסימה, להגבלת קצב ולהפניה של תעבורה.',
   'Projects shipped': 'פרויקטים שהושקו',
+  Prompt: 'פרומפט',
   // Home factory: the display each machine unfolds.
   'Sign users in with email, OAuth, or passkeys, plus MFA, teams, and roles':
     'התחברות עם אימייל, OAuth או מפתחות גישה, לצד MFA, צוותים ותפקידים',
-  'Postgres, MySQL, tables, documents, and vectors, managed in one project':
-    'Postgres, MySQL, טבלאות, מסמכים ווקטורים, מנוהלים בפרויקט אחד',
+  'Run managed Postgres and MySQL, or store tables, documents, and vectors in one project':
+    'הריצו Postgres ו-MySQL מנוהלים, או שמרו טבלאות, מסמכים ווקטורים בפרויקט אחד',
   'Upload files, resize images on the fly, and deliver them over a global CDN':
     'העלו קבצים, התאימו את גודל התמונות בזמן אמת והגישו אותם דרך CDN גלובלי',
   'Run Node, Python, Go, and more on requests, schedules, or events':

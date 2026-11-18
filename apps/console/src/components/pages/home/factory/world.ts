@@ -16,6 +16,7 @@ import {
   TubeGeometry,
   Vector3,
   type Texture,
+  type WebGLRenderer,
 } from 'three'
 import { SVGLoader } from 'three/addons/loaders/SVGLoader.js'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
@@ -24,12 +25,27 @@ import {
   InstallerDisplay,
   getProductFramework,
 } from './frameworks'
-import { box, cylinder, ground, merge, panel, roundedPlane } from './geometry'
+import {
+  box,
+  cylinder,
+  ground,
+  merge,
+  mergeFinishes,
+  panel,
+  roundedPlane,
+} from './geometry'
 import { ConsoleDisplay } from './console'
-import { createKitBeam, createKitDisplay, type FactoryKit } from './kit'
+import {
+  FINISHES,
+  createKitBeam,
+  createKitDisplay,
+  type FactoryKit,
+  type Finish,
+} from './kit'
 import { createChevronMaterial } from './materials'
 import type { FactoryPalette } from './palette'
 import {
+  DOCK,
   BED_BACK,
   BED_FRONT,
   BED_TOP,
@@ -358,7 +374,10 @@ function createNetworkCables(): BufferGeometry {
   return merged
 }
 
-type PartKey = 'bed' | 'matte' | 'steel' | 'aluminum' | 'enclosure' | 'glass'
+type PartKey = Extract<
+  Finish,
+  'bed' | 'matte' | 'steel' | 'aluminum' | 'enclosure' | 'glass'
+>
 
 const PART_KEYS: readonly PartKey[] = [
   'bed',
@@ -721,6 +740,8 @@ export class FactoryWorld {
     // The framework installer: a column like the others, with a display where the nameplate goes.
     const installX = slotX(INSTALL_SLOT)
     column(installX)
+    // The dock the drones plug the models' instruction cards into.
+    add('matte', plain(DOCK.width, 0.004, 0.05), DOCK.x, DOCK.y + 0.001, DOCK.z)
     add(
       'matte',
       panel(FASCIA.width, FASCIA.height, 0.012, 0.05),
@@ -1013,18 +1034,8 @@ export class FactoryWorld {
     network.userData.noReflection = true
     this.group.add(network)
 
-    const materials: Record<PartKey, Mesh['material']> = {
-      bed: kit.bed,
-      matte: kit.matte,
-      steel: kit.steel,
-      aluminum: kit.aluminum,
-      enclosure: kit.enclosure,
-      glass: kit.glass,
-    }
-    for (const key of PART_KEYS) {
-      if (parts[key].length)
-        this.group.add(new Mesh(track(merge(parts[key])), materials[key]))
-    }
+    // Every static machined part, in all its finishes, is one draw.
+    this.group.add(new Mesh(track(mergeFinishes(parts, FINISHES)), kit.finish))
 
     this.logo = new Mesh(track(createLogoGeometry()), kit.logo)
     this.logo.position.set(CORE.x, LOGO_Y, RACKS.front + 0.014)
@@ -1239,7 +1250,9 @@ export class FactoryWorld {
     // The hovered station unfolds: its display slides up out of the slot in
     // the column's top, folded; the mast lifts it; the front half swings open
     // about the hinge while the mast slides along the slot to centre the
-    // screen, and the screen comes on. An open display reaches over the next
+    // screen, and the screen comes on. Every mast rises to the same height:
+    // where the page copy is laid over the scene, only as far as keeps every
+    // open display clear of it. An open display reaches over the next
     // column, so a display stays in its column until the one beside it has
     // closed; folding runs twice as fast as unfolding, so the neighbour is
     // back inside before this one opens.
@@ -1264,11 +1277,10 @@ export class FactoryWorld {
       const rise = easeInOutCubic(range(unfold, 0, 0.3))
       const lift = easeInOutCubic(range(unfold, 0.26, OPEN_START))
       const open = easeInOutCubic(range(unfold, OPEN_START, 0.86))
-      const fit = frame.fits[index]!
       // Stored, the display's top sits just under the slot.
       const bottom =
         -(1 - rise) * (EXTENSION.height + 0.03) +
-        lift * EXTENSION.lift * fit.lift
+        lift * EXTENSION.lift * frame.lift
       // Folded, the hinge is at the stack's left edge, centring it over the slot.
       const hinge = -(1 - open) * (EXTENSION.leaf / 2)
       extension.riser.position.set(hinge, bottom, 0)
@@ -1334,6 +1346,11 @@ export class FactoryWorld {
         0.05 * installOn,
       )
     }
+  }
+
+  /** Sends this frame's screen changes to the GPU (after `update`, before rendering). */
+  upload(renderer: WebGLRenderer) {
+    this.console.upload(renderer)
   }
 
   dispose() {

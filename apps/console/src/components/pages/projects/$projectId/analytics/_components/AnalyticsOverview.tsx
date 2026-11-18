@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from 'react'
 import { useQueries } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import type { DateRange } from 'react-day-picker'
 import {
   Area,
@@ -17,7 +18,7 @@ import {
   Tooltip,
 } from 'recharts'
 import { AnalyticsPropertyType, type Models } from '@appwrite.io/console'
-import { MessageSquarePlus } from 'lucide-react'
+import { BellRing, MessageSquarePlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
@@ -69,6 +70,7 @@ import { AnnotationMarker } from './AnnotationMarker'
 import { SaveAnnotation } from './SaveAnnotation'
 import { ANALYTICS_FILTER_UNSUPPORTED_MESSAGE } from '@/lib/analytics/analytics-filters'
 import { useT } from '@/lib/i18n/translate'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   analyticsChangePercent,
   buildAnalyticsChartPoints,
@@ -419,6 +421,7 @@ export function AnalyticsOverview({
   const t = useT()
   const [hasRevealed, setHasRevealed] = useState(false)
   const isComparing = comparisonRange !== null
+  const { features, isCloud } = useConsoleProfile()
   // Hooks can't be conditional: with comparison off, pass a null property ID
   // so the comparison queries stay disabled, and any range as a placeholder.
   const comparePropertyId = isComparing ? propertyId : null
@@ -487,6 +490,13 @@ export function AnalyticsOverview({
     requestedMetric.source === 'aggregate' && statsUnsupported
       ? metrics[0]
       : requestedMetric
+  // Monitors read the project's metered analytics usage, which only Cloud records.
+  const alertMetric =
+    isCloud &&
+    features.alerts &&
+    (activeMetric.key === 'pageviews' || activeMetric.key === 'events')
+      ? (`analytics.${activeMetric.key}` as const)
+      : undefined
 
   const chartPoints = useMemo(
     () => buildAnalyticsChartPoints(seriesData?.points ?? [], range, interval),
@@ -819,6 +829,23 @@ export function AnalyticsOverview({
             >
               <MessageSquarePlus className="size-3.5" />
               {t('Add note')}
+            </Button>
+          ) : null}
+          {alertMetric ? (
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="h-7 gap-1.5 px-2 text-[12px] text-muted-foreground"
+            >
+              <Link
+                to="/projects/$projectId/usage/monitors"
+                params={{ projectId }}
+                search={{ metric: alertMetric }}
+              >
+                <BellRing className="h-3.5 w-3.5" />
+                {t('Alert me')}
+              </Link>
             </Button>
           ) : null}
         </div>

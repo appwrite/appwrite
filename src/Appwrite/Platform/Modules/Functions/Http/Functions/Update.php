@@ -222,7 +222,6 @@ class Update extends Base
         $logging ??= $function->getAttribute('logging', true);
         $entrypoint ??= $function->getAttribute('entrypoint', '');
         $commands ??= $function->getAttribute('commands', '');
-        $providerSilentMode ??= $function->getAttribute('providerSilentMode', false);
         $deploymentRetention ??= $function->getAttribute('deploymentRetention', 0);
         $description ??= $function->getAttribute('description', '');
         $buildSpecification ??= $function->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT);
@@ -232,6 +231,9 @@ class Update extends Base
         $repositoryInternalId = $function->getAttribute('repositoryInternalId', '');
 
         $isConnected = !empty($function->getAttribute('providerRepositoryId', ''));
+
+        // Disconnecting turns silent mode on, so a new connection starts without it
+        $providerSilentMode ??= !$isConnected && !empty($providerRepositoryId) ? false : $function->getAttribute('providerSilentMode', false);
 
         if (!empty($installationId) && $installation->getAttribute('projectId') !== $project->getId()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);

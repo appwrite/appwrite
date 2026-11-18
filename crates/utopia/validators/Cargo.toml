@@ -1,6 +1,6 @@
 [package]
 name = "utopia-validators"
-description = "The checks of Utopia's request validators: booleans, integers, floats, numbers, ranges, ports, hex colors, text, identifiers, white lists, substrings and DNS labels."
+description = "The checks of Utopia's request validators: booleans, integers, floats, numbers, ranges, ports, hex colors, text, identifiers, white lists, substrings, DNS labels, hostnames, domains, hosts, IP addresses, URLs, phone numbers, JSON, FCM service accounts, globstar patterns and the validators that compose others."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

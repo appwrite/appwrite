@@ -631,11 +631,13 @@ export function ComparisonFaq({ id }: { id: AlternativeId }) {
 export function OtherComparisons({ current }: { current: AlternativeId }) {
   const t = useT()
   const { features } = useConsoleProfile()
-  // Analytics comparisons are reachable directly but stay unlisted until the flag is on.
+  // Product-specific comparisons are reachable directly but stay unlisted
+  // until that product's flag is on.
   const others = ALTERNATIVE_IDS.filter(
     (id) =>
       id !== current &&
-      (features.analytics || ALTERNATIVE_REGISTRY[id].focusProduct !== 'analytics'),
+      (features.analytics || ALTERNATIVE_REGISTRY[id].focusProduct !== 'analytics') &&
+      (features.videos || ALTERNATIVE_REGISTRY[id].focusProduct !== 'videos'),
   )
   return (
     <ComparisonSection bordered={false}>

@@ -32,7 +32,7 @@ abstract class Base extends Action
     {
         $userId = $user->getId();
         $photoId = Id::unique();
-        $path = $deviceForFiles->getPath(APP_STORAGE_PHOTOS . '/' . $userId . '/' . $photoId);
+        $path = $deviceForFiles->getPath(APP_STORAGE_USER_PHOTOS . '/' . $userId . '/' . $photoId);
 
         $deviceForFiles->upload($photo, $path, $mimeType);
 
@@ -75,7 +75,7 @@ abstract class Base extends Action
         // The new photo is live, so a file left behind here only waits for user deletion to remove the user's photo folder
         if ($previous !== '') {
             try {
-                $previousPath = $deviceForFiles->getPath(APP_STORAGE_PHOTOS . '/' . $userId . '/' . $previous);
+                $previousPath = $deviceForFiles->getPath(APP_STORAGE_USER_PHOTOS . '/' . $userId . '/' . $previous);
 
                 if ($deviceForFiles->exists($previousPath) && !$deviceForFiles->delete($previousPath)) {
                     Console::warning('Failed to remove previous photo ' . $previous);
