@@ -55,6 +55,7 @@ export function UpdateDomain({
   const [branch, setBranch] = useState(rule.deploymentVcsProviderBranch ?? '')
   const [redirectUrl, setRedirectUrl] = useState(rule.redirectUrl ?? '')
   const [statusCode, setStatusCode] = useState(initialStatusCode)
+  const [urlError, setUrlError] = useState('')
 
   const hasChanges =
     behaviour !== initialBehaviour ||
@@ -76,6 +77,10 @@ export function UpdateDomain({
       trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')
         ? trimmedUrl
         : `https://${trimmedUrl}`
+    if (behaviour === 'redirect' && !URL.canParse(url)) {
+      setUrlError(t('Invalid URL'))
+      return
+    }
     try {
       await updateMutation.mutateAsync({
         ruleId: rule.$id,
@@ -117,7 +122,11 @@ export function UpdateDomain({
               branch={branch}
               onBranchChange={setBranch}
               redirectUrl={redirectUrl}
-              onRedirectUrlChange={setRedirectUrl}
+              onRedirectUrlChange={(value) => {
+                setRedirectUrl(value)
+                setUrlError('')
+              }}
+              redirectUrlError={urlError}
               statusCode={statusCode}
               onStatusCodeChange={setStatusCode}
               projectId={projectId}
