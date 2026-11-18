@@ -34,10 +34,10 @@ import {
 } from '@/components/ui/table'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
 import { RuleStatusBadge } from './RuleStatusBadge'
@@ -242,8 +242,9 @@ function RecordStatus({
 }
 
 /**
- * What DNS returned for a record, on one line: the first value, then the
- * others in a tooltip, as IPv6 addresses would wrap the line.
+ * What DNS returned for a record, on one line: the first value, then all of
+ * them in a popover, as IPv6 addresses would wrap the line. A popover opens
+ * on tap too, where a tooltip would not.
  */
 function FoundValues({
   values,
@@ -265,16 +266,16 @@ function FoundValues({
         {first}
       </span>
       {rest.length > 0 && (
-        <Tooltip>
-          <TooltipTrigger asChild>
+        <Popover>
+          <PopoverTrigger asChild>
             <button
               type="button"
-              className="shrink-0 cursor-default rounded-sm whitespace-nowrap underline decoration-dotted underline-offset-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="shrink-0 cursor-pointer rounded-sm whitespace-nowrap underline decoration-dotted underline-offset-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {t('and {n} more').replace('{n}', String(rest.length))}
             </button>
-          </TooltipTrigger>
-          <TooltipContent className="max-w-sm text-xs">
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-auto max-w-sm p-3 text-xs">
             <ul className="space-y-0.5 font-mono">
               {values.map((value) => (
                 <li key={value} className="break-all">
@@ -282,8 +283,8 @@ function FoundValues({
                 </li>
               ))}
             </ul>
-          </TooltipContent>
-        </Tooltip>
+          </PopoverContent>
+        </Popover>
       )}
     </p>
   )
