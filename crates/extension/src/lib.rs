@@ -20,6 +20,10 @@ mod user_agent;
 
 use ext_php_rs::prelude::*;
 
+/// Rust's allocations only: PHP's own stay with its allocator.
+#[global_allocator]
+static ALLOCATOR: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 /// The environment variable listing the packages the extension replaces,
 /// comma separated.
 const LIBRARIES: &str = "_APP_EXTENSION_LIBRARIES";

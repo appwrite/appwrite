@@ -76,6 +76,9 @@ jpeg-encoder = "0.7"
 kamadak-exif = "0.6"
 # libheif (a system library): AVIF and HEIC decoding, HEIC encoding. utopia-image's `libheif` feature.
 libheif-rs = { version = "3", default-features = false, features = ["v1_17"] }
+# The extension's allocator: musl's, on the Alpine image, is slow. `local_dynamic_tls` is what a
+# library PHP loads with dlopen needs there.
+mimalloc = { version = "0.1.52", default-features = false, features = ["local_dynamic_tls"] }
 png = "0.18"
 thiserror = "2"
 # libwebp, built from source and linked statically: lossy WebP. utopia-image's `libwebp` feature.

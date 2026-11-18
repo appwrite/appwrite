@@ -358,17 +358,27 @@ fluent calls, and they validate as they are filled.
 
 `$schema->table($name)` returns the package's own `Table\<Dialect>`, holding the schema. When the
 table calls back (`compileCreate($this)`), the schema reads it through its property slots, which
-it finds by name once a request for each class, builds the crate's blueprint and compiles it. The statement it returns is the package's
-`Builder\Statement`, carrying the closure given to `setExecutor()`. A view's query is still a PHP
-builder: the schema calls its `build()`, passes the SQL to the crate and keeps the bindings as PHP
-built them.
+it finds by name once a request for each class, builds the crate's blueprint and compiles it. The
+statement it returns is the package's `Builder\Statement`, carrying the closure given to
+`setExecutor()`. A view's query is still a PHP builder: the schema calls its `build()`, passes the
+SQL to the crate and keeps the bindings as PHP built them.
 
-This part is not faster. PHP compiles a `CREATE TABLE` of 18 columns in 9 microseconds, which is
-string concatenation it does well, and the extension has to read the blueprint out of PHP objects
-first: it takes 6% to 45% longer a statement, 1 to 4 microseconds. Only DDL calls a schema, and the
-statement then takes the database milliseconds. What this part buys is that
-`crates/utopia/query`'s DDL is checked against PHP's, statement for statement, before anything
-written in Rust relies on it.
+A statement takes 7% to 22% less time than PHP's on the Alpine image, and 16% to 28% less on
+macOS: a `CREATE TABLE` of 18 columns is 6.0 microseconds against PHP's 6.5 on Alpine. The margin is
+small because PHP compiles DDL by string concatenation, which it does well, and the extension has
+to read the blueprint out of PHP objects first. Three things got it under PHP's time, having started
+28% over it on Alpine:
+
+- The extension allocates with mimalloc. More than half of a `compileCreate()` was `malloc` and
+  `free`, and musl's are slow. This is the allocator of every library in the extension, and PHP's own
+  allocations stay with PHP's.
+- The crate writes a column's definition into one string, where it joined a list of parts.
+- A `Statement` is made by setting its properties, which is all its constructor does. Calling a PHP
+  constructor from Rust costs more than `new` does in PHP.
+
+Only DDL calls a schema, and the statement then takes the database milliseconds. What this part
+buys is that `crates/utopia/query`'s DDL is checked against PHP's, statement for statement, before
+anything written in Rust relies on it.
 
 SQL names and text are bytes to PHP, so they are widened going into the crate and narrowed coming
 out, as the AST's are. MongoDB's statements are JSON, so its strings must be UTF-8.

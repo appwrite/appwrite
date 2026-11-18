@@ -164,51 +164,60 @@ pub(crate) fn default_value(value: &Value) -> String {
     }
 }
 
-/// `COMMENT '...'`.
-fn comment(text: &str) -> String {
-    format!("COMMENT {}", names::literal(text))
+/// Adds the parts of a definition to `out`, a space before each.
+pub(crate) fn add(out: &mut String, parts: &[&str]) {
+    out.push(' ');
+    for part in parts {
+        out.push_str(part);
+    }
+}
+
+/// The name and type every column definition starts with.
+pub(crate) fn column_start<S: Schema>(schema: &S, column: &Column<S>) -> Result<String> {
+    let mut out = schema.quote_literal(&column.def.name)?;
+    add(&mut out, &[&schema.compile_column_type(column)?]);
+    Ok(out)
+}
+
+/// `DEFAULT ...`, the raw default first.
+pub(crate) fn add_default<S>(out: &mut String, column: &Column<S>) {
+    if let Some(raw) = &column.def.default_raw {
+        add(out, &["DEFAULT ", raw]);
+    } else if let Some(value) = &column.def.default {
+        add(out, &["DEFAULT ", &default_value(value)]);
+    }
 }
 
 /// PHP: `Schema::compileColumnDefinition()`.
 pub(crate) fn column_definition<S: Schema>(schema: &S, column: &Column<S>) -> Result<String> {
     let c = &column.def;
-    let mut parts = vec![schema.quote_literal(&c.name)?, schema.compile_column_type(column)?];
+    let mut out = column_start(schema, column)?;
     if let Some(collation) = &c.collation {
-        parts.push(format!("COLLATE {}", schema.quote_collation(collation)?));
+        add(&mut out, &["COLLATE ", &schema.quote_collation(collation)?]);
     }
     if c.unsigned {
         let unsigned = schema.compile_unsigned();
         if !unsigned.is_empty() {
-            parts.push(unsigned.into());
+            add(&mut out, &[unsigned]);
         }
     }
-    if c.generated_expression.is_some() {
-        parts.push(schema.compile_generated_clause(column));
-        parts.push(if c.nullable { "NULL" } else { "NOT NULL" }.into());
-        if let Some(check) = &c.check {
-            parts.push(format!("CHECK ({check})"));
-        }
-        if let Some(text) = &c.comment {
-            parts.push(comment(text));
-        }
-        return Ok(parts.join(" "));
+    let generated = c.generated_expression.is_some();
+    if generated {
+        add(&mut out, &[&schema.compile_generated_clause(column)]);
+    } else if c.auto_increment {
+        add(&mut out, &[schema.compile_auto_increment()]);
     }
-    if c.auto_increment {
-        parts.push(schema.compile_auto_increment().into());
-    }
-    parts.push(if c.nullable { "NULL" } else { "NOT NULL" }.into());
-    if let Some(raw) = &c.default_raw {
-        parts.push(format!("DEFAULT {raw}"));
-    } else if let Some(value) = &c.default {
-        parts.push(format!("DEFAULT {}", default_value(value)));
+    add(&mut out, &[if c.nullable { "NULL" } else { "NOT NULL" }]);
+    if !generated {
+        add_default(&mut out, column);
     }
     if let Some(check) = &c.check {
-        parts.push(format!("CHECK ({check})"));
+        add(&mut out, &["CHECK (", check, ")"]);
     }
     if let Some(text) = &c.comment {
-        parts.push(comment(text));
+        add(&mut out, &["COMMENT ", &names::literal(text)]);
     }
-    Ok(parts.join(" "))
+    Ok(out)
 }
 
 /// PHP: `Schema::compileGeneratedClause()`.

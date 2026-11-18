@@ -48,6 +48,8 @@ use crate::string::PhpString;
 
 const NAMESPACE: &str = "Utopia\\Query\\Schema\\";
 const STATEMENT: &str = "Utopia\\Query\\Builder\\Statement";
+/// The properties of a `Statement`, in the order [`statement`] sets them.
+const STATEMENT_PROPERTIES: [&str; 5] = ["query", "bindings", "readOnly", "executor", "namedBindings"];
 
 /// What a schema class needs to know of its dialect beyond the crate's [`Schema`].
 trait Dialect: Schema {
@@ -328,17 +330,23 @@ struct Layout {
     slots: Rc<[Option<usize>]>,
 }
 
+/// `Builder\\Statement`, and its property slots where it declares all of them.
+type StatementClass = (&'static ClassEntry, Option<[usize; 5]>);
+
 thread_local! {
     /// The layouts found this request. A blueprint is a handful of classes, so this stays short.
     static LAYOUTS: RefCell<Vec<Layout>> = const { RefCell::new(Vec::new()) };
     /// The package's classes looked up this request, by the name they were asked for.
     static CLASSES: RefCell<Vec<(&'static str, &'static ClassEntry)>> = const { RefCell::new(Vec::new()) };
+    /// `Builder\Statement` and the slots of [`STATEMENT_PROPERTIES`], found once a request.
+    static STATEMENT_SLOTS: Cell<Option<StatementClass>> = const { Cell::new(None) };
 }
 
 /// Forgets the classes at the end of a request, when PHP frees them.
 pub fn request_shutdown() {
     LAYOUTS.with_borrow_mut(Vec::clear);
     CLASSES.with_borrow_mut(Vec::clear);
+    STATEMENT_SLOTS.set(None);
 }
 
 /// A class of the package, looked up once a request.
@@ -455,13 +463,16 @@ impl<'a> Fields<'a> {
     }
 }
 
-fn column<S: Dialect>(value: &Zval) -> PhpResult<Column<S>> {
+/// Reads a PHP `Column` onto the end of `columns`: a definition is too large to hand around.
+fn column<S: Dialect>(value: &Zval, columns: &mut Vec<Column<S>>) -> PhpResult<()> {
     let fields = Fields::of(value, Kind::Column, S::JSON)?;
     let kind = fields
         .case("type", ColumnType::try_from_value)
         .ok_or_else(|| type_error(format!("A column's type must be of type {}", ColumnType::PHP_CLASS)))?;
-    let mut column = Column::new(fields.text("name")?, kind);
-    let found = column.definition_mut();
+    columns.push(Column::new(fields.text("name")?, kind));
+    let Some(found) = columns.last_mut().map(Column::definition_mut) else {
+        return Ok(());
+    };
     found.length = fields.maybe_int("length");
     found.precision = fields.maybe_int("precision");
     found.scale = fields.maybe_int("scale");
@@ -504,7 +515,7 @@ fn column<S: Dialect>(value: &Zval) -> PhpResult<Column<S>> {
         .into_iter()
         .flatten()
         .collect();
-    Ok(column)
+    Ok(())
 }
 
 fn index(value: &Zval, json: bool) -> PhpResult<Index> {
@@ -545,7 +556,11 @@ fn blueprint<S: Dialect>(value: &Zval) -> PhpResult<Table<S>> {
     let fields = Fields::of(value, Kind::Table, json)?;
     let mut table = S::fresh().table(fields.text("name")?);
     let found = table.definition_mut();
-    found.columns = fields.each("columns", column::<S>)?;
+    let columns = fields.table("columns");
+    found.columns.reserve(columns.map_or(0, ZendHashTable::len));
+    for item in columns.into_iter().flat_map(ZendHashTable::values) {
+        column::<S>(item, &mut found.columns)?;
+    }
     found.indexes = fields.each("indexes", |item| index(item, json))?;
     found.foreign_keys = fields.each("foreignKeys", |item| foreign_key(item, json))?;
     found.drop_columns = fields.texts("dropColumns")?;
@@ -603,7 +618,7 @@ macro_rules! object_argument {
             const TYPE: DataType = DataType::object($class);
 
             fn from_zval(zval: &'a Zval) -> Option<Self> {
-                let class = ClassEntry::try_find($class)?;
+                let class = known($class).ok()?;
                 zval.object().filter(|object| object.instance_of(class)).map(|_| $name(zval))
             }
         }
@@ -705,15 +720,40 @@ fn statement<S: Dialect>(
     bindings: Option<Zval>,
 ) -> PhpResult<Zval> {
     let compiled = compiled.map_err(|error| thrown(S::JSON, &error))?;
+    let (class, slots) = match STATEMENT_SLOTS.get() {
+        Some(found) => found,
+        None => {
+            let class = known(STATEMENT)?;
+            let slots: Vec<usize> = STATEMENT_PROPERTIES.iter().filter_map(|name| slot_of(class, name)).collect();
+            let found = (class, slots.try_into().ok());
+            STATEMENT_SLOTS.set(Some(found));
+            found
+        }
+    };
     let mut read_only = Zval::new();
     read_only.set_bool(compiled.read_only);
-    let mut arguments = [
+    let mut values = [
         outward(S::JSON, &compiled.query),
         bindings.unwrap_or_else(empty),
         read_only,
         held.executor.as_ref().map_or_else(null, Zval::shallow_clone),
+        null(),
     ];
-    construct(known(STATEMENT)?, &mut arguments)?.into_zval(false).map_err(PhpException::from)
+    let object = match slots {
+        // What the constructor does, without the call: it only assigns its promoted
+        // properties, and these values already have the types it declares.
+        Some(slots) => {
+            let mut object = class.new();
+            for (slot, value) in slots.into_iter().zip(values) {
+                // SAFETY: `slot_of` only answers a slot the class declares, and a new object's
+                // typed property without a default is undefined, so nothing is overwritten.
+                unsafe { object.properties_table.as_mut_ptr().add(slot).write(value) };
+            }
+            object
+        }
+        None => construct(class, &mut values[..4])?,
+    };
+    object.into_zval(false).map_err(PhpException::from)
 }
 
 /// `new Table\<Dialect>($this, $name)`.

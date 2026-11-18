@@ -304,22 +304,18 @@ impl Schema for ClickHouse {
     /// Name, type, default, codecs, TTL and comment.
     fn compile_column_definition(&self, column: &Column<Self>) -> Result<String> {
         let c = &column.def;
-        let mut parts = vec![self.quote_literal(&c.name)?, self.compile_column_type(column)?];
-        if let Some(raw) = &c.default_raw {
-            parts.push(format!("DEFAULT {raw}"));
-        } else if let Some(value) = &c.default {
-            parts.push(format!("DEFAULT {}", base::default_value(value)));
-        }
+        let mut out = base::column_start(self, column)?;
+        base::add_default(&mut out, column);
         if !c.codecs.is_empty() {
-            parts.push(format!("CODEC({})", c.codecs.join(", ")));
+            base::add(&mut out, &["CODEC(", &c.codecs.join(", "), ")"]);
         }
         if let Some(ttl) = &c.ttl {
-            parts.push(format!("TTL {ttl}"));
+            base::add(&mut out, &["TTL ", ttl]);
         }
         if let Some(comment) = &c.comment {
-            parts.push(format!("COMMENT {}", names::literal(comment)));
+            base::add(&mut out, &["COMMENT ", &names::literal(comment)]);
         }
-        Ok(parts.join(" "))
+        Ok(out)
     }
 
     fn drop_index(&self, table: &str, name: &str) -> Result<Statement> {
