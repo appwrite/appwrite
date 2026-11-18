@@ -61,6 +61,9 @@ fn startup(_kind: i32, _module: i32) -> i32 {
         if enabled("validators-text") {
             validators::text::register()?;
         }
+        if enabled("validators-network") {
+            validators::network::register()?;
+        }
         Ok(())
     })
 }
