@@ -67,6 +67,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Roblox\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Salesforce\Update as UpdateOAuth2Salesforce;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Slack\Update as UpdateOAuth2Slack;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Spotify\Update as UpdateOAuth2Spotify;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Strava\Update as UpdateOAuth2Strava;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Stripe\Update as UpdateOAuth2Stripe;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TikTok\Update as UpdateOAuth2TikTok;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Tradeshift\Update as UpdateOAuth2Tradeshift;
@@ -303,6 +304,7 @@ class Http extends Service
         $this->addAction('updateProjectOAuth2Hugging Face', UpdateOAuth2HuggingFace::class);
         $this->addAction('updateProjectOAuth2Instagram', UpdateOAuth2Instagram::class);
         $this->addAction('updateProjectOAuth2Patreon', UpdateOAuth2Patreon::class);
+        $this->addAction('updateProjectOAuth2Strava', UpdateOAuth2Strava::class);
         $this->addAction('updateProjectOAuth2Railway', UpdateOAuth2Railway::class);
         $this->addAction('updateProjectOAuth2Reddit', UpdateOAuth2Reddit::class);
         $this->addAction('updateProjectOAuth2Vercel', UpdateOAuth2Vercel::class);
