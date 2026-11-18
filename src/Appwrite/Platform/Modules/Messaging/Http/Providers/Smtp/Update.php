@@ -92,9 +92,9 @@ class Update extends Action
             ->param('replyToName', '', new Text(128), 'Name set in the Reply To field for the mail. Default value is Sender Name.', true)
             ->param('replyToEmail', '', new Text(128), 'Email set in the Reply To field for the mail. Default value is Sender Email.', true)
             ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
-            ->param('clientId', '', new Text(0), 'Microsoft Entra ID (Azure AD) application (client) ID for OAuth 2.0 authentication.', true)
-            ->param('clientSecret', '', new PasswordFormat(new Text(0)), 'Microsoft Entra ID (Azure AD) client secret for OAuth 2.0 authentication.', true)
-            ->param('tenantId', '', new Text(0), 'Microsoft Entra ID (Azure AD) directory (tenant) ID for OAuth 2.0 authentication.', true)
+            ->param('clientId', null, new Nullable(new Text(0)), 'Microsoft Entra ID (Azure AD) application (client) ID for OAuth 2.0 authentication. Pass an empty string to clear.', true)
+            ->param('clientSecret', null, new Nullable(new PasswordFormat(new Text(0))), 'Microsoft Entra ID (Azure AD) client secret for OAuth 2.0 authentication. Pass an empty string to clear.', true)
+            ->param('tenantId', null, new Nullable(new Text(0)), 'Microsoft Entra ID (Azure AD) directory (tenant) ID for OAuth 2.0 authentication. Pass an empty string to clear.', true)
             ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('response')
@@ -102,7 +102,7 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $providerId, string $name, string $host, ?int $port, string $username, string $password, string $encryption, ?bool $autoTLS, string $mailer, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, string $clientId, string $clientSecret, string $tenantId, Event $queueForEvents, Database $dbForProject, Response $response, PublicHostname $publicHostname)
+    public function action(string $providerId, string $name, string $host, ?int $port, string $username, string $password, string $encryption, ?bool $autoTLS, string $mailer, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, ?string $clientId, ?string $clientSecret, ?string $tenantId, Event $queueForEvents, Database $dbForProject, Response $response, PublicHostname $publicHostname)
     {
         // Workers dial the host later and check it again there; one that does not resolve yet is kept.
         $hostname = new Host($publicHostname, resolved: false);
@@ -174,15 +174,15 @@ class Update extends Action
             $credentials['password'] = $password;
         }
 
-        if (!empty($clientId)) {
+        if ($clientId !== null) {
             $credentials['clientId'] = $clientId;
         }
 
-        if (!empty($clientSecret)) {
+        if ($clientSecret !== null) {
             $credentials['clientSecret'] = $clientSecret;
         }
 
-        if (!empty($tenantId)) {
+        if ($tenantId !== null) {
             $credentials['tenantId'] = $tenantId;
         }
 

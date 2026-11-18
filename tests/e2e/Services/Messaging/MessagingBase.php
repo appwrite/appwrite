@@ -1577,6 +1577,17 @@ trait MessagingBase
             $this->assertSame('my-client-id', $updated['body']['credentials']['clientId']);
             $this->assertSame('my-tenant-id', $updated['body']['credentials']['tenantId']);
             $this->assertArrayNotHasKey('clientSecret', $updated['body']['credentials']);
+
+            // Clearing OAuth credentials switches back to Basic Auth cleanly
+            $cleared = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/smtp/' . $providerId, $headers, [
+                'clientId' => '',
+                'clientSecret' => '',
+                'tenantId' => '',
+            ]);
+            $this->assertSame(200, $cleared['headers']['status-code']);
+            $this->assertSame('', $cleared['body']['credentials']['clientId']);
+            $this->assertSame('', $cleared['body']['credentials']['tenantId']);
+            $this->assertArrayNotHasKey('clientSecret', $cleared['body']['credentials']);
         } finally {
             $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $providerId, $headers);
         }

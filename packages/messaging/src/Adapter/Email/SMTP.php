@@ -422,23 +422,37 @@ class SMTP extends EmailAdapter
             ],
         );
 
+        $statusCode = (int) $result['statusCode'];
         $response = $result['response'];
 
         if (
-            $result['statusCode'] !== 200
+            $statusCode !== 200
             || !\is_array($response)
             || !isset($response['access_token'])
             || !\is_string($response['access_token'])
             || $response['access_token'] === ''
         ) {
-            $error = \is_array($response)
-                ? ($response['error_description'] ?? $response['error'] ?? null)
-                : (\is_string($response) && $response !== '' ? $response : null);
-            $detail = \is_string($error) && $error !== ''
-                ? $error
-                : ($result['error'] !== '' ? $result['error'] : 'HTTP ' . $result['statusCode']);
+            $parts = ["HTTP {$statusCode}"];
 
-            throw new \Exception('Failed to obtain OAuth2 access token: ' . $detail);
+            if (\is_array($response)) {
+                $error = $response['error'] ?? null;
+                if (\is_string($error) && $error !== '') {
+                    $parts[] = $error;
+                }
+
+                $description = $response['error_description'] ?? null;
+                if (\is_string($description) && $description !== '') {
+                    $parts[] = $description;
+                }
+            } elseif (\is_string($response) && $response !== '') {
+                $parts[] = $response;
+            }
+
+            if ($result['error'] !== '') {
+                $parts[] = $result['error'];
+            }
+
+            throw new \Exception('Failed to obtain OAuth2 access token: ' . implode(' - ', $parts), $statusCode);
         }
 
         $this->accessToken = $response['access_token'];

@@ -153,9 +153,77 @@ final class SMTPOAuthTest extends TestCase
             clientFactory: static fn (): ClientInterface => $client,
         );
 
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('AADSTS7000215: Invalid client secret provided.');
-        $adapter->send($this->email());
+        try {
+            $adapter->send($this->email());
+            $this->fail('Expected exception was not thrown.');
+        } catch (\Exception $exception) {
+            $this->assertSame(400, $exception->getCode());
+            $this->assertStringContainsString('HTTP 400', $exception->getMessage());
+            $this->assertStringContainsString('invalid_client', $exception->getMessage());
+            $this->assertStringContainsString('AADSTS7000215: Invalid client secret provided.', $exception->getMessage());
+        }
+    }
+
+    public function testThrows503RetainingStatusAndOAuthErrorCodeWithDescription(): void
+    {
+        $port = ScriptedSmtpServer::closedPort();
+        $client = new TokenMockClient([
+            new Response(503, body: new Stream((string) json_encode([
+                'error' => 'temporarily_unavailable',
+                'error_description' => 'A transient error has occurred. Please try again.',
+            ]))),
+        ]);
+
+        $adapter = new SMTP(
+            host: "127.0.0.1:{$port}",
+            username: 'sender@contoso.com',
+            timeout: 2,
+            timelimit: 2,
+            clientId: 'cid',
+            clientSecret: 'csec',
+            tenantId: 'tid',
+            clientFactory: static fn (): ClientInterface => $client,
+        );
+
+        try {
+            $adapter->send($this->email());
+            $this->fail('Expected exception was not thrown.');
+        } catch (\Exception $exception) {
+            $this->assertSame(503, $exception->getCode());
+            $this->assertStringContainsString('HTTP 503', $exception->getMessage());
+            $this->assertStringContainsString('temporarily_unavailable', $exception->getMessage());
+            $this->assertStringContainsString('A transient error has occurred. Please try again.', $exception->getMessage());
+        }
+    }
+
+    public function testThrows503RetainingStatusAndServerErrorCode(): void
+    {
+        $port = ScriptedSmtpServer::closedPort();
+        $client = new TokenMockClient([
+            new Response(503, body: new Stream((string) json_encode([
+                'error' => 'server_error',
+            ]))),
+        ]);
+
+        $adapter = new SMTP(
+            host: "127.0.0.1:{$port}",
+            username: 'sender@contoso.com',
+            timeout: 2,
+            timelimit: 2,
+            clientId: 'cid',
+            clientSecret: 'csec',
+            tenantId: 'tid',
+            clientFactory: static fn (): ClientInterface => $client,
+        );
+
+        try {
+            $adapter->send($this->email());
+            $this->fail('Expected exception was not thrown.');
+        } catch (\Exception $exception) {
+            $this->assertSame(503, $exception->getCode());
+            $this->assertStringContainsString('HTTP 503', $exception->getMessage());
+            $this->assertStringContainsString('server_error', $exception->getMessage());
+        }
     }
 
     public function testThrowsWhenTokenResponseOmitsAccessToken(): void
