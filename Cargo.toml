@@ -53,6 +53,7 @@ memchr = "2"
 ripemd = "0.1"
 rustix = { version = "1", default-features = false, features = ["std", "fs", "system"] }
 ryu = "1"
+serde = "1"
 serde_json = { version = "1", features = ["raw_value", "preserve_order", "float_roundtrip"] }
 sha1 = "0.10"
 sha2 = "0.10"

@@ -34,7 +34,9 @@
 #![warn(missing_docs)]
 
 use std::borrow::Cow;
+use std::collections::HashMap;
 use std::path::Path;
+use std::sync::{Arc, OnceLock};
 
 use indexmap::IndexMap;
 use php_std::Value;
@@ -117,22 +119,119 @@ pub enum Missing<'a> {
 }
 
 /// A registered language.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 enum Language {
     Texts(Translations),
+    /// A translation file that is a JSON object of strings, kept as its text and
+    /// decoded on first use, then shared by every name registered from the same
+    /// text.
+    Json(Arc<Json>),
     /// What PHP holds instead of an array, by the name its type errors use
     /// (`null`, `true`, `false`, `int`, `float`, `string`).
     Unusable(&'static str),
+}
+
+impl PartialEq for Language {
+    fn eq(&self, other: &Self) -> bool {
+        match (self.resolve(), other.resolve()) {
+            (Ok(a), Ok(b)) => a == b,
+            (Err(a), Err(b)) => a == b,
+            _ => false,
+        }
+    }
+}
+
+impl Language {
+    /// The translations, or the name of what PHP holds instead of an array.
+    fn resolve(&self) -> Result<&Translations, &'static str> {
+        match self {
+            Language::Texts(texts) => Ok(texts),
+            Language::Json(json) => Ok(json.texts()),
+            Language::Unusable(given) => Err(given),
+        }
+    }
+}
+
+/// The text of a translation file that is a JSON object of strings, checked when
+/// it was registered and decoded on first use. Most registered languages are
+/// never read in a given process, so this keeps them as their JSON text.
+#[derive(Debug)]
+struct Json {
+    text: Arc<[u8]>,
+    texts: OnceLock<Translations>,
+}
+
+impl Json {
+    fn texts(&self) -> &Translations {
+        self.texts.get_or_init(|| {
+            serde_json::from_slice(&self.text).expect("checked to be a JSON object of strings when it was registered")
+        })
+    }
+}
+
+/// Whether `json` is a JSON object whose values are all strings: what
+/// `serde_json::from_slice::<Translations>` accepts, checked without building
+/// anything.
+fn is_object_of_strings(json: &[u8]) -> bool {
+    use serde::de::{self, Deserialize, Deserializer, MapAccess, Visitor};
+
+    struct AnyString;
+    impl<'de> Deserialize<'de> for AnyString {
+        fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+            struct V;
+            impl Visitor<'_> for V {
+                type Value = AnyString;
+                fn expecting(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    f.write_str("a string")
+                }
+                fn visit_str<E: de::Error>(self, _: &str) -> Result<AnyString, E> {
+                    Ok(AnyString)
+                }
+            }
+            deserializer.deserialize_string(V)
+        }
+    }
+
+    struct Object;
+    impl<'de> Deserialize<'de> for Object {
+        fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+            struct V;
+            impl<'de> Visitor<'de> for V {
+                type Value = Object;
+                fn expecting(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    f.write_str("an object of strings")
+                }
+                fn visit_map<A: MapAccess<'de>>(self, mut map: A) -> Result<Object, A::Error> {
+                    while map.next_entry::<AnyString, AnyString>()?.is_some() {}
+                    Ok(Object)
+                }
+            }
+            deserializer.deserialize_map(V)
+        }
+    }
+
+    serde_json::from_slice::<Object>(json).is_ok()
 }
 
 /// Every registered language, and whether missing languages and keys are
 /// errors.
 ///
 /// PHP: the static state of `Locale`.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Languages {
     languages: IndexMap<String, Language, Hasher>,
     exceptions: bool,
+    /// The translation files registered so far, by their text, so names
+    /// registered from the same file share it and its decoding.
+    files: HashMap<Arc<[u8]>, Arc<Json>, Hasher>,
+}
+
+impl PartialEq for Languages {
+    /// Equal when they hold the same languages, in the same order, with the
+    /// same translations, and the same exceptions setting.
+    fn eq(&self, other: &Self) -> bool {
+        self.exceptions == other.exceptions && self.languages == other.languages
+    }
 }
 
 impl Default for Languages {
@@ -147,7 +246,7 @@ impl Languages {
     ///
     /// PHP: exceptions are on by default, as in PHP.
     pub fn new() -> Self {
-        Self { languages: IndexMap::default(), exceptions: true }
+        Self { languages: IndexMap::default(), exceptions: true, files: HashMap::default() }
     }
 
     /// Whether an unknown language or a missing key or file is an error.
@@ -203,6 +302,11 @@ impl Languages {
     /// Registers a language from JSON text: the decoding half of
     /// [`Languages::load`].
     ///
+    /// A JSON object of strings, as every translation file is, is kept as its
+    /// text and decoded on the language's first lookup, once per distinct text:
+    /// names registered from the same file share it. Anything else is decoded
+    /// now, so its errors are returned here as before.
+    ///
     /// Invalid JSON and scalars register a language that holds no
     /// translations, so lookups in it fail with [`Error::Type`]. An object or
     /// list must hold strings only ([`Error::Unsupported`] otherwise); a list
@@ -210,10 +314,20 @@ impl Languages {
     ///
     /// PHP: reads `json` the way `json_decode($json, true)` does.
     pub fn insert_json(&mut self, name: impl Into<String>, json: &[u8]) -> Result<(), Error> {
-        // A JSON object of strings, as every translation file is, decodes
-        // straight into the map; anything else takes PHP's decoder.
-        if let Ok(texts) = serde_json::from_slice::<Translations>(json) {
-            self.languages.insert(name.into(), Language::Texts(texts));
+        // A JSON object of strings, as every translation file is, is kept as its
+        // text and decoded straight into the map on first use, once per distinct
+        // file; anything else takes PHP's decoder now.
+        if is_object_of_strings(json) {
+            let file = match self.files.get(json) {
+                Some(file) => Arc::clone(file),
+                None => {
+                    let text: Arc<[u8]> = json.into();
+                    let file = Arc::new(Json { text: Arc::clone(&text), texts: OnceLock::new() });
+                    self.files.insert(text, Arc::clone(&file));
+                    file
+                }
+            };
+            self.languages.insert(name.into(), Language::Json(file));
             return Ok(());
         }
         let language = match json::decode(json, Some(true), 512, Flags::NONE) {
@@ -254,9 +368,9 @@ impl Languages {
     /// The language a lookup reads, or the type error PHP's
     /// `array_key_exists()` raises on what it finds instead.
     fn lookup(&self, name: &str) -> Result<&Translations, Error> {
-        match self.languages.get(name) {
-            Some(Language::Texts(t)) => Ok(t),
-            Some(Language::Unusable(given)) => Err(key_exists_error(given)),
+        match self.languages.get(name).map(Language::resolve) {
+            Some(Ok(t)) => Ok(t),
+            Some(Err(given)) => Err(key_exists_error(given)),
             None => Err(key_exists_error("null")),
         }
     }
@@ -366,10 +480,11 @@ impl<'a> Locale<'a> {
         placeholders: impl IntoIterator<Item = (N, V)>,
     ) -> Result<Option<Cow<'s, str>>, Error> {
         let default = self.languages.lookup(&self.default)?.get(key);
-        let fallback = match self.languages.languages.get(self.fallback.as_deref().unwrap_or("")) {
-            None | Some(Language::Unusable("null")) => None,
-            Some(Language::Unusable(given)) => return Err(key_exists_error(given)),
-            Some(Language::Texts(t)) => t.get(key),
+        let fallback = match self.languages.languages.get(self.fallback.as_deref().unwrap_or("")).map(Language::resolve)
+        {
+            None | Some(Err("null")) => None,
+            Some(Err(given)) => return Err(key_exists_error(given)),
+            Some(Ok(t)) => t.get(key),
         };
         // An empty text counts as missing, so the next source is used.
         let usable = |text: Option<&'s String>| text.filter(|text| !text.is_empty());
@@ -394,9 +509,9 @@ impl<'a> Locale<'a> {
     ///
     /// PHP: `$locale->getTranslations()`.
     pub fn translations(&self) -> Result<&'a Translations, Error> {
-        match self.languages.languages.get(self.default.as_ref()) {
-            Some(Language::Texts(t)) => Ok(t),
-            Some(Language::Unusable(given)) => Err(returned_error(given)),
+        match self.languages.languages.get(self.default.as_ref()).map(Language::resolve) {
+            Some(Ok(t)) => Ok(t),
+            Some(Err(given)) => Err(returned_error(given)),
             None => Err(returned_error("null")),
         }
     }
@@ -535,5 +650,70 @@ mod tests {
         assert!(bad.translations().unwrap_err().to_string().ends_with("null returned"));
         let num = Locale::with(&l, "num", None::<&str>);
         assert!(num.text("a", Missing::Key, &[]).unwrap_err().to_string().ends_with("int given"));
+    }
+
+    /// The check that keeps a file as JSON accepts exactly what decoding it
+    /// straight into the map accepts, so nothing moves between the lazy path and
+    /// PHP's decoder.
+    #[test]
+    fn object_of_strings_check_matches_the_decoder() {
+        let inputs: &[&[u8]] = &[
+            br#"{"a":"b"}"#,
+            br#"{}"#,
+            br#" {"a" : "b" } "#,
+            br#"{"a":"b","a":"c"}"#,
+            br#"{"a":1}"#,
+            br#"{"a":null}"#,
+            br#"{"a":["b"]}"#,
+            br#"{"a":{"b":"c"}}"#,
+            br#"{"\u00e9":"\u00e9\n"}"#,
+            br#"{"a":"\ud800"}"#,
+            br#"{"a":"b"} x"#,
+            br#"{"a":"b""#,
+            br#"[]"#,
+            br#"["a"]"#,
+            br#""a""#,
+            b"null",
+            b"1",
+            b"",
+            b"\xff",
+        ];
+        for input in inputs {
+            assert_eq!(
+                is_object_of_strings(input),
+                serde_json::from_slice::<Translations>(input).is_ok(),
+                "{}",
+                String::from_utf8_lossy(input)
+            );
+        }
+    }
+
+    /// Names registered from the same file share its text and decode it once, on
+    /// first use, to what decoding it at once gives.
+    #[test]
+    fn json_files_are_shared_and_decoded_on_first_use() {
+        let json = br#"{"hello":"Hello","bye":"Bye"}"#;
+        let mut lazy = Languages::new();
+        lazy.insert_json("en", json).unwrap();
+        lazy.insert_json("en-us", json).unwrap();
+        lazy.insert_json("fr", br#"{"hello":"Bonjour"}"#).unwrap();
+        assert_eq!(lazy.files.len(), 2);
+        let (Some(Language::Json(en)), Some(Language::Json(en_us))) =
+            (lazy.languages.get("en"), lazy.languages.get("en-us"))
+        else {
+            panic!("a JSON object of strings is kept as its text");
+        };
+        assert!(Arc::ptr_eq(en, en_us));
+        assert!(en.texts.get().is_none(), "nothing is decoded before a lookup");
+
+        let locale = Locale::new(&lazy, "en-us").unwrap();
+        assert_eq!(locale.text("hello", Missing::Null, &[]).unwrap().as_deref(), Some("Hello"));
+        assert!(en.texts.get().is_some() && Arc::ptr_eq(en, en_us), "decoded once, for both names");
+
+        let mut eager = Languages::new();
+        for (name, texts) in [("en", json.as_slice()), ("en-us", json), ("fr", br#"{"hello":"Bonjour"}"#)] {
+            eager.insert(name, serde_json::from_slice(texts).unwrap());
+        }
+        assert_eq!(lazy, eager);
     }
 }

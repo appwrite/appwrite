@@ -84,7 +84,11 @@ class's static state, so they live once per process and are cleared when the req
 PHP clears static properties. `Locale::$exceptions` is still a PHP static property:
 `Locale::$exceptions = false` works unchanged, and every call reads it. Translation files are read
 through PHP's `file_exists()` and `file_get_contents()`, so Swoole's hooks, stream wrappers and
-PHP's warnings apply. `getTranslations()` builds a language's array once and returns it by
+PHP's warnings apply. A file is read when it is registered, as in PHP, but a JSON object of strings
+(every Appwrite translation file) is kept as its text and decoded on the language's first lookup,
+once per distinct file: Appwrite registers 131 codes at boot and a process reads a few, so this
+keeps about 4.5 MB per process out of memory. Anything else is decoded at registration, so its
+errors are raised at the same point as before. `getTranslations()` builds a language's array once and returns it by
 refcount afterwards, as PHP returns `self::$language[$name]`.
 
 Known differences from the PHP class it replaced:
