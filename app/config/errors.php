@@ -84,6 +84,11 @@ return [
         'description' => 'The embedding service could not generate embeddings for this request. Please try again later.',
         'code' => 503,
     ],
+    Exception::GENERAL_EMBEDDING_TEXT_TOO_LONG => [
+        'name' => Exception::GENERAL_EMBEDDING_TEXT_TOO_LONG,
+        'description' => 'A text is longer than the selected embedding model can process. Split it into smaller chunks and try again.',
+        'code' => 400,
+    ],
     Exception::GENERAL_ARGUMENT_INVALID => [
         'name' => Exception::GENERAL_ARGUMENT_INVALID,
         'description' => 'The request contains one or more invalid arguments. Please refer to the endpoint documentation.',
