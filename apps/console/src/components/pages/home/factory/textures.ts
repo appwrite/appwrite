@@ -462,7 +462,8 @@ export function createDescriptionAtlas(
     width * DESCRIPTION_COLUMNS,
     height * rows,
   )
-  const texture = finishTexture(new CanvasTexture(canvas))
+  // Plain RGBA: the display material decodes its sRGB (see `createKitDisplay`).
+  const texture = finishTexture(new CanvasTexture(canvas), false)
   const fonts = brandFontStack()
 
   const ready = Promise.all([

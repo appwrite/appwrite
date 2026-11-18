@@ -62,7 +62,7 @@ export type FactoryKit = {
   /** The network's cables: the same cable, with light pulses running out along it. */
   networkCable: MeshStandardMaterial
   networkUniforms: NetworkUniforms
-  /** Self-lit displays (installer, counter), mapped per mesh. */
+  /** Self-lit displays (installer, counter, Console, drone cards), mapped per mesh. */
   displays: MeshBasicMaterial[]
   carrier: MeshStandardMaterial
   /** Product bodies, tinted per instance with the product's finish. */
@@ -290,9 +290,25 @@ export function createKitBeam(kit: FactoryKit) {
   return material
 }
 
-/** A self-lit display showing `map`. */
+/**
+ * A self-lit display showing `map`, a canvas the scene draws (most redraw
+ * theirs while the line runs). `map` stays plain RGBA (`NoColorSpace`, a
+ * canvas texture's default) and the shader decodes its sRGB: Chrome copies a
+ * canvas into an sRGB texture down a slow path (about 15 ms of GPU time for
+ * the installer's screen, against 0.2 ms as plain RGBA), which dropped a
+ * frame every time a display changed.
+ */
 export function createKitDisplay(kit: FactoryKit, map: Texture) {
   const material = new MeshBasicMaterial({ map, toneMapped: false })
+  material.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <map_fragment>',
+      `#ifdef USE_MAP
+        diffuseColor *= sRGBTransferEOTF(texture2D(map, vMapUv));
+      #endif`,
+    )
+  }
+  material.customProgramCacheKey = () => 'factory-display'
   kit.displays.push(material)
   return material
 }
