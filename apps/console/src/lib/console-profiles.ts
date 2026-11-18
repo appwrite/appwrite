@@ -73,6 +73,12 @@ export type ConsoleProfileFeatures = {
    * self-hosted instances run the review service only when they opt in.
    */
   reviews: boolean
+  /**
+   * Internal only, switched on from the debug menu. Sandboxes product (live
+   * workspaces you run commands, files, processes and terminals in) via the
+   * Cloud-only `sandboxes` service.
+   */
+  sandboxes: boolean
   /** Project environments switcher in the project sidebar (`/project/environments`, Cloud only). */
   projectEnvironments: boolean
   /** Internal only, switched on from the debug menu. Usage monitors and the alerts they raise: the Usage sidebar's Monitors and Alerts pages, their quick actions, budget monitors in billing, and the alert events in the webhook event picker. */
@@ -144,6 +150,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   nativeDbsMongo: 'Native DBs: MongoDB',
   videos: 'Videos',
   reviews: 'Review',
+  sandboxes: 'Sandboxes',
   projectEnvironments: 'Project environments',
   alerts: 'Alerts',
   multiRegion: 'Multi-region',
@@ -200,6 +207,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       nativeDbsMongo: false,
       videos: false,
       reviews: false,
+      sandboxes: false,
       projectEnvironments: false,
       alerts: false,
       multiRegion: true,
@@ -245,6 +253,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       nativeDbsMongo: false,
       videos: false,
       reviews: false,
+      sandboxes: false,
       projectEnvironments: false,
       alerts: false,
       multiRegion: false,

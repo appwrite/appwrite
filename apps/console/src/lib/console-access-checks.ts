@@ -169,6 +169,14 @@ export function canWriteReviewRepositories(
   return whenOrgRoles(access, features, access.canWriteReviews)
 }
 
+/** Create and delete sandboxes, and run commands, files and terminals in them (`sandboxes.write`). */
+export function canWriteSandboxes(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.canWriteSandboxes)
+}
+
 export function canShowVideoSettings(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
@@ -337,6 +345,8 @@ export function canSeeProjectNavItem(
       return access.canSeeVideos
     case 'reviews':
       return access.canSeeReviews
+    case 'sandboxes':
+      return access.canSeeSandboxes
     case 'usage':
     case 'playground':
     case 'analytics':

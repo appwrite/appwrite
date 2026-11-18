@@ -11,6 +11,7 @@ import { heProductPagesDictionary } from './product-pages'
 import { hePricingDictionary } from './pricing'
 import { heVideosDictionary } from './videos'
 import { heReviewsDictionary } from './reviews'
+import { heSandboxesDictionary } from './sandboxes'
 import { heAlternativesDictionary } from './alternatives'
 import { heEnterpriseDictionary } from './enterprise'
 import { heSolutionsDictionary } from './solutions'
@@ -38,4 +39,5 @@ export const heDictionary: Record<string, string> = {
   ...heDatabasesDictionary,
   ...heVideosDictionary,
   ...heReviewsDictionary,
+  ...heSandboxesDictionary,
 }

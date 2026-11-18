@@ -12,8 +12,10 @@ export const enCatalog = {
         solutionAgencies: 'Agencies',
         solutionAgenciesDescription: 'The same stack on every client project.',
         solutionInnovationTeams: 'Innovation teams',
-        solutionInnovationTeamsDescription: 'A pilot on Cloud, then Enterprise if it sticks.',
-        solutionEnterpriseDescription: 'Custom limits, support, and deployment.',
+        solutionInnovationTeamsDescription:
+          'A pilot on Cloud, then Enterprise if it sticks.',
+        solutionEnterpriseDescription:
+          'Custom limits, support, and deployment.',
         enterprise: 'Enterprise',
         customers: 'Customers',
         blog: 'Blog',
@@ -222,6 +224,7 @@ export const enCatalog = {
         functions: 'Functions',
         messaging: 'Messaging',
         videos: 'Videos',
+        sandboxes: 'Sandboxes',
         reviews: 'Review',
         sites: 'Sites',
         distribution: 'Distribution',
@@ -296,12 +299,14 @@ export const enCatalog = {
       startProject: 'Start project',
       viewDocs: 'View docs',
       mcpIncluded: 'MCP included',
-      toolsHeading: 'Optimized for the frameworks, languages and agents you love',
+      toolsHeading:
+        'Optimized for the frameworks, languages and agents you love',
       productsHeadingLineOne: 'All the services you need',
       productsHeadingLineTwo: 'in one platform',
       productsDescription:
         'Build with modular products that feel unified from the first prototype to production scale.',
-      securityHeading: 'Embedded security across every layer of the architecture',
+      securityHeading:
+        'Embedded security across every layer of the architecture',
       securityDescription:
         'With a security-first approach, Appwrite helps keep products and users safe by default, making it easier to adhere to strict safety policies.', // pragma: allowlist secret
       frameworkTools: {
@@ -410,8 +415,10 @@ export const enCatalog = {
         },
         items: {
           authTagline: 'Email, OAuth, SMS, MFA, teams, and sessions.',
-          databasesTagline: 'Managed PostgreSQL, TablesDB, DocumentsDB, VectorsDB, MySQL.',
-          postgresTagline: 'Managed PostgreSQL with pooling, replicas, and PITR.',
+          databasesTagline:
+            'Managed PostgreSQL, TablesDB, DocumentsDB, VectorsDB, MySQL.',
+          postgresTagline:
+            'Managed PostgreSQL with pooling, replicas, and PITR.',
           storageTagline: 'Upload, transform, and deliver files on CDN.',
           functionsTagline: 'APIs, cron jobs, and event handlers at scale.',
           messagingTagline: 'Email, SMS, and push with topics and targets.',
@@ -419,12 +426,15 @@ export const enCatalog = {
           realtimeName: 'Realtime',
           realtimeTagline: 'Live events, channels, and presence.',
           agentName: 'Agent',
-          agentTagline: 'Chat to inspect your project and take approved actions.',
+          agentTagline:
+            'Chat to inspect your project and take approved actions.',
           domainsName: 'Domains',
           domainsTagline: 'Search, buy, transfer, and manage domains.',
-          analyticsTagline: 'Cookieless web and app analytics, bots and AI included.',
+          analyticsTagline:
+            'Cookieless web and app analytics, bots and AI included.',
           firewallName: 'Firewall',
-          firewallTagline: 'Project rules to deny, rate limit, and redirect traffic.',
+          firewallTagline:
+            'Project rules to deny, rate limit, and redirect traffic.',
           advisorName: 'Advisor',
           advisorTagline: 'Security and performance insights.',
         },
@@ -434,7 +444,8 @@ export const enCatalog = {
         headingDescription:
           'API-first by design. Use the Console, Realtime, SDKs, CLI, Terraform, MCP, and agent skills on the same project.',
         developerExperienceTitle: 'Developer and agent experience',
-        developerExperienceFallbackCaption: 'A typical integration in TypeScript.',
+        developerExperienceFallbackCaption:
+          'A typical integration in TypeScript.',
         everythingApiTitle: 'Everything is an API',
         everythingApiDescription:
           'REST, GraphQL, and SDKs for every service. Automate and integrate without console-only workflows.',
