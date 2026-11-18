@@ -919,6 +919,13 @@ final class MessagingTest extends TestCase
         }
     }
 
+    public function testConvertQueriesRejectsSelectOtherThanAll(): void
+    {
+        $this->expectException(QueryException::class);
+        $this->expectExceptionMessage('Only select("*") is allowed in Realtime queries.');
+        Realtime::convertQueries([Query::select(['name'])->toString()]);
+    }
+
     public function testCountQueriesIncludesNested(): void
     {
         $this->assertSame(0, Realtime::countQueries([]));
