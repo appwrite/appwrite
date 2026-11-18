@@ -59,7 +59,7 @@ Git automation controls what Appwrite does when you push to the connected reposi
 ---
 * **Report commit status**
 * `providerStatuses`
-* Appwrite reports each build on its commit as building, passed, or failed. On GitHub and Entire, it adds a check run and a deployment entry. On GitLab, Gitea, and Bitbucket, it sets a commit status.
+* Appwrite reports each build on its commit as building, passed, or failed. On GitHub, it adds a check run. On Entire, it adds a check run and a deployment entry. On GitLab, Gitea, and Bitbucket, it sets a commit status.
 {% /table %}
 
 Changes apply from the next push, without a redeploy.

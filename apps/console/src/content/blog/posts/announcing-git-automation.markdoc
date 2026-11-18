@@ -68,7 +68,7 @@ Turn it off when your team already follows builds through checks, or doesn't wan
 
 ## Report commit status
 
-With **Report commit status** on, Appwrite reports each build on its commit. On GitHub and Entire, that's a check run plus a deployment entry. On GitLab, Gitea, and Bitbucket, it's a commit status. It also covers deployments you create by hand from Git, so it keeps working with deploy on push off.
+With **Report commit status** on, Appwrite reports each build on its commit. On GitHub, that's a check run. On Entire, it's a check run plus a deployment entry. On GitLab, Gitea, and Bitbucket, it's a commit status. It also covers deployments you create by hand from Git, so it keeps working with deploy on push off.
 
 That status is what makes a passing Appwrite build something you can require. Add it to a branch protection rule, such as GitHub's [required status checks](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches#require-status-checks-before-merging), and a pull request can't merge until its build passes.
 
