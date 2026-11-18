@@ -257,10 +257,10 @@ class Create extends Action
                 $dbForProject->createDocuments('indexes', $indexDocuments);
             }
         } catch (DuplicateException) {
-            $this->cleanup($dbForProject, $dbForDatabases, $databaseKey, $collectionKey, $collection->getId());
+            $this->cleanup($dbForProject, $dbForDatabases, $database, $collection, $attributeDocuments, $indexDocuments);
             throw new Exception($this->getDuplicateException(), params: [$collectionId]);
         } catch (\Throwable $e) {
-            $this->cleanup($dbForProject, $dbForDatabases, $databaseKey, $collectionKey, $collection->getId());
+            $this->cleanup($dbForProject, $dbForDatabases, $database, $collection, $attributeDocuments, $indexDocuments);
             throw $e;
         }
 
@@ -435,23 +435,4 @@ class Create extends Action
         ];
     }
 
-    protected function cleanup(
-        Database $dbForProject,
-        Database $dbForDatabases,
-        string $databaseId,
-        string $collectionId,
-        string $collectionDocumentId
-    ): void {
-        try {
-            $dbForDatabases->deleteCollection($collectionId);
-        } catch (\Throwable) {
-            // Ignore cleanup errors for collection deletion
-        }
-
-        try {
-            $dbForProject->deleteDocument($databaseId, $collectionDocumentId);
-        } catch (\Throwable) {
-            // Ignore cleanup errors for document deletion
-        }
-    }
 }
