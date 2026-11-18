@@ -110,6 +110,7 @@ export const enCatalog = {
         github: 'GitHub',
         x: 'X',
         youtube: 'YouTube',
+        youtubeChannels: 'YouTube channels',
         linkedIn: 'LinkedIn',
         instagram: 'Instagram',
         discord: 'Discord',
