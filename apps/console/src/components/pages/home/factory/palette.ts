@@ -49,6 +49,8 @@ export type FactoryPalette = {
   /** Indicator and work light. */
   light: Color
   finishes: Color[]
+  /** The desktop's colors, seen on its chin. */
+  desktopFinishes: Color[]
   hemiSky: Color
   hemiGround: Color
   hemiIntensity: number
@@ -85,6 +87,17 @@ const FINISHES = [
   '#c5c8cf',
 ]
 
+/** Desktop colors as they read on the chin: blue, green, pink, silver, yellow, orange, purple. */
+const DESKTOP_FINISHES = [
+  '#a9c2dc',
+  '#b3cbae',
+  '#e6b5bd',
+  '#dcdde1',
+  '#ead595',
+  '#efb894',
+  '#c2b7dc',
+]
+
 function toneColors(hex: Record<FactoryTone, string>) {
   return {
     pink: new Color(hex.pink),
@@ -99,6 +112,7 @@ export function createFactoryPalette(
   background: Color,
 ): FactoryPalette {
   const finishes = FINISHES.map((hex) => new Color(hex))
+  const desktopFinishes = DESKTOP_FINISHES.map((hex) => new Color(hex))
   if (dark) {
     return {
       dark,
@@ -127,6 +141,7 @@ export function createFactoryPalette(
       toneHex: DARK_TONES,
       light: new Color('#ffffff'),
       finishes,
+      desktopFinishes,
       hemiSky: new Color('#c9cee0'),
       hemiGround: new Color('#121216'),
       hemiIntensity: 1.6,
@@ -165,6 +180,7 @@ export function createFactoryPalette(
     toneHex: LIGHT_TONES,
     light: new Color('#ffffff'),
     finishes,
+    desktopFinishes,
     hemiSky: new Color('#ffffff'),
     hemiGround: new Color('#c4c5cf'),
     hemiIntensity: 1.3,

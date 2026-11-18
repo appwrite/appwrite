@@ -121,7 +121,12 @@ export function createKit(
     ...createNetworkCable(),
     displays: [],
     carrier: standard(0.5, 1),
-    device: standard(0.32, 0.9),
+    // Machined finish per instance; keys, ports and feet darken it per vertex.
+    device: new MeshStandardMaterial({
+      roughness: 0.32,
+      metalness: 0.9,
+      vertexColors: true,
+    }),
     accent: standard(0.3, 0.9),
     logo: standard(0.5, 0.1),
     track: new MeshStandardMaterial({

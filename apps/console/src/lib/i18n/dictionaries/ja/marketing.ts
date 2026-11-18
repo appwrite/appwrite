@@ -1594,8 +1594,8 @@ export const jaMarketingDictionary: Record<string, string> = {
   // Home factory: the display each machine unfolds.
   'Sign users in with email, OAuth, or passkeys, plus MFA, teams, and roles':
     'メール、OAuth、パスキーでサインイン。MFA、チーム、ロールにも対応',
-  'Postgres, MySQL, tables, documents, and vectors, managed in one project':
-    'Postgres、MySQL、テーブル、ドキュメント、ベクトルを 1 つのプロジェクトで管理',
+  'Run managed Postgres and MySQL, or store tables, documents, and vectors in one project':
+    'マネージドの Postgres と MySQL を実行し、テーブル、ドキュメント、ベクトルも 1 つのプロジェクトに保存',
   'Upload files, resize images on the fly, and deliver them over a global CDN':
     'ファイルをアップロードし、画像をその場でリサイズして、グローバル CDN で配信',
   'Run Node, Python, Go, and more on requests, schedules, or events':

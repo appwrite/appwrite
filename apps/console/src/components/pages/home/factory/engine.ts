@@ -31,7 +31,7 @@ import {
 import { GlowLayer, ShadowLayer } from './effects'
 import { createFrameworkAtlas, loadFrameworkIcons } from './frameworks'
 import { releaseShapes } from './geometry'
-import type { DisplayFit, FrameState } from './frame'
+import type { FrameState } from './frame'
 import { applyKitPalette, createKit, disposeKit, type FactoryKit } from './kit'
 import {
   BED_BACK,
@@ -53,6 +53,7 @@ import {
   type FactoryPalette,
 } from './palette'
 import { ProductLine } from './products'
+import { DroneFleet } from './drones'
 import { StationLine } from './stations'
 import { createStudioEnvironment } from './studio'
 import {
@@ -80,7 +81,6 @@ export type FactoryEngineOptions = {
   dark: boolean
   reducedMotion: boolean
   onReady?: () => void
-  onHover?: (station: number) => void
   /** WebGL failed or the context was lost for good. */
   onError?: () => void
 }
@@ -181,6 +181,9 @@ function share(twin: Material, source: Material) {
   twin.needsUpdate = true
 }
 
+/** Work (ms) building may do before it yields a frame to the page (see `step`). */
+const STEP_BUDGET = 24
+
 const nextFrame = () =>
   new Promise<void>((resolve) => {
     if (typeof requestAnimationFrame === 'function')
@@ -208,6 +211,7 @@ export class FactoryEngine {
   private world: FactoryWorld | null = null
   private stations: StationLine | null = null
   private products: ProductLine | null = null
+  private drones: DroneFleet | null = null
   private glows: GlowLayer | null = null
   private shadows: ShadowLayer | null = null
   private textures: Texture[] = []
@@ -229,16 +233,23 @@ export class FactoryEngine {
   }[] = []
   private readonly environments = new Map<boolean, Texture>()
   private frameState: FrameState | null = null
-  private copyArea: CopyArea | null = null
-  private readonly fits: DisplayFit[] = Array.from(
-    { length: STATION_COUNT },
-    () => ({ lift: 1, covers: false }),
-  )
+  /** Lines of page copy laid over the stage (see `setCopyLines`). */
+  private copyLines: CopyArea[] = []
+  /** How far every display's mast rises (see `fitDisplays`). */
+  private lift = 1
   private reflection: WebGLRenderTarget | null = null
   /** Whether the floor still mirrors the machine; off for good once frames run slow. */
   private reflectionOn = true
-  /** 1 while the floor mirrors the machine, easing to 0 when the reflection is dropped. */
-  private reflectionFade = 1
+  /**
+   * 1 while the floor mirrors the machine. It starts at 0 and fades in once
+   * the reflection has been warmed up after the first frame, and eases back
+   * to 0 when the reflection is dropped.
+   */
+  private reflectionFade = 0
+  /** The reflection pass has run once, off the first frame's path. */
+  private reflectionWarm = false
+  /** When building last yielded a frame (see `step`). */
+  private lastYield = 0
   private floor: Mesh | null = null
   private shadowCatcher: Mesh | null = null
 
@@ -324,6 +335,7 @@ export class FactoryEngine {
    * the visitor sees is an ordinary one.
    */
   async init() {
+    this.lastYield = performance.now()
     const palette = this.palette
     // Icons download, and the printed atlases finish drawing, while the machine is built.
     const icons = loadFrameworkIcons()
@@ -358,6 +370,8 @@ export class FactoryEngine {
     this.screenAtlas = this.crisp(atlas.texture)
     this.products.setScreenAtlas(atlas.texture, atlas.cells)
     this.scene.add(this.products.group)
+    this.drones = new DroneFleet(kit)
+    this.scene.add(this.drones.group)
     // The machine is built; the shapes it was built from can go.
     releaseShapes()
     this.glows = new GlowLayer(kit.glow)
@@ -424,25 +438,12 @@ export class FactoryEngine {
     this.updateCamera(0)
     if (!(await this.step())) return
 
-    await Promise.all([this.compile(), plates.ready, descriptions.ready])
+    // The first frame waits only for what it shows: the printed atlases
+    // (fonts, icons) and the reflection follow it (see `finish`).
+    await this.compile('view')
     if (this.disposed) return
-    for (const texture of [
-      this.nameplateAtlas,
-      this.descriptionAtlas,
-      this.screenAtlas,
-      track,
-      shadow,
-    ]) {
+    for (const texture of [this.screenAtlas, track, shadow]) {
       this.renderer.initTexture(texture)
-      if (!(await this.step())) return
-    }
-    if (this.reflection) {
-      // Warm up off screen: the first reflection also draws the shadow map
-      // and sets up every object's buffers, which would otherwise all land on
-      // the first frame the visitor sees.
-      this.renderer.initRenderTarget(this.reflection)
-      this.scene.updateMatrixWorld()
-      this.renderReflection()
       if (!(await this.step())) return
     }
 
@@ -450,34 +451,78 @@ export class FactoryEngine {
     this.renderFrame(0)
     this.options.onReady?.()
     if (this.active && !this.options.reducedMotion) this.start()
-    void icons.then((loaded) => this.showFrameworks(loaded))
+    void this.finish(plates.ready, descriptions.ready, icons)
   }
 
-  /** Waits a frame between build steps; false once the engine is gone. */
-  private async step() {
-    await nextFrame()
+  /**
+   * After the first frame, a step at a time: the floor's reflection (warmed
+   * up, then faded in), the nameplates (dark until their station powers up),
+   * the descriptions (shown only on hover), the models' marks on the drones'
+   * cards, then the framework marks.
+   */
+  private async finish(
+    plates: Promise<unknown>,
+    descriptions: Promise<unknown>,
+    icons: Promise<readonly (HTMLImageElement | null)[]>,
+  ) {
+    if (!(await this.step(true))) return
+    if (this.reflection) {
+      await this.compile('reflection')
+      if (this.disposed) return
+      this.renderer.initRenderTarget(this.reflection)
+      this.scene.updateMatrixWorld()
+      this.renderReflection()
+      this.reflectionWarm = true
+      if (!this.isLooping()) {
+        this.reflectionFade = 1
+        this.renderFrame(0)
+      }
+    }
+    await plates
+    if (!(await this.step(true))) return
+    if (this.nameplateAtlas) this.renderer.initTexture(this.nameplateAtlas)
+    if (!this.isLooping()) this.renderFrame(0)
+    await descriptions
+    if (!(await this.step(true))) return
+    if (this.descriptionAtlas) this.renderer.initTexture(this.descriptionAtlas)
+    await this.drones?.showMarks()
+    await this.showFrameworks(await icons)
+  }
+
+  /**
+   * Yields a frame to the page once building has worked for `STEP_BUDGET`
+   * since the last one (or always, when `force`), so it never blocks the
+   * page for long without idling between small steps; false once the
+   * engine is gone.
+   */
+  private async step(force = false) {
+    if (force || performance.now() - this.lastYield > STEP_BUDGET) {
+      await nextFrame()
+      this.lastYield = performance.now()
+    }
     return !this.disposed
   }
 
   /**
-   * Compiles every program before the first frame, in parallel where the
-   * driver allows: the view's, and the reflection twins' (a target is drawn
-   * in linear color without tone mapping, so they need variants of their
-   * own), which would otherwise compile on the first frames.
+   * Compiles every program a pass draws with, in parallel where the driver
+   * allows, before that pass first runs: the view's before the first frame,
+   * the reflection twins' (a target is drawn in linear color without tone
+   * mapping, so they need variants of their own) before the reflection
+   * warms up after it.
    */
-  private async compile() {
+  private async compile(pass: 'view' | 'reflection') {
     const { renderer } = this
-    const pending: Promise<unknown>[] = []
     try {
-      if (this.reflection) {
+      if (pass === 'view') {
+        await renderer.compileAsync(this.scene, this.camera)
+      } else if (this.reflection) {
         this.useTwins(true)
         renderer.setRenderTarget(this.reflection)
-        pending.push(renderer.compileAsync(this.scene, this.mirror))
+        const pending = renderer.compileAsync(this.scene, this.mirror)
         renderer.setRenderTarget(null)
         this.useTwins(false)
+        await pending
       }
-      pending.push(renderer.compileAsync(this.scene, this.camera))
-      await Promise.all(pending)
     } catch {
       // Older drivers without parallel compile still compile on first render.
     }
@@ -759,49 +804,48 @@ export class FactoryEngine {
   }
 
   /**
-   * The part of the stage (CSS pixels) covered by page copy, which the
-   * unfolded displays must stay clear of; null when nothing is laid over it.
+   * The lines of page copy laid over the stage (CSS pixels), which the
+   * unfolded displays keep clear of; empty when nothing is laid over it.
+   * Lines, not the copy's box, so a display may rise beside a short line.
    */
-  setCopyArea(area: CopyArea | null) {
-    this.copyArea = area
+  setCopyLines(lines: CopyArea[]) {
+    this.copyLines = lines
     if (this.ready && !this.isLooping()) this.renderFrame(0)
   }
 
   /**
-   * Every display opens at the same size. Where the copy is laid over the
-   * scene, a display's mast rises only as far as keeps it clear of the copy;
-   * a display that covers the copy even with its mast down opens at full
-   * height, and the copy steps back while it is open (see `coversCopy`).
+   * Every display opens at the same size on the same mast height: as high
+   * as keeps every station's open display clear of the copy laid over the
+   * scene, down to resting on its column.
    */
   private fitDisplays() {
-    const area = this.copyArea
-    for (let index = 0; index < STATION_COUNT; index++) {
-      const fit = this.fits[index]!
-      fit.lift = 1
-      fit.covers = false
-      if (!area || this.isClear(index, 1, area)) continue
-      if (!this.isClear(index, 0, area)) {
-        fit.covers = true
-        continue
+    const lines = this.copyLines
+    let lift = 1
+    if (lines.length) {
+      for (let index = 0; index < STATION_COUNT; index++) {
+        if (this.isClear(index, lift, lines)) continue
+        let low = 0
+        let high = lift
+        for (let step = 0; step < 8; step++) {
+          const middle = (low + high) / 2
+          if (this.isClear(index, middle, lines)) low = middle
+          else high = middle
+        }
+        lift = low
       }
-      let low = 0
-      let high = 1
-      for (let step = 0; step < 8; step++) {
-        const middle = (low + high) / 2
-        if (this.isClear(index, middle, area)) low = middle
-        else high = middle
-      }
-      fit.lift = low
+    }
+    this.lift = lift
+    // Hovering keeps answering for the display where it actually opens.
+    const screenBottom = TOWER_TOP + lift * EXTENSION.lift
+    for (const [mast, screen] of this.displayBoxes) {
+      mast.max.y = screenBottom
+      screen.min.y = screenBottom
+      screen.max.y = screenBottom + EXTENSION.height + 0.1
     }
   }
 
-  /** Whether station `index`'s open display covers the page copy, which should then step back. */
-  coversCopy(index: number): boolean {
-    return this.fits[index]?.covers ?? false
-  }
-
-  /** Whether station `index`'s open display, its mast raised by `lift`, stays off the copy. */
-  private isClear(index: number, lift: number, area: CopyArea) {
+  /** Whether station `index`'s open display, its mast raised by `lift`, stays off every one of `areas`. */
+  private isClear(index: number, lift: number, areas: CopyArea[]) {
     const x = stationX(index)
     const base = TOWER_TOP - 0.01 + lift * EXTENSION.lift
     const top = base + EXTENSION.height
@@ -821,11 +865,12 @@ export class FactoryEngine {
       right = Math.max(right, screenX)
       highest = Math.min(highest, ((1 - this.scratch.y) / 2) * this.height)
     }
-    const margin = 16
-    return (
-      right < area.left - margin ||
-      left > area.right + margin ||
-      highest > area.bottom + margin
+    const margin = 12
+    return areas.every(
+      (area) =>
+        right < area.left - margin ||
+        left > area.right + margin ||
+        highest > area.bottom + margin,
     )
   }
 
@@ -1023,7 +1068,7 @@ export class FactoryEngine {
       highlight: -1,
       levels: new Array(STATION_COUNT).fill(0),
       realShadows: this.studio,
-      fits: this.fits,
+      lift: 1,
     }
     this.frameState = frame
     frame.time = this.time
@@ -1033,12 +1078,14 @@ export class FactoryEngine {
     frame.palette = this.palette
     frame.highlight = this.hovered
     this.fitDisplays()
+    frame.lift = this.lift
 
     glows.begin()
     shadows.begin()
     stations.update(frame)
     world.update(frame)
     products.update(frame)
+    this.drones?.update(frame)
     glows.end()
     shadows.end()
     world.upload(this.renderer)
@@ -1047,8 +1094,8 @@ export class FactoryEngine {
     // Once per frame, not once per pass: the reflection and the view share it.
     this.scene.updateMatrixWorld()
     if (this.reflection) {
-      // Eases out over half a second when the GPU cannot keep up (see `trackPerformance`).
-      const target = this.reflectionOn ? 1 : 0
+      // Eases in over half a second once warm, and out when the GPU cannot keep up (see `trackPerformance`).
+      const target = this.reflectionOn && this.reflectionWarm ? 1 : 0
       this.reflectionFade = MathUtils.clamp(
         this.reflectionFade + Math.sign(target - this.reflectionFade) * dt * 2,
         0,
@@ -1068,7 +1115,7 @@ export class FactoryEngine {
     if (x === null || y === null || this.options.reducedMotion) {
       this.pointerInside = false
       this.pointerTarget.set(0, 0)
-      if (this.hovered !== -1) this.setHovered(-1)
+      this.hovered = -1
       return
     }
     this.pointerInside = true
@@ -1102,19 +1149,7 @@ export class FactoryEngine {
       for (const box of this.displayBoxes[this.hovered]!)
         test(box, this.hovered)
     }
-    if (best !== this.hovered) this.setHovered(best)
-  }
-
-  private setHovered(index: number) {
-    this.hovered = index
-    this.options.onHover?.(index)
-  }
-
-  /** Highlight from outside (a focused or hovered label). */
-  setHighlight(index: number) {
-    if (index === this.hovered) return
-    this.hovered = index
-    if (this.ready && !this.isLooping()) this.renderFrame(0)
+    this.hovered = best
   }
 
   setTheme(dark: boolean) {
@@ -1148,6 +1183,7 @@ export class FactoryEngine {
     this.world?.dispose()
     this.stations?.dispose()
     this.products?.dispose()
+    this.drones?.dispose()
     this.glows?.points.geometry.dispose()
     this.shadows?.mesh.geometry.dispose()
     if (this.kit) {

@@ -83,23 +83,23 @@ export const FASCIA = {
 
 /**
  * On hover a station unfolds a display like a foldable phone. Folded shut it
- * is stored upright inside the column, so each half is as wide as a slot in
- * the column's top and as tall as the column: it rises out of the slot, a
+ * is stored upright inside the column, reaching down into the bed, so each
+ * half is as wide as a slot in the column's top: it rises out of the slot, a
  * mast lifts it, and its front half swings open about the hinge while the
  * mast slides along the slot to bring the open screen to the column's centre.
  */
 export const EXTENSION = {
   /** Width of each half. */
-  leaf: 1,
+  leaf: 1.1,
   /** Thickness of each half. */
   thickness: 0.032,
-  height: 1.1,
+  height: 1.4,
   /** The hinge line. */
   z: TOWER.z + 0.04,
   /** Border around the screen. */
   border: 0.05,
   /** How far a mast lifts the display above the column once it has risen. */
-  lift: 0.7,
+  lift: 0.9,
 } as const
 
 /**
@@ -362,34 +362,48 @@ export function getSinceShip(line: LineState): number {
 }
 
 /**
- * What the line builds: app screens in the formats apps ship in. They travel
- * flat on their carriers, the way displays do on a real line.
+ * What the line builds: apps on the hardware they ship to, from the watch
+ * to the desktop. Most travel flat on their carriers, the way displays do
+ * on a real line (see `DEVICE_SIZES`).
  */
-export type ProductKind = 'phone' | 'tablet' | 'desktop' | 'display' | 'watch'
+export type ProductKind =
+  | 'phone'
+  | 'tablet'
+  | 'laptop'
+  | 'desktop'
+  | 'display'
+  | 'mini'
+  | 'watch'
 
 export const PRODUCT_KINDS: readonly ProductKind[] = [
   'phone',
   'tablet',
+  'laptop',
   'desktop',
   'display',
+  'mini',
   'watch',
 ]
 
 /** Fixed order so neighbours never repeat and the mix feels hand-picked. */
 const KIND_SEQUENCE: readonly ProductKind[] = [
   'phone',
-  'desktop',
+  'laptop',
   'watch',
   'display',
   'tablet',
+  'mini',
   'phone',
-  'display',
   'desktop',
-  'phone',
+  'laptop',
   'tablet',
   'watch',
-  'desktop',
+  'phone',
+  'mini',
   'display',
+  'laptop',
+  'desktop',
+  'tablet',
 ]
 
 export function getProductKind(index: number): ProductKind {
@@ -397,7 +411,18 @@ export function getProductKind(index: number): ProductKind {
   return KIND_SEQUENCE[((index % length) + length) % length]!
 }
 
-/** Seven finishes, coprime with the kind sequence, so pairs rarely repeat. */
+/**
+ * Where the drones plug the models' instruction cards in: a slot across the
+ * top of the framework installer, at the head of the line.
+ */
+export const DOCK = {
+  x: slotX(INSTALL_SLOT),
+  y: TOWER_TOP,
+  z: TOWER.z,
+  width: 0.4,
+} as const
+
+/** Seven finishes, coprime with the kind sequence's 17, so pairs rarely repeat. */
 export const FINISH_COUNT = 7
 
 export function getProductFinish(index: number): number {
