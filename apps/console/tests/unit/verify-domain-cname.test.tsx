@@ -140,7 +140,7 @@ describe('VerifyDomainContent apex domain', () => {
   test('offers an ALIAS to the CNAME target, not an A record', async () => {
     a = '1.2.3.4'
     const view = await renderContent('api', 'custom.com')
-    expect(view.queryAllByText('ALIAS / ANAME').length).toBeGreaterThan(0)
+    expect(view.queryAllByText('ALIAS or ANAME').length).toBeGreaterThan(0)
     expect(view.queryAllByText('target.example.com').length).toBeGreaterThan(0)
     expect(view.queryAllByText('1.2.3.4')).toHaveLength(0)
   })

@@ -632,6 +632,7 @@ export const heSitesDictionary: Record<string, string> = {
   Alternative: 'חלופה',
   'CAA record': 'רשומת CAA',
   '{type} record': 'רשומת {type}',
+  'ALIAS or ANAME': 'ALIAS או ANAME',
   'DNS lookup': 'בדיקת DNS',
   'Domain verification': 'אימות הדומיין',
   'Point your domain': 'הפניית הדומיין',

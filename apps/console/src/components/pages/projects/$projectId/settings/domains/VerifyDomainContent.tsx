@@ -43,7 +43,7 @@ export const DNS_PROVIDERS_LINK = '/docs/advanced/platform/custom-domains'
  * An apex record that names a host, as a CNAME does. Providers call it ALIAS,
  * ANAME or CNAME flattening and answer it with the host's addresses.
  */
-const ALIAS_TYPE = 'ALIAS / ANAME'
+const ALIAS_TYPE = 'ALIAS or ANAME'
 
 const TAB_LABELS: Record<VerificationMethod, string> = {
   cname: 'CNAME',
@@ -168,6 +168,16 @@ const SECTION_BADGE =
 const TABLE_HEAD =
   'px-4 py-2.5 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
 
+/** The type of one record, on one line. The ALIAS type reads as a phrase. */
+function RecordType({ type }: { type: string }) {
+  const t = useT()
+  return (
+    <span className="whitespace-nowrap">
+      {type === ALIAS_TYPE ? t('ALIAS or ANAME') : type}
+    </span>
+  )
+}
+
 /** The status pill of one record at the last check. */
 function RecordStatus({
   record,
@@ -239,6 +249,10 @@ function RecordSection({
   children?: ReactNode
 }) {
   const t = useT()
+  // The ALIAS type takes three words, so its column is wider.
+  const typeWidth = records.some((r) => r.type === ALIAS_TYPE)
+    ? 'w-[160px]'
+    : 'w-[88px]'
   return (
     <section className="space-y-3">
       <div className="flex items-center gap-2">
@@ -251,7 +265,7 @@ function RecordSection({
         <Table className="table-fixed">
           <TableHeader className="bg-muted/40">
             <TableRow className="hover:bg-transparent border-b border-border">
-              <TableHead className={`w-[88px] ${TABLE_HEAD}`}>
+              <TableHead className={`${typeWidth} ${TABLE_HEAD}`}>
                 {t('Type')}
               </TableHead>
               <TableHead className={`w-[22%] ${TABLE_HEAD}`}>
@@ -277,8 +291,8 @@ function RecordSection({
               return (
                 <Fragment key={`${r.type}-${r.value}`}>
                   <TableRow className={found.length ? 'border-b-0' : undefined}>
-                    <TableCell className="whitespace-normal px-4 py-3 font-mono text-[12px]">
-                      {r.type}
+                    <TableCell className="px-4 py-3 font-mono text-[12px]">
+                      <RecordType type={r.type} />
                     </TableCell>
                     <TableCell
                       className="px-4 py-3 font-mono text-[12px]"
@@ -444,7 +458,10 @@ function getDnsBanners(
           : ''
       banners.push({
         tone: 'error',
-        prefix: t('{type} record').replace('{type}', check.type),
+        prefix: t('{type} record').replace(
+          '{type}',
+          check.type === ALIAS_TYPE ? t('ALIAS or ANAME') : check.type,
+        ),
         text: t('It points to {found}. Change it to {value}.')
           .replace('{found}', `${check.found[0] ?? ''}${more}`)
           .replace('{value}', check.value),
@@ -601,7 +618,7 @@ export function DnsRecordsTable({
             <TableRow>
               <TableCell className="px-4 py-3 font-mono text-[12px]">
                 <span className="inline-flex flex-wrap items-center gap-1.5">
-                  {r.type}
+                  <RecordType type={r.type} />
                   {r.badge ? (
                     <Badge
                       variant={
