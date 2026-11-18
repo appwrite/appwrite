@@ -8,7 +8,8 @@ import {
   FileText,
   RefreshCw,
   Trash2,
-  ExternalLink} from 'lucide-react'
+  ExternalLink,
+  Pencil} from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { Button } from '@/components/ui/button'
@@ -352,6 +353,13 @@ export function View() {
                                     </MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
+                                <DropdownMenuItem
+                                  onClick={() => handleUpdate(rule)}
+                                >
+                                  <MenuItemContent icon={Pencil}>
+                                    {t('Update')}
+                                  </MenuItemContent>
+                                </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleRecords(rule)}
                                 >
