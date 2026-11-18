@@ -52,6 +52,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Linear\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Linkedin\Update as UpdateOAuth2Linkedin;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Microsoft\Update as UpdateOAuth2Microsoft;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Naver\Update as UpdateOAuth2Naver;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Netlify\Update as UpdateOAuth2Netlify;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Notion\Update as UpdateOAuth2Notion;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Oidc\Update as UpdateOAuth2Oidc;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Okta\Update as UpdateOAuth2Okta;
@@ -301,6 +302,7 @@ class Http extends Service
         $this->addAction('updateProjectOAuth2Microsoft', UpdateOAuth2Microsoft::class);
         $this->addAction('updateProjectOAuth2Hugging Face', UpdateOAuth2HuggingFace::class);
         $this->addAction('updateProjectOAuth2VK', UpdateOAuth2VK::class);
+        $this->addAction('updateProjectOAuth2Netlify', UpdateOAuth2Netlify::class);
         $this->addAction('updateProjectOAuth2Railway', UpdateOAuth2Railway::class);
         $this->addAction('updateProjectOAuth2Reddit', UpdateOAuth2Reddit::class);
         $this->addAction('updateProjectOAuth2Vercel', UpdateOAuth2Vercel::class);
