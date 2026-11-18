@@ -406,7 +406,7 @@ export function CreateGitDeploymentModal({
                 providerRepositoryId={providerRepositoryId}
                 value={branch}
                 onChange={setBranch}
-                label={t('Production branch')}
+                label={t('Branch')}
                 placeholder={t('Select branch')}
                 suppressInstallationError={!!installationErrorKind}
               />
