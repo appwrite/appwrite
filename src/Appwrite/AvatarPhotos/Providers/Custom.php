@@ -25,7 +25,7 @@ class Custom extends Photo
 
     public function get(Document $profile, int $width, int $height, string $rating): ?string
     {
-        $path = $this->deviceForFiles->getPath(APP_STORAGE_PHOTOS . '/' . $profile->getId() . '/' . $profile->getAttribute('photoId'));
+        $path = $this->deviceForFiles->getPath(APP_STORAGE_USER_PHOTOS . '/' . $profile->getId() . '/' . $profile->getAttribute('photoId'));
 
         if (!$this->deviceForFiles->exists($path)) {
             return null;
