@@ -98,16 +98,6 @@ final class GitAction
             return;
         }
 
-        // Statuses switched off during the build still owe the started check its result,
-        // or a required check blocks the pull request
-        $switchedOff = $resource->getAttribute('providerStatuses', true) === false
-            && \in_array($status, ['ready', 'failed', 'canceled'], true)
-            && \strtotime($resource->getUpdatedAt() ?? '') >= \strtotime($deployment->getCreatedAt() ?? '');
-
-        if ($switchedOff && $commitHash !== '') {
-            self::updateCheck($status, $vcs, $commitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform);
-        }
-
         self::check($status, $vcs, $commitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform);
         self::deployment($status, $vcs, $commitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform);
 
@@ -166,24 +156,6 @@ final class GitAction
             return;
         }
 
-        self::updateCheck($status, $vcs, $commitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform);
-    }
-
-    /**
-     * @param array<string, mixed> $platform
-     */
-    private static function updateCheck(
-        string $status,
-        Git $vcs,
-        string $commitHash,
-        string $owner,
-        string $repositoryName,
-        Document $project,
-        Document $resource,
-        Document $deployment,
-        Database $dbForPlatform,
-        array $platform,
-    ): void {
         $isSite = $resource->getCollection() === 'sites';
         $collection = $isSite ? 'sites' : 'functions';
         $consoleUrl = ($platform['consoleUrl'] ?? '') . "/projects/{$project->getId()}/{$collection}/{$resource->getId()}/deployments/{$deployment->getId()}";
