@@ -55,7 +55,13 @@ abstract class Base extends Action
                     throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT, 'Photo was changed by another request, please try again');
                 }
 
-                $current = $dbForProject->getDocument('teams', $teamId);
+                try {
+                    $current = $dbForProject->getDocument('teams', $teamId);
+                } catch (\Throwable $th) {
+                    $deviceForFiles->delete($path);
+
+                    throw $th;
+                }
             } catch (\Throwable $th) {
                 $deviceForFiles->delete($path);
 
