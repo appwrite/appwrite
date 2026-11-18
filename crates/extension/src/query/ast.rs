@@ -28,10 +28,10 @@ use ext_php_rs::types::{ZendHashTable, ZendObject, ZendStr, Zval};
 use ext_php_rs::zend::{ClassEntry, ExecutorGlobals, ce};
 use utopia_query::ast;
 use utopia_query::tokenizer::{Token, TokenType};
-use utopia_query::{NullsPosition, OrderDirection, Value};
+use utopia_query::{NullsPosition, OrderDirection, StringLiteral, Value};
 
-use super::exception;
 use super::tokenizer::{case, class};
+use super::{Rules, exception};
 use crate::emails::{construct, string};
 use crate::string::PhpString;
 
@@ -168,7 +168,7 @@ const NODES: [(Node, &str, &[&str]); 25] = [
     (Node::WindowDefinition, "Definition\\Window", &["name", "specification"]),
     (Node::Aliased, "Expression\\Aliased", &["expression", "alias"]),
     (Node::Between, "Expression\\Between", &["expression", "low", "high", "negated"]),
-    (Node::Binary, "Expression\\Binary", &["left", "operator", "right"]),
+    (Node::Binary, "Expression\\Binary", &["left", "operator", "right", "escape"]),
     (Node::CaseWhen, "Expression\\CaseWhen", &["condition", "result"]),
     (Node::Cast, "Expression\\Cast", &["expression", "type"]),
     (Node::Conditional, "Expression\\Conditional", &["operand", "whens", "else"]),
@@ -466,6 +466,7 @@ impl Reader<'_> {
                 left: self.boxed(slot(node, 0, "left")?)?,
                 operator: text(slot(node, 1, "operator")?, "operator")?,
                 right: self.boxed(slot(node, 2, "right")?)?,
+                escape: self.maybe(slot(node, 3, "escape")?)?.map(Box::new),
             }
             .into(),
             Some(Node::CaseWhen) => self.when(value)?.into(),
@@ -738,7 +739,12 @@ impl Builder<'_> {
             ),
             ast::Expression::Binary(binary) => self.make(
                 Node::Binary,
-                [self.expression(&binary.left), words(&binary.operator), self.expression(&binary.right)],
+                [
+                    self.expression(&binary.left),
+                    words(&binary.operator),
+                    self.expression(&binary.right),
+                    self.maybe(binary.escape.as_deref()),
+                ],
             ),
             ast::Expression::CaseWhen(when) => self.when(when),
             ast::Expression::Cast(cast) => {
@@ -918,12 +924,13 @@ fn tokens<'a>(classes: &Classes, table: &'a ZendHashTable) -> PhpResult<(Vec<Tok
 #[php_class]
 #[php(name = "Utopia\\Query\\AST\\Parser")]
 #[derive(Clone)]
-pub struct Parser;
+pub struct Parser(StringLiteral);
 
 #[php_impl]
 impl Parser {
-    pub fn __construct() -> Self {
-        Self
+    #[php(defaults(literal = "Rules(StringLiteral::Backslash)"))]
+    pub fn __construct(literal: Rules) -> Self {
+        Self(literal.0)
     }
 
     pub fn parse(&self, tokens: &ZendHashTable) -> PhpResult<Zval> {
@@ -934,7 +941,11 @@ impl Parser {
         }
         // The statement is dropped where it was made: on the stack with room for it.
         roomy(levels, INLINE_PARSE_LEVELS, || {
-            ast::Parser::new().parse(&read).map(|select| Builder(&classes).select(&select))
+            ast::Parser::new()
+                .with_literal(self.0)
+                .widened()
+                .parse(&read)
+                .map(|select| Builder(&classes).select(&select))
         })
         .map_err(|error| failed(&error))
     }
@@ -984,20 +995,21 @@ fn written(serializer: ast::Serializer, value: &Zval, statement: bool) -> PhpRes
 /// The methods every serializer class declares: a parent's method reads its own Rust type,
 /// so each class has its own.
 macro_rules! serializer_methods {
-    ($class:ident, $serializer:expr) => {
+    ($class:ident, $serializer:expr, $rules:literal) => {
         #[php_impl]
         impl $class {
-            pub fn __construct() -> Self {
-                Self
+            #[php(defaults(literal = $rules))]
+            pub fn __construct(literal: Rules) -> Self {
+                Self(literal.0)
             }
 
             pub fn serialize(&self, stmt: Statement<'_>) -> PhpResult<Zval> {
-                written($serializer, stmt.0, true)
+                written($serializer.with_literal(self.0), stmt.0, true)
             }
 
             #[php(name = "serializeExpression")]
             pub fn serialize_expression(&self, expression: Expression<'_>) -> PhpResult<Zval> {
-                written($serializer, expression.0, false)
+                written($serializer.with_literal(self.0), expression.0, false)
             }
 
             #[php(name = "quoteIdentifier", vis = "protected")]
@@ -1012,45 +1024,45 @@ macro_rules! serializer_methods {
 #[php_class]
 #[php(name = "Utopia\\Query\\AST\\Serializer")]
 #[derive(Clone)]
-pub struct Serializer;
-serializer_methods!(Serializer, ast::Serializer::new());
+pub struct Serializer(StringLiteral);
+serializer_methods!(Serializer, ast::Serializer::new(), "Rules(StringLiteral::Backslash)");
 
 /// `Utopia\Query\AST\Serializer\MySQL`.
 #[php_class]
 #[php(name = "Utopia\\Query\\AST\\Serializer\\MySQL")]
 #[php(extends(Serializer))]
 #[derive(Clone)]
-pub struct MySqlSerializer;
-serializer_methods!(MySqlSerializer, ast::Serializer::mysql());
+pub struct MySqlSerializer(StringLiteral);
+serializer_methods!(MySqlSerializer, ast::Serializer::mysql(), "Rules(StringLiteral::Backslash)");
 
 /// `Utopia\Query\AST\Serializer\MariaDB`.
 #[php_class]
 #[php(name = "Utopia\\Query\\AST\\Serializer\\MariaDB")]
 #[php(extends(MySqlSerializer))]
 #[derive(Clone)]
-pub struct MariaDbSerializer;
-serializer_methods!(MariaDbSerializer, ast::Serializer::mariadb());
+pub struct MariaDbSerializer(StringLiteral);
+serializer_methods!(MariaDbSerializer, ast::Serializer::mariadb(), "Rules(StringLiteral::Backslash)");
 
 /// `Utopia\Query\AST\Serializer\PostgreSQL`: identifiers in double quotes.
 #[php_class]
 #[php(name = "Utopia\\Query\\AST\\Serializer\\PostgreSQL")]
 #[php(extends(Serializer))]
 #[derive(Clone)]
-pub struct PostgreSqlSerializer;
-serializer_methods!(PostgreSqlSerializer, ast::Serializer::postgresql());
+pub struct PostgreSqlSerializer(StringLiteral);
+serializer_methods!(PostgreSqlSerializer, ast::Serializer::postgresql(), "Rules(StringLiteral::Extended)");
 
 /// `Utopia\Query\AST\Serializer\SQLite`: identifiers in double quotes.
 #[php_class]
 #[php(name = "Utopia\\Query\\AST\\Serializer\\SQLite")]
 #[php(extends(Serializer))]
 #[derive(Clone)]
-pub struct SqliteSerializer;
-serializer_methods!(SqliteSerializer, ast::Serializer::sqlite());
+pub struct SqliteSerializer(StringLiteral);
+serializer_methods!(SqliteSerializer, ast::Serializer::sqlite(), "Rules(StringLiteral::Standard)");
 
 /// `Utopia\Query\AST\Serializer\ClickHouse`.
 #[php_class]
 #[php(name = "Utopia\\Query\\AST\\Serializer\\ClickHouse")]
 #[php(extends(Serializer))]
 #[derive(Clone)]
-pub struct ClickHouseSerializer;
-serializer_methods!(ClickHouseSerializer, ast::Serializer::clickhouse());
+pub struct ClickHouseSerializer(StringLiteral);
+serializer_methods!(ClickHouseSerializer, ast::Serializer::clickhouse(), "Rules(StringLiteral::BackslashUtf8)");

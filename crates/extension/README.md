@@ -356,6 +356,28 @@ written as `a = b = c`, which reads back as `(a = b) = c`. `packages/query/src/A
 is now the fixed version, with two tests in `tests/AST/SerializerTest.php` that fail on the old
 one.
 
+### String literals
+
+`Utopia\Query\StringLiteral` is a PHP enum and stays one. The tokenizers, the parser, the
+serializers and the schemas each take a case of it (or their dialect's default), and the crate has
+the same four rules as `utopia_query::StringLiteral`: `quote()` for what the serializers and the
+DDL write, `unquote()` for what the parser reads. A backslash escapes or not, PostgreSQL's
+`E'...'` is its own token, a NUL or a backslash after a byte of 0x80 or above is refused where
+the dialect refuses it, and `LIKE` keeps its `ESCAPE` clause through `Binary::$escape`.
+
+The parser reads escapes in bytes, as PHP does. The extension hands it text with a character
+for each byte, so it asks the crate's parser for `widened()` text: `E'\u00e9'` is then the two
+bytes of `é`, each its own character, and comes back out as those two bytes.
+
+The corpus runs 1,903 cases of this on both: 29 literals through six tokenizers and the parser
+under each of the four rules, 18 strings through six serializers under each rule and through the
+DDL of five dialects, `LIKE ... ESCAPE` read and written, and statements with input after them.
+One known difference: the rules given to a tokenizer, a serializer or a schema are a protected
+property `$literal` in PHP, which a subclass can read. The extension keeps them in Rust.
+
+The crate's builders do not have these rules yet. They are not in the extension, so nothing
+here reaches them, and they are to be brought level when the builders move.
+
 ### The schemas
 
 `Schema` and `Schema\SQL` (both abstract), the dialects `Schema\MySQL`, `PostgreSQL`, `SQLite`,
