@@ -1,6 +1,6 @@
 [package]
 name = "utopia-auth"
-description = "Password hashing, proofs, session stores, JWT issuers and verifiers, OAuth2 server values and WebAuthn passkeys."
+description = "Password hashing (with PECL scrypt, Firebase's modified scrypt and phpass), proofs, session stores, JWT issuers and verifiers, OAuth2 server values and WebAuthn passkeys."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -9,8 +9,10 @@ repository = "https://github.com/utopia-rs/auth"
 publish.workspace = true
 
 [dependencies]
+# AES-256 for Firebase's modified scrypt (openssl_encrypt aes-256-ctr in PHP).
 aes.workspace = true
-ctr.workspace = true
+# random_bytes() and password_hash()'s salts, as PHP draws them.
+getrandom.workspace = true
 rand.workspace = true
 hex.workspace = true
 hmac.workspace = true
@@ -24,6 +26,8 @@ php-std.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
 thiserror.workspace = true
+# Wiping derived keys and scrypt's working memory.
+zeroize.workspace = true
 
 [package.metadata.utopia]
 category = "security"

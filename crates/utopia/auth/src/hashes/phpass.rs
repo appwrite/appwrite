@@ -1,6 +1,5 @@
 //! The phpass password hash used by WordPress and phpBB.
 
-use md5::{Digest, Md5};
 use php_std::Value;
 use php_std::format::{dval_to_lval, str_to_float};
 use php_std::value::{Number, numeric_str_ex};
@@ -8,9 +7,8 @@ use php_std::value::{Number, numeric_str_ex};
 use super::{hash_plumbing, password};
 use crate::hash::{hash_equals, random_bytes};
 use crate::options::{to_long, truthy, type_name};
+use crate::phpass::{ITOA64, blowfish_salt, md5_rounds};
 use crate::{Error, Hash, Options};
-
-const ITOA64: &[u8; 64] = b"./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
 /// The phpass password hash, as WordPress and phpBB use it: `$2a$` bcrypt
 /// hashes, or `$P$` portable MD5 hashes when `portable_hashes` is set (or
@@ -148,62 +146,13 @@ fn operand(value: &Value, op: &str) -> Result<Number, Error> {
 
 /// The blowfish-alphabet encoding of `gensaltBlowfish()` for 16 bytes (22 characters).
 fn bf_encode(input: &[u8; 16]) -> Vec<u8> {
-    const BCRYPT64: &[u8; 64] = b"./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let mut out = Vec::with_capacity(22);
-    let mut i = 0;
-    loop {
-        let mut c1 = usize::from(input[i]);
-        i += 1;
-        out.push(BCRYPT64[c1 >> 2]);
-        c1 = (c1 & 0x03) << 4;
-        if i >= 16 {
-            out.push(BCRYPT64[c1]);
-            break;
-        }
-        let c2 = usize::from(input[i]);
-        i += 1;
-        c1 |= c2 >> 4;
-        out.push(BCRYPT64[c1]);
-        let c1 = (c2 & 0x0f) << 2;
-        let c2 = usize::from(input[i]);
-        i += 1;
-        out.push(BCRYPT64[c1 | (c2 >> 6)]);
-        out.push(BCRYPT64[c2 & 0x3f]);
-    }
-    out
+    // 16 bytes: no offset past the end to warn about.
+    blowfish_salt(input, &mut |_| {})
 }
 
-/// `encode64()`: phpass's base64 of the first `count` bytes.
+/// `encode64()`: phpass's base64 of the first `count` bytes, which callers always have.
 fn encode64(input: &[u8], count: usize) -> Vec<u8> {
-    let at = |i: usize| u32::from(input.get(i).copied().unwrap_or(0));
-    let mut out = Vec::new();
-    let mut i = 0;
-    loop {
-        let mut value = at(i);
-        i += 1;
-        out.push(ITOA64[(value & 0x3f) as usize]);
-        if i < count {
-            value |= at(i) << 8;
-        }
-        out.push(ITOA64[((value >> 6) & 0x3f) as usize]);
-        if i >= count {
-            break;
-        }
-        i += 1;
-        if i < count {
-            value |= at(i) << 16;
-        }
-        out.push(ITOA64[((value >> 12) & 0x3f) as usize]);
-        if i >= count {
-            break;
-        }
-        i += 1;
-        out.push(ITOA64[((value >> 18) & 0x3f) as usize]);
-        if i >= count {
-            break;
-        }
-    }
-    out
+    crate::phpass::encode64(ITOA64, input, count, &mut |_| {}, &mut |_| {})
 }
 
 /// `cryptPrivate()`: the portable `$P$`/`$H$` hash, or `*0`/`*1` when the
@@ -228,10 +177,7 @@ fn crypt_private(password: &[u8], setting: &[u8]) -> Vec<u8> {
     let Some(salt) = setting.get(4..12) else {
         return failure;
     };
-    let mut hash = Md5::new().chain_update(salt).chain_update(password).finalize();
-    for _ in 0..(1u64 << count_log2) {
-        hash = Md5::new().chain_update(hash).chain_update(password).finalize();
-    }
+    let hash = md5_rounds(salt, password, 1u64 << count_log2);
     let mut out = setting[..12].to_vec();
     out.extend_from_slice(&encode64(&hash, 16));
     out

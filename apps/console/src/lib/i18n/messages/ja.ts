@@ -124,6 +124,7 @@ export const jaCatalog: EnCatalog = {
         github: 'GitHub',
         x: 'X',
         youtube: 'YouTube',
+        youtubeChannels: 'YouTube チャンネル',
         linkedIn: 'LinkedIn',
         instagram: 'Instagram',
         discord: 'Discord',

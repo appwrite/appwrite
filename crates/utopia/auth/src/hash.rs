@@ -62,12 +62,15 @@ impl Clone for Box<dyn Hash> {
 ///
 /// Strings of different lengths are unequal at once.
 ///
-/// PHP: `hash_equals($known, $user)`.
+/// PHP: `hash_equals($known, $user)`, which leaks the length too.
+#[must_use]
 pub fn hash_equals(known: &[u8], user: &[u8]) -> bool {
     if known.len() != user.len() {
         return false;
     }
-    known.iter().zip(user).fold(0u8, |acc, (a, b)| acc | (a ^ b)) == 0
+    let difference = known.iter().zip(user).fold(0u8, |acc, (a, b)| acc | (a ^ b));
+    // `black_box` keeps the compiler from turning the fold into an early-exit comparison.
+    std::hint::black_box(difference) == 0
 }
 
 /// Fills `buf` with cryptographically secure random bytes.
@@ -110,5 +113,19 @@ pub(crate) fn random_int(max: u64) -> u64 {
         if v < zone {
             return v % range;
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::hash_equals;
+
+    #[test]
+    fn hash_equals_is_php_hash_equals() {
+        assert!(hash_equals(b"", b""));
+        assert!(hash_equals(b"abc", b"abc"));
+        assert!(!hash_equals(b"abc", b"abd"));
+        assert!(!hash_equals(b"abc", b"ab"));
+        assert!(!hash_equals(b"ab", b"abc"));
     }
 }

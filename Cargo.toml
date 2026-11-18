@@ -305,6 +305,8 @@ whirlpool = "0.10"
 xxhash-rust = { version = "0.8", features = ["xxh3"] }
 # libwebp, built from source and linked statically: lossy WebP. utopia-image's `libwebp` feature.
 webp = { version = "0.3", default-features = false }
+# Wiping derived keys and scrypt's working memory (utopia-auth); RustCrypto, pure Rust.
+zeroize = "1"
 zstd = { version = "0.14", default-features = false }
 # libyaml 0.2.5 translated to Rust (php-std yaml_parse(), which must accept and
 # refuse documents as the libyaml of PHP's ext-yaml does); no C toolchain needed.

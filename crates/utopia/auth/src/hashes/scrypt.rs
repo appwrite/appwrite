@@ -4,6 +4,7 @@ use php_std::encoding::bin2hex;
 
 use super::hash_plumbing;
 use crate::hash::{hash_equals, random_bytes};
+use crate::scrypt::Failure;
 use crate::{Error, Hash, Options};
 
 /// The scrypt key derivation as a password hash, in lowercase hex.
@@ -109,127 +110,14 @@ impl Scrypt {
 
 /// php-scrypt's `scrypt($password, $salt, $N, $r, $p, $keyLength)`: hex output.
 ///
-/// The argument checks are php-scrypt's, in its order; the derivation is
-/// Tarsnap's `crypto_scrypt` (which, unlike RFC 7914 implementations, accepts
-/// any `N` below `2^(128 r / 8)`... and above it).
+/// The derivation and its checks are [`crate::scrypt::scrypt`]'s: its `Error` is
+/// [`Error::Engine`] with PHP's message; its warning and `false`, or memory that cannot be
+/// allocated, are the `RuntimeException` `hash()` throws on `false`.
 pub(crate) fn scrypt(password: &[u8], salt: &[u8], n: i64, r: i64, p: i64, length: i64) -> Result<Vec<u8>, Error> {
-    let argument = |m: &str| Err(Error::Engine(format!("scrypt(): {m}")));
-    if n < 2 {
-        return argument("Argument #3 ($N) must be greater than 1");
-    }
-    if r < 1 {
-        return argument("Argument #4 ($r) must be greater than 0");
-    }
-    if p < 1 {
-        return argument("Argument #5 ($p) must be greater than 0");
-    }
-    if n & (n - 1) != 0 {
-        return argument("Argument #3 ($N) must be a power of 2");
-    }
-    if length < 16 {
-        return argument("Argument #6 ($key_length) must be greater than or equal to 16");
-    }
-    let failed = || Error::Runtime("Failed to hash using scrypt".into());
-    // crypto_scrypt: EFBIG for r * p >= 2^30, ENOMEM where the buffers cannot be sized.
-    if r.saturating_mul(p) >= 1 << 30 {
-        return Err(failed());
-    }
-    let (n, r, p) = (n as usize, r as usize, p as usize);
-    let length = usize::try_from(length).map_err(|_| failed())?;
-    let block = 128usize.checked_mul(r).ok_or_else(failed)?;
-    let v_len = block.checked_mul(n).ok_or_else(failed)?;
-    let b_len = block.checked_mul(p).ok_or_else(failed)?;
-    let mut b = Vec::new();
-    b.try_reserve_exact(b_len).map_err(|_| failed())?;
-    b.resize(b_len, 0);
-    let mut v: Vec<u32> = Vec::new();
-    v.try_reserve_exact(v_len / 4).map_err(|_| failed())?;
-    v.resize(v_len / 4, 0);
-    pbkdf2_sha256(password, salt, &mut b);
-    let mut x = vec![0u32; block / 4];
-    let mut y = vec![0u32; block / 4];
-    for chunk in b.chunks_mut(block) {
-        romix(chunk, n, r, &mut v, &mut x, &mut y);
-    }
-    let mut out = vec![0u8; length];
-    pbkdf2_sha256(password, &b, &mut out);
-    Ok(bin2hex(&out).into_bytes())
-}
-
-/// PBKDF2-HMAC-SHA256 with one iteration, filling `out`.
-fn pbkdf2_sha256(password: &[u8], salt: &[u8], out: &mut [u8]) {
-    use hmac::{Hmac, Mac};
-    let prf = Hmac::<sha2::Sha256>::new_from_slice(password).expect("HMAC takes any key length");
-    for (i, chunk) in out.chunks_mut(32).enumerate() {
-        let mut mac = prf.clone();
-        mac.update(salt);
-        mac.update(&(i as u32 + 1).to_be_bytes());
-        let t = mac.finalize().into_bytes();
-        chunk.copy_from_slice(&t[..chunk.len()]);
-    }
-}
-
-/// The Salsa20/8 core, in place.
-fn salsa20_8(b: &mut [u32; 16]) {
-    let mut x = *b;
-    for _ in 0..4 {
-        macro_rules! quarter {
-            ($a:expr, $b:expr, $c:expr, $d:expr) => {
-                x[$b] ^= x[$a].wrapping_add(x[$d]).rotate_left(7);
-                x[$c] ^= x[$b].wrapping_add(x[$a]).rotate_left(9);
-                x[$d] ^= x[$c].wrapping_add(x[$b]).rotate_left(13);
-                x[$a] ^= x[$d].wrapping_add(x[$c]).rotate_left(18);
-            };
-        }
-        quarter!(0, 4, 8, 12);
-        quarter!(5, 9, 13, 1);
-        quarter!(10, 14, 2, 6);
-        quarter!(15, 3, 7, 11);
-        quarter!(0, 1, 2, 3);
-        quarter!(5, 6, 7, 4);
-        quarter!(10, 11, 8, 9);
-        quarter!(15, 12, 13, 14);
-    }
-    for (b, x) in b.iter_mut().zip(x) {
-        *b = b.wrapping_add(x);
-    }
-}
-
-/// `blockmix_salsa8`: `y = BlockMix(x)` over `2 r` 64-byte blocks.
-fn block_mix(x: &[u32], y: &mut [u32], r: usize) {
-    let mut t: [u32; 16] = x[(2 * r - 1) * 16..2 * r * 16].try_into().expect("16 words");
-    for i in 0..2 * r {
-        for (t, x) in t.iter_mut().zip(&x[i * 16..i * 16 + 16]) {
-            *t ^= x;
-        }
-        salsa20_8(&mut t);
-        // Even blocks go to the first half, odd blocks to the second.
-        let at = if i % 2 == 0 { (i / 2) * 16 } else { (r + i / 2) * 16 };
-        y[at..at + 16].copy_from_slice(&t);
-    }
-}
-
-/// `smix`: ROMix on one `128 r` byte block.
-fn romix(block: &mut [u8], n: usize, r: usize, v: &mut [u32], x: &mut [u32], y: &mut [u32]) {
-    let words = 32 * r;
-    for (w, c) in x.iter_mut().zip(block.chunks_exact(4)) {
-        *w = u32::from_le_bytes([c[0], c[1], c[2], c[3]]);
-    }
-    for i in 0..n {
-        v[i * words..(i + 1) * words].copy_from_slice(x);
-        block_mix(x, y, r);
-        x.copy_from_slice(y);
-    }
-    for _ in 0..n {
-        let j = (x[(2 * r - 1) * 16] as usize) & (n - 1);
-        for (x, v) in x.iter_mut().zip(&v[j * words..(j + 1) * words]) {
-            *x ^= v;
-        }
-        block_mix(x, y, r);
-        x.copy_from_slice(y);
-    }
-    for (c, w) in block.chunks_exact_mut(4).zip(x.iter()) {
-        c.copy_from_slice(&w.to_le_bytes());
+    match crate::scrypt::scrypt(password, salt, n, r, p, length) {
+        Ok(key) => Ok(bin2hex(&key).into_bytes()),
+        Err(Failure::Error(message)) => Err(Error::Engine(message)),
+        Err(Failure::Warning(_) | Failure::False) => Err(Error::Runtime("Failed to hash using scrypt".into())),
     }
 }
 

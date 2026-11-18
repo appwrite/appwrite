@@ -47,6 +47,17 @@
 //! | `Passkeys\RelyingParty`, `Origin`, `Counter` | [`passkeys::RelyingParty`], [`passkeys::Origin`], [`passkeys::Counter`] |
 //! | `Passkeys\Exception` | [`Error::Passkey`] |
 //!
+//! Under the hashes are the algorithms PHP itself does not provide, each a
+//! function that returns what PHP returns, byte for byte, including where PHP
+//! fails; the utopia PHP extension serves `Utopia\Auth\Hashes\*` over them:
+//!
+//! | PHP | Rust |
+//! |---|---|
+//! | PECL `scrypt($password, $salt, $N, $r, $p, $keyLength, true)` | [`scrypt::scrypt`] ([`scrypt::Failure`]) |
+//! | `ScryptModified::generateDerivedKey()`, `hashKeys()` | [`firebase::derived_key`], [`firebase::aes_256_ctr`], [`firebase::hash`] |
+//! | `PHPass::encode64()`, `gensaltBlowfish()`, `cryptPrivate()`'s rounds | [`phpass::encode64`], [`phpass::blowfish_salt`], [`phpass::md5_rounds`] |
+//! | `random_bytes($length)`, `password_hash()`'s salt | [`random::random_bytes`], [`password_salt`] |
+//!
 //! PHP strings are bytes, so values are `&[u8]`, and every place PHP reads
 //! the clock (`time()`) takes `now` instead.
 //!
@@ -81,16 +92,21 @@
 pub struct GettingStarted;
 
 mod error;
+pub mod firebase;
 mod hash;
 pub mod hashes;
 pub mod jwt;
 pub mod oauth2;
 mod options;
 pub mod passkeys;
+pub mod phpass;
 pub mod proofs;
+pub mod random;
+pub mod scrypt;
 mod store;
 
 pub use error::Error;
 pub use hash::{Hash, hash_equals, random_bytes};
 pub use options::{OptionValue, Options};
+pub use random::password_salt;
 pub use store::Store;

@@ -25,11 +25,8 @@ fn salt() -> [u8; 16] {
 /// `php_password_make_salt(16)`, the salt `password_hash()` gives Argon2:
 /// 13 random bytes in base64, `+` as `.`, cut to 16 characters.
 fn argon2_salt() -> [u8; 16] {
-    let mut raw = [0u8; 13];
-    random_bytes(&mut raw);
-    let encoded = php_std::encoding::base64_encode(&raw).replace('+', ".");
     let mut salt = [0u8; 16];
-    salt.copy_from_slice(&encoded.as_bytes()[..16]);
+    salt.copy_from_slice(&crate::password_salt(16));
     salt
 }
 

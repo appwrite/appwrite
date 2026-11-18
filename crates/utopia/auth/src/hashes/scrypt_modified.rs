@@ -1,12 +1,13 @@
 //! Firebase's modified scrypt password hash.
 
-use aes::cipher::{KeyIvInit, StreamCipher};
-use php_std::encoding::{base64_decode, base64_encode, hex2bin};
+use php_std::encoding::{base64_decode, base64_encode};
 use php_std::mb::mb_scrub;
+use zeroize::Zeroize;
 
 use super::hash_plumbing;
-use super::scrypt::scrypt;
+use crate::firebase;
 use crate::hash::{hash_equals, random_bytes};
+use crate::scrypt::Failure;
 use crate::{Error, Hash, Options};
 
 /// Firebase's modified scrypt: the signer key encrypted with AES-256-CTR
@@ -118,15 +119,20 @@ impl Hash for ScryptModified {
         let (Some(salt), Some(separator)) = (o.string("salt"), o.string("saltSeparator")) else {
             return Err(Error::InvalidArgument("Salt and salt separator must be strings".into()));
         };
-        let mut full = base64_decode(salt, false).unwrap_or_default();
-        full.extend_from_slice(&base64_decode(separator, false).unwrap_or_default());
-        let derived = scrypt(&mb_scrub(value), &full, 16384, 8, 1, 64)?;
-        let derived = hex2bin(&derived)
-            .ok_or_else(|| Error::Runtime("Failed to convert derived key from hex to binary".into()))?;
-        let mut data = base64_decode(signer, false).unwrap_or_default();
-        let iv = [0u8; 16];
-        let mut cipher = ctr::Ctr128BE::<aes::Aes256>::new((&derived[..32]).into(), (&iv).into());
-        cipher.apply_keystream(&mut data);
+        let salt = base64_decode(salt, false).unwrap_or_default();
+        let separator = base64_decode(separator, false).unwrap_or_default();
+        let mut derived = match firebase::derived_key(&mb_scrub(value), &salt, &separator) {
+            Ok(derived) => derived,
+            Err(Failure::Error(message)) => return Err(Error::Engine(message)),
+            Err(Failure::Warning(_) | Failure::False) => {
+                return Err(Error::Runtime("Failed to generate derived key using scrypt".into()));
+            }
+        };
+        let mut key = [0u8; 32];
+        key.copy_from_slice(&derived[..32]);
+        let data = firebase::aes_256_ctr(&key, &base64_decode(signer, false).unwrap_or_default());
+        key.zeroize();
+        derived.zeroize();
         Ok(base64_encode(&data).into_bytes())
     }
 
