@@ -1,192 +1,210 @@
-//! Strings of bounded length, and identifiers.
+//! The text leaf validators: `Text`, `Identifier`, `WhiteList`, `Contains` and `Label`.
+//!
+//! The parts that compare a value with the PHP values a validator holds (`in_array()`
+//! over an allow list or a white list, `(string)` of a pattern) stay with the PHP engine, in
+//! the extension; what is left here works on bytes, as the PHP methods do once they have a
+//! string.
 
-use std::borrow::Cow;
-
-use php_std::value::numeric_str;
 use php_std::{mb, pcre};
 
-use crate::input::loose_str_eq;
-use crate::{Error, Input, Type, Validator, Verdict, is_valid_via_validate};
-
-/// `preg_match($pattern, $subject) === 1`.
-pub(crate) fn preg_matches(pattern: &[u8], subject: &[u8]) -> bool {
-    matches!(pcre::preg_match_bare(pattern, subject), Ok(p) if p.value == pcre::Value::Int(1))
-}
-
-/// What an anchored `/^...$/` pattern (without `/D`) must match whole when
-/// its classes exclude `\n`: the subject, without the one final newline
-/// before which `$` also matches.
-pub(crate) fn dollar_body(subject: &[u8]) -> &[u8] {
-    subject.strip_suffix(b"\n").unwrap_or(subject)
-}
-
-/// `/^[1-9]\d{6,14}$/` on [`dollar_body`]: 7 to 15 ASCII digits, the first
-/// not 0.
-pub(crate) fn is_e164_digits(body: &[u8]) -> bool {
-    (7..=15).contains(&body.len()) && body[0] != b'0' && body.iter().all(u8::is_ascii_digit)
-}
-
-/// A string of `min` to `length` characters (`length` 0 is unlimited),
-/// optionally made only of the characters in `allow_list`, and optionally not
-/// blank.
+/// `preg_match('/[^\p{Z}\p{Cf}\s]/u', $value) !== 1`: the value holds only Unicode separators,
+/// format characters and whitespace (nothing at all included), or is not UTF-8, which
+/// `preg_match()` refuses.
 ///
-/// PHP: `Utopia\Validator\Text`.
-#[derive(Debug, Clone)]
-pub struct Text {
-    /// The most characters allowed; 0 for no limit.
-    pub length: usize,
-    /// The fewest characters allowed.
-    pub min: usize,
-    /// The only characters allowed, compared byte by byte; empty allows any.
-    pub allow_list: Vec<Cow<'static, str>>,
-    /// Whether values made only of whitespace, separators and format characters are refused.
-    pub require_non_blank: bool,
+/// PHP: `Text::isValid()` with `$requireNonBlank`.
+pub fn is_blank(value: &[u8]) -> bool {
+    !matches!(
+        pcre::preg_match_bare(br"/[^\p{Z}\p{Cf}\s]/u", value),
+        Ok(result) if result.value == pcre::Value::Int(1)
+    )
 }
 
-impl Text {
-    /// The digits `0` to `9`, for [`Text::with_allow_list`].
-    pub const NUMBERS: [&'static str; 10] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
-    /// The letters `A` to `Z`, for [`Text::with_allow_list`].
-    pub const ALPHABET_UPPER: [&'static str; 26] = [
-        "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V",
-        "W", "X", "Y", "Z",
-    ];
-    /// The letters `a` to `z`, for [`Text::with_allow_list`].
-    pub const ALPHABET_LOWER: [&'static str; 26] = [
-        "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v",
-        "w", "x", "y", "z",
-    ];
-
-    /// Text with a maximum length (0 = unlimited) and a minimum of 1 char.
-    pub const fn new(length: usize) -> Self {
-        Self::with_min(length, 1)
-    }
-
-    /// Text of at least `min` and at most `length` characters (`length` 0 is unlimited).
-    pub const fn with_min(length: usize, min: usize) -> Self {
-        Self { length, min, allow_list: Vec::new(), require_non_blank: false }
-    }
-
-    /// Allows only these characters, compared byte by byte; a digit also matches
-    /// an entry of the same numeric value.
-    ///
-    /// PHP: compared loosely, as PHP's `in_array` does.
-    pub fn with_allow_list<I, S>(mut self, list: I) -> Self
-    where
-        I: IntoIterator<Item = S>,
-        S: Into<Cow<'static, str>>,
-    {
-        self.allow_list = list.into_iter().map(Into::into).collect();
-        self
-    }
-
-    /// Rejects values made only of Unicode separators, whitespace and format characters.
-    pub fn non_blank(mut self) -> Self {
-        self.require_non_blank = true;
-        self
-    }
-
-    fn accepts(&self, s: &[u8]) -> bool {
-        if self.require_non_blank && !preg_matches(br"/[^\p{Z}\p{Cf}\s]/u", s) {
-            return false;
-        }
-        let len = mb::mb_strlen(s);
-        if len < self.min || (self.length != 0 && len > self.length) {
-            return false;
-        }
-        // `str_split()` then a loose `in_array()` per byte. `==` compares two
-        // strings as numbers only when both are numeric, so a byte that is not
-        // numeric needs no more than a byte comparison.
-        self.allow_list.is_empty()
-            || s.chunks(1).all(|c| {
-                let numeric = std::str::from_utf8(c).ok().and_then(numeric_str).is_some();
-                self.allow_list.iter().any(|a| if numeric { loose_str_eq(c, a.as_bytes()) } else { c == a.as_bytes() })
-            })
-    }
+/// PHP `mb_strlen($value)`: each sequence that is not UTF-8 counts as one character.
+pub fn chars(value: &[u8]) -> i64 {
+    i64::try_from(mb::mb_strlen(value)).unwrap_or(i64::MAX)
 }
 
-impl Validator for Text {
-    /// `Value must be a valid string`, followed by the length, character and blank limits that apply.
-    fn description(&self) -> String {
-        let mut message = String::from("Value must be a valid string");
-        if self.min == self.length {
-            message.push_str(&format!(" and exactly {} chars", self.length));
-        } else {
-            if self.min != 0 {
-                message.push_str(&format!(" and at least {} chars", self.min));
-            }
-            if self.length != 0 {
-                message.push_str(&format!(" and no longer than {} chars", self.length));
-            }
-        }
-        if !self.allow_list.is_empty() {
-            message.push_str(&format!(" and only consist of '{}' chars", self.allow_list.join(", ")));
-        }
-        if self.require_non_blank {
-            message.push_str(" and not be blank");
-        }
-        message
-    }
-
-    is_valid_via_validate!();
-
-    /// Valid for a string within the limits; length counts UTF-8 characters.
-    fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
-        Ok(Verdict::of(value.as_str().is_some_and(|s| self.accepts(s))))
-    }
-
-    /// Expects a string ([`Type::String`]).
-    fn kind(&self) -> Type {
-        Type::String
-    }
-}
-
-/// An identifier: ASCII letters, digits and underscores, not starting with a
-/// digit, of at most `length` characters (0 for no limit).
+/// `mb_strlen($value) >= $min` and, for a `$length` other than 0, `mb_strlen($value) <= $length`.
 ///
-/// PHP: `Utopia\Validator\Identifier`.
-#[derive(Debug, Clone, Copy, Default)]
-pub struct Identifier {
-    /// The most characters allowed; 0 for no limit.
-    pub length: usize,
+/// PHP: `Text::isValid()`'s length checks.
+pub fn text_length(value: &[u8], min: i64, length: i64) -> bool {
+    let chars = chars(value);
+    chars >= min && !(chars > length && length != 0)
 }
 
-impl Identifier {
-    /// An identifier of at most `length` characters (0 for no limit).
-    pub const fn new(length: usize) -> Self {
-        Self { length }
-    }
-}
-
-/// `/^[A-Za-z_]\w*$/D`: `\w` is ASCII without `/u`, and `/D` takes no final
-/// newline.
-pub(crate) fn is_identifier(s: &[u8]) -> bool {
-    s.first().is_some_and(|&b| b.is_ascii_alphabetic() || b == b'_')
-        && s.iter().all(|&b| b.is_ascii_alphanumeric() || b == b'_')
-}
-
-impl Validator for Identifier {
-    /// `Value must contain only letters, digits and underscores and must not start
-    /// with a digit`, with the length limit when there is one.
-    fn description(&self) -> String {
-        let mut description =
-            String::from("Value must contain only letters, digits and underscores and must not start with a digit");
-        if self.length != 0 {
-            description.push_str(&format!(", and be at most {} chars", self.length));
+/// `Text::getDescription()`, given `implode(', ', $this->allowList)` when the list is not
+/// empty.
+pub fn text_description(length: i64, min: i64, allow_list: Option<&[u8]>, require_non_blank: bool) -> Vec<u8> {
+    let mut message = b"Value must be a valid string".to_vec();
+    if min == length {
+        message.extend_from_slice(format!(" and exactly {length} chars").as_bytes());
+    } else {
+        if min != 0 {
+            message.extend_from_slice(format!(" and at least {min} chars").as_bytes());
         }
-        description.push('.');
-        description
+        if length != 0 {
+            message.extend_from_slice(format!(" and no longer than {length} chars").as_bytes());
+        }
+    }
+    if let Some(list) = allow_list {
+        message.extend_from_slice(b" and only consist of '");
+        message.extend_from_slice(list);
+        message.extend_from_slice(b"' chars");
+    }
+    if require_non_blank {
+        message.extend_from_slice(b" and not be blank");
+    }
+    message
+}
+
+/// `preg_match('/^[A-Za-z_]\w*$/D', $value) === 1`: an ASCII letter or `_`, then ASCII letters,
+/// digits and `_` (the pattern has no `/u`, so `\w` is ASCII), up to the very end.
+///
+/// PHP: `Identifier::isValid()` after `Text::isValid()`.
+pub fn identifier(value: &[u8]) -> bool {
+    match value.split_first() {
+        Some((first, rest)) => {
+            (first.is_ascii_alphabetic() || *first == b'_')
+                && rest.iter().all(|b| b.is_ascii_alphanumeric() || *b == b'_')
+        }
+        None => false,
+    }
+}
+
+/// `Identifier::getDescription()`.
+pub fn identifier_description(length: i64) -> Vec<u8> {
+    let mut description =
+        b"Value must contain only letters, digits and underscores and must not start with a digit".to_vec();
+    if length != 0 {
+        description.extend_from_slice(format!(", and be at most {length} chars").as_bytes());
+    }
+    description.push(b'.');
+    description
+}
+
+/// PHP `strtolower()`: ASCII only, whatever the locale (PHP 8.2 and later).
+pub fn ascii_lower(value: &[u8]) -> Vec<u8> {
+    value.to_ascii_lowercase()
+}
+
+/// `WhiteList::getDescription()`, given `implode(', ', $this->list)`.
+pub fn white_list_description(list: &[u8]) -> Vec<u8> {
+    let mut message = b"Value must be one of (".to_vec();
+    message.extend_from_slice(list);
+    message.push(b')');
+    message
+}
+
+/// PHP `mb_strtolower($value, 'UTF-8')`: full lower case, the final sigma rule, and `?` for
+/// each sequence that is not UTF-8.
+///
+/// PHP: `Contains::isValid()` when it is not strict.
+pub fn lower(value: &[u8]) -> Vec<u8> {
+    mb::mb_strtolower(value)
+}
+
+/// PHP `str_contains($haystack, $needle)`: an empty needle is in every haystack.
+pub fn contains(haystack: &[u8], needle: &[u8]) -> bool {
+    needle.is_empty() || haystack.windows(needle.len()).any(|window| window == needle)
+}
+
+/// `Contains::getDescription()`, given `implode(', ', $this->patterns)`.
+pub fn contains_description(patterns: &[u8], strict: bool) -> Vec<u8> {
+    let mut message = b"Value must contain one of (".to_vec();
+    message.extend_from_slice(patterns);
+    message.push(b')');
+    message.extend_from_slice(if strict { b" (case-sensitive)" } else { b" (case-insensitive)" });
+    message
+}
+
+/// `Label::MAX_LENGTH`: the longest DNS label.
+pub const LABEL_MAX_LENGTH: i64 = 63;
+
+/// `Label::isValid()` on a string: 1 to 63 bytes of lowercase ASCII letters, digits and
+/// hyphens, not starting or ending with a hyphen. (`ctype_alnum()` of what is left without the
+/// hyphens, so a label of hyphens only is refused.)
+pub fn label(value: &[u8]) -> bool {
+    if value.is_empty() || value.len() > LABEL_MAX_LENGTH as usize || value.starts_with(b"-") || value.ends_with(b"-") {
+        return false;
+    }
+    let rest: Vec<u8> = value.iter().copied().filter(|b| *b != b'-').collect();
+    !rest.is_empty() && rest.iter().all(u8::is_ascii_alphanumeric) && !value.iter().any(u8::is_ascii_uppercase)
+}
+
+/// `Label::getDescription()`.
+pub fn label_description() -> Vec<u8> {
+    format!(
+        "Value must be 1 to {LABEL_MAX_LENGTH} lowercase letters, digits and hyphens, and must not start or end with a hyphen."
+    )
+    .into_bytes()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn blank() {
+        assert!(is_blank(b""));
+        assert!(is_blank(b" \t\n\r\x0b\x0c"));
+        assert!(is_blank("\u{00a0}\u{2028}\u{200b}\u{feff}".as_bytes()));
+        assert!(!is_blank(b" a "));
+        // Not UTF-8: `preg_match()` fails, so the value is refused as blank.
+        assert!(is_blank(b"a\xff"));
     }
 
-    is_valid_via_validate!();
-
-    /// Valid for a non-empty identifier within the length limit.
-    fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
-        Ok(Verdict::of(value.as_str().is_some_and(|s| Text::with_min(self.length, 1).accepts(s) && is_identifier(s))))
+    #[test]
+    fn lengths() {
+        assert!(text_length("héllo".as_bytes(), 5, 5));
+        assert!(!text_length("héllo".as_bytes(), 6, 0));
+        assert!(text_length(b"", 0, 0));
+        assert!(!text_length(b"abc", 1, 2));
+        assert!(text_length(b"abc", 1, 0));
     }
 
-    /// Expects a string ([`Type::String`]).
-    fn kind(&self) -> Type {
-        Type::String
+    #[test]
+    fn descriptions() {
+        assert_eq!(text_description(10, 10, None, false), b"Value must be a valid string and exactly 10 chars");
+        assert_eq!(
+            text_description(10, 1, Some(b"a, b"), true),
+            b"Value must be a valid string and at least 1 chars and no longer than 10 chars and only consist of 'a, b' chars and not be blank"
+        );
+        assert_eq!(text_description(0, 0, None, false), b"Value must be a valid string and exactly 0 chars");
+        assert_eq!(
+            identifier_description(0),
+            b"Value must contain only letters, digits and underscores and must not start with a digit."
+        );
+        assert_eq!(contains_description(b"a, b", false), b"Value must contain one of (a, b) (case-insensitive)");
+    }
+
+    #[test]
+    fn identifiers() {
+        assert!(identifier(b"_a1"));
+        assert!(identifier(b"A"));
+        assert!(!identifier(b"1a"));
+        assert!(!identifier(b"a-b"));
+        assert!(!identifier(b"a\n"));
+        assert!(!identifier("é".as_bytes()));
+        assert!(!identifier(b""));
+    }
+
+    #[test]
+    fn labels() {
+        assert!(label(b"a-1"));
+        assert!(!label(b"A"));
+        assert!(!label(b"-a"));
+        assert!(!label(b"a-"));
+        assert!(!label(b"a.b"));
+        assert!(!label(&[b'a'; 64]));
+        assert!(label(&[b'a'; 63]));
+        assert!(!label(b""));
+    }
+
+    #[test]
+    fn contains_needles() {
+        assert!(contains(b"abc", b""));
+        assert!(contains(b"abc", b"bc"));
+        assert!(!contains(b"", b"a"));
+        assert_eq!(lower("ÀB\u{03a3}".as_bytes()), "àbς".as_bytes());
     }
 }

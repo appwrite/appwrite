@@ -527,7 +527,13 @@ pub const OAUTH2_PROVIDERS: &[(&str, &[ProviderField])] = &[
     ("gitlab", &[app("clientId"), secret("endpoint", None)]),
     ("google", &[app("clientId"), secret("prompt", None)]),
     ("huggingface", CLIENT),
+    ("railway", CLIENT),
+    ("reddit", CLIENT),
     ("vercel", CLIENT),
+    ("atlassian", CLIENT),
+    ("line", CLIENT),
+    ("linear", CLIENT),
+    ("roblox", CLIENT),
     ("workos", CLIENT),
     ("kakao", CLIENT),
     (

@@ -11,140 +11,28 @@
 
 use std::sync::atomic::{AtomicPtr, Ordering};
 
-use ext_php_rs::args::{Arg, ArgInfoTables};
-use ext_php_rs::builders::{ClassBuilder, FunctionBuilder};
+use ext_php_rs::args::ArgInfoTables;
 use ext_php_rs::exception::throw;
-use ext_php_rs::flags::{DataType, MethodFlags};
-use ext_php_rs::types::{ZendObject, Zval};
+use ext_php_rs::types::Zval;
 use ext_php_rs::zend::{ClassEntry, ExecuteData};
 use utopia_validators::scalar::Integer as IntegerCheck;
 
 use super::engine::{
-    self, MAY_BE_ANY, MAY_BE_BOOL, MAY_BE_DOUBLE, MAY_BE_LONG, MAY_BE_STRING, Property, bool_arg, get, input, long_arg,
-    number_arg, set, str_arg, string, too_few,
+    self, MAY_BE_BOOL, MAY_BE_LONG, MAY_BE_STRING, Property, bool_arg, get, input, long_arg, number_arg, set, str_arg,
+    string, too_few,
+};
+use super::leaf::{
+    self, Method, NUMBER, PRIVATE, PUBLIC, VALUE, VALUE_MIXED, build, is_array, set_bool, set_str, stored, this,
+    type_string, value_arg,
 };
 
-/// A method's handler (ext-php-rs's `FunctionHandler`, which it does not export).
-type FunctionHandler = extern "C" fn(&mut ExecuteData, &mut Zval);
+/// The constructor parameters here that do not declare a property: `Integer`'s `$bits` and
+/// `$unsigned`, which `Integer.php` declares on their own.
+const UNPROMOTED: &[&str] = &["bits", "unsigned"];
 
-/// A method of a hand-built class: its handler, flags, parameters (name, type mask, default)
-/// and return type mask. A parameter mask of 0 is untyped, as `isValid($value)` is in PHP.
-struct Method {
-    name: &'static str,
-    handler: FunctionHandler,
-    flags: MethodFlags,
-    params: &'static [(&'static str, u32, Option<&'static str>)],
-    returns: u32,
-}
-
-const PUBLIC: MethodFlags = MethodFlags::Public;
-const PRIVATE: MethodFlags = MethodFlags::Private;
-
-/// `$value`, typed `mixed` (`Integer`, `FloatValidator`, `Numeric`, `Range`, `HexColor`).
-const VALUE_MIXED: &[(&str, u32, Option<&str>)] = &[("value", MAY_BE_ANY, None)];
-/// `$value`, untyped (`Boolean`, `Port`, `Wildcard`).
-const VALUE: &[(&str, u32, Option<&str>)] = &[("value", 0, None)];
-
-/// The type ext-php-rs builds a parameter or return with, before [`patch`] sets the exact
-/// one: what the inheritance checks at registration see, so it must be compatible with the
-/// parent's (`int` stands in for `int|float`, `mixed` for untyped).
-fn data_type(mask: u32) -> DataType {
-    match mask {
-        MAY_BE_BOOL => DataType::Bool,
-        MAY_BE_LONG | NUMBER => DataType::Long,
-        MAY_BE_STRING => DataType::String,
-        _ => DataType::Mixed,
-    }
-}
-
-/// Builds `name` (extending `parent`) with `methods`; `register` runs once the engine has
-/// the class, to declare its properties and [`patch`] the methods' types.
-fn build(
-    name: &str,
-    parent: (fn() -> &'static ClassEntry, &'static str),
-    methods: &[Method],
-    register: fn(&'static mut ClassEntry, ArgInfoTables),
-) -> ext_php_rs::error::Result<()> {
-    let mut class = ClassBuilder::new(name).extends(parent);
-    for method in methods {
-        let mut function = FunctionBuilder::new(method.name, method.handler);
-        let required = method.params.iter().take_while(|(_, _, default)| default.is_none()).count();
-        for (param, mask, default) in method.params {
-            let arg = Arg::new(*param, data_type(*mask));
-            function = function.arg(match default {
-                Some(default) => arg.default(*default),
-                None => arg,
-            });
-        }
-        let function = function.required_args(required);
-        // A constructor declares no return type.
-        let function = if method.name == "__construct" {
-            function
-        } else {
-            function.returns(data_type(method.returns), false, false)
-        };
-        class = class.method(function, method.flags);
-    }
-    class.registration(register).register()
-}
-
-/// Sets the exact types of `methods`' parameters and returns on `class` (the `int|float`
-/// unions, the untyped `$value`s), and keeps the built tables alive: the engine points at
-/// them for the methods it did not copy.
+/// [`leaf::patch`] with this batch's [`UNPROMOTED`] parameters.
 fn patch(class: &ClassEntry, methods: &[Method], tables: ArgInfoTables) {
-    for method in methods {
-        let Some(info) = engine::arg_info(class, method.name) else { continue };
-        let (returns, params) = info.split_at_mut(1);
-        if method.name != "__construct" {
-            engine::set_type(&mut returns[0], method.returns);
-        }
-        for ((name, mask, _), param) in method.params.iter().zip(params.iter_mut()) {
-            engine::set_type(param, *mask);
-            // The constructor parameters that declare a property (every one here bar
-            // `Integer`'s `$bits` and `$unsigned`, which are declared on their own).
-            if method.name == "__construct" && !matches!(*name, "bits" | "unsigned") {
-                param.type_.type_mask |= engine::IS_PROMOTED;
-            }
-        }
-    }
-    Box::leak(tables);
-}
-
-/// The class entry stored in `slot` at registration.
-fn stored(slot: &AtomicPtr<ClassEntry>) -> &'static ClassEntry {
-    // SAFETY: set once, in MINIT, to a class entry the engine keeps for the process.
-    unsafe { slot.load(Ordering::Acquire).as_ref().expect("validator class registered") }
-}
-
-/// The method's `$this` (a validator's methods are never static).
-fn this(ex: &mut ExecuteData) -> Option<&'static mut ZendObject> {
-    // SAFETY: the object outlives the call.
-    ex.get_self().map(|object| unsafe { &mut *std::ptr::from_mut(object) })
-}
-
-/// `isValid()`'s one argument, or the `ArgumentCountError` of a call without it.
-fn value_arg(ex: &mut ExecuteData, function: &str) -> Option<&'static mut Zval> {
-    let arg = engine::arg(ex, 0);
-    if arg.is_none() {
-        too_few(ex, function, 0, 1, 1);
-    }
-    arg
-}
-
-fn set_bool(retval: &mut Zval, value: bool) {
-    retval.set_bool(value);
-}
-
-fn set_str(retval: &mut Zval, value: &[u8]) {
-    *retval = string(value);
-}
-
-// The constant answers every class here gives.
-extern "C" fn is_array(_: &mut ExecuteData, retval: &mut Zval) {
-    set_bool(retval, false);
-}
-extern "C" fn type_string(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, b"string");
+    leaf::patch(class, methods, tables, UNPROMOTED);
 }
 
 // Boolean -------------------------------------------------------------------------------
@@ -416,8 +304,6 @@ extern "C" fn numeric_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(value) = value_arg(ex, "Utopia\\Validator\\Numeric::isValid") else { return };
     set_bool(retval, utopia_validators::numeric(input(value)));
 }
-
-const NUMBER: u32 = MAY_BE_LONG | MAY_BE_DOUBLE;
 
 const RANGE_METHODS: &[Method] = &[
     Method {

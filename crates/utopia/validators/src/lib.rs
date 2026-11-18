@@ -77,6 +77,18 @@
 //! [`Integer`], [`Float`], [`Numeric`], [`Range`], [`Port`] and [`HexColor`]
 //! run them, and so does the `utopia` PHP extension (`crates/extension`),
 //! whose classes keep their own state.
+//!
+//! # Text checks
+//!
+//! The [`text`] module does the same for the text validators, on bytes, as
+//! the PHP methods work once they have a string: [`is_blank`],
+//! [`text_length`] and [`text_description`] ([`Text`]), [`identifier`] and
+//! [`identifier_description`] ([`Identifier`]), [`white_list_description`]
+//! ([`WhiteList`]), [`lower`], [`contains`] and [`contains_description`]
+//! ([`Contains`]), [`label`] and [`label_description`] ([`Label`]). Comparing
+//! a value with the PHP values a validator holds (the loose `in_array()` of
+//! `Text`'s allow list and of `WhiteList`) stays with each caller: here
+//! [`Text`] and [`WhiteList`], and the PHP engine in the extension.
 
 #![warn(missing_docs)]
 
@@ -101,7 +113,7 @@ mod network;
 mod primitive;
 pub mod scalar;
 mod string;
-mod text;
+pub mod text;
 
 use std::borrow::Cow;
 use std::sync::Arc;
@@ -118,8 +130,11 @@ pub use scalar::{
     IntegerError, Number, boolean, float, hex_color, number_le, numeric, port, port_host, port_number, range,
     range_description, range_number,
 };
-pub use string::{Contains, Globstar, HexColor, Phone, Wildcard};
-pub use text::{Identifier, Text};
+pub use string::{Contains, Globstar, HexColor, Identifier, Phone, Text, Wildcard};
+pub use text::{
+    LABEL_MAX_LENGTH, ascii_lower, chars, contains, contains_description, identifier, identifier_description, is_blank,
+    label, label_description, lower, text_description, text_length, white_list_description,
+};
 
 pub use serde_json::Value;
 

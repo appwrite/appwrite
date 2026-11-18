@@ -4,7 +4,7 @@
 use php_std::mb;
 use php_std::url::parse_url;
 
-use crate::{Error, Input, Type, Url, Validator, Verdict, is_valid_via_validate};
+use crate::{Error, Input, Type, Url, Validator, Verdict, is_valid_via_validate, text};
 
 /// A host name allowed by a list of names and patterns.
 ///
@@ -128,30 +128,21 @@ impl Label {
     /// The longest label allowed.
     ///
     /// PHP: `Label::MAX_LENGTH`.
-    pub const MAX_LENGTH: usize = 63;
+    pub const MAX_LENGTH: usize = text::LABEL_MAX_LENGTH as usize;
 }
 
 impl Validator for Label {
     /// `Value must be 1 to 63 lowercase letters, digits and hyphens, and must
     /// not start or end with a hyphen.`
     fn description(&self) -> String {
-        format!(
-            "Value must be 1 to {} lowercase letters, digits and hyphens, and must not start or end with a hyphen.",
-            Self::MAX_LENGTH
-        )
+        String::from_utf8_lossy(&text::label_description()).into_owned()
     }
 
     is_valid_via_validate!();
 
     /// Valid for a string that is a DNS label.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
-        Ok(Verdict::of(value.as_str().is_some_and(|s| {
-            !s.is_empty()
-                && s.len() <= Self::MAX_LENGTH
-                && !s.starts_with(b"-")
-                && !s.ends_with(b"-")
-                && s.iter().all(|&b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
-        })))
+        Ok(Verdict::of(value.as_str().is_some_and(text::label)))
     }
 
     /// Expects a string ([`Type::String`]).

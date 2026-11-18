@@ -1,6 +1,6 @@
 [package]
 name = "utopia-validators"
-description = "Request parameter validators with their user-facing messages."
+description = "Request parameter validators with their user-facing messages, and the checks they share with the utopia PHP extension: scalars, text, identifiers, white lists, substrings and DNS labels."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

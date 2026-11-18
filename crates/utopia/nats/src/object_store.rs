@@ -234,7 +234,8 @@ impl ObjectStore {
     /// # Errors
     ///
     /// [`Error::ObjectStore`] (`conflicting concurrent write`) when the
-    /// record moved on; the chunks this write stored are purged first.
+    /// record moved on. The chunks this write stored are purged first, as they
+    /// are when a chunk write fails or the server refuses the meta record.
     ///
     /// PHP: `ObjectStore::writeVersion()` (private).
     pub async fn write_version(
@@ -251,7 +252,15 @@ impl ObjectStore {
         let chunk_subject = format!("$O.{}.C.{nuid}", self.bucket);
         let mut chunks = 0;
         for chunk in data.chunks(CHUNK_SIZE) {
-            self.js.publish(conn, &chunk_subject, chunk, PublishOptions::default(), 0).await?;
+            if let Err(error) = self.js.publish(conn, &chunk_subject, chunk, PublishOptions::default(), 0).await {
+                // The chunks already written sit under a NUID no meta record
+                // names yet, so nothing else could reclaim them: on a bucket
+                // limited by max_bytes they would hold the byte budget forever.
+                // Purging is safe even after an ambiguous failure, unlike at the
+                // meta publish below.
+                self.purge_chunks(conn, &nuid).await;
+                return Err(error);
+            }
             chunks += 1;
         }
         let meta = ObjectMeta {
@@ -273,10 +282,17 @@ impl ObjectStore {
         };
         let body = crate::json::encode(&meta.to_value())?;
         if let Err(error) = self.js.publish(conn, &self.meta_subject(name), body.as_bytes(), options, 0).await {
-            if error.api_err_code() != Some(JetStream::ERR_WRONG_LAST_SEQUENCE) {
+            // A server error is a decoded refusal: the meta record does not
+            // exist, so this write's chunks are orphaned whatever the reason (a
+            // CAS conflict, a bucket at max_bytes). Without one the publish is
+            // ambiguous (it may have landed), and the chunks stay.
+            let Some(code) = error.api_err_code() else {
+                return Err(error);
+            };
+            self.purge_chunks(conn, &nuid).await;
+            if code != JetStream::ERR_WRONG_LAST_SEQUENCE {
                 return Err(error);
             }
-            self.purge_chunks(conn, &nuid).await;
             return Err(Error::ObjectStore(format!("conflicting concurrent write for object: {name}")));
         }
         if let Some(previous) = previous

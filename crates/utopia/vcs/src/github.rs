@@ -791,6 +791,7 @@ impl Adapter for GitHub {
                     ("headCommitUrl", head_commit_url),
                     ("external", Value::Bool(external)),
                     ("pullRequestNumber", or(at(&payload, "number"), "")),
+                    ("pullRequestAuthor", if php::is_array(&user) { or(at(&user, "login"), "") } else { s("") }),
                     ("action", or(at(&payload, "action"), "")),
                 ])])
             }
@@ -801,21 +802,21 @@ impl Adapter for GitHub {
                 let comment = as_array(or(at(&payload, "comment"), Value::Array(Array::new())));
                 let comment_user = as_array(or(at(&comment, "user"), Value::Array(Array::new())));
 
-                let pull_request_number = if event == EVENT_ISSUE_COMMENT {
+                let (pull_request_number, pull_request_user) = if event == EVENT_ISSUE_COMMENT {
                     let issue = as_array(or(at(&payload, "issue"), Value::Array(Array::new())));
                     // Issues and pull requests share the conversation; only pull requests are of interest.
                     if empty(&at(&issue, "pull_request")) {
                         return Ok(Vec::new());
                     }
-                    or(at(&issue, "number"), Value::Int(0))
+                    (or(at(&issue, "number"), Value::Int(0)), or(at(&issue, "user"), Value::Array(Array::new())))
                 } else {
-                    let pull_request = or(at(&payload, "pull_request"), Value::Array(Array::new()));
-                    if php::is_array(&pull_request) {
-                        or(at(&pull_request, "number"), Value::Int(0))
-                    } else {
-                        Value::Int(0)
-                    }
+                    let pull_request = as_array(or(at(&payload, "pull_request"), Value::Array(Array::new())));
+                    (
+                        or(at(&pull_request, "number"), Value::Int(0)),
+                        or(at(&pull_request, "user"), Value::Array(Array::new())),
+                    )
                 };
+                let pull_request_user = as_array(pull_request_user);
                 let int_or_zero = |v: Value| if matches!(v, Value::Int(_)) { v } else { Value::Int(0) };
 
                 let repository_id = or(at(&repository, "id"), "");
@@ -831,6 +832,8 @@ impl Adapter for GitHub {
                     ("owner", or(at(&repository_owner, "login"), "")),
                     ("installationId", installation_id),
                     ("pullRequestNumber", int_or_zero(pull_request_number)),
+                    // Who opened the pull request: the issue's author on a conversation comment.
+                    ("pullRequestAuthor", or(at(&pull_request_user, "login"), "")),
                     ("action", or(at(&payload, "action"), "")),
                     ("commentId", int_or_zero(or(at(&comment, "id"), Value::Int(0)))),
                     ("commentKind", s(if event == EVENT_ISSUE_COMMENT { "issue" } else { "review" })),

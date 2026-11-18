@@ -5,7 +5,7 @@
 
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
-Request parameter validators with their user-facing messages.
+Request parameter validators with their user-facing messages, and the checks they share with the utopia PHP extension: scalars, text, identifiers, white lists, substrings and DNS labels.
 
 This library is maintained by the [Appwrite team](https://appwrite.io).
 
@@ -252,6 +252,8 @@ bin/compat check validators
 
 The utopia PHP extension (`crates/extension`) serves the scalar leaf validators of `packages/validators` (`Boolean`, `Integer`, `FloatValidator`, `Numeric`, `Range`, `Port`, `HexColor`) from this crate's `scalar` module when `_APP_EXTENSION_LIBRARIES` names `validators,validators-scalar`. Each function there is the body of a PHP validator's method over a value as PHP sees it (`scalar::Input`), with the same coercions (`is_numeric()`, `$value + 0`), comparisons and messages; the extension's classes keep their constructors' state and pass it in, and this crate's validators run the same functions. `crates/extension/tests/run.sh` diffs the parity corpus `crates/extension/tests/validators-scalar.php` between the PHP classes and the extension's, and runs `packages/validators/tests` on the extension, in the development image.
 
+The extension serves the text leaf validators (`Text`, `Identifier`, `WhiteList`, `Contains`, `Label`) the same way, from this crate's `text` module, when `_APP_EXTENSION_LIBRARIES` names `validators,validators-text`. Those functions work on bytes, as the PHP methods do once they have a string: the blank check, character counts, identifiers, case folding, substrings, DNS labels and every description. Comparing a value with the PHP values a validator holds (the loose `in_array()` of `Text`'s allow list and of `WhiteList`, `(string)` of a pattern) is left to the PHP engine there; this crate's `Text`, `Identifier`, `WhiteList`, `Contains` and `Label` run the same functions. Its parity corpus is `crates/extension/tests/validators-text.php`.
+
 ```rust
 use utopia_validators::scalar::{Input, Integer};
 use utopia_validators::{Number, range};
@@ -260,6 +262,12 @@ let int8 = Integer::new(8, false).unwrap();
 assert!(int8.accepts(true, Input::Str(b" 127 ")));
 assert!(!int8.accepts(true, Input::Float(1.0)));
 assert!(range(Number::Int(1), Number::Int(10), b"integer", Input::Str(b"5")));
+
+use utopia_validators::text::{identifier, label, text_description};
+
+assert!(identifier(b"_user1"));
+assert!(!label(b"-api"));
+assert_eq!(text_description(10, 1, None, true), b"Value must be a valid string and at least 1 chars and no longer than 10 chars and not be blank");
 ```
 
 ### Benchmark

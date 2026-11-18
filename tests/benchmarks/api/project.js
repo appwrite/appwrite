@@ -298,6 +298,12 @@ const bench = define({
         { name: 'project.variables.delete', route: 'DELETE /v1/project/variables/:variableId', run: (api) => api.call('DELETE', `/project/variables/${variable(api)}`, null, [204]) },
     ],
     skipped: [
+        { skipped: 'PATCH /v1/project/oauth2/atlassian', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'PATCH /v1/project/oauth2/line', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'PATCH /v1/project/oauth2/linear', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'PATCH /v1/project/oauth2/railway', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'PATCH /v1/project/oauth2/reddit', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'PATCH /v1/project/oauth2/roblox', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
         { skipped: 'PATCH /v1/project/oauth2/vercel', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
         { skipped: 'PATCH /v1/project/oauth2/workos', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
         { skipped: 'GET /v1/project/videos/profiles', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },

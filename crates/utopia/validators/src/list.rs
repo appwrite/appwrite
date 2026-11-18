@@ -6,7 +6,7 @@ use php_std::string::strtolower;
 use php_std::{Str, Value};
 
 use crate::input::{View, loose_str_eq};
-use crate::{Error, Input, Type, Validator, Verdict, is_valid_via_validate};
+use crate::{Error, Input, Type, Validator, Verdict, is_valid_via_validate, text};
 
 /// A value that is one of a list of allowed values.
 ///
@@ -80,12 +80,9 @@ fn identical(a: Input<'_>, b: Input<'_>) -> bool {
 impl Validator for WhiteList {
     /// Lists the allowed values: `Value must be one of (a, b, c)`.
     fn description(&self) -> String {
-        let items: Vec<String> = self
-            .list
-            .iter()
-            .map(|v| String::from_utf8_lossy(&Input::Value(v).to_bytes().unwrap_or_default()).into_owned())
-            .collect();
-        format!("Value must be one of ({})", items.join(", "))
+        let items: Vec<Vec<u8>> =
+            self.list.iter().map(|v| Input::Value(v).to_bytes().map(Cow::into_owned).unwrap_or_default()).collect();
+        String::from_utf8_lossy(&text::white_list_description(&items.join(&b", "[..]))).into_owned()
     }
 
     /// The description, or [`Error::Engine`] for a strict list holding an object, which cannot be described.
