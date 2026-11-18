@@ -81,6 +81,8 @@ class Delete extends Action
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
+        // The placeholder becomes the team's own photo, the way it does for a user
+        $photo = (new Fallback())->render(self::RESOLUTION, self::RESOLUTION);
 
         $response->noContent();
     }
