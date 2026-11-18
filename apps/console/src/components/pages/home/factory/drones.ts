@@ -10,7 +10,6 @@ import {
   Mesh,
   MeshBasicMaterial,
   PlaneGeometry,
-  SRGBColorSpace,
   TorusGeometry,
   Vector3,
   type BufferGeometry,
@@ -202,7 +201,6 @@ export class DroneFleet {
     canvas.width = 384 * MODELS.length
     canvas.height = 240
     this.marks = new CanvasTexture(canvas)
-    this.marks.colorSpace = SRGBColorSpace
     this.marks.minFilter = LinearMipmapLinearFilter
     this.marks.magFilter = LinearFilter
     drawMarks(canvas, [], label, rtl)

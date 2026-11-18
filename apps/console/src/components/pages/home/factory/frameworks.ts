@@ -47,7 +47,6 @@ export function getProductFramework(index: number, kind: ProductKind): number {
 }
 
 function finish(texture: CanvasTexture) {
-  texture.colorSpace = SRGBColorSpace
   texture.generateMipmaps = true
   texture.minFilter = LinearMipmapLinearFilter
   texture.magFilter = LinearFilter
@@ -144,7 +143,10 @@ export function createFrameworkAtlas(
       )
     })
   }
-  return finish(new CanvasTexture(canvas))
+  // Drawn and uploaded once, so it can be an sRGB texture (unlike the displays).
+  const texture = finish(new CanvasTexture(canvas))
+  texture.colorSpace = SRGBColorSpace
+  return texture
 }
 
 const LCD = { width: 2048, height: 448, segments: 12 } as const

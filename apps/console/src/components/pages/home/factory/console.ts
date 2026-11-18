@@ -2,7 +2,6 @@ import {
   CanvasTexture,
   LinearFilter,
   LinearMipmapLinearFilter,
-  SRGBColorSpace,
   Vector2,
   type WebGLRenderer,
 } from 'three'
@@ -94,7 +93,6 @@ export class ConsoleDisplay {
     this.canvas.height = CANVAS.height
     this.context = this.canvas.getContext('2d', { willReadFrequently: false })
     this.texture = new CanvasTexture(this.canvas)
-    this.texture.colorSpace = SRGBColorSpace
     this.texture.generateMipmaps = true
     this.texture.minFilter = LinearMipmapLinearFilter
     this.texture.magFilter = LinearFilter
