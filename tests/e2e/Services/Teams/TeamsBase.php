@@ -596,6 +596,8 @@ trait TeamsBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
+        $uploaded = $this->client->call(Client::METHOD_GET, '/teams/' . $team['teamUid'] . '/photo', $headers)['body'];
+
         /**
          * Test for SUCCESS
          */
@@ -607,6 +609,7 @@ trait TeamsBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotSame($initials, $response['body']);
+        $this->assertNotSame($uploaded, $response['body']);
 
         /**
          * Test for FAILURE
