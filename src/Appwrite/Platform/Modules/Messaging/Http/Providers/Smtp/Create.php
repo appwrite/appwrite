@@ -95,6 +95,9 @@ class Create extends Action
             ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name.', true)
             ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email.', true)
             ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+            ->param('clientId', '', new Text(0), 'Microsoft Entra ID (Azure AD) application (client) ID for OAuth 2.0 authentication.', true)
+            ->param('clientSecret', '', new PasswordFormat(new Text(0)), 'Microsoft Entra ID (Azure AD) client secret for OAuth 2.0 authentication.', true)
+            ->param('tenantId', '', new Text(0), 'Microsoft Entra ID (Azure AD) directory (tenant) ID for OAuth 2.0 authentication.', true)
             ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('response')
@@ -102,7 +105,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $providerId, string $name, string $host, int $port, string $username, string $password, string $encryption, bool $autoTLS, string $mailer, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response, PublicHostname $publicHostname)
+    public function action(string $providerId, string $name, string $host, int $port, string $username, string $password, string $encryption, bool $autoTLS, string $mailer, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, string $clientId, string $clientSecret, string $tenantId, Event $queueForEvents, Database $dbForProject, Response $response, PublicHostname $publicHostname)
     {
         // Workers dial the host later and check it again there; one that does not resolve yet is kept.
         $hostname = new Host($publicHostname, resolved: false);
@@ -112,10 +115,18 @@ class Create extends Action
 
         $providerId = $providerId == 'unique()' ? Id::unique() : $providerId;
 
+        $hasOAuth = $clientId !== '' || $clientSecret !== '' || $tenantId !== '';
+        if ($hasOAuth && ($username === '' || $clientId === '' || $clientSecret === '' || $tenantId === '')) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'OAuth 2.0 authentication requires username, clientId, clientSecret, and tenantId.');
+        }
+
         $credentials = [
             'port' => $port,
             'username' => $username,
             'password' => $password,
+            'clientId' => $clientId,
+            'clientSecret' => $clientSecret,
+            'tenantId' => $tenantId,
         ];
 
         if (!empty($host)) {

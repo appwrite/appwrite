@@ -2498,7 +2498,10 @@
             "fromEmail",
             "replyToName",
             "replyToEmail",
-            "enabled"
+            "enabled",
+            "clientId",
+            "clientSecret",
+            "tenantId"
         ],
         "messaging.createSendgridProvider": [
             "providerId",
@@ -2545,7 +2548,10 @@
             "fromEmail",
             "replyToName",
             "replyToEmail",
-            "enabled"
+            "enabled",
+            "clientId",
+            "clientSecret",
+            "tenantId"
         ],
         "messaging.createSubscriber": [
             "topicId",
@@ -2775,7 +2781,10 @@
             "fromEmail",
             "replyToName",
             "replyToEmail",
-            "enabled"
+            "enabled",
+            "clientId",
+            "clientSecret",
+            "tenantId"
         ],
         "messaging.updateSendgridProvider": [
             "providerId",
@@ -2822,7 +2831,10 @@
             "fromEmail",
             "replyToName",
             "replyToEmail",
-            "enabled"
+            "enabled",
+            "clientId",
+            "clientSecret",
+            "tenantId"
         ],
         "messaging.updateTelesignProvider": [
             "providerId",
@@ -6926,7 +6938,10 @@
             "fromEmail",
             "replyToName",
             "replyToEmail",
-            "enabled"
+            "enabled",
+            "clientId",
+            "clientSecret",
+            "tenantId"
         ],
         "messaging.createSendgridProvider": [
             "providerId",
@@ -6973,7 +6988,10 @@
             "fromEmail",
             "replyToName",
             "replyToEmail",
-            "enabled"
+            "enabled",
+            "clientId",
+            "clientSecret",
+            "tenantId"
         ],
         "messaging.createSubscriber": [
             "topicId",
@@ -7203,7 +7221,10 @@
             "fromEmail",
             "replyToName",
             "replyToEmail",
-            "enabled"
+            "enabled",
+            "clientId",
+            "clientSecret",
+            "tenantId"
         ],
         "messaging.updateSendgridProvider": [
             "providerId",
@@ -7250,7 +7271,10 @@
             "fromEmail",
             "replyToName",
             "replyToEmail",
-            "enabled"
+            "enabled",
+            "clientId",
+            "clientSecret",
+            "tenantId"
         ],
         "messaging.updateTelesignProvider": [
             "providerId",
