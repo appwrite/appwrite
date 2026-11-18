@@ -34,8 +34,8 @@ _APP_EXTENSION_LIBRARIES=<package>,<package>   # those packages' classes from th
 
 A package ported in batches has one switch per batch, `<package>-<batch>`, which needs the
 package's own: `validators,validators-scalar` registers the validators' base and the scalar leaf
-validators, `validators,validators-text` the base and the text ones, `validators` alone only the
-base.
+validators, `validators,validators-text` the base and the text ones, `validators,validators-network`
+the base and the network ones, `validators` alone only the base.
 
 The extension reads it once, when PHP loads the module, so changing it takes a restart and no
 deploy. Each library is canaried on Cloud this way before it becomes the default.
@@ -263,6 +263,46 @@ child process, the declarations the engine checks against them. It asserts one k
 
 A warning PHP raises inside a method (`Array to string conversion`) names the caller's file and line,
 since the class has no PHP source.
+
+## Utopia\Validator's network validators
+
+`_APP_EXTENSION_LIBRARIES=validators,validators-network` also registers `Hostname`, `Domain` (the
+validator, not `Utopia\Domains\Domain`), `Host`, `IP`, `URL` and `Phone` over
+`crates/utopia/validators`. Outside the package, Appwrite's `Network\Validator\PublicURL` extends
+`URL`: it calls `parent::__construct()`, `parent::isValid()` and `parent::getDescription()`, and
+works unchanged on either implementation.
+
+`src/validators/network.rs` builds them by hand like the scalar and text batches, with their state
+in real typed protected properties (`IP`'s `$type` declared in the class body, the rest promoted),
+read in PHP's order; `Domain::createRestriction()` and `Phone::normalize()` are static methods, and
+`URL::isPrivateUseSchemeURI()` stays private (a subclass's method of that name does not replace it).
+`filter_var()` (`FILTER_VALIDATE_URL`, `IP` and `DOMAIN`), `parse_url()` and
+`Uri\Rfc3986\Uri::parse()` run as `php-std`'s ports of PHP 8.5's; a value that is not a string
+reaches `filter_var()` as PHP converts it (a `Stringable` once per conversion, which the corpus
+counts; `NAN` with its warning). What PHP does with the values a validator holds goes through the
+engine: `Domain`'s restrictions (`zend_fetch_dimension_const` for `$restriction['key']`, with its
+`Undefined array key` and `Trying to access array offset` warnings, its errors and `ArrayAccess`;
+`add_function` for `$levels + 1` and the strict `explode()` limit's `TypeError`; `foreach` over an
+array, a `Traversable`, an object's visible properties, or its warning), `(string)` casts, and a
+`Hostname` allow-list entry that is not a string (`str_starts_with()` and `substr()` called as
+`Hostname.php`, without strict types, calls them).
+
+`crates/extension/tests/validators-network.php` prints a corpus that must be identical on both
+implementations (18,599 lines): each class's reflection; 95 validators from every constructor over
+arguments of every kind PHP converts or rejects (malformed `Domain` restrictions included) and
+strict types (in a child process); the getters and `isValid()` over 179 values (hostnames at the 63
+and 253 limits, IDN and punycode, wildcards and underscores; IPv4 and IPv6 forms with embedded IPv4,
+zone ids, leading zeros, octal and hex look-alikes; URLs with every scheme, user info, port, IPv6
+host, fragment, query and IRI oddity, private-use schemes; phone numbers in every format and with a
+trailing newline; bytes that are not UTF-8, arrays, objects, `Stringable`, a throwing
+`__toString()`, an enum); the static methods; the private helper through reflection; how often each
+validator converts a `Stringable`; dumps, copies, comparisons and serialization; Appwrite's
+`PublicURL`; PHP subclasses writing every protected property or skipping the parent constructor;
+and, from a child process, the declarations the engine checks against them. It asserts one known
+difference:
+
+- `Phone` runs its regular expressions without PHP's `preg_*` functions, so `isValid()` and
+  `normalize()` leave `preg_last_error()` as it was.
 
 ## Benchmarks
 
