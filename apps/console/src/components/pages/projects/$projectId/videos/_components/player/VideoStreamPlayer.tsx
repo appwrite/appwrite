@@ -74,6 +74,8 @@ export interface VideoStreamPlayerProps {
 const COMPACT_PLAYER_HEIGHT = 72
 /** Docked strip: the player plus its `py-2` padding and bottom border. */
 const DOCKED_STRIP_HEIGHT = COMPACT_PLAYER_HEIGHT + 16 + 1
+/** Caption offset from the bottom of the docked picture. */
+const COMPACT_SUBTITLE_INSET_PX = 4
 /** Scrolling back this far above the docking point undocks the player. */
 const UNDOCK_SLACK_PX = 16
 
@@ -301,13 +303,18 @@ export function VideoStreamPlayer({
     streamAccess,
   )
 
+  // While the visitor stream is refused and the Console retry is about to
+  // start, keep the video mounted and show no error.
+  const memberRetryPending =
+    embed &&
+    embedAccess === 'end-user' &&
+    (state.fatalStatus === 401 ||
+      state.fatalStatus === 403 ||
+      state.fatalStatus === 404)
+
   useEffect(() => {
-    if (!embed || embedAccess !== 'end-user') return
-    const status = state.fatalStatus
-    if (status === 401 || status === 403 || status === 404) {
-      setEmbedAccess('console')
-    }
-  }, [embed, embedAccess, state.fatalStatus])
+    if (memberRetryPending) setEmbedAccess('console')
+  }, [memberRetryPending])
 
   useEffect(() => {
     if (state.firstFrameAt != null || state.fatalError) setReloading(false)
@@ -685,6 +692,11 @@ export function VideoStreamPlayer({
   const menuOnlyAdvanced = true
 
   useEffect(() => {
+    // Docked, the controls sit beside the picture: captions keep to the edge.
+    if (compact) {
+      setSubtitleInsetPx(COMPACT_SUBTITLE_INSET_PX)
+      return
+    }
     const node = controlsRef.current
     if (!node) {
       setSubtitleInsetPx(72)
@@ -707,7 +719,7 @@ export function VideoStreamPlayer({
     const ro = new ResizeObserver(measure)
     ro.observe(node)
     return () => ro.disconnect()
-  }, [embed, fullscreen, state.fatalError])
+  }, [embed, fullscreen, state.fatalError, compact])
 
   const videoSubtitleStyle = useMemo(
     (): CSSProperties =>
@@ -803,7 +815,7 @@ export function VideoStreamPlayer({
         {emptyPlaybackMessage}
       </p>
     </div>
-  ) : state.fatalError ? (
+  ) : state.fatalError && !memberRetryPending ? (
     <div className="absolute inset-0 flex items-center justify-center bg-black/70 px-6 text-center">
       <p className="max-w-md text-[13px] text-white/80">
         {isEmbedUnauthorizedMessage(state.fatalError)
@@ -813,7 +825,11 @@ export function VideoStreamPlayer({
     </div>
   ) : null
 
-  if (embed && isEmbedUnauthorizedMessage(state.fatalError)) {
+  if (
+    embed &&
+    !memberRetryPending &&
+    isEmbedUnauthorizedMessage(state.fatalError)
+  ) {
     return <EmbedUnauthorized className="h-full" />
   }
 

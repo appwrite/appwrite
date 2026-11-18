@@ -258,6 +258,28 @@ export function useHlsPlayer(
     }
     video.addEventListener('loadeddata', onFirstFrame)
 
+    // Native playback reports no HTTP status. On a failure, ask for the
+    // manifest once more to learn whether it was refused (a private video).
+    const manifestUrl = applyVideoStreamAccess(src, access)
+    const onNativeError = () => {
+      void fetch(manifestUrl, { credentials: 'include' })
+        .then((response) => (response.ok ? null : response.status))
+        .catch(() => null)
+        .then((status) => {
+          if (cancelled) return
+          setState((prev) => ({
+            ...prev,
+            fatalError: playbackFatalMessage(
+              status ?? undefined,
+              status
+                ? `The stream could not be loaded (HTTP ${status}).`
+                : 'The stream could not be played.',
+            ),
+            fatalStatus: status,
+          }))
+        })
+    }
+
     if (sourceType === 'file') {
       video.src = applyVideoStreamAccess(src, access)
       setState((prev) => ({ ...prev, engine: 'native' }))
@@ -274,7 +296,8 @@ export function useHlsPlayer(
 
       if (!HlsClass.isSupported()) {
         if (video.canPlayType('application/vnd.apple.mpegurl')) {
-          video.src = applyVideoStreamAccess(src, access)
+          video.addEventListener('error', onNativeError)
+          video.src = manifestUrl
           setState((prev) => ({ ...prev, engine: 'native' }))
           pushEvent({
             kind: 'warning',
@@ -413,6 +436,7 @@ export function useHlsPlayer(
     return () => {
       cancelled = true
       video.removeEventListener('loadeddata', onFirstFrame)
+      video.removeEventListener('error', onNativeError)
       hls?.destroy()
       hlsRef.current = null
       video.removeAttribute('src')

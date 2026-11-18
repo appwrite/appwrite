@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import type { Locator, Page, Request, Route } from '@playwright/test'
 import type { Models } from '@appwrite.io/console'
 import { expect, test } from './fixtures'
@@ -196,11 +197,22 @@ thumbnails/${THUMBNAIL_ID}?project=${PROJECT_ID}#xywh=0,0,160,90
 thumbnails/${THUMBNAIL_ID}?project=${PROJECT_ID}#xywh=160,0,160,90
 `
 
-/** 1×1 PNG. */
-const THUMBNAIL = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg==',
-  'base64',
-)
+/** Files under `fixtures/videos`, made with ffmpeg. */
+const fixture = (name: string) =>
+  readFileSync(new URL(`./fixtures/videos/${name}`, import.meta.url))
+
+/** 320×90 sprite sheet: a red frame, then a blue frame (the two cues). */
+const THUMBNAIL = fixture('sprite.png')
+
+/** One second of 96×54 VP9 in fMP4 HLS (the test browser has no H.264). */
+const STREAM: Record<string, { body: Buffer; type: string }> = {
+  'master.m3u8': {
+    body: fixture('stream.m3u8'),
+    type: 'application/vnd.apple.mpegurl',
+  },
+  'init.mp4': { body: fixture('init.mp4'), type: 'video/mp4' },
+  'segment0.m4s': { body: fixture('segment0.m4s'), type: 'video/iso.segment' },
+}
 
 function corsHeaders(route: Route): Record<string, string> {
   const request = route.request()
@@ -234,6 +246,7 @@ async function mockAppwriteApi(
   video: Models.Video = VIDEO,
   renditions: Models.VideoRendition[] = RENDITIONS,
   profiles: Models.VideoProfile[] = PROFILES,
+  servePlayableStream = false,
 ): Promise<Calls> {
   const profileStore = [...profiles]
   const localOrigin = new URL(String(test.info().project.use.baseURL)).origin
@@ -338,7 +351,16 @@ async function mockAppwriteApi(
           version: '1.0',
         })
       }
-      // Leave Console manifests pending: the player stays loading, with controls.
+      // Members get a real stream for the private-video player page; other
+      // pages leave it pending so the player stays loading, with controls.
+      const file = STREAM[url.pathname.split('/').pop() ?? '']
+      if (file && servePlayableStream) {
+        return route.fulfill({
+          status: 200,
+          headers: { ...headers, 'content-type': file.type },
+          body: file.body,
+        })
+      }
       return
     }
     if (apiPath === '/account') return json(200, ACCOUNT)
@@ -465,6 +487,14 @@ test.describe('videos (mocked API)', () => {
     expect(calls.profileCreates[0].postDataJSON()).toMatchObject({
       codec: 'vp9',
     })
+    // The saved profile is listed under its codec once the dialog closes.
+    await expect(dialog).toBeHidden()
+    const created = String(calls.profileCreates[0].postDataJSON().name)
+    await expect(
+      page
+        .getByRole('row', { name: new RegExp(`Select profile ${created}`) })
+        .filter({ has: page.getByRole('cell', { name: 'vp9', exact: true }) }),
+    ).toBeVisible()
   })
 
   test('creates several preset profiles at once', async ({ page }) => {
@@ -578,7 +608,7 @@ test.describe('videos (mocked API)', () => {
     page,
   }) => {
     await enableVideos(page)
-    const calls = await mockAppwriteApi(page)
+    const calls = await mockAppwriteApi(page, VIDEO, RENDITIONS, PROFILES, true)
     await page.goto(`/player/${VIDEO_ID}?project=${PROJECT_ID}`, {
       waitUntil: 'domcontentloaded',
     })
@@ -593,6 +623,14 @@ test.describe('videos (mocked API)', () => {
       calls.manifests.some((url) => url.searchParams.get('mode') === 'admin'),
     ).toBe(true)
     await expect(page.getByText(/manifestLoadError/)).toHaveCount(0)
+    // The Console stream actually plays.
+    await expect
+      .poll(() =>
+        page
+          .locator('video')
+          .evaluate((video: HTMLVideoElement) => video.readyState),
+      )
+      .toBeGreaterThanOrEqual(2)
     await page.screenshot({
       path: test.info().outputPath('videos-player-private.png'),
     })
@@ -675,6 +713,39 @@ test.describe('videos (mocked API)', () => {
     await expect.poll(() => calls.thumbnails.length).toBeGreaterThan(0)
     expect(calls.thumbnails[0].searchParams.get('project')).toBe(PROJECT_ID)
     await expect(page.getByText('Set as preview')).toHaveCount(0)
+
+    // Each thumbnail shows its own frame of the sheet: red, then blue.
+    const frames = page.locator(
+      '[data-cue-index] [style*="background-position"]',
+    )
+    await expect(frames).toHaveCount(2)
+    const colors = await frames.evaluateAll(async (nodes) => {
+      const style = getComputedStyle(nodes[0])
+      const src = style.backgroundImage.slice(5, -2)
+      const image = new Image()
+      image.crossOrigin = 'anonymous'
+      image.src = src
+      await image.decode()
+      const canvas = document.createElement('canvas')
+      canvas.width = image.naturalWidth
+      canvas.height = image.naturalHeight
+      const context = canvas.getContext('2d')!
+      context.drawImage(image, 0, 0)
+      return nodes.map((node) => {
+        const box = getComputedStyle(node)
+        const [x, y] = box.backgroundPosition
+          .split(' ')
+          .map((value) => -parseFloat(value))
+        const [r, , b] = context.getImageData(
+          x + parseFloat(box.width) / 2,
+          y + parseFloat(box.height) / 2,
+          1,
+          1,
+        ).data
+        return r > b ? 'red' : 'blue'
+      })
+    })
+    expect(colors).toEqual(['red', 'blue'])
 
     await screenshot(page, 'videos-timeline.png')
   })

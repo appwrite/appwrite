@@ -7,6 +7,7 @@
  * `@/lib/realtime/video-cache`.
  */
 
+import { useEffect, useRef } from 'react'
 import {
   queryOptions,
   useMutation,
@@ -217,15 +218,25 @@ export async function fetchVideoProfiles(
     ? codecs.map((codec) => codec.$id as VideoCodec)
     : [VideoCodec.H264]
   const project = sdk.forProject(projectId).project
-  const lists = await Promise.all(
-    ids.map((codec) =>
-      project.listVideoProfiles({
+  // Page through each codec: the pickers and the profiles page list them all.
+  const listCodec = async (codec: VideoCodec) => {
+    const profiles: Models.VideoProfile[] = []
+    for (;;) {
+      const page = await project.listVideoProfiles({
         codec,
-        queries: [Query.limit(VIDEO_PROFILES_LIMIT)],
-      }),
-    ),
-  )
-  const profiles = lists.flatMap((list) => list.profiles ?? [])
+        queries: [
+          Query.limit(VIDEO_PROFILES_LIMIT),
+          Query.offset(profiles.length),
+        ],
+      })
+      const batch = page.profiles ?? []
+      profiles.push(...batch)
+      if (batch.length < VIDEO_PROFILES_LIMIT || profiles.length >= page.total)
+        return profiles
+    }
+  }
+  const lists = await Promise.all(ids.map(listCodec))
+  const profiles = lists.flat()
   return { total: profiles.length, profiles }
 }
 
@@ -470,6 +481,19 @@ export function useVideoTimeline(
     enabled:
       !!projectId && !!videoId && !!video && canFetchVideoTimeline(video),
   })
+  // A timeline cached as missing while it was generating is stale once the
+  // video reports it ready (realtime may be down, so polling sees it first).
+  const queryClient = useQueryClient()
+  const previousState = useRef(state)
+  useEffect(() => {
+    const before = previousState.current
+    previousState.current = state
+    if (state === 'ready' && before === 'processing') {
+      void queryClient.invalidateQueries({
+        queryKey: videoKeys.timeline(projectId, videoId),
+      })
+    }
+  }, [state, queryClient, projectId, videoId])
   return {
     ...query,
     state,
