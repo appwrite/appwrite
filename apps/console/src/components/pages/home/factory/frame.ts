@@ -21,15 +21,11 @@ export type FrameState = {
   /** Real shadow maps are on, so fake contact blobs can step back. */
   realShadows: boolean
   /**
-   * Per station, how its unfolded display fits around the page copy laid
-   * over the scene: how much of the mast to raise, and whether the open
-   * display still covers the copy (which then steps back while it is open).
+   * How far every display's mast rises (0 → 1): one height for all, so no
+   * open display meets the page copy laid over the scene.
    */
-  fits: DisplayFit[]
+  lift: number
 }
-
-/** See `FrameState.fits`. */
-export type DisplayFit = { lift: number; covers: boolean }
 
 const POWER_ORDER = Array.from({ length: STATION_COUNT }, (_, index) => index)
   .sort((a, b) => STATION_DELAY[a]! - STATION_DELAY[b]!)

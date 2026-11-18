@@ -384,7 +384,8 @@ const storage: Builder = (shop) => {
 
   const hit = STATION_HIT.storage
   const feed = feedZ - TRACK_Z
-  const cruise = REST - 0.05
+  // High enough to carry the tile over an open laptop's lid.
+  const cruise = REST - 0.01
 
   return {
     group: axis.group,

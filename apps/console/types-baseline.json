@@ -220,8 +220,7 @@
     "TS2322: Type '(theme: \"light-plain\" | \"dark-plain\" | \"dark-glow\" | \"dark-mono\") => void' is not assignable to type '(theme: \"light\" | \"dark\" | \"light-grid\" | \"dark-grid\" | \"light-aurora\" | \"dark-aurora\" | \"light-beam\" | \"dark-beam\" | \"light-plain\" | \"dark-plain\" | \"dark-glow\" | \"dark-mono\") => void'.": 2
   },
   "src/components/pages/home/NetworkGlobeMount.tsx": {
-    "TS2322: Type 'Promise<{ default: unknown; }>' is not assignable to type 'Promise<{ default: ComponentType<any>; }>'.": 1,
-    "TS2339: Property 'setTimeout' does not exist on type 'never'.": 1
+    "TS2322: Type 'Promise<{ default: unknown; }>' is not assignable to type 'Promise<{ default: ComponentType<any>; }>'.": 1
   },
   "src/components/pages/home/product-bento/FunctionsProductVisual.tsx": {
     "TS2305: Module '\"lucide-react\"' has no exported member 'CSSProperties'.": 1
