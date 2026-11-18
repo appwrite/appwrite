@@ -83,6 +83,11 @@ class Delete extends Action
 
         // The placeholder becomes the team's own photo, the way it does for a user
         $photo = (new Fallback())->render(self::RESOLUTION, self::RESOLUTION);
+        $photoId = Id::unique();
+        $path = $deviceForFiles->getPath(APP_STORAGE_TEAM_PHOTOS . '/' . $teamId . '/' . $photoId);
+
+        $deviceForFiles->upload(new Stream($photo), $path, 'image/png');
+
 
         $response->noContent();
     }
