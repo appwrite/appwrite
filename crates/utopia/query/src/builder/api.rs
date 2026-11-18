@@ -9,6 +9,7 @@ use crate::builder::core::{
     AfterBuild, Builder, Dialect, ExistsSubquery, ExplainOptions, LateralJoin, SubSelect, WhereInSubquery,
 };
 use crate::builder::join::JoinBuilder;
+use crate::builder::steps::{Arg, Step};
 use crate::builder::types::{
     CteClause, Executor, JoinType, Statement, UnionClause, UnionType, WindowDefinition, WindowFrame, WindowSelect,
 };
@@ -814,7 +815,7 @@ impl<D: Dialect> Builder<D> {
 
 impl<D: Dialect> Compiler for Builder<D> {
     fn compile_filter(&mut self, query: &Query) -> Result<String> {
-        D::compile_filter(self, query)
+        self.step_string(Step::CompileFilter, &[Arg::Query(query)])
     }
 
     fn compile_order(&mut self, query: &Query) -> Result<String> {

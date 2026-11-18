@@ -31,6 +31,7 @@ use std::sync::Arc;
 use php_std::pcre::{StrOrArray, preg_replace};
 
 use crate::builder::core::{Builder, Dialect};
+use crate::builder::steps::{Arg, Step};
 use crate::builder::types::{Condition, Statement};
 use crate::error::{Error, Result};
 use crate::hook::Hook;
@@ -246,7 +247,7 @@ impl<D: Dialect> Builder<D> {
         self.core.resolved.clear();
         let mut expressions = Vec::with_capacity(filters.len());
         for filter in filters {
-            expressions.push(D::compile_filter(self, filter)?);
+            expressions.push(self.step_string(Step::CompileFilter, &[Arg::Query(filter)])?);
         }
         Ok(Condition::new(expressions.join(" AND "), self.binding_values()))
     }

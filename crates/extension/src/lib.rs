@@ -97,6 +97,12 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     } else {
         module
     };
+    // The builders are a batch of their own while they are being moved.
+    let module = if enabled("query") && enabled("query-builders") {
+        module.class::<query::builder::MySqlBuilder>()
+    } else {
+        module
+    };
     module.request_shutdown_function(request_shutdown)
 }
 
@@ -131,5 +137,6 @@ extern "C" fn request_shutdown(kind: i32, module: i32) -> i32 {
     query::value::request_shutdown();
     query::ast::request_shutdown();
     query::schema::request_shutdown();
+    query::builder::request_shutdown();
     locale::request_shutdown(kind, module)
 }

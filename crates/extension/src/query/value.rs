@@ -593,6 +593,16 @@ fn query_of(zval: &Zval) -> Option<&ZendClassObject<Query>> {
     ZendClassObject::<Query>::from_zend_obj(object)
 }
 
+/// What a query holds, for the builders to read: its method, attribute, values, alias,
+/// attribute type and whether it is on an array.
+pub(super) type Parts<'a> = (Method, &'a [u8], &'a Zval, &'a [u8], &'a [u8], bool);
+
+/// The parts of the query behind `zval`, when it is one.
+pub(super) fn parts(zval: &Zval) -> Option<Parts<'_>> {
+    let query = query_of(zval)?;
+    Some((query.method, &query.attribute, &query.values, &query.alias, &query.attribute_type, query.on_array))
+}
+
 /// `Utopia\Query\NativeQuery`: the state and methods of `Utopia\Query\Query`.
 ///
 /// Not `Default`: with it, ext-php-rs 0.16.5 makes `new` of a PHP subclass an object of this

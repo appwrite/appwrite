@@ -11,6 +11,7 @@ use php_std::json::Flags;
 use crate::builder::AnyBuilder;
 use crate::builder::case::{CaseExpression, Kind as CaseKind, WhenClause};
 use crate::builder::join::JoinBuilder;
+use crate::builder::steps::{Arg, Step};
 use crate::builder::types::{
     Binding, ColumnPredicate, Condition, CteClause, Executor, JoinType, LockMode, Statement, UnionClause,
     WindowDefinition, WindowSelect,
@@ -164,6 +165,7 @@ pub struct Core {
     pub(crate) flavor: crate::builder::flavor::Flavor,
     pub(crate) scope: Option<crate::builder::flavor::ScopeState>,
     pub(crate) deferred: Option<Error>,
+    pub(crate) overrides: Option<Arc<dyn crate::builder::Overrides>>,
 }
 
 /// A query builder for one dialect: from a table, with queries (filters,
@@ -418,6 +420,16 @@ impl<D: Dialect> Builder<D> {
     }
 
     pub(crate) fn add_binding(&mut self, value: Value, column: Option<&str>) {
+        if self.core.overrides.is_none() {
+            return self.base_add_binding(value, column);
+        }
+        // An override that fails has nowhere to say so here: the build it is part of does.
+        if let Err(error) = self.step(Step::AddBinding, &[Arg::Value(&value), Arg::MaybeStr(column)]) {
+            self.core.deferred.get_or_insert(error);
+        }
+    }
+
+    pub(crate) fn base_add_binding(&mut self, value: Value, column: Option<&str>) {
         self.core.bindings.push(Binding::new(value, column.map(str::to_owned)));
     }
 
@@ -736,7 +748,7 @@ impl<D: Dialect> Builder<D> {
     fn build_where_clause(&mut self, grouped: &ParsedQuery, join_filter_where: Vec<Condition>) -> Result<String> {
         let mut clauses = Vec::new();
         for filter in &grouped.filters {
-            clauses.push(D::compile_filter(self, filter)?);
+            clauses.push(self.step_string(Step::CompileFilter, &[Arg::Query(filter)])?);
         }
         let table = if self.core.alias.is_empty() { self.core.table.clone() } else { self.core.alias.clone() };
         for hook in self.core.filter_hooks.clone() {
@@ -819,7 +831,7 @@ impl<D: Dialect> Builder<D> {
                 let sub = query_value(value, "compileFilter")?;
                 match alias_to_expression.iter().find(|(alias, _)| alias == sub.attribute()) {
                     Some((_, expression)) => clauses.push(self.compile_having_condition(sub, expression)?),
-                    None => clauses.push(D::compile_filter(self, sub)?),
+                    None => clauses.push(self.step_string(Step::CompileFilter, &[Arg::Query(sub)])?),
                 }
             }
         }
@@ -1024,7 +1036,7 @@ impl<D: Dialect> Builder<D> {
         };
         let mut clauses = Vec::new();
         for filter in &grouped.filters {
-            clauses.push(D::compile_filter(self, filter)?);
+            clauses.push(self.step_string(Step::CompileFilter, &[Arg::Query(filter)])?);
         }
         let table = if self.core.alias.is_empty() { self.core.table.clone() } else { self.core.alias.clone() };
         for hook in self.core.filter_hooks.clone() {
@@ -1408,10 +1420,50 @@ impl<D: Dialect> Builder<D> {
             GreaterThanEqual => Ok(self.compile_comparison(&attribute, ">=", values, column)),
             Between => Ok(self.compile_between(&attribute, values, false, column)),
             NotBetween => Ok(self.compile_between(&attribute, values, true, column)),
-            StartsWith => D::compile_like(self, &attribute, values, "", "%", false, column),
-            NotStartsWith => D::compile_like(self, &attribute, values, "", "%", true, column),
-            EndsWith => D::compile_like(self, &attribute, values, "%", "", false, column),
-            NotEndsWith => D::compile_like(self, &attribute, values, "%", "", true, column),
+            StartsWith => self.step_string(
+                Step::CompileLike,
+                &[
+                    Arg::Str(&attribute),
+                    Arg::Values(values),
+                    Arg::Str(""),
+                    Arg::Str("%"),
+                    Arg::Bool(false),
+                    Arg::MaybeStr(column),
+                ],
+            ),
+            NotStartsWith => self.step_string(
+                Step::CompileLike,
+                &[
+                    Arg::Str(&attribute),
+                    Arg::Values(values),
+                    Arg::Str(""),
+                    Arg::Str("%"),
+                    Arg::Bool(true),
+                    Arg::MaybeStr(column),
+                ],
+            ),
+            EndsWith => self.step_string(
+                Step::CompileLike,
+                &[
+                    Arg::Str(&attribute),
+                    Arg::Values(values),
+                    Arg::Str("%"),
+                    Arg::Str(""),
+                    Arg::Bool(false),
+                    Arg::MaybeStr(column),
+                ],
+            ),
+            NotEndsWith => self.step_string(
+                Step::CompileLike,
+                &[
+                    Arg::Str(&attribute),
+                    Arg::Values(values),
+                    Arg::Str("%"),
+                    Arg::Str(""),
+                    Arg::Bool(true),
+                    Arg::MaybeStr(column),
+                ],
+            ),
             Contains => D::compile_contains(self, &attribute, values, column),
             ContainsAny => {
                 if query.on_array() {
@@ -1592,7 +1644,7 @@ impl<D: Dialect> Builder<D> {
             if condition.method() == Method::On {
                 parts.push(self.compile_on(condition)?);
             } else {
-                parts.push(D::compile_filter(self, condition)?);
+                parts.push(self.step_string(Step::CompileFilter, &[Arg::Query(condition)])?);
             }
         }
         Ok(parts)
@@ -1718,6 +1770,10 @@ impl<D: Dialect> Builder<D> {
 
     /// `attribute IN (?, ...)`, with `IS NULL` for null values; `1 = 0` for none.
     pub(crate) fn compile_in(&mut self, attribute: &str, values: &Array, column: Option<&str>) -> Result<String> {
+        self.step_string(Step::CompileIn, &[Arg::Str(attribute), Arg::Values(values), Arg::MaybeStr(column)])
+    }
+
+    pub(crate) fn base_compile_in(&mut self, attribute: &str, values: &Array, column: Option<&str>) -> Result<String> {
         let collated = self.collate(attribute, column)?;
         let attribute = collated.as_str();
         if values.is_empty() {
@@ -1783,7 +1839,7 @@ impl<D: Dialect> Builder<D> {
         let mut parts = Vec::with_capacity(query.values().len());
         for value in query.values().values() {
             let sub = query_value(value, "compileFilter")?;
-            parts.push(D::compile_filter(self, sub)?);
+            parts.push(self.step_string(Step::CompileFilter, &[Arg::Query(sub)])?);
         }
         if parts.is_empty() {
             return Ok(if operator == "OR" { "1 = 0" } else { "1 = 1" }.into());

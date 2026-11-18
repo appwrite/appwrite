@@ -3,6 +3,7 @@
 //! and serializers, and the schemas. Every other class of the package is still its PHP source.
 
 pub mod ast;
+pub mod builder;
 pub mod classifier;
 pub mod schema;
 pub mod tokenizer;

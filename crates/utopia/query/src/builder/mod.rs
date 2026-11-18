@@ -40,6 +40,7 @@ mod mysql;
 mod postgresql;
 mod sql;
 mod sqlite;
+mod steps;
 mod types;
 
 use std::any::Any;
@@ -58,6 +59,7 @@ pub use mysql::{MySql, MySqlDialect, MySqlFamily, MySqlState};
 pub use postgresql::{DeleteUsing, MergeTarget, PostgreSql, PostgreSqlDialect, UpdateFrom};
 pub use sql::{SqlDialect, geometry_to_wkt};
 pub use sqlite::{Sqlite, SqliteDialect};
+pub use steps::{Arg, Overrides, Ret, Step};
 pub use types::{
     Binding, ColumnPredicate, Condition, CteClause, Executor, JoinOn, JoinType, LockMode, MergeClause,
     SpatialDistanceFilter, Statement, UnionClause, UnionType, VectorMetric, WindowDefinition, WindowFrame,
