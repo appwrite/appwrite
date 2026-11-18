@@ -1,3 +1,4 @@
+import { VideoOutput, type Models } from '@appwrite.io/console'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -10,8 +11,10 @@ import {
 } from '@/components/ui/dialog'
 import {
   useCreateVideoRenditions,
+  useVideoCodecs,
   useVideoProfiles,
   useVideoRenditions,
+  videoProfileSupportsOutput,
 } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -21,13 +24,12 @@ import {
   ProfilePicker,
   sortProfilesByPixels,
 } from './RenditionOptions'
-import { VideoOutput, type Video } from '@/lib/appwrite/videos'
 
 type CreateRenditionsProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   projectId: string
-  video: Video
+  video: Models.Video
 }
 
 export function CreateRenditions({
@@ -41,12 +43,19 @@ export function CreateRenditions({
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const { data: profilesData, isLoading: profilesLoading } =
     useVideoProfiles(projectId)
+  const { data: codecs } = useVideoCodecs(projectId)
   const { data: renditionsData } = useVideoRenditions(projectId, video.$id)
   const createMutation = useCreateVideoRenditions(projectId, video.$id)
 
+  // A codec can only be packaged as some outputs (VP9 is DASH only).
   const profiles = useMemo(
-    () => sortProfilesByPixels(profilesData?.profiles ?? []),
-    [profilesData?.profiles],
+    () =>
+      sortProfilesByPixels(
+        (profilesData?.profiles ?? []).filter((profile) =>
+          videoProfileSupportsOutput(profile, output, codecs),
+        ),
+      ),
+    [profilesData?.profiles, output, codecs],
   )
 
   const existingProfileIds = useMemo(

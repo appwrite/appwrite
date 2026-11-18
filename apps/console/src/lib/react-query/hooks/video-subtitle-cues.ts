@@ -9,7 +9,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
-import { ID } from '@appwrite.io/console'
+import { ID, type Models, VideoOutput } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
 import {
@@ -23,17 +23,11 @@ import {
   downloadSubtitleCues,
   type SubtitleDownloadFormat,
 } from '@/lib/videos/subtitle-download'
-import {
-  createVideoCaption,
-  getCaptionManifestUrl,
-  updateVideoCaption,
-  type VideoCaption,
-} from '@/lib/videos/captions'
+import { getVideoCaptionManifestUrl } from '@/lib/videos/urls'
 import { DEFAULT_STALE_TIME } from './constants'
 import { videoKeys } from './videos'
-import { VideoOutput } from '@/lib/appwrite/videos'
 
-type CaptionSource = Pick<VideoCaption, '$id' | 'bucketId' | 'fileId'>
+type CaptionSource = Pick<Models.VideoCaption, '$id' | 'bucketId' | 'fileId'>
 
 async function fetchCaptionResource(url: string): Promise<string> {
   const response = await fetch(withAdminMode(url), { credentials: 'include' })
@@ -61,24 +55,24 @@ async function fetchPackagedCaptionCues(
   videoId: string,
   captionId: string,
 ): Promise<SubtitleCue[]> {
-  const dashUrl = getCaptionManifestUrl({
+  const dashUrl = getVideoCaptionManifestUrl(
     projectId,
     videoId,
     captionId,
-    output: VideoOutput.Dash,
-  })
+    VideoOutput.Dash,
+  )
   try {
     const text = await fetchCaptionResource(dashUrl)
     if (text.trimStart().startsWith('WEBVTT')) return parseSubtitleText(text)
   } catch {
     // Fall back to the HLS playlist below.
   }
-  const playlistUrl = getCaptionManifestUrl({
+  const playlistUrl = getVideoCaptionManifestUrl(
     projectId,
     videoId,
     captionId,
-    output: VideoOutput.Hls,
-  })
+    VideoOutput.Hls,
+  )
   const playlist = await fetchCaptionResource(playlistUrl)
   const segments = playlist
     .split(/\r?\n/)
@@ -138,7 +132,7 @@ export function useDownloadVideoCaption(
 ) {
   const queryClient = useQueryClient()
   return async (
-    caption: CaptionSource & Pick<VideoCaption, 'name' | 'code'>,
+    caption: CaptionSource & Pick<Models.VideoCaption, 'name' | 'code'>,
     format: SubtitleDownloadFormat,
   ) => {
     const cues = await queryClient.fetchQuery(
@@ -174,7 +168,7 @@ export function useSaveVideoCaptionCues(
       name: string
       code: string
       isDefault: boolean
-    }): Promise<VideoCaption> => {
+    }): Promise<Models.VideoCaption> => {
       const projectSdk = sdk.forProject(projectId!)
       const file = new File(
         [serializeWebVtt(input.cues)],
@@ -195,11 +189,11 @@ export function useSaveVideoCaptionCues(
         xdefault: input.isDefault,
       }
       return input.captionId
-        ? await updateVideoCaption(projectId!, {
+        ? await projectSdk.videos.updateCaption({
             ...params,
             captionId: input.captionId,
           })
-        : await createVideoCaption(projectId!, params)
+        : await projectSdk.videos.createCaption(params)
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({

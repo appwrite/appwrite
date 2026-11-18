@@ -250,8 +250,10 @@ export const jaVideosDictionary: Record<string, string> = {
   'Some renditions failed': '一部のレンディションが失敗しました',
   'Renditions are still encoding. Playback starts when one is ready.':
     'レンディションはまだ処理中です。準備ができると再生が始まります。',
-  'No renditions are ready to play.': '再生できるレンディションはまだありません。',
-  'This video has no source to play.': 'この動画には再生できるソースがありません。',
+  'No renditions are ready to play.':
+    '再生できるレンディションはまだありません。',
+  'This video has no source to play.':
+    'この動画には再生できるソースがありません。',
   'Auto quality': '自動画質',
   'Subtitles off': '字幕オフ',
   'New renditions are ready.': '新しいレンディションの準備ができました。',
@@ -882,17 +884,22 @@ export const jaVideosDictionary: Record<string, string> = {
   Demo: 'デモ',
   'Advanced settings': '詳細設定',
   'Serves both HLS and DASH.': 'HLS と DASH の両方に対応します。',
-  'Plays natively on Safari and iOS.': 'Safari と iOS でネイティブ再生できます。',
-  'Not supported natively on Safari.': 'Safari ではネイティブ再生に対応していません。',
-  'Review': '確認',
+  'Plays natively on Safari and iOS.':
+    'Safari と iOS でネイティブ再生できます。',
+  'Not supported natively on Safari.':
+    'Safari ではネイティブ再生に対応していません。',
+  Review: '確認',
   'Uploaded from your computer': 'コンピューターからアップロード',
   'File in Storage': 'ストレージ内のファイル',
   'Demo video by Blender Studio': 'Blender Studio のデモ動画',
   'Timeline previews': 'タイムラインプレビュー',
   'Bucket created': 'バケットを作成しました',
-  'Video created with issues': '動画は作成されましたが、一部の処理に失敗しました',
-  'Open the video to retry the steps that failed.': '動画を開いて、失敗した処理を再試行してください。',
-  'Video creation continues in the background.': '動画の作成はバックグラウンドで続行されます。',
+  'Video created with issues':
+    '動画は作成されましたが、一部の処理に失敗しました',
+  'Open the video to retry the steps that failed.':
+    '動画を開いて、失敗した処理を再試行してください。',
+  'Video creation continues in the background.':
+    '動画の作成はバックグラウンドで続行されます。',
   'Open video': '動画を開く',
   'Choose a source': 'ソースを選択',
   'Every video starts from a file in Storage. Upload one, pick a file you already have, or start with a demo.':
@@ -910,11 +917,14 @@ export const jaVideosDictionary: Record<string, string> = {
   'Name your video and confirm the details. You can rename it later.':
     '動画に名前を付けて、内容を確認してください。名前は後から変更できます。',
   'Destination bucket': '保存先バケット',
-  'No renditions. You can encode later.': 'レンディションなし。後からエンコードできます。',
+  'No renditions. You can encode later.':
+    'レンディションなし。後からエンコードできます。',
   'Too large for this bucket.': 'このバケットには大きすぎます。',
   'Maximum file size:': '最大ファイルサイズ:',
-  'This bucket does not accept this file type.': 'このバケットはこのファイル形式を受け付けません。',
-  'Drop a file here or click to browse': 'ここにファイルをドロップするか、クリックして選択',
+  'This bucket does not accept this file type.':
+    'このバケットはこのファイル形式を受け付けません。',
+  'Drop a file here or click to browse':
+    'ここにファイルをドロップするか、クリックして選択',
   'MP4, MOV, WebM, MKV, and audio files': 'MP4、MOV、WebM、MKV、音声ファイル',
   'Up to': '最大',
   'Choose a video or audio file.': '動画または音声ファイルを選択してください。',
@@ -932,14 +942,17 @@ export const jaVideosDictionary: Record<string, string> = {
   'Drop a video or audio file from your computer.':
     'コンピューターから動画または音声ファイルをドロップします。',
   'Choose from Storage': 'ストレージから選択',
-  'Use a file that is already in a bucket.': 'バケット内の既存ファイルを使用します。',
+  'Use a file that is already in a bucket.':
+    'バケット内の既存ファイルを使用します。',
   'Try a demo video': 'デモ動画を試す',
-  'Import an open movie to explore Videos.': 'オープンムービーをインポートして動画機能を試せます。',
+  'Import an open movie to explore Videos.':
+    'オープンムービーをインポートして動画機能を試せます。',
   'No source selected': 'ソースが選択されていません',
   'Preview unavailable': 'プレビューを利用できません',
   'Audio only': '音声のみ',
   'New video': '新しい動画',
-  'Choose a source to see a preview.': 'ソースを選択するとプレビューが表示されます。',
+  'Choose a source to see a preview.':
+    'ソースを選択するとプレビューが表示されます。',
   'Creating your video': '動画を作成しています',
   'Encoding renditions': 'レンディションをエンコード中',
   'You can leave this screen. Encoding continues on the video.':
@@ -960,11 +973,14 @@ export const jaVideosDictionary: Record<string, string> = {
   'The video was not created. Go back to adjust the source or try again.':
     '動画は作成されませんでした。戻ってソースを変更するか、もう一度お試しください。',
   'Download demo video': 'デモ動画をダウンロード',
-  'Fetch the open movie in your browser.': 'ブラウザでオープンムービーを取得します。',
+  'Fetch the open movie in your browser.':
+    'ブラウザでオープンムービーを取得します。',
   'Upload to Storage': 'ストレージにアップロード',
-  'Store the source file in your bucket.': 'ソースファイルをバケットに保存します。',
+  'Store the source file in your bucket.':
+    'ソースファイルをバケットに保存します。',
   'Register video': '動画を登録',
-  'Create the video from the source file.': 'ソースファイルから動画を作成します。',
+  'Create the video from the source file.':
+    'ソースファイルから動画を作成します。',
   'Prepare source': 'ソースを準備',
   'Download, probe, and extract embedded subtitles.':
     'ダウンロード、解析、埋め込み字幕の抽出を行います。',
@@ -973,7 +989,8 @@ export const jaVideosDictionary: Record<string, string> = {
   'Queue renditions': 'レンディションをキューに追加',
   'Start encoding one rendition per selected profile.':
     '選択したプロファイルごとに 1 つのレンディションのエンコードを開始します。',
-  'Short and light. The fastest way to try encoding.': '短くて軽量。エンコードを試すのに最適です。',
+  'Short and light. The fastest way to try encoding.':
+    '短くて軽量。エンコードを試すのに最適です。',
   'Bright 16:9 cartoon with fast camera moves.':
     '素早いカメラワークの鮮やかな 16:9 アニメーション。',
   'Longer 16:9 short with detailed outdoor scenes.':
@@ -1000,7 +1017,8 @@ export const jaVideosDictionary: Record<string, string> = {
   "Couldn't load this track": 'このトラックを読み込めませんでした',
   'Embedded tracks can be read once they are packaged.':
     '埋め込みトラックはパッケージ後に読み込めます。',
-  'The subtitle file could not be read.': '字幕ファイルを読み込めませんでした。',
+  'The subtitle file could not be read.':
+    '字幕ファイルを読み込めませんでした。',
   'Start from an empty track': '空のトラックから開始',
   Cues: 'キュー',
   'Failed to download subtitles': '字幕のダウンロードに失敗しました',
@@ -1058,7 +1076,8 @@ export const jaVideosDictionary: Record<string, string> = {
   'Cue timings shifted': 'キューのタイミングをずらしました',
   'Fix overlaps': '重なりを修正',
   'No overlapping cues': '重なっているキューはありません',
-  'Trimmed {count} overlapping cues': '重なっていた {count} 件のキューを短縮しました',
+  'Trimmed {count} overlapping cues':
+    '重なっていた {count} 件のキューを短縮しました',
   'Remove empty cues': '空のキューを削除',
   'No empty cues': '空のキューはありません',
   'Removed {count} empty cues': '{count} 件の空のキューを削除しました',
@@ -1099,7 +1118,8 @@ export const jaVideosDictionary: Record<string, string> = {
   'Update cue text': 'キューのテキストを更新',
   'Delete selected cues': '選択したキューを削除',
   'Read-only': '読み取り専用',
-  'Empty cues are left out of the file.': '空のキューはファイルに含まれません。',
+  'Empty cues are left out of the file.':
+    '空のキューはファイルに含まれません。',
   'Previous cue': '前のキュー',
   'Next cue': '次のキュー',
   'Add cue': 'キューを追加',
@@ -1184,4 +1204,19 @@ export const jaVideosDictionary: Record<string, string> = {
     '字幕トラックがありません。Captions ページから追加してください。',
   'Captions are listed in the manifest, so viewers can pick a language in any player.':
     '字幕はマニフェストに含まれるため、視聴者はどのプレーヤーでも言語を選択できます。',
+  // Codecs and timeline status (Stream v8)
+  'Choose a preset to add a rendition quality.':
+    'プリセットを選んでレンディションの画質を追加します。',
+  'Profiles define the codec, resolution, and bitrate of each rendition. A profile keeps the codec it was created with.':
+    'プロファイルは各レンディションのコーデック、解像度、ビットレートを定義します。プロファイルのコーデックは作成後に変更できません。',
+  'Set the resolution and bitrate of the rendition.':
+    'レンディションの解像度とビットレートを設定します。',
+  'Timeline generation failed': 'タイムラインの生成に失敗しました',
+  'The worker could not sample frames from this video.':
+    'この動画からフレームを取得できませんでした。',
+  'No timeline for this video': 'この動画にはタイムラインがありません',
+  'A timeline is generated when a video is created. Thumbnails appear here once it is ready.':
+    'タイムラインは動画の作成時に生成されます。準備ができるとここにサムネイルが表示されます。',
+  'Scroll through the thumbnails and hover one to see its time range and sprite region.':
+    'サムネイルをスクロールし、カーソルを合わせると時間範囲とスプライト領域を確認できます。',
 }

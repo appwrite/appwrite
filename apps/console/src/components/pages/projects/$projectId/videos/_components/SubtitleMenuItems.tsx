@@ -1,3 +1,4 @@
+import type { Models } from '@appwrite.io/console'
 import type { ReactNode } from 'react'
 import {
   Copy,
@@ -44,7 +45,6 @@ import {
   type SubtitleDownloadFormat,
 } from '@/lib/videos/subtitle-download'
 import { getVideoCaptionManifestUrl } from '@/lib/videos/urls'
-import type { VideoCaption } from '@/lib/videos/captions'
 
 const CAPTION_OUTPUTS = [
   { id: 'hls', label: 'Copy HLS caption URL' },
@@ -87,7 +87,7 @@ export function SubtitleMenuItems({
   variant: 'context' | 'dropdown'
   projectId: string
   videoId: string
-  caption: VideoCaption
+  caption: Models.VideoCaption
   canWrite: boolean
   onOpen: () => void
   onToggleDefault: () => void

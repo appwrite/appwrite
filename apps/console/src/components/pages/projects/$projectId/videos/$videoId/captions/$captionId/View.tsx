@@ -1,3 +1,4 @@
+import type { Models } from '@appwrite.io/console'
 import { useState } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import { Captions } from 'lucide-react'
@@ -12,11 +13,10 @@ import {
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { SubtitleCue } from '@/lib/videos/subtitle-cues'
-import type { VideoCaption } from '@/lib/videos/captions'
 
 type ViewProps = {
   initialData?: {
-    caption: VideoCaption | null
+    caption: Models.VideoCaption | null
     cues: SubtitleCue[] | null
   }
 }

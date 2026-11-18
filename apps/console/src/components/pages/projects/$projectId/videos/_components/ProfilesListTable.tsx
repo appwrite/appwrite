@@ -1,3 +1,4 @@
+import type { Models } from '@appwrite.io/console'
 import { Copy, FileJson, Pencil, Trash2 } from 'lucide-react'
 import {
   MenuItemContent,
@@ -36,7 +37,6 @@ import {
 } from '@/lib/utils/video-format'
 import { isPresetSpec } from '@/lib/videos/profile-presets'
 import { VideoTermHint } from './VideoTermHint'
-import type { VideoProfile } from '@/lib/appwrite/videos'
 
 const HEAD_CLASS =
   'px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground'
@@ -44,10 +44,10 @@ const HEAD_CLASS =
 const MONO_CELL_CLASS = 'px-4 py-3 font-mono text-[12px] text-muted-foreground'
 
 interface ProfilesListTableProps {
-  profiles: VideoProfile[]
+  profiles: Models.VideoProfile[]
   canWrite: boolean
-  onUpdate: (profile: VideoProfile) => void
-  onDelete: (profile: VideoProfile) => void
+  onUpdate: (profile: Models.VideoProfile) => void
+  onDelete: (profile: Models.VideoProfile) => void
   selectedIds: Set<string>
   onToggleSelected: (profileId: string) => void
   onToggleAllSelected: (selectAll: boolean) => void
@@ -91,6 +91,7 @@ export function ProfilesListTable({
               </TableHead>
             ) : null}
             <TableHead className={HEAD_CLASS}>{t('Name')}</TableHead>
+            <TableHead className={HEAD_CLASS}>{t('Codec')}</TableHead>
             <TableHead className={HEAD_CLASS}>{t('Resolution')}</TableHead>
             <TableHead className={HEAD_CLASS}>
               <span className="inline-flex items-center gap-1">
@@ -156,6 +157,9 @@ export function ProfilesListTable({
                   <div className="mt-0.5">
                     <CopyableId id={profile.$id} size="xs" />
                   </div>
+                </TableCell>
+                <TableCell className={cn(MONO_CELL_CLASS, 'uppercase')}>
+                  {profile.codec || 'h264'}
                 </TableCell>
                 <TableCell className={MONO_CELL_CLASS}>
                   {formatResolution(profile.width, profile.height)}

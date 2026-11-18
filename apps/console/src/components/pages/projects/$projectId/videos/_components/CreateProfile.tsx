@@ -1,3 +1,4 @@
+import { VideoCodec, type Models } from '@appwrite.io/console'
 import { useEffect, useState } from 'react'
 import { ArrowLeft, SlidersHorizontal } from 'lucide-react'
 import { toast } from 'sonner'
@@ -13,7 +14,11 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { useSaveVideoProfile, useVideoProfiles } from '@/lib/react-query/hooks'
+import {
+  useSaveVideoProfile,
+  useVideoCodecs,
+  useVideoProfiles,
+} from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -28,7 +33,6 @@ import {
   PROFILE_PRESETS,
   type ProfilePreset,
 } from '@/lib/videos/profile-presets'
-import type { VideoProfile } from '@/lib/appwrite/videos'
 
 const LIMITS = {
   width: { min: 16, max: 4320 },
@@ -52,7 +56,7 @@ const EMPTY_FORM: FormState = {
 }
 
 function toForm(
-  profile: VideoProfile | ProfilePreset | null | undefined,
+  profile: Models.VideoProfile | ProfilePreset | null | undefined,
 ): FormState {
   if (!profile) return EMPTY_FORM
   return {
@@ -74,7 +78,7 @@ type CreateProfileProps = {
   onOpenChange: (open: boolean) => void
   projectId: string
   /** When set, the dialog updates this profile instead of creating one. */
-  profile?: VideoProfile | null
+  profile?: Models.VideoProfile | null
 }
 
 export function CreateProfile({
@@ -87,17 +91,23 @@ export function CreateProfile({
   const [form, setForm] = useState<FormState>(() => toForm(profile))
   const [mode, setMode] = useState<'preset' | 'custom'>('preset')
   const [preset, setPreset] = useState<ProfilePreset>(DEFAULT_PROFILE_PRESET)
+  const [codec, setCodec] = useState<string>(VideoCodec.H264)
   const saveMutation = useSaveVideoProfile(projectId)
   const { data: profilesData } = useVideoProfiles(projectId)
+  const { data: codecs = [] } = useVideoCodecs(projectId)
   const isUpdate = !!profile
   const isCustom = isUpdate || mode === 'custom'
   const existingProfiles = profilesData?.profiles ?? []
+  const codecName = (id: string) =>
+    codecs.find((item) => item.$id === id)?.name ?? id.toUpperCase()
+  const showCodecPicker = !isUpdate && codecs.length > 1
 
   useEffect(() => {
     if (!open) return
     setForm(toForm(profile))
     setMode('preset')
     setPreset(DEFAULT_PROFILE_PRESET)
+    setCodec(profile?.codec || VideoCodec.H264)
   }, [open, profile])
 
   const openCustom = () => {
@@ -133,6 +143,7 @@ export function CreateProfile({
             height: Number(form.height),
             videoBitRate: Number(form.videoBitRate),
             audioBitRate: Number(form.audioBitRate),
+            codec: codec as VideoCodec,
           }
         : {
             name: preset.name,
@@ -140,6 +151,7 @@ export function CreateProfile({
             height: preset.height,
             videoBitRate: preset.videoBitRate,
             audioBitRate: preset.audioBitRate,
+            codec: codec as VideoCodec,
           },
       {
         onSuccess: () => {
@@ -155,19 +167,15 @@ export function CreateProfile({
   }
 
   let title = t('Create profile')
-  let description = t(
-    'Choose a preset to add a rendition quality. Video codec is chosen by the server when encoding.',
-  )
+  let description = t('Choose a preset to add a rendition quality.')
   if (isUpdate) {
     title = t('Update profile')
     description = t(
-      'Profiles define the resolution and bitrate of each rendition. Video codec is chosen by the server when encoding. Use profiles when creating adaptive streams.',
+      'Profiles define the codec, resolution, and bitrate of each rendition. A profile keeps the codec it was created with.',
     )
   } else if (isCustom) {
     title = t('Create custom profile')
-    description = t(
-      'Set the resolution and bitrate of the rendition. Video codec is chosen by the server when encoding.',
-    )
+    description = t('Set the resolution and bitrate of the rendition.')
   }
 
   return (
@@ -181,6 +189,37 @@ export function CreateProfile({
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
+          {showCodecPicker ? (
+            <div className="space-y-2 px-6 pt-4">
+              <Label className="text-[13px]">{t('Codec')}</Label>
+              <RadioGroup
+                value={codec}
+                onValueChange={setCodec}
+                aria-label={t('Codec')}
+                className="flex flex-wrap gap-2"
+              >
+                {codecs.map((item) => (
+                  <Label
+                    key={item.$id}
+                    htmlFor={`video-profile-codec-${item.$id}`}
+                    className={cn(
+                      'flex cursor-pointer items-center gap-2 rounded-md border border-border px-3 py-2 text-[13px] font-normal transition-colors hover:bg-muted/40',
+                      codec === item.$id && 'bg-muted/40',
+                    )}
+                  >
+                    <RadioGroupItem
+                      id={`video-profile-codec-${item.$id}`}
+                      value={item.$id}
+                    />
+                    {item.name}
+                    <span className="font-mono text-[11px] uppercase text-muted-foreground">
+                      {item.outputs.join(' · ')}
+                    </span>
+                  </Label>
+                ))}
+              </RadioGroup>
+            </div>
+          ) : null}
           {isCustom ? (
             <div className="space-y-4 px-6 pb-4 pt-4">
               <div className="space-y-2">
@@ -196,6 +235,19 @@ export function CreateProfile({
                   maxLength={128}
                 />
               </div>
+              {isUpdate ? (
+                <div className="space-y-2">
+                  <Label htmlFor="video-profile-codec" className="text-[13px]">
+                    {t('Codec')}
+                  </Label>
+                  <Input
+                    id="video-profile-codec"
+                    value={codecName(profile?.codec || VideoCodec.H264)}
+                    disabled
+                    readOnly
+                  />
+                </div>
+              ) : null}
               <div className="grid grid-cols-2 gap-4">
                 {numericFields.map(({ field, label, unit }) => {
                   const invalid =
@@ -244,8 +296,10 @@ export function CreateProfile({
               >
                 {PROFILE_PRESETS.map((item) => {
                   const selected = item.name === preset.name
-                  const exists = existingProfiles.some((existing) =>
-                    isSameSpec(existing, item),
+                  const exists = existingProfiles.some(
+                    (existing) =>
+                      (existing.codec || VideoCodec.H264) === codec &&
+                      isSameSpec(existing, item),
                   )
                   return (
                     <Label

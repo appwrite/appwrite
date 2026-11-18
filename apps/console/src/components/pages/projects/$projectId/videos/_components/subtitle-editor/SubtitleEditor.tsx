@@ -1,3 +1,4 @@
+import type { Models } from '@appwrite.io/console'
 import {
   useCallback,
   useEffect,
@@ -107,7 +108,6 @@ import {
   SUBTITLE_DOWNLOAD_FORMATS,
   type SubtitleDownloadFormat,
 } from '@/lib/videos/subtitle-download'
-import type { VideoCaption } from '@/lib/videos/captions'
 
 type EditorTab = 'cues' | 'track' | 'file'
 
@@ -166,7 +166,7 @@ export function SubtitleEditor({
   projectId: string
   videoId: string
   /** The track being updated; omitted when creating a new one. */
-  subtitle?: VideoCaption | null
+  subtitle?: Models.VideoCaption | null
   initialCues: SubtitleCue[]
 }) {
   const t = useT()
@@ -768,7 +768,11 @@ export function SubtitleEditor({
       </span>
       {subtitle ? (
         <span className="hidden shrink-0 sm:inline-flex">
-          <VideoStatusBadge status={subtitle.status} kind="caption" />
+          <VideoStatusBadge
+            status={subtitle.status}
+            kind="caption"
+            error={subtitle.error}
+          />
         </span>
       ) : null}
       {dirty ? (

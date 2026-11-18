@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ID } from '@appwrite.io/console'
-import type { Models } from '@appwrite.io/console'
+import { ID, type Models, VideoOutput } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import type { StorageFileSelection } from '@/components/global/shared/StorageFileExplorer'
@@ -21,7 +20,9 @@ import {
   useOrganizationScopes,
   useProject,
   useProjectBuckets,
+  useVideoCodecs,
   useVideoProfiles,
+  videoProfileSupportsOutput,
   videoRenditionsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -62,7 +63,6 @@ import {
   ProfilePicker,
   sortProfilesByPixels,
 } from './RenditionOptions'
-import { type Video, VideoOutput } from '@/lib/appwrite/videos'
 
 interface CreateVideoProps {
   open: boolean
@@ -108,7 +108,7 @@ function createBucketMaximumFileSizeFromPlan(
 type RunState = {
   steps: CreateVideoStepId[]
   states: Partial<Record<CreateVideoStepId, CreateVideoStepState>>
-  video: Video | null
+  video: Models.Video | null
   phase: 'running' | 'encoding' | 'done' | 'failed'
   failedSteps: CreateVideoStepId[]
   profiles: { id: string; name: string }[]
@@ -196,9 +196,16 @@ function CreateVideoWizard({
   } = useProjectBuckets(projectId, 0, 100)
   const { data: profilesData, isLoading: profilesLoading } =
     useVideoProfiles(projectId)
+  const { data: codecs } = useVideoCodecs(projectId)
+  // A codec can only be packaged as some outputs (VP9 is DASH only).
   const profiles = useMemo(
-    () => sortProfilesByPixels(profilesData?.profiles ?? []),
-    [profilesData?.profiles],
+    () =>
+      sortProfilesByPixels(
+        (profilesData?.profiles ?? []).filter((profile) =>
+          videoProfileSupportsOutput(profile, output, codecs),
+        ),
+      ),
+    [profilesData?.profiles, output, codecs],
   )
 
   const { data: storageFile } = useQuery({

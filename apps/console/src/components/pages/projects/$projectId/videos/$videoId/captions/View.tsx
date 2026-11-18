@@ -1,3 +1,4 @@
+import type { Models } from '@appwrite.io/console'
 import {
   useState,
   type ComponentProps,
@@ -36,10 +37,9 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import type { SubtitleDownloadFormat } from '@/lib/videos/subtitle-download'
 import { getVideoSubtitleLanguage } from '@/lib/videos/subtitle-languages'
-import type { VideoCaption, VideoCaptionList } from '@/lib/videos/captions'
 
 type ViewProps = {
-  initialData?: { captions: VideoCaptionList }
+  initialData?: { captions: Models.VideoCaptionList }
 }
 
 export function View({ initialData }: ViewProps = {}) {
@@ -55,11 +55,11 @@ export function View({ initialData }: ViewProps = {}) {
   const updateMutation = useUpdateVideoCaption(projectId, videoId)
   const deleteMutation = useDeleteVideoCaption(projectId, videoId)
   const downloadCaption = useDownloadVideoCaption(projectId, videoId)
-  const [deleting, setDeleting] = useState<VideoCaption | null>(null)
+  const [deleting, setDeleting] = useState<Models.VideoCaption | null>(null)
 
   const captions = data?.captions ?? initialData?.captions.captions ?? []
 
-  const toggleDefault = (caption: VideoCaption) => {
+  const toggleDefault = (caption: Models.VideoCaption) => {
     updateMutation.mutate(
       { captionId: caption.$id, isDefault: !caption.default },
       {
@@ -71,7 +71,7 @@ export function View({ initialData }: ViewProps = {}) {
   }
 
   const download = (
-    caption: VideoCaption,
+    caption: Models.VideoCaption,
     format: SubtitleDownloadFormat,
   ) => {
     downloadCaption(caption, format).catch((error: unknown) =>
@@ -117,7 +117,7 @@ export function View({ initialData }: ViewProps = {}) {
     </VideoActionButton>
   )
 
-  const menuProps = (caption: VideoCaption) => ({
+  const menuProps = (caption: Models.VideoCaption) => ({
     projectId,
     videoId,
     caption,
@@ -204,7 +204,7 @@ function CaptionRow({
 }: ComponentProps<'div'> & {
   projectId: string
   videoId: string
-  caption: VideoCaption
+  caption: Models.VideoCaption
   onOpen: () => void
   menu: ReactNode
 }) {
@@ -266,7 +266,11 @@ function CaptionRow({
           </span>
         </p>
       </div>
-      <VideoStatusBadge status={caption.status} kind="caption" />
+      <VideoStatusBadge
+        status={caption.status}
+        kind="caption"
+        error={caption.error}
+      />
       <DateTooltip
         date={caption.$createdAt}
         className="hidden w-24 shrink-0 whitespace-nowrap text-end text-[12px] font-normal text-muted-foreground md:block"

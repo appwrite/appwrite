@@ -1,11 +1,11 @@
+import type { Models } from '@appwrite.io/console'
 import { getVideoEncodingStatus } from '@/lib/react-query/hooks/videos'
 import { VIDEO_TAB_NEEDS_READY_RENDITION } from '@/components/pages/projects/$projectId/videos/_components/video-tabs'
-import type { VideoRendition } from '@/lib/appwrite/videos'
 
 /** English reason preview/embed are unavailable, or null when they should work. */
 export function getVideoEmbedPlaybackDisabledReason(
   video: { duration?: number },
-  renditions: Pick<VideoRendition, 'status'>[],
+  renditions: Pick<Models.VideoRendition, 'status'>[],
 ): string | null {
   const hasReady = renditions.some((r) => r.status === 'ready')
   if (hasReady) return null

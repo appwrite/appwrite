@@ -1,3 +1,4 @@
+import type { Models } from '@appwrite.io/console'
 import type { ReactNode } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import { ChevronDown, Info } from 'lucide-react'
@@ -24,11 +25,10 @@ import {
   formatResolution,
 } from '@/lib/utils/video-format'
 import { useT } from '@/lib/i18n/translate'
-import type { Video, VideoRenditionList } from '@/lib/appwrite/videos'
 
 export type VideoOverviewInitialData = {
-  video: Video
-  renditions: VideoRenditionList
+  video: Models.Video
+  renditions: Models.VideoRenditionList
 }
 
 type ViewProps = {
@@ -81,7 +81,7 @@ function SourcePopover({
   video,
 }: {
   projectId: string
-  video: Video
+  video: Models.Video
 }) {
   const t = useT()
   const hasSource = Boolean(video.bucketId && video.fileId)

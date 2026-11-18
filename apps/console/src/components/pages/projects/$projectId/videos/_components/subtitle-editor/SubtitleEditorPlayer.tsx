@@ -1,3 +1,4 @@
+import type { Models } from '@appwrite.io/console'
 import {
   useEffect,
   useLayoutEffect,
@@ -55,7 +56,6 @@ import {
   type SubtitleCue,
 } from '@/lib/videos/subtitle-cues'
 import { applyVideoStreamAccess } from '@/lib/videos/video-stream-access'
-import type { Video, VideoRendition } from '@/lib/appwrite/videos'
 
 const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2]
 
@@ -70,8 +70,8 @@ export function SubtitleEditorPlayer({
   onSelectCue,
 }: {
   projectId: string
-  video: Video
-  renditions: VideoRendition[]
+  video: Models.Video
+  renditions: Models.VideoRendition[]
   videoRef: RefObject<HTMLVideoElement | null>
   cues: SubtitleCue[]
   selectedId: string | null

@@ -144,9 +144,9 @@ export const heVideosDictionary: Record<string, string> = {
   'No profiles. Create a profile first.': 'אין פרופילים. צרו פרופיל קודם.',
   Exists: 'קיים',
   Upscale: 'הגדלה',
-  '1 selected profile is larger than the source':
-    'פרופיל נבחר אחד גדול מהמקור',
-  'selected profiles are larger than the source': 'פרופילים נבחרים גדולים מהמקור',
+  '1 selected profile is larger than the source': 'פרופיל נבחר אחד גדול מהמקור',
+  'selected profiles are larger than the source':
+    'פרופילים נבחרים גדולים מהמקור',
   'Upscaling adds size without adding detail.':
     'הגדלה מוסיפה נפח בלי להוסיף פרטים.',
   'MPEG-TS segments. Plays natively on Safari and iOS.':
@@ -870,7 +870,7 @@ export const heVideosDictionary: Record<string, string> = {
   'Serves both HLS and DASH.': 'זמין גם כ-HLS וגם כ-DASH.',
   'Plays natively on Safari and iOS.': 'מתנגן באופן מובנה ב-Safari וב-iOS.',
   'Not supported natively on Safari.': 'לא נתמך באופן מובנה ב-Safari.',
-  'Review': 'סקירה',
+  Review: 'סקירה',
   'Uploaded from your computer': 'הועלה מהמחשב שלכם',
   'File in Storage': 'קובץ באחסון',
   'Demo video by Blender Studio': 'סרטון הדגמה של Blender Studio',
@@ -1018,7 +1018,8 @@ export const heVideosDictionary: Record<string, string> = {
   'Has errors': 'יש שגיאות',
   'Has warnings': 'יש אזהרות',
   'Showing now': 'מוצג כעת',
-  'End time must be after the start time.': 'זמן הסיום חייב להיות אחרי זמן ההתחלה.',
+  'End time must be after the start time.':
+    'זמן הסיום חייב להיות אחרי זמן ההתחלה.',
   'Cue has no text.': 'אין טקסט בקטע.',
   'Overlaps the previous cue.': 'חופף לקטע הקודם.',
   'Ends after the video does.': 'מסתיים אחרי סוף הסרטון.',
@@ -1173,4 +1174,19 @@ export const heVideosDictionary: Record<string, string> = {
     'אין רצועות כתוביות. הוסיפו אותן מדף הכתוביות.',
   'Captions are listed in the manifest, so viewers can pick a language in any player.':
     'הכתוביות מופיעות במניפסט, כך שהצופים יכולים לבחור שפה בכל נגן.',
+  // Codecs and timeline status (Stream v8)
+  'Choose a preset to add a rendition quality.':
+    'בחרו תבנית מוכנה כדי להוסיף איכות קידוד.',
+  'Profiles define the codec, resolution, and bitrate of each rendition. A profile keeps the codec it was created with.':
+    'פרופילים מגדירים את הקודק, הרזולוציה וקצב הנתונים של כל גרסת קידוד. פרופיל שומר על הקודק שאיתו נוצר.',
+  'Set the resolution and bitrate of the rendition.':
+    'הגדירו את הרזולוציה וקצב הנתונים של גרסת הקידוד.',
+  'Timeline generation failed': 'יצירת ציר הזמן נכשלה',
+  'The worker could not sample frames from this video.':
+    'לא ניתן היה לדגום פריימים מהסרטון הזה.',
+  'No timeline for this video': 'אין ציר זמן לסרטון הזה',
+  'A timeline is generated when a video is created. Thumbnails appear here once it is ready.':
+    'ציר זמן נוצר כשסרטון נוצר. התמונות הממוזערות יופיעו כאן כשהוא יהיה מוכן.',
+  'Scroll through the thumbnails and hover one to see its time range and sprite region.':
+    'גללו בין התמונות הממוזערות ורחפו מעל אחת כדי לראות את טווח הזמן ואזור הגיליון שלה.',
 }

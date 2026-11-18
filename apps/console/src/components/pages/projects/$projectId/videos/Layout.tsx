@@ -1,3 +1,4 @@
+import type { Models } from '@appwrite.io/console'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
   Link,
@@ -70,8 +71,6 @@ import {
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
-import type { Video, VideoRendition } from '@/lib/appwrite/videos'
-import type { VideoCaption } from '@/lib/videos/captions'
 
 const TAB_GROUPS: VideoTabGroup[] = ['video', 'encoding', 'delivery', 'manage']
 
@@ -404,8 +403,8 @@ function SubnavHeader({
   onCreateVideo,
 }: {
   projectId: string
-  video: Video
-  renditions: VideoRendition[]
+  video: Models.Video
+  renditions: Models.VideoRendition[]
   timelineCues?: VideoTimelineCue[]
   onSwitchVideo: (videoId: string) => void
   createDisabled: boolean
@@ -445,7 +444,6 @@ function SubnavHeader({
           video={video}
           timelineCues={timelineCues}
           fetchTimeline={false}
-          width={420}
           showDuration
           className="w-full rounded-md border border-border/60"
         />
@@ -476,9 +474,9 @@ function SubnavLink({
   tab: VideoTabDefinition
   active: boolean
   projectId: string
-  video: Video
-  renditions: VideoRendition[]
-  subtitles: VideoCaption[]
+  video: Models.Video
+  renditions: Models.VideoRendition[]
+  subtitles: Models.VideoCaption[]
   timeline:
     | { url: string; vtt: string; cues: VideoTimelineCue[] }
     | null
@@ -586,8 +584,8 @@ function SubnavTrailing({
   encodingStatus,
 }: {
   tab: VideoTab
-  renditions: VideoRendition[]
-  subtitles: VideoCaption[]
+  renditions: Models.VideoRendition[]
+  subtitles: Models.VideoCaption[]
   timeline:
     | { url: string; vtt: string; cues: VideoTimelineCue[] }
     | null

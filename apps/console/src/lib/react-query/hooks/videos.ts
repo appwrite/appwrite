@@ -14,38 +14,23 @@ import {
   useQueryClient,
   keepPreviousData,
 } from '@tanstack/react-query'
-import { useEffect } from 'react'
-import { Query } from '@appwrite.io/console'
+import {
+  AppwriteException,
+  Query,
+  VideoCodec,
+  VideoOutput,
+  type Models,
+} from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import {
-  clearTimelinePending,
-  markTimelinePending,
-  useTimelinePending,
-} from '@/lib/videos/pending-timelines'
-import {
-  createVideoCaption,
-  deleteVideoCaption,
-  listVideoCaptions,
-  updateVideoCaption,
-  type VideoCaptionList,
-} from '@/lib/videos/captions'
-import { getProjectProfilesApi } from '@/lib/videos/project-profiles-api'
 import { DEFAULT_STALE_TIME, GRID_DEFAULT_PAGE_SIZE } from './constants'
 import { Dependencies } from './dependencies'
-import { VideoOutput } from '@/lib/appwrite/videos'
-import type {
-  Video,
-  VideoProfileList,
-  VideoRendition,
-  VideoRenditionList,
-} from '@/lib/appwrite/videos'
 
 export const VIDEOS_DEFAULT_SORT_BY = '$createdAt'
 export const VIDEOS_DEFAULT_SORT_ORDER: 'asc' | 'desc' = 'desc'
 
 /** True when probe metadata is available on the video document. */
 export function isVideoMetadataReady(
-  video: Pick<Video, 'width' | 'height'> | null | undefined,
+  video: Pick<Models.Video, 'width' | 'height'> | null | undefined,
 ): boolean {
   if (!video) return false
   return (video.width ?? 0) > 0 && (video.height ?? 0) > 0
@@ -56,7 +41,6 @@ export const VIDEO_RENDITION_ACTIVE_STATUSES = [
   'pending',
   'started',
   'ended',
-  'uploading',
 ] as const
 
 export function isVideoRenditionActive(status: string | undefined): boolean {
@@ -82,7 +66,7 @@ export type VideoEncodingStatus = 'none' | 'encoding' | 'ready' | 'error'
 
 /** Videos carry no status of their own; summarize their renditions instead. */
 export function getVideoEncodingStatus(
-  renditions: Pick<VideoRendition, 'status'>[],
+  renditions: Pick<Models.VideoRendition, 'status'>[],
 ): VideoEncodingStatus {
   if (renditions.some((r) => isVideoRenditionActive(r.status))) {
     return 'encoding'
@@ -92,6 +76,44 @@ export function getVideoEncodingStatus(
     return 'error'
   }
   return 'none'
+}
+
+/**
+ * Timeline generation is queued when a video is created and reported on the
+ * video document (`timelineStatus`). Videos from before the field existed
+ * report an empty status; treat those as possibly ready.
+ */
+export type VideoTimelineState =
+  | 'processing'
+  | 'ready'
+  | 'skipped'
+  | 'error'
+  | 'unknown'
+
+export function getVideoTimelineState(
+  video: Pick<Models.Video, 'timelineStatus'> | null | undefined,
+): VideoTimelineState {
+  switch (video?.timelineStatus) {
+    case 'pending':
+    case 'started':
+      return 'processing'
+    case 'ready':
+      return 'ready'
+    case 'skipped':
+      return 'skipped'
+    case 'error':
+      return 'error'
+    default:
+      return 'unknown'
+  }
+}
+
+/** Whether a timeline may exist, so it is worth requesting the WebVTT. */
+export function canFetchVideoTimeline(
+  video: Pick<Models.Video, 'timelineStatus'> | null | undefined,
+): boolean {
+  const state = getVideoTimelineState(video)
+  return state === 'ready' || state === 'unknown'
 }
 
 // ---------------------------------------------------------------------------
@@ -135,18 +157,19 @@ export async function fetchProjectVideos(
   filterQueries?: string[],
   sortBy: string = VIDEOS_DEFAULT_SORT_BY,
   sortOrder: 'asc' | 'desc' = VIDEOS_DEFAULT_SORT_ORDER,
-): Promise<{ videos: Video[]; total: number }> {
+): Promise<{ videos: Models.Video[]; total: number }> {
   if (!projectId) return { videos: [], total: 0 }
   const orderQuery =
     sortOrder === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy)
+  const term = search?.trim()
   const response = await sdk.forProject(projectId).videos.list({
     queries: [
       ...(filterQueries ?? []),
+      ...(term ? [Query.search('search', term)] : []),
       orderQuery,
       Query.limit(limit),
       Query.offset(page * limit),
     ],
-    search: search?.trim() || undefined,
   })
   return { videos: response.videos ?? [], total: response.total ?? 0 }
 }
@@ -154,50 +177,66 @@ export async function fetchProjectVideos(
 export async function fetchProjectVideo(
   projectId: string,
   videoId: string,
-): Promise<Video> {
+): Promise<Models.Video> {
   return await sdk.forProject(projectId).videos.get({ videoId })
 }
 
 export async function fetchVideoRenditions(
   projectId: string,
   videoId: string,
-): Promise<VideoRenditionList> {
+): Promise<Models.VideoRenditionList> {
   return await sdk.forProject(projectId).videos.listRenditions({ videoId })
 }
 
 export async function fetchVideoCaptions(
   projectId: string,
   videoId: string,
-): Promise<VideoCaptionList> {
-  return await listVideoCaptions(projectId, videoId)
+): Promise<Models.VideoCaptionList> {
+  return await sdk.forProject(projectId).videos.listCaptions({ videoId })
 }
 
-export async function fetchVideoProfiles(
-  projectId: string,
-): Promise<VideoProfileList> {
-  return await getProjectProfilesApi(projectId).listProfiles()
-}
-
-export type VideoCodecOption = {
-  $id: string
-  name: string
-  outputs: string[]
-}
-
+/** Codecs enabled on this instance, with the outputs each can be packaged as. */
 export async function fetchVideoCodecs(
   projectId: string,
-): Promise<VideoCodecOption[]> {
-  const videos = sdk.forProject(projectId).videos
-  const listCodecs = (
-    videos as {
-      listCodecs?: () => Promise<{ codecs?: VideoCodecOption[] }>
-    }
-  ).listCodecs
-  if (!listCodecs) {
-    return [{ $id: 'h264', name: 'H.264', outputs: ['hls', 'dash', 'cmaf'] }]
-  }
-  const response = await listCodecs.call(videos)
+): Promise<Models.VideoCodec[]> {
+  const response = await sdk.forProject(projectId).videos.listCodecs()
   return response.codecs ?? []
+}
+
+const VIDEO_PROFILES_LIMIT = 100
+
+/**
+ * Profiles belong to one codec and the API lists one codec at a time
+ * (`h264` when none is given), so list every enabled codec and merge.
+ */
+export async function fetchVideoProfiles(
+  projectId: string,
+): Promise<Models.VideoProfileList> {
+  const codecs = await fetchVideoCodecs(projectId)
+  const ids = codecs.length
+    ? codecs.map((codec) => codec.$id as VideoCodec)
+    : [VideoCodec.H264]
+  const project = sdk.forProject(projectId).project
+  const lists = await Promise.all(
+    ids.map((codec) =>
+      project.listVideoProfiles({
+        codec,
+        queries: [Query.limit(VIDEO_PROFILES_LIMIT)],
+      }),
+    ),
+  )
+  const profiles = lists.flatMap((list) => list.profiles ?? [])
+  return { total: profiles.length, profiles }
+}
+
+/** Whether a profile's codec can be packaged as `output` on this instance. */
+export function videoProfileSupportsOutput(
+  profile: Pick<Models.VideoProfile, 'codec'>,
+  output: VideoOutput,
+  codecs: Models.VideoCodec[] | undefined,
+): boolean {
+  const codec = codecs?.find((item) => item.$id === (profile.codec || 'h264'))
+  return codec ? codec.outputs.includes(output) : true
 }
 
 export type VideoTimelineCue = {
@@ -216,7 +255,10 @@ function parseVttTimestamp(value: string): number {
   return parts.reduce((total, part) => total * 60 + part, 0)
 }
 
-/** Parse a sprite-sheet WebVTT (`sprites/{id}#xywh=x,y,w,h` cues). */
+/**
+ * Parse a thumbnail timeline WebVTT. Cues are relative to the timeline URL
+ * (`thumbnails/{id}?project=…#xywh=x,y,w,h`).
+ */
 export function parseVideoTimelineVtt(
   vtt: string,
   timelineUrl: string,
@@ -231,9 +273,9 @@ export function parseVideoTimelineVtt(
     const [startRaw, endRaw] = lines[timingIdx].split('-->')
     const cueLine = lines[timingIdx + 1].trim()
     const xywhIdx = cueLine.indexOf('#xywh=')
-    const path =
-      xywhIdx >= 0 ? cueLine.slice(0, xywhIdx) : cueLine
-    const fragment = xywhIdx >= 0 ? cueLine.slice(xywhIdx + '#xywh='.length) : ''
+    const path = xywhIdx >= 0 ? cueLine.slice(0, xywhIdx) : cueLine
+    const fragment =
+      xywhIdx >= 0 ? cueLine.slice(xywhIdx + '#xywh='.length) : ''
     const [x, y, width, height] = fragment.split(',').map(Number)
     const imageUrl = new URL(path, timelineUrl)
     if (!imageUrl.searchParams.has('project')) {
@@ -266,43 +308,19 @@ export function getVideoTimelineUrl(
   return url.toString()
 }
 
-export function getVideoSpriteUrl(
-  projectId: string,
-  videoId: string,
-  spriteId: string,
-  options?: { width?: number; height?: number; output?: string },
-): string {
-  const endpoint = sdk.forProject(projectId).client.config.endpoint
-  const url = new URL(
-    `${endpoint}/videos/${encodeURIComponent(videoId)}/sprites/${encodeURIComponent(spriteId)}`,
-  )
-  url.searchParams.set('project', projectId)
-  url.searchParams.set('mode', 'admin')
-  if (options?.width != null && options.width > 0) {
-    url.searchParams.set('width', String(options.width))
-  }
-  if (options?.height != null && options.height > 0) {
-    url.searchParams.set('height', String(options.height))
-  }
-  if (options?.output) {
-    url.searchParams.set('output', options.output)
-  }
-  return url.toString()
-}
-
-/** `null` when no timeline has been generated yet (404). */
+/** `null` while no timeline exists (`video_timelines_not_found`). */
 export async function fetchVideoTimeline(
   projectId: string,
   videoId: string,
 ): Promise<{ url: string; vtt: string; cues: VideoTimelineCue[] } | null> {
   const url = getVideoTimelineUrl(projectId, videoId)
-  const response = await fetch(url, { credentials: 'include' })
-  if (response.status === 404) return null
-  if (!response.ok) {
-    throw new Error(`Timeline request failed (HTTP ${response.status})`)
+  try {
+    const vtt = await sdk.forProject(projectId).videos.getTimelines({ videoId })
+    return { url, vtt, cues: parseVideoTimelineVtt(vtt, url, projectId) }
+  } catch (error) {
+    if (error instanceof AppwriteException && error.code === 404) return null
+    throw error
   }
-  const vtt = await response.text()
-  return { url, vtt, cues: parseVideoTimelineVtt(vtt, url, projectId) }
 }
 
 // ---------------------------------------------------------------------------
@@ -428,24 +446,37 @@ export function videoTimelineQueryOptions(
 // Hooks
 // ---------------------------------------------------------------------------
 
-/** Timeline generation emits no realtime events, so poll while a request is pending. */
+const TIMELINE_POLL_INTERVAL = 5000
+
+/**
+ * The video's thumbnail timeline. Progress arrives on the video document
+ * (`timelineStatus`) over `videos.[videoId].timelines.update`, which
+ * `@/lib/realtime/video-cache` merges and uses to refetch this query. The
+ * video is also polled while the timeline is processing, in case realtime
+ * is not connected.
+ */
 export function useVideoTimeline(
   projectId: string | null | undefined,
   videoId: string | null | undefined,
 ) {
-  const pending = useTimelinePending(projectId, videoId)
+  const { data: video } = useQuery({
+    ...videoQueryOptions(projectId, videoId),
+    refetchInterval: (query) =>
+      getVideoTimelineState(query.state.data) === 'processing'
+        ? TIMELINE_POLL_INTERVAL
+        : false,
+  })
+  const state = getVideoTimelineState(video)
   const query = useQuery({
     ...videoTimelineQueryOptions(projectId, videoId),
-    refetchInterval: (query) =>
-      pending && query.state.data === null ? 3000 : false,
+    enabled: !!projectId && !!videoId && !!video && canFetchVideoTimeline(video),
   })
-  const ready = Boolean(query.data)
-
-  useEffect(() => {
-    if (ready && projectId && videoId) clearTimelinePending(projectId, videoId)
-  }, [ready, projectId, videoId])
-
-  return { ...query, pending: pending && !ready }
+  return {
+    ...query,
+    state,
+    pending: state === 'processing',
+    timelineError: state === 'error' ? video?.timelineError || null : null,
+  }
 }
 
 export function useProjectVideos(
@@ -541,21 +572,6 @@ export function useDeleteVideo(projectId: string | null | undefined) {
   })
 }
 
-export function useCreateVideoTimeline(
-  projectId: string | null | undefined,
-  videoId: string | null | undefined,
-) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async () => {
-      markTimelinePending(projectId!, videoId!)
-      await queryClient.invalidateQueries({
-        queryKey: videoKeys.timeline(projectId, videoId),
-      })
-    },
-  })
-}
-
 export function useCreateVideoRenditions(
   projectId: string | null | undefined,
   videoId: string | null | undefined,
@@ -626,7 +642,7 @@ export function useCreateVideoCaption(
       code: string
       isDefault: boolean
     }) =>
-      createVideoCaption(projectId!, {
+      sdk.forProject(projectId!).videos.createCaption({
         videoId: videoId!,
         bucketId: input.bucketId,
         fileId: input.fileId,
@@ -656,7 +672,7 @@ export function useUpdateVideoCaption(
       code?: string
       isDefault?: boolean
     }) =>
-      updateVideoCaption(projectId!, {
+      sdk.forProject(projectId!).videos.updateCaption({
         videoId: videoId!,
         captionId: input.captionId,
         bucketId: input.bucketId,
@@ -680,7 +696,10 @@ export function useDeleteVideoCaption(
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (captionId: string) =>
-      deleteVideoCaption(projectId!, videoId!, captionId),
+      sdk.forProject(projectId!).videos.deleteCaption({
+        videoId: videoId!,
+        captionId,
+      }),
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: videoKeys.captions(projectId, videoId),
@@ -695,11 +714,13 @@ export type VideoProfileInput = {
   height: number
   videoBitRate: number
   audioBitRate: number
+  /** Set on create only; a profile keeps its codec. */
+  codec?: VideoCodec
 }
 
 /** True when probe metadata includes an audio stream (after prepare / encode probe). */
 export function videoSourceHasAudio(
-  video: Pick<Video, 'audioCodec' | 'duration'> | null | undefined,
+  video: Pick<Models.Video, 'audioCodec' | 'duration'> | null | undefined,
 ): boolean {
   if (!video) return false
   if (video.audioCodec?.trim()) return true
@@ -710,11 +731,11 @@ export function useSaveVideoProfile(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (input: VideoProfileInput & { profileId?: string }) => {
-      const projectApi = getProjectProfilesApi(projectId!)
-      const { profileId, ...payload } = input
+      const project = sdk.forProject(projectId!).project
+      const { profileId, codec, ...payload } = input
       return profileId
-        ? projectApi.updateProfile({ profileId, ...payload })
-        : projectApi.createProfile(payload)
+        ? project.updateVideoProfile({ profileId, ...payload })
+        : project.createVideoProfile({ ...payload, codec })
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
@@ -728,7 +749,7 @@ export function useDeleteVideoProfile(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (profileId: string) =>
-      getProjectProfilesApi(projectId!).deleteProfile({ profileId }),
+      sdk.forProject(projectId!).project.deleteVideoProfile({ profileId }),
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: videoKeys.profiles(projectId),

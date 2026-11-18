@@ -1,33 +1,29 @@
+import type { Models } from '@appwrite.io/console'
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 import {
-  getVideoSpriteUrl,
+  canFetchVideoTimeline,
   videoTimelineQueryOptions,
   type VideoTimelineCue,
 } from '@/lib/react-query/hooks/videos'
-import {
-  getVideoPosterCueIndex,
-  sampleTimelineCuesForPreview,
-} from '@/lib/videos/timeline-cues'
+import { sampleTimelineCuesForPreview } from '@/lib/videos/timeline-cues'
 import { cn } from '@/lib/utils'
 import {
   formatVideoDuration,
   videoThumbAspectRatio,
 } from '@/lib/utils/video-format'
 import { TimelineSpriteThumb } from './player/TimelineSpriteThumb'
-import type { Video } from '@/lib/appwrite/videos'
 
 const HOVER_FRAME_INTERVAL_MS = 180
 
 /**
- * Poster from the sprite timeline when available, else `previewId`, else a placeholder.
- * Hover cycles timeline frames when a timeline exists.
+ * Poster from the first timeline frame when a timeline exists, else a
+ * placeholder. Hover cycles timeline frames.
  */
 export function VideoThumb({
   projectId,
   video,
-  width = 480,
   className,
   showDuration = false,
   timelineCues: timelineCuesProp,
@@ -36,10 +32,15 @@ export function VideoThumb({
 }: {
   projectId: string
   video: Pick<
-    Video,
-    '$id' | 'previewId' | 'name' | 'duration' | 'width' | 'height' | 'aspectRatio'
+    Models.Video,
+    | '$id'
+    | 'timelineStatus'
+    | 'name'
+    | 'duration'
+    | 'width'
+    | 'height'
+    | 'aspectRatio'
   >
-  width?: number
   className?: string
   showDuration?: boolean
   /** When set, skips fetching timeline data for this thumb. */
@@ -48,12 +49,15 @@ export function VideoThumb({
   /** Fixed 16:9 box; media is letterboxed to its aspect ratio (videos list). */
   uniformSize?: boolean
 }) {
-  const [previewFailed, setPreviewFailed] = useState(false)
   const [hovering, setHovering] = useState(false)
   const [hoverFrameIndex, setHoverFrameIndex] = useState(0)
 
   const shouldFetchTimeline =
-    fetchTimeline && timelineCuesProp === undefined && !!projectId && !!video.$id
+    fetchTimeline &&
+    timelineCuesProp === undefined &&
+    !!projectId &&
+    !!video.$id &&
+    canFetchVideoTimeline(video)
 
   const timelineQuery = useQuery({
     ...videoTimelineQueryOptions(projectId, video.$id),
@@ -62,24 +66,11 @@ export function VideoThumb({
 
   const cues = timelineCuesProp ?? timelineQuery.data?.cues ?? null
   const hasTimelineCues = (cues?.length ?? 0) > 0
-  // A sized preview URL center-crops the sprite sheet. Wait for cues so the
-  // thumb is the poster frame, not that crop. Cached timelines skip the wait.
-  const timelinePending = shouldFetchTimeline && timelineQuery.isPending
-
-  const posterCueIndex = useMemo(
-    () => (cues ? getVideoPosterCueIndex(cues, video.previewId) : 0),
-    [cues, video.previewId],
-  )
 
   const hoverFrames = useMemo(
     () => (cues ? sampleTimelineCuesForPreview(cues) : []),
     [cues],
   )
-
-  const previewSrc =
-    !hasTimelineCues && !timelinePending && video.previewId && !previewFailed
-      ? getVideoSpriteUrl(projectId, video.$id, video.previewId, { width })
-      : null
 
   useEffect(() => {
     if (!hovering) {
@@ -99,7 +90,7 @@ export function VideoThumb({
     return () => window.clearInterval(id)
   }, [hovering, hoverFrames.length])
 
-  const posterCue = hasTimelineCues ? cues![posterCueIndex] : null
+  const posterCue = hasTimelineCues ? cues![0] : null
   const activeCue =
     hasTimelineCues && hovering && hoverFrames.length > 1
       ? hoverFrames[hoverFrameIndex]
@@ -127,17 +118,6 @@ export function VideoThumb({
           fillParent
           fit={uniformSize ? 'contain' : 'cover'}
           className="absolute inset-0"
-        />
-      ) : previewSrc ? (
-        <img
-          src={previewSrc}
-          alt=""
-          loading="lazy"
-          className={cn(
-            'h-full w-full',
-            uniformSize ? 'object-contain' : 'object-cover',
-          )}
-          onError={() => setPreviewFailed(true)}
         />
       ) : (
         <VIDEOS_PRODUCT_ICON className="h-5 w-5" />

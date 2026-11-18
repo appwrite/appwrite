@@ -1,3 +1,4 @@
+import type { Models } from '@appwrite.io/console'
 import { AlertCircle, Check, Circle, Loader2 } from 'lucide-react'
 import { ProgressBarRow } from '@/components/global/shared/ProgressBarRow'
 import { cn } from '@/lib/utils'
@@ -12,7 +13,6 @@ import type {
 } from '@/lib/videos/create-video-pipeline'
 import { useT } from '@/lib/i18n/translate'
 import { VideoStatusBadge } from './VideoStatusBadge'
-import type { VideoRendition } from '@/lib/appwrite/videos'
 
 export const CREATE_VIDEO_STEP_COPY: Record<
   CreateVideoStepId,
@@ -132,7 +132,7 @@ export function CreateVideoProgress({
   phase: 'running' | 'encoding' | 'done' | 'failed'
   hasFailedSteps: boolean
   profiles: CreateVideoProgressProfile[]
-  renditions: VideoRendition[]
+  renditions: Models.VideoRendition[]
   errorMessage?: string
 }) {
   const t = useT()

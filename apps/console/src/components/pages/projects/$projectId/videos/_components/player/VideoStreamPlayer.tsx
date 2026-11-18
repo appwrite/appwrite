@@ -1,3 +1,4 @@
+import type { Models } from '@appwrite.io/console'
 import {
   useCallback,
   useEffect,
@@ -19,7 +20,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { AppwriteMarkIcon } from '@/components/global/shared/AppwriteMarkIcon'
 import {
-  getVideoSpriteUrl,
   isVideoMetadataReady,
   isVideoRenditionActive,
   useVideoTimeline,
@@ -51,14 +51,13 @@ import {
   videoSubtitleSizeCss,
   type VideoSubtitleSize,
 } from '@/lib/videos/player-subtitle-display'
-import type { Video, VideoRendition } from '@/lib/appwrite/videos'
 
 const FULLSCREEN_CONTROLS_IDLE_MS = 2500
 
 export interface VideoStreamPlayerProps {
   projectId: string
-  video: Video
-  renditions: VideoRendition[]
+  video: Models.Video
+  renditions: Models.VideoRendition[]
   /** Overview layout: slightly shorter max height. */
   variant?: 'default' | 'featured'
   /** Full-viewport embed player for end users (`/player/:videoId`). */
@@ -148,19 +147,6 @@ export function VideoStreamPlayer({
         streamAccess,
       ),
     [projectId, video.bucketId, video.fileId, streamAccess],
-  )
-
-  const posterUrl = useMemo(
-    () =>
-      video.previewId
-        ? applyVideoStreamAccess(
-            getVideoSpriteUrl(projectId, video.$id, video.previewId, {
-              width: 1280,
-            }),
-            streamAccess,
-          )
-        : undefined,
-    [projectId, video.$id, video.previewId, streamAccess],
   )
 
   const activeManifestUrl = useMemo(() => {
@@ -774,7 +760,6 @@ export function VideoStreamPlayer({
                 )}
                 style={videoSubtitleStyle}
                 playsInline
-                poster={posterUrl}
                 aria-label={video.name}
                 onClick={() => {
                   const el = videoRef.current
@@ -859,7 +844,6 @@ export function VideoStreamPlayer({
                   )}
                   style={videoSubtitleStyle}
                   playsInline
-                  poster={posterUrl}
                   aria-label={video.name}
                   onClick={() => {
                     const el = videoRef.current

@@ -1,3 +1,4 @@
+import type { Models } from '@appwrite.io/console'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Link,
@@ -61,7 +62,6 @@ import { VideosEmptyState } from './_components/VideosEmptyState'
 import { VideosListTable } from './_components/VideosListTable'
 import { VideoThumb } from './_components/VideoThumb'
 import { getVideosServiceTabs } from './_components/videos-service-tabs'
-import type { Video } from '@/lib/appwrite/videos'
 
 type VideosListSearch = {
   search?: string
@@ -523,7 +523,13 @@ export function View() {
   )
 }
 
-function VideoCard({ projectId, video }: { projectId: string; video: Video }) {
+function VideoCard({
+  projectId,
+  video,
+}: {
+  projectId: string
+  video: Models.Video
+}) {
   const t = useT()
   const meta = [
     video.width > 0 ? formatResolution(video.width, video.height) : null,

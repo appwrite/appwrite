@@ -1,9 +1,9 @@
+import type { VideoOutput, VideoRenditionStatus, Models } from '@appwrite.io/console'
 import type { CompactFilterKey } from '@/lib/table-filters'
-import type { VideoOutput, VideoRendition, VideoRenditionStatus } from '@/lib/appwrite/videos'
 
 /** Flat record for client-side FiltersPopover matching. */
 export function renditionToFilterRecord(
-  rendition: VideoRendition,
+  rendition: Models.VideoRendition,
   profileName?: string,
 ): Record<string, unknown> {
   return {
@@ -60,7 +60,7 @@ export type RenditionSortColumn =
   | 'encodingTime'
   | 'created'
 
-function encodingDurationMs(rendition: VideoRendition): number {
+function encodingDurationMs(rendition: Models.VideoRendition): number {
   if (!rendition.startedAt) return -1
   const endIso = rendition.endedAt ?? rendition.$updatedAt
   return new Date(endIso).getTime() - new Date(rendition.startedAt).getTime()
@@ -68,8 +68,8 @@ function encodingDurationMs(rendition: VideoRendition): number {
 
 /** Client-side sort (`listRenditions` has no sort query params). */
 export function compareVideoRenditions(
-  a: VideoRendition,
-  b: VideoRendition,
+  a: Models.VideoRendition,
+  b: Models.VideoRendition,
   sortBy: string,
   sortOrder: 'asc' | 'desc',
   profileNames?: Map<string, string>,

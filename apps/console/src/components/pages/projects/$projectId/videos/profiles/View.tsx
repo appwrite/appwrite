@@ -1,5 +1,7 @@
+import type { Models } from '@appwrite.io/console'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { sdk } from '@/lib/appwrite/sdk'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { AlertCircle, Layers } from 'lucide-react'
 import { toast } from 'sonner'
@@ -7,7 +9,6 @@ import { ProfilesEmptyState } from './_components/ProfilesEmptyState'
 import { CreateProfile } from '../_components/CreateProfile'
 import { ProfilesListTable } from '../_components/ProfilesListTable'
 import { SpreadsheetBulkActionsBar } from '../_components/SpreadsheetBulkActionsBar'
-import { getProjectProfilesApi } from '@/lib/videos/project-profiles-api'
 import { getVideosServiceTabs } from '../_components/videos-service-tabs'
 import { ServiceHeader } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
 import { Button } from '@/components/ui/button'
@@ -15,7 +16,7 @@ import { ConfirmActionDialog } from '@/components/global/shared/ConfirmActionDia
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { canCreateVideo } from '@/lib/console-access-checks'
+import { canManageVideoProfiles } from '@/lib/console-access-checks'
 import {
   useDeleteVideoProfile,
   useOrganizationScopes,
@@ -44,7 +45,6 @@ import {
   PROFILES_DEFAULT_SORT_BY,
   PROFILES_DEFAULT_SORT_ORDER,
 } from '@/lib/videos/profile-list-filters'
-import type { VideoProfile } from '@/lib/appwrite/videos'
 
 const isDefaultSort = (sortBy: string, sortOrder: 'asc' | 'desc') =>
   sortBy === PROFILES_DEFAULT_SORT_BY &&
@@ -73,9 +73,9 @@ export function View() {
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingProfile, setEditingProfile] =
-    useState<VideoProfile | null>(null)
+    useState<Models.VideoProfile | null>(null)
   const [deletingProfile, setDeletingProfile] =
-    useState<VideoProfile | null>(null)
+    useState<Models.VideoProfile | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [selectedProfileIds, setSelectedProfileIds] = useState<Set<string>>(
     new Set(),
@@ -90,7 +90,7 @@ export function View() {
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
-  const canWrite = canCreateVideo(access, features)
+  const canWrite = canManageVideoProfiles(access, features)
   const createPermissionTooltip = canWrite
     ? undefined
     : t("You don't have permission to manage video profiles.")
@@ -106,9 +106,11 @@ export function View() {
 
   const bulkDeleteMutation = useMutation({
     mutationFn: async (profileIds: string[]) => {
-      const projectApi = getProjectProfilesApi(projectId)
+      const projectApi = sdk.forProject(projectId).project
       await Promise.all(
-        profileIds.map((profileId) => projectApi.deleteProfile({ profileId })),
+        profileIds.map((profileId) =>
+          projectApi.deleteVideoProfile({ profileId }),
+        ),
       )
     },
     onSuccess: async (_data, profileIds) => {
@@ -267,7 +269,7 @@ export function View() {
     setDialogOpen(true)
   }
 
-  const openUpdate = (profile: VideoProfile) => {
+  const openUpdate = (profile: Models.VideoProfile) => {
     setEditingProfile(profile)
     setDialogOpen(true)
   }

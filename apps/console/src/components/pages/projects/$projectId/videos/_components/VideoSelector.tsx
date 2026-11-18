@@ -1,3 +1,4 @@
+import type { Models } from '@appwrite.io/console'
 import { useEffect, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Check, ChevronsUpDown, Loader2 } from 'lucide-react'
@@ -20,7 +21,6 @@ import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { formatVideoDuration } from '@/lib/utils/video-format'
 import { VideoThumb } from './VideoThumb'
-import type { Video } from '@/lib/appwrite/videos'
 
 const SELECTOR_LIMIT = 15
 
@@ -32,7 +32,7 @@ export function VideoSelector({
   className,
 }: {
   projectId: string
-  video: Video
+  video: Models.Video
   onSelect: (videoId: string) => void
   className?: string
 }) {
@@ -125,7 +125,6 @@ export function VideoSelector({
                   <VideoThumb
                     projectId={projectId}
                     video={item}
-                    width={120}
                     uniformSize
                     className="w-12 shrink-0 rounded border border-border/60 [&_svg]:h-3 [&_svg]:w-3"
                   />

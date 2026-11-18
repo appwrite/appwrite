@@ -1,3 +1,4 @@
+import type { Models } from '@appwrite.io/console'
 import { useMemo } from 'react'
 import { useSearch } from '@tanstack/react-router'
 import { AlertCircle, Loader2 } from 'lucide-react'
@@ -18,13 +19,12 @@ import {
 import { parseEmbedStartParam } from '@/lib/videos/embed-start-time'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
-import type { Video, VideoRendition } from '@/lib/appwrite/videos'
 
 type EmbedViewProps = {
   videoId: string
   initialData?: {
-    video: Video
-    renditions: VideoRendition[]
+    video: Models.Video
+    renditions: Models.VideoRendition[]
   }
 }
 

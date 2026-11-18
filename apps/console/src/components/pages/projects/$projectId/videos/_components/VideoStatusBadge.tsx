@@ -1,5 +1,10 @@
 import { Loader2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 
@@ -26,7 +31,6 @@ const RENDITION_STATUS: Record<
   pending: { label: 'Queued', variant: 'pending' },
   started: { label: 'Encoding', variant: 'processing' },
   ended: { label: 'Encoded', variant: 'processing' },
-  uploading: { label: 'Uploading', variant: 'processing' },
   ready: { label: 'Ready', variant: 'success' },
   error: { label: 'Failed', variant: 'error' },
   aborted: { label: 'Aborted', variant: 'warning' },
@@ -51,10 +55,13 @@ const STATUS_MAPS = {
 export function VideoStatusBadge({
   status,
   kind = 'video',
+  error,
   className,
 }: {
   status: string | undefined
   kind?: keyof typeof STATUS_MAPS
+  /** Worker error message, shown on hover when the status is a failure. */
+  error?: string
   className?: string
 }) {
   const t = useT()
@@ -62,7 +69,7 @@ export function VideoStatusBadge({
     label: status || 'Unknown',
     variant: 'info' as const,
   }
-  return (
+  const badge = (
     <Badge
       variant={entry.variant}
       className={cn('text-[10px] shrink-0 gap-1', className)}
@@ -72,5 +79,16 @@ export function VideoStatusBadge({
       ) : null}
       {t(entry.label)}
     </Badge>
+  )
+  if (entry.variant !== 'error' || !error?.trim()) return badge
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span tabIndex={0} className="inline-flex w-fit shrink-0">
+          {badge}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs break-words">{error}</TooltipContent>
+    </Tooltip>
   )
 }
