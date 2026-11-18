@@ -75,14 +75,28 @@ export function RetryDomainDialog({
     }
   }
 
+  // The rule updates live: once DNS passes, there is nothing to retry.
+  const retryable = canRetryRule(rule)
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>{t('Retry verification')}</DialogTitle>
-          <DialogDescription className="text-[13px] mt-2">
-            {t('Retry domain verification for')} {rule.domain}
-          </DialogDescription>
+          {retryable ? (
+            <>
+              <DialogTitle>{t('Retry verification')}</DialogTitle>
+              <DialogDescription className="text-[13px] mt-2">
+                {t('Retry domain verification for')} {rule.domain}
+              </DialogDescription>
+            </>
+          ) : (
+            <>
+              <DialogTitle>{t('DNS Records')}</DialogTitle>
+              <DialogDescription className="text-[13px] mt-2 font-mono">
+                {rule.domain}
+              </DialogDescription>
+            </>
+          )}
         </DialogHeader>
         <div className="border-t border-border" />
 
@@ -95,9 +109,8 @@ export function RetryDomainDialog({
           />
         </div>
 
-        {/* The rule updates live: once DNS passes, there is nothing to retry. */}
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          {canRetryRule(rule) ? (
+          {retryable ? (
             <>
               <Button
                 type="button"
