@@ -347,18 +347,10 @@ function OrgRoleBadge({ role }: { role: string }) {
   )
 }
 
-/** Single sign-on preview: whether a member's email is on a verified domain. */
-function MemberAffiliationBadge({ internal }: { internal: boolean }) {
+/** Single sign-on preview: a member whose email is not on a verified domain. */
+function ExternalMemberBadge() {
   const t = useT()
-  return internal ? (
-    <Badge
-      variant="secondary"
-      className="text-[11px] font-medium border px-2 py-0.5 shrink-0"
-      title={t('Email on a verified domain')}
-    >
-      {t('Internal')}
-    </Badge>
-  ) : (
+  return (
     <Badge
       variant="warning"
       className="text-[11px] font-medium px-2 py-0.5 shrink-0"
@@ -1849,7 +1841,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       mapOrganizationMembershipsToTeamMembers(displayedMembershipsRaw, orgId),
     [displayedMembershipsRaw, orgId],
   )
-  // Single sign-on preview: Internal / External once the org has a verified domain.
+  // Single sign-on preview: flag External members once the org has a verified domain.
   const { domains: emailDomains } = useOrganizationEmailDomains(
     canShowOrgSsoSettings(access, features) ? orgId : null,
   )
@@ -3757,14 +3749,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                       </Badge>
                                                     )}
                                                     {verifiedEmailDomains.size >
-                                                      0 && (
-                                                      <MemberAffiliationBadge
-                                                        internal={isInternalEmail(
-                                                          member.userEmail,
-                                                          verifiedEmailDomains,
-                                                        )}
-                                                      />
-                                                    )}
+                                                      0 &&
+                                                      !isInternalEmail(
+                                                        member.userEmail,
+                                                        verifiedEmailDomains,
+                                                      ) && (
+                                                        <ExternalMemberBadge />
+                                                      )}
                                                   </div>
                                                   <div className="mt-0.5">
                                                     <p className="truncate text-[12px] text-muted-foreground">

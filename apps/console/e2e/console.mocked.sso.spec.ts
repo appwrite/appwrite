@@ -426,9 +426,37 @@ test.describe('organization single sign-on', () => {
     await expect(page.getByText('No email domains yet')).toBeVisible()
   })
 
-  test('marks members Internal or External by the verified domains', async ({
+  test('needs at least one role to add or update a domain', async ({
     page,
   }) => {
+    const mock = await mockAppwriteApi(page)
+    await enableSso(page)
+    await openSso(page)
+
+    await page.getByRole('button', { name: 'Add domain' }).click()
+    const add = page.getByRole('dialog', { name: 'Add email domain' })
+    await add.getByLabel('Domain').fill('devs.acme.io')
+    await add.getByRole('button', { name: 'Remove Developer' }).click()
+    await expect(add.getByText('Pick at least one role.')).toBeVisible()
+    await expect(
+      add.getByRole('button', { name: 'Add', exact: true }),
+    ).toBeDisabled()
+    await page.keyboard.press('Escape')
+
+    await page.getByRole('button', { name: 'Actions for acme.com' }).click()
+    await page.getByRole('menuitem', { name: 'Update' }).click()
+    const update = page.getByRole('dialog', { name: 'Update roles' })
+    await update.getByRole('button', { name: 'Remove Developer' }).click()
+    await expect(update.getByText('Pick at least one role.')).toBeVisible()
+    await expect(
+      update.getByRole('button', { name: 'Update', exact: true }),
+    ).toBeDisabled()
+
+    expect(mock.sent.creates).toHaveLength(0)
+    expect(mock.sent.updates).toHaveLength(0)
+  })
+
+  test('flags External members by the verified domains', async ({ page }) => {
     await mockAppwriteApi(page, {
       rules: [
         rule('acme.com', ['developer'], 'verified'),
@@ -446,20 +474,20 @@ test.describe('organization single sign-on', () => {
     await page.goto(`${SETTINGS}/members`, { waitUntil: 'domcontentloaded' })
 
     const row = (name: string) => page.getByRole('row', { name })
-    await expect(row('Demo Owner')).toContainText('Internal', {
+    await expect(row('Alex Contractor')).toContainText('External', {
       timeout: 45_000,
     })
-    await expect(row('Sara Lee')).toContainText('Internal')
-    await expect(row('Alex Contractor')).toContainText('External')
+    // Members on a verified domain get no label: they are most of the list
+    await expect(row('Demo Owner')).not.toContainText('External')
+    await expect(row('Sara Lee')).not.toContainText('External')
+    await expect(page.getByText('Internal', { exact: true })).toHaveCount(0)
     // A subdomain is its own domain, verified on its own
     await expect(row('Kim Park')).toContainText('External')
     // Unverified domains do not count
     await expect(row('new@acme.dev')).toContainText('External')
   })
 
-  test('shows no Internal or External without a verified domain', async ({
-    page,
-  }) => {
+  test('flags no one without a verified domain', async ({ page }) => {
     await mockAppwriteApi(page, {
       rules: [rule('acme.com', ['developer'], 'unverified')],
       members: [

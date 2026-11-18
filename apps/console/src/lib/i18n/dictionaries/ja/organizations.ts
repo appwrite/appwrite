@@ -1681,8 +1681,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'このドメインのネームサーバーは Appwrite を指していません。ドメインのステータスを更新しました。',
   // Single sign-on
   'Single sign-on': 'シングルサインオン',
-  'Internal': '内部',
-  'Email on a verified domain': '検証済みドメインのメール',
   'Email not on a verified domain': '検証済みドメイン外のメール',
   'Verify your company domain so teammates join on sign-up.':
     '会社のドメインを検証すると、チームメンバーがサインアップ時に参加します。',
