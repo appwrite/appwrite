@@ -2,12 +2,13 @@
 //! value objects and enums those classes take live in the Composer packages
 //! (`packages/<name>`), as plain PHP.
 //!
-//! `Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN` and
-//! `Utopia\Locale\Locale` are always registered: they have no PHP
-//! implementation. Every other library still has one, and its class is
-//! registered only when `_APP_EXTENSION_LIBRARIES` names its package
-//! (`user-agent`, `domains`, `emails`), so each can be canaried and switched back to PHP
-//! with a restart, not a deploy.
+//! `Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`,
+//! `Utopia\Locale\Locale`, `Utopia\UserAgent\UserAgent`, `Utopia\Domains\Domain` and
+//! `Utopia\Emails\Email` are always registered: they have no PHP implementation.
+//! Every other library still has one, and its class is registered only when
+//! `_APP_EXTENSION_LIBRARIES` names its package (`validators`) or, for a package ported in
+//! batches, the package and the batch (`validators,validators-scalar`, `validators,validators-text`), so each can be
+//! canaried and switched back to PHP with a restart, not a deploy.
 
 mod canvas;
 mod domains;
@@ -16,6 +17,7 @@ mod emails;
 mod locale;
 mod string;
 mod user_agent;
+mod validators;
 
 use ext_php_rs::prelude::*;
 
@@ -30,17 +32,37 @@ fn enabled(package: &str) -> bool {
 
 /// The module PHP loads: every class of the extension that is switched on.
 #[php_module]
+#[php(startup = startup)]
 pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     let module = module
         .name("utopia")
         .class::<canvas::Canvas>()
         .class::<canvas::Font>()
         .class::<dsn::Dsn>()
-        .class::<locale::Locale>();
-    let module = if enabled("domains") { module.class::<domains::Domain>() } else { module };
-    let module = if enabled("emails") { module.class::<emails::Email>() } else { module };
-    let module = if enabled("user-agent") { module.class::<user_agent::UserAgent>() } else { module };
+        .class::<locale::Locale>()
+        .class::<user_agent::UserAgent>()
+        .class::<domains::Domain>()
+        .class::<emails::Email>();
     module.request_shutdown_function(request_shutdown)
+}
+
+/// Registers the classes built by hand rather than with `#[php_class]` that are switched on.
+/// Runs in MINIT, before the `#[php_class]` classes are registered.
+fn startup(_kind: i32, _module: i32) -> i32 {
+    if !enabled("validators") {
+        return 0;
+    }
+    // The leaves extend the base, so a batch is registered only with it.
+    ext_php_rs::internal::startup_guard(|| {
+        validators::register()?;
+        if enabled("validators-scalar") {
+            validators::scalar::register()?;
+        }
+        if enabled("validators-text") {
+            validators::text::register()?;
+        }
+        Ok(())
+    })
 }
 
 /// Forgets what the classes hold for the request when it ends, as PHP frees its static state.

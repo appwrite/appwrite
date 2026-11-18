@@ -59,15 +59,11 @@ cargo fmt --all --check
 
 ### Compare with PHP
 
-The utopia PHP extension serves this crate as `Utopia\Domains\Domain`. Its parity corpus, `crates/extension/tests/domains.php`, checks every rule of `packages/domains/data/data.php` on PHP's class and on the extension; `crates/extension/tests/run.sh` runs it in the development image. To time both implementations:
-
-```bash
-python3 crates/extension/bench/run.py crates/extension/bench/domains.php . target/release/libutopia.so 5
-```
+The utopia PHP extension serves this crate as `Utopia\Domains\Domain`, which no longer has a PHP implementation. `crates/extension/tests/run.sh` runs `packages/domains/tests` on it in the development image.
 
 ### Public Suffix List
 
-`data/public-suffix-list.txt` is `packages/domains/data/data.php` in the crate's format. After refreshing the PHP list, regenerate it from the repository root:
+`data/public-suffix-list.txt` is `packages/domains/data/data.php` in the crate's format. After refreshing the package's list, regenerate it from the repository root:
 
 ```bash
 php crates/utopia/domains/data/export.php > crates/utopia/domains/data/public-suffix-list.txt

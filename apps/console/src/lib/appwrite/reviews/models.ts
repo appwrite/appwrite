@@ -1,8 +1,10 @@
 /**
- * Reviews response models, copied from `Review`, `ReviewFinding` and
- * `ReviewRepository` in `src/Appwrite/Utopia/Response/Model`. Delete with
+ * Reviews response models, copied from `Review`, `ReviewFinding`,
+ * `ReviewRepository`, `ReviewLearning` and `ReviewAuthor` in `src/Appwrite/Utopia/Response/Model`. Delete with
  * `service.ts` once the generated SDK carries the `reviews` service.
  */
+
+import type { Models } from '@appwrite.io/console'
 
 export type ReviewStatus =
   | 'queued'
@@ -107,6 +109,11 @@ export type Review = {
    * Pull request number.
    */
   providerPullRequestId: string
+  /**
+   * VCS login of who opened the pull request. Empty for reviews queued before
+   * it was recorded.
+   */
+  providerPullRequestAuthor: string
   /**
    * Head commit of the pull request.
    */
@@ -222,6 +229,17 @@ export type ReviewRepository = {
 }
 
 /**
+ * A VCS installation with its code review settings, which the Console SDK's
+ * `Installation` model does not carry yet.
+ */
+export type ReviewInstallation = Models.Installation & {
+  /**
+   * Whether code review is turned on for repositories added to the installation later.
+   */
+  reviewNewRepositories?: boolean
+}
+
+/**
  * Review Repositories List
  */
 export type ReviewRepositoryList = {
@@ -233,4 +251,99 @@ export type ReviewRepositoryList = {
    * List of repositories.
    */
   repositories: ReviewRepository[]
+}
+
+/**
+ * Review Learning: something the reviewer was asked to remember in a
+ * conversation on GitHub. Later reviews of the repository follow it.
+ */
+export type ReviewLearning = {
+  /**
+   * Learning ID.
+   */
+  $id: string
+  /**
+   * Learning creation date in ISO 8601 format.
+   */
+  $createdAt: string
+  /**
+   * ID of the repository whose reviews follow the learning.
+   */
+  repositoryId: string
+  /**
+   * What the reviewer was asked to remember.
+   */
+  body: string
+  /**
+   * GitHub login of who asked for it.
+   */
+  author: string
+  /**
+   * The comment it was asked in, if known.
+   */
+  sourceUrl: string
+}
+
+/**
+ * Review Learnings List
+ */
+export type ReviewLearningList = {
+  /**
+   * Total number of learnings that matched your query.
+   */
+  total: number
+  /**
+   * List of learnings.
+   */
+  learnings: ReviewLearning[]
+}
+
+/** Date range the author performance is computed over. */
+export type ReviewAuthorRange = '7d' | '30d' | '90d'
+
+/**
+ * Review Author: how one author's pull requests fared in review over a range.
+ */
+export type ReviewAuthor = {
+  /**
+   * VCS login of the pull requests' author. Empty for pull requests reviewed
+   * before authors were recorded.
+   */
+  author: string
+  /** Pull requests reviewed. */
+  pulls: number
+  /** Completed reviews of the pull requests. */
+  reviews: number
+  /** Pull requests whose latest review approved. */
+  approved: number
+  /** Pull requests approved by their first review. */
+  approvedFirst: number
+  /** Findings posted on the pull requests. */
+  findings: number
+  /** Critical findings posted. */
+  critical: number
+  /** Major findings posted. */
+  major: number
+  /** Findings fixed by a later commit. */
+  resolved: number
+  /** Findings settled in their thread or dismissed by a maintainer. */
+  dismissed: number
+  /** Average merge confidence tier of the latest reviews, S to F; empty when none has one. */
+  tier: string
+  /** Date of the latest review in ISO 8601 format. */
+  lastReviewAt: string
+}
+
+/**
+ * Review Authors List
+ */
+export type ReviewAuthorList = {
+  /**
+   * Total number of authors.
+   */
+  total: number
+  /**
+   * Authors with the most reviewed pull requests first.
+   */
+  authors: ReviewAuthor[]
 }

@@ -20,30 +20,38 @@ and libclang at build time.
 
 ## Switching a class on
 
-`Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN` and `Utopia\Locale\Locale` are always
-registered: they have no PHP implementation. Their signatures are in `stubs/` and `packages/image/stubs/` for PHPStan,
+`Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`, `Utopia\Locale\Locale`,
+`Utopia\UserAgent\UserAgent`, `Utopia\Domains\Domain` and `Utopia\Emails\Email` are always
+registered: they have no PHP implementation. Their signatures are in `stubs/`, `packages/image/stubs/`,
+`packages/user-agent/stubs/`, `packages/domains/stubs/` and `packages/emails/stubs/` for PHPStan,
 which runs without the extension. Every other class is registered only when
 `_APP_EXTENSION_LIBRARIES` names its package. Otherwise Composer loads the package's PHP class as
 before:
 
 ```sh
-_APP_EXTENSION_LIBRARIES=user-agent,domains   # Utopia\UserAgent\UserAgent and Utopia\Domains\Domain from the extension
+_APP_EXTENSION_LIBRARIES=<package>,<package>   # those packages' classes from the extension
 ```
+
+A package ported in batches has one switch per batch, `<package>-<batch>`, which needs the
+package's own: `validators,validators-scalar` registers the validators' base and the scalar leaf
+validators, `validators,validators-text` the base and the text ones, `validators` alone only the
+base.
 
 The extension reads it once, when PHP loads the module, so changing it takes a restart and no
 deploy. Each library is canaried on Cloud this way before it becomes the default.
 
-CI runs `crates/extension/tests/run.sh` in the development image. It finds the libraries from the
-`enabled()` calls in `src/lib.rs` and requires a parity corpus at `tests/<name>.php` for each. For
-every library it runs `packages/<name>/tests` on the extension and diffs the corpus on both
-implementations, first one library at a time, then with all of them on. A new library needs only
+CI runs `crates/extension/tests/run.sh` in the development image. It finds the switchable libraries
+from the `enabled()` calls in `src/lib.rs` and requires a parity corpus at `tests/<name>.php` for
+each. For every one it runs `packages/<name>/tests` on the extension and diffs the corpus on both
+implementations, first one library at a time (a batch with its package's switch, running the
+package's tests), then with all of them on. A new library needs only
 its `enabled()` call, its corpus and its package tests; there is no CI step to add.
 
-Once a library has run on the extension everywhere, its PHP package is removed: the class is
-registered unconditionally, `tests/<name>.expected.jsonl` holds the output of the PHP class it
-replaced, and `run.sh` diffs the corpus against that file. The package stays published at its last
-release for projects outside this repository; the root `composer.json` keeps `replace`-ing it so it
-is never installed here.
+Once a library has run on the extension everywhere, its PHP class is removed and the class is
+registered unconditionally. Its corpus goes with it, since there is nothing left to compare
+against; the package's own tests keep running on the extension. The package stays published at its
+last release for projects outside this repository; the root `composer.json` keeps `replace`-ing a
+package removed whole so it is never installed here.
 
 ## Utopia\DSN\DSN
 
@@ -53,9 +61,7 @@ published at 1.0.0 for other projects. It declares the PHP class's protected pro
 `var_dump()` and `(array)` see what they saw in PHP. The DSN, `from()`'s user and its password are
 `#[\SensitiveParameter]`, as in PHP, so exception traces never hold them.
 
-`crates/extension/tests/dsn.php` prints a corpus of results (#14308's `tests/compat/dsn` cases, plus
-edge cases) that must match `dsn.expected.jsonl`, the output of the PHP class, and asserts the known
-differences from it:
+Known differences from the PHP class it replaced:
 
 - A DSN that is not UTF-8 is refused as malformed, where `parse_url` took any bytes.
 - `from()` takes string parameters; PHP also round-tripped a list value (`['a' => ['b', 'c']]`).
@@ -80,13 +86,7 @@ through PHP's `file_exists()` and `file_get_contents()`, so Swoole's hooks, stre
 PHP's warnings apply. `getTranslations()` builds a language's array once and returns it by
 refcount afterwards, as PHP returns `self::$language[$name]`.
 
-`crates/extension/tests/locale.php` prints a corpus of results that must match
-`locale.expected.jsonl`, the output of the PHP class: real Appwrite translations pinned in
-`tests/fixtures/locale` (English, Hebrew, Arabic, Japanese, Chinese, Russian, Hindi), with
-placeholders; JSON files of
-every shape; every combination of default, fallback and missing key with and without
-exceptions; placeholder values of every type; the scalar arguments PHP converts; and the warnings
-each case raises. It asserts these known differences from the PHP class:
+Known differences from the PHP class it replaced:
 
 - `setLanguageFromArray()` refuses a translation that is not a string; PHP stored it and returned it.
 - A language name, translation key or text that is not UTF-8 is refused with an `Exception` when it
@@ -103,17 +103,15 @@ file and line, since the class has no PHP source.
 
 ## Utopia\UserAgent\UserAgent
 
-Over `crates/utopia/user-agent` (`_APP_EXTENSION_LIBRARIES=user-agent`). Only `UserAgent` moves: what
-it returns are the package's own `OperatingSystem`, `Client`, `Device` and `Bot` objects, built by
-their PHP constructors once per agent and returned as the same object on every call, as in PHP. The
-detectors in `Utopia\UserAgent\Detection` stay PHP. The class is final with a private constructor
+Over `crates/utopia/user-agent`, always registered. Once the extension had served it in every Cloud
+region (appwrite-labs/cloud#7503), the PHP parser (`UserAgent.php` and `Detection\*`) was removed
+from `packages/user-agent`, which now requires `ext-utopia` like `packages/image`; 0.1.x on
+Packagist is the last release that parses in PHP. What `UserAgent` returns are the package's own
+`OperatingSystem`, `Client`, `Device` and `Bot` objects, built by their PHP constructors once per
+agent and returned as the same object on every call, as in PHP. The class is final with a private constructor
 and the PHP class's private properties, so `==`, `var_dump()` and `(array)` see what they see in PHP.
 
-`crates/extension/tests/user-agent.php` prints a corpus of results that must be identical on both
-implementations: every string in the package's tests, agents Appwrite sees (SDKs, the CLI, HTTP
-libraries, browsers, previews, monitors, bots), edge cases (empty, case, control bytes, bytes that are
-not UTF-8, 100 KB inputs) and seeded mutations of all of them, read through every method and through
-`Appwrite\Detector\Detector`. It asserts these known differences on the extension:
+`packages/user-agent/tests` run on the extension. Known differences from the PHP class it replaced:
 
 - A `null`, array or object argument and a missing argument raise the same `TypeError` and
   `ArgumentCountError` with ext-php-rs's message.
@@ -122,35 +120,35 @@ not UTF-8, 100 KB inputs) and seeded mutations of all of them, read through ever
 
 ## Utopia\Domains\Domain
 
-Over `crates/utopia/domains` (`_APP_EXTENSION_LIBRARIES=domains`), the Public Suffix List parser of
-`packages/domains`. The registrars make network calls, so they and the validators stay PHP. The
-crate embeds the list as `crates/utopia/domains/data/public-suffix-list.txt`, exported from the PHP
-package's `data/data.php`, so both read the same rules. PHP fills the class's protected properties as
+Over `crates/utopia/domains`, always registered: the Public Suffix List parser of `packages/domains`.
+Once the extension had served it in every Cloud region (appwrite-labs/cloud#7503), the PHP class
+(`src/Domain.php`) was removed from `packages/domains`, which now requires `ext-utopia` like
+`packages/image`; 4.4.x on Packagist is the last release that parses in PHP. The registrars make
+network calls, so they and the validators stay PHP. The crate embeds the list as
+`crates/utopia/domains/data/public-suffix-list.txt`, exported from the package's `data/data.php`,
+which stays the list's source. PHP fills the class's protected properties as
 its getters run (`getTLD()` sets `$TLD`, a matching `getSuffix()` sets `$suffix` and `$rule`), and the
 binding shows the same properties, so `==`, `var_dump()` and `(array)` see what they see in PHP.
 
-`crates/extension/tests/domains.php` prints a corpus of results that must be identical on both
-implementations: every rule of `data.php` as a suffix, under a name, under a subdomain and in upper
-case, so a list refreshed on one side and not the other fails it; hostnames Appwrite and Cloud parse;
-edge cases (empty and dotted names, `0`, IDN and punycode, IPs, ports, bytes that are not UTF-8,
-URLs); the properties after each getter and after every getter in reverse; the scalar arguments PHP
-converts; and `==`, clone, `var_dump()`, reflection and a subclass. It asserts one known difference on
-the extension:
+`packages/domains/tests` run on the extension. Known differences from the PHP class it replaced:
 
 - The exception for a URL (`http://`, `https://`) holding bytes that are not UTF-8 shows them as
   U+FFFD; PHP's message keeps the bytes.
 
-Cloning an instance of a PHP subclass is not tested: it hits the ext-php-rs bug in
-extphprs/ext-php-rs#837. Nothing in Appwrite or Cloud subclasses `Domain`.
+A PHP subclass, with properties of its own, clones as in PHP (fixed in ext-php-rs 0.16.5,
+extphprs/ext-php-rs#838).
 
 ## Utopia\Emails\Email
 
-Over `crates/utopia/emails` (`_APP_EXTENSION_LIBRARIES=emails`): parsing, the local-part and
-`FILTER_VALIDATE_EMAIL` checks, the free and disposable lists and the canonical forms of
-`packages/emails`. The validators and the `Canonicals` provider classes stay PHP; the validators make
-`Email`s, so they use the extension's. The crate embeds the lists as
-`crates/utopia/emails/data/{free,disposable}-domains.txt`, exported from the PHP package's
-`data/*-domains.php` by `data/export.php`.
+Over `crates/utopia/emails`, always registered: parsing, the local-part and `FILTER_VALIDATE_EMAIL`
+checks, the free and disposable lists and the canonical forms of `packages/emails`. Once the
+extension had served it in every Cloud region (appwrite-labs/cloud#7503), the PHP class
+(`src/Email.php`) was removed from `packages/emails`, which now requires `ext-utopia` like
+`packages/image`; 0.8.x on Packagist is the last release that parses in PHP. The validators and the
+`Canonicals` provider classes stay PHP; the validators make `Email`s, so they use the extension's.
+The crate embeds the lists as `crates/utopia/emails/data/{free,disposable}-domains.txt`, exported from
+the package's `data/*-domains.php` (which `import.php` refreshes, and which stay the lists' source)
+by `data/export.php`.
 
 What `Email` asks of its domain is `Utopia\Domains\Domain`'s: the binding makes the
 `$domainInstance` object with `new Domain()` and calls `isKnown()`, `isTest()`, `getRegisterable()`
@@ -158,21 +156,113 @@ and `getSub()` on it as PHP does, so it is whichever implementation `domains` se
 same exception for a URL, and fills the same properties. `==`, `var_dump()`, `(array)` and `clone`
 (which shares `$domainInstance`) see what they see in PHP.
 
-`crates/extension/tests/emails.php` prints a corpus of results that must be identical on both
-implementations: every domain of both lists (and a subdomain of every 25th), so a list refreshed on
-one side and not the other fails it; every domain of every provider under local parts the rules
-change; addresses Appwrite and Cloud see and edge cases (whitespace, case, `0`, quoted and IP
-literal addresses, IDN, lengths at the limits, bytes that are not UTF-8, URLs as domains); 20,000
-seeded random addresses through `isValid()`, `hasValidLocal()`, `hasValidDomain()` and
-`getCanonical()`; the properties after each getter and after every getter in reverse; the scalar
-arguments PHP converts; `==`, clone, `var_dump()`, reflection, constants, subclasses; and the
-package's validators. It asserts these known differences on the extension:
+`packages/emails/tests` run on the extension. Known differences from the PHP class it replaced:
 
 - The protected helpers `initializeProviders()`, `getProviderForDomain()` and `isDomainSupported()`
   and the protected static properties `$freeDomains`, `$disposableDomains` and `$providers` do not
   exist: a subclass cannot call or read them. Nothing in Appwrite or Cloud subclasses `Email`.
-- Cloning an instance of a PHP subclass gives an `Email`, not the subclass (extphprs/ext-php-rs#837);
-  a subclass that declares properties of its own crashes on `clone`, as it does with `Domain`.
+
+## Utopia\Validator\Validator
+
+`_APP_EXTENSION_LIBRARIES=validators` registers the abstract base of every validator, its seven
+`TYPE_*` constants and its four abstract methods. It holds nothing, so the leaf validators of
+`packages/validators`, Appwrite's and utopia-php/database's stay PHP and extend it as they would
+extend `Exception`. `src/validators/mod.rs` builds it with ext-php-rs's `ClassBuilder` rather than
+`#[php_class]`: that macro gives a class a Rust object and a public `__construct` that throws
+without a Rust constructor, which a subclass without a constructor of its own would inherit. Built
+by hand it has neither, as in PHP: `new` on a subclass, `parent::__construct()` (an `Error`),
+clone, `var_dump()` and serialization behave as on the PHP base.
+
+The migration goes in phases: this base first, then the leaf validators in batches, each batch
+behind its own switch (`validators-<batch>`) so it can be canaried alone, with its own corpus.
+
+`crates/extension/tests/validators.php` prints a corpus that must be identical on both
+implementations: the base's reflection (constants, modifiers, return types, parameters); every
+validator of the package in 52 configurations over 48 values of every kind (scalars, numeric
+strings, hostnames, URLs, IPs, colours, JSON, phone numbers, bytes that are not UTF-8, arrays,
+objects); PHP subclasses (a clone with properties of its own, `var_dump()`, serialization, a leaf's
+subclass calling `parent::` and reading its protected state, `parent::__construct()`); constants
+through a leaf; the `Utopia\Validator` alias of `compat.php`; and, from a child process, the
+declarations the engine refuses or accepts (a missing method, a missing or wrong return type, a
+`mixed` or extra optional parameter, a static override). There is no known difference: `isValid()`'s
+`$value` is untyped, as in PHP (ext-php-rs types every argument it builds; the binding clears the
+type in the engine's copy after registration).
+
+## Utopia\Validator's scalar validators
+
+`_APP_EXTENSION_LIBRARIES=validators,validators-scalar` also registers `Boolean`, `Integer`,
+`FloatValidator`, `Numeric`, `Range` (a `Numeric`), `Port`, `HexColor` and `Wildcard` over
+`crates/utopia/validators`. Nothing outside the package extends them.
+
+`src/validators/scalar.rs` builds them by hand like the base: a class has a constructor only where
+PHP's has one, and no Rust object. What a PHP constructor keeps is in real typed protected
+properties, declared as `packages/validators` declares them (types, defaults, order, promoted
+parameters), so a subclass reads and writes them with their type checks, and `var_dump()`,
+`(array)`, `==`, `clone`, `serialize()`, `unserialize()` and reflection see what they see in PHP.
+Methods read the properties on every call, in PHP's order (an uninitialized one throws the same
+`Error`), straight from the object's slot on an object of the class itself and through the engine
+otherwise. Arguments go through the engine's own conversions, and a rejected one throws the
+`TypeError` or `ArgumentCountError` of a userland function, `called in` file and line included.
+`src/validators/engine.rs` holds the engine calls ext-php-rs does not wrap, which are worth
+proposing upstream: typed property declarations, union and untyped argument types (the engine
+copies a typed method's argument info at registration, so they are patched in its copy after the
+inheritance checks), and `FunctionHandler`, which is not exported.
+
+`crates/extension/tests/validators-scalar.php` prints a corpus that must be identical on both
+implementations (10,008 lines): each class's reflection (constants, properties, methods,
+parameters with their types, defaults and promotion); every constructor over arguments of every
+kind PHP converts or rejects, named arguments, too few arguments, strict types (in a child
+process), reflection's `newInstance()` and `newInstanceWithoutConstructor()`; the getters and
+`isValid()` of 69 validators over 127 values (ints and floats at every bound, `NAN`, `INF`,
+numeric strings with whitespace, exponents, overflow, hex and signs, ports with IPv4 and IPv6
+hosts, colours with a trailing newline, bytes that are not UTF-8, arrays, objects, `Stringable`);
+dumps, copies, comparisons, JSON, iteration and serialization, crafted serializations included;
+PHP subclasses of the leaves (overriding `isUnsigned()` that `getFormat()` calls, writing the
+protected bounds, skipping the parent constructor); and, from a child process, the declarations
+the engine checks against them. There is no known difference: only `isInternal()`, the file, the
+doc comments and the methods' attributes (`#[\Override]`) differ, by construction.
+
+## Utopia\Validator's text validators
+
+`_APP_EXTENSION_LIBRARIES=validators,validators-text` also registers `Text`, `Identifier` (a `Text`),
+`WhiteList`, `Contains` and `Label` over `crates/utopia/validators`. Outside the package, Appwrite's
+`Compute\Validator\VariableKey` and `Database\Validator\Filename` extend `Text`; they read its
+protected `$length` and call `parent::__construct()`, `parent::getDescription()` and
+`parent::isValid()`, and work unchanged on either implementation.
+
+`src/validators/text.rs` builds them by hand like the scalar batch (shared helpers in
+`src/validators/leaf.rs`), with their state in real typed protected properties, read in PHP's
+order. `Text`'s `NUMBERS`, `ALPHABET_UPPER` and `ALPHABET_LOWER` are persistent immutable arrays, and
+`Label::MAX_LENGTH` is a typed (`int`) constant; each class's own constants come before the ones it
+inherits, as PHP orders them. Comparisons with the PHP values a validator holds go through the
+engine: the loose `in_array()` of `Text`'s allow list and of `WhiteList` (`zend_compare`, or bytes
+when two strings cannot both be numeric), `WhiteList`'s strict `in_array()` (`zend_is_identical`),
+and `(string)` of a list item or a pattern, and `implode()` (`zval_get_string_func`, with its
+`Array to string conversion` warning and its `Error` for an object without `__toString()`). A non-strict
+`WhiteList` copies its list with the engine (`zend_array_dup`, keys and order kept) and lowers the
+values in place. `Text`'s blank check and `Contains`'s case folding are `php-std`'s PCRE2 and
+`mb_strtolower()`, PHP's own.
+
+`crates/extension/tests/validators-text.php` prints a corpus that must be identical on both
+implementations (13,716 lines): each class's reflection (constants with their types, properties,
+methods and their order, parameters); every constructor over arguments of every kind PHP converts or
+rejects, named arguments, strict types (in a child process) and `newInstanceWithoutConstructor()`;
+the getters and `isValid()` of 80 validators over 105 values (multibyte, combining and emoji
+characters, every Unicode separator and format character, final sigma, bytes that are not UTF-8,
+numeric strings, arrays, objects, `Stringable`, a throwing `__toString()`, an enum); every code
+point through the blank check and through `Contains`'s case folding; the character count of every
+two-byte string and of 4,000 seeded random byte strings; allow lists, white lists (strict and not)
+and patterns of every kind of value against values of every kind; dumps, copies, comparisons and
+serialization; Appwrite's two `Text` subclasses; PHP subclasses writing every protected property,
+skipping or catching the parent constructor (a `WhiteList` whose list fails half way); and, from a
+child process, the declarations the engine checks against them. It asserts one known difference:
+
+- The native classes run their regular expressions without PHP's `preg_*` functions, so they leave
+  `preg_last_error()` as it was: after `Text`'s blank check on bytes that are not UTF-8 it is not
+  `PREG_BAD_UTF8_ERROR`, and after `Identifier::isValid()` it is not reset.
+
+A warning PHP raises inside a method (`Array to string conversion`) names the caller's file and line,
+since the class has no PHP source.
 
 ## Benchmarks
 
@@ -181,7 +271,7 @@ times one implementation; `run.py` runs it on both, alternating, and prints the 
 
 ```sh
 cargo build --release -p utopia-extension
-python3 crates/extension/bench/run.py crates/extension/bench/user-agent.php . target/release/libutopia.so 5
+python3 crates/extension/bench/run.py crates/extension/bench/<name>.php . target/release/libutopia.so 5
 ```
 
 ## Utopia\Image\Canvas and Utopia\Image\Font

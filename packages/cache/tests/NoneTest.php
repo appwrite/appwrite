@@ -69,6 +69,20 @@ final class NoneTest extends Base
     }
 
     #[\Override]
+    public function testEmptyArrayIsStored(): void
+    {
+        $this->assertFalse(self::$cache->save('empty-array', []));
+        $this->assertFalse(self::$cache->load('empty-array', 60));
+    }
+
+    #[\Override]
+    public function testEmptyArrayIsKeptByTouch(): void
+    {
+        $this->assertFalse(self::$cache->save('empty-array-touch', []));
+        $this->assertFalse(self::$cache->touch('empty-array-touch'));
+    }
+
+    #[\Override]
     public function testCaseInsensitivity(): void
     {
         $this->markTestSkipped('The None adapter stores nothing, so key casing cannot matter.');

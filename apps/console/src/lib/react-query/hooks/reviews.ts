@@ -19,13 +19,16 @@ import {
 import { sdk } from '@/lib/appwrite/sdk'
 import type {
   Review,
+  ReviewAuthorList,
+  ReviewAuthorRange,
   ReviewEventList,
+  ReviewLearningList,
   ReviewList,
   ReviewRepository,
   ReviewRepositoryList,
   ReviewStrength,
 } from '@/lib/appwrite/reviews'
-import { DEFAULT_STALE_TIME } from './constants'
+import { DEFAULT_PAGE_SIZE, DEFAULT_STALE_TIME } from './constants'
 import { fetchRepositories } from './vcs'
 
 /** Reviews are fanned out by the review service, so poll while one is running. */
@@ -161,6 +164,46 @@ export async function fetchReviewedRepositories(
   )
 }
 
+/**
+ * Query function to fetch a page of what the reviewer was asked to remember,
+ * newest first.
+ */
+export async function fetchReviewLearnings(
+  projectId: string,
+  page: number,
+  limit: number,
+): Promise<ReviewLearningList> {
+  if (!projectId) {
+    return { learnings: [], total: 0 }
+  }
+
+  return await sdk.forProject(projectId).reviews.listLearnings({
+    queries: [
+      Query.orderDesc('$createdAt'),
+      Query.limit(limit),
+      Query.offset(page * limit),
+    ],
+  })
+}
+
+/**
+ * Query function to fetch how the authors of the project's pull requests fared
+ * in review over a range, optionally for one repository.
+ */
+export async function fetchReviewAuthors(
+  projectId: string,
+  range: ReviewAuthorRange,
+  repositoryId: string,
+): Promise<ReviewAuthorList> {
+  if (!projectId) {
+    return { authors: [], total: 0 }
+  }
+
+  return await sdk
+    .forProject(projectId)
+    .reviews.listAuthors({ range, repositoryId: repositoryId || undefined })
+}
+
 // ============================================================================
 // QUERY OPTIONS
 // ============================================================================
@@ -237,6 +280,42 @@ export function reviewRepositoriesQueryOptions(
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function reviewLearningsQueryOptions(
+  projectId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+) {
+  return queryOptions({
+    queryKey: ['review-learnings', 'project', projectId, page, limit],
+    queryFn: () => fetchReviewLearnings(projectId!, page, limit),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function reviewAuthorsQueryOptions(
+  projectId: string | null | undefined,
+  range: ReviewAuthorRange = '30d',
+  repositoryId: string = '',
+) {
+  return queryOptions({
+    queryKey: ['review-authors', 'project', projectId, range, repositoryId],
+    queryFn: () => fetchReviewAuthors(projectId!, range, repositoryId),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnWindowFocus: false,
     placeholderData: keepPreviousData,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -326,6 +405,43 @@ export function useReviewRepositories(
     isLoading,
     isFetching,
     isPlaceholderData,
+    error,
+  }
+}
+
+export function useReviewLearnings(
+  projectId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+) {
+  const { data, isLoading, isFetching, isPlaceholderData, error } = useQuery(
+    reviewLearningsQueryOptions(projectId, page, limit),
+  )
+
+  return {
+    learnings: data?.learnings ?? [],
+    total: data?.total ?? 0,
+    isLoading,
+    isFetching,
+    isPlaceholderData,
+    error,
+  }
+}
+
+export function useReviewAuthors(
+  projectId: string | null | undefined,
+  range: ReviewAuthorRange = '30d',
+  repositoryId: string = '',
+) {
+  const { data, isLoading, isFetching, error } = useQuery(
+    reviewAuthorsQueryOptions(projectId, range, repositoryId),
+  )
+
+  return {
+    authors: data?.authors ?? [],
+    total: data?.total ?? 0,
+    isLoading,
+    isFetching,
     error,
   }
 }
@@ -476,6 +592,45 @@ export function useDeleteReviewRepository(
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['review-repositories', 'project', projectId],
+      })
+    },
+  })
+}
+
+/**
+ * Chooses whether repositories added to a GitHub installation later are
+ * reviewed, and how hard.
+ */
+export function useUpdateReviewInstallation(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (params: {
+      installationId: string
+      newRepositories: boolean
+    }) => sdk.forProject(projectId!).reviews.updateInstallation(params),
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['vcs', 'installations', projectId],
+      })
+    },
+  })
+}
+
+/**
+ * Forgets a learning: later reviews and answers no longer follow it.
+ */
+export function useDeleteReviewLearning(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (learningId: string) =>
+      sdk.forProject(projectId!).reviews.deleteLearning({ learningId }),
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['review-learnings', 'project', projectId],
       })
     },
   })

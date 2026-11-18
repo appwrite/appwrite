@@ -2166,7 +2166,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description"
+            "description",
+            "providerComments",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "functions.createDeployment": [
             "functionId",
@@ -2310,7 +2313,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description"
+            "description",
+            "providerComments",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "functions.updateDeploymentStatus": [
             "functionId",
@@ -3358,6 +3364,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Atlassian": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Auth0": [
             "clientId",
             "clientSecret",
@@ -3481,6 +3492,16 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Line": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Linear": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Linkedin": [
             "clientId",
             "primaryClientSecret",
@@ -3537,7 +3558,22 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Railway": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Reddit": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Resend": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Roblox": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -3583,6 +3619,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Vercel": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Webflow": [
             "clientId",
             "clientSecret",
@@ -3599,6 +3640,11 @@
             "enabled"
         ],
         "project.updateOAuth2WordPress": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2WorkOS": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -3807,6 +3853,9 @@
             "providerRepositoryId",
             "strength"
         ],
+        "reviews.deleteLearning": [
+            "learningId"
+        ],
         "reviews.deleteRepository": [
             "repositoryId"
         ],
@@ -3817,14 +3866,26 @@
             "queries",
             "total"
         ],
+        "reviews.listAuthors": [
+            "range",
+            "repositoryId"
+        ],
         "reviews.listEvents": [
             "reviewId",
+            "queries",
+            "total"
+        ],
+        "reviews.listLearnings": [
             "queries",
             "total"
         ],
         "reviews.listRepositories": [
             "queries",
             "total"
+        ],
+        "reviews.updateInstallation": [
+            "installationId",
+            "newRepositories"
         ],
         "reviews.updateRepositoryStrength": [
             "repositoryId",
@@ -3855,7 +3916,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "scopes",
-            "description"
+            "description",
+            "providerComments",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "sites.createDeployment": [
             "siteId",
@@ -3991,7 +4055,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "scopes",
-            "description"
+            "description",
+            "providerComments",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "sites.updateDeploymentStatus": [
             "siteId",
@@ -6571,7 +6638,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description"
+            "description",
+            "providerComments",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "functions.createDeployment": [
             "functionId",
@@ -6705,7 +6775,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description"
+            "description",
+            "providerComments",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "functions.updateDeploymentStatus": [
             "functionId",
@@ -7711,6 +7784,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Atlassian": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Auth0": [
             "clientId",
             "clientSecret",
@@ -7834,6 +7912,16 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Line": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Linear": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Linkedin": [
             "clientId",
             "primaryClientSecret",
@@ -7890,7 +7978,22 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Railway": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Reddit": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Resend": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Roblox": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -7936,6 +8039,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Vercel": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Webflow": [
             "clientId",
             "clientSecret",
@@ -7952,6 +8060,11 @@
             "enabled"
         ],
         "project.updateOAuth2WordPress": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2WorkOS": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -8130,6 +8243,9 @@
             "providerRepositoryId",
             "strength"
         ],
+        "reviews.deleteLearning": [
+            "learningId"
+        ],
         "reviews.deleteRepository": [
             "repositoryId"
         ],
@@ -8140,14 +8256,26 @@
             "queries",
             "total"
         ],
+        "reviews.listAuthors": [
+            "range",
+            "repositoryId"
+        ],
         "reviews.listEvents": [
             "reviewId",
+            "queries",
+            "total"
+        ],
+        "reviews.listLearnings": [
             "queries",
             "total"
         ],
         "reviews.listRepositories": [
             "queries",
             "total"
+        ],
+        "reviews.updateInstallation": [
+            "installationId",
+            "newRepositories"
         ],
         "reviews.updateRepositoryStrength": [
             "repositoryId",
@@ -8178,7 +8306,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "scopes",
-            "description"
+            "description",
+            "providerComments",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "sites.createDeployment": [
             "siteId",
@@ -8304,7 +8435,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "scopes",
-            "description"
+            "description",
+            "providerComments",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "sites.updateDeploymentStatus": [
             "siteId",

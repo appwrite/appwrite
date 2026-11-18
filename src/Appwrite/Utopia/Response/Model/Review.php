@@ -59,6 +59,12 @@ class Review extends Model
                 'default' => '',
                 'example' => '42',
             ])
+            ->addRule('providerPullRequestAuthor', [
+                'type' => self::TYPE_STRING,
+                'description' => 'VCS login of who opened the pull request. Empty for reviews queued before it was recorded.',
+                'default' => '',
+                'example' => 'octocat',
+            ])
             ->addRule('providerCommitHash', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Head commit of the pull request: the one the review was queued for, then the one it reviews.',

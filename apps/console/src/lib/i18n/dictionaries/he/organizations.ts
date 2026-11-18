@@ -950,6 +950,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Project keys': 'מפתחות פרויקט',
   'Project pinned': 'הפרויקט הוצמד',
   'Project unpinned': 'הצמדת הפרויקט בוטלה',
+  'Projects subtotal': 'סכום ביניים של הפרויקטים',
   'Projects that will be deleted:': 'פרויקטים שיימחקו:',
   'Promo code': 'קוד קופון',
   Public: 'ציבורי',

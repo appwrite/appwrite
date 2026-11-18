@@ -2,6 +2,10 @@
 
 namespace Appwrite\Platform\Modules\Reviews\Services;
 
+use Appwrite\Platform\Modules\Reviews\Http\Authors\XList as ListAuthors;
+use Appwrite\Platform\Modules\Reviews\Http\Installations\Update as UpdateInstallation;
+use Appwrite\Platform\Modules\Reviews\Http\Learnings\Delete as DeleteLearning;
+use Appwrite\Platform\Modules\Reviews\Http\Learnings\XList as ListLearnings;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Create as CreateRepository;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Delete as DeleteRepository;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Learnings\Create as CreateRepositoryLearning;
@@ -32,10 +36,15 @@ class Http extends Service
         $this->addAction(ListRepositories::getName(), new ListRepositories());
         $this->addAction(UpdateRepositoryStrength::getName(), new UpdateRepositoryStrength());
         $this->addAction(DeleteRepository::getName(), new DeleteRepository());
+        $this->addAction(UpdateInstallation::getName(), new UpdateInstallation());
 
         $this->addAction(ListReviews::getName(), new ListReviews());
         $this->addAction(GetReview::getName(), new GetReview());
         $this->addAction(ListReviewEvents::getName(), new ListReviewEvents());
+
+        $this->addAction(ListAuthors::getName(), new ListAuthors());
+        $this->addAction(ListLearnings::getName(), new ListLearnings());
+        $this->addAction(DeleteLearning::getName(), new DeleteLearning());
 
         // Called by the review service, not by projects
         $this->addAction(CreateRepositoryToken::getName(), new CreateRepositoryToken());

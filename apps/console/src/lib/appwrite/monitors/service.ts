@@ -10,9 +10,25 @@ import {
   type Payload,
 } from '@appwrite.io/console'
 import type { Monitor, MonitorList, MonitorSeverity as Level } from './api'
+import type {
+  DnsTarget,
+  HttpTarget,
+  ProbeSettings,
+  SmtpTarget,
+  TcpTarget,
+} from './models'
 
 /** The severity as a plain string, so callers can pass `'critical'` as well as the enum. */
 type MonitorSeverity = `${Level}`
+
+/** Update parameters: every field but the ID is optional, and null leaves it as it is. */
+type Nullable<T> = { [K in keyof T]?: T[K] | null }
+
+type ProbeCreate<Target> = { monitorId: string } & ProbeSettings & Target
+
+type ProbeUpdate<Target> = { monitorId: string } & Nullable<
+  ProbeSettings & Target
+>
 
 export class Monitors {
   client: Client
@@ -417,6 +433,143 @@ export class Monitors {
   }
 
   /**
+   * Create an HTTP monitor. It requests a URL on its own interval, following redirects, and opens an alert when the request fails or answers with a status it does not expect, or when the certificate of an HTTPS URL is about to expire.
+   *
+   * @throws {AppwriteException}
+   * @returns {Promise<Monitor>}
+   */
+  createHttpMonitor(params: ProbeCreate<HttpTarget>): Promise<Monitor> {
+    return this.createProbe('/monitors/http', params)
+  }
+
+  /**
+   * Update an HTTP monitor by its unique ID. Only the parameters passed change.
+   *
+   * @throws {AppwriteException}
+   * @returns {Promise<Monitor>}
+   */
+  updateHttpMonitor(params: ProbeUpdate<HttpTarget>): Promise<Monitor> {
+    return this.updateProbe('/monitors/http/{monitorId}', params)
+  }
+
+  /**
+   * Create a DNS monitor. It queries a domain on its own interval and opens an alert when the name does not resolve, or when no answer has the expected value.
+   *
+   * @throws {AppwriteException}
+   * @returns {Promise<Monitor>}
+   */
+  createDnsMonitor(params: ProbeCreate<DnsTarget>): Promise<Monitor> {
+    return this.createProbe('/monitors/dns', params)
+  }
+
+  /**
+   * Update a DNS monitor by its unique ID. Only the parameters passed change.
+   *
+   * @throws {AppwriteException}
+   * @returns {Promise<Monitor>}
+   */
+  updateDnsMonitor(params: ProbeUpdate<DnsTarget>): Promise<Monitor> {
+    return this.updateProbe('/monitors/dns/{monitorId}', params)
+  }
+
+  /**
+   * Create a TCP monitor. It connects to a host and port on its own interval and opens an alert when the connection fails.
+   *
+   * @throws {AppwriteException}
+   * @returns {Promise<Monitor>}
+   */
+  createTcpMonitor(params: ProbeCreate<TcpTarget>): Promise<Monitor> {
+    return this.createProbe('/monitors/tcp', params)
+  }
+
+  /**
+   * Update a TCP monitor by its unique ID. Only the parameters passed change.
+   *
+   * @throws {AppwriteException}
+   * @returns {Promise<Monitor>}
+   */
+  updateTcpMonitor(params: ProbeUpdate<TcpTarget>): Promise<Monitor> {
+    return this.updateProbe('/monitors/tcp/{monitorId}', params)
+  }
+
+  /**
+   * Create an SMTP monitor. It opens a session with a mail server on its own interval and opens an alert when the server refuses it or the TLS handshake fails.
+   *
+   * @throws {AppwriteException}
+   * @returns {Promise<Monitor>}
+   */
+  createSmtpMonitor(params: ProbeCreate<SmtpTarget>): Promise<Monitor> {
+    return this.createProbe('/monitors/smtp', params)
+  }
+
+  /**
+   * Update an SMTP monitor by its unique ID. Only the parameters passed change.
+   *
+   * @throws {AppwriteException}
+   * @returns {Promise<Monitor>}
+   */
+  updateSmtpMonitor(params: ProbeUpdate<SmtpTarget>): Promise<Monitor> {
+    return this.updateProbe('/monitors/smtp/{monitorId}', params)
+  }
+
+  private createProbe(
+    apiPath: string,
+    params: { monitorId: string; name: string },
+  ): Promise<Monitor> {
+    if (typeof params.monitorId === 'undefined') {
+      throw new AppwriteException('Missing required parameter: "monitorId"')
+    }
+    if (typeof params.name === 'undefined') {
+      throw new AppwriteException('Missing required parameter: "name"')
+    }
+    return this.send('post', apiPath, params)
+  }
+
+  private updateProbe(
+    apiPath: string,
+    { monitorId, ...params }: { monitorId: string },
+  ): Promise<Monitor> {
+    if (typeof monitorId === 'undefined' || monitorId === '') {
+      throw new AppwriteException('Missing required parameter: "monitorId"')
+    }
+    return this.send(
+      'put',
+      apiPath.replace('{monitorId}', encodeURIComponent(monitorId)),
+      params,
+    )
+  }
+
+  private send(
+    method: 'post' | 'put',
+    apiPath: string,
+    params: object,
+  ): Promise<Monitor> {
+    const apiPayload: Payload = {}
+    for (const [key, value] of Object.entries(params)) {
+      if (typeof value !== 'undefined') {
+        apiPayload[key] = value
+      }
+    }
+    // The server's object params refuse an empty JSON object, so no headers go as an empty list.
+    if (
+      apiPayload.headers !== null &&
+      typeof apiPayload.headers === 'object' &&
+      Object.keys(apiPayload.headers).length === 0
+    ) {
+      apiPayload.headers = []
+    }
+    const uri = new URL(this.client.config.endpoint + apiPath)
+
+    const apiHeaders: { [header: string]: string } = {
+      'X-Appwrite-Project': this.client.config.project,
+      'content-type': 'application/json',
+      accept: 'application/json',
+    }
+
+    return this.client.call(method, uri, apiHeaders, apiPayload)
+  }
+
+  /**
    * Get a monitor by its unique ID, with its state as of its last evaluation.
    *
    * @param {string} params.monitorId - Monitor ID.
@@ -475,19 +628,19 @@ export class Monitors {
    *
    * @param {string} params.monitorId - Monitor ID.
    * @throws {AppwriteException}
-   * @returns {Promise<{}>}
+   * @returns {Promise<object>}
    */
-  delete(params: { monitorId: string }): Promise<{}>
+  delete(params: { monitorId: string }): Promise<object>
   /**
    * Delete a monitor by its unique ID. It stops being evaluated; an alert it is firing is resolved and kept with the rest of its alert history.
    *
    * @param {string} monitorId - Monitor ID.
    * @throws {AppwriteException}
-   * @returns {Promise<{}>}
+   * @returns {Promise<object>}
    * @deprecated Use the object parameter style method for a better developer experience.
    */
-  delete(monitorId: string): Promise<{}>
-  delete(paramsOrFirst: { monitorId: string } | string): Promise<{}> {
+  delete(monitorId: string): Promise<object>
+  delete(paramsOrFirst: { monitorId: string } | string): Promise<object> {
     let params: { monitorId: string }
 
     if (

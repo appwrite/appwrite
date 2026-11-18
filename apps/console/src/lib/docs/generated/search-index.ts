@@ -2032,6 +2032,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/auth/account-switching",
+    "title": "Account switching",
+    "description": "Let users stay signed in to several accounts in one browser or app and switch between them with Appwrite Auth devices, without signing out and back in.",
+    "excerpt": "Account switching lets one browser or app install stay signed in to several accounts at once and switch which one is active. A user can keep a personal and a work account signed in side by side and move between them without signing out and back in. Account switching is different from identities. Identities link several sign-in methods to one account. Account switching keeps separate accounts, each with its own session. How account switching works Account switching is built on…",
+    "breadcrumbs": [
+      "Auth",
+      "Guides",
+      "Account switching"
+    ]
+  },
+  {
     "slug": "products/auth/accounts",
     "title": "Accounts",
     "description": "Unlock advanced user management - Appwrite's Account API for seamless signups, authentication, and dynamic permissions.",
@@ -6713,6 +6724,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Tooling",
       "Deployments",
       "Teams"
+    ]
+  },
+  {
+    "slug": "tooling/command-line/terminal",
+    "title": "Terminal",
+    "description": "Browse, query, and manage your Appwrite projects in an interactive, keyboard-driven interface with the terminal command in the Appwrite CLI.",
+    "excerpt": "The command opens your Appwrite projects in an interactive, keyboard-driven interface inside your terminal. Browse databases, functions, sites, storage, users, teams, and messaging, query rows, execute functions, and watch your project's usage, without leaving the command line. It works with Appwrite Cloud and self-hosted instances. is available in Appwrite CLI version 28.13.3 and later. Update your CLI to the latest version before you start. Open the terminal interface Sign in with the CLI, then run the command: uses the credentials…",
+    "breadcrumbs": [
+      "Tooling",
+      "Guides",
+      "Terminal"
     ]
   },
   {

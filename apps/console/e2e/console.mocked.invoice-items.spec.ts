@@ -310,7 +310,11 @@ test('keeps saved project charges and usage quantities when aggregation is unava
   await summary.getByRole('button', { name: /project-a/ }).click()
   await expect(summary.getByText('Recorded project bandwidth')).toBeVisible()
   await expect(summary.getByText('1.5 GB / 1 GB')).toBeVisible()
-  await expect(summary.getByText('$10.01', { exact: true })).toHaveCount(2)
+  // Project row, its line item and the projects subtotal above the org-level adjustments.
+  await expect(summary.getByText('$10.01', { exact: true })).toHaveCount(3)
+  await expect(
+    summary.getByText('Projects subtotal').locator('..').getByText('$10.01'),
+  ).toBeVisible()
 })
 
 test('keeps saved charges visible through a usage outage and retries only usage', async ({
@@ -416,18 +420,26 @@ test('keeps named projects and saved charges beyond the first aggregation page',
     undefined,
     { ...aggregation, breakdown: projects },
   )
-  await expect(
-    summary.getByRole('button', { name: 'Project 1 -', exact: true }),
-  ).toBeVisible()
-  await summary
-    .getByRole('button', { name: 'Go to next page', exact: true })
-    .click()
+  // The charged project comes from the second aggregation page but sorts first by cost.
   const project = summary.getByRole('button', {
     name: 'Project 11 $10.01',
     exact: true,
   })
   await expect(project).toBeVisible()
+  await expect(
+    summary.getByRole('button', { name: 'Project 1 $0.00', exact: true }),
+  ).toBeVisible()
   await project.click()
   await expect(summary.getByText('Recorded project bandwidth')).toBeVisible()
-  await expect(summary.getByText('$10.01', { exact: true })).toHaveCount(2)
+  // Project row, its line item and the projects subtotal above the org-level adjustments.
+  await expect(summary.getByText('$10.01', { exact: true })).toHaveCount(3)
+  await expect(
+    summary.getByText('Projects subtotal').locator('..').getByText('$10.01'),
+  ).toBeVisible()
+  await summary
+    .getByRole('button', { name: 'Go to next page', exact: true })
+    .click()
+  await expect(
+    summary.getByRole('button', { name: 'Project 10 $0.00', exact: true }),
+  ).toBeVisible()
 })
