@@ -340,6 +340,31 @@ export function useUpdateDomainRule(
       const { ruleId, resourceType, resourceId, behaviour } = params
       const branch = behaviour === 'branch' ? params.branch : undefined
 
+      if (behaviour === 'redirect') {
+        const { ProxyResourceType, StatusCode } = await import(
+          '@appwrite.io/console'
+        )
+        const codeMap: Record<
+          string,
+          (typeof StatusCode)[keyof typeof StatusCode]
+        > = {
+          '301': StatusCode.MovedPermanently,
+          '302': StatusCode.Found,
+          '307': StatusCode.TemporaryRedirect,
+          '308': StatusCode.PermanentRedirect,
+        }
+        return await projectSdk.proxy.updateRedirectRule({
+          ruleId,
+          url: params.redirectUrl?.trim() ?? '',
+          statusCode: codeMap[params.statusCode ?? '302'] ?? StatusCode.Found,
+          resourceId,
+          resourceType:
+            resourceType === 'site'
+              ? ProxyResourceType.Site
+              : ProxyResourceType.Function,
+        })
+      }
+
       if (resourceType === 'site') {
         return await projectSdk.proxy.updateSiteRule({
           ruleId,
