@@ -117,4 +117,25 @@ class Get extends Action
 
     }
 
+    private function process(string $raw, int $width, int $height, int $quality, string $output): string
+    {
+        if ($raw === '') {
+            return $raw;
+        }
+
+        try {
+            $image = new Canvas($raw, Config::getParam('storage-image-limits'));
+
+            if ($width > 0 || $height > 0) {
+                $image = $image->apply(new Transform(
+                    width: $width > 0 ? $width : 256,
+                    height: $height > 0 ? $height : 256,
+                ));
+            }
+
+            return $image->encode(Format::from($output), $quality);
+        } catch (\Throwable) {
+            return $raw;
+        }
+    }
 }
