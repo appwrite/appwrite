@@ -12,12 +12,12 @@ use Utopia\Query\Schema\Table;
 
 /**
  * DDL takes no bound parameters, so string literals (comments, defaults, enum
- * values) are inlined with `\` and `'` escaped. That is only safe over a
- * connection charset in which byte 0x5C cannot occur inside a multibyte
- * character (utf8mb4, latin1), not GBK, BIG5, SJIS/CP932 or GB18030.
+ * values) are inlined through the dialect's {@see StringLiteral}.
  */
 abstract class Schema
 {
+    protected StringLiteral $literal = StringLiteral::Backslash;
+
     /** @var (Closure(Statement): (array<mixed>|int))|null */
     protected ?Closure $executor = null;
 
@@ -303,7 +303,7 @@ abstract class Schema
             }
 
             if ($column->comment !== null) {
-                $parts[] = "COMMENT '" . \str_replace(['\\', "'"], ['\\\\', "''"], $column->comment) . "'";
+                $parts[] = 'COMMENT ' . $this->literal->quote($column->comment);
             }
 
             return \implode(' ', $parts);
@@ -330,7 +330,7 @@ abstract class Schema
         }
 
         if ($column->comment !== null) {
-            $parts[] = "COMMENT '" . \str_replace(['\\', "'"], ['\\\\', "''"], $column->comment) . "'";
+            $parts[] = 'COMMENT ' . $this->literal->quote($column->comment);
         }
 
         return \implode(' ', $parts);
@@ -362,7 +362,7 @@ abstract class Schema
         }
 
         /** @var string|int|float $value */
-        return "'" . \str_replace(['\\', "'"], ['\\\\', "''"], (string) $value) . "'";
+        return $this->literal->quote((string) $value);
     }
 
     /**
