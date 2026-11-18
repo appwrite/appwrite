@@ -14,13 +14,26 @@
 //! | `Range::isValid()`, `getDescription()` | [`range`], [`range_description`] |
 //! | `Port::isValid()` | [`port`] |
 //! | `HexColor::isValid()` | [`hex_color`] |
+//! | `Text::isValid()`, `getDescription()` | [`is_blank`], [`text_length`], [`text_description`] |
+//! | `Identifier::isValid()`, `getDescription()` | [`identifier`], [`identifier_description`] |
+//! | `WhiteList::__construct()`, `getDescription()` | [`ascii_lower`], [`white_list_description`] |
+//! | `Contains::isValid()`, `getDescription()` | [`lower`], [`contains`], [`contains_description`] |
+//! | `Label::isValid()`, `getDescription()` | [`label`], [`label_description`] |
+//!
+//! Comparing a value with the PHP values a validator holds (the loose `in_array()` of `Text`'s
+//! allow list and of `WhiteList`, `(string)` of a pattern) is left to the PHP engine.
 
 mod scalar;
+mod text;
 
 pub use php_std::value::Number;
 pub use scalar::{
     Integer, IntegerError, boolean, float, hex_color, number_le, numeric, port, port_host, port_number, range,
     range_description, range_number,
+};
+pub use text::{
+    LABEL_MAX_LENGTH, ascii_lower, chars, contains, contains_description, identifier, identifier_description, is_blank,
+    label, label_description, lower, text_description, text_length, white_list_description,
 };
 
 /// A PHP value as the validators look at it: scalars by value, strings as bytes, and

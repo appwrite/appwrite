@@ -330,6 +330,9 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_GOOGLE = 'oAuth2Google';
     public const MODEL_OAUTH2_CLOUDFLARE = 'oAuth2Cloudflare';
     public const MODEL_OAUTH2_HUGGINGFACE = 'oAuth2HuggingFace';
+    public const MODEL_OAUTH2_VK = 'oAuth2VK';
+    public const MODEL_OAUTH2_NETLIFY = 'oAuth2Netlify';
+    public const MODEL_OAUTH2_RAILWAY = 'oAuth2Railway';
     public const MODEL_OAUTH2_REDDIT = 'oAuth2Reddit';
     public const MODEL_OAUTH2_VERCEL = 'oAuth2Vercel';
     public const MODEL_OAUTH2_ATLASSIAN = 'oAuth2Atlassian';
@@ -400,6 +403,8 @@ class Response extends SwooleResponse
     public const MODEL_REVIEW_EVENT_LIST = 'reviewEventList';
     public const MODEL_REVIEW_REPOSITORY = 'reviewRepository';
     public const MODEL_REVIEW_REPOSITORY_LIST = 'reviewRepositoryList';
+    public const MODEL_REVIEW_AUTHOR = 'reviewAuthor';
+    public const MODEL_REVIEW_AUTHOR_LIST = 'reviewAuthorList';
     public const MODEL_REVIEW_LEARNING = 'reviewLearning';
     public const MODEL_REVIEW_LEARNING_LIST = 'reviewLearningList';
 
