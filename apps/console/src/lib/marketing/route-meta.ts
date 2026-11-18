@@ -2,20 +2,18 @@ import { translate } from '@/lib/i18n/translate'
 import { getSeoSiteOrigin } from '@/lib/marketing/site-origin'
 import { stringifyJsonLd } from '@/lib/seo/json-ld'
 import { getPageMetaTags } from '@/lib/seo/page-meta'
-import { buildOgImageUrl, type OgImageParams } from '@/lib/seo/og-image'
+import type { OgImageParams } from '@/lib/seo/og-image'
 import { asRouteHead } from '@/lib/seo/route-head'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const MARKETING_HOMEPAGE_TITLE =
   'Appwrite · The open-source cloud for developers and agents'
 
-/** Homepage social card — PNG via `/og/image.png` (1200×630) for crawler compatibility. */
-export const MARKETING_HOME_OG_IMAGE_PARAMS = {
-  title: 'The open-source cloud for developers and agents',
-  subtitle:
-    'Auth, Databases, Storage, Functions, Messaging, and Sites in one open-source platform.',
-  eyebrow: 'Appwrite',
-} as const satisfies OgImageParams
+/**
+ * Homepage social card: the Appwrite logotype on the brand background, a static
+ * 1200×630 PNG for crawler compatibility. Bump `v` when replacing the file.
+ */
+const MARKETING_HOME_OG_IMAGE_PATH = '/images/og/home.png?v=20261118'
 
 type MetaTag = Record<string, string>
 
@@ -42,7 +40,7 @@ function asRouteMetaTags(tags: readonly MetaTag[]): MetaTag[] {
 }
 
 export function getMarketingHomeOgImage(siteOrigin?: string): string {
-  return buildOgImageUrl(MARKETING_HOME_OG_IMAGE_PARAMS, siteOrigin)
+  return `${getSeoSiteOrigin(siteOrigin)}${MARKETING_HOME_OG_IMAGE_PATH}`
 }
 
 export function getMarketingPageMetaTags(input: MarketingPageMetaInput): MetaTag[] {
