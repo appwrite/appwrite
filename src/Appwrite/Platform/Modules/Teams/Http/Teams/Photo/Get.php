@@ -93,6 +93,18 @@ class Get extends Action
             'photoId' => $team->getAttribute('photoId', ''),
         ]);
 
+        $data = null;
+
+        foreach ([new Custom($deviceForFiles, APP_STORAGE_TEAM_PHOTOS), new Initials(), new Fallback()] as $provider) {
+            if ($provider->supports($profile)) {
+                $data = $provider->get($profile, $width, $height, 'g');
+            }
+
+            if ($data !== null) {
+                break;
+            }
+        }
+
     }
 
 }
