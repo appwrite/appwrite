@@ -3493,6 +3493,10 @@
             "enabled"
         ],
         "project.updateOAuth2Line": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Linear": [
             "clientId",
             "clientSecret",
@@ -7900,6 +7904,10 @@
             "enabled"
         ],
         "project.updateOAuth2Line": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Linear": [
             "clientId",
             "clientSecret",

@@ -306,6 +306,13 @@ return [
         'name' => 'LINE',
         'developers' => 'https://developers.line.biz/en/docs/line-login/',
         'icon' => 'icon-line',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Line',
+    ],
     'linear' => [
         'name' => 'Linear',
         'developers' => 'https://linear.app/developers/oauth-2-0-authentication',
@@ -315,7 +322,6 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Line',
         'class' => 'Appwrite\\Auth\\OAuth2\\Linear',
     ],
     'linkedin' => [
