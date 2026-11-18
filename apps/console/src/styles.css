@@ -3435,3 +3435,42 @@ pre.prism-code .token-line > span {
   }
 }
 
+
+/*
+ * Homepage Console section: the screenshot tilts up into place as it scrolls
+ * in. Scroll-driven, so it runs on the compositor with no JS; browsers
+ * without `animation-timeline` and reduced-motion users get the flat frame.
+ */
+@keyframes console-rise {
+  from {
+    transform: perspective(1800px) rotateX(16deg) scale(0.93) translateY(28px);
+    opacity: 0.55;
+  }
+  to {
+    transform: perspective(1800px) rotateX(0deg) scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .console-rise {
+      transform-origin: 50% 0%;
+      animation: console-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 42%;
+    }
+  }
+}
+
+/* Homepage factory hero: the line dissolves into the page on every side. */
+.factory-stage {
+  -webkit-mask-image:
+    linear-gradient(90deg, transparent 0%, #000 9%, #000 91%, transparent 100%),
+    linear-gradient(180deg, transparent 0%, #000 13%, #000 84%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(90deg, transparent 0%, #000 9%, #000 91%, transparent 100%),
+    linear-gradient(180deg, transparent 0%, #000 13%, #000 84%, transparent 100%);
+  mask-composite: intersect;
+}

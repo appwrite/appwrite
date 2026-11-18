@@ -909,6 +909,7 @@ final class MessagingTest extends TestCase
             'A query must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' values.' => [Query::equal('id', [...$values, 'one more'])->toString()],
             'A query must be at most ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.' => [Query::equal('id', [\str_repeat('x', APP_LIMIT_ARRAY_ELEMENT_SIZE)])->toString()],
             'A subscription must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries, counting the ones nested in and/or.' => [...$nested, Query::equal('a', ['b'])->toString()],
+            'A query must be a string.' => [['equal', 'x']],
         ] as $message => $queries) {
             try {
                 Realtime::convertQueries($queries);
@@ -917,6 +918,13 @@ final class MessagingTest extends TestCase
                 $this->assertSame($message, $e->getMessage());
             }
         }
+    }
+
+    public function testConvertQueriesRejectsSelectOtherThanAll(): void
+    {
+        $this->expectException(QueryException::class);
+        $this->expectExceptionMessage('Only select("*") is allowed in Realtime queries.');
+        Realtime::convertQueries([Query::select(['name'])->toString()]);
     }
 
     public function testCountQueriesIncludesNested(): void
