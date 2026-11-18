@@ -1569,6 +1569,9 @@ class Deletes extends Action
         }
 
         $dbForProject->purgeCachedDocument('teams', $teamId);
+
+        // The trailing slash keeps the prefix match from reaching a team whose ID starts the same
+        getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId())->deletePath(APP_STORAGE_TEAM_PHOTOS . '/' . $teamId . '/');
     }
 
     /**
