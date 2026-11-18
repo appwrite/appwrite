@@ -72,6 +72,7 @@ export const OAUTH2_NEW_PROVIDER_LAUNCH_DATES: Partial<Record<string, string>> =
     [OAuthProvider.Line]: '2026-11-18',
     [OAuthProvider.Linear]: '2026-11-18',
     [OAuthProvider.Naver]: '2026-11-12',
+    [OAuthProvider.Railway]: '2026-11-18',
     [OAuthProvider.Reddit]: '2026-11-18',
     [OAuthProvider.Resend]: '2026-09-08',
     [OAuthProvider.Roblox]: '2026-11-18',
