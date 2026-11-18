@@ -1591,6 +1591,7 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Email, SMS, and push with topics and targets.': 'トピックとターゲットで、メール、SMS、プッシュ通知を配信。',
   'Project rules to deny, rate limit, and redirect traffic.': 'トラフィックを拒否、レート制限、リダイレクトするプロジェクトルール。',
   'Projects shipped': 'リリースされたプロジェクト',
+  Prompt: 'プロンプト',
   // Home factory: the display each machine unfolds.
   'Sign users in with email, OAuth, or passkeys, plus MFA, teams, and roles':
     'メール、OAuth、パスキーでサインイン。MFA、チーム、ロールにも対応',

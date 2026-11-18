@@ -18,6 +18,7 @@ import {
 import type { FrameState } from './frame'
 import { loadIcon } from './frameworks'
 import { box, cylinder, merge, mergeFinishes, place, slab } from './geometry'
+import { brandFontStack } from './textures'
 import { FINISHES, createKitDisplay, type FactoryKit, type Finish } from './kit'
 import {
   CYCLE,
@@ -59,7 +60,7 @@ const TRIP = {
  * The card: hung `hang` under the gimbal, which sits `mount` under the
  * drone's body; it sinks its own height into the dock's slot to go home.
  */
-const CARD = { width: 0.34, height: 0.23, hang: 0.11, mount: 0.08 } as const
+const CARD = { width: 0.46, height: 0.3, hang: 0.11, mount: 0.08 } as const
 
 /** Drones are modelled at this size and flown a quarter larger, so they read across the page. */
 const SCALE = 1.25
@@ -123,6 +124,7 @@ export class DroneFleet {
   private readonly drones: Drone[] = []
   private readonly geometries: BufferGeometry[] = []
   private readonly marks: CanvasTexture
+  private images: readonly (HTMLImageElement | null)[] = []
   private readonly rotorMaterial = new MeshBasicMaterial({
     color: 0x9aa0ad,
     transparent: true,
@@ -130,7 +132,12 @@ export class DroneFleet {
     depthWrite: false,
   })
 
-  constructor(kit: FactoryKit) {
+  constructor(
+    kit: FactoryKit,
+    /** What the cards say they carry (translated), over the model's mark. */
+    private label: string,
+    private rtl: boolean,
+  ) {
     const track = <T extends BufferGeometry>(geometry: T) => {
       this.geometries.push(geometry)
       return geometry
@@ -192,13 +199,13 @@ export class DroneFleet {
     const tether = track(cylinder(0.005, 1, 6).translate(0, -0.5, 0))
 
     const canvas = document.createElement('canvas')
-    canvas.width = 256 * MODELS.length
-    canvas.height = 172
+    canvas.width = 384 * MODELS.length
+    canvas.height = 240
     this.marks = new CanvasTexture(canvas)
     this.marks.colorSpace = SRGBColorSpace
     this.marks.minFilter = LinearMipmapLinearFilter
     this.marks.magFilter = LinearFilter
-    drawMarks(canvas, [])
+    drawMarks(canvas, [], label, rtl)
     const face = createKitDisplay(kit, this.marks)
 
     MODELS.forEach((_, index) => {
@@ -238,10 +245,27 @@ export class DroneFleet {
     })
   }
 
-  /** Draws each model's mark onto the cards (they show dark glass until then). */
+  /** Draws each model's mark onto the cards (they show just their label until then). */
   async showMarks() {
-    const images = await Promise.all(MODELS.map((file) => loadIcon(file)))
-    drawMarks(this.marks.image as HTMLCanvasElement, images)
+    this.images = await Promise.all(MODELS.map((file) => loadIcon(file)))
+    this.redraw()
+  }
+
+  /** Relabels the cards (language changed). */
+  setLabel(label: string, rtl: boolean) {
+    if (label === this.label && rtl === this.rtl) return
+    this.label = label
+    this.rtl = rtl
+    this.redraw()
+  }
+
+  private redraw() {
+    drawMarks(
+      this.marks.image as HTMLCanvasElement,
+      this.images,
+      this.label,
+      this.rtl,
+    )
     this.marks.needsUpdate = true
   }
 
@@ -355,34 +379,59 @@ function flight(since: number, target: Vector3) {
   return target
 }
 
-/** Dark glass cards, one per model, each with the model's mark in the LCD ink. */
+/**
+ * Dark glass cards, one per model: a small label saying what they carry,
+ * with the brand underscore, over the model's mark in the LCD ink.
+ */
 function drawMarks(
   canvas: HTMLCanvasElement,
   images: readonly (HTMLImageElement | null)[],
+  label: string,
+  rtl: boolean,
 ) {
   const context = canvas.getContext('2d')
   if (!context) return
+  const { height } = canvas
   const cell = canvas.width / MODELS.length
+  const size = Math.round(height * 0.15)
+  context.font = `500 ${size}px ${brandFontStack()}`
+  context.direction = rtl ? 'rtl' : 'ltr'
+  context.textAlign = 'center'
+  context.textBaseline = 'middle'
+  const underscore = size * 0.55
+  const gap = size * 0.12
+  const text = context.measureText(label).width
   MODELS.forEach((_, index) => {
     const x = index * cell
-    const glass = context.createLinearGradient(x, 0, x + cell, canvas.height)
+    const glass = context.createLinearGradient(x, 0, x + cell, height)
     glass.addColorStop(0, '#1c1c22')
     glass.addColorStop(1, '#121216')
     context.fillStyle = glass
-    context.fillRect(x, 0, cell, canvas.height)
+    context.fillRect(x, 0, cell, height)
+
+    // The label and its underscore, centered together; the underscore trails the words.
+    const labelY = height * 0.25
+    const center = x + cell / 2 + ((rtl ? 1 : -1) * (underscore + gap)) / 2
+    context.fillStyle = 'rgba(255, 255, 255, 0.72)'
+    context.fillText(label, center, labelY)
+    context.fillStyle = '#fd366e'
+    context.fillRect(
+      rtl ? center - text / 2 - gap - underscore : center + text / 2 + gap,
+      labelY + size * 0.3,
+      underscore,
+      size * 0.11,
+    )
+
     const image = images[index]
     if (image) {
-      const side = canvas.height * 0.52
+      const side = height * 0.42
       context.drawImage(
         image,
         x + (cell - side) / 2,
-        (canvas.height - side) / 2,
+        height * 0.63 - side / 2,
         side,
         side,
       )
     }
-    // The brand underscore, as on the displays.
-    context.fillStyle = '#fd366e'
-    context.fillRect(x + cell / 2 - 10, canvas.height * 0.86, 20, 4)
   })
 }

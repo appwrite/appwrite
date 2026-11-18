@@ -419,7 +419,7 @@ export const DOCK = {
   x: slotX(INSTALL_SLOT),
   y: TOWER_TOP,
   z: TOWER.z,
-  width: 0.4,
+  width: 0.62,
 } as const
 
 /** Seven finishes, coprime with the kind sequence's 17, so pairs rarely repeat. */

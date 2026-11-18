@@ -76,6 +76,8 @@ export type FactoryEngineOptions = {
   descriptions: string[]
   /** Translated label of the shipped counter. */
   counterLabel: string
+  /** Translated label on the cards the drones carry. */
+  promptLabel: string
   /** Right-to-left page: nameplates put the icon on the right. */
   rtl: boolean
   dark: boolean
@@ -370,7 +372,11 @@ export class FactoryEngine {
     this.screenAtlas = this.crisp(atlas.texture)
     this.products.setScreenAtlas(atlas.texture, atlas.cells)
     this.scene.add(this.products.group)
-    this.drones = new DroneFleet(kit)
+    this.drones = new DroneFleet(
+      kit,
+      this.options.promptLabel,
+      this.options.rtl,
+    )
     this.scene.add(this.drones.group)
     // The machine is built; the shapes it was built from can go.
     releaseShapes()
@@ -720,6 +726,7 @@ export class FactoryEngine {
     this.options.names = names
     this.options.descriptions = descriptions
     this.options.rtl = rtl
+    this.drones?.setLabel(this.options.promptLabel, rtl)
     if (this.kit) this.printNameplates()
   }
 
@@ -727,6 +734,13 @@ export class FactoryEngine {
   setCounterLabel(label: string) {
     this.options.counterLabel = label
     this.world?.setCounterLabel(label)
+    if (this.ready && !this.isLooping()) this.renderFrame(0)
+  }
+
+  /** Relabels the cards the drones carry (language changed). */
+  setPromptLabel(label: string) {
+    this.options.promptLabel = label
+    this.drones?.setLabel(label, this.options.rtl)
     if (this.ready && !this.isLooping()) this.renderFrame(0)
   }
 

@@ -99,13 +99,16 @@ export function FactoryStage({ className }: { className?: string }) {
   }
   const descriptions = STATION_IDS.map((id) => copy[id])
   const counterLabel = t('Projects shipped')
-  const labelsKey = `${plates.join('|')}|${descriptions.join('|')}|${counterLabel}`
+  const promptLabel = t('Prompt')
+  const labelsKey = `${plates.join('|')}|${descriptions.join('|')}|${counterLabel}|${promptLabel}`
   const platesRef = useRef(plates)
   platesRef.current = plates
   const descriptionsRef = useRef(descriptions)
   descriptionsRef.current = descriptions
   const counterLabelRef = useRef(counterLabel)
   counterLabelRef.current = counterLabel
+  const promptLabelRef = useRef(promptLabel)
+  promptLabelRef.current = promptLabel
 
   useEffect(() => {
     const container = containerRef.current
@@ -133,6 +136,7 @@ export function FactoryStage({ className }: { className?: string }) {
           names: platesRef.current,
           descriptions: descriptionsRef.current,
           counterLabel: counterLabelRef.current,
+          promptLabel: promptLabelRef.current,
           rtl: isRtl(),
           dark: isHtmlDarkChrome(),
           reducedMotion,
@@ -245,6 +249,7 @@ export function FactoryStage({ className }: { className?: string }) {
       isRtl(),
     )
     engineRef.current?.setCounterLabel(counterLabelRef.current)
+    engineRef.current?.setPromptLabel(promptLabelRef.current)
   }, [labelsKey])
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {

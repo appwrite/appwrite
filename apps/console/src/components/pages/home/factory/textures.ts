@@ -240,7 +240,7 @@ function loadImage(src: string): Promise<HTMLImageElement | null> {
 }
 
 /** The page's brand font stack (Inter for languages Aeonik does not cover). */
-function brandFontStack(): string {
+export function brandFontStack(): string {
   const value = getComputedStyle(document.documentElement)
     .getPropertyValue('--font-aeonik-pro')
     .trim()

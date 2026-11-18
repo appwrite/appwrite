@@ -1749,6 +1749,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Project rules to deny, rate limit, and redirect traffic.':
     'כללי פרויקט לחסימה, להגבלת קצב ולהפניה של תעבורה.',
   'Projects shipped': 'פרויקטים שהושקו',
+  Prompt: 'פרומפט',
   // Home factory: the display each machine unfolds.
   'Sign users in with email, OAuth, or passkeys, plus MFA, teams, and roles':
     'התחברות עם אימייל, OAuth או מפתחות גישה, לצד MFA, צוותים ותפקידים',
