@@ -156,7 +156,8 @@ export const CORE = {
 const WALL_FRAME = 0.05
 /** Floor between the first rack's side and the screen's frame. */
 const WALL_GAP = 0.9
-const WALL_HEIGHT = RACKS.height - 2 * WALL_FRAME
+/** The screen stands a little taller than the racks beside it. */
+const WALL_HEIGHT = (RACKS.height - 2 * WALL_FRAME) * 1.15
 /** The Console capture's shape (1920 x 1234). */
 const WALL_ASPECT = 1920 / 1234
 export const WALL = {

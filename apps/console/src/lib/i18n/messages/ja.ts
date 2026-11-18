@@ -303,7 +303,7 @@ export const jaCatalog: EnCatalog = {
       heroTitleLineOne: 'エージェント＆開発者のための',
       heroTitleLineTwo: 'オープンソースクラウド',
       heroDescriptionLineOne:
-        'Appwrite は、思考の速さでアプリを構築しスケールするための MCP＆エージェントファーストの OSS プラットフォームです。', // pragma: allowlist secret
+        'Appwrite は、思考の速さでアプリを構築しスケールするための MCP＆エージェントファーストのクラウドプラットフォームです。', // pragma: allowlist secret
       heroDescriptionLineTwo:
         'エージェントに Auth、DB、ストレージ、Functions、メッセージング、Realtime、ホスティングを提供し、すべてが一つの場所に。',
       heroPreviewWorkspace: 'Appwrite', // pragma: allowlist secret

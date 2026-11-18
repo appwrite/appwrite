@@ -154,8 +154,10 @@ const FRAMINGS: Record<'overlay' | 'band' | 'narrow', Framing> = {
 const START_TIME = 30 * CYCLE + MOVE + 0.02
 /** Still frame for reduced motion: several machines mid-action. */
 const STILL_TIME = 30 * CYCLE + MOVE + 0.5
-/** Seconds the line takes to power up before it starts moving. */
+/** The line's power-up, in its own seconds: lights come on, then it starts moving. */
 const INTRO_END = 2.4
+/** The power-up plays this many times faster than it is written, so the line is up and moving within a second. */
+const INTRO_SPEED = 3
 const FOV = 30
 const FRAME_INTERVAL = 1000 / 60
 /** The lowest resolution scale the adaptive quality drops to. */
@@ -1020,7 +1022,8 @@ export class FactoryEngine {
    * unfocused windows never count.
    */
   private trackPerformance(interval: number) {
-    if (this.introTime < 0.6 || interval <= 0 || interval > 120) return
+    // Judged once the power-up is over: the frames around the first carry one-off work.
+    if (this.introTime < INTRO_END || interval <= 0 || interval > 120) return
     if (
       typeof document !== 'undefined' &&
       (document.hidden || !document.hasFocus())
@@ -1065,7 +1068,7 @@ export class FactoryEngine {
     if (!kit || !world || !stations || !products || !glows || !shadows) return
 
     if (!this.options.reducedMotion) {
-      this.introTime += dt
+      this.introTime += dt * INTRO_SPEED
       // The line holds still while it powers up, then eases into its rhythm.
       const speed = easeInOutCubic(range(this.introTime, 1.5, INTRO_END))
       this.time += dt * speed

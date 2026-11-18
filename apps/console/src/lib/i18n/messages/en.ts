@@ -286,7 +286,7 @@ export const enCatalog = {
       heroTitleLineOne: 'The open-source cloud for',
       heroTitleLineTwo: 'agents & devs',
       heroDescriptionLineOne:
-        'Appwrite is an MCP & agent-first, OSS platform for building and scaling apps at the speed of thought.', // pragma: allowlist secret
+        'Appwrite is an MCP & agent-first, cloud platform for building and scaling apps at the speed of thought.', // pragma: allowlist secret
       heroDescriptionLineTwo:
         'Give your agents Auth, DBs, Storage, Functions, Messaging, Realtime, and Hosting - all in one place.',
       heroPreviewWorkspace: 'Appwrite', // pragma: allowlist secret
