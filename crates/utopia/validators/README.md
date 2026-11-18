@@ -1,7 +1,9 @@
 # utopia-validators
 
 The checks of [`utopia-php/validators`](../../../packages/validators) as PHP runs them: booleans,
-integers, floats, numbers, ranges, ports and hex colors. Each function is the body of a PHP
+integers, floats, numbers, ranges, ports, hex colors, text, identifiers, white lists, substrings,
+DNS labels, hostnames, domains, hosts, IP addresses, URLs and phone numbers (over `php-std`'s ports of
+`filter_var()`, `parse_url()` and `Uri\Rfc3986\Uri`). Each function is the body of a PHP
 validator's method, over a value as PHP sees it (`Input`), with the same coercions
 (`is_numeric()`, `$value + 0`), comparisons and messages. The validator classes, and the state
 their constructors keep, live in the PHP extension (`crates/extension`), which passes it in.

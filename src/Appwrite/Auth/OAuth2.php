@@ -37,6 +37,8 @@ abstract class OAuth2
      */
     protected array $scopes;
 
+    protected string $deviceId = '';
+
     /**
      * OAuth2 constructor.
      *
@@ -56,6 +58,14 @@ abstract class OAuth2
         foreach ($scopes as $scope) {
             $this->addScope($scope);
         }
+    }
+
+    /**
+     * Device the provider reported on the callback, for providers that bind tokens to it.
+     */
+    public function setDeviceId(string $deviceId): void
+    {
+        $this->deviceId = $deviceId;
     }
 
     /**

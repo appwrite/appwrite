@@ -79,6 +79,7 @@ class Get extends Base
             ->param('state', '', new Text(2048 + 512), 'OAuth2 state params.', true)
             ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
             ->param('error_description', '', new Text(2048, 0), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
+            ->param('device_id', '', new Text(256, 0), 'Device ID returned from the OAuth2 provider.', true)
             ->inject('request')
             ->inject('response')
             ->inject('project')
@@ -110,6 +111,7 @@ class Get extends Base
         string $state,
         string $error,
         string $error_description,
+        string $device_id,
         Request $request,
         Response $response,
         Project $project,
@@ -284,6 +286,8 @@ class Get extends Base
         $accessTokenExpiry = 0;
         $oauth2ID = '';
 
+        $oauth2->setDeviceId($device_id);
+
         try {
             $accessToken = $oauth2->getAccessToken($code);
             $refreshToken = $oauth2->getRefreshToken($code);
@@ -452,27 +456,35 @@ class Get extends Base
                         $failureRedirect(Exception::GENERAL_BAD_REQUEST);
                     }
                     $user->setAttributes($userWithEmail->getArrayCopy());
-                    if (!$user->getAttribute('emailVerification', false)) {
-                        $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, mqtt: $mqtt));
-                        $dbForProject->purgeCachedDocument('users', $user->getId());
-
-                        try {
-                            $mqtt->revoke($project->getId(), $user->getId());
-                        } catch (\Throwable $error) {
-                            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
-                        }
-
-                        // Sent before the request's own event, which would otherwise reach the registrant with the claimant's data
-                        (clone $queueForRealtime)
-                            ->reset()
-                            ->setProject($project)
-                            ->setEvent('users.[userId].sessions.delete')
-                            ->setParam('userId', $user->getId())
-                            ->trigger();
-                    }
                     // The provider verified this address, or its canonical form on the same domain
                     if ((new Email($user->getAttribute('email')))->getDomain() === (new Email($providerEmail))->getDomain()) {
-                        $user->setAttribute('emailVerification', true);
+                        // Proving an unverified address claims the account, so whoever registered it keeps no other way in.
+                        // The claim takes the user row lock, so of two concurrent claims only the first revokes, and a
+                        // request that re-checks the account under the same lock finds it already claimed
+                        $address = $user->getAttribute('email');
+                        $claimed = $authorization->skip(fn () => User::claim($dbForProject, $user, $project, mqtt: $mqtt));
+
+                        if ($user->getAttribute('email') !== $address) {
+                            $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                        }
+
+                        if ($claimed) {
+                            $dbForProject->purgeCachedDocument('users', $user->getId());
+
+                            try {
+                                $mqtt->revoke($project->getId(), $user->getId());
+                            } catch (\Throwable $error) {
+                                Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+                            }
+
+                            // Sent before the request's own event, which would otherwise reach the registrant with the claimant's data
+                            (clone $queueForRealtime)
+                                ->reset()
+                                ->setProject($project)
+                                ->setEvent('users.[userId].sessions.delete')
+                                ->setParam('userId', $user->getId())
+                                ->trigger();
+                        }
                     }
                 }
             }
@@ -582,7 +594,8 @@ class Get extends Base
             $failureRedirect(Exception::USER_BLOCKED); // User is in status blocked
         }
 
-        if (empty($user->getAttribute('email')) && !empty($providerEmail)) {
+        $backfilled = empty($user->getAttribute('email')) && !empty($providerEmail);
+        if ($backfilled) {
             $emailMetadata = [
                 'emailCanonical' => null,
                 'emailIsCanonical' => null,
@@ -690,22 +703,11 @@ class Get extends Base
             Query::equal('providerUid', [$oauth2ID]),
         ]);
         if ($identity->isEmpty()) {
-            // Before creating the identity, check if the email is already associated with another user
             $userId = $user->getId();
-
-            if (!empty($providerEmail)) {
-                $identitiesWithMatchingEmail = $dbForProject->find('identities', [
-                    Query::equal('providerEmail', [$providerEmail]),
-                    Query::notEqual('userInternalId', $user->getSequence()),
-                ]);
-                if (!empty($identitiesWithMatchingEmail)) {
-                    $failureRedirect(Exception::GENERAL_BAD_REQUEST);
-                    /** Return a generic bad request to prevent exposing existing accounts */
-                }
-            }
+            $conflict = null;
 
             try {
-                $dbForProject->createDocument('identities', new Document([
+                $linked = User::linkIdentity($dbForProject, new Document([
                     '$id' => Id::unique(),
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -722,9 +724,18 @@ class Get extends Base
                     'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
                     'photo' => $oauth2->getUserPhoto($accessToken),
                 ]));
+
+                if (!$linked) {
+                    /** Return a generic bad request to prevent exposing existing accounts */
+                    $conflict = Exception::GENERAL_BAD_REQUEST;
+                }
             } catch (Duplicate) {
-                // The (provider, providerUid) unique index guards the same identity being connected to two users.
-                // A request that lost the race must not leave behind the user it just created.
+                // The (provider, providerUid) unique index guards the same identity being connected to two users
+                $conflict = Exception::USER_ALREADY_EXISTS;
+            }
+
+            if ($conflict !== null) {
+                // A request whose link did not hold must not leave behind the user it just created
                 if ($newUser !== null) {
                     $authorization->skip(function () use ($dbForProject, $newUser, $newTarget) {
                         if ($newTarget !== null) {
@@ -733,7 +744,7 @@ class Get extends Base
                         $dbForProject->deleteDocument('users', $newUser->getId());
                     });
                 }
-                $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                $failureRedirect($conflict);
             }
         } else {
             $identity = $dbForProject->updateDocument('identities', $identity->getId(), new Document([
@@ -745,13 +756,21 @@ class Get extends Base
             ]));
         }
 
+        // Only what this request changed: its copy predates any claim or password change that landed since
+        $changes = ['status' => true];
+
         if (empty($user->getAttribute('name'))) {
             $user->setAttribute('name', $oauth2->getUserName($accessToken));
+            $changes['name'] = $user->getAttribute('name');
+        }
+
+        if ($backfilled) {
+            $changes += \array_intersect_key($user->getArrayCopy(), \array_flip(['email', 'emailVerification', 'emailCanonical', 'emailIsCanonical', 'emailIsCorporate', 'emailIsDisposable', 'emailIsFree']));
         }
 
         $user->setAttribute('status', true);
 
-        $dbForProject->updateDocument('users', $user->getId(), $user);
+        $dbForProject->updateDocument('users', $user->getId(), new Document($changes));
 
         $authorization->addRole(Role::user($user->getId())->toString());
 

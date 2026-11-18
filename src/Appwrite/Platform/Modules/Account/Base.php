@@ -340,27 +340,35 @@ abstract class Base extends Action
                     throw new Exception(Exception::GENERAL_BAD_REQUEST);
                 }
                 $user->setAttributes($userWithEmail->getArrayCopy());
-                if (!$user->getAttribute('emailVerification', false)) {
-                    $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, mqtt: $mqtt));
-                    $dbForProject->purgeCachedDocument('users', $user->getId());
-
-                    try {
-                        $mqtt->revoke($project->getId(), $user->getId());
-                    } catch (\Throwable $error) {
-                        Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
-                    }
-
-                    // Sent before the request's own event, which would otherwise reach the registrant with the claimant's data
-                    (clone $queueForRealtime)
-                        ->reset()
-                        ->setProject($project)
-                        ->setEvent('users.[userId].sessions.delete')
-                        ->setParam('userId', $user->getId())
-                        ->trigger();
-                }
                 // The provider verified this address, or its canonical form on the same domain
                 if ((new Email($user->getAttribute('email')))->getDomain() === (new Email($providerEmail))->getDomain()) {
-                    $user->setAttribute('emailVerification', true);
+                    // Proving an unverified address claims the account, so whoever registered it keeps no other way in.
+                    // The claim takes the user row lock, so of two concurrent claims only the first revokes, and a
+                    // request that re-checks the account under the same lock finds it already claimed
+                    $address = $user->getAttribute('email');
+                    $claimed = $authorization->skip(fn () => User::claim($dbForProject, $user, $project, mqtt: $mqtt));
+
+                    if ($user->getAttribute('email') !== $address) {
+                        throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                    }
+
+                    if ($claimed) {
+                        $dbForProject->purgeCachedDocument('users', $user->getId());
+
+                        try {
+                            $mqtt->revoke($project->getId(), $user->getId());
+                        } catch (\Throwable $error) {
+                            Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+                        }
+
+                        // Sent before the request's own event, which would otherwise reach the registrant with the claimant's data
+                        (clone $queueForRealtime)
+                            ->reset()
+                            ->setProject($project)
+                            ->setEvent('users.[userId].sessions.delete')
+                            ->setParam('userId', $user->getId())
+                            ->trigger();
+                    }
                 }
             }
         }
@@ -467,20 +475,10 @@ abstract class Base extends Action
         ]);
 
         if ($identity->isEmpty()) {
-            // Before creating the identity, check if the email is already associated with another user
-            if (!empty($providerEmail)) {
-                $identitiesWithMatchingEmail = $dbForProject->find('identities', [
-                    Query::equal('providerEmail', [$providerEmail]),
-                    Query::notEqual('userInternalId', $user->getSequence()),
-                ]);
-                if (!empty($identitiesWithMatchingEmail)) {
-                    throw new Exception(Exception::GENERAL_BAD_REQUEST);
-                    /** Return a generic bad request to prevent exposing existing accounts */
-                }
-            }
+            $conflict = null;
 
             try {
-                $dbForProject->createDocument('identities', new Document(\array_merge([
+                $linked = User::linkIdentity($dbForProject, new Document(\array_merge([
                     '$id' => Id::unique(),
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -493,9 +491,18 @@ abstract class Base extends Action
                     'providerUid' => $sub,
                     'providerEmail' => $providerEmail,
                 ], $attributes)));
+
+                if (!$linked) {
+                    /** Return a generic bad request to prevent exposing existing accounts */
+                    $conflict = Exception::GENERAL_BAD_REQUEST;
+                }
             } catch (Duplicate) {
-                // The (provider, providerUid) unique index guards the same identity being connected to two users.
-                // A request that lost the race must not leave behind the user it just created.
+                // The (provider, providerUid) unique index guards the same identity being connected to two users
+                $conflict = Exception::USER_ALREADY_EXISTS;
+            }
+
+            if ($conflict !== null) {
+                // A request whose link did not hold must not leave behind the user it just created
                 if ($newUser !== null) {
                     $authorization->skip(function () use ($dbForProject, $newUser, $newTarget) {
                         if ($newTarget !== null) {
@@ -504,8 +511,9 @@ abstract class Base extends Action
                         $dbForProject->deleteDocument('users', $newUser->getId());
                     });
                 }
-                throw new Exception(Exception::USER_ALREADY_EXISTS);
+                throw new Exception($conflict);
             }
+
             return;
         }
 

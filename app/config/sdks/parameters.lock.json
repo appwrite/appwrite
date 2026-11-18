@@ -805,6 +805,20 @@
             "teamId",
             "name"
         ],
+        "teams.getPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "teams.updatePhoto": [
+            "teamId",
+            "file"
+        ],
+        "teams.deletePhoto": [
+            "teamId"
+        ],
         "teams.updatePrefs": [
             "teamId",
             "prefs"
@@ -3474,6 +3488,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Instagram": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Kakao": [
             "clientId",
             "clientSecret",
@@ -3519,6 +3538,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Netlify": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Notion": [
             "oauthClientId",
             "oauthClientSecret",
@@ -3542,6 +3566,11 @@
             "authorizationServerId",
             "enabled",
             "prompt"
+        ],
+        "project.updateOAuth2Patreon": [
+            "clientId",
+            "clientSecret",
+            "enabled"
         ],
         "project.updateOAuth2Paypal": [
             "clientId",
@@ -3594,6 +3623,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Strava": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Stripe": [
             "clientId",
             "apiSecretKey",
@@ -3620,6 +3654,11 @@
             "enabled"
         ],
         "project.updateOAuth2Vercel": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2VK": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -4790,6 +4829,20 @@
         "teams.updateName": [
             "teamId",
             "name"
+        ],
+        "teams.getPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "teams.updatePhoto": [
+            "teamId",
+            "file"
+        ],
+        "teams.deletePhoto": [
+            "teamId"
         ],
         "teams.updatePrefs": [
             "teamId",
@@ -7894,6 +7947,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Instagram": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Kakao": [
             "clientId",
             "clientSecret",
@@ -7939,6 +7997,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Netlify": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Notion": [
             "oauthClientId",
             "oauthClientSecret",
@@ -7962,6 +8025,11 @@
             "authorizationServerId",
             "enabled",
             "prompt"
+        ],
+        "project.updateOAuth2Patreon": [
+            "clientId",
+            "clientSecret",
+            "enabled"
         ],
         "project.updateOAuth2Paypal": [
             "clientId",
@@ -8014,6 +8082,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Strava": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Stripe": [
             "clientId",
             "apiSecretKey",
@@ -8040,6 +8113,11 @@
             "enabled"
         ],
         "project.updateOAuth2Vercel": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2VK": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -9170,6 +9248,20 @@
         "teams.updateName": [
             "teamId",
             "name"
+        ],
+        "teams.getPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "teams.updatePhoto": [
+            "teamId",
+            "file"
+        ],
+        "teams.deletePhoto": [
+            "teamId"
         ],
         "teams.updatePrefs": [
             "teamId",
