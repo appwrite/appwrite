@@ -2,7 +2,6 @@ import {
   Color,
   MeshBasicMaterial,
   MeshStandardMaterial,
-  NoColorSpace,
   Vector2,
   type ShaderMaterial,
   type Texture,
@@ -292,14 +291,14 @@ export function createKitBeam(kit: FactoryKit) {
 }
 
 /**
- * A self-lit display showing `map`, a canvas redrawn while the line runs.
- * The canvas uploads as plain RGBA and the shader decodes its sRGB: Chrome
- * copies a canvas into an sRGB texture down a slow path (about 15 ms of GPU
- * time for the installer's screen, against 0.2 ms as plain RGBA), which
- * dropped a frame every time a display changed.
+ * A self-lit display showing `map`, a canvas the scene draws (most redraw
+ * theirs while the line runs). `map` stays plain RGBA (`NoColorSpace`, a
+ * canvas texture's default) and the shader decodes its sRGB: Chrome copies a
+ * canvas into an sRGB texture down a slow path (about 15 ms of GPU time for
+ * the installer's screen, against 0.2 ms as plain RGBA), which dropped a
+ * frame every time a display changed.
  */
 export function createKitDisplay(kit: FactoryKit, map: Texture) {
-  map.colorSpace = NoColorSpace
   const material = new MeshBasicMaterial({ map, toneMapped: false })
   material.onBeforeCompile = (shader) => {
     shader.fragmentShader = shader.fragmentShader.replace(
