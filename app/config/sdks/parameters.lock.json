@@ -3519,6 +3519,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Netlify": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Notion": [
             "oauthClientId",
             "oauthClientSecret",
@@ -7936,6 +7941,11 @@
             "prompt"
         ],
         "project.updateOAuth2Naver": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Netlify": [
             "clientId",
             "clientSecret",
             "enabled"
