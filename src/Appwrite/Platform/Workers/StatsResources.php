@@ -285,7 +285,7 @@ class StatsResources extends Action
     private function photoGauges(Document $project, Database $dbForProject): array
     {
         try {
-            $storage = (int) $dbForProject->sum('users', 'photoSize');
+            $storage = (int) $dbForProject->sum('users', 'photoSize') + (int) $dbForProject->sum('teams', 'photoSize');
         } catch (\Throwable $th) {
             Console::warning("Failed to measure photos for {$project->getId()}: " . $th->getMessage());
             return [];

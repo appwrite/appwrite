@@ -52,6 +52,7 @@ class Exception extends \Exception
     public const string GENERAL_PWNED_PASSWORDS_UNAVAILABLE = 'general_pwned_passwords_unavailable';
     public const string GENERAL_CACHE_UNAVAILABLE = 'general_cache_unavailable';
     public const string GENERAL_EMBEDDING_UNAVAILABLE = 'general_embedding_unavailable';
+    public const string GENERAL_EMBEDDING_TEXT_TOO_LONG = 'general_embedding_text_too_long';
     public const string GENERAL_ARGUMENT_INVALID = 'general_argument_invalid';
     public const string GENERAL_COLUMN_QUERY_LIMIT_EXCEEDED = 'general_column_query_limit_exceeded';
     public const string GENERAL_ATTRIBUTE_QUERY_LIMIT_EXCEEDED = 'general_attribute_query_limit_exceeded';
@@ -240,12 +241,10 @@ class Exception extends \Exception
     /** Collections */
     public const string COLLECTION_NOT_FOUND = 'collection_not_found';
     public const string COLLECTION_ALREADY_EXISTS = 'collection_already_exists';
-    public const string COLLECTION_LIMIT_EXCEEDED = 'collection_limit_exceeded';
 
     /** Tables */
     public const string TABLE_NOT_FOUND = 'table_not_found';
     public const string TABLE_ALREADY_EXISTS = 'table_already_exists';
-    public const string TABLE_LIMIT_EXCEEDED = 'table_limit_exceeded';
 
     /** Documents */
     public const string DOCUMENT_NOT_FOUND = 'document_not_found';

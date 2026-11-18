@@ -19,7 +19,10 @@ import {
   type AlertMetric,
   type AlertResourceType,
   type MonitorInput,
+  type MonitorType,
   type ParsedMonitor,
+  type ProbeMonitorChanges,
+  type ProbeMonitorInput,
 } from '@/lib/appwrite/monitors'
 import { fetchAlertSeries, hasSeries } from '@/lib/alerts/series'
 import { DEFAULT_STALE_TIME } from './constants'
@@ -198,13 +201,33 @@ export function useCreateMonitor(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (input: MonitorInput) => {
+    mutationFn: async (input: MonitorInput | ProbeMonitorInput) => {
       if (!projectId) throw new Error('Project ID is required')
-      return parseMonitor(
-        await sdk
-          .forProject(projectId)
-          .monitors.createUsageMonitor({ monitorId: ID.unique(), ...input }),
-      )
+      const monitors = sdk.forProject(projectId).monitors
+      const monitorId = ID.unique()
+      if (!('params' in input)) {
+        return parseMonitor(
+          await monitors.createUsageMonitor({ monitorId, ...input }),
+        )
+      }
+      switch (input.type) {
+        case 'http':
+          return parseMonitor(
+            await monitors.createHttpMonitor({ monitorId, ...input.params }),
+          )
+        case 'dns':
+          return parseMonitor(
+            await monitors.createDnsMonitor({ monitorId, ...input.params }),
+          )
+        case 'tcp':
+          return parseMonitor(
+            await monitors.createTcpMonitor({ monitorId, ...input.params }),
+          )
+        case 'smtp':
+          return parseMonitor(
+            await monitors.createSmtpMonitor({ monitorId, ...input.params }),
+          )
+      }
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
@@ -221,17 +244,28 @@ export function useUpdateMonitor(projectId: string | null | undefined) {
   return useMutation({
     mutationFn: async ({
       monitorId,
+      type,
       changes,
     }: {
       monitorId: string
-      changes: Partial<MonitorInput>
+      /** Each type is updated through its own endpoint. */
+      type: MonitorType
+      changes: Partial<MonitorInput> | ProbeMonitorChanges
     }) => {
       if (!projectId) throw new Error('Project ID is required')
-      return parseMonitor(
-        await sdk
-          .forProject(projectId)
-          .monitors.updateUsageMonitor({ monitorId, ...changes }),
-      )
+      const monitors = sdk.forProject(projectId).monitors
+      const params = { monitorId, ...changes }
+      const updated =
+        type === 'http'
+          ? monitors.updateHttpMonitor(params)
+          : type === 'dns'
+            ? monitors.updateDnsMonitor(params)
+            : type === 'tcp'
+              ? monitors.updateTcpMonitor(params)
+              : type === 'smtp'
+                ? monitors.updateSmtpMonitor(params)
+                : monitors.updateUsageMonitor(params)
+      return parseMonitor(await updated)
     },
     // Pausing and resuming flip at once in the list, and roll back if the update fails.
     onMutate: async ({ monitorId, changes }) => {

@@ -2625,6 +2625,7 @@ dependencies = [
  "utopia-locale",
  "utopia-query",
  "utopia-user-agent",
+ "utopia-validators",
 ]
 
 [[package]]
@@ -2653,6 +2654,7 @@ dependencies = [
  "foldhash",
  "indexmap",
  "php-std",
+ "serde",
  "serde_json",
  "thiserror 2.0.21",
 ]
@@ -2672,6 +2674,13 @@ version = "0.1.0"
 dependencies = [
  "aho-corasick",
  "memchr",
+ "php-std",
+]
+
+[[package]]
+name = "utopia-validators"
+version = "0.1.0"
+dependencies = [
  "php-std",
 ]
 

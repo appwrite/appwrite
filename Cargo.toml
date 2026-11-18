@@ -29,6 +29,7 @@ utopia-image = { path = "crates/utopia/image", default-features = false }
 utopia-locale = { path = "crates/utopia/locale" }
 utopia-query = { path = "crates/utopia/query" }
 utopia-user-agent = { path = "crates/utopia/user-agent" }
+utopia-validators = { path = "crates/utopia/validators" }
 
 # 0.16.5: #[php(sensitive(...))] (extphprs/ext-php-rs#840), which `Utopia\DSN\DSN` needs to keep
 # credentials out of exception traces, and the clone of a PHP subclass (extphprs/ext-php-rs#838).
@@ -53,6 +54,7 @@ memchr = "2"
 ripemd = "0.1"
 rustix = { version = "1", default-features = false, features = ["std", "fs", "system"] }
 ryu = "1"
+serde = "1"
 serde_json = { version = "1", features = ["raw_value", "preserve_order", "float_roundtrip"] }
 sha1 = "0.10"
 sha2 = "0.10"

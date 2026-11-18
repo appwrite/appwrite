@@ -37,6 +37,8 @@ import {
 } from '@/components/pages/home/HomeSoftLights'
 import { HomeHashScroll } from '@/components/pages/home/HomeHashScroll'
 import { TestimonialsSection } from '@/components/pages/home/TestimonialsSection'
+import { ConsoleSection } from '@/components/pages/home/ConsoleSection'
+import { FactoryHero } from '@/components/pages/home/FactoryHero'
 import { ProductBentoVisualDeferred } from '@/components/pages/home/product-bento/ProductBentoVisualDeferred'
 import { ProductBentoCardLink } from '@/components/pages/home/product-bento/ProductBentoCardLink'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
@@ -48,11 +50,12 @@ import { marketingProductToolkit } from '@/lib/marketing/product-toolkit'
 import { PRODUCT_NAV_REGISTRY } from '@/lib/products/registry'
 import type { ProductNavItemId } from '@/lib/products/types'
 import {
+  getMarketingHomeOgImage,
   getMarketingPageMetaTags,
-  MARKETING_HOME_OG_IMAGE_PARAMS,
   MARKETING_HOMEPAGE_TITLE,
 } from '@/lib/marketing/route-meta'
 import { getEnglishCatalog, useI18n } from '@/lib/i18n'
+import { NOINDEX_FOLLOW_ROBOTS_META } from '@/lib/seo/indexing'
 import { getDefaultSiteOrigin } from '@/lib/marketing/site-origin'
 import { stringifyJsonLd } from '@/lib/seo/json-ld'
 import { getOrganizationSchema, getWebSiteSchema } from '@/lib/seo/organization'
@@ -253,7 +256,7 @@ export function getHomePageHead() {
         pageName: 'Home',
         title: MARKETING_HOMEPAGE_TITLE,
         description: HOME_COPY.seoDescription,
-        ogImageParams: MARKETING_HOME_OG_IMAGE_PARAMS,
+        ogImage: getMarketingHomeOgImage(),
       }),
       { property: 'og:url', content: canonical },
     ],
@@ -284,9 +287,26 @@ export function getHomePageHead() {
   }
 }
 
-export function View() {
+/**
+ * `/home1`: the factory hero. Same canonical as `/`, kept out of search, and
+ * no hero screenshot preload because the Console sits lower on the page.
+ */
+export function getFactoryHomePageHead() {
+  const head = getHomePageHead()
+  return {
+    ...head,
+    meta: [...head.meta, NOINDEX_FOLLOW_ROBOTS_META],
+    links: head.links.filter((link) => link.rel !== 'preload'),
+  }
+}
+
+/** `factory` swaps the dashboard hero for the 3D software factory. */
+export type HomeVariant = 'default' | 'factory'
+
+export function View({ variant = 'default' }: { variant?: HomeVariant }) {
   const { catalog } = useI18n()
   const homeCopy = catalog.website.home
+  const factory = variant === 'factory'
   const productBentoItems = useMemo(
     () => getProductBentoItems(homeCopy),
     [homeCopy],
@@ -299,116 +319,120 @@ export function View() {
   return (
     <>
       <HomeHashScroll />
-        <section className="relative isolate overflow-hidden border-b border-border bg-background">
-          <HomeSoftLights />
-          <div
-            className="absolute inset-0 z-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:18px_18px] [mask-image:radial-gradient(ellipse_80%_70%_at_50%_0%,black_40%,transparent_100%)]"
-            aria-hidden
-          />
-          <div className="relative z-[1] mx-auto flex w-full max-w-7xl flex-col items-center px-4 pb-0 pt-14 text-center sm:px-6 sm:pt-20">
-            <Button
-              variant="outline"
-              size="sm"
-              className="group h-7 rounded-full bg-background/70 px-3 text-[12px] backdrop-blur-sm"
-              asChild
-            >
-              <MarketingSiteLink href="/init">
-                <SpriteIcon icon={Megaphone} className="size-3.5" />
-                <span className="text-[var(--brand-cta)]">{homeCopy.announcementNew}</span>
-                {homeCopy.announcementText}
-                <SpriteIcon
-                  icon={ArrowRight}
-                  className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5 rtl:-scale-x-100 rtl:group-hover:-translate-x-0.5"
-                />
-              </MarketingSiteLink>
-            </Button>
-
-            <h1 className="font-aeonik-pro text-gradient-brand mt-6 max-w-6xl pb-3 text-balance text-[48px] font-normal leading-[1.04] tracking-[-0.022em] lg:text-[76px]">
-              {homeCopy.heroTitleLineOne}
-              <br />
-              {homeCopy.heroTitleLineTwo}
-              <span className="text-[var(--brand-cta)]">_</span>
-            </h1>
-
-            <p className="mx-auto mt-7 max-w-4xl text-[15px] leading-6 text-muted-foreground sm:text-[16px] sm:leading-7">
-              {homeCopy.heroDescriptionLineOne}
-              <br />
-              {homeCopy.heroDescriptionLineTwo}
-            </p>
-
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
-              <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
-                <Link
-                  to="/sign-up"
-                  search={{ redirect: '/' }}
-                  {...analyticsAttrs('home-start-project')}
-                >
-                  {homeCopy.startProject}
-                </Link>
-              </Button>
-              <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
-                <MarketingSiteLink
-                  href="/docs"
-                  {...analyticsAttrs('home-view-docs')}
-                >
-                  {homeCopy.viewDocs}
+        {factory ? (
+          <FactoryHero />
+        ) : (
+          <section className="relative isolate overflow-hidden border-b border-border bg-background">
+            <HomeSoftLights />
+            <div
+              className="absolute inset-0 z-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:18px_18px] [mask-image:radial-gradient(ellipse_80%_70%_at_50%_0%,black_40%,transparent_100%)]"
+              aria-hidden
+            />
+            <div className="relative z-[1] mx-auto flex w-full max-w-7xl flex-col items-center px-4 pb-0 pt-14 text-center sm:px-6 sm:pt-20">
+              <Button
+                variant="outline"
+                size="sm"
+                className="group h-7 rounded-full bg-background/70 px-3 text-[12px] backdrop-blur-sm"
+                asChild
+              >
+                <MarketingSiteLink href="/init">
+                  <SpriteIcon icon={Megaphone} className="size-3.5" />
+                  <span className="text-[var(--brand-cta)]">{homeCopy.announcementNew}</span>
+                  {homeCopy.announcementText}
+                  <SpriteIcon
+                    icon={ArrowRight}
+                    className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5 rtl:-scale-x-100 rtl:group-hover:-translate-x-0.5"
+                  />
                 </MarketingSiteLink>
               </Button>
-            </div>
-          </div>
 
-          <div className="relative z-[1] mt-8 flex justify-center sm:mt-10">
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/80 px-3 py-1 text-[12px] text-muted-foreground backdrop-blur-sm">
-              <McpIcon className="size-3.5" />
-              <span>{homeCopy.mcpIncluded}</span>
-            </div>
-          </div>
+              <h1 className="font-aeonik-pro text-gradient-brand mt-6 max-w-6xl pb-3 text-balance text-[48px] font-normal leading-[1.04] tracking-[-0.022em] lg:text-[76px]">
+                {homeCopy.heroTitleLineOne}
+                <br />
+                {homeCopy.heroTitleLineTwo}
+                <span className="text-[var(--brand-cta)]">_</span>
+              </h1>
 
-          <div className="relative z-[1] mt-8 w-full sm:mt-10">
-            <div className="mx-auto w-full max-w-full px-3 sm:max-w-[min(100vw-3rem,84rem)] sm:px-6 lg:max-w-[min(100vw-4rem,88rem)]">
-              <div className="relative isolate z-[1] flex w-full flex-col overflow-hidden rounded-t-[20px] border-x-2 border-t-2 border-b-0 border-muted-foreground/8 bg-muted-foreground/[0.035] px-1.5 pb-0 pt-1 sm:rounded-t-[28px] sm:px-4 dark:border-muted/30 dark:bg-muted/10">
-                <div className="relative z-10 flex h-8 shrink-0 items-center gap-2 text-start sm:h-10">
-                  <div className="ms-1.5 flex items-center gap-1.5 sm:ms-2" aria-hidden>
-                    <span className="size-2 rounded-full bg-muted-foreground/30 sm:size-2.5" />
-                    <span className="size-2 rounded-full bg-muted-foreground/30 sm:size-2.5" />
-                    <span className="size-2 rounded-full bg-muted-foreground/30 sm:size-2.5" />
+              <p className="mx-auto mt-7 max-w-4xl text-[15px] leading-6 text-muted-foreground sm:text-[16px] sm:leading-7">
+                {homeCopy.heroDescriptionLineOne}
+                <br />
+                {homeCopy.heroDescriptionLineTwo}
+              </p>
+
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+                <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
+                  <Link
+                    to="/sign-up"
+                    search={{ redirect: '/' }}
+                    {...analyticsAttrs('home-start-project')}
+                  >
+                    {homeCopy.startProject}
+                  </Link>
+                </Button>
+                <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
+                  <MarketingSiteLink
+                    href="/docs"
+                    {...analyticsAttrs('home-view-docs')}
+                  >
+                    {homeCopy.viewDocs}
+                  </MarketingSiteLink>
+                </Button>
+              </div>
+            </div>
+
+            <div className="relative z-[1] mt-8 flex justify-center sm:mt-10">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/80 px-3 py-1 text-[12px] text-muted-foreground backdrop-blur-sm">
+                <McpIcon className="size-3.5" />
+                <span>{homeCopy.mcpIncluded}</span>
+              </div>
+            </div>
+
+            <div className="relative z-[1] mt-8 w-full sm:mt-10">
+              <div className="mx-auto w-full max-w-full px-3 sm:max-w-[min(100vw-3rem,84rem)] sm:px-6 lg:max-w-[min(100vw-4rem,88rem)]">
+                <div className="relative isolate z-[1] flex w-full flex-col overflow-hidden rounded-t-[20px] border-x-2 border-t-2 border-b-0 border-muted-foreground/8 bg-muted-foreground/[0.035] px-1.5 pb-0 pt-1 sm:rounded-t-[28px] sm:px-4 dark:border-muted/30 dark:bg-muted/10">
+                  <div className="relative z-10 flex h-8 shrink-0 items-center gap-2 text-start sm:h-10">
+                    <div className="ms-1.5 flex items-center gap-1.5 sm:ms-2" aria-hidden>
+                      <span className="size-2 rounded-full bg-muted-foreground/30 sm:size-2.5" />
+                      <span className="size-2 rounded-full bg-muted-foreground/30 sm:size-2.5" />
+                      <span className="size-2 rounded-full bg-muted-foreground/30 sm:size-2.5" />
+                    </div>
+                    <div className="ms-1.5 flex min-w-0 items-center gap-1.5 pe-2 text-[11px] text-muted-foreground sm:ms-2 sm:pe-4 sm:text-[12px]">
+                      <span className="font-medium text-foreground">
+                        {homeCopy.heroPreviewWorkspace}
+                      </span>
+                      <SpriteIcon icon={ChevronRight} className="size-3" />
+                      <span className="truncate">
+                        {homeCopy.heroPreviewOrganization}
+                      </span>
+                      <SpriteIcon icon={ChevronRight} className="size-3" />
+                      <span className="truncate">{homeCopy.heroPreviewProject}</span>
+                    </div>
                   </div>
-                  <div className="ms-1.5 flex min-w-0 items-center gap-1.5 pe-2 text-[11px] text-muted-foreground sm:ms-2 sm:pe-4 sm:text-[12px]">
-                    <span className="font-medium text-foreground">
-                      {homeCopy.heroPreviewWorkspace}
-                    </span>
-                    <SpriteIcon icon={ChevronRight} className="size-3" />
-                    <span className="truncate">
-                      {homeCopy.heroPreviewOrganization}
-                    </span>
-                    <SpriteIcon icon={ChevronRight} className="size-3" />
-                    <span className="truncate">{homeCopy.heroPreviewProject}</span>
+                  <div className="relative z-10 aspect-[148/65] w-full overflow-hidden">
+                    <img
+                      src={HOME_HERO_LIGHT_SRC}
+                      alt={homeCopy.heroImageAlt}
+                      width={1920}
+                      height={1234}
+                      fetchPriority="high"
+                      decoding="async"
+                      className="block h-full w-full rounded-t-md object-cover object-top opacity-95 dark:hidden sm:rounded-t-lg"
+                    />
+                    <img
+                      src={HOME_HERO_DARK_SRC}
+                      alt={homeCopy.heroImageAlt}
+                      width={1920}
+                      height={1234}
+                      fetchPriority="high"
+                      decoding="async"
+                      className="hidden h-full w-full rounded-t-md object-cover object-top opacity-95 dark:block sm:rounded-t-lg"
+                    />
                   </div>
-                </div>
-                <div className="relative z-10 aspect-[148/65] w-full overflow-hidden">
-                  <img
-                    src={HOME_HERO_LIGHT_SRC}
-                    alt={homeCopy.heroImageAlt}
-                    width={1920}
-                    height={1234}
-                    fetchPriority="high"
-                    decoding="async"
-                    className="block h-full w-full rounded-t-md object-cover object-top opacity-95 dark:hidden sm:rounded-t-lg"
-                  />
-                  <img
-                    src={HOME_HERO_DARK_SRC}
-                    alt={homeCopy.heroImageAlt}
-                    width={1920}
-                    height={1234}
-                    fetchPriority="high"
-                    decoding="async"
-                    className="hidden h-full w-full rounded-t-md object-cover object-top opacity-95 dark:block sm:rounded-t-lg"
-                  />
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         <InitSection />
 
@@ -541,6 +565,8 @@ export function View() {
             </div>
           </div>
         </section>
+
+        {factory ? <ConsoleSection /> : null}
 
         <AiSection />
 

@@ -1,5 +1,7 @@
 //! `Utopia\Locale\Locale` over [`utopia_locale`]. The registered languages are
 //! the PHP class's static state, so they live in one [`Languages`] per process;
+//! a translation file is read when registered and decoded on its first lookup,
+//! once per distinct file ([`Languages::insert_json`]).
 //! `Locale::$exceptions` stays a PHP static property, read on every call, so
 //! `Locale::$exceptions = false` works as it does in PHP. Like PHP's static
 //! state, both are cleared when the request ends.

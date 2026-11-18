@@ -84,6 +84,11 @@ return [
         'description' => 'The embedding service could not generate embeddings for this request. Please try again later.',
         'code' => 503,
     ],
+    Exception::GENERAL_EMBEDDING_TEXT_TOO_LONG => [
+        'name' => Exception::GENERAL_EMBEDDING_TEXT_TOO_LONG,
+        'description' => 'A text is longer than the selected embedding model can process. Split it into smaller chunks and try again.',
+        'code' => 400,
+    ],
     Exception::GENERAL_ARGUMENT_INVALID => [
         'name' => Exception::GENERAL_ARGUMENT_INVALID,
         'description' => 'The request contains one or more invalid arguments. Please refer to the endpoint documentation.',
@@ -890,11 +895,6 @@ return [
         'description' => 'A collection with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
-    Exception::COLLECTION_LIMIT_EXCEEDED => [
-        'name' => Exception::COLLECTION_LIMIT_EXCEEDED,
-        'description' => 'The maximum number of collections for database \'%s\' has been reached.',
-        'code' => 400,
-    ],
 
     /** Tables */
     Exception::TABLE_NOT_FOUND => [
@@ -906,11 +906,6 @@ return [
         'name' => Exception::TABLE_ALREADY_EXISTS,
         'description' => 'A table with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
-    ],
-    Exception::TABLE_LIMIT_EXCEEDED => [
-        'name' => Exception::TABLE_LIMIT_EXCEEDED,
-        'description' => 'The maximum number of tables for database \'%s\' has been reached.',
-        'code' => 400,
     ],
 
     /** Documents */

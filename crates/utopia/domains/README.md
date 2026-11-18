@@ -59,7 +59,7 @@ cargo fmt --all --check
 
 ### Compare with PHP
 
-The utopia PHP extension serves this crate as `Utopia\Domains\Domain`, which no longer has a PHP implementation. Its parity corpus, `crates/extension/tests/domains.php`, checks every rule of `packages/domains/data/data.php` and must print `crates/extension/tests/domains.expected.jsonl`, the output of the PHP class it replaced; `crates/extension/tests/run.sh` checks it, and runs `packages/domains/tests`, in the development image.
+The utopia PHP extension serves this crate as `Utopia\Domains\Domain`, which no longer has a PHP implementation. `crates/extension/tests/run.sh` runs `packages/domains/tests` on it in the development image.
 
 ### Public Suffix List
 

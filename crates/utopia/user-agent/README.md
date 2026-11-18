@@ -174,7 +174,7 @@ cargo fmt --all --check
 
 ### Compare with PHP
 
-The utopia PHP extension serves this crate as `Utopia\UserAgent\UserAgent`, which no longer has a PHP implementation. Its parity corpus, `crates/extension/tests/user-agent.php`, must print `crates/extension/tests/user-agent.expected.jsonl`, the output of the PHP class it replaced; `crates/extension/tests/run.sh` checks it, and runs `packages/user-agent/tests`, in the development image.
+The utopia PHP extension serves this crate as `Utopia\UserAgent\UserAgent`, which no longer has a PHP implementation. `crates/extension/tests/run.sh` runs `packages/user-agent/tests` on it in the development image.
 
 ## License
 

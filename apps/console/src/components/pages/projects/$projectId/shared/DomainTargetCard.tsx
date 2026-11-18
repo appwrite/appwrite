@@ -37,6 +37,7 @@ export interface DomainTargetCardProps {
   /** Redirect URL when behaviour is 'redirect' */
   redirectUrl?: string
   onRedirectUrlChange?: (v: string) => void
+  redirectUrlError?: string
   /** Status code when behaviour is 'redirect' */
   statusCode?: string
   onStatusCodeChange?: (v: string) => void
@@ -46,6 +47,8 @@ export interface DomainTargetCardProps {
   providerRepositoryId?: string | null
   /** Whether repo is connected (needed for branch option) */
   hasRepository?: boolean
+  /** Updating a rule in a modal: drops the card frame and disables the other type's options */
+  ruleType?: 'deployment' | 'redirect'
   disabled?: boolean
 }
 
@@ -56,38 +59,54 @@ export function DomainTargetCard({
   onBranchChange,
   redirectUrl = '',
   onRedirectUrlChange,
+  redirectUrlError,
   statusCode = '302',
   onStatusCodeChange,
   projectId,
   installationId,
   providerRepositoryId,
   hasRepository = false,
+  ruleType,
   disabled = false,
 }: DomainTargetCardProps) {
   const t = useT()
-  const branchDisabled = !hasRepository
-  const redirectDisabled = false
+  const deploymentLocked = ruleType === 'redirect'
+  const branchDisabled = !hasRepository || deploymentLocked
+  const redirectDisabled = ruleType === 'deployment'
+  const lockedReason = t(
+    'A domain cannot switch between serving a deployment and redirecting. Delete it and add it again.',
+  )
 
   return (
-    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-      <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">
-          {t('Target')}
-        </h3>
-      </div>
-      <div className="border-t border-border" />
-      <div className="px-6 py-4 space-y-4">
+    <div
+      className={cn(
+        !ruleType &&
+          'rounded-xl border border-border bg-card/50 overflow-hidden',
+      )}
+    >
+      {!ruleType && (
+        <>
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {t('Target')}
+            </h3>
+          </div>
+          <div className="border-t border-border" />
+        </>
+      )}
+      <div className={cn('space-y-4', !ruleType && 'px-6 py-4')}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <button
             type="button"
             onClick={() => onBehaviourChange('active')}
-            disabled={disabled}
+            disabled={disabled || deploymentLocked}
+            title={deploymentLocked ? lockedReason : undefined}
             className={cn(
               'text-start rounded-lg border p-4 transition-all cursor-pointer',
               behaviour === 'active'
                 ? 'border-foreground bg-primary/5'
                 : 'border-border hover:border-muted-foreground/50',
-              disabled && 'opacity-50 cursor-not-allowed',
+              (disabled || deploymentLocked) && 'opacity-50 cursor-not-allowed',
             )}
           >
             <Rocket className="h-5 w-5 text-muted-foreground mb-2" />
@@ -103,7 +122,13 @@ export function DomainTargetCard({
             type="button"
             onClick={() => !branchDisabled && onBehaviourChange('branch')}
             disabled={disabled || branchDisabled}
-            title={branchDisabled ? t('Connect repository first') : undefined}
+            title={
+              deploymentLocked
+                ? lockedReason
+                : branchDisabled
+                  ? t('Connect repository first')
+                  : undefined
+            }
             className={cn(
               'text-start rounded-lg border p-4 transition-all cursor-pointer',
               behaviour === 'branch'
@@ -123,6 +148,7 @@ export function DomainTargetCard({
             type="button"
             onClick={() => onBehaviourChange('redirect')}
             disabled={disabled || redirectDisabled}
+            title={redirectDisabled ? lockedReason : undefined}
             className={cn(
               'text-start rounded-lg border p-4 transition-all cursor-pointer',
               behaviour === 'redirect'
@@ -163,9 +189,18 @@ export function DomainTargetCard({
                   placeholder="https://example.com"
                   value={redirectUrl}
                   onChange={(e) => onRedirectUrlChange(e.target.value)}
-                  className="font-mono mt-1.5"
+                  aria-invalid={!!redirectUrlError}
+                  className={cn(
+                    'font-mono mt-1.5',
+                    redirectUrlError && 'border-destructive',
+                  )}
                   disabled={disabled}
                 />
+                {redirectUrlError && (
+                  <p className="text-[11px] text-destructive mt-1">
+                    {redirectUrlError}
+                  </p>
+                )}
               </div>
               <div>
                 <Label className="text-[12px]">{t('Status code')}</Label>

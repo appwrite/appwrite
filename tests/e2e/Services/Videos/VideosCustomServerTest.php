@@ -961,6 +961,40 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
+     * A playlist only points at other media, so it is refused as a source even
+     * when the upload claims a video type: storage records the type it sniffs
+     * from the content, and playlist types are excluded. The worker's format
+     * allowlist (hls, concat, ... left out) is the second line behind this.
+     */
+    public function testCreateVideoRejectsPlaylist(): void
+    {
+        $playlist = \tempnam(\sys_get_temp_dir(), 'playlist');
+        $this->assertNotFalse($playlist);
+        \file_put_contents($playlist, "#EXTM3U\n#EXT-X-TARGETDURATION:2\n#EXTINF:2,\nsegment.ts\n#EXT-X-ENDLIST\n");
+
+        try {
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $this->getVideoBucket()['$id'] . '/files', \array_merge([
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'fileId' => 'unique()',
+                'file' => new \CURLFile($playlist, 'video/mp4', 'playlist.m3u8'),
+            ]);
+        } finally {
+            \unlink($playlist);
+        }
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $file['body']['$id'],
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('video_not_valid', $response['body']['type']);
+    }
+
+    /**
      * A source that is neither encrypted nor compressed (uploaded to a bucket
      * with encryption off; every other file is encrypted whatever its size) is
      * read where it is stored: in place on a local device, over a presigned URL

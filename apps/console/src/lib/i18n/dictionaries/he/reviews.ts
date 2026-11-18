@@ -233,4 +233,42 @@ export const heReviewsDictionary: Record<string, string> = {
   'Delete learning': 'מחיקת למידה',
   'Later reviews and answers will no longer follow this learning. This action cannot be undone.':
     'סקירות ותשובות עתידיות לא יפעלו עוד לפי הלמידה הזו. לא ניתן לבטל פעולה זו.',
+
+  // Performance
+  Performance: 'ביצועים',
+  'Unknown author': 'מחבר לא ידוע',
+  'Date range': 'טווח תאריכים',
+  Author: 'מחבר',
+  'Pull requests': 'בקשות משיכה',
+  'First try': 'בניסיון הראשון',
+  'Findings / PR': 'ממצאים / PR',
+  'Critical / major': 'קריטי / משמעותי',
+  Fixed: 'תוקנו',
+  'Last review': 'סקירה אחרונה',
+  'Pull requests reviewed': 'בקשות משיכה שנסקרו',
+  '{count} authors': '{count} מחברים',
+  'Approval rate': 'שיעור אישור',
+  '{rate} approved by the first review': '{rate} אושרו בסקירה הראשונה',
+  'Findings per pull request': 'ממצאים לבקשת משיכה',
+  '{critical} critical, {major} major': '{critical} קריטיים, {major} משמעותיים',
+  'Fix rate': 'שיעור תיקון',
+  '{count} findings fixed by a later commit':
+    '{count} ממצאים תוקנו בקומיט מאוחר יותר',
+  'No completed reviews in this range': 'אין סקירות שהושלמו בטווח הזה',
+  'Performance shows how the authors of your pull requests fare in review once reviews complete. Try a longer range or another repository.':
+    'כאן מוצג איך מחברי בקשות המשיכה שלכם מצליחים בסקירה, לאחר שהסקירות מושלמות. נסו טווח ארוך יותר או מאגר אחר.',
+  'Counts completed reviews in the range. Approval and confidence go by each pull request’s latest review; fixed counts findings resolved by a later commit.':
+    'נספרות סקירות שהושלמו בטווח. אישור וביטחון נקבעים לפי הסקירה האחרונה של כל בקשת משיכה; תוקנו סופר ממצאים שנפתרו בקומיט מאוחר יותר.',
+
+  // Finding outcomes
+  'Useful findings': 'ממצאים מועילים',
+  '{resolved} fixed, {dismissed} dismissed':
+    '{resolved} תוקנו, {dismissed} נדחו',
+  Useful: 'מועילים',
+  Dismissed: 'נדחו',
+  'Findings by category': 'ממצאים לפי קטגוריה',
+  'Categories that are often dismissed are candidates for a learning that tells the reviewer to flag them less.':
+    'קטגוריות שנדחות לעיתים קרובות הן מועמדות ללמידה שתורה לסוקר לסמן אותן פחות.',
+  'Useful findings is the share of settled findings that were fixed rather than dismissed; findings still open count for neither.':
+    'ממצאים מועילים הם החלק מהממצאים שהוכרעו שתוקנו ולא נדחו; ממצאים שעדיין פתוחים אינם נספרים לאף צד.',
 }

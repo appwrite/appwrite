@@ -143,6 +143,30 @@ export function buildAnalyticsChartPoints(
   return points
 }
 
+/**
+ * Group notes by the chart bucket their date falls in, keyed by bucket index,
+ * so notes in one bucket share a marker. Notes outside the grid are dropped.
+ */
+export function groupAnnotationsByBucket<T extends { date: string }>(
+  points: readonly AnalyticsChartPoint[],
+  annotations: readonly T[],
+  interval: AnalyticsChartInterval,
+): Map<number, T[]> {
+  const groups = new Map<number, T[]>()
+  if (points.length === 0) return groups
+  const first = points[0].day.getTime()
+  // Calendar step, not elapsed time: a DST day is 23 or 25 hours long.
+  const end = nextBucket(points[points.length - 1].day, interval).getTime()
+  for (const annotation of annotations) {
+    const time = new Date(annotation.date).getTime()
+    if (Number.isNaN(time) || time < first || time >= end) continue
+    let index = points.length - 1
+    while (index > 0 && points[index].day.getTime() > time) index--
+    groups.set(index, [...(groups.get(index) ?? []), annotation])
+  }
+  return groups
+}
+
 /** A time window to read the flat aggregate for, anchored at a chart bucket. */
 export type AnalyticsBucketWindow = {
   /** Index of the first chart bucket the window covers. */

@@ -2814,7 +2814,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
   {
     name: 'appwrite-embedding',
     block: `  appwrite-embedding:
-    image: appwrite/embedding:0.3.1
+    image: appwrite/embedding:0.4.0
     profiles:
       - embedding
     environment:
