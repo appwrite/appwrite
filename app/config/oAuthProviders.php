@@ -423,6 +423,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Podio',
     ],
+    'railway' => [
+        'name' => 'Railway',
+        'developers' => 'https://docs.railway.com/integrations/oauth',
+        'icon' => 'icon-railway',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Railway',
+    ],
     'reddit' => [
         'name' => 'Reddit',
         'developers' => 'https://www.reddit.com/prefs/apps',
