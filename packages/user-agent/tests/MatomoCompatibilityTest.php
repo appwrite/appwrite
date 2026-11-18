@@ -7,12 +7,14 @@ namespace Utopia\UserAgent\Tests;
 use DeviceDetector\DeviceDetector as MatomoDeviceDetector;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RequiresMethod;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\UserAgent\UserAgent;
 
 // matomo/device-detector is a dev dependency of this package only, so the
 // root `packages` suite skips this; `bin/monorepo test user-agent` runs it.
 #[RequiresMethod(MatomoDeviceDetector::class, 'parse')]
+#[RequiresPhpExtension('utopia')]
 final class MatomoCompatibilityTest extends TestCase
 {
     /**

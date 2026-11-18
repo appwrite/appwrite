@@ -107,7 +107,7 @@ class Create extends Base
             }
         }
 
-        if (!$isSupported) {
+        if (!$isSupported || \in_array($mimeType, self::SOURCE_MIME_EXCLUDED, true)) {
             throw new Exception(Exception::VIDEO_NOT_VALID);
         }
 

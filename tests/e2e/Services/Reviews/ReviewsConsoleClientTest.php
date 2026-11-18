@@ -647,6 +647,174 @@ final class ReviewsConsoleClientTest extends Scope
         $this->client->call(Client::METHOD_DELETE, '/reviews/repositories/' . $repositoryId, $this->projectHeaders());
     }
 
+    public function testReviewNewRepositories(): void
+    {
+        $installationId = $this->setupInstallation();
+        $otherProjectId = $this->getProject(true)['$id'];
+        $otherInstallationId = $this->setupInstallation($otherProjectId);
+        // Repositories added to the installation are not looked up on GitHub, so any id will do.
+        $added = (string) \random_int(1_000_000_000, 9_999_999_999);
+        $addedLater = (string) \random_int(1_000_000_000, 9_999_999_999);
+
+        /**
+         * Test for SUCCESS
+         */
+
+        // Off until the project asks for it
+        $installation = $this->client->call(Client::METHOD_GET, '/vcs/installations/' . $installationId, $this->projectHeaders());
+        $this->assertSame(200, $installation['headers']['status-code']);
+        $this->assertFalse($installation['body']['reviewNewRepositories']);
+
+        $installation = $this->client->call(Client::METHOD_PATCH, '/reviews/installations/' . $installationId, $this->projectHeaders(), [
+            'newRepositories' => true,
+        ]);
+        $this->assertSame(200, $installation['headers']['status-code']);
+        $this->assertSame($installationId, $installation['body']['$id']);
+        $this->assertTrue($installation['body']['reviewNewRepositories']);
+
+        $installation = $this->client->call(Client::METHOD_GET, '/vcs/installations/' . $installationId, $this->projectHeaders());
+        $this->assertTrue($installation['body']['reviewNewRepositories']);
+
+        // A repository added to the installation is reviewed at normal strength
+        $event = $this->sendInstallationRepositoriesEvent('added', [$added]);
+        $this->assertSame(200, $event['headers']['status-code']);
+
+        $repositories = $this->listRepositories([$added]);
+        $this->assertSame(1, $repositories['body']['total']);
+        $repository = $repositories['body']['repositories'][0];
+        $this->assertSame($installationId, $repository['installationId']);
+        $this->assertSame('normal', $repository['strength']);
+
+        // Only in the project that asked for it
+        $this->assertSame(0, $this->listRepositories([$added], $otherProjectId)['body']['total']);
+
+        // A second delivery, or a repository already reviewed, keeps the row it has
+        $this->client->call(Client::METHOD_PATCH, '/reviews/repositories/' . $repository['$id'] . '/strength', $this->projectHeaders(), [
+            'strength' => 'expert',
+        ]);
+        $this->sendInstallationRepositoriesEvent('added', [$added]);
+        $repositories = $this->listRepositories([$added]);
+        $this->assertSame(1, $repositories['body']['total']);
+        $this->assertSame('expert', $repositories['body']['repositories'][0]['strength']);
+
+        // Removing a repository from the installation does not add it
+        $this->sendInstallationRepositoriesEvent('removed', [$addedLater]);
+        $this->assertSame(0, $this->listRepositories([$addedLater])['body']['total']);
+
+        // Turned off, new repositories are left alone
+        $installation = $this->client->call(Client::METHOD_PATCH, '/reviews/installations/' . $installationId, $this->projectHeaders(), [
+            'newRepositories' => false,
+        ]);
+        $this->assertSame(200, $installation['headers']['status-code']);
+        $this->assertFalse($installation['body']['reviewNewRepositories']);
+
+        $this->sendInstallationRepositoriesEvent('added', [$addedLater]);
+        $this->assertSame(0, $this->listRepositories([$addedLater])['body']['total']);
+
+        /**
+         * Test for FAILURE
+         */
+
+        // Another project's installation is not found
+        $other = $this->client->call(Client::METHOD_PATCH, '/reviews/installations/' . $otherInstallationId, $this->projectHeaders(), [
+            'newRepositories' => true,
+        ]);
+        $this->assertSame(404, $other['headers']['status-code']);
+        $this->assertSame('installation_not_found', $other['body']['type']);
+
+        $unknown = $this->client->call(Client::METHOD_PATCH, '/reviews/installations/unknown', $this->projectHeaders(), [
+            'newRepositories' => true,
+        ]);
+        $this->assertSame(404, $unknown['headers']['status-code']);
+
+        $invalid = $this->client->call(Client::METHOD_PATCH, '/reviews/installations/' . $installationId, $this->projectHeaders(), [
+            'newRepositories' => 'maybe',
+        ]);
+        $this->assertSame(400, $invalid['headers']['status-code']);
+
+        $this->client->call(Client::METHOD_DELETE, '/reviews/repositories/' . $repository['$id'], $this->projectHeaders());
+    }
+
+    public function testLearnings(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $installationId = $this->setupInstallation();
+
+        $repository = $this->client->call(Client::METHOD_POST, '/reviews/repositories', $this->projectHeaders(), [
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->providerRepositoryId,
+        ]);
+        $this->assertSame(201, $repository['headers']['status-code']);
+        $repositoryId = $repository['body']['$id'];
+
+        foreach (['Do not flag TODO comments.', 'Prefer early returns.'] as $body) {
+            $learning = $this->callService(Client::METHOD_POST, '/reviews/repositories/' . $repositoryId . '/learnings', [
+                'projectId' => $projectId,
+                'body' => $body,
+                'author' => 'appwrite-test',
+                'sourceUrl' => 'https://github.com/appwrite-test/svelte-starter/pull/1#issuecomment-1',
+            ]);
+            $this->assertSame(204, $learning['headers']['status-code']);
+        }
+
+        /**
+         * Test for SUCCESS
+         */
+
+        // The project lists what its reviews were asked to remember
+        $learnings = $this->client->call(Client::METHOD_GET, '/reviews/learnings', $this->projectHeaders(), [
+            'queries' => [
+                Query::equal('repositoryId', [$repositoryId])->toString(),
+                Query::orderAsc('$createdAt')->toString(),
+            ],
+        ]);
+        $this->assertSame(200, $learnings['headers']['status-code']);
+        $this->assertSame(2, $learnings['body']['total']);
+        $first = $learnings['body']['learnings'][0];
+        $this->assertSame('Do not flag TODO comments.', $first['body']);
+        $this->assertSame($repositoryId, $first['repositoryId']);
+        $this->assertSame('appwrite-test', $first['author']);
+        $this->assertSame('https://github.com/appwrite-test/svelte-starter/pull/1#issuecomment-1', $first['sourceUrl']);
+        $this->assertNotEmpty($first['$createdAt']);
+
+        // A deleted learning is no longer given to the review service
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/reviews/learnings/' . $first['$id'], $this->projectHeaders());
+        $this->assertSame(204, $deleted['headers']['status-code']);
+
+        $learnings = $this->client->call(Client::METHOD_GET, '/reviews/learnings', $this->projectHeaders(), [
+            'queries' => [Query::equal('repositoryId', [$repositoryId])->toString()],
+        ]);
+        $this->assertSame(1, $learnings['body']['total']);
+        $this->assertSame('Prefer early returns.', $learnings['body']['learnings'][0]['body']);
+
+        $service = $this->callService(Client::METHOD_GET, '/reviews/repositories/' . $repositoryId . '/learnings', [
+            'projectId' => $projectId,
+        ]);
+        $this->assertSame(['Prefer early returns.'], $service['body']['learnings']);
+
+        /**
+         * Test for FAILURE
+         */
+
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/reviews/learnings/' . $first['$id'], $this->projectHeaders());
+        $this->assertSame(404, $deleted['headers']['status-code']);
+        $this->assertSame('review_learning_not_found', $deleted['body']['type']);
+
+        $invalid = $this->client->call(Client::METHOD_GET, '/reviews/learnings', $this->projectHeaders(), [
+            'queries' => [Query::equal('body', ['Prefer early returns.'])->toString()],
+        ]);
+        $this->assertSame(400, $invalid['headers']['status-code']);
+
+        // Another project sees none of them
+        $learnings = $this->client->call(Client::METHOD_GET, '/reviews/learnings', $this->projectHeaders($this->getProject(true)['$id']), [
+            'queries' => [Query::equal('repositoryId', [$repositoryId])->toString()],
+        ]);
+        $this->assertSame(200, $learnings['headers']['status-code']);
+        $this->assertSame(0, $learnings['body']['total']);
+
+        $this->client->call(Client::METHOD_DELETE, '/reviews/repositories/' . $repositoryId, $this->projectHeaders());
+    }
+
     public function testServiceNeedsTheSecret(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -816,6 +984,45 @@ final class ReviewsConsoleClientTest extends Scope
                 System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', ''),
             ),
         ], $payload);
+    }
+
+    /**
+     * @param array<string> $providerRepositoryIds
+     */
+    private function sendInstallationRepositoriesEvent(string $action, array $providerRepositoryIds): array
+    {
+        $repositories = \array_map(fn (string $id) => ['id' => (int) $id, 'name' => 'repository-' . $id], $providerRepositoryIds);
+
+        $payload = [
+            'action' => $action,
+            'installation' => ['id' => (int) $this->providerInstallationId, 'account' => ['login' => 'appwrite-test']],
+            'repository_selection' => 'selected',
+            'repositories_added' => $action === 'added' ? $repositories : [],
+            'repositories_removed' => $action === 'removed' ? $repositories : [],
+        ];
+
+        return $this->client->call(Client::METHOD_POST, '/vcs/github/events', [
+            'content-type' => 'application/json',
+            'x-github-event' => 'installation_repositories',
+            'x-hub-signature-256' => 'sha256=' . \hash_hmac(
+                'sha256',
+                \json_encode($payload, JSON_THROW_ON_ERROR),
+                System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', ''),
+            ),
+        ], $payload);
+    }
+
+    /**
+     * @param array<string> $providerRepositoryIds
+     */
+    private function listRepositories(array $providerRepositoryIds, ?string $projectId = null): array
+    {
+        $repositories = $this->client->call(Client::METHOD_GET, '/reviews/repositories', $this->projectHeaders($projectId), [
+            'queries' => [Query::equal('providerRepositoryId', $providerRepositoryIds)->toString()],
+        ]);
+        $this->assertSame(200, $repositories['headers']['status-code']);
+
+        return $repositories;
     }
 
     private function sendPullRequestEvent(string $action, int $pullRequest, string $head): array

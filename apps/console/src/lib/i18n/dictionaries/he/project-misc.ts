@@ -3723,7 +3723,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Greater than': 'גדול מ-',
   'Greater than or equal': 'גדול או שווה ל-',
   'Inbound bandwidth': 'תעבורה נכנסת',
-  'Know when usage crosses a line': 'דעו מתי השימוש חוצה את הגבול',
+  'Know when something needs attention': 'דעו מתי משהו דורש תשומת לב',
   'Last value': 'ערך אחרון',
   'Less than': 'קטן מ-',
   'Less than or equal': 'קטן או שווה ל-',
@@ -3819,8 +3819,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   '{percent}% of {budget}': '{percent}% מתוך {budget}',
   'Managed by budget': 'מנוהל לפי התקציב',
   'Last sent': 'נשלח לאחרונה',
-  'A monitor raises an alert when its rules hold, and resolves it when usage recovers.':
-    'מוניטור מעלה התראה כשהכללים שלו מתקיימים, וסוגר אותה כשהשימוש חוזר לשגרה.',
   Alert: 'התראה',
   'Alert not found': 'ההתראה לא נמצאה',
   'Budget monitors': 'מוניטורים של תקציב',
@@ -3845,8 +3843,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Monitor has been updated': 'המוניטור עודכן',
   'Monitor not found': 'המוניטור לא נמצא',
   Monitors: 'מוניטורים',
-  'Monitors watch your project usage and notify you when a metric crosses the threshold you set.':
-    'מוניטורים עוקבים אחר השימוש בפרויקט ומתריעים כשמדד חוצה את הסף שהגדרתם.',
+  'Monitors watch your project usage and your endpoints, and notify you when a metric crosses your threshold or a check fails.':
+    'מוניטורים עוקבים אחר השימוש בפרויקט ואחר נקודות הקצה שלכם, ומתריעים כשמדד חוצה את הסף שהגדרתם או כשבדיקה נכשלת.',
   'No alerts yet': 'אין עדיין התראות',
   Ongoing: 'מתמשך',
   Peak: 'שיא',
@@ -3866,8 +3864,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Acknowledged with an API key': 'אושר באמצעות מפתח API',
   'Failed to acknowledge the alert': 'אישור הטיפול בהתראה נכשל',
   'Failed to undo the acknowledgement': 'ביטול אישור הטיפול נכשל',
-  'Let your team know someone is on it. It keeps firing until usage recovers.':
-    'כך הצוות יודע שמישהו מטפל בזה. ההתראה תמשיך לפעול עד שהשימוש יחזור לשגרה.',
+  'Let your team know someone is on it. It keeps firing until its monitor recovers.':
+    'כך הצוות יודע שמישהו מטפל בזה. ההתראה תמשיך לפעול עד שהמוניטור יחזור לשגרה.',
   'Nobody has acknowledged this alert': 'אף אחד עדיין לא אישר טיפול בהתראה הזו',
   "You don't have permission to manage monitors.":
     'אין לכם הרשאה לנהל מוניטורים.',
@@ -4089,4 +4087,84 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'הוסיפו לפחות מארח אחד ו-base DN כדי להפעיל התחברות דרך LDAP.',
   'Add at least one host and a base DN under Settings > Identity servers to enable LDAP sign-in.':
     'הוסיפו לפחות מארח אחד ו-base DN תחת הגדרות > שרתי זהויות כדי להפעיל התחברות דרך LDAP.',
+  // Probe monitors
+  'Enter a URL starting with http:// or https://.':
+    'הזינו כתובת URL שמתחילה ב-http:// או ב-https://.',
+  'Write each header on its own line as Name: value.':
+    'כתבו כל כותרת בשורה נפרדת בתבנית Name: value.',
+  'Enter status codes between 100 and 599.': 'הזינו קודי סטטוס בין 100 ל-599.',
+  'Enter the domain to query.': 'הזינו את הדומיין לשאילתה.',
+  'Enter the host to connect to.': 'הזינו את המארח להתחברות.',
+  'Enter a port between 1 and 65535.': 'הזינו פורט בין 1 ל-65535.',
+  'The timeout must not be longer than the interval.':
+    'הזמן הקצוב לא יכול להיות ארוך מהמרווח בין הבדיקות.',
+  'Monitor type': 'סוג המוניטור',
+  'Expected status codes': 'קודי סטטוס צפויים',
+  'Separate codes with commas.': 'הפרידו בין הקודים בפסיקים.',
+  'Any 2xx status': 'כל סטטוס 2xx',
+  'Certificate expiry warning': 'התראה על תפוגת אישור',
+  'Days before an HTTPS certificate expires to fire. 0 never warns early.':
+    'כמה ימים לפני תפוגת אישור HTTPS להפעיל התראה. 0 לא מתריע מראש.',
+  'One per line, as Name: value.': 'אחת בכל שורה, בתבנית Name: value.',
+  'Record type': 'סוג רשומה',
+  'Expected answer': 'תשובה צפויה',
+  'Leave empty to accept any answer.': 'השאירו ריק כדי לקבל כל תשובה.',
+  Resolver: 'שרת DNS',
+  "Leave empty to use the server's resolver.":
+    'השאירו ריק כדי להשתמש בשרת ה-DNS של השרת.',
+  Checks: 'בדיקות',
+  'The monitor fires when a check fails, and resolves when one passes again.':
+    'המוניטור מופעל כשבדיקה נכשלת, ונסגר כשבדיקה עוברת שוב.',
+  'Check every': 'בדיקה כל',
+  'Check interval': 'מרווח בין בדיקות',
+  'and fail after': 'וכישלון אחרי',
+  'Check timeout': 'זמן קצוב לבדיקה',
+  'Last check': 'בדיקה אחרונה',
+  'Code {code}': 'קוד {code}',
+  'Every {interval}, failing after {timeout}':
+    'כל {interval}, כישלון אחרי {timeout}',
+  Expects: 'מצפה ל',
+  Certificate: 'אישור',
+  'No certificate seen yet': 'עדיין לא נראה אישור',
+  'fires {days} days before it expires': 'מופעל {days} ימים לפני התפוגה',
+  'Any answer': 'כל תשובה',
+  "The server's resolver": 'שרת ה-DNS של השרת',
+  'Checks run on the monitor interval, so this monitor is not being checked.':
+    'הבדיקות רצות לפי המרווח של המוניטור, ולכן המוניטור הזה לא נבדק.',
+  '{type} check': 'בדיקת {type}',
+  'Check that your endpoints respond': 'בדקו שנקודות הקצה שלכם מגיבות',
+  '{type} monitor': 'מוניטור {type}',
+  'Latest latency': 'זמן תגובה אחרון',
+  'Peak latency': 'זמן תגובה מרבי',
+  Result: 'תוצאה',
+  'Resolves when a check passes again.': 'נסגרת כשבדיקה עוברת שוב.',
+  'A monitor raises an alert when its rules hold or its check fails, and resolves it when they recover.':
+    'מוניטור מעלה התראה כשהכללים שלו מתקיימים או כשהבדיקה שלו נכשלת, וסוגר אותה כשהמצב חוזר לשגרה.',
+  'peak latency': 'זמן תגובה מרבי',
+  'Get notified when a URL stops answering with the status you expect, or its certificate is about to expire.':
+    'קבלו התראה כשכתובת URL מפסיקה להחזיר את הסטטוס הצפוי, או כשהאישור שלה עומד לפוג.',
+  'Get notified when a domain stops resolving, or stops answering with the value you expect.':
+    'קבלו התראה כשדומיין מפסיק להיפתר, או מפסיק להחזיר את הערך הצפוי.',
+  'Get notified when a host stops accepting connections on a port.':
+    'קבלו התראה כשמארח מפסיק לקבל חיבורים בפורט.',
+  'Get notified when a mail server stops accepting sessions or its TLS handshake fails.':
+    'קבלו התראה כששרת דואר מפסיק לקבל סשנים או כשלחיצת היד של TLS נכשלת.',
+  Responding: 'מגיב',
+  'Name did not resolve': 'השם לא נפתר',
+  'Connection refused': 'החיבור נדחה',
+  'Connection timed out': 'הזמן הקצוב לחיבור פג',
+  'TLS handshake failed': 'לחיצת היד של TLS נכשלה',
+  'TLS certificate expiring': 'אישור TLS עומד לפוג',
+  'Unexpected status code': 'קוד סטטוס לא צפוי',
+  'Unexpected answer': 'תשובה לא צפויה',
+  'Server refused the session': 'השרת דחה את הסשן',
+  'Target is in a denied network': 'היעד נמצא ברשת חסומה',
+  'Timed out': 'הזמן הקצוב פג',
+  '30 seconds': '30 שניות',
+  '1 minute': 'דקה',
+  '5 seconds': '5 שניות',
+  '10 seconds': '10 שניות',
+  'From the port': 'לפי הפורט',
+  'Upgrade with STARTTLS': 'שדרוג עם STARTTLS',
+  'Implicit TLS': 'TLS מובנה',
 }
