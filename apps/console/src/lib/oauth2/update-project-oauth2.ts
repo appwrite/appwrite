@@ -54,6 +54,7 @@ const OAUTH2_UPDATE_BY_PROVIDER: Partial<
   [ProjectOAuthProviderId.Linkedin]: (p, b) => p.updateOAuth2Linkedin(b),
   [ProjectOAuthProviderId.Microsoft]: (p, b) => p.updateOAuth2Microsoft(b),
   [ProjectOAuthProviderId.Naver]: (p, b) => p.updateOAuth2Naver(b),
+  [ProjectOAuthProviderId.Netlify]: (p, b) => p.updateOAuth2Netlify(b),
   [ProjectOAuthProviderId.Notion]: (p, b) => p.updateOAuth2Notion(b),
   [ProjectOAuthProviderId.Oidc]: (p, b) => p.updateOAuth2Oidc(b),
   [ProjectOAuthProviderId.Okta]: (p, b) => p.updateOAuth2Okta(b),
@@ -77,6 +78,7 @@ const OAUTH2_UPDATE_BY_PROVIDER: Partial<
   [ProjectOAuthProviderId.Vipps]: (p, b) => p.updateOAuth2Vipps(b),
   [ProjectOAuthProviderId.VippsSandbox]: (p, b) =>
     p.updateOAuth2VippsSandbox(b),
+  [ProjectOAuthProviderId.Vk]: (p, b) => p.updateOAuth2VK(b),
   [ProjectOAuthProviderId.Webflow]: (p, b) => p.updateOAuth2Webflow(b),
   [ProjectOAuthProviderId.Wordpress]: (p, b) => p.updateOAuth2WordPress(b),
   [ProjectOAuthProviderId.Workos]: (p, b) => p.updateOAuth2WorkOS(b),
