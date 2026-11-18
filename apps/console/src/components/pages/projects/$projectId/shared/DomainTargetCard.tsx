@@ -47,6 +47,8 @@ export interface DomainTargetCardProps {
   providerRepositoryId?: string | null
   /** Whether repo is connected (needed for branch option) */
   hasRepository?: boolean
+  /** Updating a rule in a modal: drops the card frame and disables the other type's options */
+  ruleType?: 'deployment' | 'redirect'
   disabled?: boolean
 }
 
@@ -64,6 +66,7 @@ export function DomainTargetCard({
   installationId,
   providerRepositoryId,
   hasRepository = false,
+  ruleType,
   disabled = false,
 }: DomainTargetCardProps) {
   const t = useT()
