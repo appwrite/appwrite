@@ -623,6 +623,7 @@ test.describe('videos (mocked API)', () => {
         RENDITIONS,
         PROFILES,
         true,
+        status,
       )
       await page.goto(`/player/${VIDEO_ID}?project=${PROJECT_ID}`, {
         waitUntil: 'domcontentloaded',
