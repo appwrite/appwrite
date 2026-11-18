@@ -528,6 +528,28 @@ trait TeamsBase
         $this->assertEquals(404, $response['headers']['status-code']);
     }
 
+    public function testGetTeamPhoto(): void
+    {
+        $team = $this->createTeamHelper('Photo Team');
+        $headers = $this->getTeamPhotoHeaders();
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $team['teamUid'] . '/photo', $headers);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertNotFalse(\imagecreatefromstring($response['body']));
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . Id::unique() . '/photo', $headers);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+    }
+
     /**
      * @return array<string, string>
      */
