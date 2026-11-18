@@ -812,6 +812,10 @@
             "quality",
             "output"
         ],
+        "teams.updatePhoto": [
+            "teamId",
+            "file"
+        ],
         "teams.updatePrefs": [
             "teamId",
             "prefs"
@@ -4770,6 +4774,10 @@
             "height",
             "quality",
             "output"
+        ],
+        "teams.updatePhoto": [
+            "teamId",
+            "file"
         ],
         "teams.updatePrefs": [
             "teamId",
@@ -9123,6 +9131,10 @@
             "height",
             "quality",
             "output"
+        ],
+        "teams.updatePhoto": [
+            "teamId",
+            "file"
         ],
         "teams.updatePrefs": [
             "teamId",
