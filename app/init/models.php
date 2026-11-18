@@ -225,6 +225,7 @@ use Appwrite\Utopia\Response\Model\Report;
 use Appwrite\Utopia\Response\Model\ResourceToken;
 use Appwrite\Utopia\Response\Model\Review;
 use Appwrite\Utopia\Response\Model\ReviewAuthor;
+use Appwrite\Utopia\Response\Model\ReviewCategory;
 use Appwrite\Utopia\Response\Model\ReviewEvent;
 use Appwrite\Utopia\Response\Model\ReviewFinding;
 use Appwrite\Utopia\Response\Model\ReviewLearning;
@@ -355,6 +356,7 @@ Response::setModel(new BaseList('Reviews List', Response::MODEL_REVIEW_LIST, 're
 Response::setModel(new BaseList('Review Events List', Response::MODEL_REVIEW_EVENT_LIST, 'events', Response::MODEL_REVIEW_EVENT));
 Response::setModel(new BaseList('Review Repositories List', Response::MODEL_REVIEW_REPOSITORY_LIST, 'repositories', Response::MODEL_REVIEW_REPOSITORY));
 Response::setModel(new BaseList('Review Authors List', Response::MODEL_REVIEW_AUTHOR_LIST, 'authors', Response::MODEL_REVIEW_AUTHOR));
+Response::setModel(new BaseList('Review Categories List', Response::MODEL_REVIEW_CATEGORY_LIST, 'categories', Response::MODEL_REVIEW_CATEGORY));
 Response::setModel(new BaseList('Review Learnings List', Response::MODEL_REVIEW_LEARNING_LIST, 'learnings', Response::MODEL_REVIEW_LEARNING));
 
 // Entities
@@ -615,6 +617,7 @@ Response::setModel(new InsightCTA());
 Response::setModel(new Report());
 Response::setModel(new Review());
 Response::setModel(new ReviewAuthor());
+Response::setModel(new ReviewCategory());
 Response::setModel(new ReviewEvent());
 Response::setModel(new ReviewFinding());
 Response::setModel(new ReviewLearning());

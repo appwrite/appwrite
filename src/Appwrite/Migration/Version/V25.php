@@ -610,8 +610,13 @@ class V25 extends Migration
                         // added to it since created on their own.
                         $existed = $this->dbForProject->findCollection($id) !== null;
                         $this->createCollection($id);
-                        if ($existed && $id === 'reviews') {
-                            foreach (['strength', 'providerPullRequestAuthor'] as $attribute) {
+                        $added = match ($id) {
+                            'reviews' => ['strength', 'providerPullRequestAuthor'],
+                            'reviewFindings' => ['settlement', 'upvotes', 'downvotes'],
+                            default => [],
+                        };
+                        if ($existed) {
+                            foreach ($added as $attribute) {
                                 try {
                                     $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
                                 } catch (Throwable $th) {

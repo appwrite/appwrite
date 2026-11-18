@@ -242,6 +242,9 @@ class Base extends Action
             'status' => $finding->getAttribute('status', 'posted'),
             'dropReason' => $finding->getAttribute('dropReason') ?: null,
             'providerCommentId' => $commentId === '' || $commentId === null ? null : (int) $commentId,
+            'settlement' => $finding->getAttribute('settlement') ?: null,
+            'upvotes' => $finding->getAttribute('upvotes', 0),
+            'downvotes' => $finding->getAttribute('downvotes', 0),
             'createdAt' => $finding->getCreatedAt(),
         ];
     }

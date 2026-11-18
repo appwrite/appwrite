@@ -6,6 +6,7 @@ use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\Finding;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -59,7 +60,7 @@ class XList extends Action
                 group: 'authors',
                 name: 'listAuthors',
                 description: <<<EOT
-                List the authors of the project's reviewed pull requests with how their pull requests fared in review over a range: pull requests and reviews, findings by severity, findings fixed and dismissed, approvals, and the average merge confidence tier. Authors with the most reviewed pull requests come first.
+                List the authors of the project's reviewed pull requests with how their pull requests fared in review over a range: pull requests and reviews, findings by severity, findings fixed and dismissed, findings people found useful or noisy, approvals, and the average merge confidence tier. Authors with the most reviewed pull requests come first.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -126,6 +127,8 @@ class XList extends Action
                 'major' => 0,
                 'resolved' => 0,
                 'dismissed' => 0,
+                'useful' => 0,
+                'noisy' => 0,
                 'tiers' => [],
                 'lastReviewAt' => '',
             ];
@@ -214,13 +217,13 @@ class XList extends Action
             $findings = $dbForProject->find('reviewFindings', [
                 Query::equal('reviewInternalId', \array_map(fn (Document $review) => $review->getSequence(), $chunk)),
                 Query::notEqual('status', 'dropped'),
-                Query::select(['reviewInternalId', 'severity', 'status']),
+                Query::select(['reviewInternalId', 'severity', 'status', 'upvotes', 'downvotes']),
                 Query::limit(self::FINDINGS_CHUNK * APP_LIMIT_ARRAY_PARAMS_SIZE),
             ]);
 
             foreach ($findings as $finding) {
                 $count = &$counts[$finding->getAttribute('reviewInternalId')];
-                $count ??= ['findings' => 0, 'critical' => 0, 'major' => 0, 'resolved' => 0, 'dismissed' => 0];
+                $count ??= ['findings' => 0, 'critical' => 0, 'major' => 0, 'resolved' => 0, 'dismissed' => 0, 'useful' => 0, 'noisy' => 0];
 
                 $count['findings']++;
                 $severity = $finding->getAttribute('severity');
@@ -230,6 +233,10 @@ class XList extends Action
                 $status = $finding->getAttribute('status');
                 if ($status === 'resolved' || $status === 'dismissed') {
                     $count[$status]++;
+                }
+                $useful = (new Finding($finding->getArrayCopy()))->isUseful();
+                if ($useful !== null) {
+                    $count[$useful ? 'useful' : 'noisy']++;
                 }
                 unset($count);
             }

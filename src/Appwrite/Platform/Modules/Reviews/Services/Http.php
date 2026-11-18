@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Reviews\Services;
 
 use Appwrite\Platform\Modules\Reviews\Http\Authors\XList as ListAuthors;
+use Appwrite\Platform\Modules\Reviews\Http\Categories\XList as ListCategories;
 use Appwrite\Platform\Modules\Reviews\Http\Installations\Update as UpdateInstallation;
 use Appwrite\Platform\Modules\Reviews\Http\Learnings\Delete as DeleteLearning;
 use Appwrite\Platform\Modules\Reviews\Http\Learnings\XList as ListLearnings;
@@ -10,6 +11,7 @@ use Appwrite\Platform\Modules\Reviews\Http\Repositories\Create as CreateReposito
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Delete as DeleteRepository;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Learnings\Create as CreateRepositoryLearning;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Learnings\XList as ListRepositoryLearnings;
+use Appwrite\Platform\Modules\Reviews\Http\Repositories\Pulls\Findings\Reactions\Update as UpdatePullFindingsReactions;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Pulls\Findings\Status\Update as UpdatePullFindingsStatus;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Pulls\Findings\XList as ListPullFindings;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Pulls\Reviews\XList as ListPullReviews;
@@ -43,6 +45,7 @@ class Http extends Service
         $this->addAction(ListReviewEvents::getName(), new ListReviewEvents());
 
         $this->addAction(ListAuthors::getName(), new ListAuthors());
+        $this->addAction(ListCategories::getName(), new ListCategories());
         $this->addAction(ListLearnings::getName(), new ListLearnings());
         $this->addAction(DeleteLearning::getName(), new DeleteLearning());
 
@@ -56,6 +59,7 @@ class Http extends Service
         $this->addAction(ListPullReviews::getName(), new ListPullReviews());
         $this->addAction(ListPullFindings::getName(), new ListPullFindings());
         $this->addAction(UpdatePullFindingsStatus::getName(), new UpdatePullFindingsStatus());
+        $this->addAction(UpdatePullFindingsReactions::getName(), new UpdatePullFindingsReactions());
         $this->addAction(ListRepositoryLearnings::getName(), new ListRepositoryLearnings());
         $this->addAction(CreateRepositoryLearning::getName(), new CreateRepositoryLearning());
     }
