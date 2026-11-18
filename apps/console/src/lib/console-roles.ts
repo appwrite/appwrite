@@ -37,6 +37,8 @@ export const DEFAULT_SCOPES = [
   'sites.write',
   'videos.read',
   'videos.write',
+  'project.videos.profiles.read',
+  'project.videos.profiles.write',
   'reviews.read',
   'reviews.write',
   'domains.write',
@@ -89,6 +91,7 @@ export type ConsoleAccess = {
   canWriteProviders: boolean
   canWriteSites: boolean
   canWriteVideos: boolean
+  canWriteVideoProfiles: boolean
   canWriteReviews: boolean
   canWriteDomains: boolean
   canWriteExecutions: boolean
@@ -144,6 +147,15 @@ export function deriveAccessFromRolesScopes(
     canWriteProviders: has('providers.write'),
     canWriteSites: has('sites.write'),
     canWriteVideos: hasVideoScopes ? has('videos.write') : has('buckets.write'),
+    // Profiles are project settings with their own scope; roles that predate it
+    // fall back to the videos scope.
+    canWriteVideoProfiles: scopes.some((s) =>
+      s.startsWith('project.videos.profiles.'),
+    )
+      ? has('project.videos.profiles.write')
+      : hasVideoScopes
+        ? has('videos.write')
+        : has('buckets.write'),
     canWriteReviews: has('reviews.write'),
     canWriteDomains: has('domains.write'),
     canWriteExecutions: has('executions.write'),
