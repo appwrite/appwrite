@@ -16,6 +16,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Agents\Adapters\Appwrite as AppwriteAdapter;
+use Utopia\Agents\Exception\Api;
 use Utopia\Database\Document;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Platform\Enum;
@@ -96,8 +97,9 @@ class Create extends CreateDocumentAction
         $totalTokens = 0;
         $totalErrors = 0;
         $failure = null;
+        $tooLong = null;
 
-        foreach (array_chunk($texts, APP_EMBEDDING_BATCH_LIMIT) as $batch) {
+        foreach (array_chunk($texts, APP_EMBEDDING_BATCH_LIMIT) as $position => $batch) {
             try {
                 $embeddings = $embedder->embed($batch);
                 $totalDuration += $embeddings->duration ?? 0;
@@ -107,6 +109,18 @@ class Create extends CreateDocumentAction
                     $results[] = $this->embeddingResult($model, $dimension, $vector);
                 }
             } catch (\Exception $e) {
+                if ($e instanceof Api && $e->type === 'text_too_long') {
+                    $error = \json_decode($e->body, true)['error'];
+                    $index = $position * APP_EMBEDDING_BATCH_LIMIT + $error['index'];
+                    $tooLong = new Exception(
+                        Exception::GENERAL_EMBEDDING_TEXT_TOO_LONG,
+                        "Text at index {$index} has {$error['tokens']} tokens, but {$model} accepts up to {$error['limit']}. Split it into smaller chunks and try again.",
+                        previous: $e,
+                    );
+                    $totalErrors = \count($texts);
+                    break;
+                }
+
                 $failure = $e;
                 $totalErrors += \count($batch);
                 Span::add('embedding.model', $model);
@@ -122,7 +136,7 @@ class Create extends CreateDocumentAction
 
         Span::add('embedding.errors', $totalErrors);
         if ($totalErrors > 0 && $totalErrors === \count($texts)) {
-            $exception = new Exception(Exception::GENERAL_EMBEDDING_UNAVAILABLE, previous: $failure);
+            $exception = $tooLong ?? new Exception(Exception::GENERAL_EMBEDDING_UNAVAILABLE, previous: $failure);
 
             // Usage shutdown hooks are skipped once the action throws, so publish the errors here.
             if ($project->getId() !== 'console') {
