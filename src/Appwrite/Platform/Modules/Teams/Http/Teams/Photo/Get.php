@@ -42,6 +42,24 @@ class Get extends Action
             ->desc('Get photo')
             ->groups(['api', 'teams'])
             ->label('scope', 'teams.read')
+            ->label('sdk', new Method(
+                namespace: 'teams',
+                group: 'teams',
+                name: 'getPhoto',
+                description: <<<'EOT'
+                Returns the photo of a team: the uploaded photo (see teams.updatePhoto), else the initials of the team name, else a built-in static placeholder.
+                EOT,
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                type: MethodType::LOCATION,
+                locationAuth: ['Project', 'Environment', 'ImpersonateUserId'],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_NONE,
+                    ),
+                ],
+                contentType: ContentType::IMAGE
+            ))
             ->param('teamId', '', new UID(), 'Team ID.')
             ->inject('response')
             ->inject('dbForProject')
