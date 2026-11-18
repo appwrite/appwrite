@@ -170,6 +170,7 @@ class Update extends Action
             }
         }
 
+        $queueForEvents->setParam('teamId', $teamId);
 
         $response->dynamic($updated, Response::MODEL_TEAM);
     }
