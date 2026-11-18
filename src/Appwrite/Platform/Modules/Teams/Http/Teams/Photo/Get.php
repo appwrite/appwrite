@@ -41,6 +41,7 @@ class Get extends Action
             ->setHttpPath('/v1/teams/:teamId/photo')
             ->desc('Get photo')
             ->groups(['api', 'teams'])
+            ->label('scope', 'teams.read')
             ->param('teamId', '', new UID(), 'Team ID.')
             ->inject('response')
             ->inject('dbForProject')
