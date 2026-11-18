@@ -237,13 +237,15 @@ class Update extends Base
         $outputDirectory ??= $site->getAttribute('outputDirectory', '');
         $adapter ??= $site->getAttribute('adapter', '');
         $fallbackFile ??= $site->getAttribute('fallbackFile', '');
-        $providerSilentMode ??= $site->getAttribute('providerSilentMode', false);
         $deploymentRetention ??= $site->getAttribute('deploymentRetention', 0);
 
         $repositoryId = $site->getAttribute('repositoryId', '');
         $repositoryInternalId = $site->getAttribute('repositoryInternalId', '');
 
         $isConnected = !empty($site->getAttribute('providerRepositoryId', ''));
+
+        // Disconnecting turns silent mode on, so a new connection starts without it
+        $providerSilentMode ??= !$isConnected && !empty($providerRepositoryId) ? false : $site->getAttribute('providerSilentMode', false);
 
         if (!empty($installationId) && $installation->getAttribute('projectId') !== $project->getId()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
