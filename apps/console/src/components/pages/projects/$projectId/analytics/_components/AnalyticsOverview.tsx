@@ -33,7 +33,6 @@ import {
 import { ChartSeriesDot } from '@/components/global/shared/ChartSeriesDot'
 import { AnimatedCounter } from '@/components/global/shared/AnimatedCounter'
 import { ConfirmActionDialog } from '@/components/global/shared/ConfirmActionDialog'
-import type { AnalyticsAnnotation } from '@/lib/appwrite/analytics-annotations'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { Button } from '@/components/ui/button'
 import {
@@ -506,12 +505,11 @@ export function AnalyticsOverview({
   )
   const { authors } = useAnalyticsAnnotationAuthors(project?.teamId, authorIds)
   const [noteDraft, setNoteDraft] = useState<{
-    annotation?: AnalyticsAnnotation
+    annotation?: Models.AnalyticsAnnotation
     date: string
   } | null>(null)
-  const [deletingNote, setDeletingNote] = useState<AnalyticsAnnotation | null>(
-    null,
-  )
+  const [deletingNote, setDeletingNote] =
+    useState<Models.AnalyticsAnnotation | null>(null)
   const deleteNote = useDeleteAnalyticsAnnotation(projectId, propertyId)
   // A drag that zooms the range also ends in a click, which must not add a note.
   const brushCommitted = useRef(false)

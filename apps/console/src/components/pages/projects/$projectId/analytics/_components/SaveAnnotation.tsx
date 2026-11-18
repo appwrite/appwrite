@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -11,7 +12,6 @@ import {
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { DateTimePicker } from '@/components/global/shared/DateTimePicker'
-import type { AnalyticsAnnotation } from '@/lib/appwrite/analytics-annotations'
 import { useSaveAnalyticsAnnotation } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
@@ -31,7 +31,7 @@ export function SaveAnnotation({
   onOpenChange: (open: boolean) => void
   projectId: string
   propertyId: string
-  annotation?: AnalyticsAnnotation
+  annotation?: Models.AnalyticsAnnotation
   /** Date a new note starts on. */
   date: string
 }) {

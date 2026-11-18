@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/popover'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import type { AnalyticsAnnotation } from '@/lib/appwrite/analytics-annotations'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
 
@@ -31,12 +30,12 @@ export function AnnotationMarker({
   /** Line position from the label's viewBox. */
   x: number
   y: number
-  annotations: AnalyticsAnnotation[]
+  annotations: Models.AnalyticsAnnotation[]
   /** Names by user ID; undefined until loaded. */
   authors: ReadonlyMap<string, string> | undefined
   canWrite: boolean
-  onEdit: (annotation: AnalyticsAnnotation) => void
-  onDelete: (annotation: AnalyticsAnnotation) => void
+  onEdit: (annotation: Models.AnalyticsAnnotation) => void
+  onDelete: (annotation: Models.AnalyticsAnnotation) => void
 }) {
   const t = useT()
   const [open, setOpen] = useState(false)

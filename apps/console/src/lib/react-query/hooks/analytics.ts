@@ -30,13 +30,6 @@ import {
 } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
-  createAnalyticsAnnotation,
-  deleteAnalyticsAnnotation,
-  listAnalyticsAnnotations,
-  updateAnalyticsAnnotation,
-  type AnalyticsAnnotation,
-} from '@/lib/appwrite/analytics-annotations'
-import {
   analyticsFilterQueries,
   analyticsFiltersKey,
   isAnalyticsFilterShapeSupported,
@@ -1266,13 +1259,12 @@ export async function fetchAnalyticsAnnotations(
   propertyId: string,
   range: AnalyticsRange,
 ) {
-  const client = sdk.forProject(projectId).client
-  const annotations: AnalyticsAnnotation[] = []
+  const annotations: Models.AnalyticsAnnotation[] = []
   for (let page = 0; page < ANALYTICS_ANNOTATIONS_MAX_PAGES; page++) {
     const last = annotations.at(-1)
     const response = await withReadTimeout(
       'listAnnotations',
-      listAnalyticsAnnotations(client, {
+      sdk.forProject(projectId).analytics.listAnnotations({
         propertyId,
         queries: [
           Query.greaterThanEqual('date', range.startAt),
@@ -1383,18 +1375,18 @@ export function useSaveAnalyticsAnnotation(
   return useMutation({
     mutationFn: async (input: SaveAnalyticsAnnotationInput) => {
       if (!projectId || !propertyId) throw new Error('Property is required')
-      const client = sdk.forProject(projectId).client
+      const analytics = sdk.forProject(projectId).analytics
       const params = {
         propertyId,
         date: input.date,
         content: input.content.trim(),
       }
       return input.annotationId
-        ? await updateAnalyticsAnnotation(client, {
+        ? await analytics.updateAnnotation({
             ...params,
             annotationId: input.annotationId,
           })
-        : await createAnalyticsAnnotation(client, {
+        : await analytics.createAnnotation({
             ...params,
             annotationId: ID.unique(),
           })
@@ -1416,7 +1408,7 @@ export function useDeleteAnalyticsAnnotation(
   return useMutation({
     mutationFn: async (annotationId: string) => {
       if (!projectId || !propertyId) throw new Error('Property is required')
-      await deleteAnalyticsAnnotation(sdk.forProject(projectId).client, {
+      await sdk.forProject(projectId).analytics.deleteAnnotation({
         propertyId,
         annotationId,
       })
