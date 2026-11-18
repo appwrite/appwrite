@@ -192,6 +192,18 @@ export const PLATFORM_COVERAGE: Record<AlternativeId, Record<PlatformProductId, 
     domains: 'no',
     firewall: 'no',
   },
+  mux: {
+    auth: 'no',
+    databases: 'no',
+    postgres: 'no',
+    storage: 'no',
+    functions: 'no',
+    realtime: 'no',
+    messaging: 'no',
+    sites: 'no',
+    domains: 'no',
+    firewall: 'no',
+  },
 }
 
 /** How each competitor ships its source, shown next to Appwrite being open source. */
@@ -247,5 +259,9 @@ export const COMPETITOR_SOURCE: Record<AlternativeId, { status: string; detail: 
   plausible: {
     status: 'Open source',
     detail: 'Community Edition is AGPL licensed and self-hostable, with fewer features than the cloud service.',
+  },
+  mux: {
+    status: 'Proprietary',
+    detail: 'Mux Player and the upload SDKs are open source, but encoding, storage, and delivery run only on Mux.',
   },
 }

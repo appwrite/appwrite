@@ -165,6 +165,7 @@ const LIVE_PRODUCTS = new Set([
   'storage',
   'functions',
   'messaging',
+  'videos',
   'realtime',
   'sites',
   'analytics',

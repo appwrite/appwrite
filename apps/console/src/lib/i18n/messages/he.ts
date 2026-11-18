@@ -216,6 +216,7 @@ export const heCatalog: EnCatalog = {
           vsPlanetScale: 'Appwrite מול PlanetScale', // pragma: allowlist secret
           vsPostHog: 'Appwrite מול PostHog', // pragma: allowlist secret
           vsPlausible: 'Appwrite מול Plausible', // pragma: allowlist secret
+          vsMux: 'Appwrite מול Mux', // pragma: allowlist secret
           nextjsHosting: 'אירוח Next.js',
           reactHosting: 'אירוח React',
           vueHosting: 'אירוח Vue.js',
@@ -392,6 +393,7 @@ export const heCatalog: EnCatalog = {
         storage: 'אחסון',
         functions: 'פונקציות',
         messaging: 'הודעות',
+        videos: 'סרטונים',
         sites: 'אתרים',
         analytics: 'אנליטיקה',
       },
@@ -422,6 +424,7 @@ export const heCatalog: EnCatalog = {
           storageTagline: 'העלאה, עיבוד והגשה של קבצים דרך CDN.',
           functionsTagline: 'APIs, משימות Cron ומטפלי אירועים בקנה מידה רחב.',
           messagingTagline: 'אימייל, SMS ו-Push עם נושאים ויעדים.',
+          videosTagline: 'סטרימינג אדפטיבי ב-HLS, DASH ו-CMAF עם כתוביות.',
           sitesTagline: 'פריסות סטטיות, SSR ו-CSR מ-Git.',
           realtimeName: 'Realtime',
           realtimeTagline: 'אירועים חיים, ערוצים ונוכחות.',
