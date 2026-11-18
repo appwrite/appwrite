@@ -105,6 +105,10 @@ class Get extends Action
             }
         }
 
+        if ($data === null) {
+            throw new Exception(Exception::AVATAR_NOT_FOUND);
+        }
+
     }
 
 }
