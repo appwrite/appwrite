@@ -254,6 +254,8 @@ The utopia PHP extension (`crates/extension`) serves the scalar leaf validators 
 
 The extension serves the text leaf validators (`Text`, `Identifier`, `WhiteList`, `Contains`, `Label`) the same way, from this crate's `text` module, when `_APP_EXTENSION_LIBRARIES` names `validators,validators-text`. Those functions work on bytes, as the PHP methods do once they have a string: the blank check, character counts, identifiers, case folding, substrings, DNS labels and every description. Comparing a value with the PHP values a validator holds (the loose `in_array()` of `Text`'s allow list and of `WhiteList`, `(string)` of a pattern) is left to the PHP engine there; this crate's `Text`, `Identifier`, `WhiteList`, `Contains` and `Label` run the same functions. Its parity corpus is `crates/extension/tests/validators-text.php`.
 
+The extension serves the network leaf validators (`Hostname`, `Domain`, `Host`, `IP`, `URL`, `Phone`) from this crate's `network` module when `_APP_EXTENSION_LIBRARIES` names `validators,validators-network`. Those functions run `php-std`'s ports of `filter_var()`, `parse_url()` and `Uri\Rfc3986\Uri`, so a value is accepted exactly when PHP accepts it: hostname shape and allow-list wildcards, domain format and label counts, IP versions, URL encoding, components and private-use schemes, loopback hosts, E.164 phone numbers and their normalization, and every description. `Domain`'s restrictions are left to the PHP engine there; this crate's `Hostname`, `Domain`, `Host`, `Ip`, `Url` and `Phone` run the same functions. Its parity corpus is `crates/extension/tests/validators-network.php`.
+
 ```rust
 use utopia_validators::scalar::{Input, Integer};
 use utopia_validators::{Number, range};

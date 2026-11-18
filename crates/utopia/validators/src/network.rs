@@ -1,388 +1,284 @@
-//! Domain names, IP addresses and URLs.
+//! The checks of the network validators: `Hostname`, `Domain`, `Host`, `IP`, `URL` and
+//! `Phone`.
+//!
+//! PHP runs `filter_var()`, `parse_url()` and `Uri\Rfc3986\Uri::parse()` for them; these
+//! functions run [`php_std`]'s ports of the same, so a value is accepted exactly when PHP
+//! accepts it. This crate's validators ([`crate::Hostname`], [`crate::Domain`],
+//! [`crate::Host`], [`crate::Ip`], [`crate::Url`], [`crate::Phone`]) run them, and so do the
+//! classes of the PHP extension (`crates/extension`), which keep the constructors' state
+//! themselves and pass it in.
+//!
+//! | PHP | Rust |
+//! |---|---|
+//! | `Hostname::isValid()`, `getDescription()` | [`hostname`], [`hostname_allowed`], [`HOSTNAME_DESCRIPTION`] |
+//! | `Domain::isValid()`, `getDescription()` | [`domain`], [`explode_count`], [`DOMAIN_DESCRIPTION`] |
+//! | `IP::isValid()`, `getDescription()` | [`ip`], [`ip_str`], [`IP_DESCRIPTION`] |
+//! | `URL::isValid()`, `getDescription()`, `isPrivateUseSchemeURI()` | [`url_ascii`], [`url`], [`url_str`], [`url_component`], [`private_use_scheme`], [`url_description`], [`LOOPBACK_HOSTS`] |
+//! | `Host::getDescription()` | [`host_description`] |
+//! | `Phone::isValid()`, `normalize()`, `getDescription()` | [`phone`], [`phone_normalize`], [`PHONE_DESCRIPTION`] |
+
+use std::borrow::Cow;
 
 use php_std::filter::{
-    FILTER_FLAG_HOSTNAME, FILTER_FLAG_IPV4, FILTER_FLAG_IPV6, FILTER_VALIDATE_DOMAIN, FILTER_VALIDATE_IP,
-    FILTER_VALIDATE_URL,
+    self, FILTER_FLAG_IPV4, FILTER_FLAG_IPV6, FILTER_VALIDATE_IP, FILTER_VALIDATE_URL, Options, Value,
 };
-use php_std::string::{explode, strtolower};
-use php_std::url::parse_url;
 use php_std::url::rfc3986::Uri;
+use php_std::url::{Component, ComponentValue, parse_url};
 
-use crate::input::{filter, filter_str, loose_str_eq};
-use crate::{Error, Input, Type, Validator, Verdict, is_valid_via_validate, scalar};
+use crate::chars;
 
-/// A [`Domain`] restriction: domains ending with `hostname` must have exactly
-/// `levels` labels (when set) and must not start with any of
-/// `prefix_deny_list`.
-///
-/// PHP: `Domain::createRestriction()`.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Restriction {
-    /// The suffix of the domains the restriction applies to.
-    pub hostname: String,
-    /// The exact number of dot-separated labels a matching domain must have, when set.
-    pub levels: Option<i64>,
-    /// Prefixes a matching domain must not start with.
-    pub prefix_deny_list: Vec<String>,
+/// Whether `filter_var($value, $filter, $flags)` returns something other than `false`.
+fn passes(value: &Value, filter: i64, flags: i64) -> bool {
+    filter::filter_var(value, filter, &Options::Flags(flags))
+        .is_ok_and(|filtered| !matches!(filtered.value, Value::Bool(false)))
 }
 
-impl Restriction {
-    /// A restriction on the domains ending with `hostname`.
-    ///
-    /// PHP: `Domain::createRestriction($hostname, $levels, $prefixDenyList)`.
-    pub fn new(hostname: impl Into<String>, levels: Option<i64>, prefix_deny_list: Vec<String>) -> Self {
-        Self { hostname: hostname.into(), levels, prefix_deny_list }
-    }
-
-    /// Whether `domain` passes this restriction.
-    fn allows(&self, domain: &[u8]) -> Result<bool, Error> {
-        if !domain.ends_with(self.hostname.as_bytes()) {
-            return Ok(true);
-        }
-        if let Some(levels) = self.levels {
-            // `$levels + 1` overflows to a float, which `explode()` rejects.
-            let limit = levels.checked_add(1).ok_or_else(|| {
-                Error::Type("explode(): Argument #3 ($limit) must be of type int, float given".into())
-            })?;
-            if explode(b".", domain, limit)?.len() as i64 != levels {
-                return Ok(false);
-            }
-        }
-        Ok(!self.prefix_deny_list.iter().any(|p| domain.starts_with(p.as_bytes())))
-    }
+/// Whether `filter_var($value, $filter, $flags)` returns a truthy value (`IP` tests it with
+/// `if (filter_var(...))`).
+fn truthy(value: &Value, filter: i64, flags: i64) -> bool {
+    filter::filter_var(value, filter, &Options::Flags(flags)).is_ok_and(|filtered| match filtered.value {
+        Value::Bool(b) => b,
+        Value::Str(s) => !(s.is_empty() || s == b"0"),
+        Value::Null => false,
+        Value::Int(i) => i != 0,
+        Value::Float(f) => f != 0.0,
+        Value::Array(a) => !a.is_empty(),
+        Value::Object => true,
+    })
 }
 
-/// A domain name, not ending with `.` or `-`, and allowed by every
-/// [`Restriction`].
-///
-/// PHP: `Utopia\Validator\Domain`, checking with `FILTER_VALIDATE_DOMAIN` and,
-/// when `hostnames` is set, `FILTER_FLAG_HOSTNAME`.
-#[derive(Debug, Clone)]
-pub struct Domain {
-    /// Restrictions every domain must pass.
-    pub restrictions: Vec<Restriction>,
-    /// Whether the domain must also be a valid host name: letters, digits and hyphens in each label.
-    pub hostnames: bool,
-    /// Whether the empty string is valid.
-    pub allow_empty: bool,
+// Hostname --------------------------------------------------------------------------------
+
+/// `Hostname::getDescription()`.
+pub const HOSTNAME_DESCRIPTION: &str = "Value must be a valid hostname without path, port and protocol.";
+
+/// The checks of `Hostname::isValid()` before its allow list: not `''` or `'0'`, at most 253
+/// characters (`mb_strlen()`), no `/` and no `:`.
+pub fn hostname(value: &[u8]) -> bool {
+    !(value.is_empty() || value == b"0") && chars(value) <= 253 && !value.contains(&b'/') && !value.contains(&b':')
 }
 
-impl Default for Domain {
-    /// No restrictions, host names required, the empty string refused.
-    fn default() -> Self {
-        Self { restrictions: Vec::new(), hostnames: true, allow_empty: false }
-    }
+/// Whether `value` matches an allow-list entry `allowed` that is a string: equal to it, `*`,
+/// or a `*.suffix` wildcard that `value` ends with (the root itself is not matched).
+pub fn hostname_allowed(value: &[u8], allowed: &[u8]) -> bool {
+    value == allowed || allowed == b"*" || allowed.strip_prefix(b"*").is_some_and(|suffix| value.ends_with(suffix))
 }
 
-impl Validator for Domain {
-    /// Returns "Value must be a valid domain".
-    fn description(&self) -> String {
-        "Value must be a valid domain".to_owned()
-    }
+// Domain ----------------------------------------------------------------------------------
 
-    is_valid_via_validate!();
+/// `Domain::getDescription()`.
+pub const DOMAIN_DESCRIPTION: &str = "Value must be a valid domain";
 
-    /// Valid for a non-empty string that is a domain name, does not end with `.`
-    /// or `-`, and passes every restriction. A restriction whose label count
-    /// cannot be computed fails with [`Error::Type`].
-    fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
-        if self.allow_empty && value.as_str() == Some(b"") {
-            return Ok(Verdict::VALID);
-        }
-        // `empty($value)`, then `is_string($value)`.
-        let Some(domain) = value.as_str().filter(|_| value.truthy()) else {
-            return Ok(Verdict::INVALID);
-        };
-        let flags = if self.hostnames { FILTER_FLAG_HOSTNAME } else { 0 };
-        if !filter_str(domain, FILTER_VALIDATE_DOMAIN, flags) || domain.ends_with(b".") || domain.ends_with(b"-") {
-            return Ok(Verdict::INVALID);
-        }
-        for restriction in &self.restrictions {
-            if !restriction.allows(domain)? {
-                return Ok(Verdict::INVALID);
-            }
-        }
-        Ok(Verdict::VALID)
-    }
-
-    /// Expects a string ([`Type::String`]).
-    fn kind(&self) -> Type {
-        Type::String
-    }
+/// `Domain::isValid()`'s format checks on a non-empty string: `filter_var(FILTER_VALIDATE_DOMAIN)`
+/// (with `FILTER_FLAG_HOSTNAME` when `hostnames`) and no trailing `.` or `-`.
+pub fn domain(value: &[u8], hostnames: bool) -> bool {
+    // `filter_var()` of a string runs the filter on it as it is.
+    filter::validate_domain(value, hostnames) && !value.ends_with(b".") && !value.ends_with(b"-")
 }
 
-/// The IP versions an [`Ip`] validator accepts.
-///
-/// PHP: the `IP::ALL`, `IP::V4` and `IP::V6` constants.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum IpVersion {
-    /// IPv4 and IPv6.
-    #[default]
+/// `count(explode('.', $value, $limit))`.
+pub fn explode_count(value: &[u8], limit: i64) -> i64 {
+    php_std::string::explode(b".", value, limit).map_or(0, |parts| i64::try_from(parts.len()).unwrap_or(i64::MAX))
+}
+
+// IP --------------------------------------------------------------------------------------
+
+/// `IP::getDescription()`.
+pub const IP_DESCRIPTION: &str = "Value must be a valid IP address";
+
+/// The IP versions `IP` accepts: `IP::ALL`, `IP::V4` or `IP::V6`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum IpType {
+    /// IPv4 and IPv6 (`IP::ALL`).
     All,
-    /// IPv4 only.
+    /// IPv4 only (`IP::V4`).
     V4,
-    /// IPv6 only.
+    /// IPv6 only (`IP::V6`).
     V6,
 }
 
-impl IpVersion {
-    /// The version's name: `all`, `ipv4` or `ipv6`.
-    ///
-    /// PHP: the value of the matching `IP` constant.
-    pub const fn as_str(self) -> &'static str {
+impl IpType {
+    /// The type named `name` (`'all'`, `'ipv4'`, `'ipv6'`), as `IP`'s constructor and
+    /// `isValid()` compare it.
+    pub fn from_name(name: &[u8]) -> Option<Self> {
+        match name {
+            b"all" => Some(IpType::All),
+            b"ipv4" => Some(IpType::V4),
+            b"ipv6" => Some(IpType::V6),
+            _ => None,
+        }
+    }
+}
+
+/// `IP::isValid()`: `filter_var($value, FILTER_VALIDATE_IP[, flag])` is truthy.
+pub fn ip(value: &Value, kind: IpType) -> bool {
+    truthy(value, FILTER_VALIDATE_IP, kind.flags())
+}
+
+/// [`ip`] of a string: the filter on the string as it is (an address it accepts is never
+/// `''` or `'0'`, so accepted is truthy).
+pub fn ip_str(value: &[u8], kind: IpType) -> bool {
+    filter::validate_ip(value, kind.flags())
+}
+
+impl IpType {
+    /// The `filter_var()` flags `IP` passes for the type.
+    fn flags(self) -> i64 {
         match self {
-            IpVersion::All => "all",
-            IpVersion::V4 => "ipv4",
-            IpVersion::V6 => "ipv6",
-        }
-    }
-
-    /// The version a name from [`IpVersion::as_str`] names; [`Error::Exception`]
-    /// for any other name.
-    ///
-    /// PHP: the type `new IP($type)` takes; PHP throws for any other type.
-    pub fn from_php(value: &str) -> Result<Self, Error> {
-        match value {
-            "all" => Ok(IpVersion::All),
-            "ipv4" => Ok(IpVersion::V4),
-            "ipv6" => Ok(IpVersion::V6),
-            _ => Err(Error::Exception("Unsupported IP type".into())),
+            IpType::All => 0,
+            IpType::V4 => FILTER_FLAG_IPV4,
+            IpType::V6 => FILTER_FLAG_IPV6,
         }
     }
 }
 
-/// An IP address of the accepted versions.
-///
-/// PHP: `Utopia\Validator\IP`, checking with `FILTER_VALIDATE_IP`.
-#[derive(Debug, Clone, Copy, Default)]
-pub struct Ip {
-    /// The versions accepted.
-    pub version: IpVersion,
+// URL -------------------------------------------------------------------------------------
+
+/// `URL::getDescription()`, given `implode(', ', $allowedSchemes)` when there are schemes.
+pub fn url_description(schemes: Option<&[u8]>, allow_fragments: bool, https_or_loopback: bool) -> Vec<u8> {
+    let transport: &[u8] = if https_or_loopback { b" restricted to https or http on a loopback host" } else { b"" };
+    let mut description = Vec::new();
+    if let Some(schemes) = schemes {
+        description.extend_from_slice(b"Value must be a valid URL with following schemes (");
+        description.extend_from_slice(schemes);
+        description.push(b')');
+        if !allow_fragments {
+            description.extend_from_slice(b" and without a fragment component");
+        }
+    } else if !allow_fragments {
+        description.extend_from_slice(b"Value must be a valid URL without a fragment component");
+    } else {
+        description.extend_from_slice(b"Value must be a valid URL");
+    }
+    description.extend_from_slice(transport);
+    description
 }
 
-impl Ip {
-    /// A validator accepting addresses of `version`.
-    pub const fn new(version: IpVersion) -> Self {
-        Self { version }
+/// `URL::isValid()`'s IRI step: each byte above 127 as `rawurlencode()` encodes it.
+pub fn url_ascii(value: &[u8]) -> Cow<'_, [u8]> {
+    if value.is_ascii() {
+        return Cow::Borrowed(value);
     }
+    let mut ascii = Vec::with_capacity(value.len() * 3);
+    for &byte in value {
+        if byte > 127 {
+            const HEX: &[u8; 16] = b"0123456789ABCDEF";
+            ascii.extend_from_slice(&[b'%', HEX[usize::from(byte >> 4)], HEX[usize::from(byte & 15)]]);
+        } else {
+            ascii.push(byte);
+        }
+    }
+    Cow::Owned(ascii)
 }
 
-impl Validator for Ip {
-    /// Returns "Value must be a valid IP address".
-    fn description(&self) -> String {
-        "Value must be a valid IP address".to_owned()
-    }
-
-    is_valid_via_validate!();
-
-    /// Valid for an IP address of the accepted versions.
-    fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
-        let flags = match self.version {
-            IpVersion::All => 0,
-            IpVersion::V4 => FILTER_FLAG_IPV4,
-            IpVersion::V6 => FILTER_FLAG_IPV6,
-        };
-        Ok(Verdict::of(filter(value, FILTER_VALIDATE_IP, flags).is_some()))
-    }
-
-    /// Expects a string ([`Type::String`]).
-    fn kind(&self) -> Type {
-        Type::String
-    }
+/// Whether `filter_var($value, FILTER_VALIDATE_URL)` is not `false`.
+pub fn url(value: &Value) -> bool {
+    passes(value, FILTER_VALIDATE_URL, 0)
 }
 
-/// A URL, optionally limited to some schemes, to URLs without a fragment, or
-/// to https (and http on a loopback host).
-///
-/// With `allow_private_use_schemes`, URIs of private-use schemes without an
-/// authority (`com.example.app:/oauth`, RFC 8252 §7.1) are valid too.
-///
-/// PHP: `Utopia\Validator\URL`, checking with `FILTER_VALIDATE_URL`.
-#[derive(Debug, Clone)]
-pub struct Url {
-    /// The schemes allowed; empty for any scheme.
-    pub allowed_schemes: Vec<String>,
-    /// Whether the empty string is valid.
-    pub allow_empty: bool,
-    /// Whether a fragment (`#section`) is allowed.
-    pub allow_fragments: bool,
-    /// Whether authority-less URIs of private-use schemes, such as `com.example.app:/oauth`, are valid.
-    pub allow_private_use_schemes: bool,
-    /// Whether the URL must use https, or http on `localhost`, `127.0.0.1` or `[::1]`.
-    pub https_or_loopback: bool,
+/// [`url`] of a string: the filter on the string as it is.
+pub fn url_str(value: &[u8]) -> bool {
+    filter::validate_url(value, 0, None).unwrap_or(false)
 }
 
-impl Default for Url {
-    /// Any scheme, fragments allowed, the empty string refused, and no transport limit.
-    fn default() -> Self {
-        Self {
-            allowed_schemes: Vec::new(),
-            allow_empty: false,
-            allow_fragments: true,
-            allow_private_use_schemes: false,
-            https_or_loopback: false,
-        }
-    }
+/// `URL::isPrivateUseSchemeURI()` on a string: `Uri\Rfc3986\Uri::parse()` succeeds, its
+/// (normalized) scheme contains a `.` and it has no host.
+pub fn private_use_scheme(value: &[u8]) -> bool {
+    Uri::parse(value)
+        .is_some_and(|uri| uri.scheme().is_some_and(|scheme| scheme.contains(&b'.')) && uri.host().is_none())
 }
 
-/// A component of `parse_url($url, PHP_URL_*)`: `false` when the URL does
-/// not parse, `null` when the component is missing.
-enum Component<'a> {
-    False,
-    Null,
-    Value(std::borrow::Cow<'a, [u8]>),
+/// `parse_url($value, $component)` for a string component: `None` where PHP returns `false`
+/// (a malformed URL), `Some(None)` for `null` (no such component).
+pub fn url_component(value: &[u8], component: Component) -> Option<Option<Vec<u8>>> {
+    let url = parse_url(value)?;
+    Some(url.component(component).map(|found| match found {
+        ComponentValue::Str(s) => s.into_owned(),
+        ComponentValue::Port(port) => port.to_string().into_bytes(),
+    }))
 }
 
-/// An owned component.
-fn owned(c: std::borrow::Cow<'_, [u8]>) -> Component<'static> {
-    Component::Value(std::borrow::Cow::Owned(c.into_owned()))
+/// The hosts `URL`'s `httpsOrLoopback` lets plain `http` reach.
+pub const LOOPBACK_HOSTS: [&[u8]; 3] = [b"localhost", b"127.0.0.1", b"[::1]"];
+
+// Host ------------------------------------------------------------------------------------
+
+/// `Host::getDescription()`, given `implode(', ', $whitelist)`.
+pub fn host_description(whitelist: &[u8]) -> Vec<u8> {
+    let mut description = b"URL host must be one of: ".to_vec();
+    description.extend_from_slice(whitelist);
+    description
 }
 
-impl Component<'_> {
-    /// `(string) $component`.
-    fn bytes(&self) -> &[u8] {
-        match self {
-            Component::Value(v) => v,
-            _ => b"",
-        }
-    }
+// Phone -----------------------------------------------------------------------------------
+
+/// `Phone::getDescription()`.
+pub const PHONE_DESCRIPTION: &str = "Phone number must start with a '+' and contain between 7 and 15 digits.";
+
+/// `[1-9]\d{6,14}$` against all of `value`: PCRE's `$` (no `D` modifier) also matches before
+/// a final newline.
+fn e164_digits(value: &[u8]) -> bool {
+    let digits = value.strip_suffix(b"\n").unwrap_or(value);
+    matches!(digits.first(), Some(b'1'..=b'9'))
+        && (7..=15).contains(&digits.len())
+        && digits.iter().all(u8::is_ascii_digit)
 }
 
-impl Url {
-    /// An authority-less private-use URI scheme (`Uri\Rfc3986\Uri::parse()`:
-    /// a scheme with a dot and no host).
-    /// `value` with each byte above 127 percent-encoded, as PHP's
-    /// `rawurlencode()` encodes a single byte (`%C4`).
-    fn ascii(value: &[u8]) -> Vec<u8> {
-        const HEX: &[u8; 16] = b"0123456789ABCDEF";
-        let mut out = Vec::with_capacity(value.len());
-        for &b in value {
-            if b > 127 {
-                out.extend_from_slice(&[b'%', HEX[usize::from(b >> 4)], HEX[usize::from(b & 15)]]);
-            } else {
-                out.push(b);
-            }
-        }
-        out
-    }
-
-    fn is_private_use_scheme_uri(value: Input<'_>) -> bool {
-        let Some(uri) = value.as_str().and_then(Uri::parse) else {
-            return false;
-        };
-        uri.scheme().is_some_and(|s| s.contains(&b'.')) && uri.host().is_none()
-    }
-
-    /// `in_array($scheme, $this->allowedSchemes)`.
-    fn scheme_allowed(&self, scheme: &Component<'_>) -> bool {
-        self.allowed_schemes.iter().any(|allowed| match scheme {
-            Component::False => allowed.is_empty() || allowed == "0",
-            Component::Null => allowed.is_empty(),
-            Component::Value(s) => loose_str_eq(s, allowed.as_bytes()),
-        })
-    }
+/// `Phone::isValid()`'s pattern, `/^\+[1-9]\d{6,14}$/`.
+pub fn phone(value: &[u8]) -> bool {
+    value.strip_prefix(b"+").is_some_and(e164_digits)
 }
 
-impl Validator for Url {
-    /// `Value must be a valid URL`, followed by the scheme, fragment and transport limits that apply.
-    fn description(&self) -> String {
-        let transport = if self.https_or_loopback { " restricted to https or http on a loopback host" } else { "" };
-        if !self.allowed_schemes.is_empty() {
-            let mut description =
-                format!("Value must be a valid URL with following schemes ({})", self.allowed_schemes.join(", "));
-            if !self.allow_fragments {
-                description.push_str(" and without a fragment component");
-            }
-            return description + transport;
-        }
-        if !self.allow_fragments {
-            return format!("Value must be a valid URL without a fragment component{transport}");
-        }
-        format!("Value must be a valid URL{transport}")
+/// `Phone::normalize()`: `rawurldecode()`, then a leading space (a `+` a query string decoded
+/// as a space) or no `+` at all before 7 to 15 digits becomes a `+`.
+pub fn phone_normalize(value: &[u8]) -> Vec<u8> {
+    let value = php_std::encoding::rawurldecode(value);
+    if value.strip_prefix(b" ").is_some_and(e164_digits) {
+        let mut normalized = b"+".to_vec();
+        normalized.extend_from_slice(&value[1..]);
+        return normalized;
     }
-
-    is_valid_via_validate!();
-
-    /// Valid for a URL that passes every limit set.
-    fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
-        if self.allow_empty && value.as_str() == Some(b"") {
-            return Ok(Verdict::VALID);
-        }
-        let private = self.allow_private_use_schemes && Self::is_private_use_scheme_uri(value);
-        // FILTER_VALIDATE_URL is ASCII-only: a string's non-ASCII bytes
-        // (IRIs, RFC 3987) are percent-encoded before it is validated.
-        let url = match value.as_str() {
-            Some(s) => filter_str(&Self::ascii(s), FILTER_VALIDATE_URL, 0),
-            None => filter(value, FILTER_VALIDATE_URL, 0).is_some(),
-        };
-        if !private && !url {
-            return Ok(Verdict::INVALID);
-        }
-        // Only the scheme, fragment and transport limits read the URL's parts
-        // (PHP calls `parse_url((string) $value)` only for them).
-        let transport = self.https_or_loopback && !private;
-        if self.allowed_schemes.is_empty() && self.allow_fragments && !transport {
-            return Ok(Verdict::VALID);
-        }
-        let url = value.to_bytes()?;
-        let parsed = parse_url(&url);
-        let component = |get: fn(&php_std::url::Url<'_>) -> Option<Component<'static>>| match &parsed {
-            None => Component::False,
-            Some(u) => get(u).unwrap_or(Component::Null),
-        };
-        if !self.allowed_schemes.is_empty() && !self.scheme_allowed(&component(|u| u.scheme().map(owned))) {
-            return Ok(Verdict::INVALID);
-        }
-        if !self.allow_fragments && !matches!(component(|u| u.fragment().map(owned)), Component::Null) {
-            return Ok(Verdict::INVALID);
-        }
-        if transport {
-            let scheme = component(|u| u.scheme().map(owned));
-            let scheme = strtolower(scheme.bytes());
-            if scheme.as_ref() == b"http" {
-                let host = component(|u| u.host().map(owned));
-                let host = strtolower(host.bytes());
-                if !matches!(host.as_ref(), b"localhost" | b"127.0.0.1" | b"[::1]") {
-                    return Ok(Verdict::INVALID);
-                }
-            } else if scheme.as_ref() != b"https" {
-                return Ok(Verdict::INVALID);
-            }
-        }
-        Ok(Verdict::VALID)
+    if !value.is_empty() && !value.starts_with(b"+") && e164_digits(&value) {
+        let mut normalized = b"+".to_vec();
+        normalized.extend_from_slice(&value);
+        return normalized;
     }
-
-    /// Expects a string ([`Type::String`]).
-    fn kind(&self) -> Type {
-        Type::String
-    }
+    value
 }
 
-/// A published port as Docker accepts it: a port (`8080`), or a port bound to
-/// one host interface (`127.0.0.1:8080`, `[::1]:8080`).
-///
-/// PHP: `Utopia\Validator\Port`.
-#[derive(Debug, Clone, Copy, Default)]
-pub struct Port;
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-impl Validator for Port {
-    /// Returns "Value must be a port between 1 and 65535, optionally prefixed
-    /// by a host IP address (e.g. 127.0.0.1:80)".
-    fn description(&self) -> String {
-        "Value must be a port between 1 and 65535, optionally prefixed by a host IP address (e.g. 127.0.0.1:80)"
-            .to_owned()
+    #[test]
+    fn phone_pattern_matches_pcre() {
+        assert!(phone(b"+1234567"));
+        assert!(phone(b"+1234567\n"));
+        assert!(!phone(b"+1234567\n\n"));
+        assert!(!phone(b"+0234567"));
+        assert!(!phone(b"+123456"));
+        assert!(phone(b"+123456789012345"));
+        assert!(!phone(b"+1234567890123456"));
+        assert_eq!(phone_normalize(b"%2B1234567"), b"+1234567");
+        assert_eq!(phone_normalize(b" 1234567"), b"+1234567");
+        assert_eq!(phone_normalize(b" 1234567\n"), b"+1234567\n");
+        assert_eq!(phone_normalize(b"1234567"), b"+1234567");
+        assert_eq!(phone_normalize(b"0234567"), b"0234567");
     }
 
-    is_valid_via_validate!();
-
-    /// Valid for an integer or a string that is a port, or an IPv4 address or
-    /// a bracketed IPv6 address, `:` and a port (split at the last `:`).
-    fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
-        Ok(Verdict::of(scalar::port(value.scalar())))
+    #[test]
+    fn hostname_shape_and_wildcards() {
+        assert!(hostname(b"a.b"));
+        assert!(!hostname(b"0"));
+        assert!(!hostname(b"a/b"));
+        assert!(!hostname(b"a:1"));
+        assert!(hostname_allowed(b"x.a.com", b"*.a.com"));
+        assert!(!hostname_allowed(b"a.com", b"*.a.com"));
+        assert!(hostname_allowed(b"anything", b"*"));
     }
 
-    /// Expects a string ([`Type::String`]).
-    fn kind(&self) -> Type {
-        Type::String
+    #[test]
+    fn url_ascii_encodes_high_bytes() {
+        assert_eq!(&*url_ascii("https://e.com/č".as_bytes()), b"https://e.com/%C4%8D");
     }
 }

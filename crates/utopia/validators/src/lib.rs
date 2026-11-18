@@ -89,6 +89,18 @@
 //! a value with the PHP values a validator holds (the loose `in_array()` of
 //! `Text`'s allow list and of `WhiteList`) stays with each caller: here
 //! [`Text`] and [`WhiteList`], and the PHP engine in the extension.
+//!
+//! # Network checks
+//!
+//! The [`network`] module does the same for the network validators, over
+//! `php-std`'s ports of `filter_var()`, `parse_url()` and
+//! `Uri\Rfc3986\Uri`: [`hostname`], [`hostname_allowed`] ([`Hostname`]),
+//! [`domain`] and [`explode_count`] ([`Domain`]), [`host_description`]
+//! ([`Host`]), [`ip`] and [`ip_str`] ([`Ip`]), [`url_ascii`], [`url`],
+//! [`url_str`], [`url_component`], [`private_use_scheme`] and
+//! [`url_description`] ([`Url`]), [`phone`] and [`phone_normalize`]
+//! ([`Phone`]). [`Domain`]'s restrictions stay with each caller: here
+//! [`Restriction`], and the PHP engine in the extension.
 
 #![warn(missing_docs)]
 
@@ -103,13 +115,14 @@ pub use php_std::value as php;
 #[doc = include_str!("../guide.md")]
 pub struct GettingStarted;
 
+mod address;
 mod compose;
 mod error;
 mod hostname;
 mod input;
 pub mod json;
 mod list;
-mod network;
+pub mod network;
 mod primitive;
 pub mod scalar;
 mod string;
@@ -118,13 +131,20 @@ pub mod text;
 use std::borrow::Cow;
 use std::sync::Arc;
 
+pub use address::{Domain, Ip, IpVersion, Port, Restriction, Url};
 pub use compose::{AllOf, AnyOf, Multiple, NoneOf};
 pub use error::Error;
 pub use hostname::{Host, Hostname, Label};
 pub use input::{Entries, Input, View};
 pub use json::Json;
 pub use list::{ArrayList, Assoc, Nullable, WhiteList};
-pub use network::{Domain, Ip, IpVersion, Port, Restriction, Url};
+pub use network::{
+    DOMAIN_DESCRIPTION, HOSTNAME_DESCRIPTION, IP_DESCRIPTION, IpType, LOOPBACK_HOSTS, PHONE_DESCRIPTION, domain,
+    explode_count, host_description, hostname, hostname_allowed, ip, ip_str, phone, phone_normalize,
+    private_use_scheme, url, url_ascii, url_component, url_description, url_str,
+};
+pub use php_std::filter::Value as FilterValue;
+pub use php_std::url::Component as UrlComponent;
 pub use primitive::{Boolean, Float, Integer, Numeric, Range};
 pub use scalar::{
     IntegerError, Number, boolean, float, hex_color, number_le, numeric, port, port_host, port_number, range,

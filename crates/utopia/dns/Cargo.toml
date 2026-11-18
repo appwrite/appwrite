@@ -26,4 +26,4 @@ utopia-validators.workspace = true
 
 [package.metadata.utopia]
 category = "servers"
-php-sync = "87da092b1566157b6a888380e9dd49e9a440cb57"
+php-sync = "e0d77bc7b7d81a8a465d6f9ab0f93c1fbff8f39c"

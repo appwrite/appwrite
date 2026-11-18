@@ -9,7 +9,7 @@ use utopia_validators::{Error as ValidatorError, Input, Type, Validator, Verdict
 
 use crate::Error;
 use crate::client::Client;
-use crate::message::{Message, Question, Record, domain};
+use crate::message::{Message, Question, RCODE_NOERROR, RCODE_NXDOMAIN, Record, domain};
 
 /// A record owner name: labels of letters, digits and hyphens (not at
 /// either end), a leading `*` wildcard label, `@` for the zone apex, and a
@@ -290,7 +290,17 @@ impl Dns {
     /// PHP: `query()` (private).
     async fn query(&self, value: &str) -> Result<Vec<Record>, Error> {
         let client = Client::new(&self.server, self.port, TIMEOUT, false)?;
-        let response = client.query(&Message::query(Question::new(value, self.ty), None, true)).await?;
+        let query = Message::query(Question::new(value, self.ty), None, true);
+        let mut response = client.query(&query).await?;
+        // A truncated answer may be missing the record being validated.
+        if response.header().truncated {
+            response = Client::new(&self.server, self.port, TIMEOUT, true)?.query(&query).await?;
+        }
+        // Only these two mean the name was looked up; anything else says nothing about its records.
+        let code = response.header().response_code;
+        if code != RCODE_NOERROR && code != RCODE_NXDOMAIN {
+            return Err(Error::exception(format!("DNS query failed with response code {code}.")));
+        }
         // Some DNS servers return all records, not only the type asked for,
         // likely when no records of that type are found.
         Ok(response.answers().iter().filter(|r| r.ty() == self.ty).cloned().collect())

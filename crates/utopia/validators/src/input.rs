@@ -279,14 +279,6 @@ impl<'a> Input<'a> {
     }
 }
 
-/// `filter_var($value, $filter, $flags) !== false`, and the filtered value.
-pub(crate) fn filter(value: Input<'_>, filter: i64, flags: i64) -> Option<filter::Value> {
-    match filter::filter_var(&value.filter_value(), filter, &filter::Options::Flags(flags)) {
-        Ok(f) if f.value != filter::Value::Bool(false) => Some(f.value),
-        _ => None,
-    }
-}
-
 /// `filter_var($string, $filter, $flags) !== false` for a string.
 pub(crate) fn filter_str(value: &[u8], filter: i64, flags: i64) -> bool {
     matches!(

@@ -1,10 +1,9 @@
 //! Host names checked against an allow list, alone or as the host of a
 //! URL.
 
-use php_std::mb;
 use php_std::url::parse_url;
 
-use crate::{Error, Input, Type, Url, Validator, Verdict, is_valid_via_validate, text};
+use crate::{Error, Input, Type, Url, Validator, Verdict, is_valid_via_validate, network, text};
 
 /// A host name allowed by a list of names and patterns.
 ///
@@ -39,26 +38,17 @@ impl Hostname {
 
 /// `Hostname::isValid()` of a string against `allow_list`.
 fn allowed(allow_list: &[String], value: &[u8]) -> bool {
-    if value.is_empty() || value == b"0" {
+    // Not `''` or `'0'`, at most 253 characters, no path (`/`), no port or scheme (`:`).
+    if !network::hostname(value) {
         return false;
     }
-    // At most 253 characters, no path (`/`), no port or scheme (`:`).
-    if mb::mb_strlen(value) > 253 || value.contains(&b'/') || value.contains(&b':') {
-        return false;
-    }
-    if allow_list.is_empty() {
-        return true;
-    }
-    allow_list.iter().any(|allowed| {
-        let allowed = allowed.as_bytes();
-        value == allowed || allowed == b"*" || allowed.strip_prefix(b"*").is_some_and(|suffix| value.ends_with(suffix))
-    })
+    allow_list.is_empty() || allow_list.iter().any(|allowed| network::hostname_allowed(value, allowed.as_bytes()))
 }
 
 impl Validator for Hostname {
     /// Returns "Value must be a valid hostname without path, port and protocol.".
     fn description(&self) -> String {
-        "Value must be a valid hostname without path, port and protocol.".to_owned()
+        network::HOSTNAME_DESCRIPTION.to_owned()
     }
 
     is_valid_via_validate!();
@@ -94,7 +84,7 @@ impl Host {
 impl Validator for Host {
     /// Lists the allowed hosts: `URL host must be one of: a, b`.
     fn description(&self) -> String {
-        format!("URL host must be one of: {}", self.whitelist.join(", "))
+        String::from_utf8_lossy(&network::host_description(self.whitelist.join(", ").as_bytes())).into_owned()
     }
 
     is_valid_via_validate!();

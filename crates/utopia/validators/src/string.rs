@@ -3,30 +3,16 @@
 
 use std::borrow::Cow;
 
-use php_std::encoding::rawurldecode;
 use php_std::pcre;
 use php_std::pcre::preg_quote;
 use php_std::value::numeric_str;
 
 use crate::input::loose_str_eq;
-use crate::{Error, Input, Type, Validator, Verdict, is_valid_via_validate, scalar, text};
+use crate::{Error, Input, Type, Validator, Verdict, is_valid_via_validate, network, scalar, text};
 
 /// `preg_match($pattern, $subject) === 1`.
 pub(crate) fn preg_matches(pattern: &[u8], subject: &[u8]) -> bool {
     matches!(pcre::preg_match_bare(pattern, subject), Ok(p) if p.value == pcre::Value::Int(1))
-}
-
-/// What an anchored `/^...$/` pattern (without `/D`) must match whole when
-/// its classes exclude `\n`: the subject, without the one final newline
-/// before which `$` also matches.
-pub(crate) fn dollar_body(subject: &[u8]) -> &[u8] {
-    subject.strip_suffix(b"\n").unwrap_or(subject)
-}
-
-/// `/^[1-9]\d{6,14}$/` on [`dollar_body`]: 7 to 15 ASCII digits, the first
-/// not 0.
-pub(crate) fn is_e164_digits(body: &[u8]) -> bool {
-    (7..=15).contains(&body.len()) && body[0] != b'0' && body.iter().all(u8::is_ascii_digit)
 }
 
 /// The `i64` PHP holds for a length: lengths beyond `i64::MAX` saturate.
@@ -434,27 +420,14 @@ impl Phone {
     ///
     /// PHP: `Phone::normalize()`.
     pub fn normalize(value: &[u8]) -> Vec<u8> {
-        let value = rawurldecode(value);
-        // `/^ [1-9]\d{6,14}$/`
-        if dollar_body(&value).strip_prefix(b" ").is_some_and(is_e164_digits) {
-            let mut out = b"+".to_vec();
-            out.extend_from_slice(&value[1..]);
-            return out;
-        }
-        // `/^[1-9]\d{6,14}$/`
-        if !value.is_empty() && !value.starts_with(b"+") && is_e164_digits(dollar_body(&value)) {
-            let mut out = b"+".to_vec();
-            out.extend_from_slice(&value);
-            return out;
-        }
-        value
+        network::phone_normalize(value)
     }
 }
 
 impl Validator for Phone {
     /// Returns "Phone number must start with a '+' and contain between 7 and 15 digits.".
     fn description(&self) -> String {
-        "Phone number must start with a '+' and contain between 7 and 15 digits.".to_owned()
+        network::PHONE_DESCRIPTION.to_owned()
     }
 
     is_valid_via_validate!();
@@ -467,9 +440,7 @@ impl Validator for Phone {
         if self.allow_empty && s.is_empty() {
             return Ok(Verdict::VALID);
         }
-        // `/^\+[1-9]\d{6,14}$/`
-        let e164 = |s: &[u8]| dollar_body(s).strip_prefix(b"+").is_some_and(is_e164_digits);
-        Ok(Verdict::of(if self.normalize { e164(&Self::normalize(s)) } else { e164(s) }))
+        Ok(Verdict::of(if self.normalize { network::phone(&Self::normalize(s)) } else { network::phone(s) }))
     }
 
     /// Expects a string ([`Type::String`]).

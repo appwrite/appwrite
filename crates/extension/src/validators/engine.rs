@@ -69,6 +69,9 @@ unsafe extern "C" {
     fn zend_hash_real_init_packed(ht: *mut HashTable);
     fn zend_hash_str_add(ht: *mut HashTable, key: *const c_char, len: usize, value: *mut zval) -> *mut zval;
     fn zend_array_dup(source: *mut HashTable) -> *mut HashTable;
+    fn zend_fetch_dimension_const(result: *mut zval, container: *mut zval, dim: *mut zval, ty: i32);
+    fn add_function(result: *mut zval, op1: *mut zval, op2: *mut zval) -> i32;
+    fn zend_error(ty: i32, format: *const c_char, ...);
 }
 
 /// `ZEND_ACC_PROMOTED`: a property declared by a constructor parameter.
@@ -345,6 +348,12 @@ pub fn bool_arg(ex: &ExecuteData, num: u32, arg: &mut Zval) -> Option<bool> {
 
 /// An `int` argument, coerced as a userland `int` parameter is.
 pub fn long_arg(ex: &ExecuteData, num: u32, arg: &mut Zval) -> Option<i64> {
+    long_arg_named(ex, num, arg, "int")
+}
+
+/// An `int` argument of a parameter whose type PHP names `expected` in its error (`?int` for
+/// a nullable one, which the caller lets `null` through), coerced as a userland one is.
+pub fn long_arg_named(ex: &ExecuteData, num: u32, arg: &mut Zval, expected: &str) -> Option<i64> {
     if let Some(i) = arg.long() {
         return Some(i);
     }
@@ -354,7 +363,7 @@ pub fn long_arg(ex: &ExecuteData, num: u32, arg: &mut Zval) -> Option<i64> {
         return (!ExecutorGlobals::has_exception()).then_some(dest);
     }
     if !ExecutorGlobals::has_exception() {
-        type_error(ex, num, "int", arg);
+        type_error(ex, num, expected, arg);
     }
     None
 }
@@ -557,7 +566,7 @@ const IS_PTR: u32 = 13;
 const IMMUTABLE_ARRAY: u32 = (1 << 4) | (1 << 6) | (1 << 7);
 
 /// A persistent interned string zval, as a constant of an internal class holds it.
-fn interned(bytes: &[u8]) -> Zval {
+pub fn interned(bytes: &[u8]) -> Zval {
     let mut zval = Zval::new();
     // SAFETY: called in MINIT; the engine keeps interned persistent strings for the process.
     unsafe {
@@ -635,4 +644,66 @@ pub fn inherited_constants_last(class: &mut ClassEntry, names: &[&str]) {
             std::mem::forget(pointer);
         }
     }
+}
+
+/// PHP's name for `value`'s type in its messages: `int`, `true`, `stdClass`.
+pub fn value_name(value: &Zval) -> String {
+    // SAFETY: `value` is a live zval; the engine returns a static or interned name.
+    unsafe { CStr::from_ptr(zend_zval_value_name(value)) }.to_string_lossy().into_owned()
+}
+
+/// Raises the `E_WARNING` `message`, as the engine raises one.
+pub fn warning(message: &str) {
+    /// `E_WARNING`.
+    const E_WARNING: i32 = 1 << 1;
+    let message = CString::new(message.replace('\0', "")).unwrap_or_default();
+    // SAFETY: the engine formats `%s` with a NUL-terminated string.
+    unsafe { zend_error(E_WARNING, c"%s".as_ptr(), message.as_ptr()) };
+}
+
+/// PHP `$container['key']` read: the engine's own fetch, with its warnings (`Undefined array
+/// key`, `Trying to access array offset on null`), its errors and `ArrayAccess::offsetGet()`;
+/// `None` with an exception pending.
+pub fn dimension(container: &Zval, key: &str) -> Option<Zval> {
+    let mut result = Zval::new();
+    let mut container = container.dereference().shallow_clone();
+    let mut dim = string(key.as_bytes());
+    // SAFETY: live zvals; `BP_VAR_R` (0) copies the element (or `null`) into `result`, which
+    // the returned `Zval` owns.
+    unsafe { zend_fetch_dimension_const(&raw mut result, &raw mut container, &raw mut dim, 0) };
+    if ExecutorGlobals::has_exception() { None } else { Some(result) }
+}
+
+/// PHP `$a + $b`: the engine's addition, with its coercions, warnings and `TypeError`s;
+/// `None` with an exception pending.
+pub fn add(a: &Zval, b: &Zval) -> Option<Zval> {
+    let mut result = Zval::new();
+    let (mut a, mut b) = (a.dereference().shallow_clone(), b.dereference().shallow_clone());
+    // SAFETY: live zvals; the engine writes the sum into `result`, which the returned `Zval`
+    // owns.
+    unsafe { add_function(&raw mut result, &raw mut a, &raw mut b) };
+    if ExecutorGlobals::has_exception() { None } else { Some(result) }
+}
+
+/// Calls the PHP function `name` with `args`, as a function in a file without
+/// `declare(strict_types=1)` calls it (an internal caller passes arguments in weak mode), so
+/// its coercions, deprecations and errors are PHP's; `None` with an exception pending.
+pub fn call(name: &str, args: &[&Zval]) -> Option<Zval> {
+    let mut function = string(name.as_bytes());
+    let mut params: Vec<Zval> = args.iter().map(|arg| arg.dereference().shallow_clone()).collect();
+    let mut retval = Zval::new();
+    let count = u32::try_from(params.len()).unwrap_or(u32::MAX);
+    // SAFETY: the name and the arguments are live zvals laid out contiguously; the engine
+    // writes the result into `retval`, which the returned `Zval` owns.
+    let result = unsafe {
+        ext_php_rs::ffi::_call_user_function_impl(
+            std::ptr::null_mut(),
+            &raw mut function,
+            &raw mut retval,
+            count,
+            params.as_mut_ptr(),
+            std::ptr::null_mut(),
+        )
+    };
+    if result < 0 || ExecutorGlobals::has_exception() { None } else { Some(retval) }
 }
