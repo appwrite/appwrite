@@ -1,7 +1,7 @@
 ---
 layout: changelog
 title: "Sign users in with their Active Directory or OpenLDAP credentials"
-date: 2026-11-17
+date: 2026-11-19
 cover: /images/blog/announcing-ldap-login/cover.avif
 tags: auth, security
 ---

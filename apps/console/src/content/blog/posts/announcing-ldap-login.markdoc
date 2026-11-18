@@ -2,10 +2,10 @@
 layout: post
 title: "Announcing LDAP login: Sign in with your directory"
 description: Appwrite Auth now supports LDAP login. Users sign in with their Active Directory or OpenLDAP username and password, with group restrictions and attribute mapping.
-date: 2026-11-17
+date: 2026-11-19
 cover: /images/blog/announcing-ldap-login/cover.avif
 timeToRead: 7
-author: aditya-oberai
+author: matej-baco
 category: announcements, security
 featured: false
 callToAction: true
