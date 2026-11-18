@@ -285,16 +285,12 @@ class PostgreSQL extends SQL implements
 
         $parts = [$sql];
 
-        $extraWhere = [];
-        if ($updateFrom->condition !== '') {
-            $extraWhere[] = $updateFrom->condition;
-            foreach ($updateFrom->bindings as $binding) {
-                $this->addBinding($binding);
-            }
-        }
-
         $this->compileWhereClauses($parts);
-        $this->mergeIntoWhereClause($parts, $extraWhere);
+
+        if ($updateFrom->condition !== '') {
+            $this->mergeIntoWhereClause($parts, $this->enclose($updateFrom->condition));
+            $this->addBindings($updateFrom->bindings);
+        }
 
         return new Statement(\implode(' ', $parts), $this->getBindingValues(), executor: $this->executor);
     }
@@ -339,42 +335,29 @@ class PostgreSQL extends SQL implements
 
         $parts = [$sql];
 
-        $extraWhere = [];
-        if ($deleteUsing->condition !== '') {
-            $extraWhere[] = $deleteUsing->condition;
-            foreach ($deleteUsing->bindings as $binding) {
-                $this->addBinding($binding);
-            }
-        }
-
         $this->compileWhereClauses($parts);
-        $this->mergeIntoWhereClause($parts, $extraWhere);
+
+        if ($deleteUsing->condition !== '') {
+            $this->mergeIntoWhereClause($parts, $this->enclose($deleteUsing->condition));
+            $this->addBindings($deleteUsing->bindings);
+        }
 
         return new Statement(\implode(' ', $parts), $this->getBindingValues(), executor: $this->executor);
     }
 
     /**
-     * Merge additional conditions into the trailing WHERE clause in $parts.
-     * If the last part already begins with "WHERE ", append with AND; otherwise
-     * push a new WHERE fragment. No-op when $extra is empty.
-     *
      * @param  array<string>  $parts
-     * @param  list<string>   $extra
      */
-    private function mergeIntoWhereClause(array &$parts, array $extra): void
+    private function mergeIntoWhereClause(array &$parts, string $condition): void
     {
-        if (empty($extra)) {
-            return;
-        }
-
         $lastPart = \end($parts);
         if (\is_string($lastPart) && \str_starts_with($lastPart, 'WHERE ')) {
-            $parts[\count($parts) - 1] = $lastPart . ' AND ' . \implode(' AND ', $extra);
+            $parts[\count($parts) - 1] = $lastPart . ' AND ' . $condition;
 
             return;
         }
 
-        $parts[] = 'WHERE ' . \implode(' AND ', $extra);
+        $parts[] = 'WHERE ' . $condition;
     }
 
     public function upsert(): Statement
@@ -917,7 +900,7 @@ class PostgreSQL extends SQL implements
         $operator = $values[1];
         $value = $values[2];
 
-        if (!\preg_match('/^[a-zA-Z0-9_.\[\]]+$/', $path)) {
+        if (!\preg_match('/^[a-zA-Z0-9_.\[\]]+$/D', $path)) {
             throw new ValidationException('Invalid JSON path: ' . $path);
         }
 
@@ -949,4 +932,9 @@ class PostgreSQL extends SQL implements
         return '(' . $attribute . ' ' . $operator . ' ?::vector)';
     }
 
+    #[\Override]
+    protected function quoteString(string $value): string
+    {
+        return "'" . \str_replace("'", "''", $value) . "'";
+    }
 }

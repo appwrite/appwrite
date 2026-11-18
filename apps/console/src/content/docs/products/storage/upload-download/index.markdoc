@@ -671,10 +671,7 @@ const result = await storage.getFileDownload({
 console.log(result); // ArrayBuffer with file data
 
 // To get just the download URL without downloading:
-const downloadUrl = storage.getFileDownloadURL({
-    bucketId: '<BUCKET_ID>',
-    fileId: '<FILE_ID>'
-});
+const downloadUrl = storage.getFileDownloadURL('<BUCKET_ID>', '<FILE_ID>');
 
 console.log(downloadUrl); // URL object
 ```
@@ -942,10 +939,7 @@ const result = await storage.getFileView({
 console.log(result); // ArrayBuffer with file data
 
 // To get just the view URL without downloading:
-const viewUrl = storage.getFileViewURL({
-    bucketId: '<BUCKET_ID>',
-    fileId: '<FILE_ID>'
-});
+const viewUrl = storage.getFileViewURL('<BUCKET_ID>', '<FILE_ID>');
 
 console.log(viewUrl); // URL object
 ```

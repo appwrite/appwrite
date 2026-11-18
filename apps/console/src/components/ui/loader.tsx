@@ -1,11 +1,13 @@
 import { ExternalLink, Loader2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
+import { getReleaseLine } from '@/lib/appwrite-version'
 import { getStatusIcon, getStatusPresentation } from '@/lib/cloud-status-copy'
 import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
 import { LegacyAppwriteLogo } from '@/components/global/shared/LegacyAppwriteBrand'
 import { isLegacyThemeFromStorage } from '@/lib/legacy-theme-assets'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
+import { getRuntimeConfig } from '@/lib/runtime-config'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
@@ -16,6 +18,7 @@ export const FULLSCREEN_LOADER_HIDE_MS = 420
 
 function LoaderBrandMark() {
   const isLegacy = isLegacyThemeFromStorage()
+  const release = getReleaseLine(getRuntimeConfig().appwriteVersion)
 
   return (
     <div
@@ -27,9 +30,11 @@ function LoaderBrandMark() {
       ) : (
         <AppwriteWordmark className="h-8" />
       )}
-      <span className="pb-0.5 text-xs font-extralight tracking-tight text-muted-foreground">
-        / 2.0
-      </span>
+      {release ? (
+        <span className="pb-0.5 text-xs font-extralight tracking-tight text-muted-foreground">
+          / {release}
+        </span>
+      ) : null}
     </div>
   )
 }
@@ -132,76 +137,76 @@ export function FullscreenLoader({
       data-fullscreen-loader=""
     >
       <div className="absolute inset-0">
-          {statusBanner &&
-            (() => {
-              const presentation = getStatusPresentation(statusBanner.state)
-              const Icon = getStatusIcon(statusBanner.state)
-              return (
-                <a
-                  href={statusBanner.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
+        {statusBanner &&
+          (() => {
+            const presentation = getStatusPresentation(statusBanner.state)
+            const Icon = getStatusIcon(statusBanner.state)
+            return (
+              <a
+                href={statusBanner.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  'absolute top-0 start-0 end-0 z-10 min-h-14 transition-all duration-200 hover:opacity-95',
+                  'flex min-h-14 flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:gap-4',
+                  presentation.containerClassName,
+                )}
+              >
+                <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
+                  <Icon className="mt-0.5 h-4 w-4 shrink-0 sm:mt-0" />
+                  <p className="text-[13px] font-medium leading-snug">
+                    {t(statusBanner.title)}
+                    {statusBanner.reportTitle ? (
+                      <>
+                        {' '}
+                        <span className="text-foreground">
+                          {t(statusBanner.reportTitle)}
+                        </span>
+                      </>
+                    ) : null}
+                    {statusBanner.maintenanceWindow ? (
+                      <>
+                        {' '}
+                        <span className="text-foreground/70">
+                          {statusBanner.maintenanceWindow}
+                        </span>
+                      </>
+                    ) : null}
+                    {statusBanner.regionsLine ? (
+                      <>
+                        {' '}
+                        <span className="text-foreground/70">
+                          {t(statusBanner.regionsLine)}
+                        </span>
+                      </>
+                    ) : null}
+                  </p>
+                </div>
+                <span
                   className={cn(
-                    'absolute top-0 start-0 end-0 z-10 min-h-14 transition-all duration-200 hover:opacity-95',
-                    'flex min-h-14 flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:gap-4',
-                    presentation.containerClassName,
+                    'flex h-8 w-fit shrink-0 items-center gap-2 rounded-md px-3 text-[13px] font-medium sm:ms-auto',
+                    presentation.buttonClassName,
                   )}
                 >
-                  <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
-                    <Icon className="mt-0.5 h-4 w-4 shrink-0 sm:mt-0" />
-                    <p className="text-[13px] font-medium leading-snug">
-                      {t(statusBanner.title)}
-                      {statusBanner.reportTitle ? (
-                        <>
-                          {' '}
-                          <span className="text-foreground">
-                            {t(statusBanner.reportTitle)}
-                          </span>
-                        </>
-                      ) : null}
-                      {statusBanner.maintenanceWindow ? (
-                        <>
-                          {' '}
-                          <span className="text-foreground/70">
-                            {statusBanner.maintenanceWindow}
-                          </span>
-                        </>
-                      ) : null}
-                      {statusBanner.regionsLine ? (
-                        <>
-                          {' '}
-                          <span className="text-foreground/70">
-                            {t(statusBanner.regionsLine)}
-                          </span>
-                        </>
-                      ) : null}
-                    </p>
-                  </div>
-                  <span
-                    className={cn(
-                      'flex h-8 w-fit shrink-0 items-center gap-2 rounded-md px-3 text-[13px] font-medium sm:ms-auto',
-                      presentation.buttonClassName,
-                    )}
-                  >
-                    <span className="hidden sm:inline">{t('View Status')}</span>
-                    <span className="sm:hidden">{t('Status')}</span>
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </span>
-                </a>
-              )
-            })()}
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <LoaderBrandMark />
+                  <span className="hidden sm:inline">{t('View Status')}</span>
+                  <span className="sm:hidden">{t('Status')}</span>
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </span>
+              </a>
+            )
+          })()}
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <LoaderBrandMark />
+        </div>
+        {showSpinner && !hasStatusBanner ? (
+          <div
+            className="pointer-events-none absolute bottom-8 left-1/2 z-10 -translate-x-1/2"
+            data-fullscreen-loader-spinner=""
+            aria-hidden
+          >
+            <Loader2 className="h-5 w-5 animate-spin text-foreground/70" />
           </div>
-          {showSpinner && !hasStatusBanner ? (
-            <div
-              className="pointer-events-none absolute bottom-8 left-1/2 z-10 -translate-x-1/2"
-              data-fullscreen-loader-spinner=""
-              aria-hidden
-            >
-              <Loader2 className="h-5 w-5 animate-spin text-foreground/70" />
-            </div>
-          ) : null}
+        ) : null}
       </div>
     </div>
   )

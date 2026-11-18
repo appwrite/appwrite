@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Introducing Appwrite Start
-description: Appwrite Start is Appwrite Cloud production pricing for India, built so more developers can grow on Appwrite rather than maximize margin on this tier.
+description: Appwrite Start is Appwrite Cloud production pricing for selected regions, built so more developers can grow on Appwrite rather than maximize margin on this tier.
 date: 2026-09-21
 cover: /images/blog/introducing-appwrite-cloud-start-plan/cover.avif
 timeToRead: 7
@@ -14,9 +14,9 @@ faqs:
   - question: "Who is Appwrite Start for?"
     answer: "Appwrite Start is for developers and small teams who need more than the Free tier for a live app but are not ready for Pro. Typical fits include side projects going to production, early MVPs, client work with modest traffic, and student or indie products that still need daily backups and email support."
   - question: "Where is Appwrite Start available?"
-    answer: "Appwrite Start is available now for qualifying organizations in India, with billing eligibility determined by organization location in the Console. We are rolling the plan out region by region and will add more markets with a similar economic profile after India. Everywhere else on [Appwrite Cloud](https://cloud.appwrite.io), Free and Pro are unchanged."
-  - question: "How much does Appwrite Start cost in India?"
-    answer: "Eligible organizations in India can subscribe from $10 per month. Included quotas and billing in local currency are shown on the [pricing page](/pricing) and when you choose Start in the Console."
+    answer: "Appwrite Start is offered in selected regions. The [pricing page](/pricing) and Console show the plan when your organization qualifies, and subscribing requires a payment card issued in a country where the plan is offered. We add regions over time. Everywhere else on [Appwrite Cloud](https://cloud.appwrite.io), Free and Pro are unchanged."
+  - question: "How much does Appwrite Start cost?"
+    answer: "Eligible organizations can subscribe from $10 per month. Included quotas and the amount in local currency are shown on the [pricing page](/pricing) and when you choose Start in the Console."
   - question: "How is Appwrite Start different from the Appwrite Startups program?"
     answer: "They solve different problems. The [Startups program](/startups) offers credits and hands-on support for qualifying early-stage companies. Appwrite Start is a standard Cloud subscription eligible organizations can choose on the [pricing page](/pricing), with included resources and predictable monthly pricing. You do not apply for Appwrite Start the way you apply for Startups."
   - question: "How does Appwrite Start compare to Pro?"
@@ -81,9 +81,9 @@ See the full comparison table on [pricing](/pricing) for rows like reads, writes
 
 # Where Appwrite Start is available
 
-Appwrite Start is live in India today. If your organization qualifies, the [pricing page](/pricing) and Console show Free, Appwrite Start, Pro, and Enterprise together. You get the full Appwrite Cloud stack on Start; only the included quotas and monthly price differ from Pro.
+Appwrite Start is live in selected regions. If your organization qualifies, the [pricing page](/pricing) and Console show Free, Appwrite Start, Pro, and Enterprise together. You get the full Appwrite Cloud stack on Start; only the included quotas and monthly price differ from Pro.
 
-Regional pricing is how we deliver this plan responsibly: the product is the same everywhere, but Appwrite Start is offered where it matches our accessibility goals for that market. India is our first Appwrite Start region. We chose it to launch with a large, active developer community and to refine support and upgrade paths as teams move from Start to Pro. We will bring Appwrite Start to additional markets with a similar economic profile as part of the same mission: make sure developers in those regions can grow on Appwrite, not only start on Free.
+Regional pricing is how we deliver this plan: the product is the same everywhere, and Appwrite Start is offered where it matches our accessibility goals for that market. We add regions over time so developers there can grow on Appwrite, not only start on Free.
 
 Outside Appwrite Start regions, Free, Pro, and Enterprise are unchanged. Check the [pricing page](/pricing) or Organization → Billing → Change plan in the Console for the plans available to your organization.
 

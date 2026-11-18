@@ -25,9 +25,10 @@ Goal: Add Appwrite auth to an Apple (iOS/macOS/watchOS/tvOS) app with a working 
 
 ## Step 3: Add the Appwrite SDK
 
+- The SDK requires Xcode 16.3 or later and supports iOS 15, macOS 12, tvOS 15 and watchOS 8 or later.
 - In Xcode, open the **File** menu and click **Add Packages**.
 - In the **Package URL** search box, enter: `https://github.com/appwrite/sdk-for-apple`
-- Use `10.1.0` as version, select **Up to Next Major Version** as **Dependency Rule**, and click **Add Package**.
+- Use `21.1.1` as version, select **Up to Next Major Version** as **Dependency Rule**, and click **Add Package**.
 - When resolution is complete, click **Add Package** again to add the SDK to the target.
 - Ask the user for their **Project ID** and add the following URL scheme to `Info.plist` for OAuth sessions:
 
@@ -47,7 +48,7 @@ Goal: Add Appwrite auth to an Apple (iOS/macOS/watchOS/tvOS) app with a working 
 </array>
 ```
 
-- If using UIKit instead of SwiftUI, add the following to `SceneDelegate.swift`:
+- For OAuth in SwiftUI, call `.registerOAuthHandler()` on the view that starts the flow. If using UIKit instead of SwiftUI, add the following to `SceneDelegate.swift`:
 
 ```swift
 func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
@@ -119,6 +120,7 @@ class Appwrite {
 - Add the following code to `ContentView.swift`:
 
 ```swift
+import Appwrite
 import SwiftUI
 
 class ViewModel: ObservableObject {
@@ -164,6 +166,7 @@ struct ContentView: View {
             )
         }
         .padding()
+        .registerOAuthHandler()
     }
 }
 ```
@@ -179,4 +182,4 @@ struct ContentView: View {
 ## Deliverables
 
 - A running Apple app with working Appwrite auth (register/login/logout)
-- Files created/updated: `Appwrite.swift`, `ContentView.swift`, `Info.plist` (URL scheme)
+- Files created/updated: `Appwrite.swift`, `ContentView.swift` (with `.registerOAuthHandler()`), `Info.plist` (URL scheme)

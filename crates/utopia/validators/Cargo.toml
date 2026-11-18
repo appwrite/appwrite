@@ -1,0 +1,15 @@
+[package]
+name = "utopia-validators"
+description = "The checks of Utopia's request validators: booleans, integers, floats, numbers, ranges, ports, hex colors, text, identifiers, white lists, substrings, DNS labels, hostnames, domains, hosts, IP addresses, URLs and phone numbers."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+php-std.workspace = true
+
+[package.metadata.utopia]
+category = "utilities"

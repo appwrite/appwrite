@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
-import type { Models } from '@appwrite.io/console'
 import { ChevronDown, Info } from 'lucide-react'
 import { VideoFact, VideoPage } from '../_components/VideoPage'
 import { VideoPreviewEmbedMenu } from '../_components/VideoPreviewEmbedMenu'
@@ -25,10 +24,11 @@ import {
   formatResolution,
 } from '@/lib/utils/video-format'
 import { useT } from '@/lib/i18n/translate'
+import type { Video, VideoRenditionList } from '@/lib/appwrite/videos'
 
 export type VideoOverviewInitialData = {
-  video: Models.Video
-  renditions: Models.VideoRenditionList
+  video: Video
+  renditions: VideoRenditionList
 }
 
 type ViewProps = {
@@ -81,7 +81,7 @@ function SourcePopover({
   video,
 }: {
   projectId: string
-  video: Models.Video
+  video: Video
 }) {
   const t = useT()
   const hasSource = Boolean(video.bucketId && video.fileId)

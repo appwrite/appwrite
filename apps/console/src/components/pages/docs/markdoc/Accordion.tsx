@@ -91,6 +91,7 @@ export function MarkdocAccordionItem({
         <span className="pe-4 font-medium text-foreground">{title}</span>
       </AccordionTrigger>
       <AccordionContent
+        forceMount
         className={cn(
           'px-4 pb-4 text-muted-foreground',
           contentTextClass,

@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import type { Models } from '@appwrite.io/console'
 import { CodeXml, MonitorPlay } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -19,14 +18,15 @@ import { openInNewTab } from '@/lib/utils/context-menu'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { VideoEmbed } from './VideoEmbed'
+import type { Video, VideoRendition } from '@/lib/appwrite/videos'
 
 type VideoPreviewEmbedMenuProps = {
   projectId: string
-  video: Pick<Models.Video, '$id'> & {
+  video: Pick<Video, '$id'> & {
     name?: string | null
     duration?: number
   }
-  renditions: Pick<Models.VideoRendition, 'status'>[]
+  renditions: Pick<VideoRendition, 'status'>[]
   /** Toolbar buttons on video pages; context menu items on list right-click. */
   variant: 'toolbar' | 'context'
   className?: string

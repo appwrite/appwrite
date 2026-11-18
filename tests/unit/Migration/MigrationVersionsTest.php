@@ -14,6 +14,8 @@ use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -21,6 +23,11 @@ use Utopia\Database\Validator\Authorization;
 
 final class MigrationVersionsTest extends TestCase
 {
+    protected function tearDown(): void
+    {
+        require __DIR__ . '/../../../app/init/database/filters.php';
+    }
+
     /**
      * Check versions array integrity.
      */
@@ -37,6 +44,21 @@ final class MigrationVersionsTest extends TestCase
         if (!(\str_contains(APP_VERSION_STABLE, 'RC'))) {
             $this->assertArrayHasKey(APP_VERSION_STABLE, Migration::$versions);
         }
+
+        // 2.6.x and 2.7.x stay on V25. That migration creates the 2.7
+        // collections and the video collections. Class existence does not
+        // catch a swap onto another class.
+        $this->assertSame(
+            [
+                '2.4.0' => 'V25',
+                '2.5.0' => 'V25',
+                '2.6.0' => 'V25',
+                '2.6.1' => 'V25',
+                '2.6.2' => 'V25',
+                '2.7.0' => 'V25',
+            ],
+            \array_intersect_key(Migration::$versions, \array_flip(['2.4.0', '2.5.0', '2.6.0', '2.6.1', '2.6.2', '2.7.0']))
+        );
     }
 
     public function testV24CreatesAlertsCollectionForConsoleProject(): void
@@ -51,7 +73,7 @@ final class MigrationVersionsTest extends TestCase
             ->setNamespace('migration_' . \uniqid());
         $database->create();
 
-        $migration = new V24();
+        $migration = $this->v24WithoutWalks();
         $migration->setProject(
             new Document(['$id' => 'console', '$sequence' => 'console']),
             $database,
@@ -59,16 +81,15 @@ final class MigrationVersionsTest extends TestCase
             $authorization,
         );
 
-        $migrateCollections = new \ReflectionMethod($migration, 'migrateCollections');
         \ob_start();
         try {
-            $migrateCollections->invoke($migration);
+            $migration->execute();
         } finally {
             \ob_end_clean();
         }
 
-        $collection = $database->getCollection('notifications');
-        $this->assertFalse($collection->isEmpty());
+        $collection = $database->findCollection('notifications');
+        $this->assertInstanceOf(Collection::class, $collection);
 
         $attributes = [];
         foreach ($collection->getAttribute('attributes', []) as $attribute) {
@@ -110,9 +131,9 @@ final class MigrationVersionsTest extends TestCase
             ->setDatabase('migrationV24ExistingAlerts')
             ->setNamespace('migration_existing_alerts_' . \uniqid());
         $database->create();
-        $database->createCollection('notifications');
+        $database->createCollection(Collection::create(id: 'notifications'));
 
-        $migration = new V24();
+        $migration = $this->v24WithoutWalks();
         $migration->setProject(
             new Document(['$id' => 'console', '$sequence' => 'console']),
             $database,
@@ -120,10 +141,9 @@ final class MigrationVersionsTest extends TestCase
             $authorization,
         );
 
-        $migrateCollections = new \ReflectionMethod($migration, 'migrateCollections');
         \ob_start();
         try {
-            $migrateCollections->invoke($migration);
+            $migration->execute();
         } finally {
             \ob_end_clean();
         }
@@ -145,8 +165,8 @@ final class MigrationVersionsTest extends TestCase
      * from the current config, so it keeps describing the old install even as
      * the config moves on.
      *
-     * Drives migrateCollections, as the other migration tests here do:
-     * execute() also walks every document in every console collection, which
+     * Runs execute() without its document walk, as the other migration tests
+     * here do: the walk reads every document of every console collection, which
      * needs a full install rather than a fixture. Then does the thing the
      * columns exist for: store a notification against a team, read it back by
      * team, and check another team does not see it.
@@ -163,43 +183,29 @@ final class MigrationVersionsTest extends TestCase
             ->setNamespace('migration_team_notifications_' . \uniqid());
         $database->create();
 
-        $string = fn (string $id, int $size = Database::LENGTH_KEY): Document => new Document([
-            '$id' => $id,
-            'type' => Database::VAR_STRING,
-            'format' => '',
-            'size' => $size,
-            'signed' => true,
-            'required' => false,
-            'default' => null,
-            'array' => false,
-            'filters' => [],
-        ]);
+        $database->createCollection(Collection::create(
+            id: 'notifications',
+            attributes: [
+                Attribute::string(key: 'messageId'),
+                Attribute::string(key: 'recipientHash', size: 64),
+                Attribute::string(key: 'type', size: 100),
+                Attribute::string(key: 'channel', size: 64),
+                Attribute::string(key: 'projectId'),
+                Attribute::string(key: 'projectInternalId'),
+                Attribute::string(key: 'resourceType', size: 64),
+                Attribute::string(key: 'resourceId'),
+                Attribute::string(key: 'resourceInternalId'),
+                Attribute::string(key: 'title', size: 256),
+                Attribute::boolean(key: 'read'),
+            ],
+        ));
 
-        $database->createCollection('notifications', [
-            $string('messageId'),
-            $string('recipientHash', 64),
-            $string('type', 100),
-            $string('channel', 64),
-            $string('projectId'),
-            $string('projectInternalId'),
-            $string('resourceType', 64),
-            $string('resourceId'),
-            $string('resourceInternalId'),
-            $string('title', 256),
-            new Document([
-                '$id' => 'read',
-                'type' => Database::VAR_BOOLEAN,
-                'format' => '',
-                'size' => 0,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ]),
-        ]);
-
-        $migration = new V25();
+        $migration = new class () extends V25 {
+            #[\Override]
+            public function forEachDocument(callable $callback): void
+            {
+            }
+        };
         $migration->setProject(
             new Document(['$id' => 'console', '$sequence' => 'console']),
             $database,
@@ -207,10 +213,9 @@ final class MigrationVersionsTest extends TestCase
             $authorization,
         );
 
-        $migrateCollections = new \ReflectionMethod($migration, 'migrateCollections');
         \ob_start();
         try {
-            $migrateCollections->invoke($migration);
+            $migration->execute();
         } finally {
             \ob_end_clean();
         }
@@ -257,7 +262,7 @@ final class MigrationVersionsTest extends TestCase
             ->setDatabase('migrationV24Functions')
             ->setNamespace('migration_functions_' . \uniqid());
         $database->create();
-        $database->createCollection('functions');
+        $database->createCollection(Collection::create(id: 'functions'));
 
         $migration = new V24();
         $migration->setProject(
@@ -308,11 +313,16 @@ final class MigrationVersionsTest extends TestCase
             ->setDatabase('migrationV25ProviderAttributes')
             ->setNamespace('migration_provider_attributes_' . \uniqid());
         $database->create();
-        $database->createCollection('databases');
-        $database->createCollection('functions');
-        $database->createCollection('sites');
+        $database->createCollection(Collection::create(id: 'databases'));
+        $database->createCollection(Collection::create(id: 'functions'));
+        $database->createCollection(Collection::create(id: 'sites'));
 
-        $migration = new V25();
+        $migration = new class () extends V25 {
+            #[\Override]
+            public function forEachDocument(callable $callback): void
+            {
+            }
+        };
         $migration->setProject(
             new Document(['$id' => 'project', '$sequence' => '1']),
             $database,
@@ -322,11 +332,10 @@ final class MigrationVersionsTest extends TestCase
 
         $migration->createAttributesFromCollection($database, 'functions', ['providerBranches']);
 
-        $migrateCollections = new \ReflectionMethod($migration, 'migrateCollections');
         \ob_start();
         try {
-            $migrateCollections->invoke($migration);
-            $migrateCollections->invoke($migration);
+            $migration->execute();
+            $migration->execute();
         } finally {
             \ob_end_clean();
         }
@@ -340,6 +349,24 @@ final class MigrationVersionsTest extends TestCase
             $this->assertContains('providerBranches', $attributes);
             $this->assertContains('providerPaths', $attributes);
         }
+    }
+
+    /**
+     * V24 without its bucket and document walks, which need a full install rather than a fixture.
+     */
+    private function v24WithoutWalks(): V24
+    {
+        return new class () extends V24 {
+            #[\Override]
+            protected function migrateBuckets(): void
+            {
+            }
+
+            #[\Override]
+            public function forEachDocument(callable $callback): void
+            {
+            }
+        };
     }
 
     /**
@@ -371,47 +398,23 @@ final class MigrationVersionsTest extends TestCase
                 continue;
             }
 
-            $database->createCollection(
-                $key,
-                \array_map(fn (array $attribute) => new Document($attribute), $collection['attributes']),
-                \array_map(fn (array $index) => new Document($index), $collection['indexes']),
-            );
+            $database->createCollection(Collection::create(
+                id: $key,
+                attributes: \array_values($collection['attributes']),
+                indexes: \array_values($collection['indexes']),
+            ));
         }
 
-        $string = fn (string $id, int $size): Document => new Document([
-            '$id' => $id,
-            'type' => Database::VAR_STRING,
-            'format' => '',
-            'size' => $size,
-            'signed' => true,
-            'required' => false,
-            'default' => null,
-            'array' => false,
-            'filters' => [],
-        ]);
-
-        $boolean = fn (string $id): Document => new Document([
-            '$id' => $id,
-            'type' => Database::VAR_BOOLEAN,
-            'format' => '',
-            'size' => 0,
-            'signed' => true,
-            'required' => false,
-            'default' => null,
-            'array' => false,
-            'filters' => [],
-        ]);
-
-        $database->createCollection('users', [
-            $string('name', 256),
-            $string('email', 320),
-            $string('phone', 16),
-            $boolean('status'),
-            $boolean('emailVerification'),
-            $boolean('phoneVerification'),
-            $boolean('reset'),
-            $boolean('mfa'),
-        ]);
+        $database->createCollection(Collection::create(id: 'users', attributes: [
+            Attribute::string('name', size: 256),
+            Attribute::string('email', size: 320),
+            Attribute::string('phone', size: 16),
+            Attribute::boolean('status'),
+            Attribute::boolean('emailVerification'),
+            Attribute::boolean('phoneVerification'),
+            Attribute::boolean('reset'),
+            Attribute::boolean('mfa'),
+        ]));
 
         $migration = new V25();
         $migration->setProject(
@@ -444,5 +447,116 @@ final class MigrationVersionsTest extends TestCase
         $user = $authorization->skip(fn () => $database->getDocument('users', 'legacy-user'));
 
         $this->assertSame('legacyuser@example.com', $user->getAttribute('emailCanonical'));
+    }
+
+    /**
+     * The 2.6.x/2.7.0 upgrade path creates the video collections from V25, so
+     * the shared-tables rule holds there too: the metadata row belongs to no
+     * tenant, and a second project on the host sees the collections. The
+     * created schema keeps retained size and the job failure reason.
+     */
+    public function testV25SharedTablesCreateGlobalVideoCollections(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV25Shared')
+            ->setNamespace('migration_videos_shared_v25_' . \uniqid())
+            ->setSharedTables(true)
+            ->setTenant(null);
+        $database->create();
+
+        $migrate = function (string $tenant) use ($database, $authorization): void {
+            // Only the collection pass matters here; the document passes read
+            // collections a fresh schema does not have.
+            $migration = new class () extends V25 {
+                #[\Override]
+                public function forEachDocument(callable $callback): void
+                {
+                }
+
+                #[\Override]
+                protected function documentsIterator(string $collection, array $queries = []): \Generator
+                {
+                    yield from [];
+                }
+            };
+            $database->setTenant($tenant);
+            $migration->setProject(
+                new Document(['$id' => 'project-' . $tenant, '$sequence' => $tenant]),
+                $database,
+                $database,
+                $authorization,
+            );
+
+            \ob_start();
+            try {
+                $migration->execute();
+            } finally {
+                \ob_end_clean();
+            }
+        };
+
+        $collections = [
+            'videos',
+            'videosTimelines',
+            'videosRenditions',
+            'videosRenditionsSegments',
+            'videosProfiles',
+            'videosCaptions',
+            'videosCaptionsSegments',
+        ];
+
+        $migrate('tenant-a');
+
+        foreach ($collections as $collectionId) {
+            $metadata = $database->withTenant(null, fn () => $database->getDocument(Database::METADATA, $collectionId));
+            $this->assertFalse($metadata->isEmpty(), "Expected metadata for \"{$collectionId}\" to exist");
+            $this->assertNull($metadata->getTenant(), "Expected \"{$collectionId}\" metadata to be global");
+        }
+
+        $attributeIds = function (string $collectionId) use ($database): array {
+            $ids = [];
+            foreach ($database->getCollection($collectionId)->getAttribute('attributes', []) as $attribute) {
+                $ids[] = $attribute instanceof Document ? $attribute->getAttribute('$id') : ($attribute['$id'] ?? '');
+            }
+
+            return $ids;
+        };
+
+        foreach (['videosRenditions', 'videosCaptions', 'videosTimelines'] as $collectionId) {
+            $this->assertContains('size', $attributeIds($collectionId), "Expected \"{$collectionId}\" to store retained bytes");
+        }
+
+        $reasons = [
+            'videos' => ['timelineStatus', 'timelineError'],
+            'videosRenditions' => ['error'],
+            'videosCaptions' => ['error'],
+        ];
+        foreach ($reasons as $collectionId => $expected) {
+            $ids = $attributeIds($collectionId);
+            foreach ($expected as $attributeId) {
+                $this->assertContains($attributeId, $ids, "Expected \"{$collectionId}\" to carry the job failure reason");
+            }
+        }
+
+        $timelineAttributeIds = $attributeIds('videosTimelines');
+        $this->assertNotContains('second', $timelineAttributeIds);
+        $this->assertNotContains('type', $timelineAttributeIds);
+
+        $migrate('tenant-b');
+
+        foreach ($collections as $collectionId) {
+            $this->assertFalse(
+                $database->getCollection($collectionId)->isEmpty(),
+                "Expected collection \"{$collectionId}\" to exist for tenant-b"
+            );
+            $metadata = $database->withTenant(null, fn () => $database->getDocument(Database::METADATA, $collectionId));
+            $this->assertFalse($metadata->isEmpty(), "Expected metadata for \"{$collectionId}\" to exist");
+            $this->assertNull($metadata->getTenant(), "Expected \"{$collectionId}\" metadata to stay global");
+        }
     }
 }

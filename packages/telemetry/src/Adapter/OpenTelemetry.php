@@ -24,6 +24,8 @@ use OpenTelemetry\SDK\Metrics\MetricReaderInterface;
 use OpenTelemetry\SDK\Resource\ResourceInfo;
 use OpenTelemetry\SDK\Sdk;
 use OpenTelemetry\SemConv\ResourceAttributes;
+use Utopia\Lock\Exception\Contention;
+use Utopia\Lock\Mutex;
 use Utopia\Telemetry\Adapter;
 use Utopia\Telemetry\Adapter\OpenTelemetry\MetricExporter as NonEmptyMetricExporter;
 use Utopia\Telemetry\Counter;
@@ -42,7 +44,9 @@ class OpenTelemetry implements Adapter
 {
     private MetricReaderInterface $reader;
 
-    private MeterInterface $meter;
+    private readonly MeterInterface $meter;
+
+    private ?Mutex $collecting = null;
 
     /**
      * @var array<class-string, array<string, Counter|UpDownCounter|Histogram|Gauge|ObservableGauge>>
@@ -145,7 +149,7 @@ class OpenTelemetry implements Adapter
                 /**
                  * @param \Closure(): CounterInterface $create
                  */
-                public function __construct(private \Closure $create)
+                public function __construct(private readonly \Closure $create)
                 {
                 }
 
@@ -177,7 +181,7 @@ class OpenTelemetry implements Adapter
                 /**
                  * @param \Closure(): HistogramInterface $create
                  */
-                public function __construct(private \Closure $create)
+                public function __construct(private readonly \Closure $create)
                 {
                 }
 
@@ -209,7 +213,7 @@ class OpenTelemetry implements Adapter
                 /**
                  * @param \Closure(): GaugeInterface $create
                  */
-                public function __construct(private \Closure $create)
+                public function __construct(private readonly \Closure $create)
                 {
                 }
 
@@ -241,7 +245,7 @@ class OpenTelemetry implements Adapter
                 /**
                  * @param \Closure(): UpDownCounterInterface $create
                  */
-                public function __construct(private \Closure $create)
+                public function __construct(private readonly \Closure $create)
                 {
                 }
 
@@ -276,7 +280,7 @@ class OpenTelemetry implements Adapter
                 /**
                  * @param \Closure(): ObservableGaugeInterface $create
                  */
-                public function __construct(private \Closure $create)
+                public function __construct(private readonly \Closure $create)
                 {
                 }
 
@@ -304,10 +308,23 @@ class OpenTelemetry implements Adapter
     }
 
     /**
-     * Collect and export metrics
+     * Collect and export metrics. Under Swoole, overlapping calls (a timer tick still exporting when
+     * shutdown flushes) run one at a time: the exporter's HTTP client cannot be used from two
+     * coroutines at once, and Swoole aborts the process when it is.
      */
     public function collect(): bool
     {
-        return $this->reader->collect();
+        if (!\extension_loaded('swoole')) {
+            return $this->reader->collect();
+        }
+
+        $this->collecting ??= new Mutex();
+
+        try {
+            return $this->collecting->withLock($this->reader->collect(...));
+        } catch (Contention) {
+            // The waiting coroutine was cancelled, so nothing was exported.
+            return false;
+        }
     }
 }

@@ -13,7 +13,12 @@ import type {
   AnalyticsRange,
 } from '@/lib/react-query/hooks'
 
-export type AnalyticsSeriesKey = 'events' | 'visitors' | 'sessions'
+export type AnalyticsSeriesKey =
+  | 'events'
+  | 'visitors'
+  | 'sessions'
+  | 'pageviews'
+  | 'users'
 
 export type AnalyticsChartPoint = {
   /** Short axis label. */
@@ -25,6 +30,9 @@ export type AnalyticsChartPoint = {
   events: number
   visitors: number
   sessions: number
+  pageviews: number
+  /** Identified users only; 0 when the property records none. */
+  users: number
 }
 
 /**
@@ -77,16 +85,30 @@ export function buildAnalyticsChartPoints(
 
   const lookup = new Map<
     number,
-    { events: number; visitors: number; sessions: number }
+    {
+      events: number
+      visitors: number
+      sessions: number
+      pageviews: number
+      users: number
+    }
   >()
   for (const metric of metrics) {
     const key = bucketKey(metric.date, interval)
     if (key == null) continue
-    const current = lookup.get(key) ?? { events: 0, visitors: 0, sessions: 0 }
+    const current = lookup.get(key) ?? {
+      events: 0,
+      visitors: 0,
+      sessions: 0,
+      pageviews: 0,
+      users: 0,
+    }
     lookup.set(key, {
       events: current.events + (metric.events ?? 0),
       visitors: current.visitors + (metric.visitors ?? 0),
       sessions: current.sessions + (metric.sessions ?? 0),
+      pageviews: current.pageviews + (metric.pageviews ?? 0),
+      users: current.users + (metric.users ?? 0),
     })
   }
 
@@ -112,11 +134,37 @@ export function buildAnalyticsChartPoints(
       events: values?.events ?? 0,
       visitors: values?.visitors ?? 0,
       sessions: values?.sessions ?? 0,
+      pageviews: values?.pageviews ?? 0,
+      users: values?.users ?? 0,
     })
     cursor = nextBucket(cursor, interval)
   }
 
   return points
+}
+
+/**
+ * Group notes by the chart bucket their date falls in, keyed by bucket index,
+ * so notes in one bucket share a marker. Notes outside the grid are dropped.
+ */
+export function groupAnnotationsByBucket<T extends { date: string }>(
+  points: readonly AnalyticsChartPoint[],
+  annotations: readonly T[],
+  interval: AnalyticsChartInterval,
+): Map<number, T[]> {
+  const groups = new Map<number, T[]>()
+  if (points.length === 0) return groups
+  const first = points[0].day.getTime()
+  // Calendar step, not elapsed time: a DST day is 23 or 25 hours long.
+  const end = nextBucket(points[points.length - 1].day, interval).getTime()
+  for (const annotation of annotations) {
+    const time = new Date(annotation.date).getTime()
+    if (Number.isNaN(time) || time < first || time >= end) continue
+    let index = points.length - 1
+    while (index > 0 && points[index].day.getTime() > time) index--
+    groups.set(index, [...(groups.get(index) ?? []), annotation])
+  }
+  return groups
 }
 
 /** A time window to read the flat aggregate for, anchored at a chart bucket. */
@@ -178,8 +226,10 @@ export function sumAnalyticsSeries(
       events: acc.events + point.events,
       visitors: acc.visitors + point.visitors,
       sessions: acc.sessions + point.sessions,
+      pageviews: acc.pageviews + point.pageviews,
+      users: acc.users + point.users,
     }),
-    { events: 0, visitors: 0, sessions: 0 },
+    { events: 0, visitors: 0, sessions: 0, pageviews: 0, users: 0 },
   )
 }
 

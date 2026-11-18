@@ -184,7 +184,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your secret API key
 
@@ -483,7 +483,7 @@ $page1 = $vectorsDB->listDocuments(
     ]
 );
 
-$lastId = $page1['documents'][count($page1['documents']) - 1]['$id'];
+$lastId = $page1->documents[count($page1->documents) - 1]->id;
 
 // Page 2
 $page2 = $vectorsDB->listDocuments(
@@ -516,7 +516,7 @@ page1 = vectors_db.list_documents(
     ]
 )
 
-last_id = page1['documents'][-1]['$id']
+last_id = page1.documents[-1].id
 
 # Page 2
 page2 = vectors_db.list_documents(
@@ -567,7 +567,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your secret API key
 
@@ -897,7 +897,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your secret API key
 

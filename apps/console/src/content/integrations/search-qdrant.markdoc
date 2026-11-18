@@ -1,0 +1,123 @@
+---
+layout: integration
+title: Vector search with Qdrant
+description: Sync an Appwrite Databases table to a Qdrant collection and search it by meaning with OpenAI embeddings
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/search-qdrant/cover.avif
+category: search
+product:
+    vendor: Qdrant
+    description: "Qdrant is an open-source vector database and similarity search engine, available self-hosted or as Qdrant Cloud."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+[Qdrant](https://qdrant.tech/) is an open-source vector database written in Rust. It stores embeddings with a JSON payload and returns the points closest to a query vector, which makes it a good fit for semantic search and retrieval-augmented generation. You can run it yourself or use the managed Qdrant Cloud.
+
+# How does the integration work?
+
+The **Sync with Qdrant** recipe is an Appwrite Function from the [Appwrite templates repository](https://github.com/appwrite/templates/tree/1.2.0/node/sync-with-qdrant). When you send it a `POST` request, it reads every row of an Appwrite Databases table, creates an embedding for each row with OpenAI's `text-embedding-3-small` model, and upserts the embeddings into a Qdrant collection with the full row as the payload.
+
+| Route | Purpose |
+| --- | --- |
+| `GET /` | Serves a demo page where you can search the collection |
+| `POST /` | Syncs the table to Qdrant |
+| `POST /search` | Embeds the `prompt` in the JSON body and returns the 5 closest points with their payloads |
+
+{% info title="Not in the template picker" %}
+This recipe isn't listed under **Functions** > **Templates** in the Appwrite Console. You deploy it yourself from the templates repository, as described below.
+{% /info %}
+
+# Prerequisites
+
+- An Appwrite database with a table that holds the data you want to search.
+- A Qdrant instance the function can reach, such as a [Qdrant Cloud](https://cloud.qdrant.io/) cluster.
+- An [OpenAI API key](https://platform.openai.com/api-keys). OpenAI bills each embeddings request.
+- Git and `tar` on your machine.
+
+# How to implement
+
+To implement the Qdrant integration, there are several steps you must complete:
+
+## Step 1: Set up Qdrant
+
+Create a Qdrant Cloud cluster, or start your own Qdrant server. Copy the cluster URL, including the port (for example `https://<CLUSTER_HOST>:6333`), and create an API key for it.
+
+The recipe doesn't create the collection, so create one with a vector size of **1536**, the size of `text-embedding-3-small` embeddings:
+
+```bash
+curl -X PUT "https://<CLUSTER_HOST>:6333/collections/<COLLECTION_NAME>" \
+  -H "api-key: <QDRANT_API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{"vectors": {"size": 1536, "distance": "Cosine"}}'
+```
+
+## Step 2: Deploy the recipe
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+Download the released recipe and package it as a `.tar.gz` archive:
+
+```bash
+git clone --depth 1 --branch 1.2.0 https://github.com/appwrite/templates.git
+cd templates/node/sync-with-qdrant
+tar --exclude code.tar.gz -czf code.tar.gz .
+```
+
+In the Appwrite Console, go to **Functions**, click **Create function**, and choose **create a function manually**. Pick a Node.js runtime, version 18.17 or later, upload `code.tar.gz`, and set the entrypoint to `src/main.js` and the build command to `npm install`. Unless the table's data is public, don't allow anyone to execute the function. Then click **Create and deploy**.
+
+{% info title="Keep the function private" %}
+Anyone who can execute the function can start a sync or search the collection, and search results include the matching rows in full. Each of those requests also spends your OpenAI credits. The function's domain, including the demo page, only accepts requests when its [execute access](/docs/products/functions/functions#execution-access) includes `Any`, so only use the domain for public data. To make an existing function private, remove `Any` from its execute access.
+{% /info %}
+
+You can also deploy the folder with the [Appwrite CLI](/docs/tooling/command-line/functions), or copy it into your own repository and [deploy it from Git](/docs/products/functions/deploy-from-git).
+
+## Step 3: Configure variables and scopes
+
+Open the function's **Settings** tab. Under **Environment variables**, add:
+
+| Variable | Value |
+| --- | --- |
+| `APPWRITE_DATABASE_ID` | The ID of the database that holds your table |
+| `APPWRITE_COLLECTION_ID` | The ID of the table to sync. The recipe reads it through the legacy Databases API, which calls tables collections. |
+| `QDRANT_URL` | Your cluster URL |
+| `QDRANT_API_KEY` | Your Qdrant API key |
+| `QDRANT_COLLECTION_NAME` | The collection you created |
+| `OPENAI_API_KEY` | Your OpenAI API key |
+
+The recipe reads your table with the function's [ephemeral API key](/docs/products/functions/develop#ephemeral-api-key). Under **Scopes**, grant the read scopes the in-console sync templates use: `databases.read`, `collections.read`, `tables.read`, `documents.read`, and `rows.read`. Then redeploy the function so the variables take effect.
+
+## Step 4: Sync and search
+
+To start the sync, [execute the function from the Console](/docs/products/functions/execute#console) with the `POST` method and the path `/`. The function responds with `Sync finished.` when the upsert completes.
+
+To search from your server, [create an execution](/docs/products/functions/execute#sdk) with a Server SDK and an API key that has the `executions.write` scope. Use the `POST` method, the path `/search`, and a JSON body with a `prompt`, such as `{"prompt": "Books about space travel"}`. The execution's `responseBody` contains the JSON response, with the 5 closest points in `searchResults`.
+
+If the function allows anyone to execute it, you can call its domain from the **Domains** tab instead. Open the domain in your browser to search from the demo page, or use `curl`:
+
+```bash
+# Sync the table
+curl -X POST https://<FUNCTION_DOMAIN>
+
+# Search the collection
+curl -X POST https://<FUNCTION_DOMAIN>/search \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "Books about space travel"}'
+```
+
+Each result carries the original row in its payload, so use the payload's `$id` to map results back to your rows. The recipe numbers points by their position in each sync rather than by row ID.
+
+[Synchronous executions](/docs/products/functions/execute#synchronous-executions), including requests to a function's domain, stop after 30 seconds. To sync a large table, raise the function's timeout under **Settings** > **Timeout** and start the sync as an [asynchronous execution](/docs/products/functions/execute#asynchronous-executions).
+
+# Read more about Qdrant and Appwrite Functions
+
+If you would like to learn more about Qdrant and Appwrite Functions, we have some resources that you should visit:
+
+- [Qdrant Cloud documentation](https://qdrant.tech/documentation/cloud/)
+- [Qdrant collections](https://qdrant.tech/documentation/concepts/collections/)
+- [Deploy Appwrite Functions manually](/docs/products/functions/deploy-manually)
+- [Sync with Qdrant recipe source](https://github.com/appwrite/templates/tree/1.2.0/node/sync-with-qdrant)

@@ -10,9 +10,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 final class DatabasesPermissionsTeamTest extends Scope
 {
@@ -49,7 +49,7 @@ final class DatabasesPermissionsTeamTest extends Scope
         $this->assertEquals(201, $db['headers']['status-code']);
 
         $collection1 = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $this->databaseId . '/collections', $this->getServerHeader(), [
-            'collectionId' => ID::custom('collection1'),
+            'collectionId' => Id::custom('collection1'),
             'name' => 'Collection 1',
             'dimension' => 3,
             'permissions' => [
@@ -63,7 +63,7 @@ final class DatabasesPermissionsTeamTest extends Scope
         $this->collections['collection1'] = $collection1['body']['$id'];
 
         $collection2 = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $this->databaseId . '/collections', $this->getServerHeader(), [
-            'collectionId' => ID::custom('collection2'),
+            'collectionId' => Id::custom('collection2'),
             'name' => 'Collection 2',
             'dimension' => 3,
             'permissions' => [
@@ -129,7 +129,7 @@ final class DatabasesPermissionsTeamTest extends Scope
         $this->createCollections($this->teams);
 
         $response = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $this->databaseId . '/collections/' . $this->collections['collection1'] . '/documents', $this->getServerHeader(), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'embeddings' => [1.0, 0.0, 0.0],
                 'metadata' => ['title' => 'Lorem'],
@@ -138,7 +138,7 @@ final class DatabasesPermissionsTeamTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $this->databaseId . '/collections/' . $this->collections['collection2'] . '/documents', $this->getServerHeader(), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'embeddings' => [0.0, 1.0, 0.0],
                 'metadata' => ['title' => 'Ipsum'],
@@ -180,7 +180,7 @@ final class DatabasesPermissionsTeamTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $users[$user]['session'],
         ], [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'embeddings' => [0.2, 0.3, 0.5],
                 'metadata' => ['title' => 'Ipsum'],

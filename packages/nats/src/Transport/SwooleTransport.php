@@ -7,6 +7,7 @@ namespace Utopia\NATS\Transport;
 use Swoole\Coroutine\Client;
 use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\TimeoutException;
+use Utopia\NATS\Exception\TlsException;
 
 /**
  * Coroutine-native transport built on Swoole\Coroutine\Client.
@@ -18,7 +19,7 @@ use Utopia\NATS\Exception\TimeoutException;
  * Requires ext-swoole; the base package does not depend on it. Wire it in via
  * ConnectionOptions::$transportFactory.
  */
-final class SwooleTransport implements Transport
+final class SwooleTransport implements Pollable, Transport
 {
     private ?Client $client = null;
 
@@ -100,13 +101,32 @@ final class SwooleTransport implements Transport
         $client->set($this->buildTlsSettings($options));
 
         if (!$client->enableSSL()) {
-            throw new ConnectionException('Failed to upgrade connection to TLS');
+            $this->close();
+            throw new TlsException('Failed to upgrade connection to TLS');
         }
     }
 
     public function isConnected(): bool
     {
         return $this->client instanceof \Swoole\Coroutine\Client && $this->client->isConnected();
+    }
+
+    public function poll(): bool
+    {
+        if ($this->buffer !== '') {
+            return true;
+        }
+        if (!$this->client instanceof Client) {
+            return true;
+        }
+
+        // peek() never yields: it is a MSG_PEEK recv on the non-blocking socket.
+        // '' is the peer's close, which a read reports at once.
+        if ($this->client->peek(1) !== false) {
+            return true;
+        }
+
+        return \defined('SOCKET_EAGAIN') && $this->client->errCode !== SOCKET_EAGAIN;
     }
 
     public function close(): void
@@ -127,8 +147,7 @@ final class SwooleTransport implements Transport
         }
 
         if ($data === false) {
-            // ponytail: Swoole sets errCode 110 (ETIMEDOUT) on a recv timeout; anything else is a hard error.
-            if ($client->errCode === 110) {
+            if (\defined('SOCKET_ETIMEDOUT') && $client->errCode === SOCKET_ETIMEDOUT) {
                 throw new TimeoutException('Read timed out');
             }
             throw new ConnectionException("Failed to read from socket: [{$client->errCode}] {$client->errMsg}");

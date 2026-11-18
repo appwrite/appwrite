@@ -10,12 +10,16 @@
 
 export interface RuntimeConfig {
   appwriteEndpoint: string
+  appwriteVersion: string
   consoleProfile: string
   /** HMAC key for the console fingerprint token. Public (ships to the browser). */
   fingerprintKey: string
   stripePublishableKey: string
   sentryDsn: string
   plausibleScriptSrc: string
+  appwriteAnalyticsEndpoint: string
+  appwriteAnalyticsProjectId: string
+  appwriteAnalyticsPropertyId: string
   /** Override for the profile's userVerification feature ('' = profile default). */
   userVerification: string
   /** Override for the profile's cookieBanner feature ('' = profile default). */
@@ -30,11 +34,10 @@ export interface RuntimeConfig {
   screenshotMode: string
   /** Override for dedicated database PITR restore UI ('' = profile default). */
   databasePitrRestore: string
-  /**
-   * Override for extra Git (VCS) OAuth connect providers
-   * ('' = profile default, off).
-   */
-  extraVcsOAuth: string
+  /** Override for the project environments switcher ('' = profile default, off). */
+  projectEnvironments: string
+  /** Override for Origin on Git connect ('' = profile default, off). */
+  vcsOrigin: string
   /** Override for backend-powered usage statistics ('' = Console variables). */
   usageStats: string
   /**
@@ -114,6 +117,7 @@ export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
   const read = (key: string) => readEnvValue(env, key)
   return {
     appwriteEndpoint: readAppwriteEndpointFromEnv(env),
+    appwriteVersion: read('VITE_APPWRITE_VERSION'),
     consoleProfile: read('VITE_CONSOLE_PROFILE'),
     fingerprintKey:
       read('VITE_CONSOLE_FINGERPRINT_KEY') ||
@@ -121,6 +125,9 @@ export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
     stripePublishableKey: read('VITE_STRIPE_PUBLISHABLE_KEY'),
     sentryDsn: read('VITE_SENTRY_DSN'),
     plausibleScriptSrc: read('VITE_PLAUSIBLE_SCRIPT_SRC'),
+    appwriteAnalyticsEndpoint: read('VITE_APPWRITE_ANALYTICS_ENDPOINT'),
+    appwriteAnalyticsProjectId: read('VITE_APPWRITE_ANALYTICS_PROJECT_ID'),
+    appwriteAnalyticsPropertyId: read('VITE_APPWRITE_ANALYTICS_PROPERTY_ID'),
     userVerification: read('VITE_CONSOLE_USER_VERIFICATION'),
     cookieBanner: read('VITE_CONSOLE_COOKIE_BANNER'),
     browserApi: read('VITE_CONSOLE_BROWSER_API'),
@@ -128,7 +135,8 @@ export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
     blogDrafts: read('VITE_CONSOLE_BLOG_DRAFTS'),
     screenshotMode: read('VITE_CONSOLE_SCREENSHOT_MODE'),
     databasePitrRestore: read('VITE_CONSOLE_DATABASE_PITR_RESTORE'),
-    extraVcsOAuth: read('VITE_CONSOLE_EXTRA_VCS_OAUTH'),
+    projectEnvironments: read('VITE_CONSOLE_PROJECT_ENVIRONMENTS'),
+    vcsOrigin: read('VITE_CONSOLE_VCS_ORIGIN'),
     usageStats: read('VITE_CONSOLE_USAGE_STATS'),
     preLaunch: read('VITE_CONSOLE_PRE_LAUNCH'),
   }

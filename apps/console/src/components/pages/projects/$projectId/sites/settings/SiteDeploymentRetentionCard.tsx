@@ -33,10 +33,7 @@ export function SiteDeploymentRetentionCard({
     },
     onSuccess: (updated) => {
       toast.success(t('Retention has been updated'))
-      queryClient.setQueryData(
-        ['site', 'project', projectId, siteId],
-        updated,
-      )
+      queryClient.setQueryData(['site', 'project', projectId, siteId], updated)
       queryClient.invalidateQueries({
         queryKey: ['sites', 'project', projectId],
       })
@@ -50,6 +47,7 @@ export function SiteDeploymentRetentionCard({
 
   return (
     <DeploymentRetentionCard
+      projectId={projectId}
       deploymentRetention={getDeploymentRetention(site)}
       onUpdate={(deploymentRetention) =>
         updateSiteMutation.mutate(deploymentRetention)

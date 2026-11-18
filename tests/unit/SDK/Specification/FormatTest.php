@@ -2,6 +2,9 @@
 
 namespace Tests\Unit\SDK\Specification;
 
+use Appwrite\Auth\Validator\Hash\Argon2;
+use Appwrite\Auth\Validator\Hash\Bcrypt;
+use Appwrite\Auth\Validator\Hash\PHPass;
 use Appwrite\Platform\Tasks\Specs;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -24,6 +27,7 @@ use Appwrite\Utopia\Response\Model\AlgoScryptModified;
 use Appwrite\Utopia\Response\Model\AlgoSha;
 use Appwrite\Utopia\Response\Model as ResponseModel;
 use Appwrite\Utopia\Response\Model\AttributeLine;
+use Appwrite\Utopia\Response\Model\ColumnBigInt;
 use Appwrite\Utopia\Response\Model\ColumnEmail;
 use Appwrite\Utopia\Response\Model\ColumnString;
 use Appwrite\Utopia\Response\Model\Error as ErrorModel;
@@ -43,6 +47,7 @@ use Appwrite\Utopia\Response\Model\PlatformList;
 use Appwrite\Utopia\Response\Model\PlatformWeb;
 use Appwrite\Utopia\Response\Model\PlatformWindows;
 use Appwrite\Utopia\Response\Model\Preferences;
+use Appwrite\Utopia\Response\Model\Presence;
 use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\TemplateFramework;
@@ -55,9 +60,8 @@ use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Webhook;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
-use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Queries\Base;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Spatial;
@@ -68,6 +72,7 @@ use Utopia\OpenAPI\Model\Composition;
 use Utopia\OpenAPI\Model\Discriminator;
 use Utopia\OpenAPI\Parser;
 use Utopia\Platform\Enum;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\AnyOf;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
@@ -171,6 +176,39 @@ final class FormatTest extends TestCase
                 ['propertyName' => 'format', 'value' => 'email'],
             ]],
         ], $union->conditionalReferences());
+    }
+
+    public function testBigIntColumnKeepsItsTypeDiscriminator(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+        $route = (new Route('GET', '/v1/tests/column'))
+            ->desc('Get column')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getColumn',
+                description: 'Get column.',
+                auth: [AuthType::ADMIN],
+                responses: [new SDKResponse(code: 200, model: [Response::MODEL_COLUMN_BIGINT, Response::MODEL_COLUMN_STRING, Response::MODEL_COLUMN_EMAIL])],
+            ));
+        $spec = (new OpenAPI3(new Container(), [], [$route], [new ColumnBigInt(), new ColumnString(), new ColumnEmail()], [], ['console' => 0], 'console'))->parse();
+        $document = Parser::parse(json_encode($spec, JSON_THROW_ON_ERROR));
+        $union = $document->paths['/tests/column']->operations['get']->responses['200']->content['application/json']->schema;
+
+        $this->assertInstanceOf(CompositeSchema::class, $union);
+        $this->assertSame([
+            ['reference' => '#/components/schemas/columnBigint', 'conditions' => [
+                ['propertyName' => 'type', 'value' => 'bigint'],
+            ]],
+            ['reference' => '#/components/schemas/columnString', 'conditions' => [
+                ['propertyName' => 'type', 'value' => 'string'],
+            ]],
+            ['reference' => '#/components/schemas/columnEmail', 'conditions' => [
+                ['propertyName' => 'type', 'value' => 'string'],
+                ['propertyName' => 'format', 'value' => 'email'],
+            ]],
+        ], $union->conditionalReferences(), 'Typed SDKs decode attribute and column unions by these type discriminators, so a bigint branch must keep its own.');
     }
 
     public function testProjectRequestParameterOverrides(): void
@@ -1199,7 +1237,7 @@ final class FormatTest extends TestCase
                 auth: [AuthType::ADMIN],
                 responses: [],
             ))
-            ->param('default', null, new Nullable(new Spatial(Database::VAR_LINESTRING)), 'Default value.', true);
+            ->param('default', null, new Nullable(new Spatial(ColumnType::Linestring->value)), 'Default value.', true);
 
         $modelRoute = (new Route('GET', '/v1/tests/spatial-model'))
             ->desc('Get spatial test')
@@ -1272,6 +1310,44 @@ final class FormatTest extends TestCase
         $this->assertSame('webhook-password', $authPassword['example']);
         $this->assertArrayNotHasKey('x-example', $authPassword);
 
+        // Secrets the API returns are marked too, so clients can keep them out of their output.
+        $secret = $openApi['components']['schemas']['webhook']['properties']['secret'];
+        $this->assertSame('password', $secret['format']);
+        $this->assertArrayNotHasKey('format', $openApi['components']['schemas']['webhook']['properties']['name']);
+    }
+
+    public function testHashParamsHaveValidHashExamples(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $validators = ['argon2' => new Argon2(), 'bcrypt' => new Bcrypt(), 'phpass' => new PHPass()];
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [AuthType::ADMIN],
+                responses: [
+                    new SDKResponse(
+                        code: 200,
+                        model: Response::MODEL_WEBHOOK,
+                    ),
+                ],
+            ));
+        foreach ($validators as $name => $validator) {
+            $route->param($name, '', $validator, 'Hash.');
+        }
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [new Webhook()], [], ['console' => 0], 'console'))->parse();
+        $properties = $openApi['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties'];
+
+        foreach ($validators as $name => $validator) {
+            $this->assertSame('password', $properties[$name]['format'], $name);
+            $this->assertTrue($validator->isValid($properties[$name]['example']), $name);
+        }
     }
 
     public function testNoContentMethodsOmitProducesMetadata(): void
@@ -1399,6 +1475,7 @@ final class FormatTest extends TestCase
 
         $models = [
             new Provider(),
+            new Presence(),
             new FrameworkAdapter(),
             new TemplateFramework(),
             new TemplateSite(),
@@ -1409,6 +1486,7 @@ final class FormatTest extends TestCase
         $routes = [$route];
 
         foreach ([
+            Response::MODEL_PRESENCE,
             Response::MODEL_FRAMEWORK_ADAPTER,
             Response::MODEL_TEMPLATE_FRAMEWORK,
             Response::MODEL_TEMPLATE_SITE,
@@ -1437,6 +1515,11 @@ final class FormatTest extends TestCase
 
         $this->assertTrue($openApiOptions['additionalProperties']);
         $this->assertArrayNotHasKey('nullable', $openApiOptions);
+
+        $openApiMetadata = $openApi['components']['schemas'][Response::MODEL_PRESENCE]['properties']['metadata'];
+
+        $this->assertTrue($openApiMetadata['additionalProperties']);
+        $this->assertTrue($openApiMetadata['nullable']);
 
         foreach ([
             Response::MODEL_FRAMEWORK_ADAPTER => 'fallbackFile',
@@ -1470,7 +1553,7 @@ final class FormatTest extends TestCase
                 auth: [AuthType::ADMIN],
                 responses: [],
             ))
-            ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Queries.', true)
+            ->param('queries', [], new Base([new Limit(), new Offset()]), 'Queries.', true)
             ->param('repositoryQueries', [], new VcsRepositories(), 'Repository queries.', true)
             ->param('deepQueries', [], $deepSubclass, 'Deeply nested queries.', true);
 

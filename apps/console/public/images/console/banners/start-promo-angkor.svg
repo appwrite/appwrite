@@ -1,0 +1,29 @@
+<svg width="482" height="340" viewBox="0 0 482 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="angkorGrad" x1="241" y1="26" x2="241" y2="381" gradientUnits="userSpaceOnUse">
+<stop stop-color="#19191C"/>
+<stop offset="0.17" stop-color="#2F1820"/>
+<stop offset="0.34" stop-color="#531A2C"/>
+<stop offset="0.51" stop-color="#9F1D42"/>
+<stop offset="0.68" stop-color="#FD366E"/>
+<stop offset="0.85" stop-color="#FEAFC5"/>
+<stop offset="1" stop-color="#EDEDF0"/>
+</linearGradient>
+<g id="angkor">
+<path d="M118 226C118 184 128.8 160.48 136 142C143.2 160.48 154 184 154 226Z"/>
+<path d="M328 226C328 184 338.8 160.48 346 142C353.2 160.48 364 184 364 226Z"/>
+<path d="M164 214C164 166 177.2 139.12 186 118C194.8 139.12 208 166 208 214Z"/>
+<path d="M274 214C274 166 287.2 139.12 296 118C304.8 139.12 318 166 318 214Z"/>
+<path d="M211 196C211 132 229 96.16 241 68C253 96.16 271 132 271 196Z"/>
+<path d="M110 226H372V296H110Z"/>
+<path d="M160 214H322V226H160Z"/>
+<path d="M196 196H286V214H196Z"/>
+<path d="M96 296H386V310H96Z"/>
+</g>
+</defs>
+<use href="#angkor" fill="#19191C"/>
+<use href="#angkor" fill="url(#angkorGrad)"/>
+<use href="#angkor" stroke="#FD366E" stroke-width="1.36239"/>
+<g fill="#19191C" stroke="#FD366E" stroke-width="1.36239"><path d="M231 250H251V296H231Z"/><path d="M130 290V262C130 252.66 144 252.66 144 262V290Z"/><path d="M160 290V262C160 252.66 174 252.66 174 262V290Z"/><path d="M302 290V262C302 252.66 316 252.66 316 262V290Z"/><path d="M332 290V262C332 252.66 346 252.66 346 262V290Z"/></g>
+<g stroke="#FD366E" stroke-width="1.36239" stroke-linecap="round" fill="none"><path d="M119.81 205H152.19"/><path d="M123.43 184H148.57"/><path d="M128.87 163H143.13"/><path d="M136 142V226"/><path d="M329.81 205H362.19"/><path d="M333.43 184H358.57"/><path d="M338.87 163H353.13"/><path d="M346 142V226"/><path d="M166.22 190H205.78"/><path d="M170.63 166H201.37"/><path d="M177.29 142H194.71"/><path d="M186 118V214"/><path d="M276.22 190H315.78"/><path d="M280.63 166H311.37"/><path d="M287.29 142H304.71"/><path d="M296 118V214"/><path d="M214.02 164H267.98"/><path d="M220.04 132H261.96"/><path d="M229.12 100H252.88"/><path d="M241 68V196"/><path d="M110 240H372"/></g>
+</svg>

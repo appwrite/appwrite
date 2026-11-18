@@ -36,6 +36,8 @@ export const CONVERSION_EXCLUDED_PATHS = new Set([
   'blog/rewriting-the-appwrite-cli-in-go/footprint.gif',
   'blog/rewriting-the-appwrite-cli-in-go/install.gif',
   'blog/rewriting-the-appwrite-cli-in-go/startup.gif',
+  'blog/announcing-mcp-events/demo.gif',
+  'blog/announcing-mcp-events/dark/demo.gif',
 ])
 
 function isExcluded(absPath: string): boolean {

@@ -22,7 +22,7 @@ export type McpOAuthTokenSet = {
   expires_in?: number
   refresh_token?: string
   scope?: string
-  id_token?: string
+  id_token?: string | null
   authorization_details?: unknown
   [key: string]: unknown
 }
@@ -510,7 +510,7 @@ async function resolveAuthorizationCode(params: {
     state: params.state,
     codeChallenge: params.codeChallenge,
     codeChallengeMethod: 'S256',
-    resource: params.resource,
+    resource: [params.resource],
     authorizationDetails: params.authorizationDetails,
   })
 
@@ -619,7 +619,7 @@ export async function connectMcpOAuthSilently(
         redirectUri,
         clientId: fixedClientId,
         codeVerifier,
-        resource,
+        resource: [resource],
       })
 
       if (!tokens.access_token) {

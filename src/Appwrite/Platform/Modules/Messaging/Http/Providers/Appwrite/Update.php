@@ -52,7 +52,7 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
+            ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Provider ID.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Provider name.', true)
             ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
             ->param('qos', null, new Nullable(new Range(0, 1)), 'Default QoS for topics on this provider (0 or 1). Null lets the subscriber choose.', true)

@@ -8,7 +8,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
+use Utopia\Lock\Distributed;
 use Utopia\System\System;
 
 final class TeamsConsoleClientTest extends Scope
@@ -46,7 +47,7 @@ final class TeamsConsoleClientTest extends Scope
                         'X-Appwrite-Project: console',
                         'Cookie: a_session_console=' . $accounts[$index]['session'],
                     ],
-                    CURLOPT_POSTFIELDS => json_encode(['teamId' => ID::unique(), 'name' => 'Instance organization']),
+                    CURLOPT_POSTFIELDS => json_encode(['teamId' => Id::unique(), 'name' => 'Instance organization']),
                 ]);
                 curl_multi_add_handle($multi, $handle);
                 $handles[] = [$handle, $index];
@@ -96,7 +97,7 @@ final class TeamsConsoleClientTest extends Scope
 
         foreach ([$ownerHeaders, $outsiderHeaders] as $requestHeaders) {
             $response = $this->client->call(Client::METHOD_POST, '/teams', $requestHeaders, [
-                'teamId' => ID::unique(),
+                'teamId' => Id::unique(),
                 'name' => 'Another organization',
             ]);
             $this->assertSame(403, $response['headers']['status-code']);
@@ -105,6 +106,49 @@ final class TeamsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/teams', $ownerHeaders);
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame(1, $response['body']['total']);
+    }
+
+    public function testCreateOrganizationRefusalDoesNotWaitForTheCreationLock(): void
+    {
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], $this->getHeaders());
+
+        $this->createTeamFixture($headers, [
+            'teamId' => Id::unique(),
+            'name' => 'Existing organization',
+        ]);
+
+        $redis = new \Redis();
+        $redis->connect(System::getEnv('_APP_REDIS_HOST', 'redis'), (int) System::getEnv('_APP_REDIS_PORT', '6379'));
+        $password = System::getEnv('_APP_REDIS_PASS', '');
+        if ($password !== '') {
+            $user = System::getEnv('_APP_REDIS_USER', '');
+            $redis->auth($user !== '' ? [$user, $password] : $password);
+        }
+
+        $lock = new Distributed($redis, 'console:organizations:create', 30);
+        $this->assertTrue($lock->acquire(10.0), 'Could not hold the organization creation lock');
+
+        try {
+            $response = $this->client->call(Client::METHOD_POST, '/teams', $headers, [
+                'teamId' => Id::unique(),
+                'name' => 'Another organization',
+            ]);
+        } finally {
+            $lock->release();
+            $redis->close();
+        }
+
+        // An edition that lifts the organization limit never takes the lock.
+        if ($response['headers']['status-code'] === 201) {
+            $this->assertSame('Another organization', $response['body']['name']);
+            return;
+        }
+
+        $this->assertSame(403, $response['headers']['status-code'], 'A refused organization must be refused while another request holds the creation lock');
+        $this->assertSame('organization_creation_prohibited', $response['body']['type']);
     }
 
     public function testConsoleMembershipPrivacyDefaults(): void
@@ -309,6 +353,94 @@ final class TeamsConsoleClientTest extends Scope
 
         $this->assertEquals(401, $response['headers']['status-code']);
         $this->assertEquals('User is not allowed to modify roles', $response['body']['message']);
+    }
+
+    public function testPendingOwnerInviteDoesNotCountAsAnOwner(): void
+    {
+        $teamUid = $this->createTeamHelper()['teamUid'];
+        $headers = array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $invite = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', $headers, [
+            'email' => uniqid() . 'pending-owner@localhost.test',
+            'name' => 'Pending Owner',
+            'roles' => ['owner'],
+            'url' => 'http://localhost:5000/join-us#title',
+        ]);
+        $this->assertSame(201, $invite['headers']['status-code']);
+        $this->assertFalse($invite['body']['confirm']);
+
+        $memberships = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', $headers);
+        $this->assertSame(200, $memberships['headers']['status-code']);
+        $owner = \array_values(\array_filter($memberships['body']['memberships'], fn (array $membership) => $membership['confirm']))[0];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamUid . '/memberships/' . $owner['$id'], $headers, [
+            'roles' => ['developer'],
+        ]);
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('membership_downgrade_prohibited', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/' . $owner['$id'], $headers);
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('membership_deletion_prohibited', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships/' . $owner['$id'], $headers);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertContains('owner', $response['body']['roles']);
+
+        // Revoking the pending owner invite is still allowed
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/' . $invite['body']['$id'], $headers);
+        $this->assertSame(204, $response['headers']['status-code']);
+    }
+
+    public function testConcurrentOwnerRemovalsKeepAnOwner(): void
+    {
+        $teamData = $this->createTeamHelper();
+        $member = $this->createAndAcceptMembershipHelper($teamData['teamUid'], $teamData['teamName']);
+        $teamUid = $teamData['teamUid'];
+        $headers = array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $memberHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $member['session'],
+        ];
+
+        $promote = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamUid . '/memberships/' . $member['membershipUid'], $headers, [
+            'roles' => ['owner'],
+        ]);
+        $this->assertSame(200, $promote['headers']['status-code']);
+
+        $memberships = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', $headers);
+        $this->assertSame(200, $memberships['headers']['status-code']);
+        $creator = \array_values(\array_filter(
+            $memberships['body']['memberships'],
+            fn (array $membership) => $membership['$id'] !== $member['membershipUid'],
+        ))[0];
+
+        // Each owner gives up ownership at the same moment: one demotes itself, the other leaves
+        [$demote, $leave] = $this->client->callConcurrently([
+            [Client::METHOD_PATCH, '/teams/' . $teamUid . '/memberships/' . $creator['$id'], $headers, ['roles' => ['developer']]],
+            [Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/' . $member['membershipUid'], $memberHeaders, []],
+        ]);
+        $statuses = [$demote['headers']['status-code'], $leave['headers']['status-code']];
+        $this->assertCount(1, \array_intersect($statuses, [200, 204]), 'Exactly one owner may give up ownership: ' . \json_encode($statuses));
+        $this->assertContains(400, $statuses);
+
+        $memberships = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', $headers);
+        $this->assertSame(200, $memberships['headers']['status-code']);
+        $owners = \array_filter(
+            $memberships['body']['memberships'],
+            fn (array $membership) => $membership['confirm'] && \in_array('owner', $membership['roles'], true),
+        );
+        $this->assertCount(1, $owners);
     }
 
     public function testConsoleDeveloperCannotUpdateMembershipRoles(): void
@@ -595,7 +727,7 @@ final class TeamsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => 'Other Member',
@@ -621,7 +753,7 @@ final class TeamsConsoleClientTest extends Scope
         ];
 
         $organization = $this->createTeamFixture($memberHeaders, [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Other organization',
         ]);
 

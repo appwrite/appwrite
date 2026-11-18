@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
  * Shared layout and colors for top-of-console alerts (billing, impersonation, etc.).
  * Matches {@link CloudStatusBanner}: min-h-14, padding, responsive row.
  */
-export type HeaderAlertVariant = 'warning' | 'danger' | 'info'
+export type HeaderAlertVariant = 'warning' | 'danger' | 'info' | 'environment'
 
 const VARIANT_CONTAINER: Record<HeaderAlertVariant, string> = {
   warning:
@@ -14,6 +14,9 @@ const VARIANT_CONTAINER: Record<HeaderAlertVariant, string> = {
   danger:
     'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400 border-b border-red-600/12 dark:border-red-400/18',
   info: 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border-b border-blue-600/12 dark:border-blue-400/18',
+  // Purple marks a project environment, the color its dot has in the switcher
+  environment:
+    'bg-purple-500/10 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 border-b border-purple-600/12 dark:border-purple-400/18',
 }
 
 /** Outline CTA - same treatment as the Cloud status banner link chip. */
@@ -23,6 +26,8 @@ const VARIANT_OUTLINE_ACTION: Record<HeaderAlertVariant, string> = {
   danger:
     'border border-red-500 bg-transparent text-red-600 hover:bg-red-500/10 hover:text-red-700 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-500/20 dark:hover:text-red-300',
   info: 'border border-blue-500 bg-transparent text-blue-600 hover:bg-blue-500/10 hover:text-blue-700 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-500/20 dark:hover:text-blue-300',
+  environment:
+    'border border-purple-500 bg-transparent text-purple-700 hover:bg-purple-500/10 hover:text-purple-800 dark:border-purple-400 dark:text-purple-300 dark:hover:bg-purple-500/20 dark:hover:text-purple-200',
 }
 
 export function headerAlertOutlineButtonClass(variant: HeaderAlertVariant) {
@@ -39,6 +44,8 @@ const VARIANT_GHOST_ACTION: Record<HeaderAlertVariant, string> = {
   danger:
     'bg-transparent text-red-600 hover:bg-red-500/10 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/20 dark:hover:text-red-300',
   info: 'bg-transparent text-blue-600 hover:bg-blue-500/10 hover:text-blue-700 dark:text-blue-400 dark:hover:bg-blue-500/20 dark:hover:text-blue-300',
+  environment:
+    'bg-transparent text-purple-700 hover:bg-purple-500/10 hover:text-purple-800 dark:text-purple-300 dark:hover:bg-purple-500/20 dark:hover:text-purple-200',
 }
 
 export function headerAlertGhostButtonClass(variant: HeaderAlertVariant) {
@@ -55,6 +62,8 @@ const VARIANT_TEXT_ACTION: Record<HeaderAlertVariant, string> = {
   danger:
     'text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300',
   info: 'text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300',
+  environment:
+    'text-purple-700 hover:text-purple-800 dark:text-purple-300 dark:hover:text-purple-200',
 }
 
 export function headerAlertTextButtonClass(variant: HeaderAlertVariant) {

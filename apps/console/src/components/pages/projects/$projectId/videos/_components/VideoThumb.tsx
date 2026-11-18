@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import type { Models } from '@appwrite.io/console'
 import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 import {
   getVideoSpriteUrl,
@@ -17,6 +16,7 @@ import {
   videoThumbAspectRatio,
 } from '@/lib/utils/video-format'
 import { TimelineSpriteThumb } from './player/TimelineSpriteThumb'
+import type { Video } from '@/lib/appwrite/videos'
 
 const HOVER_FRAME_INTERVAL_MS = 180
 
@@ -36,7 +36,7 @@ export function VideoThumb({
 }: {
   projectId: string
   video: Pick<
-    Models.Video,
+    Video,
     '$id' | 'previewId' | 'name' | 'duration' | 'width' | 'height' | 'aspectRatio'
   >
   width?: number

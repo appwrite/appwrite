@@ -32,6 +32,10 @@ import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPic
 import { WarningAlert } from '@/components/global/shared/WarningAlert'
 import { VcsInstallationErrorAlert } from '@/components/global/shared/VcsInstallationError'
 import {
+  VcsAccountLinks,
+  VcsProviderButtons,
+} from '@/components/global/shared/VcsProviderButtons'
+import {
   getErrorMessage,
   getVcsInstallationErrorKind,
 } from '@/lib/utils/error-formatting'
@@ -46,7 +50,6 @@ import {
   getVcsProvider,
   vcsInlineProviderIconBoxClassName,
   vcsInlineProviderIconClassName,
-  vcsProviderButtonIconClassName,
   vcsProviderHasCapability,
   VcsIcon,
   getVisibleVcsOAuthProviders,
@@ -122,7 +125,12 @@ export function ConnectRepositorySection({
 }: ConnectRepositorySectionProps) {
   const t = useT()
   const { features } = useConsoleProfile()
-  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features.extraVcsOAuth)
+  const {
+    vcsProviders,
+    vcsProvidersWithRepositoryCreation,
+    vcsProvidersWithPublicRepositories,
+  } = useConsoleVariables()
+  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features, vcsProviders)
   const vcsAuthUrl = (
     provider?: VcsProviderId,
     mode: 'create' | 'update' = 'create',
@@ -157,10 +165,6 @@ export function ConnectRepositorySection({
     projectId,
     installations,
   )
-  const {
-    vcsProvidersWithRepositoryCreation,
-    vcsProvidersWithPublicRepositories,
-  } = useConsoleVariables()
   const orgOptions = useMemo(
     () => buildVcsOrgOptions(installations, namespacesByInstallation),
     [installations, namespacesByInstallation],
@@ -321,19 +325,12 @@ export function ConnectRepositorySection({
         <div className="border-t border-border" />
         <div className="px-6 py-6 flex flex-col items-center">
           <AuthFlowHeaderIcon icon={GitIcon} className="mb-4" />
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            {vcsOAuthProviders.map((provider) => (
-              <Button key={provider.id} variant="secondary" asChild>
-                <a href={vcsAuthUrl(provider.id)}>
-                  <VcsIcon
-                    type={provider.id}
-                    className={vcsProviderButtonIconClassName}
-                  />
-                  {t(`Connect to ${provider.label}`)}
-                </a>
-              </Button>
-            ))}
-          </div>
+          <VcsProviderButtons
+            providers={vcsOAuthProviders}
+            link={(provider, content) => (
+              <a href={vcsAuthUrl(provider.id)}>{content}</a>
+            )}
+          />
         </div>
       </div>
     )
@@ -510,25 +507,15 @@ export function ConnectRepositorySection({
                       </span>
                     </SelectItem>
                   ))}
-                  <div className="border-t border-border mt-1 pt-1">
-                    {vcsOAuthProviders
-                      .filter((p) =>
-                        vcsProviderHasCapability(
-                          p.id,
-                          vcsProvidersWithRepositoryCreation,
-                        ),
-                      )
-                      .map((p) => (
-                        <a
-                          key={p.id}
-                          href={vcsAuthUrl(p.id)}
-                          className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
-                        >
-                          <p.Icon className="h-3 w-3" />
-                          {t(`Add ${p.label} account`)}
-                        </a>
-                      ))}
-                  </div>
+                  <VcsAccountLinks
+                    providers={vcsOAuthProviders.filter((p) =>
+                      vcsProviderHasCapability(
+                        p.id,
+                        vcsProvidersWithRepositoryCreation,
+                      ),
+                    )}
+                    href={(p) => vcsAuthUrl(p.id)}
+                  />
                 </SelectContent>
               </Select>
             </div>

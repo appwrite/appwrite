@@ -150,8 +150,8 @@ import {
   sanitizeAccountPrefsForWrite,
   mergeDismissedBannerPrefs,
   clearDismissedBannerPrefs,
+  mergeExperimentsSeenAtPrefs,
   mergeAgentsDismissedProjectIdsPrefs,
-  mergePremiumGeoOverviewDismissedProjectIdsPrefs,
   USER_PREFS_KEY_FEATURE_NOTIFICATIONS,
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
@@ -305,6 +305,9 @@ export function consoleAccountQueryOptions(options?: { revision?: number }) {
     staleTime: CONSOLE_ACCOUNT_STALE_TIME_MS,
     gcTime: CONSOLE_ACCOUNT_GC_TIME_MS,
     retry: false,
+    // A guest 401 has no data, so each newly mounted `useAuth()` would refetch
+    // it and flip `isLoading`, unmounting and remounting itself in a loop.
+    retryOnMount: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
@@ -884,6 +887,38 @@ export function useUpdatePasswordPwnedPolicy(
 }
 
 /**
+ * Hook to update the password rotation policy.
+ *
+ * `enabled` refuses an email/password sign-in once the password is older than
+ * `maxAge` seconds. Leaving `maxAge` out keeps the stored one.
+ *
+ * @param projectId - The project ID
+ */
+export function useUpdatePasswordRotationPolicy(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (policy: { enabled: boolean; maxAge?: number }) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+
+      return await sdk
+        .forProject(projectId)
+        .project.updatePasswordRotationPolicy({
+          enabled: policy.enabled,
+          maxAge: policy.maxAge,
+        })
+    },
+    onSuccess: () => {
+      invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
+/**
  * Hook to update project session alerts
  *
  * @param projectId - The project ID
@@ -908,7 +943,7 @@ export function useUpdateSessionAlerts(projectId: string | null | undefined) {
 }
 
 /**
- * Updates the passkey relying party policy. Send only the fields that changed.
+ * Updates the passkey relying party ID.
  *
  * @param projectId - The project ID
  */
@@ -916,12 +951,12 @@ export function useUpdatePasskeyPolicy(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (policy: { rpId?: string; origins?: string[] }) => {
+    mutationFn: async ({ rpId }: { rpId: string }) => {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
 
-      return sdk.forProject(projectId).project.updatePasskeyPolicy(policy)
+      return sdk.forProject(projectId).project.updatePasskeyPolicy({ rpId })
     },
     // Awaited so the mutation stays pending until the refetch lands: the card keeps
     // Update disabled across the whole write, not just the PATCH.
@@ -952,6 +987,42 @@ export function useUpdateSessionInvalidation(
     },
     onSuccess: () => {
       invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
+/**
+ * Hook to sign out every user in the project
+ *
+ * @param projectId - The project ID
+ */
+export function useDeleteProjectSessions(projectId: string | null | undefined) {
+  return useMutation({
+    mutationFn: async () => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+
+      return await sdk.forProject(projectId).project.deleteSessions()
+    },
+  })
+}
+
+/**
+ * Hook to force every user in the project to reset their password
+ *
+ * @param projectId - The project ID
+ */
+export function useDeleteProjectPasswords(
+  projectId: string | null | undefined,
+) {
+  return useMutation({
+    mutationFn: async () => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+
+      return await sdk.forProject(projectId).project.deletePasswords()
     },
   })
 }
@@ -1182,6 +1253,52 @@ export function useUpdateDenyCorporateEmailPolicy(
       return await projectEmailPolicyService(
         projectId,
       ).updateDenyCorporateEmailPolicy({ enabled })
+    },
+    onSuccess: () => {
+      invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
+/**
+ * Hook to update the deny realtime guests policy.
+ */
+export function useUpdateDenyRealtimeGuestsPolicy(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (enabled: boolean) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      return await sdk
+        .forProject(projectId)
+        .project.updateDenyRealtimeGuestsPolicy({ enabled })
+    },
+    onSuccess: () => {
+      invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
+/**
+ * Hook to update the account switching (account devices) policy.
+ */
+export function useUpdateAccountDevicesPolicy(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (enabled: boolean) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      return await sdk
+        .forProject(projectId)
+        .project.updateAccountDevicesPolicy({ enabled })
     },
     onSuccess: () => {
       invalidateProjectAuthQueries(queryClient, projectId)
@@ -1767,6 +1884,32 @@ export function useClearConsoleBannerDismissal() {
 }
 
 /**
+ * Record in `console.previews.seenAt` that the user opened the previews popover.
+ */
+export function useMarkExperimentsSeen() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (seenAt: Date) => {
+      const account = getConsoleAccountFromCache(queryClient)
+
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+
+      const updatedPrefs = mergeExperimentsSeenAtPrefs(account.prefs, seenAt)
+
+      return await updateAccountPrefs(updatedPrefs, 'mark-experiments-seen')
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+}
+
+/**
  * Persist dismissal of the project Agents landing in
  * `console.agents.dismissedProjectIds`.
  */
@@ -1789,39 +1932,6 @@ export function useDismissProjectAgentsLanding() {
       return await updateAccountPrefs(
         updatedPrefs,
         'dismiss-project-agents-landing',
-      )
-    },
-    onSuccess: (updatedAccount) => {
-      syncConsoleAccountAfterMutation(queryClient, {
-        apiResult: updatedAccount,
-      })
-    },
-  })
-}
-
-/**
- * Persist dismissal of the Premium Geo DB overview promo for a project in
- * `console.premiumGeoOverview.dismissedProjectIds`.
- */
-export function useDismissPremiumGeoOverviewPromo() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async (projectId: string) => {
-      const account = getConsoleAccountFromCache(queryClient)
-
-      if (!account) {
-        throw new Error('Account data not available')
-      }
-
-      const updatedPrefs = mergePremiumGeoOverviewDismissedProjectIdsPrefs(
-        account.prefs,
-        projectId,
-      )
-
-      return await updateAccountPrefs(
-        updatedPrefs,
-        'dismiss-premium-geo-overview-promo',
       )
     },
     onSuccess: (updatedAccount) => {

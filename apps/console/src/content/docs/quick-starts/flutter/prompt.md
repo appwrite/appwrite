@@ -31,26 +31,56 @@ Add app name and **Hostname** (use `localhost` for local testing). Create `web/a
 <title>Authentication complete</title>
 <p>Authentication is complete. If this does not happen automatically, please close the window.</p>
 <script>
-    window.opener.postMessage(
-        {
+    function postAuthenticationMessage() {
+        const message = {
             'flutter-web-auth-2': window.location.href
-        },
-        window.location.origin
-    );
-    window.close();
+        };
+
+        if (window.opener) {
+            window.opener.postMessage(message, window.location.origin);
+            window.close();
+        } else if (window.parent && window.parent !== window) {
+            window.parent.postMessage(message, window.location.origin);
+        } else {
+            localStorage.setItem('flutter-web-auth-2', window.location.href);
+            window.close();
+        }
+    }
+
+    postAuthenticationMessage();
 </script>
 ```
 
 ### iOS
 
-Add app name and **Bundle ID**. Set iOS Deployment Target to iOS >= 11 in XCode.
+Add app name and **Bundle ID**. Set iOS Deployment Target to iOS >= 13 in XCode.
 
 ### Android
 
-Add app name and package name (`applicationId` from `build.gradle`). Add callback activity to `AndroidManifest.xml`:
+Add app name and package name (`applicationId` from `build.gradle`). The SDK needs `minSdk` 24 or later and core library desugaring. Add both to `android/app/build.gradle.kts`:
+
+```kotlin
+android {
+    defaultConfig {
+        minSdk = 24
+    }
+    compileOptions {
+        isCoreLibraryDesugaringEnabled = true
+    }
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+}
+```
+
+Add callback activity to `AndroidManifest.xml`:
 
 ```xml
-<activity android:name="com.linusu.flutter_web_auth_2.CallbackActivity" android:exported="true">
+<activity
+  android:name="com.linusu.flutter_web_auth_2.CallbackActivity"
+  android:exported="true"
+  android:taskAffinity="">
   <intent-filter android:label="flutter_web_auth_2">
     <action android:name="android.intent.action.VIEW" />
     <category android:name="android.intent.category.DEFAULT" />
@@ -66,27 +96,16 @@ Add app name and package name (from `pubspec.yaml`).
 
 ### macOS
 
-Add app name and **Bundle ID**. Set macOS Deployment Target to >= 10.15 in XCode. Add URL scheme to `Info.plist`:
+Add app name and **Bundle ID**. Set macOS Deployment Target to >= 10.15 in XCode. Allow outgoing network requests by adding this key to both `macos/Runner/DebugProfile.entitlements` and `macos/Runner/Release.entitlements`:
 
 ```xml
-<key>CFBundleURLTypes</key>
-<array>
-<dict>
-    <key>CFBundleTypeRole</key>
-    <string>Editor</string>
-    <key>CFBundleURLName</key>
-    <string>io.appwrite</string>
-    <key>CFBundleURLSchemes</key>
-    <array>
-        <string>appwrite-callback-<PROJECT_ID></string>
-    </array>
-</dict>
-</array>
+<key>com.apple.security.network.client</key>
+<true/>
 ```
 
 ## Step 3: Install Appwrite SDK
 
-- Run: `flutter pub add appwrite:17.0.0`
+- Run: `flutter pub add appwrite:28.0.0`
 
 ## Step 4: Import and Initialize Appwrite
 
@@ -251,4 +270,4 @@ The page displays:
 
 - A running Flutter app with working Appwrite auth (register/login/logout)
 - Files created/updated: `pubspec.yaml` (deps), `lib/main.dart`
-- Platform-specific files if applicable: `web/auth.html` (Web), `AndroidManifest.xml` (Android), `Info.plist` (macOS)
+- Platform-specific files if applicable: `web/auth.html` (Web), `build.gradle.kts` and `AndroidManifest.xml` (Android), `*.entitlements` (macOS)

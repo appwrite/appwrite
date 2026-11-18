@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
+use Appwrite\Auth\Key;
 use Appwrite\Bus\Events\RuleCreated;
 use Appwrite\Certificates\Certificates;
 use Appwrite\Deployment\Deployments;
@@ -27,6 +28,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
+use Appwrite\Vcs\Validator\Directory;
 use Utopia\Abuse\Adapter\TimeLimit;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
@@ -34,7 +36,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
 use Utopia\Http\Request;
@@ -86,7 +88,7 @@ class Create extends Base
                     )
                 ],
             ))
-            ->param('functionId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
+            ->param('functionId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Function ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
             ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.', enum: new Enum(name: 'Runtime'))
             ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
@@ -101,8 +103,8 @@ class Create extends Base
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the function.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function.', true)
-            ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
-            ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
+            ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, no comments or checks are posted to commits and pull requests.', true)
+            ->param('providerRootDirectory', '', new Directory(), 'Path to function code in the linked repo.', true)
             ->param('providerBranches', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
             ->param('providerPaths', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
             ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan, 'buildSpecifications'), fn (array $plan) => new Specification(
@@ -120,10 +122,14 @@ class Create extends Base
             ), 'Runtime specification for the function executions.', true, ['plan'], example: 's-1vcpu-512mb')
             ->param('templateRepository', '', new Text(128, 0), 'Repository name of the template.', true, deprecated: true)
             ->param('templateOwner', '', new Text(128, 0), 'The name of the owner of the template.', true, deprecated: true)
-            ->param('templateRootDirectory', '', new Text(128, 0), 'Path to function code in the template repo.', true, deprecated: true)
+            ->param('templateRootDirectory', '', new Directory(), 'Path to function code in the template repo.', true, deprecated: true)
             ->param('templateVersion', '', new Text(128, 0), 'Version (tag) for the repo linked to the function template.', true, deprecated: true)
-            ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
+            ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 keeps all deployments unless the server applies a default retention.', true)
             ->param('interval', 0, new Range(0, Database::MAX_INT), 'Minutes between scheduled executions. Appwrite picks when within each interval the function runs. Use 0 to disable. Cannot be combined with schedule.', true)
+            ->param('description', '', new Text(1024, 0), 'Optional description for the function.', true)
+            ->param('providerComments', true, new Boolean(), 'Post a build summary on pull requests for the repo linked to the function. Commit statuses are still reported when disabled. Ignored in silent mode.', true)
+            ->param('providerDeployments', true, new Boolean(), 'Deploy every push that matches the branch and path rules for the repo linked to the function. When disabled, deploy manually.', true)
+            ->param('providerStatuses', true, new Boolean(), 'Report the build status on each commit for the repo linked to the function. Ignored in silent mode.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('timelimit')
@@ -144,6 +150,7 @@ class Create extends Base
             ->inject('authorization')
             ->inject('bus')
             ->inject('platform')
+            ->inject('apiKey')
             ->callback($this->action(...));
     }
 
@@ -175,6 +182,10 @@ class Create extends Base
         string $templateVersion,
         int $deploymentRetention,
         int $interval,
+        string $description,
+        bool $providerComments,
+        bool $providerDeployments,
+        bool $providerStatuses,
         Response $response,
         Database $dbForProject,
         callable $timelimit,
@@ -194,8 +205,13 @@ class Create extends Base
         RepositoryWebhooks $repositoryWebhooks,
         Authorization $authorization,
         Bus $bus,
-        array $platform
+        array $platform,
+        ?Key $apiKey,
     ) {
+        if ($apiKey !== null && !$apiKey->mayGrant($scopes)) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'An API key cannot grant scopes it does not hold.');
+        }
+
         $schedule ??= '';
 
         if ($schedule !== '' && $interval !== 0) {
@@ -232,7 +248,7 @@ class Create extends Base
 
         $abuseCheck();
 
-        $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
+        $functionId = ($functionId == 'unique()') ? Id::unique() : $functionId;
 
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
 
@@ -254,6 +270,11 @@ class Create extends Base
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
         }
 
+        if (!empty($providerRepositoryId)) {
+            $providerAdapter = $vcsFactory->fromInstallation($installation);
+            [$owner, $repositoryName] = $this->resolveInstallationRepository($providerAdapter, $installation, $providerRepositoryId);
+        }
+
         try {
             $function = $dbForProject->createDocument('functions', new Document([
                 '$id' => $functionId,
@@ -262,6 +283,7 @@ class Create extends Base
                 'live' => true,
                 'logging' => $logging,
                 'name' => $name,
+                'description' => $description,
                 'runtime' => $runtime,
                 'deploymentRetention' => $deploymentRetention,
                 'deploymentInternalId' => '',
@@ -276,7 +298,7 @@ class Create extends Base
                 'commands' => $commands,
                 'scopes' => $scopes,
                 'startCommand' => '',
-                'search' => implode(' ', [$functionId, $name, $runtime]),
+                'search' => implode(' ', [$functionId, $name, $description, $runtime]),
                 'version' => 'v5',
                 'installationId' => $installation->getId(),
                 'installationInternalId' => $installation->getSequence(),
@@ -286,6 +308,9 @@ class Create extends Base
                 'providerBranch' => $providerBranch,
                 'providerRootDirectory' => $providerRootDirectory,
                 'providerSilentMode' => $providerSilentMode,
+                'providerComments' => $providerComments,
+                'providerDeployments' => $providerDeployments,
+                'providerStatuses' => $providerStatuses,
                 'providerBranches' => $providerBranches,
                 'providerPaths' => $providerPaths,
                 'buildSpecification' => $buildSpecification,
@@ -318,7 +343,7 @@ class Create extends Base
             $teamId = $project->getAttribute('teamId', '');
 
             $repository = $dbForPlatform->createDocument('repositories', new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 '$permissions' => $this->getPermissions($teamId, $project->getId()),
                 'installationId' => $installation->getId(),
                 'installationInternalId' => $installation->getSequence(),
@@ -332,12 +357,7 @@ class Create extends Base
             ]));
 
             try {
-                $providerAdapter = $vcsFactory->fromInstallation($installation);
-                if (!\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
-                    $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
-                    $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
-                    $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
-                }
+                $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
             } catch (\Throwable $error) {
                 $dbForPlatform->deleteDocument('repositories', $repository->getId());
                 throw $error;
@@ -400,7 +420,7 @@ class Create extends Base
                 $deployment = $deployments->createFromRef(
                     $function,
                     new Document([
-                        '$id' => ID::unique(),
+                        '$id' => Id::unique(),
                         'entrypoint' => $function->getAttribute('entrypoint', ''),
                         'buildCommands' => $function->getAttribute('commands', ''),
                         'startCommand' => $function->getAttribute('startCommand', ''),
@@ -426,11 +446,11 @@ class Create extends Base
 
             $functionsDomain = $platform['functionsDomain'];
             if (!empty($functionsDomain) && isset($deployment) && !$deployment->isEmpty()) {
-                $routeSubdomain = ID::unique();
+                $routeSubdomain = Id::unique();
                 $domain = "{$routeSubdomain}.{$functionsDomain}";
                 // TODO: (@Meldiron) Remove after 1.7.x migration
                 $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
-                $ruleId = $isMd5 ? md5($domain) : ID::unique();
+                $ruleId = $isMd5 ? md5($domain) : Id::unique();
 
                 $rule = $authorization->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([

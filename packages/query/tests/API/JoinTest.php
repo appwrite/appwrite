@@ -75,24 +75,145 @@ class JoinTest extends TestCase
      * @param  Closure(string, string, list<Query>): Query  $factory
      */
     #[DataProvider('conditionedJoins')]
-    public function testConditionedJoinRequiresAlias(Method $method, Closure $factory): void
+    public function testConditionedJoinWithoutAliasIsReadUnderItsCollection(Method $method, Closure $factory): void
     {
-        $this->expectException(ValidationException::class);
-        $this->expectExceptionMessage('Join alias is required: ' . $method->value . ' orders');
+        $on = Query::on('users.id', 'orders.user_id');
 
-        $factory('orders', '', [Query::on('users.id', 'orders.user_id')]);
+        $query = $factory('orders', '', [$on]);
+
+        $this->assertSame($method, $query->getMethod());
+        $this->assertSame('orders', $query->getAttribute());
+        $this->assertSame('orders', $query->getAlias());
+        $this->assertTrue($query->isAliasDefaulted());
+        $this->assertSame([$on], $query->getJoinOnQueries());
     }
 
     /**
      * @param  Closure(string, string): Query  $factory
      */
     #[DataProvider('unconditionedJoins')]
-    public function testUnconditionedJoinRequiresAlias(Method $method, Closure $factory): void
+    public function testUnconditionedJoinWithoutAliasIsReadUnderItsCollection(Method $method, Closure $factory): void
+    {
+        $query = $factory('colors', '');
+
+        $this->assertSame($method, $query->getMethod());
+        $this->assertSame('colors', $query->getAlias());
+        $this->assertTrue($query->isAliasDefaulted());
+        $this->assertSame([], $query->getValues());
+    }
+
+    /**
+     * @param  Closure(string, string, list<Query>): Query  $factory
+     */
+    #[DataProvider('conditionedJoins')]
+    public function testConditionedJoinWithAliasIsNotDefaulted(Method $method, Closure $factory): void
+    {
+        $this->assertFalse($factory('orders', 'ord', [Query::on('users.id', 'ord.user_id')])->isAliasDefaulted());
+    }
+
+    /**
+     * @param  Closure(string, string): Query  $factory
+     */
+    #[DataProvider('unconditionedJoins')]
+    public function testUnconditionedJoinWithAliasIsNotDefaulted(Method $method, Closure $factory): void
+    {
+        $this->assertFalse($factory('colors', 'c')->isAliasDefaulted());
+    }
+
+    public function testJoinAliasedAsItsCollectionCountsAsDefaulted(): void
+    {
+        $this->assertTrue(Query::join('orders', 'orders', [Query::on('users.id', 'orders.user_id')])->isAliasDefaulted());
+    }
+
+    public function testQueriesOtherThanJoinsAreNeverDefaulted(): void
+    {
+        $this->assertFalse(Query::count('total', 'total')->isAliasDefaulted());
+        $this->assertFalse(new Query(Method::Equal, 'status', ['paid'], 'status')->isAliasDefaulted());
+    }
+
+    public function testBuilderJoinWithoutAliasStaysUnaliased(): void
+    {
+        $query = new Query(Method::Join, 'orders', [Query::on('users.id', 'orders.user_id')]);
+
+        $this->assertSame('', $query->getAlias());
+        $this->assertFalse($query->isAliasDefaulted());
+        $this->assertSame('JOIN `orders` ON `users`.`id` = `orders`.`user_id`', $query->compile(new MySQL()));
+    }
+
+    public function testDefaultedJoinCompilesUnderItsCollection(): void
+    {
+        $this->assertSame(
+            'JOIN `orders` AS `orders` ON `users`.`id` = `orders`.`user_id`',
+            Query::join('orders', '', [Query::on('users.id', 'orders.user_id')])->compile(new MySQL()),
+        );
+        $this->assertSame('CROSS JOIN `colors` AS `colors`', Query::crossJoin('colors', '')->compile(new MySQL()));
+    }
+
+    /**
+     * A consumer may point the join at another table after it is built, as Appwrite points a
+     * public collection ID at its internal table. The alias and the defaulted state stay with the
+     * name the caller gave, so rows are never keyed by the internal table.
+     */
+    public function testDefaultedAliasSurvivesRenamingTheCollection(): void
+    {
+        $query = Query::join('orders', '', [Query::on('users.id', 'orders.user_id')]);
+
+        $renamed = (clone $query)->setAttribute('database_1_collection_7');
+
+        $this->assertSame('orders', $renamed->getAlias());
+        $this->assertTrue($renamed->isAliasDefaulted());
+        $this->assertSame('orders', $renamed->toArray()['alias']);
+    }
+
+    /**
+     * The serialized form carries the alias itself, so a join serialized after its collection was
+     * renamed is parsed under the same alias, and read as an alias given explicitly.
+     */
+    public function testRenamedJoinSerializesItsAliasExplicitly(): void
+    {
+        $renamed = (clone Query::join('orders', '', [Query::on('users.id', 'orders.user_id')]))->setAttribute('database_1_collection_7');
+
+        $parsed = Query::parseQuery($renamed->toArray());
+
+        $this->assertSame('database_1_collection_7', $parsed->getAttribute());
+        $this->assertSame('orders', $parsed->getAlias());
+        $this->assertFalse($parsed->isAliasDefaulted());
+    }
+
+    /**
+     * An unaliased builder join has no alias to serialize, so parsing it back reads it under its
+     * collection like any join given no alias.
+     */
+    public function testBuilderJoinWithoutAliasParsesUnderItsCollection(): void
+    {
+        $parsed = Query::parseQuery(new Query(Method::Join, 'orders', [Query::on('users.id', 'orders.user_id')])->toArray());
+
+        $this->assertSame('orders', $parsed->getAlias());
+        $this->assertTrue($parsed->isAliasDefaulted());
+    }
+
+    /**
+     * @param  Closure(string, string, list<Query>): Query  $factory
+     */
+    #[DataProvider('conditionedJoins')]
+    public function testConditionedJoinWithoutAliasOrCollectionIsRejected(Method $method, Closure $factory): void
     {
         $this->expectException(ValidationException::class);
-        $this->expectExceptionMessage('Join alias is required: ' . $method->value . ' colors');
+        $this->expectExceptionMessage('Join alias is required: ' . $method->value . ' ');
 
-        $factory('colors', '');
+        $factory('', '', [Query::on('users.id', 'orders.user_id')]);
+    }
+
+    /**
+     * @param  Closure(string, string): Query  $factory
+     */
+    #[DataProvider('unconditionedJoins')]
+    public function testUnconditionedJoinWithoutAliasOrCollectionIsRejected(Method $method, Closure $factory): void
+    {
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Join alias is required: ' . $method->value . ' ');
+
+        $factory('', '');
     }
 
     /**
@@ -342,14 +463,77 @@ class JoinTest extends TestCase
         $this->assertSame('c', $parsed->getAlias());
     }
 
-    public function testParseRejectsJoinWithoutAlias(): void
+    /**
+     * @return array<string, array{array<string, mixed>, Method, list<array<string, mixed>>}>
+     */
+    public static function joinsWithoutAlias(): array
+    {
+        $on = Query::on('users.id', 'orders.user_id')->toArray();
+
+        return [
+            'nested ON form' => [['method' => 'join', 'attribute' => 'orders', 'values' => [$on]], Method::Join, [$on]],
+            'empty alias property' => [['method' => 'leftJoin', 'attribute' => 'orders', 'alias' => '', 'values' => [$on]], Method::LeftJoin, [$on]],
+            'empty legacy alias first' => [['method' => 'rightJoin', 'attribute' => 'orders', 'values' => ['', $on]], Method::RightJoin, [$on]],
+            'column form' => [['method' => 'join', 'attribute' => 'orders', 'values' => ['users.id', '=', 'orders.user_id']], Method::Join, [$on]],
+            'column form with an empty alias' => [['method' => 'fullOuterJoin', 'attribute' => 'orders', 'values' => ['users.id', '=', 'orders.user_id', '']], Method::FullOuterJoin, [$on]],
+            'crossJoin' => [['method' => 'crossJoin', 'attribute' => 'orders', 'values' => []], Method::CrossJoin, []],
+            'crossJoin with an empty legacy alias' => [['method' => 'crossJoin', 'attribute' => 'orders', 'values' => ['']], Method::CrossJoin, []],
+            'naturalJoin' => [['method' => 'naturalJoin', 'attribute' => 'orders'], Method::NaturalJoin, []],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $array
+     * @param  list<array<string, mixed>>  $on
+     */
+    #[DataProvider('joinsWithoutAlias')]
+    public function testParsedJoinWithoutAliasIsReadUnderItsCollection(array $array, Method $method, array $on): void
+    {
+        $parsed = Query::parseQuery($array);
+
+        $this->assertSame($method, $parsed->getMethod());
+        $this->assertSame('orders', $parsed->getAttribute());
+        $this->assertSame('orders', $parsed->getAlias());
+        $this->assertTrue($parsed->isAliasDefaulted());
+        $this->assertSame($on, $parsed->toArray()['values']);
+    }
+
+    /**
+     * @param  array<string, mixed>  $array
+     * @param  list<array<string, mixed>>  $on
+     */
+    #[DataProvider('joinsWithoutAlias')]
+    public function testParsedJoinWithoutAliasRoundTrips(array $array, Method $method, array $on): void
+    {
+        $parsed = Query::parseQuery($array);
+        $serialized = $parsed->toArray();
+
+        $this->assertSame('orders', $serialized['alias']);
+
+        $fromArray = Query::parseQuery($serialized);
+        $this->assertSame($serialized, $fromArray->toArray());
+        $this->assertTrue($fromArray->isAliasDefaulted());
+
+        $fromString = Query::parse($parsed->toString());
+        $this->assertSame($serialized, $fromString->toArray());
+        $this->assertTrue($fromString->isAliasDefaulted());
+    }
+
+    public function testParsedJoinWithAliasRoundTripsAsNotDefaulted(): void
+    {
+        $parsed = Query::parse(Query::join('orders', 'ord', [Query::on('users.id', 'ord.user_id')])->toString());
+
+        $this->assertSame('ord', $parsed->getAlias());
+        $this->assertFalse($parsed->isAliasDefaulted());
+    }
+
+    public function testParseRejectsJoinWithoutAliasOrCollection(): void
     {
         $this->expectException(ValidationException::class);
-        $this->expectExceptionMessage('Join alias is required: join orders');
+        $this->expectExceptionMessage('Join alias is required: join ');
 
         Query::parseQuery([
             'method' => 'join',
-            'attribute' => 'orders',
             'values' => ['users.id', '=', 'orders.user_id'],
         ]);
     }

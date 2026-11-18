@@ -8,7 +8,6 @@ use Utopia\Abuse\Tests\E2E\Services;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MySQL;
-use Utopia\Database\Adapter\SQL;
 use Utopia\Database\Database as UtopiaDatabase;
 
 final class Database extends Base
@@ -31,7 +30,14 @@ final class Database extends Base
             dsn: "mysql:host={$host};port={$port};charset=utf8mb4",
             username: $user,
             password: $password,
-            options: SQL::getPDOAttributes()
+            options: [
+                PDO::ATTR_TIMEOUT => 3,
+                PDO::ATTR_PERSISTENT => true,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_EMULATE_PREPARES => true,
+                PDO::ATTR_STRINGIFY_FETCHES => true,
+            ],
         );
 
         $database = new UtopiaDatabase(new MySQL($pdo), new Cache(new NoCache()));

@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import { useSearch } from '@tanstack/react-router'
 import { AlertCircle, Loader2 } from 'lucide-react'
-import type { Models } from '@appwrite.io/console'
 import { EmbedUnauthorized } from '@/components/pages/player/EmbedUnauthorized'
 import { VideoStreamPlayer } from '@/components/pages/projects/$projectId/videos/_components/player/VideoStreamPlayer'
 import { VideoInspectorProvider } from '@/components/pages/projects/$projectId/videos/_components/player/VideoInspectorContext'
@@ -19,12 +18,13 @@ import {
 import { parseEmbedStartParam } from '@/lib/videos/embed-start-time'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
+import type { Video, VideoRendition } from '@/lib/appwrite/videos'
 
 type EmbedViewProps = {
   videoId: string
   initialData?: {
-    video: Models.Video
-    renditions: Models.VideoRendition[]
+    video: Video
+    renditions: VideoRendition[]
   }
 }
 

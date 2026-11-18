@@ -225,6 +225,7 @@ const IMAGE_GENERATORS: Record<string, (outputDir: string) => Promise<void>> = {
   'announcing-console-iv': convertCoverSourceToAvif,
   'build-support-chatbot-vectorsdb': convertCoverSourceToAvif,
   'announcing-function-intervals': convertCoverSourceToAvif,
+  'announcing-appwrite-helm-chart': convertCoverSourceToAvif,
 }
 
 async function main() {

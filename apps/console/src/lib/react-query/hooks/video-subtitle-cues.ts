@@ -9,8 +9,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
-import { ID, VideoOutput } from '@appwrite.io/console'
-import type { Models } from '@appwrite.io/console'
+import { ID } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
 import {
@@ -28,11 +27,13 @@ import {
   createVideoCaption,
   getCaptionManifestUrl,
   updateVideoCaption,
+  type VideoCaption,
 } from '@/lib/videos/captions'
 import { DEFAULT_STALE_TIME } from './constants'
 import { videoKeys } from './videos'
+import { VideoOutput } from '@/lib/appwrite/videos'
 
-type CaptionSource = Pick<Models.VideoCaption, '$id' | 'bucketId' | 'fileId'>
+type CaptionSource = Pick<VideoCaption, '$id' | 'bucketId' | 'fileId'>
 
 async function fetchCaptionResource(url: string): Promise<string> {
   const response = await fetch(withAdminMode(url), { credentials: 'include' })
@@ -137,7 +138,7 @@ export function useDownloadVideoCaption(
 ) {
   const queryClient = useQueryClient()
   return async (
-    caption: CaptionSource & Pick<Models.VideoCaption, 'name' | 'code'>,
+    caption: CaptionSource & Pick<VideoCaption, 'name' | 'code'>,
     format: SubtitleDownloadFormat,
   ) => {
     const cues = await queryClient.fetchQuery(
@@ -173,7 +174,7 @@ export function useSaveVideoCaptionCues(
       name: string
       code: string
       isDefault: boolean
-    }): Promise<Models.VideoCaption> => {
+    }): Promise<VideoCaption> => {
       const projectSdk = sdk.forProject(projectId!)
       const file = new File(
         [serializeWebVtt(input.cues)],

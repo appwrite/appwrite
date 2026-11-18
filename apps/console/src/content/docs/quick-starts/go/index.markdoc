@@ -55,7 +55,7 @@ go mod init go-appwrite/main
 Install the Go Appwrite SDK.
 
 ```sh
-go get github.com/appwrite/sdk-for-go
+go get github.com/appwrite/sdk-for-go/v7
 ```
 
 {% /section %}
@@ -77,11 +77,11 @@ Create a new file called `app.go`, initialize a function, and initialize the App
 package main
 
 import (
-	"github.com/appwrite/sdk-for-go/appwrite"
-	"github.com/appwrite/sdk-for-go/client"
-	"github.com/appwrite/sdk-for-go/tablesdb"
-	"github.com/appwrite/sdk-for-go/models"
-	"github.com/appwrite/sdk-for-go/query"
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/client"
+	"github.com/appwrite/sdk-for-go/v7/tablesdb"
+	"github.com/appwrite/sdk-for-go/v7/models"
+	"github.com/appwrite/sdk-for-go/v7/query"
 )
 
 var (
@@ -102,7 +102,7 @@ func main() {
 {% /section %}
 {% section #step-5 step=5 title="Initialize database" %}
 
-Once the Appwrite Client is initialized, create a function to configure a todo table. Import the id Appwrite dependency by adding `"github.com/appwrite/sdk-for-go/id"` to the imported dependencies list.
+Once the Appwrite Client is initialized, create a function to configure a todo table. Import the id Appwrite dependency by adding `"github.com/appwrite/sdk-for-go/v7/id"` to the imported dependencies list.
 
 ```go
 func prepareDatabase() {
@@ -272,12 +272,12 @@ package main
 import (
 	"fmt"
 
-	"github.com/appwrite/sdk-for-go/appwrite"
-	"github.com/appwrite/sdk-for-go/client"
-	"github.com/appwrite/sdk-for-go/tablesdb"
-	"github.com/appwrite/sdk-for-go/id"
-	"github.com/appwrite/sdk-for-go/models"
-	"github.com/appwrite/sdk-for-go/query"
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/client"
+	"github.com/appwrite/sdk-for-go/v7/tablesdb"
+	"github.com/appwrite/sdk-for-go/v7/id"
+	"github.com/appwrite/sdk-for-go/v7/models"
+	"github.com/appwrite/sdk-for-go/v7/query"
 )
 
 var (

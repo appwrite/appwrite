@@ -3,9 +3,12 @@
 namespace Utopia\Usage\Adapter;
 
 use Exception;
+use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Index;
 use Utopia\Database\Query as DatabaseQuery;
 use Utopia\Query\Method;
 use Utopia\Query\Query;
@@ -45,7 +48,7 @@ class Database extends SQL
             }
 
             $collectionName = $this->collection ?? 'usage';
-            if ($this->db->getCollection($collectionName)->isEmpty()) {
+            if ($this->db->findCollection($collectionName) === null) {
                 return [
                     'healthy' => false,
                     'database' => $databaseName,
@@ -76,53 +79,66 @@ class Database extends SQL
 
         // Event schema is a superset of the gauge schema for the dimensions
         // that exist in both (resourceId, resourceInternalId, teamId,
-        // teamInternalId), so a single Database collection backed by the
-        // event schema works for both types. Gauge-only columns (ordinal)
-        // are appended below.
-        $attributes = $this->getAttributeDocuments('event');
-        $indexDocs = $this->getIndexDocuments('event');
+        // teamInternalId, ordinal), so a single Database collection backed
+        // by the event schema works for both types.
+        $attributes = $this->getAttributeDocuments(Usage::TYPE_EVENT);
+        $indexes = $this->getIndexDocuments(Usage::TYPE_EVENT);
 
         // Append a `type` column so a single collection can disambiguate event vs gauge rows.
         // ClickHouse uses separate tables instead, so this lives in the Database adapter only.
-        $attributes[] = new Document([
-            '$id' => 'type',
-            'type' => 'string',
-            'size' => 16,
-            'required' => false,
-            'signed' => true,
-            'array' => false,
-            'filters' => [],
-        ]);
-        $indexDocs[] = new Document([
-            '$id' => 'index-type',
-            'type' => 'key',
-            'attributes' => ['type'],
-        ]);
-
-        // Gauge-only replica ordinal dimension.
-        $attributes[] = new Document([
-            '$id' => 'ordinal',
-            'type' => 'string',
-            'size' => 255,
-            'required' => false,
-            'signed' => true,
-            'array' => false,
-            'filters' => [],
-        ]);
-        $indexDocs[] = new Document([
-            '$id' => 'index-ordinal',
-            'type' => 'key',
-            'attributes' => ['ordinal'],
-        ]);
+        $attributes[] = Attribute::string(key: 'type', size: 16);
+        $indexes[] = Index::key(key: 'index-type', attributes: ['type']);
 
         try {
-            $this->db->createCollection(
-                $this->collection,
-                $attributes,
-                $indexDocs
-            );
+            $this->db->createCollection(Collection::create(
+                id: $this->collection,
+                attributes: $attributes,
+                indexes: $indexes,
+            ));
+
+            return;
         } catch (DuplicateException) {
-            // Collection already exists
+            // Created by an earlier setup(); bring it up to date below.
+        }
+
+        $this->addMissing($attributes, $indexes);
+    }
+
+    /**
+     * Bring a collection created by an earlier schema up to date. Attributes
+     * come first, since a new index may cover a new attribute.
+     *
+     * @param list<Attribute> $attributes
+     * @param list<Index> $indexes
+     */
+    private function addMissing(array $attributes, array $indexes): void
+    {
+        $collection = $this->db->getCollection($this->collection);
+
+        $existing = \array_map(static fn (Attribute $attribute): string => $attribute->key, $collection->attributes());
+        foreach ($attributes as $attribute) {
+            if (\in_array($attribute->key, $existing, true)) {
+                continue;
+            }
+
+            try {
+                $this->db->createAttribute($this->collection, $attribute);
+            } catch (DuplicateException) {
+                // A concurrent setup() added it first.
+            }
+        }
+
+        $existing = \array_map(static fn (Index $index): string => $index->key, $collection->indexes());
+        foreach ($indexes as $index) {
+            if (\in_array($index->key, $existing, true)) {
+                continue;
+            }
+
+            try {
+                $this->db->createIndex($this->collection, $index);
+            } catch (DuplicateException) {
+                // A concurrent setup() added it first.
+            }
         }
     }
 
@@ -444,11 +460,9 @@ class Database extends SQL
                     }
                     break;
                 case Method::Contains:
-                    /** @var array<array<int|string, mixed>|bool|float|int|string> $values */
-                    $dbQueries[] = DatabaseQuery::contains($attribute, $values);
+                    $dbQueries[] = DatabaseQuery::containsString($attribute, $values);
                     break;
                 case Method::ContainsAny:
-                    /** @var array<array<int|string, mixed>|bool|float|int|string> $values */
                     $dbQueries[] = DatabaseQuery::containsAny($attribute, $values);
                     break;
                 case Method::IsNull:

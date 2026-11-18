@@ -6,11 +6,14 @@ namespace Utopia\NATS\Transport;
 
 use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\TimeoutException;
+use Utopia\NATS\Exception\TlsException;
 
-final class TcpTransport implements Transport
+final class TcpTransport implements Pollable, Transport
 {
     /** @var resource|null */
     private $stream;
+
+    private ?Probe $probe = null;
 
     public function connect(string $host, int $port, float $timeout): void
     {
@@ -38,6 +41,7 @@ final class TcpTransport implements Transport
         stream_set_blocking($stream, true);
         $this->setTimeout($stream, $timeout);
         $this->stream = $stream;
+        $this->probe = new Probe($stream);
     }
 
     public function write(string $data): int
@@ -83,15 +87,12 @@ final class TcpTransport implements Transport
 
         $data = @fread($stream, $maxBytes);
 
-        if ($data === false) {
-            if ($this->isTimedOut()) {
+        if ($data === false || $data === '') {
+            // A hooked read reports its timeout as '' rather than false.
+            if ($this->isTimedOut() || ($data === '' && !$this->isAtEof())) {
                 throw new TimeoutException('Read timed out');
             }
-            throw new ConnectionException('Failed to read from socket');
-        }
-
-        if ($data === '' && $this->isAtEof()) {
-            throw new ConnectionException('Connection closed by server');
+            throw new ConnectionException($data === '' ? 'Connection closed by server' : 'Failed to read from socket');
         }
 
         return $data;
@@ -149,10 +150,13 @@ final class TcpTransport implements Transport
             }
         }
 
+        error_clear_last();
         $result = @stream_socket_enable_crypto($stream, true, STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT | STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT);
 
         if ($result !== true) {
-            throw new ConnectionException('Failed to upgrade connection to TLS');
+            $reason = error_get_last()['message'] ?? 'no reason given';
+            $this->close();
+            throw new TlsException("Failed to upgrade connection to TLS: {$reason}");
         }
     }
 
@@ -161,8 +165,18 @@ final class TcpTransport implements Transport
         return \is_resource($this->stream) && !feof($this->stream);
     }
 
+    public function poll(): bool
+    {
+        if (!\is_resource($this->stream)) {
+            return true;
+        }
+
+        return ($this->probe ??= new Probe($this->stream))->ready();
+    }
+
     public function close(): void
     {
+        $this->probe = null;
         if ($this->stream !== null) {
             @fclose($this->stream);
             $this->stream = null;

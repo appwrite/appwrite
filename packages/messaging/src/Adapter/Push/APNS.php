@@ -52,7 +52,7 @@ class APNS extends PushAdapter
             $payload['aps']['alert']['body'] = $message->getBody();
         }
         if (!\is_null($message->getData())) {
-            $payload['aps']['data'] = $message->getData();
+            $payload['data'] = $message->getData();
         }
         if (!\is_null($message->getAction())) {
             $payload['aps']['category'] = $message->getAction();
@@ -75,11 +75,29 @@ class APNS extends PushAdapter
         if (!\is_null($message->getContentAvailable())) {
             $payload['aps']['content-available'] = (int) $message->getContentAvailable();
         }
+        if (!\is_null($message->getMutableContent())) {
+            $payload['aps']['mutable-content'] = (int) $message->getMutableContent();
+        }
+
+        $priority = null;
         if (!\is_null($message->getPriority())) {
-            $payload['headers']['apns-priority'] = match ($message->getPriority()) {
+            $priority = match ($message->getPriority()) {
                 Priority::HIGH => '10',
                 Priority::NORMAL => '5',
             };
+        }
+
+        // No user-facing content means a background push: Apple requires type background, priority 5,
+        // and content-available (and rejects an alert push that carries no alert).
+        $background = \is_null($message->getTitle())
+            && \is_null($message->getBody())
+            && \is_null($message->getSound())
+            && \is_null($message->getCritical())
+            && \is_null($message->getBadge());
+        $pushType = $background ? 'background' : 'alert';
+        if ($background) {
+            $priority = '5';
+            $payload['aps']['content-available'] = 1;
         }
 
         $claims = [
@@ -101,9 +119,27 @@ class APNS extends PushAdapter
             $endpoint = 'https://api.development.push.apple.com';
         }
 
+        // Results map back by request index, not by what the URL path appears to name
+        $tokens = \array_values($message->getTo());
         $urls = [];
-        foreach ($message->getTo() as $token) {
-            $urls[] = $endpoint . '/3/device/' . $token;
+        foreach ($tokens as $token) {
+            $urls[] = $endpoint . '/3/device/' . \rawurlencode($token);
+        }
+
+        $headers = [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $jwt,
+            'apns-topic: ' . $this->bundleId,
+            'apns-push-type: ' . $pushType,
+        ];
+        if (!\is_null($priority)) {
+            $headers[] = 'apns-priority: ' . $priority;
+        }
+        // A later push with the same tag replaces the earlier one on the device. APNs refuses a
+        // collapse ID over 64 bytes, so a longer tag is left out rather than failing the push.
+        $tag = $message->getTag();
+        if ($tag !== null && \strlen($tag) <= 64) {
+            $headers[] = 'apns-collapse-id: ' . $tag;
         }
 
         $response = new Response($this->getType());
@@ -111,15 +147,10 @@ class APNS extends PushAdapter
         $this->requestMulti(
             method: 'POST',
             urls: $urls,
-            headers: [
-                'Content-Type: application/json',
-                'Authorization: Bearer ' . $jwt,
-                'apns-topic: ' . $this->bundleId,
-                'apns-push-type: alert',
-            ],
+            headers: $headers,
             bodies: [$payload],
-            onResult: function (array $result) use ($response): void {
-                $device = basename($result['url']);
+            onResult: function (array $result) use ($response, $tokens): void {
+                $device = $tokens[$result['index']];
 
                 if ($result['statusCode'] === 200) {
                     $response->incrementDeliveredTo();
@@ -128,7 +159,8 @@ class APNS extends PushAdapter
                     return;
                 }
 
-                $error = ($result['response']['reason'] ?? null) === 'ExpiredToken' || ($result['response']['reason'] ?? null) === 'BadDeviceToken'
+                // Unregistered: the app was removed from the device, or the token is no longer valid for it.
+                $error = \in_array($result['response']['reason'] ?? null, ['ExpiredToken', 'BadDeviceToken', 'Unregistered'], true)
                     ? $this->getExpiredErrorMessage()
                     : ($result['response']['reason'] ?? ($result['error'] ?: 'Unknown error'));
 

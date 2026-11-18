@@ -1,4 +1,3 @@
-import type { Models } from '@appwrite.io/console'
 import { Link, useNavigate } from '@tanstack/react-router'
 import {
   Table,
@@ -17,6 +16,7 @@ import { formatResolution, formatVideoDuration } from '@/lib/utils/video-format'
 import { useT } from '@/lib/i18n/translate'
 import { VideoContextMenu } from './VideoContextMenu'
 import { VideoThumb } from './VideoThumb'
+import type { Video } from '@/lib/appwrite/videos'
 
 const HEAD_CLASS =
   'px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground'
@@ -25,7 +25,7 @@ const MONO_CELL_CLASS = 'px-4 py-3 font-mono text-[12px] text-muted-foreground'
 
 interface VideosListTableProps {
   projectId: string
-  videos: Models.Video[]
+  videos: Video[]
   selectedVideoIds: Set<string>
   onToggleVideo: (videoId: string) => void
   onToggleAll: () => void

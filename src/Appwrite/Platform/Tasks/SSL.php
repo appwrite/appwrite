@@ -9,7 +9,7 @@ use Utopia\Bus\Bus;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Domains\Domain;
 use Utopia\Platform\Action;
@@ -80,7 +80,7 @@ class SSL extends Action
                 }
             }
 
-            $ruleId = $isMd5 ? md5($domain->get()) : ID::unique();
+            $ruleId = $isMd5 ? md5($domain->get()) : Id::unique();
             $rule = $dbForPlatform->createDocument('rules', new Document([
                 '$id' => $ruleId,
                 'domain' => $domain->get(),

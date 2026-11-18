@@ -1,6 +1,6 @@
-import { VideoOutput } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getCaptionManifestUrl } from '@/lib/videos/captions'
+import { VideoOutput } from '@/lib/appwrite/videos'
 
 export type VideoMasterManifestKind = 'hls' | 'dash' | 'cmaf-hls' | 'cmaf-dash'
 

@@ -19,6 +19,9 @@ class RecordingAdapter extends Adapter
 
     public bool $succeed = true;
 
+    /** Number of further batch writes to accept before the next one throws once. */
+    public ?int $throwAfter = null;
+
     public function getName(): string
     {
         return 'recording';
@@ -41,10 +44,22 @@ class RecordingAdapter extends Adapter
      */
     public function addBatch(array $metrics, string $type, int $batchSize = 1000): bool
     {
-        if ($this->succeed) {
-            $this->batches[] = ['metrics' => $metrics, 'type' => $type];
+        if (!$this->succeed) {
+            return false;
         }
-        return $this->succeed;
+
+        foreach (\array_chunk($metrics, \max(1, $batchSize)) as $batch) {
+            if ($this->throwAfter === 0) {
+                $this->throwAfter = null;
+                throw new \RuntimeException('Insert failed');
+            }
+            if ($this->throwAfter !== null) {
+                $this->throwAfter--;
+            }
+            $this->batches[] = ['metrics' => $batch, 'type' => $type];
+        }
+
+        return true;
     }
 
     /**
@@ -211,6 +226,36 @@ class AccumulatorTest extends TestCase
         $this->adapter->succeed = true;
         $this->assertTrue($this->accumulator->flush());
         $this->assertEquals(0, $this->accumulator->count());
+    }
+
+    public function testRetryAfterAFailedBatchWritesEveryEntryOnce(): void
+    {
+        for ($i = 0; $i < 2500; $i++) {
+            $this->accumulator->collect('t1', 'requests', 1, Usage::TYPE_EVENT, ['resourceId' => (string) $i]);
+        }
+
+        $this->adapter->throwAfter = 1;
+        try {
+            $this->accumulator->flush();
+            $this->fail('The second batch must fail');
+        } catch (\RuntimeException) {
+        }
+
+        $this->assertSame(1500, $this->accumulator->count(), 'Only the batch that was written leaves the buffer');
+
+        $this->assertTrue($this->accumulator->flush());
+
+        $written = [];
+        foreach ($this->adapter->batches as $batch) {
+            foreach ($batch['metrics'] as $metric) {
+                $tags = $metric['tags'];
+                \assert(\is_array($tags) && \is_string($tags['resourceId']));
+                $written[] = $tags['resourceId'];
+            }
+        }
+        $this->assertCount(2500, $written);
+        $this->assertSame(\array_unique($written), $written, 'No entry may be written twice');
+        $this->assertSame(0, $this->accumulator->count());
     }
 
     public function testFlushEmptyBuffer(): void

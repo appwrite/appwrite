@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
-import type { Models, VideoOutput } from '@appwrite.io/console'
 import { Button } from '@/components/ui/button'
 import { Layers } from 'lucide-react'
 import { toast } from 'sonner'
@@ -42,9 +41,14 @@ import {
   RENDITIONS_DEFAULT_SORT_ORDER,
   type RenditionSortColumn,
 } from '@/lib/videos/rendition-list-filters'
+import type {
+  VideoOutput,
+  VideoRendition,
+  VideoRenditionList,
+} from '@/lib/appwrite/videos'
 
 type ViewProps = {
-  initialData?: { renditions: Models.VideoRenditionList }
+  initialData?: { renditions: VideoRenditionList }
 }
 
 export function View({ initialData }: ViewProps = {}) {
@@ -68,7 +72,7 @@ export function View({ initialData }: ViewProps = {}) {
   const { data } = useVideoRenditions(projectId, videoId)
   const { data: profilesData } = useVideoProfiles(projectId)
   const deleteMutation = useDeleteVideoRendition(projectId, videoId)
-  const [deleting, setDeleting] = useState<Models.VideoRendition | null>(null)
+  const [deleting, setDeleting] = useState<VideoRendition | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [selectedRenditionIds, setSelectedRenditionIds] = useState<Set<string>>(
     new Set(),
@@ -178,7 +182,7 @@ export function View({ initialData }: ViewProps = {}) {
   const clearAllFilters = () => navigateWithQuery(undefined)
 
   const retryMutation = useMutation({
-    mutationFn: async (rendition: Models.VideoRendition) => {
+    mutationFn: async (rendition: VideoRendition) => {
       const videos = sdk.forProject(projectId).videos
       await videos.deleteRendition({ videoId, renditionId: rendition.$id })
       return await videos.createRendition({
@@ -239,7 +243,7 @@ export function View({ initialData }: ViewProps = {}) {
   })
 
   const bulkRetryMutation = useMutation({
-    mutationFn: async (items: Models.VideoRendition[]) => {
+    mutationFn: async (items: VideoRendition[]) => {
       const videos = sdk.forProject(projectId).videos
       await Promise.all(
         items.map(async (rendition) => {

@@ -1,0 +1,74 @@
+---
+layout: integration
+title: Metabase with managed PostgreSQL and MySQL
+description: Explore and chart an Appwrite native PostgreSQL or MySQL database with Metabase questions and dashboards
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/sql-metabase/cover.avif
+category: databases
+product:
+    vendor: Metabase
+    description: 'Metabase is an open-source business intelligence tool for asking questions about your data and sharing dashboards.'
+platform:
+    - 'Cloud'
+---
+
+[Metabase](https://www.metabase.com/) is an open-source business intelligence tool. It syncs your database schema, lets your team build questions with a visual editor or native SQL, and turns them into shared dashboards.
+
+# How does the integration work?
+
+Appwrite native PostgreSQL and MySQL databases are standard engines that Appwrite provisions in your project's region, each with its own hostname, credentials, and TLS. Metabase connects to them through its built-in PostgreSQL and MySQL drivers without an Appwrite-specific adapter, then syncs tables and columns so they appear in the data picker.
+
+Metabase keeps database sessions open, so it connects to the direct engine port or a session-mode pooler rather than the default transaction-mode pooler.
+
+{% info title="Available on Appwrite Cloud" %}
+Native PostgreSQL and MySQL databases run in every Appwrite Cloud region and are available on paid plans.
+{% /info %}
+
+# How to implement
+
+To connect Metabase to an Appwrite native database, there are several steps you must complete:
+
+## Step 1: Create a native database
+
+[Create an account on Appwrite Cloud](/sign-up) if you haven't already. In your project, go to **Databases**, click **Create database**, and select **PostgreSQL** or **MySQL** from the **Native databases** group. Pick a specification and click **Create database**. The database becomes `ready` within a few minutes.
+
+For PostgreSQL, open the database and click **Credentials** to copy the host and database name from the **Details** tab. For MySQL, read them from the database object with `mysql.get()` and an API key that has the `databases.read` scope.
+
+## Step 2: Choose credentials for Metabase
+
+On PostgreSQL, don't connect as `admin`, which owns the database and can change the schema. Create a read-only role from the database's **Roles** tab in the Console, then grant it `CONNECT`, `USAGE` on the schemas you want to expose, and `SELECT` on their tables and views from the SQL editor or `psql`.
+
+On MySQL, Metabase connects with the `admin.<hash>` user, which can read and write data and can't grant reduced privileges to other accounts. Reserve it for trusted Metabase instances, keep dashboards on read-only questions, and use Metabase permissions to limit who can run native SQL.
+
+## Step 3: Add the database in Metabase
+
+In Metabase, open **Admin** > **Databases** > **Add a database**, choose **PostgreSQL** or **MySQL**, and fill in the form:
+
+| Field | PostgreSQL | MySQL |
+| --- | --- | --- |
+| Host | `db-<hash>.<region>.appwrite.center` | `db-<hash>.<region>.appwrite.center` |
+| Port | `5432` | `3306` |
+| Database name | `<database>` | `default` |
+| Username | Your read-only role | `admin.<hash>` |
+| Password | The role's password | `<password>` |
+
+Turn on **Use a secure connection (SSL)**, because Appwrite Cloud requires TLS. On PostgreSQL, set **SSL Mode** to `require`. The `verify-ca` and `verify-full` modes also need a root certificate in PEM format. Click **Save changes**, and Metabase verifies the connection and starts its first schema sync.
+
+## Step 4: Build a question
+
+Once the sync finishes, click **+ New** > **Question**, pick your Appwrite database, choose a table, and add a summary such as a count grouped by a timestamp column. Switch to a line or bar chart, save the question, and add it to a dashboard.
+
+Metabase syncs the schema hourly and scans field values daily by default. To pull in new tables right away, open the database in **Admin** > **Databases** and click **Sync database schema**. To check a dashboard against a snapshot of production data, add a second connection that points at a [PostgreSQL](/docs/products/databases/postgresql/branches) or [MySQL](/docs/products/databases/mysql/branches) branch.
+
+# Read more about Metabase and Appwrite Databases
+
+If you would like to learn more about Metabase and Appwrite Databases, we have some resources that you should visit:
+
+- [Connect Metabase to a native PostgreSQL database](/docs/products/databases/postgresql/integrations/metabase)
+- [Connect Metabase to a native MySQL database](/docs/products/databases/mysql/integrations/metabase)
+- [Managed PostgreSQL on Appwrite](/docs/products/databases/postgresql)
+- [Native MySQL databases on Appwrite](/docs/products/databases/mysql)
+- [Metabase sync and scan documentation](https://www.metabase.com/docs/latest/databases/sync-scan)

@@ -48,6 +48,14 @@ final class CloudflareTest extends TestCase
         $provider->getCertificateStatus('example.com', null);
     }
 
+    public function testCertificateExpiryIsUnknownWithoutAnyRequest(): void
+    {
+        $client = new TestClient([]);
+
+        $this->assertNull(new Cloudflare('zone', 'token', $client)->getCertificateExpiry('example.com', null));
+        $this->assertSame([], $client->calls);
+    }
+
     public function testRejectsMalformedLookup(): void
     {
         $provider = new Cloudflare('zone', 'token', new TestClient([new Response(200, body: new Stream('invalid'))]));

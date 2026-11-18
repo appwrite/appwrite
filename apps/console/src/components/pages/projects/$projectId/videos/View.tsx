@@ -8,7 +8,6 @@ import {
 } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import type { Models } from '@appwrite.io/console'
 import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import {
@@ -62,6 +61,7 @@ import { VideosEmptyState } from './_components/VideosEmptyState'
 import { VideosListTable } from './_components/VideosListTable'
 import { VideoThumb } from './_components/VideoThumb'
 import { getVideosServiceTabs } from './_components/videos-service-tabs'
+import type { Video } from '@/lib/appwrite/videos'
 
 type VideosListSearch = {
   search?: string
@@ -523,13 +523,7 @@ export function View() {
   )
 }
 
-function VideoCard({
-  projectId,
-  video,
-}: {
-  projectId: string
-  video: Models.Video
-}) {
+function VideoCard({ projectId, video }: { projectId: string; video: Video }) {
   const t = useT()
   const meta = [
     video.width > 0 ? formatResolution(video.width, video.height) : null,

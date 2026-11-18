@@ -6,7 +6,6 @@ import {
   useNavigate,
   useParams,
 } from '@tanstack/react-router'
-import type { Models } from '@appwrite.io/console'
 import {
   Check,
   ChevronLeft,
@@ -71,6 +70,8 @@ import {
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import type { Video, VideoRendition } from '@/lib/appwrite/videos'
+import type { VideoCaption } from '@/lib/videos/captions'
 
 const TAB_GROUPS: VideoTabGroup[] = ['video', 'encoding', 'delivery', 'manage']
 
@@ -403,8 +404,8 @@ function SubnavHeader({
   onCreateVideo,
 }: {
   projectId: string
-  video: Models.Video
-  renditions: Models.VideoRendition[]
+  video: Video
+  renditions: VideoRendition[]
   timelineCues?: VideoTimelineCue[]
   onSwitchVideo: (videoId: string) => void
   createDisabled: boolean
@@ -475,9 +476,9 @@ function SubnavLink({
   tab: VideoTabDefinition
   active: boolean
   projectId: string
-  video: Models.Video
-  renditions: Models.VideoRendition[]
-  subtitles: Models.VideoCaption[]
+  video: Video
+  renditions: VideoRendition[]
+  subtitles: VideoCaption[]
   timeline:
     | { url: string; vtt: string; cues: VideoTimelineCue[] }
     | null
@@ -585,8 +586,8 @@ function SubnavTrailing({
   encodingStatus,
 }: {
   tab: VideoTab
-  renditions: Models.VideoRendition[]
-  subtitles: Models.VideoCaption[]
+  renditions: VideoRendition[]
+  subtitles: VideoCaption[]
   timeline:
     | { url: string; vtt: string; cues: VideoTimelineCue[] }
     | null

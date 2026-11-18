@@ -35,6 +35,12 @@ class Webhook extends Model
                 'default' => '',
                 'example' => 'My Webhook',
             ])
+            ->addRule('description', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Optional description for the webhook.',
+                'default' => '',
+                'example' => 'Notifies the billing service about new users.',
+            ])
             ->addRule('url', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Webhook URL endpoint.',
@@ -72,6 +78,7 @@ class Webhook extends Model
             ])
             ->addRule('secret', [
                 'type' => self::TYPE_STRING,
+                'format' => 'password',
                 'description' => 'Signature key which can be used to validate incoming webhook payloads. Only returned on creation and secret rotation.',
                 'default' => '',
                 'example' => 'ad3d581ca230e2b7059c545e5a',

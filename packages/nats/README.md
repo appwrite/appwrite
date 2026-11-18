@@ -62,6 +62,30 @@ $conn = Connection::connect(new ConnectionOptions(
 $conn = Connection::connect('nats://user:pass@127.0.0.1:4222');
 ```
 
+`connect()` makes up to `connectAttempts` passes over the server pool (default 3), pausing
+`connectRetryWait` plus up to `connectRetryJitter` seconds between them (defaults 0.1 and 0.1).
+Behind a load-balanced address such as a Kubernetes Service, a server in lame-duck mode refuses
+new connections while it still receives them, and the next connection usually reaches a live
+one. Only failures a new connection can fix are retried: an authorization violation, a failed
+TLS handshake or a server at its connection limit fails on the first pass. No pass starts after
+`connectTimeout` has elapsed since the call: a server that is timing out is not waited on again,
+and a pause that would end past that point is not taken, so a `connectRetryWait` longer than
+`connectTimeout` leaves a single pass. Set `connectAttempts: 1` for a single pass.
+
+A connection held unread between calls, such as a pooled one, can be closed by the server
+meanwhile: a server entering lame-duck mode sends it an `INFO` and then closes it. `request()`,
+`requestBatch()`, `requestMany()`, `flush()`, `Consumer::fetch()` and `JetStream::publishMany()`
+first act on whatever the server has already sent, so they reconnect (when `allowReconnect` is
+set) or fail before writing, rather than writing into the closed socket. Settling stops once
+nothing is waiting, and after `Connection::SETTLE_TIMEOUT` (50ms) at most, so live subscription
+traffic cannot hold a request back; the call's timeout then covers the wait for the reply.
+`JetStream::publish()`, the key-value store and the object store are covered through `request()`
+and `fetch()`. A connection the server reset is
+caught the same way on every transport but `wss://`, given ext-sockets or Swoole's socket hooks
+(which load ext-sockets themselves). A fire-and-forget `publish()` only writes, so it does not
+settle: call `settle()` before one after a long idle, or before your own write-then-read. Custom
+transports opt in by implementing `Transport\Pollable`.
+
 ### Publishing
 
 ```php

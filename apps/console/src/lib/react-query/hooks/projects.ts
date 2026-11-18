@@ -9,12 +9,12 @@ import {
   useInfiniteQuery,
   useMutation,
   useQueryClient,
-  useQueries,
   queryOptions,
   keepPreviousData,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import {
+  AppwriteException,
   Query,
   ID,
   Status,
@@ -39,6 +39,7 @@ import {
 import {
   ensureFingerprintServerTimeSynced,
   generateFingerprintToken,
+  resetFingerprintCache,
 } from '@/lib/fingerprint'
 import {
   DEFAULT_STALE_TIME,
@@ -191,6 +192,23 @@ export async function fetchProject(projectId: string) {
 }
 
 /**
+ * Query function to fetch the project itself, whatever environment the Console
+ * is in for it
+ *
+ * Inside an environment `fetchProject` answers as the environment: same ID,
+ * the environment's name. This one leaves the environment, for what belongs to
+ * the project and not to any of its environments, starting with its name.
+ *
+ * @param projectId - The project ID
+ * @returns Project data from the API
+ */
+export async function fetchProductionProject(projectId: string) {
+  return sdk
+    .forProject(projectId, undefined, { environment: null })
+    .project.get()
+}
+
+/**
  * Query function to fetch active (non-archived) projects for a team/organization
  *
  * This is extracted so it can be reused in both hooks and route loaders.
@@ -234,7 +252,12 @@ export async function fetchActiveProjects(
       ]
     : []
 
-  const statusQueries = getProjectStatusQueries()
+  // Environments are reached through their project's switcher, not listed beside it.
+  const hideEnvironments = getActiveProfileFeatures().projectEnvironments
+  const statusQueries = [
+    ...getProjectStatusQueries(),
+    ...(hideEnvironments ? [Query.isNull('parentId')] : []),
+  ]
   const trimmedSearch = search?.trim() ?? ''
   const searchQueries = trimmedSearch
     ? [projectListSearchOrQuery(trimmedSearch)]
@@ -267,7 +290,8 @@ export async function fetchActiveProjects(
         direct.teamId === teamId &&
         // Pasting an id must not reveal a project outside the member's scope.
         (!isRestricted || allowedIdSet.has(direct.$id)) &&
-        projectMatchesActiveListStatus(direct)
+        projectMatchesActiveListStatus(direct) &&
+        !(hideEnvironments && direct.parentId)
       ) {
         return {
           projects: page === 0 ? [direct] : [],
@@ -336,6 +360,9 @@ export async function fetchProjectsByIds(
       Query.select(getProjectListSelect()),
       Query.equal('teamId', teamId),
       ...getProjectStatusQueries(),
+      ...(getActiveProfileFeatures().projectEnvironments
+        ? [Query.isNull('parentId')]
+        : []),
       idQuery,
       Query.limit(validIds.length),
     ],
@@ -623,6 +650,7 @@ export function projectsForTeamInfiniteQueryKey(
     search,
     excludeKey,
     projectRestrictionKey(restrictToProjectIds),
+    getActiveProfileFeatures().projectEnvironments,
   ]
 }
 
@@ -636,7 +664,14 @@ export function activeProjectsTotalQueryOptions(
 ) {
   const restrictKey = projectRestrictionKey(restrictToProjectIds)
   return queryOptions({
-    queryKey: ['projects', 'active', 'total', orgId, restrictKey],
+    queryKey: [
+      'projects',
+      'active',
+      'total',
+      orgId,
+      restrictKey,
+      getActiveProfileFeatures().projectEnvironments,
+    ],
     queryFn: () =>
       fetchActiveProjects(orgId!, 0, 1, '', undefined, restrictToProjectIds),
     enabled: !!orgId,
@@ -672,6 +707,7 @@ export function activeProjectsQueryOptions(
       search,
       excludeKey,
       restrictKey,
+      getActiveProfileFeatures().projectEnvironments,
     ],
     queryFn: () =>
       fetchActiveProjects(
@@ -705,7 +741,13 @@ export function pinnedProjectsQueryOptions(
   const idsKey =
     projectIds.length > 0 ? projectIds.slice().sort().join(',') : ''
   return queryOptions({
-    queryKey: ['projects', 'pinned', orgId, idsKey],
+    queryKey: [
+      'projects',
+      'pinned',
+      orgId,
+      idsKey,
+      getActiveProfileFeatures().projectEnvironments,
+    ],
     queryFn: () => fetchProjectsByIds(orgId!, projectIds),
     enabled: !!orgId,
     staleTime: DEFAULT_STALE_TIME,
@@ -729,7 +771,13 @@ export function projectsByIdsQueryOptions(
   const idsKey =
     projectIds.length > 0 ? projectIds.slice().sort().join(',') : ''
   return queryOptions({
-    queryKey: ['projects', 'by-ids', orgId, idsKey],
+    queryKey: [
+      'projects',
+      'by-ids',
+      orgId,
+      idsKey,
+      getActiveProfileFeatures().projectEnvironments,
+    ],
     queryFn: () => fetchProjectsByIds(orgId!, projectIds),
     enabled: !!orgId && projectIds.length > 0,
     staleTime: DEFAULT_STALE_TIME,
@@ -767,6 +815,28 @@ export function projectQueryOptions(projectId: string | null | undefined) {
   return queryOptions({
     queryKey: ['project', projectId],
     queryFn: () => fetchProject(projectId!),
+    enabled: !!projectId,
+    staleTime: LONG_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for the project itself, whatever environment the Console is in
+ *
+ * Keyed under the project's own query so renaming the project refreshes both,
+ * and apart from it so the environment's answer never stands in for it.
+ */
+export function productionProjectQueryOptions(
+  projectId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['project', projectId, 'production'],
+    queryFn: () => fetchProductionProject(projectId!),
     enabled: !!projectId,
     staleTime: LONG_STALE_TIME,
     retry: false,
@@ -825,6 +895,38 @@ export function useProject(projectId: string | undefined) {
   }
 }
 
+/**
+ * Hook to fetch the project an environment belongs to
+ *
+ * Inside an environment `useProject` is the environment, under the project's
+ * ID. This is the project itself, for where the two are told apart: the
+ * breadcrumb, the project list, what a destructive action names.
+ *
+ * @param projectId - The project ID, or undefined outside an environment so no request is made
+ * @returns The project with loading state
+ */
+export function useProductionProject(projectId: string | undefined) {
+  const { data: projectData, isLoading } = useQuery(
+    productionProjectQueryOptions(projectId),
+  )
+
+  const project = useMemo(() => {
+    if (!projectData) return null
+
+    return {
+      $id: projectData.$id,
+      name: projectData.name,
+      teamId: projectData.teamId,
+      region: projectData.region || 'unknown',
+      createdAt: projectData.$createdAt || new Date().toISOString(),
+      icon: projectData.name.charAt(0).toUpperCase(),
+      archived: projectData.status === 'archived',
+    } as Project
+  }, [projectData])
+
+  return { project, projectData, isLoading }
+}
+
 const CONSOLE_FINGERPRINT_HEADER = 'X-Appwrite-Console-Fingerprint'
 
 function normalizeProjectRegion(region?: string | null): string | undefined {
@@ -866,20 +968,35 @@ export function useResumeProject(projectId: string | undefined) {
         headers?: Record<string, string>
         config?: { endpoint?: string; project?: string }
       }
-      await ensureFingerprintServerTimeSynced(
-        client.config?.endpoint ?? '',
-        client.config?.project ?? 'console',
-      )
-      const fingerprint = await generateFingerprintToken()
-      if (client.headers)
-        client.headers[CONSOLE_FINGERPRINT_HEADER] = fingerprint
+      const resume = async () => {
+        await ensureFingerprintServerTimeSynced(
+          client.config?.endpoint ?? '',
+          client.config?.project ?? 'console',
+        )
+        const fingerprint = await generateFingerprintToken()
+        if (client.headers)
+          client.headers[CONSOLE_FINGERPRINT_HEADER] = fingerprint
+        try {
+          await sdk.forConsole.projects.updateStatus({
+            projectId,
+            status: Status.Active,
+          })
+        } finally {
+          if (client.headers) delete client.headers[CONSOLE_FINGERPRINT_HEADER]
+        }
+      }
       try {
-        await sdk.forConsole.projects.updateStatus({
-          projectId,
-          status: Status.Active,
-        })
-      } finally {
-        if (client.headers) delete client.headers[CONSOLE_FINGERPRINT_HEADER]
+        await resume()
+      } catch (error) {
+        if (
+          !(error instanceof AppwriteException) ||
+          error.code !== 401 ||
+          error.message !== 'Invalid console fingerprint'
+        )
+          throw error
+        // Re-sync the clock and re-collect signals, as a page reload would.
+        resetFingerprintCache()
+        await resume()
       }
     },
     onSuccess: async () => {
@@ -928,7 +1045,15 @@ export function useProjectsForTeam(
     error,
     refetch,
   } = useQuery({
-    queryKey: ['projects', 'team', teamId, page, limit, search],
+    queryKey: [
+      'projects',
+      'team',
+      teamId,
+      page,
+      limit,
+      search,
+      getActiveProfileFeatures().projectEnvironments,
+    ],
     queryFn: () => fetchActiveProjects(teamId!, page, limit, search),
     enabled: !!teamId,
     staleTime: DEFAULT_STALE_TIME,
@@ -1261,7 +1386,7 @@ export function platformsQueryOptions(projectId: string | null | undefined) {
     refetchOnReconnect: false,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
     meta: {
-      // Overview / org cards prefetch platforms in the background; never hold the
+      // Project overview prefetches platforms in the background; never hold the
       // fullscreen initial loader for this non-critical call.
       skipInitialLoader: true,
     },
@@ -1294,47 +1419,6 @@ export function usePlatforms(projectId: string | null | undefined) {
     error,
     refetch,
   }
-}
-
-export type ProjectListPlatformsEntry = {
-  isLoading: boolean
-  isError: boolean
-  platforms: Models.PlatformList['platforms']
-  /** Skip fetch / show N/A (e.g. org budget-locked projects). */
-  unavailable?: boolean
-}
-
-/**
- * Fetches platforms for many projects in parallel (org project cards).
- */
-export function useProjectListPlatforms(
-  projectIds: string[],
-  enabled: boolean,
-): Map<string, ProjectListPlatformsEntry> {
-  const uniqueIds = useMemo(
-    () => [...new Set(projectIds.filter(Boolean))],
-    [projectIds],
-  )
-
-  const queries = useQueries({
-    queries: uniqueIds.map((projectId) => ({
-      ...platformsQueryOptions(projectId),
-      enabled: enabled && !!projectId,
-    })),
-  })
-
-  return useMemo(() => {
-    const map = new Map<string, ProjectListPlatformsEntry>()
-    uniqueIds.forEach((projectId, index) => {
-      const query = queries[index]
-      map.set(projectId, {
-        isLoading: query.isPending && !query.data && !query.isError,
-        isError: query.isError,
-        platforms: query.data?.platforms ?? [],
-      })
-    })
-    return map
-  }, [uniqueIds, queries])
 }
 
 /**

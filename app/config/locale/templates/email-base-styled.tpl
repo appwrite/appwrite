@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
     <head>
+        <meta charset="utf-8">
         <link rel="preconnect" href="https://assets.appwrite.io/" crossorigin>
         <meta name="color-scheme" content="light dark">
         <meta name="supported-color-schemes" content="light dark">
@@ -8,30 +9,6 @@
             :root {
                 color-scheme: light dark;
                 supported-color-schemes: light dark;
-            }
-
-            @media (prefers-color-scheme: dark ) {
-                body {
-                    color: #616b7c !important;
-                    background-color: #ffffff !important;
-                }
-                a {
-                    color: currentColor !important;
-                }
-                a.button {
-                    color: #ffffff !important;
-                    background-color: {{accentColor}} !important;
-                    border-color: {{accentColor}} !important;
-                }
-                h1, h2, h3 {
-                    color: #373b4d !important;
-                }
-                h4 {
-                    color: #4f5769 !important;
-                }
-                p.security-phrase:not(:empty), hr {
-                    border-color: #e8e9f0 !important;
-                }
             }
         </style>
         <style>
@@ -52,6 +29,10 @@
             }
         </style>
         <style>
+            body {
+                margin: 0;
+                background-color: #ffffff;
+            }
             @media (max-width:500px) {
                 .mobile-full-width {
                     width: 100%;
@@ -92,9 +73,10 @@
             }
             h1 {
                 font-size: 22px;
+                font-weight: 500;
                 margin-bottom: 0px;
                 margin-top: 0px;
-                color: #373b4d;
+                color: #19191c;
             }
             h2 {
                 font-size: 20px;
@@ -125,7 +107,8 @@
         <style>
             a.button {
                 display: inline-block;
-                background: {{accentColor}};
+                background-color: {{accentColor}};
+                background-image: linear-gradient({{accentColor}}, {{accentColor}});
                 color: #ffffff;
                 border-radius: 8px;
                 height: 48px;
@@ -150,19 +133,6 @@
                     width: 100%;
                 }
             }
-            .social-icon {
-                border-radius: 6px;
-                background: rgba(216, 216, 219, 0.1);
-                width: 32px;
-                height: 32px;
-                line-height: 32px;
-                display: flex; 
-                align-items: center; 
-                justify-content: center;
-            }
-            .social-icon > img {
-                margin: auto;
-            }
             p.security-phrase:not(:empty) {
                 opacity: 0.7;
                 margin: 0;
@@ -170,6 +140,40 @@
                 margin-top: 32px;
                 padding-top: 32px;
                 border-top: 1px solid #e8e9f0;
+            }
+            .dark-only {
+                display: none;
+                mso-hide: all;
+            }
+            @media (prefers-color-scheme: dark) {
+                body, .main {
+                    background-color: #19191c !important;
+                    color: #adadb0 !important;
+                }
+                h1 {
+                    color: #ededf0 !important;
+                }
+                h2, h3 {
+                    color: #d8d8db !important;
+                }
+                h4 {
+                    color: #c3c3c6 !important;
+                }
+                hr, .divider, p.security-phrase:not(:empty) {
+                    border-color: #2d2d31 !important;
+                }
+                .light-only {
+                    display: none !important;
+                }
+                .dark-only {
+                    display: block !important;
+                }
+            }
+            [data-ogsc] .light-only {
+                display: none !important;
+            }
+            [data-ogsc] .dark-only {
+                display: block !important;
             }
         </style>
     </head>
@@ -185,10 +189,20 @@
                 <tr>
                     <td>
                         <img
-                            height="26px"
+                            class="light-only"
+                            height="26"
                             src="{{logoUrl}}"
                             alt="{{platform}} logo"
+                            style="display: block; border: 0"
                         />
+                        <div class="dark-only" style="display: none; mso-hide: all">
+                            <img
+                                height="26"
+                                src="{{logoDarkUrl}}"
+                                alt="{{platform}} logo"
+                                style="border: 0"
+                            />
+                        </div>
                     </td>
                 </tr>
             </table>
@@ -210,6 +224,7 @@
             </table>
 
             <table
+                class="divider"
                 style="
                     padding-top: 32px;
                     margin-top: 32px;
@@ -224,29 +239,13 @@
             <table style="width: auto; margin: 0 auto">
                 <tr>
                     <td style="padding-left: 4px; padding-right: 4px">
-                        <a
-                            href="{{twitter}}"
-                            class="social-icon"
-                            title="Twitter"
-                        >
-                            <img src="https://cloud.appwrite.io/images/mails/x.png" height="24" width="24" />
-                        </a>
+                        <a href="{{twitter}}" title="X"><img src="https://cloud.appwrite.io/images/mails/social/x.png" width="32" height="32" alt="X" style="display: block; border: 0" /></a>
                     </td>
                     <td style="padding-left: 4px; padding-right: 4px">
-                        <a
-                            href="{{discord}}"
-                            class="social-icon"
-                        >
-                            <img src="https://cloud.appwrite.io/images/mails/discord.png" height="24" width="24" />
-                        </a>
+                        <a href="{{discord}}" title="Discord"><img src="https://cloud.appwrite.io/images/mails/social/discord.png" width="32" height="32" alt="Discord" style="display: block; border: 0" /></a>
                     </td>
                     <td style="padding-left: 4px; padding-right: 4px">
-                        <a
-                            href="{{github}}"
-                            class="social-icon"
-                        >
-                            <img src="https://cloud.appwrite.io/images/mails/github.png" height="24" width="24" />
-                        </a>
+                        <a href="{{github}}" title="GitHub"><img src="https://cloud.appwrite.io/images/mails/social/github.png" width="32" height="32" alt="GitHub" style="display: block; border: 0" /></a>
                     </td>
                 </tr>
             </table>
@@ -257,6 +256,7 @@
                         <div style="margin: 0 8px">|</div>
                     </td>
                     <td><a href="{{privacy}}">Privacy</a></td>
+                    {{unsubscribeLink}}
                 </tr>
             </table>
             <p style="text-align: center" align="center">

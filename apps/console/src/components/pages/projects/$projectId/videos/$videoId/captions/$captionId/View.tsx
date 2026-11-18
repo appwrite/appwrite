@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
-import type { Models } from '@appwrite.io/console'
 import { Captions } from 'lucide-react'
 import { SubtitleEditor } from '../../../_components/subtitle-editor/SubtitleEditor'
 import { VideoPage } from '../../../_components/VideoPage'
@@ -13,10 +12,11 @@ import {
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { SubtitleCue } from '@/lib/videos/subtitle-cues'
+import type { VideoCaption } from '@/lib/videos/captions'
 
 type ViewProps = {
   initialData?: {
-    caption: Models.VideoCaption | null
+    caption: VideoCaption | null
     cues: SubtitleCue[] | null
   }
 }

@@ -162,6 +162,12 @@ class Serializer
             return $this->serializeBinary($child, $parentPrecedence);
         }
 
+        // Raw SQL hides its operators, so as an operand of AND it is enclosed:
+        // an OR inside it must not escape the condition it is ANDed with.
+        if ($child instanceof Raw && $parentPrecedence === $this->operatorPrecedence('AND')) {
+            return '(' . $child->sql . ')';
+        }
+
         return $this->serializeExpression($child);
     }
 

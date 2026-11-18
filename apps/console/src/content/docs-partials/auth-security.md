@@ -373,6 +373,20 @@ Session alerts are intentionally skipped in a few situations to avoid redundant 
 
 To toggle session alerts, navigate to **Auth** > **Policies** > **Sessions** > **Session alerts**.
 
+# Force sign out all users {% #force-sign-out-all-users %}
+
+You can immediately sign out every user in your project, for example when responding to a security incident or when credentials may have been compromised. All sessions created before the action are invalidated at once across every client, including sessions used through JWTs, and open realtime connections are closed. Users can sign in again right away, and API keys are not affected.
+
+To force a sign out, navigate to **Auth** > **Settings** > **Security actions** in the Appwrite Console, or call the Project service's `deleteSessions` endpoint with an API key granted the `users.write` scope.
+
+# Force password reset {% #force-password-reset %}
+
+You can require every user in your project to choose a new password, for example after a data breach or when passwords may have been exposed. Every password set before the action stops working for email and password sign-in at once: the sign-in is refused with the `user_password_reset_required` error and no session is created. Users can sign in with email and password again once they set a new password through [password recovery](/docs/products/auth/email-password#password-recovery), change it from a session they still have, or get a new one set through the server-side Users API. Users who sign up afterwards, users without a password, and API keys are not affected.
+
+Existing sessions stay active, so [force sign out all users](#force-sign-out-all-users) as well when sessions may be compromised too. Handle the `user_password_reset_required` error in your sign-in flow the same way as for [breached passwords](#breached-passwords), and turn on [password history](#password-history) to stop users from choosing their previous password again.
+
+To force a password reset, navigate to **Auth** > **Settings** > **Security actions** in the Appwrite Console, or call the Project service's `deletePasswords` endpoint with an API key granted the `users.write` scope.
+
 # Memberships privacy {% #memberships-privacy %}
 
 In certain use cases, your app may not need to share members' personal information with others. You can safeguard privacy by marking specific membership details as private. To configure this setting, navigate to **Auth** > **Policies** > **Memberships** > **Privacy**.

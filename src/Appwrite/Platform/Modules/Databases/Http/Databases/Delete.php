@@ -56,7 +56,7 @@ class Delete extends Action
                     )
                 ),
             ])
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('publisherForDatabase')
@@ -86,7 +86,6 @@ class Delete extends Action
 
         $publisherForDatabase->enqueue(new DatabaseMessage(
             project: $queueForEvents->getProject(),
-            user: $queueForEvents->getUser(),
             type: DATABASE_TYPE_DELETE_DATABASE,
             database: $database,
             events: Event::generateEvents($queueForEvents->getEvent(), $queueForEvents->getParams()),

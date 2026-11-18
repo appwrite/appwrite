@@ -9,7 +9,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class AvatarsCustomClientTest extends Scope
 {
@@ -226,7 +226,7 @@ final class AvatarsCustomClientTest extends Scope
          * by ID: the target's name renders as initials, not the caller's own
          * photo.
          */
-        $userId = ID::unique();
+        $userId = Id::unique();
 
         $user = $this->client->call(Client::METHOD_POST, '/users', [
             'content-type' => 'application/json',
@@ -259,7 +259,7 @@ final class AvatarsCustomClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -394,21 +394,21 @@ final class AvatarsCustomClientTest extends Scope
     {
         $this->assertNotEmpty($blob);
 
-        $image = new \Imagick();
-        $image->readImageBlob($blob);
+        $image = \imagecreatefromstring($blob);
+        $this->assertNotFalse($image);
 
         $samples = [
             [0, 0],
-            [$image->getImageWidth() - 1, $image->getImageHeight() - 1],
-            [\intdiv($image->getImageWidth(), 2), \intdiv($image->getImageHeight(), 2)],
+            [\imagesx($image) - 1, \imagesy($image) - 1],
+            [\intdiv(\imagesx($image), 2), \intdiv(\imagesy($image), 2)],
         ];
 
         foreach ($samples as [$x, $y]) {
-            $color = $image->getImagePixelColor($x, $y)->getColor();
+            $color = \imagecolorsforindex($image, (int) \imagecolorat($image, $x, $y));
 
             $this->assertSame(
                 self::OAUTH2_PHOTO_COLOR,
-                ['r' => $color['r'], 'g' => $color['g'], 'b' => $color['b']],
+                ['r' => $color['red'], 'g' => $color['green'], 'b' => $color['blue']],
                 "Pixel at {$x},{$y} is not the OAuth2 provider photo — the avatar chain fell through to another provider."
             );
         }
@@ -605,10 +605,9 @@ final class AvatarsCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertPhotoFallback($response['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($response['body']);
+        $image = \getimagesizefromstring($response['body']);
 
-        $this->assertSame([100, 100], [$image->getImageWidth(), $image->getImageHeight()]);
+        $this->assertSame([100, 100], [$image[0], $image[1]]);
 
         /**
          * Test for SUCCESS — a photo can be set again after deletion

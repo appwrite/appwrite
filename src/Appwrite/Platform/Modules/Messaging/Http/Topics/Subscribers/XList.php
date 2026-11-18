@@ -54,7 +54,7 @@ class XList extends Action
                     )
                 ]
             ))
-            ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID. The topic ID subscribed to.', false, ['dbForProject'])
+            ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Topic ID. The topic ID subscribed to.', false, ['dbForProject'])
             ->param('queries', [], new Subscribers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Subscribers::ALLOWED_ATTRIBUTES), true)
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
@@ -111,11 +111,14 @@ class XList extends Action
         $subscribers = batch(\array_map(function (Document $subscriber) use ($dbForProject, $authorization) {
             return function () use ($subscriber, $dbForProject, $authorization) {
                 $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
-                $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+                // The deletes worker removes a deleted target's subscribers after the target is gone.
+                $user = $target->isEmpty()
+                    ? new Document()
+                    : $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
                 return $subscriber
                     ->setAttribute('target', $target)
-                    ->setAttribute('userName', $user->getAttribute('name'));
+                    ->setAttribute('userName', $user->getAttribute('name', ''));
             };
         }, $subscribers));
 

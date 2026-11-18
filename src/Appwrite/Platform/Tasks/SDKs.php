@@ -26,8 +26,10 @@ use Appwrite\SDK\Language\Swift;
 use Appwrite\SDK\Language\Unity;
 use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\SDK;
+use Appwrite\SDK\Specification\Release;
 use CzProject\GitPhp\Git;
 use Utopia\Config\Config;
+use Utopia\Console\Command;
 use Utopia\Console\Console;
 use Utopia\OpenAPI\Parser;
 use Utopia\OpenAPI\Specification;
@@ -168,8 +170,15 @@ class SDKs extends Action
                     }
 
                     // Check if release already exists
-                    $checkReleaseCommand = 'gh release view ' . \escapeshellarg($releaseVersion) . ' --repo ' . \escapeshellarg($repoName) . ' --json url --jq ".url" 2>/dev/null';
-                    $existingReleaseUrl = trim(\shell_exec($checkReleaseCommand) ?? '');
+                    $existingReleaseUrl = $this->read(
+                        (new Command('gh'))
+                            ->argument('release')
+                            ->argument('view')
+                            ->argument($releaseVersion)
+                            ->option('--repo', $repoName)
+                            ->option('--json', 'url')
+                            ->option('--jq', '.url')
+                    );
 
                     if (! empty($existingReleaseUrl)) {
                         Console::warning("  Release {$releaseVersion} already exists, skipping");
@@ -179,16 +188,29 @@ class SDKs extends Action
                     }
 
                     // Check if the latest commit on the target branch already has a release
-                    $latestCommitCommand = 'gh api repos/' . $repoName . '/commits/' . $releaseTarget . ' --jq ".sha" 2>/dev/null';
-                    $latestCommitSha = trim(\shell_exec($latestCommitCommand) ?? '');
+                    $latestCommitSha = $this->read(
+                        (new Command('gh'))
+                            ->argument('api')
+                            ->argument('repos/' . $repoName . '/commits/' . $releaseTarget)
+                            ->option('--jq', '.sha')
+                    );
 
                     if (! empty($latestCommitSha)) {
-                        $latestReleaseTagCommand = 'gh api repos/' . $repoName . '/releases --jq ".[0] | .tag_name" 2>/dev/null';
-                        $latestReleaseTag = trim(\shell_exec($latestReleaseTagCommand) ?? '');
+                        $latestReleaseTag = $this->read(
+                            (new Command('gh'))
+                                ->argument('api')
+                                ->argument('repos/' . $repoName . '/releases')
+                                ->option('--jq', '.[0] | .tag_name')
+                        );
 
                         if (! empty($latestReleaseTag)) {
-                            $tagCommitCommand = 'gh api repos/' . $repoName . '/git/ref/tags/' . $latestReleaseTag . ' --jq ".object.sha" 2>/dev/null';
-                            $tagCommitSha = trim(\shell_exec($tagCommitCommand) ?? '');
+                            // The tag name comes from GitHub, and a git tag may contain $, ` and ;
+                            $tagCommitSha = $this->read(
+                                (new Command('gh'))
+                                    ->argument('api')
+                                    ->argument('repos/' . $repoName . '/git/ref/tags/' . $latestReleaseTag)
+                                    ->option('--jq', '.object.sha')
+                            );
 
                             if (! empty($tagCommitSha) && $latestCommitSha === $tagCommitSha) {
                                 Console::warning("  Latest commit already released ({$latestReleaseTag}), skipping");
@@ -198,9 +220,15 @@ class SDKs extends Action
                         }
                     }
 
-                    $previousVersion = '';
-                    $tagListCommand = 'gh release list --repo ' . \escapeshellarg($repoName) . ' --limit 1 --json tagName --jq ".[0].tagName" 2>&1';
-                    $previousVersion = trim(\shell_exec($tagListCommand) ?? '');
+                    $previousVersion = $this->read(
+                        (new Command('gh'))
+                            ->argument('release')
+                            ->argument('list')
+                            ->option('--repo', $repoName)
+                            ->option('--limit', 1)
+                            ->option('--json', 'tagName')
+                            ->option('--jq', '.[0].tagName')
+                    );
 
                     $formattedNotes = "## What's Changed\n\n";
                     $formattedNotes .= $releaseNotes . "\n\n";
@@ -227,17 +255,22 @@ class SDKs extends Action
                         $tempNotesFile = \tempnam(\sys_get_temp_dir(), 'release_notes_');
                         \file_put_contents($tempNotesFile, $formattedNotes);
 
-                        $releaseCommand = 'gh release create ' . \escapeshellarg($releaseVersion)
-                            . ' --repo ' . \escapeshellarg($repoName)
-                            . ' --title ' . \escapeshellarg($releaseTitle)
-                            . ' --notes-file ' . \escapeshellarg($tempNotesFile)
-                            . ' --target ' . \escapeshellarg($releaseTarget)
-                            . ($isPrerelease ? ' --prerelease' : '')
-                            . ' 2>&1';
+                        $release = (new Command('gh'))
+                            ->argument('release')
+                            ->argument('create')
+                            ->argument($releaseVersion)
+                            ->option('--repo', $repoName)
+                            ->option('--title', $releaseTitle)
+                            ->option('--notes-file', $tempNotesFile)
+                            ->option('--target', $releaseTarget);
+                        if ($isPrerelease) {
+                            $release->flag('--prerelease');
+                        }
 
-                        $releaseOutput = [];
-                        $releaseReturnCode = 0;
-                        \exec($releaseCommand, $releaseOutput, $releaseReturnCode);
+                        $stdout = '';
+                        $stderr = '';
+                        $releaseReturnCode = Console::execute($release, '', $stdout, $stderr);
+                        $releaseOutput = \explode("\n", \trim($stdout . "\n" . $stderr));
 
                         \unlink($tempNotesFile);
 
@@ -266,39 +299,17 @@ class SDKs extends Action
 
                 Console::info("━━━ {$language['name']} SDK ({$platform['name']}, {$version}) ━━━");
                 $specFormat = $language['spec'] ?? 'openapi3';
+                $release = new Release(__DIR__ . '/../../../../app/config/specs', $version);
                 $spec = null;
                 if ($specFormat === 'static') {
                     Console::log('  Using static SDK spec...');
+                    $specification = $release->staticSpecification();
                 } else {
                     Console::log('  Fetching API spec...');
-
-                    $specPath = __DIR__ . '/../../../../app/config/specs/open-api3-' . $version . '-' . $language['family'] . '.json';
-
-                    if (!file_exists($specPath)) {
-                        throw new \Exception('Spec file not found: ' . $specPath . '. Please run "docker compose exec appwrite specs --version=' . $version . '" first to generate the specs.');
-                    }
-
-                    $spec = file_get_contents($specPath);
+                    $spec = $release->read($language['family']);
+                    $specification = Parser::parse($spec);
                 }
-
-                $specification = $specFormat === 'static'
-                    ? Parser::parse([
-                        'openapi' => '3.0.0',
-                        'info' => [
-                            'title' => 'Appwrite',
-                            'description' => 'Appwrite backend as a service',
-                            'version' => $version,
-                            'license' => [
-                                'name' => 'BSD-3-Clause',
-                                'url' => 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
-                            ],
-                        ],
-                        'paths' => [],
-                    ])
-                    : Parser::parse($spec);
-                $serverVersion = $specFormat === 'static'
-                    ? $version
-                    : self::getServerVersion($specification);
+                $serverVersion = self::getServerVersion($specification);
 
                 $cover = 'https://github.com/appwrite/appwrite/raw/main/public/images/github.png';
                 $result = \realpath(__DIR__ . '/../../../../app') . '/sdks/' . $key . '-' . $language['key'];
@@ -332,8 +343,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new Web();
                         if ($platform['key'] === APP_SDK_PLATFORM_CONSOLE) {
                             $config->setNPMPackage('@appwrite.io/console');
+                            $config->setCdnPath('console');
                         } else {
                             $config->setNPMPackage('appwrite');
+                            $config->setCdnPath('web');
                         }
                         break;
                     case 'cli':
@@ -365,8 +378,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'nodejs':
                         $config = new Node();
                         $config->setNPMPackage('node-appwrite');
-                        $warning = $warning . "\n\n > This is the Node.js SDK for integrating with Appwrite from your Node.js server-side code.
-                            If you're looking to integrate from the browser, you should check [appwrite/sdk-for-web](https://github.com/appwrite/sdk-for-web)";
+                        $warning = $warning . "\n\n> This is the Node.js SDK for integrating with Appwrite from your Node.js server-side code. If you're looking to integrate from the browser, you should check [appwrite/sdk-for-web](https://github.com/appwrite/sdk-for-web)";
                         break;
                     case 'python':
                         $config = new Python();
@@ -478,7 +490,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 // Make sure we have a clean slate.
                 // Otherwise, all files in this dir will be pushed,
                 // regardless of whether they were just generated or not.
-                \exec('chmod -R u+w ' . $result . ' 2>/dev/null; rm -rf ' . $result);
+                $stdout = '';
+                $stderr = '';
+                Console::execute((new Command('chmod'))->flag('-R')->argument('u+w')->argument($result), '', $stdout, $stderr);
+                Console::execute((new Command('rm'))->flag('-rf')->argument($result), '', $stdout, $stderr);
 
                 try {
                     $sdk->generate($result);
@@ -509,7 +524,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $this->createPullRequest($language, $platform['name'], $target, $gitBranch, $repoBranch, $prUrls);
                     }
 
-                    \exec('chmod -R u+w ' . $target . ' && rm -rf ' . $target);
+                    Console::execute(Command::and(
+                        (new Command('chmod'))->flag('-R')->argument('u+w')->argument($target),
+                        (new Command('rm'))->flag('-rf')->argument($target),
+                    ), '', $stdout, $stderr);
                     Console::log('  Cleaned up temp directory');
                 }
 
@@ -535,9 +553,12 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
     {
         Console::log('  Preparing git repository...');
 
+        $stdout = '';
+        $stderr = '';
+
         try {
             // Init fresh repo
-            \exec('rm -rf ' . \escapeshellarg($target));
+            Console::execute((new Command('rm'))->flag('-rf')->argument($target), '', $stdout, $stderr);
             \mkdir($target, 0755, true);
 
             $gitClient = new Git();
@@ -581,7 +602,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             $githubBackup = \sys_get_temp_dir() . '/.github-backup-' . \getmypid();
             $hasGithubDir = \is_dir($githubDir);
             if ($hasGithubDir) {
-                \exec('cp -r ' . \escapeshellarg($githubDir) . ' ' . \escapeshellarg($githubBackup));
+                Console::execute((new Command('cp'))->flag('-r')->argument($githubDir)->argument($githubBackup), '', $stdout, $stderr);
             }
 
             // Clean working tree
@@ -595,11 +616,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             }
 
             // Copy generated SDK and restore .github
-            \exec('cp -r ' . \escapeshellarg($result . '/.') . ' ' . \escapeshellarg($target . '/'));
+            Console::execute((new Command('cp'))->flag('-r')->argument($result . '/.')->argument($target . '/'), '', $stdout, $stderr);
 
             if ($hasGithubDir && \is_dir($githubBackup)) {
-                \exec('cp -rn ' . \escapeshellarg($githubBackup . '/.github') . ' ' . \escapeshellarg($target . '/') . ' 2>/dev/null');
-                \exec('rm -rf ' . \escapeshellarg($githubBackup));
+                Console::execute((new Command('cp'))->flag('-rn')->argument($githubBackup . '/.github')->argument($target . '/'), '', $stdout, $stderr);
+                Console::execute((new Command('rm'))->flag('-rf')->argument($githubBackup), '', $stdout, $stderr);
             }
 
             // Stage, commit, push
@@ -632,18 +653,22 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
         Console::log('  Creating pull request...');
 
-        $prCommand = 'cd ' . $target . ' && \
-            gh pr create \
-            --repo ' . \escapeshellarg($repoName) . ' \
-            --title ' . \escapeshellarg($prTitle) . ' \
-            --body ' . \escapeshellarg($prBody) . ' \
-            --base ' . \escapeshellarg($repoBranch) . ' \
-            --head ' . \escapeshellarg($gitBranch) . ' \
-            2>&1';
+        $pr = Command::and(
+            (new Command('cd'))->argument($target),
+            (new Command('gh'))
+                ->argument('pr')
+                ->argument('create')
+                ->option('--repo', $repoName)
+                ->option('--title', $prTitle)
+                ->option('--body', $prBody)
+                ->option('--base', $repoBranch)
+                ->option('--head', $gitBranch),
+        );
 
-        $prOutput = [];
-        $prReturnCode = 0;
-        \exec($prCommand, $prOutput, $prReturnCode);
+        $stdout = '';
+        $stderr = '';
+        $prReturnCode = Console::execute($pr, '', $stdout, $stderr);
+        $prOutput = \explode("\n", \trim($stdout . "\n" . $stderr));
 
         if ($prReturnCode === 0) {
             Console::success("  Pull request created");
@@ -724,10 +749,12 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 continue;
             }
 
-            \exec(
-                'mkdir -p ' . $resultExamples . $languagePath . ' && \
-                cp -r ' . $examplesSource . ' ' . $resultExamples
-            );
+            $stdout = '';
+            $stderr = '';
+            Console::execute(Command::and(
+                (new Command('mkdir'))->flag('-p')->argument($resultExamples . $languagePath),
+                (new Command('cp'))->flag('-r')->argument($examplesSource)->argument($resultExamples),
+            ), '', $stdout, $stderr);
             $label = \is_string($languageTitle) ? " ({$languageTitle})" : '';
             Console::success("  Examples{$label} copied to {$resultExamples}{$languagePath}");
         }
@@ -787,18 +814,18 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
         // Otherwise, look it up via gh pr list
         if (empty($prNumber)) {
-            $prListCommand = 'gh pr list'
-                . ' --repo ' . \escapeshellarg($repoName)
-                . ' --head ' . \escapeshellarg($gitBranch)
-                . ' --json number,url'
-                . ' --jq ".[0] | (.number|tostring) + \" \" + .url"'
-                . ' 2>&1';
+            $pr = $this->read(
+                (new Command('gh'))
+                    ->argument('pr')
+                    ->argument('list')
+                    ->option('--repo', $repoName)
+                    ->option('--head', $gitBranch)
+                    ->option('--json', 'number,url')
+                    ->option('--jq', '.[0] | (.number|tostring) + " " + .url')
+            );
 
-            $prListOutput = [];
-            \exec($prListCommand, $prListOutput);
-
-            if (! empty($prListOutput[0])) {
-                $parts = \explode(' ', trim($prListOutput[0]), 2);
+            if (! empty($pr)) {
+                $parts = \explode(' ', $pr, 2);
                 $prNumber = $parts[0];
                 $prUrl = $parts[1] ?? '';
             }
@@ -809,22 +836,19 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             return;
         }
 
-        $apiPath = "/repos/{$repoName}/pulls/{$prNumber}";
-        $updateCommand = 'gh api'
-            . ' --method PATCH'
-            . ' -H "Accept: application/vnd.github+json"'
-            . ' -H "X-GitHub-Api-Version: 2022-11-28"'
-            . ' ' . \escapeshellarg($apiPath)
-            . ' -f title=' . \escapeshellarg($prTitle)
-            . ' -f body=' . \escapeshellarg($prBody)
-            . ' 2>&1';
+        $update = (new Command('gh'))
+            ->argument('api')
+            ->option('--method', 'PATCH')
+            ->option('-H', 'Accept: application/vnd.github+json')
+            ->option('-H', 'X-GitHub-Api-Version: 2022-11-28')
+            ->argument("/repos/{$repoName}/pulls/{$prNumber}")
+            ->option('-f', 'title=' . $prTitle)
+            ->option('-f', 'body=' . $prBody);
 
-        $updateOutput = [];
-        $updateReturnCode = 0;
-        \exec($updateCommand, $updateOutput, $updateReturnCode);
-
-        if ($updateReturnCode !== 0) {
-            Console::error("  Failed to update pull request: " . implode("\n", $updateOutput));
+        $stdout = '';
+        $stderr = '';
+        if (Console::execute($update, '', $stdout, $stderr) !== 0) {
+            Console::error("  Failed to update pull request: " . \trim($stdout . "\n" . $stderr));
             return;
         }
 
@@ -833,5 +857,16 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
         if (! empty($prUrl)) {
             $prUrls[$platformName][$sdkName] = $prUrl;
         }
+    }
+
+    /**
+     * What a command printed, or nothing when it failed
+     */
+    private function read(Command $command): string
+    {
+        $stdout = '';
+        $stderr = '';
+
+        return Console::execute($command, '', $stdout, $stderr) === 0 ? \trim($stdout) : '';
     }
 }

@@ -30,6 +30,10 @@ class SubscribePayload extends Validator
             $this->description = 'Payload is not valid.';
             return false;
         }
+        if (\count($value) > APP_LIMIT_REALTIME_SUBSCRIPTIONS) {
+            $this->description = 'Payload must contain at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions.';
+            return false;
+        }
 
         $customId = new CustomId();
 
@@ -50,6 +54,10 @@ class SubscribePayload extends Validator
                 $this->description = 'channels is not a valid array.';
                 return false;
             }
+            if (\count($payload['channels']) > APP_LIMIT_ARRAY_PARAMS_SIZE) {
+                $this->description = 'channels must contain at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' channels.';
+                return false;
+            }
             foreach ($payload['channels'] as $channel) {
                 if (!\is_string($channel)) {
                     $this->description = 'channels must contain only strings.';
@@ -61,6 +69,16 @@ class SubscribePayload extends Validator
             ) {
                 $this->description = 'queries is not a valid array.';
                 return false;
+            }
+            if (\count($payload['queries'] ?? []) > APP_LIMIT_ARRAY_PARAMS_SIZE) {
+                $this->description = 'queries must contain at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries.';
+                return false;
+            }
+            foreach ($payload['queries'] ?? [] as $query) {
+                if (!\is_string($query)) {
+                    $this->description = 'queries must contain only strings.';
+                    return false;
+                }
             }
         }
 

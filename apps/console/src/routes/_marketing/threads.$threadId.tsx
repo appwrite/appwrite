@@ -10,6 +10,7 @@ import {
 import { getThreadsThreadRouteHead } from '@/lib/threads/route-meta'
 import {
   getDiscussionForumPageSchema,
+  getThreadDiscordEmbed,
   getThreadsBreadcrumbSchema,
   getThreadsCanonicalUrl,
 } from '@/lib/threads/seo'
@@ -17,6 +18,7 @@ import {
   MARKETING_PAGE_ROUTE_STATIC_DATA,
   marketingRouteLifetime,
 } from '@/lib/marketing/route-static-data'
+import { getDiscordEmbedScript } from '@/lib/seo/discord-embed'
 import { stringifyJsonLd } from '@/lib/seo/json-ld'
 
 export const Route = createFileRoute('/_marketing/threads/$threadId')({
@@ -76,6 +78,9 @@ export const Route = createFileRoute('/_marketing/threads/$threadId')({
     if (!loaderData?.thread) return {}
 
     const { thread, messages, canonicalUrl } = loaderData
+    const discordEmbed = getDiscordEmbedScript(
+      getThreadDiscordEmbed({ canonicalUrl, thread }),
+    )
 
     return {
       ...getThreadsThreadRouteHead(thread, canonicalUrl),
@@ -102,6 +107,7 @@ export const Route = createFileRoute('/_marketing/threads/$threadId')({
             ]),
           ),
         },
+        ...(discordEmbed ? [discordEmbed] : []),
       ],
     }
   },

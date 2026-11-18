@@ -8,7 +8,10 @@ import {
   MARKETING_PAGE_ROUTE_STATIC_DATA,
   marketingRouteLifetime,
 } from '@/lib/marketing/route-static-data'
-import { getMarketingRouteHead } from '@/lib/marketing/route-meta'
+import {
+  getMarketingFaqScript,
+  getMarketingRouteHead,
+} from '@/lib/marketing/route-meta'
 import {
   marketingSiteTemplatesQueryOptions,
   siteFrameworksQueryOptions,
@@ -16,7 +19,6 @@ import {
 import { MARKETING_SITE_TEMPLATES_PROJECT_ID } from '@/lib/sites/site-template-wizard'
 import { pageTitle } from '@/lib/utils/page-title'
 import { translate } from '@/lib/i18n/translate'
-import { stringifyJsonLd } from '@/lib/seo/json-ld'
 
 export const Route = createFileRoute('/_marketing/products/$productId')({
   ...marketingRouteLifetime,
@@ -55,25 +57,7 @@ export const Route = createFileRoute('/_marketing/products/$productId')({
         ogImageTitle: pageName,
         ogImageSubtitle,
       }),
-      scripts: content.faq.length
-        ? [
-            {
-              type: 'application/ld+json',
-              children: stringifyJsonLd({
-                '@context': 'https://schema.org',
-                '@type': 'FAQPage',
-                mainEntity: content.faq.map((faq) => ({
-                  '@type': 'Question',
-                  name: translate(faq.question),
-                  acceptedAnswer: {
-                    '@type': 'Answer',
-                    text: translate(faq.answer),
-                  },
-                })),
-              }),
-            },
-          ]
-        : [],
+      scripts: content.faq.length ? [getMarketingFaqScript(content.faq)] : [],
     }
   },
   loader: async ({ params, context }) => {

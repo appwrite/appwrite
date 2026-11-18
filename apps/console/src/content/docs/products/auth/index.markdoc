@@ -41,8 +41,11 @@ Deligate access for a user through passing JWT tokens.
 {% cards_item href="/docs/products/auth/server-side-rendering" title="Server-side rendering (SSR)" %}
 Authenticate users in server-side rendered applications.
 {% /cards_item %}
+{% cards_item href="/docs/products/auth/passkeys" title="Passkeys" %}
+Let users sign up and sign in with Face ID, Touch ID, or a fingerprint instead of a password, on the web, Android, and Apple platforms.
+{% /cards_item %}
 {% cards_item href="/docs/products/auth/custom-token" title="Custom token" %}
-Implement custom authentication methods like biometric and passkey login by generating custom tokens.
+Implement custom authentication methods by generating custom tokens.
 {% /cards_item %}
 {% cards_item href="/docs/products/auth/mfa" title="Multifactor authentication (MFA)" %}
 Implementing MFA to add extra layers of security to your app.

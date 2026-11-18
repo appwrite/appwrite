@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { VideoOutput } from '@appwrite.io/console'
-import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -23,12 +21,13 @@ import {
   ProfilePicker,
   sortProfilesByPixels,
 } from './RenditionOptions'
+import { VideoOutput, type Video } from '@/lib/appwrite/videos'
 
 type CreateRenditionsProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   projectId: string
-  video: Models.Video
+  video: Video
 }
 
 export function CreateRenditions({

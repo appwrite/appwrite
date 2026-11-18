@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Utopia\Domains\Tests\Validator;
 
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Domains\Validator\PublicDomain;
 
+#[RequiresPhpExtension('utopia')]
 final class PublicDomainTest extends TestCase
 {
     protected ?PublicDomain $domain;

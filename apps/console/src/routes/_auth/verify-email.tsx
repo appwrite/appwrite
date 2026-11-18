@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import {
   useIsMutating,
   useMutation,
@@ -62,9 +62,56 @@ function isInvalidTokenError(error: unknown): boolean {
  */
 const attemptedSecrets = new Set<string>()
 
-/** Accounts already sent a link by this page, so a remount does not mail another. */
-const sentVerifications = new Set<string>()
+/** When the link was last mailed, kept per tab so a remount or reload neither mails another link nor resets the wait. */
+const sentKey = (accountId: string) => `verify-email-sent:${accountId}`
 const RESEND_MUTATION_KEY = ['account', 'verification', 'email']
+
+/** One verification email per minute, as Supabase and Clerk allow. */
+const RESEND_COOLDOWN_MS = 60_000
+
+function readSentAt(accountId: string): number | null {
+  const value = Number(sessionStorage.getItem(sentKey(accountId)))
+  return Number.isFinite(value) && value > 0 ? value : null
+}
+
+/**
+ * Seconds until another verification email may be sent. Every send starts the
+ * wait, including the automatic one when the page opens.
+ */
+function useResendCooldown(accountId: string | undefined) {
+  const [sentAt, setSentAt] = useState<number | null>(() =>
+    accountId && typeof window !== 'undefined' ? readSentAt(accountId) : null,
+  )
+  const [now, setNow] = useState(() => Date.now())
+
+  const secondsLeft =
+    sentAt === null
+      ? 0
+      : Math.max(0, Math.ceil((sentAt + RESEND_COOLDOWN_MS - now) / 1000))
+  const isCoolingDown = secondsLeft > 0
+
+  useEffect(() => {
+    if (!isCoolingDown) return
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [isCoolingDown])
+
+  const start = () => {
+    if (!accountId) return
+    const at = Date.now()
+    sessionStorage.setItem(sentKey(accountId), String(at))
+    setSentAt(at)
+    setNow(at)
+  }
+
+  const clear = () => {
+    if (!accountId) return
+    sessionStorage.removeItem(sentKey(accountId))
+    setSentAt(null)
+  }
+
+  return { secondsLeft, start, clear }
+}
 
 /** Parse userId and secret from the current URL (used when following email link) so long tokens are not altered by router. */
 function getVerificationParamsFromUrl(): {
@@ -211,6 +258,11 @@ function VerifyEmailPage() {
     },
   })
 
+  // Opened from the email link, the loader has no account; the link names it.
+  const cooldown = useResendCooldown(
+    accountId ?? getVerificationParamsFromUrl()?.userId,
+  )
+
   const resendMutation = useMutation({
     mutationKey: RESEND_MUTATION_KEY,
     mutationFn: async () => {
@@ -227,6 +279,8 @@ function VerifyEmailPage() {
       toast.success(t('Verification email sent'))
     },
     onError: (error: unknown) => {
+      // Nothing was sent, so let the user retry right away.
+      cooldown.clear()
       const message =
         error instanceof AppwriteException
           ? error.message
@@ -235,6 +289,13 @@ function VerifyEmailPage() {
     },
   })
 
+  // The wait starts before the request, synchronously, so neither a burst of
+  // clicks nor a second mount can send another email while one is in flight.
+  const sendVerification = () => {
+    cooldown.start()
+    resendMutation.mutate()
+  }
+
   // A remount gives this component a new observer that reports an in-flight
   // send as idle, so the button reads pending state from the mutation cache.
   const isResending = useIsMutating({ mutationKey: RESEND_MUTATION_KEY }) > 0
@@ -242,10 +303,9 @@ function VerifyEmailPage() {
   // Sign-up, OAuth2 and sign-in all land here, so this page sends the link;
   // impersonators cannot write to the account.
   useEffect(() => {
-    if (!accountId || sentVerifications.has(accountId)) return
+    if (!accountId || readSentAt(accountId) !== null) return
     if (hasConsoleImpersonationSessionTarget()) return
-    sentVerifications.add(accountId)
-    resendMutation.mutate()
+    sendVerification()
   }, [accountId])
 
   // When landing with userId + secret (from email link), confirm and redirect.
@@ -279,8 +339,9 @@ function VerifyEmailPage() {
       accountSwitcher={<AuthFlowAccountSwitcher />}
     >
       <VerifyEmail
-        onResend={() => resendMutation.mutate()}
+        onResend={sendVerification}
         isResendLoading={isResending}
+        resendCooldown={cooldown.secondsLeft}
         redirect={search.redirect}
       />
     </AuthFlowShell>

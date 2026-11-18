@@ -22,6 +22,12 @@ class Database extends Model
                 'default' => '',
                 'example' => 'My Database',
             ])
+            ->addRule('description', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Optional description for the database.',
+                'default' => '',
+                'example' => 'Customer orders and invoices.',
+            ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Database creation date in ISO 8601 format.',

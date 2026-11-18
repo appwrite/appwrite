@@ -34,12 +34,20 @@ $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bu
 // ok: php.appwrite.skip-ungated-load
 $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
 
+// Transfers have no document permissions; their routes check the sender or the secret themselves.
+// ok: php.appwrite.skip-ungated-load
+$transfer = $authorization->skip(fn () => $dbForPlatform->getDocument('transfers', $transferId));
+
 // Intentional lookup / subquery collections (allowlisted).
 // ok: php.appwrite.skip-ungated-load
 $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
 
 // ok: php.appwrite.skip-ungated-load
 $session = $authorization->skip(fn () => $dbForProject->find('sessions', []));
+
+// Account switching device: secret-gated lookup by cookie-provided id, like sessions.
+// ok: php.appwrite.skip-ungated-load
+$device = $authorization->skip(fn () => $dbForProject->getDocument('devices', $deviceId));
 
 // Generated / variable table name.
 // ok: php.appwrite.skip-ungated-load
@@ -58,3 +66,14 @@ $transaction = ($isAPIKey || $isPrivilegedUser)
     : $dbForProject->withTransaction(function () use ($dbForProject, $transactionId) {
         return $dbForProject->getDocument('transactions', $transactionId, forUpdate: true);
     });
+
+// Video child / profile collections (no per-document ACL; parent is gated first).
+// ok: php.appwrite.skip-ungated-load
+$profile = $authorization->skip(fn () => $dbForProject->getDocument('videosProfiles', $profileId));
+
+// ok: php.appwrite.skip-ungated-load
+$rendition = $authorization->skip(fn () => $dbForProject->getDocument('videosRenditions', $renditionId));
+
+// Bare videos without a privileged/API-key gate stays an error.
+// ruleid: php.appwrite.skip-ungated-load
+$video = $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId));

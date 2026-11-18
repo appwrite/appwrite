@@ -29,7 +29,12 @@ import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { DEFAULT_AWS_SES_REGION } from '@/lib/messaging/aws-ses-regions'
+import {
+  parseAppwritePushExpiry,
+  parseAppwritePushQos,
+} from '@/lib/messaging/appwrite-push'
 import { isCloudProfile } from '@/lib/console-profiles'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useProject } from '@/lib/react-query/hooks'
 import {
   parseQuickSetupReturn,
@@ -480,6 +485,57 @@ const PROVIDERS: ProviderConfig[] = [
         enabled: true,
       }),
   },
+  {
+    id: 'appwrite',
+    name: 'Appwrite',
+    type: 'push',
+    description: 'Send push notifications through the Appwrite push service.',
+    icon: 'appwrite.svg',
+    fields: [
+      COMMON_NAME_FIELD,
+      {
+        key: 'qos',
+        label: 'Quality of service',
+        type: 'select',
+        defaultValue: 'default',
+        options: [
+          { value: 'default', label: 'Let the subscriber choose' },
+          { value: '0', label: 'At most once (QoS 0)' },
+          { value: '1', label: 'At least once (QoS 1)' },
+        ],
+        helper: 'Default delivery guarantee for topics on this provider.',
+      },
+      {
+        key: 'expiry',
+        label: 'Message expiry (seconds)',
+        type: 'number',
+        helper:
+          'How long undelivered messages are kept for offline devices. Max 7 days (604800).',
+      },
+    ],
+    submit: (projectSdk, providerId, v) => {
+      const expiry = parseAppwritePushExpiry(
+        typeof v.expiry === 'string' ? v.expiry : String(v.expiry ?? ''),
+      )
+      if (!expiry.ok) {
+        throw new Error(
+          'Message expiry must be a whole number of seconds, up to 604800.',
+        )
+      }
+      const qos = parseAppwritePushQos(
+        typeof v.qos === 'string' ? v.qos : String(v.qos ?? ''),
+      )
+      return projectSdk.messaging.createAppwriteProvider({
+        providerId,
+        name: String(v.name).trim(),
+        // A new provider has nothing to clear, so omit the defaults instead of
+        // sending the reset `null`.
+        qos: qos ?? undefined,
+        expiry: expiry.value ?? undefined,
+        enabled: true,
+      })
+    },
+  },
 ]
 
 const TYPE_LABEL: Record<ProviderType, string> = {
@@ -550,9 +606,15 @@ export function CreateProviderWizardView() {
   const [autoStartOneClick, setAutoStartOneClick] = useState(false)
   const oneClickRef = useRef<ResendOneClickSetupHandle | null>(null)
 
+  const { features } = useConsoleProfile()
+  const providers = useMemo(
+    () => PROVIDERS.filter((p) => p.id !== 'appwrite' || features.appwritePush),
+    [features.appwritePush],
+  )
+
   const selected = useMemo(
-    () => PROVIDERS.find((p) => p.id === selectedId) ?? null,
-    [selectedId],
+    () => providers.find((p) => p.id === selectedId) ?? null,
+    [providers, selectedId],
   )
 
   const grouped = useMemo(() => {
@@ -561,9 +623,9 @@ export function CreateProviderWizardView() {
       sms: [],
       push: [],
     }
-    for (const p of PROVIDERS) out[p.type].push(p)
+    for (const p of providers) out[p.type].push(p)
     return out
-  }, [])
+  }, [providers])
 
   // Keep step / selected state consistent if state goes out of sync
   useEffect(() => {

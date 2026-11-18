@@ -51,4 +51,16 @@ final class MemcachedTest extends Base
         $this->assertSame('reconnect', self::$cache->save('test:reconnect', 'reconnect', 'test:reconnect'));
         $this->assertEquals('reconnect', self::$cache->load('test:reconnect', 5));
     }
+
+    public function testAPurgeTheServerRejectsThrowsInsteadOfReportingNothingToPurge(): void
+    {
+        try {
+            self::$cache->purge(\str_repeat('k', 300));
+            $this->fail('A purge Memcached rejected must not read as a purge of a missing key');
+        } catch (MemcachedException $error) {
+            $this->assertStringContainsString('Failed to purge', $error->getMessage());
+        }
+
+        $this->assertFalse(self::$cache->purge('test:missing'));
+    }
 }

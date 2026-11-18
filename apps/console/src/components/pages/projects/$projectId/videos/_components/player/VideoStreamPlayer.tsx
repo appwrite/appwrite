@@ -7,7 +7,6 @@ import {
   type CSSProperties,
 } from 'react'
 import { createPortal } from 'react-dom'
-import type { Models } from '@appwrite.io/console'
 import { Pause, Play, SquareArrowOutUpRight } from 'lucide-react'
 import { sdk } from '@/lib/appwrite/sdk'
 import { isEmbedUnauthorizedMessage } from '@/lib/videos/embed-player-errors'
@@ -52,13 +51,14 @@ import {
   videoSubtitleSizeCss,
   type VideoSubtitleSize,
 } from '@/lib/videos/player-subtitle-display'
+import type { Video, VideoRendition } from '@/lib/appwrite/videos'
 
 const FULLSCREEN_CONTROLS_IDLE_MS = 2500
 
 export interface VideoStreamPlayerProps {
   projectId: string
-  video: Models.Video
-  renditions: Models.VideoRendition[]
+  video: Video
+  renditions: VideoRendition[]
   /** Overview layout: slightly shorter max height. */
   variant?: 'default' | 'featured'
   /** Full-viewport embed player for end users (`/player/:videoId`). */

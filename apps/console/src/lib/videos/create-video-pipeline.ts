@@ -7,7 +7,7 @@
  */
 
 import { ID } from '@appwrite.io/console'
-import type { Models, VideoOutput } from '@appwrite.io/console'
+import type { Models } from '@appwrite.io/console'
 import type { QueryClient } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Dependencies } from '@/lib/react-query/hooks/dependencies'
@@ -20,6 +20,7 @@ import {
   type DemoVideoVariant,
 } from './demo-videos'
 import { markTimelinePending } from './pending-timelines'
+import type { Video, VideoOutput } from '@/lib/appwrite/videos'
 
 export type CreateVideoSource =
   | { kind: 'storage'; bucketId: string; fileId: string }
@@ -53,7 +54,7 @@ export type CreateVideoOptions = {
 }
 
 export type CreateVideoResult = {
-  video: Models.Video
+  video: Video
   /** Steps that failed after the video was created. */
   failedSteps: CreateVideoStepId[]
   renditionsQueued: number
@@ -131,7 +132,7 @@ export async function runCreateVideoPipeline(input: {
   name: string
   options: CreateVideoOptions
   onStep: (step: CreateVideoStepId, state: CreateVideoStepState) => void
-  onVideo?: (video: Models.Video) => void
+  onVideo?: (video: Video) => void
 }): Promise<CreateVideoResult> {
   const { projectId, queryClient, source, options, onStep } = input
   const videos = sdk.forProject(projectId).videos
@@ -183,7 +184,7 @@ export async function runCreateVideoPipeline(input: {
   }
 
   // 2. Register the video (timeline generation is queued automatically).
-  let video: Models.Video
+  let video: Video
   try {
     video = await runStep('create', () =>
       videos.create({

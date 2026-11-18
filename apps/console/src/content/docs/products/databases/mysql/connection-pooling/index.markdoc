@@ -118,7 +118,7 @@ using Appwrite;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -187,8 +187,8 @@ let pooler = try await mysql.updatePooler(
 package main
 
 import (
-    "github.com/appwrite/sdk-for-go/appwrite"
-    "github.com/appwrite/sdk-for-go/mysql"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/mysql"
 )
 
 func main() {

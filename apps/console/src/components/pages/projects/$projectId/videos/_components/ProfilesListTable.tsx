@@ -1,4 +1,3 @@
-import type { Models } from '@appwrite.io/console'
 import { Copy, FileJson, Pencil, Trash2 } from 'lucide-react'
 import {
   MenuItemContent,
@@ -37,6 +36,7 @@ import {
 } from '@/lib/utils/video-format'
 import { isPresetSpec } from '@/lib/videos/profile-presets'
 import { VideoTermHint } from './VideoTermHint'
+import type { VideoProfile } from '@/lib/appwrite/videos'
 
 const HEAD_CLASS =
   'px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground'
@@ -44,10 +44,10 @@ const HEAD_CLASS =
 const MONO_CELL_CLASS = 'px-4 py-3 font-mono text-[12px] text-muted-foreground'
 
 interface ProfilesListTableProps {
-  profiles: Models.VideoProfile[]
+  profiles: VideoProfile[]
   canWrite: boolean
-  onUpdate: (profile: Models.VideoProfile) => void
-  onDelete: (profile: Models.VideoProfile) => void
+  onUpdate: (profile: VideoProfile) => void
+  onDelete: (profile: VideoProfile) => void
   selectedIds: Set<string>
   onToggleSelected: (profileId: string) => void
   onToggleAllSelected: (selectAll: boolean) => void

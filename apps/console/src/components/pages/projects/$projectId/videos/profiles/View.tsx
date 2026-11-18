@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
-import type { Models } from '@appwrite.io/console'
 import { AlertCircle, Layers } from 'lucide-react'
 import { toast } from 'sonner'
 import { ProfilesEmptyState } from './_components/ProfilesEmptyState'
@@ -45,6 +44,7 @@ import {
   PROFILES_DEFAULT_SORT_BY,
   PROFILES_DEFAULT_SORT_ORDER,
 } from '@/lib/videos/profile-list-filters'
+import type { VideoProfile } from '@/lib/appwrite/videos'
 
 const isDefaultSort = (sortBy: string, sortOrder: 'asc' | 'desc') =>
   sortBy === PROFILES_DEFAULT_SORT_BY &&
@@ -73,9 +73,9 @@ export function View() {
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingProfile, setEditingProfile] =
-    useState<Models.VideoProfile | null>(null)
+    useState<VideoProfile | null>(null)
   const [deletingProfile, setDeletingProfile] =
-    useState<Models.VideoProfile | null>(null)
+    useState<VideoProfile | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [selectedProfileIds, setSelectedProfileIds] = useState<Set<string>>(
     new Set(),
@@ -267,7 +267,7 @@ export function View() {
     setDialogOpen(true)
   }
 
-  const openUpdate = (profile: Models.VideoProfile) => {
+  const openUpdate = (profile: VideoProfile) => {
     setEditingProfile(profile)
     setDialogOpen(true)
   }

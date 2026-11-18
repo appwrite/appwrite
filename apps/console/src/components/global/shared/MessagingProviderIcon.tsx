@@ -40,6 +40,7 @@ const providerIconMap: Record<string, string> = {
   // Push
   fcm: 'firebase.svg',
   apns: 'apple.svg',
+  appwrite: 'appwrite.svg',
 }
 
 export function MessagingProviderIcon({

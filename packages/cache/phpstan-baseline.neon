@@ -111,7 +111,7 @@ parameters:
 		-
 			message: '#^Anonymous function should return int but returns int\|RedisCluster\|false\.$#'
 			identifier: return.type
-			count: 3
+			count: 2
 			path: src/Adapter/RedisCluster.php
 
 		-

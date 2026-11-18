@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
-import type { Models, VideoOutput } from '@appwrite.io/console'
 import { CodeXml, Info } from 'lucide-react'
 import { VideoPage, VideoSectionCard } from '../../_components/VideoPage'
 import { VideoTermHint } from '../../_components/VideoTermHint'
@@ -19,7 +18,7 @@ import {
 } from '@/components/ui/select'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { sdk } from '@/lib/appwrite/sdk'
-import { getCaptionSegmentUrl } from '@/lib/videos/captions'
+import { getCaptionSegmentUrl, type VideoCaption } from '@/lib/videos/captions'
 import {
   useProjectVideo,
   useVideoRenditions,
@@ -33,6 +32,7 @@ import {
   VIDEO_MASTER_MANIFESTS,
 } from '@/lib/videos/urls'
 import { useT } from '@/lib/i18n/translate'
+import type { VideoOutput, VideoRendition } from '@/lib/appwrite/videos'
 
 const MANIFEST_TERMS: Record<string, VideoGlossaryTerm> = {
   hls: 'hls',
@@ -167,7 +167,7 @@ function SubtitleUrlsCard({
 }: {
   projectId: string
   videoId: string
-  subtitles: Models.VideoCaption[]
+  subtitles: VideoCaption[]
 }) {
   const t = useT()
   const [output, setOutput] = useState<SubtitleOutput>('hls')
@@ -243,8 +243,8 @@ function AdvancedUrlsCard({
 }: {
   projectId: string
   videoId: string
-  renditions: Models.VideoRendition[]
-  subtitles: Models.VideoCaption[]
+  renditions: VideoRendition[]
+  subtitles: VideoCaption[]
 }) {
   const t = useT()
   const [renditionId, setRenditionId] = useState('')

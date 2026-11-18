@@ -95,6 +95,30 @@ class StatsResources extends Action
 
         $batch = \count($occurrences);
 
+        // A sweep costs far more than the interval that schedules it, so on a
+        // short interval the scheduler outruns the worker and the queue grows
+        // without bound. Every message in that backlog asks for the same thing
+        // -- a fresh count of one project -- so the surplus buys nothing, while
+        // a project created behind it waits the whole backlog for its first
+        // sweep. Skip the round when the queue still holds an unstarted batch
+        // and let the worker catch up; each project is then swept once per
+        // drain rather than once per interval.
+        try {
+            $pending = $publisherForStatsResources->getSize();
+            if ($pending >= $batch) {
+                Span::init('schedule.stats.backpressure');
+                Span::add('queue.pending', $pending);
+                Span::add('occurrence.batch', $batch);
+                Span::current()?->finish();
+
+                return null;
+            }
+        } catch (\Throwable $th) {
+            // The size probe is advisory; a broker that cannot answer it must
+            // not stop the sweep being scheduled at all.
+            Console::warning('stats resources: could not read queue size: ' . $th->getMessage());
+        }
+
         foreach (\array_values($occurrences) as $index => $occurrence) {
             Span::init('schedule.stats.enqueue');
             $error = null;

@@ -2,6 +2,7 @@
 
 namespace Utopia\Query\Tests\API;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Query\CursorDirection;
 use Utopia\Query\Exception\ValidationException;
@@ -233,6 +234,49 @@ class HelperTest extends TestCase
         $this->assertSame(5, $grouped->offset);
     }
 
+    /**
+     * @return array<string, array{0: mixed, 1: int|null}>
+     */
+    public static function limitValueProvider(): array
+    {
+        return [
+            'integer' => [25, 25],
+            'integral float' => [25.0, 25],
+            'numeric string' => ['25', 25],
+            'fractional float' => [25.9, 25],
+            'float beyond int range' => [1e308, null],
+            'string beyond int range' => ['1e400', null],
+            'negative float beyond int range' => [-1e300, null],
+            'boolean' => [true, null],
+            'array' => [[1], null],
+            'non-numeric string' => ['ten', null],
+        ];
+    }
+
+    #[DataProvider('limitValueProvider')]
+    public function testGroupByTypeReadsLimitAndOffsetWithoutWarnings(mixed $value, ?int $expected): void
+    {
+        $warnings = [];
+        \set_error_handler(static function (int $severity, string $message) use (&$warnings): bool {
+            $warnings[] = $message;
+
+            return true;
+        });
+
+        try {
+            $grouped = Query::groupByType([
+                new Query(Method::Limit, values: [$value]),
+                new Query(Method::Offset, values: [$value]),
+            ]);
+        } finally {
+            \restore_error_handler();
+        }
+
+        $this->assertSame([], $warnings, 'Reading a limit or offset must not raise a PHP warning');
+        $this->assertSame($expected, $grouped->limit);
+        $this->assertSame($expected, $grouped->offset);
+    }
+
     public function testGroupByTypeFirstCursorWins(): void
     {
         $queries = [
@@ -457,6 +501,16 @@ class HelperTest extends TestCase
             Query::orderRandom(),
         ];
         $errors = Query::validate($queries, []);
+        $this->assertCount(0, $errors);
+    }
+
+    public function testValidateSkipsRelationshipQueries(): void
+    {
+        $queries = [
+            Query::equal('name', ['John']),
+            Query::relationship('comments', [Query::equal('approved', [true])]),
+        ];
+        $errors = Query::validate($queries, ['name']);
         $this->assertCount(0, $errors);
     }
 

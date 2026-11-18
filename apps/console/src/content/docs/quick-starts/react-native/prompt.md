@@ -11,7 +11,7 @@
 
 ## Step 2: Install SDK and polyfills
 
-- Run: `npx expo install react-native-appwrite react-native-url-polyfill`
+- Run: `npx expo install react-native-appwrite expo-file-system react-native-url-polyfill`
 
 ## Step 3: Configure identifiers (ask user)
 

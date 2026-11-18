@@ -25,6 +25,8 @@ const MOCK_PRESETS = [
   { code: null, label: 'Auto', description: 'Use live locale.get() country' },
   { code: 'IN', label: 'India', description: 'Shows the Start plan' },
   { code: 'NP', label: 'Nepal', description: 'Shows the Start plan' },
+  { code: 'NG', label: 'Nigeria', description: 'Shows the Start plan' },
+  { code: 'PK', label: 'Pakistan', description: 'Shows the Start plan' },
   { code: 'US', label: 'United States', description: 'Hides the Start plan' },
 ] as const
 
@@ -183,7 +185,7 @@ export function DebugMenuLocalePanel() {
         <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--network-globe-edge)]/80">
           Mock country
         </p>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {MOCK_PRESETS.map((preset) => {
             const active = mockCountry === preset.code
             return (

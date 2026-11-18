@@ -19,6 +19,7 @@ class Query
         Method::And,
         Method::Or,
         Method::ElemMatch,
+        Method::Relationship,
     ];
 
     protected Method $method;
@@ -36,6 +37,8 @@ class Query
 
     protected string $alias = '';
 
+    protected bool $aliasDefaulted = false;
+
     /**
      * Construct a new query object
      *
@@ -47,6 +50,7 @@ class Query
         $this->attribute = $attribute;
         $this->values = $values;
         $this->alias = $alias;
+        $this->aliasDefaulted = $this->method->isJoin() && $alias !== '' && $alias === $attribute;
     }
 
     public function __clone(): void
@@ -102,6 +106,15 @@ class Query
     public function getAlias(): string
     {
         return $this->alias;
+    }
+
+    /**
+     * Whether a join is read under the name of the collection it joins, as a join given no alias
+     * is. It is decided when the query is built, so it holds after the collection is renamed.
+     */
+    public function isAliasDefaulted(): bool
+    {
+        return $this->aliasDefaulted;
     }
 
     /**
@@ -249,6 +262,10 @@ class Query
             throw new ValidationException('Raw queries cannot be parsed from untrusted input; construct via Query::raw() in code');
         }
 
+        if ($methodEnum === Method::Distinct && ($attribute !== '' || $values !== [])) {
+            throw new QueryException('Invalid distinct query: distinct takes no attribute or values, it deduplicates the attributes a select names');
+        }
+
         if ($methodEnum->isJoin()) {
             return self::parseJoin($methodEnum, $attribute, $values, $alias, $allowRaw);
         }
@@ -342,7 +359,7 @@ class Query
      * different parameter values produce the same fingerprint, which is
      * useful for pattern-based counting and slow-query grouping.
      *
-     * Logical queries (`and`, `or`, `elemMatch`) contribute their inner
+     * Logical queries (`and`, `or`, `elemMatch`, `relationship`) contribute their inner
      * structure to the hash via `Query::shape()` — two `and(...)` queries
      * with different child shapes produce different fingerprints.
      *
@@ -378,7 +395,7 @@ class Query
      * Canonical shape string for this Query — values excluded.
      *
      * Non-logical queries produce `method:attribute`. Logical queries
-     * (`and`, `or`, `elemMatch`) produce `method:attribute(child1|child2|…)`
+     * (`and`, `or`, `elemMatch`, `relationship`) produce `method:attribute(child1|child2|…)`
      * with children sorted so child order does not affect the shape.
      *
      * Implemented iteratively: walks the tree into a preorder list via a
@@ -424,7 +441,7 @@ class Query
             }
             \sort($childShapes);
 
-            // Attribute is empty for and/or; meaningful for elemMatch (the field being matched).
+            // Attribute is empty for and/or; meaningful for elemMatch and relationship (the field being matched).
             $shapes[$id] = $node->method->value.':'.$node->attribute.'('.\implode('|', $childShapes).')';
         }
 
@@ -897,15 +914,11 @@ class Query
                     break;
 
                 case $method === Method::Limit:
-                    if ($limit === null && isset($values[0]) && \is_numeric($values[0])) {
-                        $limit = \intval($values[0]);
-                    }
+                    $limit ??= self::toInteger($values[0] ?? null);
                     break;
 
                 case $method === Method::Offset:
-                    if ($offset === null && isset($values[0]) && \is_numeric($values[0])) {
-                        $offset = \intval($values[0]);
-                    }
+                    $offset ??= self::toInteger($values[0] ?? null);
                     break;
 
                 case $method === Method::CursorAfter:
@@ -999,6 +1012,29 @@ class Query
             cursorDirection: $cursorDirection,
             timeBuckets: $timeBuckets,
         );
+    }
+
+    private static function toInteger(mixed $value): ?int
+    {
+        if (\is_int($value)) {
+            return $value;
+        }
+
+        if (! \is_numeric($value)) {
+            return null;
+        }
+
+        $integer = \filter_var($value, FILTER_VALIDATE_INT);
+        if ($integer !== false) {
+            return $integer;
+        }
+
+        $number = (float) $value;
+        if (! \is_finite($number) || $number < PHP_INT_MIN || $number >= PHP_INT_MAX) {
+            return null;
+        }
+
+        return (int) $number;
     }
 
     /**
@@ -1217,6 +1253,17 @@ class Query
         return new static(Method::ElemMatch, $attribute, $queries);
     }
 
+    /**
+     * Queries that shape the documents populated for a relationship attribute,
+     * written against the related collection.
+     *
+     * @param  array<Query>  $queries
+     */
+    public static function relationship(string $attribute, array $queries): static
+    {
+        return new static(Method::Relationship, $attribute, $queries);
+    }
+
     // Aggregation factory methods
 
     public static function count(string $attribute = '*', string $alias = ''): static
@@ -1356,6 +1403,7 @@ class Query
     }
 
     /**
+     * @param  string  $alias  The name the join is read under; '' reads it under $collection
      * @param  list<Query>  $on  on() conditions and filters
      */
     public static function join(string $collection, string $alias, array $on): static
@@ -1364,6 +1412,7 @@ class Query
     }
 
     /**
+     * @param  string  $alias  The name the join is read under; '' reads it under $collection
      * @param  list<Query>  $on  on() conditions and filters
      */
     public static function leftJoin(string $collection, string $alias, array $on): static
@@ -1372,6 +1421,7 @@ class Query
     }
 
     /**
+     * @param  string  $alias  The name the join is read under; '' reads it under $collection
      * @param  list<Query>  $on  on() conditions and filters
      */
     public static function rightJoin(string $collection, string $alias, array $on): static
@@ -1380,6 +1430,7 @@ class Query
     }
 
     /**
+     * @param  string  $alias  The name the join is read under; '' reads it under $collection
      * @param  list<Query>  $on  on() conditions and filters
      */
     public static function fullOuterJoin(string $collection, string $alias, array $on): static
@@ -1387,11 +1438,17 @@ class Query
         return self::createJoin(Method::FullOuterJoin, $collection, $alias, $on);
     }
 
+    /**
+     * @param  string  $alias  The name the join is read under; '' reads it under $collection
+     */
     public static function crossJoin(string $collection, string $alias): static
     {
         return self::createJoin(Method::CrossJoin, $collection, $alias, []);
     }
 
+    /**
+     * @param  string  $alias  The name the join is read under; '' reads it under $collection
+     */
     public static function naturalJoin(string $collection, string $alias): static
     {
         return self::createJoin(Method::NaturalJoin, $collection, $alias, []);
@@ -1404,6 +1461,7 @@ class Query
      */
     private static function createJoin(Method $method, string $collection, string $alias, array $on): static
     {
+        $alias = $alias !== '' ? $alias : $collection;
         if ($alias === '') {
             throw new ValidationException('Join alias is required: '.$method->value.' '.$collection);
         }
@@ -1640,10 +1698,15 @@ class Query
             Method::Select,
             Method::Exists,
             Method::NotExists,
+            Method::Relationship,
         ];
 
         foreach ($queries as $query) {
             $method = $query->getMethod();
+
+            if (\in_array($method, $skipTypes, true)) {
+                continue;
+            }
 
             // Recursively validate nested queries
             if ($method->isNested()) {
@@ -1651,10 +1714,6 @@ class Query
                 $nested = $query->getValues();
                 \array_push($errors, ...static::validate($nested, $allowedAttributes));
 
-                continue;
-            }
-
-            if (\in_array($method, $skipTypes, true)) {
                 continue;
             }
 

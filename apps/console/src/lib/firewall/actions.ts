@@ -1,4 +1,5 @@
 import { WafRuleAction, type Models } from '@appwrite.io/console'
+import type { FirewallRule } from '@/lib/firewall/types'
 
 /** Actions that can be created via the Console SDK today. */
 export const FIREWALL_CREATABLE_ACTIONS = [
@@ -155,19 +156,19 @@ export function getFirewallActionBadgeClass(action: string): string {
 }
 
 export function isRateLimitRule(
-  rule: Models.WafRule,
+  rule: FirewallRule,
 ): rule is Models.WafRuleRateLimit {
   return rule.action === WafRuleAction.RateLimit
 }
 
 export function isRedirectRule(
-  rule: Models.WafRule,
+  rule: FirewallRule,
 ): rule is Models.WafRuleRedirect {
   return rule.action === WafRuleAction.Redirect
 }
 
 export function isChallengeRule(
-  rule: Models.WafRule,
+  rule: FirewallRule,
 ): rule is Models.WafRuleChallenge {
   return rule.action === WafRuleAction.Challenge
 }
@@ -184,7 +185,7 @@ function normalizeRateLimitStrategy(value: unknown): FirewallRateLimitStrategy {
     : FIREWALL_RATE_LIMIT_STRATEGY_DEFAULT
 }
 
-export function getRuleRateLimit(rule: Models.WafRule): {
+export function getRuleRateLimit(rule: FirewallRule): {
   limit: number
   interval: number
   key: FirewallRateLimitKey
@@ -221,7 +222,7 @@ export function getRuleRateLimit(rule: Models.WafRule): {
   }
 }
 
-export function getRuleChallenge(rule: Models.WafRule): {
+export function getRuleChallenge(rule: FirewallRule): {
   challengeType: string
   difficulty: number
   ttl: number
@@ -251,14 +252,15 @@ export function getRuleChallenge(rule: Models.WafRule): {
       : (toFiniteNumber(config?.ttl) ?? CHALLENGE_TTL_DEFAULT)
 
   return {
-    challengeType: typeof rule.challengeType === 'string' ? rule.challengeType : '',
+    challengeType:
+      typeof rule.challengeType === 'string' ? rule.challengeType : '',
     difficulty,
     ttl,
   }
 }
 
 export function getRuleRedirect(
-  rule: Models.WafRule,
+  rule: FirewallRule,
 ): { location: string; statusCode: number } | null {
   if (
     isRedirectRule(rule) &&
@@ -281,9 +283,7 @@ export function getRuleRedirect(
   return { location, statusCode }
 }
 
-function readRuleConfig(
-  rule: Models.WafRule,
-): Record<string, unknown> | null {
+function readRuleConfig(rule: FirewallRule): Record<string, unknown> | null {
   const config = rule.config
   if (!config || typeof config !== 'object' || Array.isArray(config)) {
     return null

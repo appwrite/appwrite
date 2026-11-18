@@ -3,12 +3,12 @@
 namespace Appwrite\Deployment;
 
 use Ahc\Jwt\JWT;
-use Utopia\System\System;
+use Appwrite\Auth\EncryptionKey;
 
 /**
  * Short-lived, self-contained presigned token for a deployment artifact.
  *
- * Signed with `_APP_OPENSSL_KEY_V1` (HS256), it lets the jobs-service sidecar
+ * Signed with the current server key (HS256), it lets the jobs-service sidecar
  * hit the deployment source-download endpoint without a session or API key. The
  * token binds the deployment id and the artifact type ("source"), so a leaked
  * token cannot be repurposed for another deployment or artifact.
@@ -19,7 +19,7 @@ final class Token
 
     public static function sign(string $deploymentId, string $type, int $ttl): string
     {
-        return (new JWT(self::key(), 'HS256', $ttl))->encode([
+        return (new JWT(EncryptionKey::current(), 'HS256', $ttl))->encode([
             'deploymentId' => $deploymentId,
             'type' => $type,
         ]);
@@ -37,17 +37,12 @@ final class Token
         }
 
         try {
-            $payload = (new JWT(self::key(), 'HS256'))->decode($token);
+            $payload = EncryptionKey::decode($token);
         } catch (\Throwable) {
             return false;
         }
 
         return ($payload['deploymentId'] ?? '') === $deploymentId
             && ($payload['type'] ?? '') === $type;
-    }
-
-    private static function key(): string
-    {
-        return System::getEnv('_APP_OPENSSL_KEY_V1', '');
     }
 }

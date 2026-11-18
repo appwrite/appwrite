@@ -10,6 +10,7 @@ use Appwrite\Event\Message\Certificate as CertificateMessage;
 use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
+use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Platform\Workers\Certificates;
@@ -42,6 +43,11 @@ final class CertificatesDomainValidationTest extends TestCase
 {
     private const DOMAIN = 'www.example.invalid';
 
+    private const MAIN_DOMAIN = 'appwrite.example.invalid';
+
+    /** What the last job threw back to the queue, if anything. */
+    private ?\Throwable $thrown = null;
+
     public function testAJobFromAVerifiedEndpointReachesIssuanceWithoutASecondDnsCheck(): void
     {
         $certificates = $this->createMock(Provider::class);
@@ -71,9 +77,19 @@ final class CertificatesDomainValidationTest extends TestCase
         $certificates = $this->createMock(Provider::class);
         $certificates->expects($this->never())->method('issueCertificate');
 
-        $writes = $this->generate($certificates, skipDomainValidation: false);
+        // The failure is emailed to the certificates address, which every deployment sets
+        $previous = \getenv('_APP_EMAIL_CERTIFICATES');
+        \putenv('_APP_EMAIL_CERTIFICATES=certificates@example.invalid');
+        try {
+            $writes = $this->generate($certificates, skipDomainValidation: false);
+        } finally {
+            \putenv($previous === false ? '_APP_EMAIL_CERTIFICATES' : '_APP_EMAIL_CERTIFICATES=' . $previous);
+        }
 
         $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATION_FAILED, $writes['rules']['status']);
+        // The domain's DNS failing is recorded above and retried by maintenance. Thrown back,
+        // the queue would redeliver it at once, spending an attempt and emailing on each run.
+        $this->assertNull($this->thrown, 'A DNS failure must end the job, not hand it back to the queue');
     }
 
     /**
@@ -127,6 +143,7 @@ final class CertificatesDomainValidationTest extends TestCase
             project: new Document(['$id' => 'project-1', '$sequence' => '1']),
             domain: new Document(['domain' => self::DOMAIN, 'domainType' => 'site']),
             action: CertificateEvent::ACTION_GENERATION,
+            validationDomain: self::MAIN_DOMAIN,
             skipDomainValidation: $skipDomainValidation,
         ))->toArray());
 
@@ -135,6 +152,7 @@ final class CertificatesDomainValidationTest extends TestCase
                 $message,
                 $dbForPlatform,
                 new MailPublisher(new MockPublisher(), new Queue('v1-mails')),
+                new NotificationPublisher(new MockPublisher(), new Queue('v1-notifications')),
                 $this->createStub(Event::class),
                 $this->createStub(Webhook::class),
                 new FunctionPublisher(new MockPublisher(), new Queue('v1-functions')),
@@ -142,12 +160,14 @@ final class CertificatesDomainValidationTest extends TestCase
                 new CertificatePublisher(new MockPublisher(), new Queue('v1-certificates')),
                 $certificates,
                 [],
+                [],
                 $this->createStub(Authorization::class),
                 (new Bus())->setResolver(static fn (): null => null),
             );
-        } catch (\Throwable) {
+        } catch (\Throwable $error) {
             // The worker rethrows an issuance failure after recording it; the
             // records are what these tests read.
+            $this->thrown = $error;
         }
 
         return $writes;

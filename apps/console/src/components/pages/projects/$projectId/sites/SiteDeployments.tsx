@@ -106,7 +106,11 @@ import {
 } from '@/lib/react-query/hooks'
 import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
 import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
-import { getVcsProvider } from '@/lib/vcs/providers'
+import {
+  getVcsProvider,
+  isEntireRepositoryUrl,
+  isRepositoryHost,
+} from '@/lib/vcs/providers'
 import {
   SITE_SCREENSHOTS_BUCKET_ID,
   SITE_SCREENSHOT_CARD_WIDTH,
@@ -120,7 +124,7 @@ import { useT } from '@/lib/i18n/translate'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
-import { domainUrl } from '@/lib/domains/url'
+import { useVisitUrl } from '@/hooks/use-visit-url'
 
 const DEPLOYMENTS_PER_PAGE = 25
 
@@ -141,20 +145,24 @@ function detectVcsProvider(
 ): { name: string; icon: React.ReactNode } | null {
   if (deployment.providerRepositoryUrl) {
     const url = deployment.providerRepositoryUrl.toLowerCase()
-    if (url.includes('github.com')) {
+    if (isRepositoryHost(url, 'github.com')) {
       const { label, Icon } = getVcsProvider('github')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
-    if (url.includes('gitlab.com')) {
+    if (isRepositoryHost(url, 'gitlab.com')) {
       const { label, Icon } = getVcsProvider('gitlab')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
-    if (url.includes('bitbucket.org') || url.includes('bitbucket.com')) {
+    if (isRepositoryHost(url, 'bitbucket.org', 'bitbucket.com')) {
       const { label, Icon } = getVcsProvider('bitbucket')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
-    if (url.includes('cursor.com')) {
+    if (isRepositoryHost(url, 'cursor.com')) {
       const { label, Icon } = getVcsProvider('origin')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
+    }
+    if (isEntireRepositoryUrl(url)) {
+      const { label, Icon } = getVcsProvider('entire')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
   }
@@ -171,6 +179,7 @@ function detectVcsProvider(
 
 export function SiteDeploymentsView() {
   const t = useT()
+  const visitUrl = useVisitUrl()
   const { projectId, siteId } = useParams({ strict: false })
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -212,11 +221,7 @@ export function SiteDeploymentsView() {
 
   const { theme, resolvedTheme } = useTheme()
   const isDark = useMemo(
-    () =>
-      resolvedTheme === 'dark' ||
-      theme === 'dark' ||
-      (typeof window !== 'undefined' &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches),
+    () => (resolvedTheme ?? theme ?? 'dark') !== 'light',
     [theme, resolvedTheme],
   )
 
@@ -905,7 +910,7 @@ export function SiteDeploymentsView() {
                                     href={repoUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="truncate link-neutral"
+                                    className="truncate no-underline hover:text-foreground"
                                     onClick={(e) => e.stopPropagation()}
                                   >
                                     {label}
@@ -1016,7 +1021,7 @@ export function SiteDeploymentsView() {
                             {activeDomains.map((rule) => (
                               <a
                                 key={rule.$id}
-                                href={domainUrl(rule.domain)}
+                                href={visitUrl(rule.domain)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1.5 text-[13px] font-mono link-neutral"
@@ -1215,7 +1220,7 @@ export function SiteDeploymentsView() {
                             {activeDomains.map((rule) => (
                               <a
                                 key={rule.$id}
-                                href={domainUrl(rule.domain)}
+                                href={visitUrl(rule.domain)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group"
@@ -1446,7 +1451,7 @@ export function SiteDeploymentsView() {
                                             href={repoUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="link-neutral truncate"
+                                            className="truncate no-underline hover:text-foreground"
                                             onClick={(e) => e.stopPropagation()}
                                           >
                                             {label}

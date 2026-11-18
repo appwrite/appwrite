@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDomainPrices } from '@/lib/react-query/hooks/domains'
-import { DOMAIN_SEARCH_TLDS } from '@/lib/domains/tlds'
+import { getDomainSearchTlds } from '@/lib/domains/tlds'
 
 export type DomainSuggestion = {
   full: string
@@ -31,11 +31,36 @@ export const DOMAIN_SEARCH_PRELOAD_AHEAD = 20
 /** IntersectionObserver margin so prices load before cards enter the viewport. */
 export const DOMAIN_SEARCH_VISIBLE_ROOT_MARGIN = '480px'
 
+const DOMAIN_SEARCH_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789.-'
+
 export function normalizeDomainSearchInput(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9.-]/g, '')
+  let host = value.trim().toLowerCase()
+  const schemeEnd = host.indexOf('://')
+  if (schemeEnd >= 0) host = host.slice(schemeEnd + 3)
+  for (const separator of ['/', '?', '#', ':']) {
+    const index = host.indexOf(separator)
+    if (index >= 0) host = host.slice(0, index)
+  }
+  if (host.startsWith('www.')) host = host.slice(4)
+
+  let normalized = ''
+  for (const char of host) {
+    if (DOMAIN_SEARCH_CHARS.includes(char)) normalized += char
+  }
+  return normalized
+}
+
+/**
+ * Whether a normalized search can name a domain: every label is non-empty and
+ * does not start or end with a hyphen. A trailing dot is allowed while typing.
+ */
+export function isValidDomainSearch(normalizedSearch: string): boolean {
+  const labels = normalizedSearch.split('.')
+  if (labels.length > 1 && labels[labels.length - 1] === '') labels.pop()
+  return labels.every(
+    (label) =>
+      label.length > 0 && !label.startsWith('-') && !label.endsWith('-'),
+  )
 }
 
 export function parseDomainBaseName(normalizedSearch: string): string {
@@ -91,42 +116,45 @@ export function buildDomainSuggestions({
 }): DomainSuggestion[] {
   if (!baseName || !showSuggestions) return []
 
-  const hasExactMatch = DOMAIN_SEARCH_TLDS.some(
+  const tlds = getDomainSearchTlds(baseName, normalizedSearch)
+  const hasExactMatch = tlds.some(
     (tld) => `${baseName}.${tld}` === normalizedSearch,
   )
 
-  return DOMAIN_SEARCH_TLDS.map((tld) => {
-    const full = `${baseName}.${tld}`
-    const apiData = apiDataByDomain.get(full)
-    const isExactMatch = full === normalizedSearch
-    const isPreferredCom =
-      tld === 'com' && normalizedSearch === baseName && !hasExactMatch
+  return tlds
+    .map((tld) => {
+      const full = `${baseName}.${tld}`
+      const apiData = apiDataByDomain.get(full)
+      const isExactMatch = full === normalizedSearch
+      const isPreferredCom =
+        tld === 'com' && normalizedSearch === baseName && !hasExactMatch
 
-    return {
-      full,
-      tld,
-      priceLoaded: apiData != null,
-      price: apiData?.price ?? undefined,
-      periodYears: apiData?.periodYears ?? 1,
-      renewalPrice: apiData?.renewalPrice,
-      renewalPeriodYears: apiData?.renewalPeriodYears,
-      taken: apiData ? !apiData.available : undefined,
-      premium: apiData?.premium,
-      isPerfectMatch: isExactMatch || isPreferredCom,
-    }
-  }).sort((a, b) => {
-    const aExact = a.full === normalizedSearch ? 1 : 0
-    const bExact = b.full === normalizedSearch ? 1 : 0
-    if (aExact !== bExact) return bExact - aExact
+      return {
+        full,
+        tld,
+        priceLoaded: apiData != null,
+        price: apiData?.price ?? undefined,
+        periodYears: apiData?.periodYears ?? 1,
+        renewalPrice: apiData?.renewalPrice,
+        renewalPeriodYears: apiData?.renewalPeriodYears,
+        taken: apiData ? !apiData.available : undefined,
+        premium: apiData?.premium,
+        isPerfectMatch: isExactMatch || isPreferredCom,
+      }
+    })
+    .sort((a, b) => {
+      const aExact = a.full === normalizedSearch ? 1 : 0
+      const bExact = b.full === normalizedSearch ? 1 : 0
+      if (aExact !== bExact) return bExact - aExact
 
-    const aRank = tldRank(a.tld, typedTld)
-    const bRank = tldRank(b.tld, typedTld)
-    if (aRank !== bRank) return aRank - bRank
+      const aRank = tldRank(a.tld, typedTld)
+      const bRank = tldRank(b.tld, typedTld)
+      if (aRank !== bRank) return aRank - bRank
 
-    const aCom = a.tld === 'com' ? 1 : 0
-    const bCom = b.tld === 'com' ? 1 : 0
-    return bCom - aCom
-  })
+      const aCom = a.tld === 'com' ? 1 : 0
+      const bCom = b.tld === 'com' ? 1 : 0
+      return bCom - aCom
+    })
 }
 
 export function useDomainSearch(
@@ -162,18 +190,22 @@ export function useDomainSearch(
     [normalizedSearch],
   )
 
-  const priorityTlds = useMemo(
-    () =>
-      DOMAIN_SEARCH_TLDS.some((tld) => tld === typedTld) &&
-      normalizedSearch === `${baseName}.${typedTld}`
-        ? [typedTld]
-        : ['com', 'dev', 'app', 'io'],
-    [baseName, normalizedSearch, typedTld],
+  const priorityTlds = useMemo(() => {
+    const exactTld = getDomainSearchTlds(baseName, normalizedSearch).find(
+      (tld) => normalizedSearch === `${baseName}.${tld}`,
+    )
+    return exactTld ? [exactTld] : ['com', 'dev', 'app', 'io']
+  }, [baseName, normalizedSearch])
+
+  const isValidSearch = useMemo(
+    () => isValidDomainSearch(normalizedSearch),
+    [normalizedSearch],
   )
 
   const showSuggestions =
-    baseName.length >= 2 ||
-    (baseName.length === 1 && normalizedSearch.includes('.'))
+    isValidSearch &&
+    (baseName.length >= 2 ||
+      (baseName.length === 1 && normalizedSearch.includes('.')))
 
   const displayOrderTlds = useMemo(() => {
     if (!baseName || !showSuggestions) return []
@@ -186,10 +218,7 @@ export function useDomainSearch(
     }).map((suggestion) => suggestion.tld)
   }, [baseName, normalizedSearch, typedTld, showSuggestions])
 
-  const priorityTldSet = useMemo(
-    () => new Set(priorityTlds),
-    [priorityTlds],
-  )
+  const priorityTldSet = useMemo(() => new Set(priorityTlds), [priorityTlds])
 
   const mergeRequestedThroughIndex = useCallback(
     (throughIndex: number) => {
@@ -332,6 +361,7 @@ export function useDomainSearch(
     isRetrying,
     showSuggestions,
     hasContent: searchValue.trim().length > 0,
+    isInvalid: searchValue.trim().length > 0 && !isValidSearch,
     baseName,
     addRequestedTld,
   }

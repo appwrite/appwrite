@@ -143,7 +143,7 @@ using Appwrite;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -236,8 +236,8 @@ package main
 
 import (
     "fmt"
-    "github.com/appwrite/sdk-for-go/appwrite"
-    "github.com/appwrite/sdk-for-go/id"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/id"
 )
 
 func main() {
@@ -384,7 +384,7 @@ using Appwrite;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -470,8 +470,8 @@ package main
 
 import (
     "fmt"
-    "github.com/appwrite/sdk-for-go/appwrite"
-    "github.com/appwrite/sdk-for-go/project"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/project"
 )
 
 func main() {
@@ -610,7 +610,7 @@ using Appwrite;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -691,7 +691,7 @@ package main
 
 import (
     "fmt"
-    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
 )
 
 func main() {
@@ -838,7 +838,7 @@ using Appwrite;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -929,7 +929,7 @@ package main
 
 import (
     "fmt"
-    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
 )
 
 func main() {
@@ -1070,7 +1070,7 @@ using Appwrite;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -1151,7 +1151,7 @@ package main
 
 import (
     "fmt"
-    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
 )
 
 func main() {

@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 final class TeamsCustomServerTest extends Scope
@@ -24,7 +24,7 @@ final class TeamsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders());
-        $teamId = ID::unique();
+        $teamId = Id::unique();
         $team = $this->client->call(Client::METHOD_POST, '/teams', $headers, [
             'teamId' => $teamId,
             'name' => 'Nullable membership fields',
@@ -33,7 +33,7 @@ final class TeamsCustomServerTest extends Scope
 
         try {
             // Test for SUCCESS: explicit nulls behave like omitted optional fields.
-            $email = ID::unique() . '@localhost.test';
+            $email = Id::unique() . '@localhost.test';
             $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $headers, [
                 'email' => $email,
                 'phone' => null,
@@ -107,7 +107,7 @@ final class TeamsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Demo'
         ]);
 
@@ -126,7 +126,7 @@ final class TeamsCustomServerTest extends Scope
         $email = uniqid() . 'friend@localhost.test';
         $name = 'Friend User';
         $password = 'password';
-        $userId = ID::unique();
+        $userId = Id::unique();
 
         // Create a user account before we create a invite so we can check if the user has permissions when it shouldn't
         $user = $this->client->call(Client::METHOD_POST, '/account', [

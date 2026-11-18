@@ -1,4 +1,4 @@
-import type { Models } from '@appwrite.io/console'
+import type { FirewallRule } from '@/lib/firewall/types'
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,7 @@ interface DeleteRuleProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   projectId: string
-  rule: Models.WafRule | null
+  rule: FirewallRule | null
 }
 
 export function DeleteRule({

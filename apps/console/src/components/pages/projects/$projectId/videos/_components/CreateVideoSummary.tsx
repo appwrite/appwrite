@@ -1,5 +1,4 @@
 import { useState, type ReactNode } from 'react'
-import type { VideoOutput } from '@appwrite.io/console'
 import { Film, Music } from 'lucide-react'
 import { formatBytes } from '@/lib/utils/mock-data'
 import {
@@ -9,6 +8,7 @@ import {
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { VideoOutputBadge } from './VideoOutputBadge'
+import type { VideoOutput } from '@/lib/appwrite/videos'
 
 /** Read from the preview element; `duration` in milliseconds. */
 export type CreateVideoSourceMeta = {

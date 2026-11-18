@@ -60,6 +60,12 @@ class Cloudflare implements Provider
         throw new UnsupportedOperation('Certificate status retrieval is not supported by the Cloudflare provider.');
     }
 
+    public function getCertificateExpiry(string $domain, ?string $domainType): ?string
+    {
+        // Cloudflare renews custom hostname certificates itself; reading the expiry would cost a custom hostname lookup.
+        return null;
+    }
+
     public function isRenewRequired(string $domain, ?string $domainType): bool
     {
         return $this->findHostname(Domain::validate($domain)) === null;

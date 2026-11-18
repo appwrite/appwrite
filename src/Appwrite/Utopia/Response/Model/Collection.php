@@ -47,6 +47,12 @@ class Collection extends Model
                 'default' => '',
                 'example' => 'My Collection',
             ])
+            ->addRule('description', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Optional description for the collection.',
+                'default' => '',
+                'example' => 'Movies available in the catalog.',
+            ])
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Collection enabled. Can be \'enabled\' or \'disabled\'. When disabled, the collection is inaccessible to users, but remains accessible to Server SDKs using API keys.',

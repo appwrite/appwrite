@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ID, VideoOutput } from '@appwrite.io/console'
+import { ID } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
@@ -62,6 +62,7 @@ import {
   ProfilePicker,
   sortProfilesByPixels,
 } from './RenditionOptions'
+import { type Video, VideoOutput } from '@/lib/appwrite/videos'
 
 interface CreateVideoProps {
   open: boolean
@@ -107,7 +108,7 @@ function createBucketMaximumFileSizeFromPlan(
 type RunState = {
   steps: CreateVideoStepId[]
   states: Partial<Record<CreateVideoStepId, CreateVideoStepState>>
-  video: Models.Video | null
+  video: Video | null
   phase: 'running' | 'encoding' | 'done' | 'failed'
   failedSteps: CreateVideoStepId[]
   profiles: { id: string; name: string }[]

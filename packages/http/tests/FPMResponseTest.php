@@ -88,6 +88,92 @@ final class FPMResponseTest extends TestCase
         $this->assertSame('body', $html);
     }
 
+    public function testChunkedResponseCountsDeliveredBytesAndFinishesOnce(): void
+    {
+        $response = new Response();
+        ob_start();
+        try {
+            @$response->chunk('first-');
+            $firstSize = $response->getSize();
+            @$response->chunk('last');
+            @$response->chunk('', true);
+            @$response->chunk('ignored', true);
+            $body = ob_get_contents();
+        } finally {
+            ob_end_clean();
+        }
+
+        $this->assertSame('first-last', $body);
+        $this->assertGreaterThanOrEqual(6, $firstSize);
+        $this->assertSame(4, $response->getSize() - $firstSize);
+        $this->assertTrue($response->isSent());
+    }
+
+    public function testFailedFinalChunkDoesNotFinishOrCountPayload(): void
+    {
+        $response = new FailingWriteResponse();
+        $this->expectException(\RuntimeException::class);
+        ob_start();
+        try {
+            @$response->chunk(\str_repeat('x', 1024), true);
+        } finally {
+            ob_end_clean();
+            $this->assertFalse($response->isSent());
+            $this->assertLessThan(1024, $response->getSize());
+        }
+    }
+
+    public function testStreamedChunksDecodeAsTheyArrive(): void
+    {
+        $response = new Response();
+        $response->setAcceptEncoding('gzip')->setContentType(Response::CONTENT_TYPE_HTML);
+        $decoder = \inflate_init(ZLIB_ENCODING_GZIP) ?: $this->fail('zlib cannot decode gzip');
+        ob_start();
+        try {
+            @$response->stream('first-');
+            $first = \inflate_add($decoder, (string) ob_get_contents());
+            ob_clean();
+            @$response->stream('last');
+            @$response->stream('', true);
+            $rest = \inflate_add($decoder, (string) ob_get_contents(), ZLIB_FINISH);
+        } finally {
+            ob_end_clean();
+        }
+
+        $this->assertSame('first-', $first);
+        $this->assertSame('last', $rest);
+    }
+
+    public function testCompressedStreamDropsContentLength(): void
+    {
+        $response = new Response();
+        $response
+            ->setAcceptEncoding('gzip')
+            ->setContentType(Response::CONTENT_TYPE_HTML)
+            ->addHeader('Content-Length', '6');
+        ob_start();
+        try {
+            @$response->stream('first-');
+        } finally {
+            ob_end_clean();
+        }
+
+        $this->assertFalse($response->hasHeader('Content-Length'));
+    }
+
+    public function testFailedStreamWriteReturnsFalse(): void
+    {
+        $response = new FailingWriteResponse();
+        ob_start();
+        try {
+            $written = @$response->stream('first-');
+        } finally {
+            ob_end_clean();
+        }
+
+        $this->assertFalse($written);
+    }
+
     public function testCanSendMinimalCookie(): void
     {
         ob_start(); //Start of build
@@ -188,5 +274,13 @@ final class FPMResponseTest extends TestCase
 
         $this->assertSame('<script type="text/javascript">window.parent.test({"key":"value"});</script>', $html);
         $this->assertSame('text/html; charset=UTF-8', $this->response->getContentType());
+    }
+}
+
+final class FailingWriteResponse extends Response
+{
+    public function write(string $content): bool
+    {
+        return false;
     }
 }

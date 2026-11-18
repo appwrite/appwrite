@@ -9,6 +9,7 @@ use Utopia\Usage\UsageQuery;
 
 class GaugesBench extends BenchmarkBase
 {
+    #[\Override]
     protected string $metric = 'storage';
 
     protected function setUp(): void

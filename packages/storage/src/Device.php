@@ -6,12 +6,13 @@ namespace Utopia\Storage;
 
 use Psr\Http\Message\StreamInterface;
 use Utopia\Storage\Exception\NotFoundException;
+use Utopia\Storage\Exception\NotModifiedException;
 use Utopia\Storage\Exception\PreconditionFailedException;
 use Utopia\Storage\Exception\StorageException;
 use Utopia\Storage\Exception\UploadException;
 
 /**
- * @phpstan-type UploadMetadata array{parts?: array<int, bool|string>, chunks?: int, content_type?: string, uploadId?: string, whole?: bool}
+ * @phpstan-type UploadMetadata array{parts?: array<int, bool|string>, chunks?: int, content_type?: string, uploadId?: string, whole?: bool, ...}
  */
 abstract class Device
 {
@@ -119,6 +120,9 @@ abstract class Device
      * file replaced meanwhile are never mistaken for the one the caller knows.
      * S3 checks the ETag as part of the read; `Local` pins the file open and
      * hashes it, which costs a full pass over it before any byte is returned.
+     * With a time, the read only happens if the file was modified after it, which
+     * tells age and bytes apart in one request. A time and an ETag cannot be
+     * combined, because services disagree on which one wins.
      *
      * @param  int<0, max>  $offset
      * @param  int<0, max>|null  $length
@@ -126,8 +130,33 @@ abstract class Device
      *
      * @throws NotFoundException When there is no file at the path
      * @throws PreconditionFailedException When the file's ETag is not the given one
+     * @throws NotModifiedException When the file has not been modified after the given time
+     * @throws \InvalidArgumentException When given both an ETag and a time
      */
-    abstract public function read(string $path, int $offset = 0, ?int $length = null, ?string $etag = null): StreamInterface;
+    abstract public function read(string $path, int $offset = 0, ?int $length = null, ?string $etag = null, ?\DateTimeInterface $modifiedSince = null): StreamInterface;
+
+    /**
+     * Deliver bytes without requiring a seekable copy of the entire object.
+     *
+     * @param callable(string): void $sink
+     * @param int<0, max> $offset
+     * @param int<0, max>|null $length
+     */
+    public function stream(string $path, callable $sink, int $offset = 0, ?int $length = null, ?string $etag = null): void
+    {
+        $body = $this->read($path, $offset, $length, $etag);
+        try {
+            while (!$body->eof()) {
+                $chunk = $body->read(524288);
+                if ($chunk === '') {
+                    break;
+                }
+                $sink($chunk);
+            }
+        } finally {
+            $body->close();
+        }
+    }
 
     /**
      * Write file by given path, replacing whatever was there.
@@ -229,12 +258,26 @@ abstract class Device
     }
 
     /**
-     * Delete file in given path return true on success and false on failure.
+     * Delete the file at the given path. When `$recursive` is true, also
+     * removes every object under `path/`. Return true on success and false on
+     * failure.
+     *
+     * A device may refuse a path that resolves to the whole bucket, or a
+     * recursive delete outside the root.
+     *
+     * @throws \InvalidArgumentException When the device refuses the path
      */
     abstract public function delete(string $path, bool $recursive = false): bool;
 
     /**
-     * Delete files in given path, path must be a directory. return true on success and false on failure.
+     * Delete the directory `path/` under the root and everything in it, never
+     * siblings that only share its name as a prefix. Return true on success
+     * and false on failure.
+     *
+     * A device may refuse a path that resolves to the whole root, the whole
+     * bucket or outside the root.
+     *
+     * @throws \InvalidArgumentException When the device refuses the path
      */
     abstract public function deletePath(string $path): bool;
 

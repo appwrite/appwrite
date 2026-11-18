@@ -31,11 +31,15 @@ export type { RuntimeConfig }
 
 const EMPTY_CONFIG: RuntimeConfig = {
   appwriteEndpoint: '',
+  appwriteVersion: '',
   consoleProfile: '',
   fingerprintKey: '',
   stripePublishableKey: '',
   sentryDsn: '',
   plausibleScriptSrc: '',
+  appwriteAnalyticsEndpoint: '',
+  appwriteAnalyticsProjectId: '',
+  appwriteAnalyticsPropertyId: '',
   userVerification: '',
   cookieBanner: '',
   browserApi: '',
@@ -43,7 +47,8 @@ const EMPTY_CONFIG: RuntimeConfig = {
   blogDrafts: '',
   screenshotMode: '',
   databasePitrRestore: '',
-  extraVcsOAuth: '',
+  projectEnvironments: '',
+  vcsOrigin: '',
   usageStats: '',
   preLaunch: '',
 }

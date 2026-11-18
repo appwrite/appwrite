@@ -1,0 +1,88 @@
+---
+layout: integration
+title: OAuth with GitLab
+description: Authenticate users with a GitLab.com or self-managed GitLab account
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-gitlab/cover.avif
+category: auth
+product:
+    vendor: GitLab
+    description: 'GitLab is a DevSecOps platform for source control, CI/CD, and project planning, available as GitLab.com or self-managed.'
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+[GitLab](https://about.gitlab.com/) is a DevSecOps platform that brings source control, CI/CD, security scanning, and project planning into one application. Teams use it on GitLab.com or run their own self-managed GitLab instance.
+
+# How does the integration work?
+
+You can use the GitLab OAuth adapter in Appwrite Auth to let users sign in with their GitLab account, on GitLab.com or on your own self-managed instance. This fits developer tools and internal apps whose users already work in GitLab. The session stores GitLab's access token as `providerAccessToken`, so your server can call the GitLab API on the user's behalf.
+
+Appwrite requests the `read_user`, `openid`, and `email` scopes and reads the user from GitLab's OpenID Connect user info. It marks the email as verified only when GitLab returns `email_verified` as `true`.
+
+# How to implement
+
+To implement the GitLab OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Create an application on GitLab
+
+On GitLab, open your user settings and go to **Applications**, then add a new application. To create it for a group or for the whole instance instead, use the group's settings or the **Admin** area of a self-managed instance.
+
+Configure the application:
+
+- **Name**: the name users see when they authorize your app.
+- **Redirect URI**: temporarily enter `https://temporary-endpoint.com/`. You'll replace it with the URI from Appwrite in the next step.
+- **Confidential**: keep it selected, since Appwrite exchanges codes with the application secret.
+- **Scopes**: select `read_user`, `openid`, and `email`. An existing application must allow all three.
+
+Save the application, then save the **Application ID** and **Secret** for later use.
+
+## Step 2: Add GitLab OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **GitLab** under the **OAuth2 Providers** section.
+
+Fill in the provider form:
+
+- **Application ID**: the application's ID.
+- **Secret**: the application's secret.
+- **Endpoint**: leave it empty to use `https://gitlab.com`, or enter the full URL of your self-managed instance, such as `https://gitlab.example.com`. The instance must be reachable from your Appwrite project.
+
+Turn the provider on and click **Update**.
+
+Copy the **Redirect URI** shown in the form. On Appwrite Cloud it looks like `https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/gitlab/<PROJECT_ID>`, but always copy the exact value from the Console. Edit the application on GitLab and replace the temporary **Redirect URI** with it.
+
+## Step 3: Test the provider
+
+Start a session from your app with the `OAuthProvider.Gitlab` value. Pass extra GitLab scopes in `scopes` if your app calls the GitLab API, such as `read_api`. With the Web SDK:
+
+```js
+import { Client, Account, OAuthProvider } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+account.createOAuth2Session({
+    provider: OAuthProvider.Gitlab,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failed',
+});
+```
+
+Add your app's domain as a web platform in your Appwrite project so Appwrite accepts the `success` and `failure` URLs. Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow for other platforms and for server-side sign-in.
+
+# Read more about GitLab and Appwrite Auth
+
+If you would like to learn more about GitLab and Appwrite Auth, we have some resources that you should visit:
+
+- [Configure GitLab as an OAuth 2.0 authentication identity provider](https://docs.gitlab.com/integration/oauth_provider/)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Read the OAuth 2 profile and provider token](/docs/products/auth/oauth2#profile)
+- [Link multiple sign-in methods with identities](/docs/products/auth/identities)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)

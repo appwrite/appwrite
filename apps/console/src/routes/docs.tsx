@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute, Outlet, ScriptOnce } from '@tanstack/react-router'
 import { NotFoundView } from '@/components/error/NotFound'
 import { DocsPageShell } from '@/lib/docs/DocsPageShell'
 import {
@@ -6,6 +6,8 @@ import {
   marketingRouteLifetime,
 } from '@/lib/marketing/route-static-data'
 import { redirectIfMarketingDisabled } from '@/lib/marketing/marketing-route-guard'
+import { SITE_TOOLS_SCRIPT } from '@/lib/webmcp/site/tools'
+import { useSiteTools } from '@/lib/webmcp/site/use-site-tools'
 
 export const Route = createFileRoute('/docs')({
   ...marketingRouteLifetime,
@@ -17,8 +19,10 @@ export const Route = createFileRoute('/docs')({
 })
 
 function DocsLayoutRoute() {
+  useSiteTools()
   return (
     <DocsPageShell>
+      <ScriptOnce>{SITE_TOOLS_SCRIPT}</ScriptOnce>
       <Outlet />
     </DocsPageShell>
   )

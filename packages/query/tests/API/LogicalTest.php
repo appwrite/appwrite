@@ -41,6 +41,48 @@ class LogicalTest extends TestCase
         $this->assertSame('items', $query->getAttribute());
     }
 
+    public function testRelationship(): void
+    {
+        $inner = [Query::equal('approved', [true]), Query::limit(5)];
+        $query = Query::relationship('comments', $inner);
+        $this->assertSame(Method::Relationship, $query->getMethod());
+        $this->assertSame('comments', $query->getAttribute());
+        $this->assertSame($inner, $query->getValues());
+    }
+
+    public function testRelationshipIsNested(): void
+    {
+        $query = Query::relationship('comments', [Query::equal('approved', [true])]);
+        $this->assertTrue($query->isNested());
+    }
+
+    public function testRelationshipParsesItsQueries(): void
+    {
+        $query = Query::relationship('comments', [
+            Query::equal('approved', [true]),
+            Query::orderDesc('$createdAt'),
+            Query::limit(5),
+        ]);
+
+        $parsed = Query::parse($query->toString());
+
+        $this->assertSame(Method::Relationship, $parsed->getMethod());
+        $this->assertSame('comments', $parsed->getAttribute());
+        $this->assertEquals($query->getValues(), $parsed->getValues());
+        $this->assertContainsOnlyInstancesOf(Query::class, $parsed->getValues());
+    }
+
+    public function testRelationshipShapeIncludesItsQueries(): void
+    {
+        $approved = Query::relationship('comments', [Query::equal('approved', [true])]);
+        $limited = Query::relationship('comments', [Query::limit(5)]);
+        $authors = Query::relationship('authors', [Query::equal('approved', [true])]);
+
+        $this->assertSame('relationship:comments(equal:approved)', $approved->shape());
+        $this->assertNotSame(Query::fingerprint([$approved]), Query::fingerprint([$limited]));
+        $this->assertNotSame(Query::fingerprint([$approved]), Query::fingerprint([$authors]));
+    }
+
     public function testOrIsNested(): void
     {
         $query = Query::or([Query::equal('x', [1])]);

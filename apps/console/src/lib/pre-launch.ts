@@ -34,6 +34,11 @@ const AUTH_ALLOWED_PATHS = new Set([
   '/auth/oauth2/failure',
 ])
 
+// Legal pages must stay crawlable even while locked: OAuth and app-store
+// reviewers fetch the privacy policy and terms, and a redirect to /init reads
+// as a missing or empty policy.
+const LEGAL_ALLOWED_PATHS = new Set(['/privacy', '/terms', '/cookies'])
+
 export function isPreLaunchAllowedPath(
   pathname: string | null | undefined,
 ): boolean {
@@ -45,6 +50,7 @@ export function isPreLaunchAllowedPath(
   // Debug previews (pink menu) stay reachable while the rest of the site is locked.
   if (normalized === '/debug' || normalized.startsWith('/debug/')) return true
   if (normalized === '/player' || normalized.startsWith('/player/')) return true
+  if (LEGAL_ALLOWED_PATHS.has(normalized)) return true
   return AUTH_ALLOWED_PATHS.has(normalized)
 }
 
@@ -77,7 +83,11 @@ export function isPreLaunchHeavyContentPath(
     '/og/image.png',
     '/og/image',
   ]
-  if (heavyPrefixes.some((prefix) => normalized === prefix || normalized.startsWith(`${prefix}/`))) {
+  if (
+    heavyPrefixes.some(
+      (prefix) => normalized === prefix || normalized.startsWith(`${prefix}/`),
+    )
+  ) {
     return true
   }
 
@@ -92,6 +102,7 @@ export function isPreLaunchHeavyContentPath(
     '/for-agents.md',
     '/blog/rss.xml',
     '/changelog/rss.xml',
+    '/changelog.json',
     '/robots.txt',
   ])
   if (heavyExact.has(normalized)) return true
@@ -119,9 +130,7 @@ export function clearLegacyPreLaunchDebugOverride(): void {
 }
 
 /** Whether pre-launch lock is active (env only: `VITE_CONSOLE_PRE_LAUNCH`). */
-export function isPreLaunchModeEnabled(
-  _cookieHeader?: string | null,
-): boolean {
+export function isPreLaunchModeEnabled(_cookieHeader?: string | null): boolean {
   return getPreLaunchDefault()
 }
 
@@ -148,6 +157,8 @@ export const PRE_LAUNCH_BOOT_SCRIPT = `(function(){
     if (path === '/discord') return;
     if (path === '/og/init.png') return;
     if (path === '/debug' || path.indexOf('/debug/') === 0) return;
+    // Keep legal pages crawlable for OAuth/app-store reviewers; mirrors LEGAL_ALLOWED_PATHS.
+    if (path === '/privacy' || path === '/terms' || path === '/cookies') return;
     var auth = {
       '/sign-in': 1, '/sign-up': 1, '/sign-out': 1, '/recovery': 1, '/reset': 1,
       '/mfa': 1, '/verify-email': 1, '/auth/magic-url': 1,

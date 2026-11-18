@@ -10,7 +10,7 @@ use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
 
@@ -31,8 +31,8 @@ abstract class Base extends Action
     protected function replacePhoto(User $user, StreamInterface $photo, int $size, string $mimeType, Database $dbForProject, Device $deviceForFiles): Document
     {
         $userId = $user->getId();
-        $photoId = ID::unique();
-        $path = $deviceForFiles->getPath(APP_STORAGE_PHOTOS . '/' . $userId . '/' . $photoId);
+        $photoId = Id::unique();
+        $path = $deviceForFiles->getPath(APP_STORAGE_USER_PHOTOS . '/' . $userId . '/' . $photoId);
 
         $deviceForFiles->upload($photo, $path, $mimeType);
 
@@ -75,7 +75,7 @@ abstract class Base extends Action
         // The new photo is live, so a file left behind here only waits for user deletion to remove the user's photo folder
         if ($previous !== '') {
             try {
-                $previousPath = $deviceForFiles->getPath(APP_STORAGE_PHOTOS . '/' . $userId . '/' . $previous);
+                $previousPath = $deviceForFiles->getPath(APP_STORAGE_USER_PHOTOS . '/' . $userId . '/' . $previous);
 
                 if ($deviceForFiles->exists($previousPath) && !$deviceForFiles->delete($previousPath)) {
                     Console::warning('Failed to remove previous photo ' . $previous);

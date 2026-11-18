@@ -7,7 +7,6 @@ import {
   type ReactNode,
 } from 'react'
 import { Link, useBlocker, useNavigate } from '@tanstack/react-router'
-import type { Models } from '@appwrite.io/console'
 import {
   ArrowLeft,
   Download,
@@ -108,6 +107,7 @@ import {
   SUBTITLE_DOWNLOAD_FORMATS,
   type SubtitleDownloadFormat,
 } from '@/lib/videos/subtitle-download'
+import type { VideoCaption } from '@/lib/videos/captions'
 
 type EditorTab = 'cues' | 'track' | 'file'
 
@@ -166,7 +166,7 @@ export function SubtitleEditor({
   projectId: string
   videoId: string
   /** The track being updated; omitted when creating a new one. */
-  subtitle?: Models.VideoCaption | null
+  subtitle?: VideoCaption | null
   initialCues: SubtitleCue[]
 }) {
   const t = useT()

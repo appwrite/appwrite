@@ -1,5 +1,6 @@
-import type { Client, Models, Project } from '@appwrite.io/console'
+import type { Client, Project } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import type { VideoProfile, VideoProfileList } from '@/lib/appwrite/videos'
 
 export type ProjectVideoProfileInput = {
   name: string
@@ -18,13 +19,11 @@ type ListProjectProfilesParams = {
 type ProjectProfilesApi = {
   listProfiles: (
     params?: ListProjectProfilesParams,
-  ) => Promise<Models.VideoProfileList>
-  createProfile: (
-    params: ProjectVideoProfileInput,
-  ) => Promise<Models.VideoProfile>
+  ) => Promise<VideoProfileList>
+  createProfile: (params: ProjectVideoProfileInput) => Promise<VideoProfile>
   updateProfile: (
     params: ProjectVideoProfileInput & { profileId: string },
-  ) => Promise<Models.VideoProfile>
+  ) => Promise<VideoProfile>
   deleteProfile: (params: { profileId: string }) => Promise<{}>
 }
 

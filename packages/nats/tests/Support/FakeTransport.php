@@ -6,6 +6,7 @@ namespace Utopia\NATS\Tests\Support;
 
 use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\TimeoutException;
+use Utopia\NATS\Transport\Pollable;
 use Utopia\NATS\Transport\Transport;
 
 /**
@@ -14,7 +15,7 @@ use Utopia\NATS\Transport\Transport;
  * INFO line on connect and answers every PING with a PONG, records all bytes
  * written, and lets tests script additional inbound data.
  */
-final class FakeTransport implements Transport
+final class FakeTransport implements Pollable, Transport
 {
     public string $written = '';
     public ?\Closure $onWrite = null;
@@ -30,6 +31,24 @@ final class FakeTransport implements Transport
      */
     public bool $answerPings = true;
 
+    /**
+     * Whether the server has closed the socket: one in lame-duck mode, a
+     * restarted or evicted server, or a connection an intermediary reaped while
+     * idle. Reads serve what was already sent and then raise; writes are
+     * accepted and go nowhere, as they do into a kernel buffer, so only a read
+     * can tell. The next connect() clears it, so a reconnect is served normally.
+     */
+    public bool $closedByServer = false;
+
+    /** Thrown by connect() when set. */
+    public ?\Throwable $refuse = null;
+
+    /** @var list<string> Hosts connect() refuses, as a server that is down would. */
+    public array $refuseHosts = [];
+
+    /** The host connect() was asked for. */
+    public string $host = '';
+
     private string $inbound = '';
     private bool $connected = false;
 
@@ -40,7 +59,16 @@ final class FakeTransport implements Transport
 
     public function connect(string $host, int $port, float $timeout): void
     {
+        $this->host = $host;
+        if ($this->refuse instanceof \Throwable) {
+            throw $this->refuse;
+        }
+        if (\in_array($host, $this->refuseHosts, true)) {
+            throw new ConnectionException("Failed to connect to tcp://{$host}:{$port}: [111] Connection refused");
+        }
+
         $this->connected = true;
+        $this->closedByServer = false;
         $this->inbound .= $this->infoLine();
     }
 
@@ -48,6 +76,9 @@ final class FakeTransport implements Transport
     {
         $this->written .= $data;
         $this->writes[] = $data;
+        if ($this->closedByServer) {
+            return \strlen($data);
+        }
         if ($this->onWrite instanceof \Closure) {
             ($this->onWrite)($data, $this);
         }
@@ -66,7 +97,9 @@ final class FakeTransport implements Transport
     public function read(int $maxBytes, ?float $timeout = null): string
     {
         if ($this->inbound === '') {
-            throw new TimeoutException('No inbound data');
+            throw $this->closedByServer
+                ? new ConnectionException('Connection closed by server')
+                : new TimeoutException('No inbound data');
         }
 
         $chunk = substr($this->inbound, 0, $maxBytes);
@@ -79,7 +112,9 @@ final class FakeTransport implements Transport
     {
         $pos = strpos($this->inbound, "\n");
         if ($pos === false) {
-            throw new TimeoutException('No inbound line');
+            throw $this->closedByServer
+                ? new ConnectionException('Connection closed by server')
+                : new TimeoutException('No inbound line');
         }
 
         $line = substr($this->inbound, 0, $pos + 1);
@@ -98,12 +133,15 @@ final class FakeTransport implements Transport
         return $this->connected;
     }
 
+    public function poll(): bool
+    {
+        return $this->inbound !== '' || $this->closedByServer;
+    }
+
     public function close(): void
     {
         $this->connected = false;
     }
-
-    // --- Test helpers ---
 
     public function pushInbound(string $data): void
     {

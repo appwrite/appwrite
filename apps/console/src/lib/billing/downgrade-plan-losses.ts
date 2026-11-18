@@ -2,8 +2,8 @@ import type { Models } from '@appwrite.io/console'
 
 /** The target-plan fields these two automatic consequences hang off. */
 export type DowngradeLossTargetPlan = {
-  backupsEnabled?: boolean
-  supportsDedicatedDatabases?: boolean
+  backupsEnabled?: boolean | null
+  supportsDedicatedDatabases?: boolean | null
 }
 
 export type DowngradePlanLossDatabase = { id: string; name: string }

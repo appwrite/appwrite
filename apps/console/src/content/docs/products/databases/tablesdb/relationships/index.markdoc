@@ -352,7 +352,7 @@ let client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .setProject("<PROJECT_ID>")                // Your project ID
 
-let tablesDB = TablesDB(client: client)
+let tablesDB = TablesDB(client)
 
 tablesDB.createRow(
     databaseId: "marvel",
@@ -461,7 +461,7 @@ let client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint        
     .setProject("<PROJECT_ID>")                // Your project ID      
 
-let tablesDB = TablesDB(client: client)
+let tablesDB = TablesDB(client)
 
 tablesDB.createRow(
     databaseId: "marvel",
@@ -654,7 +654,7 @@ let client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>")
 
-let tablesDB = TablesDB(client: client)
+let tablesDB = TablesDB(client)
 
 tablesDB.updateRow(
     databaseId: "marvel",
@@ -757,7 +757,7 @@ let client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>")
 
-let tablesDB = TablesDB(client: client)
+let tablesDB = TablesDB(client)
 
 tablesDB.deleteRow(
     databaseId: "marvel",
@@ -856,7 +856,7 @@ let client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>")
 
-let tablesDB = TablesDB(client: client)
+let tablesDB = TablesDB(client)
 
 tablesDB.createRow(
     databaseId: "marvel",
@@ -878,32 +878,36 @@ tablesDB.createRow(
 );
 ```
 ```kotlin
-import Appwrite
+import io.appwrite.Client
+import io.appwrite.ID
+import io.appwrite.Permission
+import io.appwrite.Role
+import io.appwrite.services.TablesDB
 
-let client = Client()
+val client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>")
 
-let tablesDB = TablesDB(client: client)
+val tablesDB = TablesDB(client)
 
 tablesDB.createRow(
-    databaseId: "marvel",
-    tableId: "movies",
-    rowId: ID.unique(),
-    data: [
-        "title": "Spiderman",
-        "year": 2002,
-        "reviews": [
-            [
-                "author": "Bob",
-                "text": "Great movie!",
-                "$permissions": [
+    databaseId = "marvel",
+    tableId = "movies",
+    rowId = ID.unique(),
+    data = mapOf(
+        "title" to "Spiderman",
+        "year" to 2002,
+        "reviews" to listOf(
+            mapOf(
+                "author" to "Bob",
+                "text" to "Great movie!",
+                "\$permissions" to listOf(
                     Permission.read(Role.any())
-                ]
-            ],
-        ]
-    ]
-);
+                )
+            )
+        )
+    )
+)
 ```
 {% /multicode %}
 

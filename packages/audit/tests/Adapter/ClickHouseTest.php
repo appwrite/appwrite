@@ -7,8 +7,14 @@ namespace Utopia\Audit\Tests\Adapter;
 use Exception;
 use PHPUnit\Framework\TestCase;
 use Utopia\Audit\Adapter\ClickHouse;
+use Utopia\Audit\Adapter\Database;
 use Utopia\Audit\Query;
+use Utopia\Cache\Adapter\None as NoCache;
+use Utopia\Cache\Cache;
 use Utopia\Client\Exception\ConnectionException;
+use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Attribute;
+use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 
@@ -18,6 +24,7 @@ final class ClickHouseTest extends TestCase
 
     private ClickHouse $adapter;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->client = new Client();
@@ -82,6 +89,115 @@ final class ClickHouseTest extends TestCase
         $fields = $this->fields($request->getHeaderLine('Content-Type'), (string) $request->getBody());
         $this->assertSame('SELECT COUNT(*) AS count FROM `logs`.`audits` WHERE `event` IN ({param0:String}) FORMAT TabSeparated', $fields['query']);
         $this->assertSame('users.create', $fields['param_param0']);
+    }
+
+    public function testFindWithoutOrderSortsNewestFirstWithIdTiebreak(): void
+    {
+        $this->client->respond(200, '{"data":[]}');
+
+        $this->adapter->find([Query::limit(2)]);
+
+        $this->assertStringEndsWith('ORDER BY `time` DESC, `id` DESC LIMIT {param0:Int64} FORMAT JSON', $this->sentQuery());
+    }
+
+    public function testFindAppendsIdTiebreakToTheRequestedOrder(): void
+    {
+        $this->client->respond(200, '{"data":[]}');
+
+        $this->adapter->find([Query::orderAsc('time'), Query::limit(2)]);
+
+        $this->assertStringEndsWith('ORDER BY `time` ASC, `id` ASC LIMIT {param0:Int64} FORMAT JSON', $this->sentQuery());
+    }
+
+    public function testFindKeepsAnExplicitIdOrder(): void
+    {
+        $this->client->respond(200, '{"data":[]}');
+
+        $this->adapter->find([Query::orderDesc('id'), Query::orderAsc('time')]);
+
+        $this->assertStringEndsWith('ORDER BY `id` DESC, `time` ASC FORMAT JSON', $this->sentQuery());
+    }
+
+    public function testFindCursorPageSortsByTheColumnsItComparesOn(): void
+    {
+        $this->client->respond(200, '{"data":[]}');
+
+        $this->adapter->find([
+            Query::limit(2),
+            Query::cursorAfter(['id' => 'b', 'time' => '2026-01-01 00:00:00.000']),
+        ]);
+
+        $query = $this->sentQuery();
+        $this->assertStringContainsString('((`time` < {cursor_cmp_0:DateTime64(3)}) OR (`time` = {cursor_eq_1_0:DateTime64(3)} AND `id` < {cursor_cmp_1:String}))', $query);
+        $this->assertStringEndsWith('ORDER BY `time` DESC, `id` DESC LIMIT {param0:Int64} FORMAT JSON', $query);
+    }
+
+    public function testFindCursorBeforeFlipsTheDefaultOrder(): void
+    {
+        $this->client->respond(200, '{"data":[]}');
+
+        $this->adapter->find([
+            Query::limit(2),
+            Query::cursorBefore(['id' => 'b', 'time' => '2026-01-01 00:00:00.000']),
+        ]);
+
+        $query = $this->sentQuery();
+        $this->assertStringContainsString('((`time` > {cursor_cmp_0:DateTime64(3)}) OR (`time` = {cursor_eq_1_0:DateTime64(3)} AND `id` > {cursor_cmp_1:String}))', $query);
+        $this->assertStringEndsWith('ORDER BY `time` ASC, `id` ASC LIMIT {param0:Int64} FORMAT JSON', $query);
+    }
+
+    public function testFindProjectsTheOrderColumnsASlimSelectLeavesOut(): void
+    {
+        $this->client->respond(200, '{"data":[]}');
+
+        $this->adapter->find([Query::select(['event'])]);
+
+        $this->assertStringStartsWith('SELECT `id`, `time`, `event` FROM', $this->sentQuery());
+    }
+
+    public function testFindRandomOrderHasNoTiebreak(): void
+    {
+        $this->client->respond(200, '{"data":[]}');
+
+        $this->adapter->find([Query::orderRandom()]);
+
+        $this->assertStringEndsWith('ORDER BY rand() FORMAT JSON', $this->sentQuery());
+    }
+
+    private function sentQuery(): string
+    {
+        $request = $this->client->last();
+
+        return $this->fields($request->getHeaderLine('Content-Type'), (string) $request->getBody())['query'];
+    }
+
+    public function testBatchInsertWritesTheReason(): void
+    {
+        $this->client->respond(200);
+
+        $this->adapter->createBatch([[
+            'userId' => 'user1',
+            'event' => 'users.update.status',
+            'resource' => 'user/user1',
+            'userAgent' => 'AppwriteMCP/1.0',
+            'ip' => '127.0.0.1',
+            'time' => '2026-01-01 00:00:00.000',
+            'data' => [],
+            'actorType' => 'keyProject',
+            'resourceType' => 'user',
+            'resourceId' => 'user1',
+            'projectId' => 'project1',
+            'projectInternalId' => '1',
+            'teamId' => 'team1',
+            'teamInternalId' => '1',
+            'hostname' => 'example.org',
+            'reason' => 'Reported as spam by 25 users',
+        ]]);
+
+        $row = json_decode((string) $this->client->last()->getBody(), true, flags: JSON_THROW_ON_ERROR);
+        $this->assertIsArray($row);
+        $this->assertSame('Reported as spam by 25 users', $row['reason']);
+        $this->assertSame('[]', $row['data']);
     }
 
     public function testBatchInsertSendsRowsAsBody(): void
@@ -167,5 +283,31 @@ final class ClickHouseTest extends TestCase
         }
 
         return $fields;
+    }
+
+    public function testRenamesTheUserColumnToActor(): void
+    {
+        $user = \array_find(
+            new Database(new UtopiaDatabase(new Memory(), new Cache(new NoCache())))->getAttributes(),
+            static fn (Attribute $attribute): bool => $attribute->key === 'userId',
+        );
+        $this->assertNotNull($user, 'the Database adapter must still declare the userId column the ClickHouse rename starts from');
+        $attributes = [];
+        foreach ($this->adapter->getAttributes() as $attribute) {
+            $attributes[$attribute->key] = $attribute;
+        }
+        $indexes = [];
+        foreach ($this->adapter->getIndexes() as $index) {
+            $indexes[$index->key] = $index;
+        }
+
+        $this->assertArrayNotHasKey('userId', $attributes);
+        $this->assertSame($user->type, $attributes['actorId']->type);
+        $this->assertSame($user->size, $attributes['actorId']->size);
+        $this->assertSame($user->required, $attributes['actorId']->required);
+        $this->assertSame($user->array, $attributes['actorId']->array);
+        $this->assertSame($user->filters, $attributes['actorId']->filters);
+        $this->assertArrayNotHasKey('idx_userId_event', $indexes);
+        $this->assertSame(['actorId', 'event'], $indexes['idx_actorId_event']->attributes);
     }
 }

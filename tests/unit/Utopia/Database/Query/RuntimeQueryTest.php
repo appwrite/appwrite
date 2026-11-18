@@ -6,7 +6,9 @@ namespace Tests\Unit\Utopia\Database\Query;
 
 use Appwrite\Utopia\Database\RuntimeQuery;
 use PHPUnit\Framework\TestCase;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
+use Utopia\Query\Method;
 
 final class RuntimeQueryTest extends TestCase
 {
@@ -23,7 +25,7 @@ final class RuntimeQueryTest extends TestCase
      */
     private function compileAndFilter(array $queries, array $payload): ?array
     {
-        $compiled = RuntimeQuery::compile($queries);
+        $compiled = RuntimeQuery::prepare($queries);
         return RuntimeQuery::filter($compiled, $payload);
     }
 
@@ -667,7 +669,7 @@ final class RuntimeQueryTest extends TestCase
     public function testValidateSelectQueryWithSpecificFields(): void
     {
         $query = Query::select(['name', 'age']);
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(QueryException::class);
         $this->expectExceptionMessage('Only select("*") is allowed in Realtime queries');
         RuntimeQuery::validateSelectQuery($query);
     }
@@ -675,14 +677,14 @@ final class RuntimeQueryTest extends TestCase
     public function testValidateSelectQueryWithSingleField(): void
     {
         $query = Query::select(['name']);
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(QueryException::class);
         $this->expectExceptionMessage('Only select("*") is allowed in Realtime queries');
         RuntimeQuery::validateSelectQuery($query);
     }
 
     public function testSelectInAllowedQueries(): void
     {
-        $this->assertContains(Query::TYPE_SELECT, RuntimeQuery::ALLOWED_QUERIES);
+        $this->assertContains(Method::Select, RuntimeQuery::ALLOWED_QUERIES);
     }
 
     public function testIsSelectAllWithNonSelectQuery(): void

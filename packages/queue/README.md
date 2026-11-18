@@ -94,9 +94,33 @@ $broker = new Nats(
 $broker->publish(new Queue('my-queue'), ['type' => 'test_number', 'value' => 123]);
 ```
 
-Each queue is a WorkQueue-retention stream (a message is removed once acknowledged) with a companion dead stream. `commit()` acknowledges a message, `reject()` schedules redelivery until `maxDeliver` and then dead-letters — unless the handler declared the failure permanent, which dead-letters it at once — `retry()` re-drives the dead stream onto the queue, and `getQueueSize()` reports pending (consumer `num_pending`) or failed (dead stream) counts. `reap()` is a no-op — redelivery after `ackWait` reclaims jobs stranded by a dead worker.
+Each queue is a WorkQueue-retention stream (a message is removed once acknowledged) with a companion dead stream. `commit()` acknowledges a message, `reject()` schedules redelivery until `maxDeliver` and then dead-letters — unless the handler declared the failure permanent, which dead-letters it at once — `retry()` re-drives the dead stream onto the queue, and `getQueueSize()` reports pending (consumer `num_pending`) or failed (dead stream) counts. Redelivery after `ackWait` reclaims jobs stranded by a dead worker. `reap()`, which `maintain()` runs for every queue the broker receives from, moves what that misses to the dead stream: a message past its last delivery whose max-deliveries advisory nobody caught, left on the work stream behind the consumer's ack floor. It only moves a message the floor has stood past for `strandedAfter` seconds (60 by default), so an acknowledgement still on its way to the stream is never mistaken for one.
 
 The server-side consumer is created with `max_deliver` one above `maxDeliver`, so reading it off `/jsz` shows the extra delivery. A message whose every attempt died unacknowledged, with no `reject()`, arrives once more and `receive()` dead-letters it without running a handler. At exactly `maxDeliver`, JetStream would retire it silently. It would stay on the work stream, counted as neither pending nor in flight, and only reach the dead stream if a broker happened to be subscribed when the server announced it. The consumer carries a `utopia_queue_spare_delivery` metadata key saying so. A broker under `Provisioning::Require`, which never writes configuration, reads that key to find the spare delivery, and reports through `onError` if it adopts a consumer provisioned without one. Requires [`utopia-php/nats`](https://github.com/utopia-php/nats).
+
+### From a DSN
+
+`Nats::fromDSN()` builds the broker from `nats://[user[:password]@]host[:port]?param=value&...`, so a queue is tuned in configuration rather than code, and a producer and a consumer that read the same DSN provision the same queue:
+
+```php
+use Utopia\DSN\DSN;
+use Utopia\Queue\Broker\Nats;
+
+$broker = Nats::fromDSN(
+    new DSN('nats://user:pass@nats:4222?replicas=3&backoff=30,120,600&maxAckPending=360&maxBytes=1073741824&discard=new'),
+    'worker-audits',                 // client name, shown in the server's /connz
+    onError: fn (\Throwable $e) => error_log($e->getMessage()),
+);
+```
+
+The query string sets the constructor parameters listed in `Nats::DSN_PARAMS`, and anything left out keeps its default. It is read strictly. An unknown parameter is refused, because a typo would otherwise run the queue on defaults nobody chose. A number with a unit (`30s`) or a fraction where a count goes (`4.9`) is refused before the cast. `inactiveThreshold` is not settable from a DSN at all. Redelivery knobs that JetStream couples are reconciled rather than refused:
+
+- An explicit `ackWait` replaces the schedule's first step; otherwise the first step is the ack wait.
+- A `maxDeliver` lowered into the schedule trims it.
+- Delays below a second are raised to one.
+- `deadMaxAge=0` keeps dead letters forever.
+
+Code-level parameters (`onError`, `codec`, `messageId`, `provisioning`, …) are passed by name. A parameter the DSN owns is refused there, so a queue's configuration has one source. `Nats::connectionOptions()` gives the same server and credentials to code that needs a raw connection.
 
 ### Shaping a queue
 
@@ -215,6 +239,8 @@ Queue 5 renames `enqueueMany()` to `publishMany()` on `Publisher\Synchronous` an
 ### Batched receive
 
 `job('v1-stats-usage', coroutines: 1, prefetch: 100)` allows up to 100 unacknowledged messages while running one handler at a time. Prefetch counts waiting messages, running handlers, and messages awaiting confirmation. It defaults to the coroutine count; an explicit lower value is rejected. A batch is the number of messages in one broker operation, which can be smaller than prefetch. The Swoole adapter enforces the prefetch limit and renews all outstanding messages from one loop.
+
+Fetching and dispatch run independently through a bounded receive buffer. Following [NATS ADR-37](https://github.com/nats-io/nats-architecture-and-design/blob/fac1b7e7ff96498afbb768b11d3d313f10c14ff3/adr/ADR-37.md#buffering-messages), the receiver refills when buffered work falls below half the buffer capacity. Running jobs do not count toward that watermark; all outstanding deliveries still count toward the separate `prefetch` cap. Dispatch and completion wake the receiver when capacity changes, without a batching timer. A slow receive does not block buffered jobs from starting. On shutdown, buffered jobs are released and running jobs drain before the consumer closes.
 
 Consumers retain `receive(Queue $queue, int $timeout, int $n = 1): array`, `commit()`, and `reject()`. Sparse queues return available messages without waiting to fill a batch. Each message has an independent outcome. Completed requests already waiting on a connection are coalesced without a timer; handlers can continue while confirmations are pending, within the same delivery bound. Success hooks run after their own confirmation, so a later handler can start before an earlier success hook.
 

@@ -15,6 +15,9 @@ use Utopia\Usage\Usage;
 
 class StatsResources extends Action
 {
+    // Below this, an exact count is cheap and an estimate's error would show.
+    private const int ESTIMATE_MIN = 100_000;
+
     public static function getName(): string
     {
         return 'stats-resources';
@@ -116,6 +119,7 @@ class StatsResources extends Action
             METRIC_SITES => $this->safeCount($dbForProject, 'sites'),
             METRIC_TEAMS => $this->safeCount($dbForProject, 'teams'),
             METRIC_MESSAGES => $this->safeCount($dbForProject, 'messages'),
+            METRIC_VIDEOS => $this->safeCount($dbForProject, 'videos'),
             METRIC_PROVIDERS => $this->safeCount($dbForProject, 'providers'),
             METRIC_TOPICS => $this->safeCount($dbForProject, 'topics'),
             METRIC_TARGETS => $this->safeCount($dbForProject, 'targets'),
@@ -137,6 +141,7 @@ class StatsResources extends Action
         array_push($gauges, ...$this->databaseGauges($project, $dbForProject, $getDatabasesDB));
         array_push($gauges, ...$this->deploymentGauges($project, $dbForProject));
         array_push($gauges, ...$this->photoGauges($project, $dbForProject));
+        array_push($gauges, ...$this->videoGauges($project, $dbForProject));
 
         return $gauges;
     }
@@ -218,7 +223,7 @@ class StatsResources extends Action
                 $storage = 0;
                 $this->foreachDocument($dbForProject, 'database_' . $databaseSequence, [], function (Document $collection) use ($dbForDatabases, $databaseSequence, &$documents, &$storage): void {
                     $data = 'database_' . $databaseSequence . '_collection_' . $collection->getSequence();
-                    $documents += $dbForDatabases->count($data);
+                    $documents += $this->countDocuments($dbForDatabases, $data);
                     $storage += $dbForDatabases->getSizeOfCollection($data);
                 });
             } catch (\Throwable $th) {
@@ -280,7 +285,7 @@ class StatsResources extends Action
     private function photoGauges(Document $project, Database $dbForProject): array
     {
         try {
-            $storage = (int) $dbForProject->sum('users', 'photoSize');
+            $storage = (int) $dbForProject->sum('users', 'photoSize') + (int) $dbForProject->sum('teams', 'photoSize');
         } catch (\Throwable $th) {
             Console::warning("Failed to measure photos for {$project->getId()}: " . $th->getMessage());
             return [];
@@ -289,6 +294,56 @@ class StatsResources extends Action
         return [
             ['metric' => METRIC_STORAGE, 'value' => $storage, 'service' => 'avatars', 'resourceType' => 'photos', 'resourceId' => $project->getId()],
         ];
+    }
+
+    /**
+     * Current bytes of packaged renditions, captions, preview images, and the
+     * timeline WebVTT.
+     * Summed from each row's stored size so a retry or a deletion replaces
+     * the total. The per-encode event is skipped in StatsUsage.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function videoGauges(Document $project, Database $dbForProject): array
+    {
+        try {
+            $gauges = [
+                ['metric' => METRIC_VIDEOS_STORAGE, 'value' => $this->videoStorage($dbForProject), 'service' => 'videos', 'resourceType' => 'project', 'resourceId' => $project->getId()],
+            ];
+        } catch (\Throwable $th) {
+            Console::warning("Failed to measure videos for {$project->getId()}: " . $th->getMessage());
+            return [];
+        }
+
+        $this->foreachDocument($dbForProject, 'videos', [], function (Document $video) use ($dbForProject, &$gauges): void {
+            try {
+                $storage = $this->videoStorage($dbForProject, [
+                    Query::equal('videoInternalId', [$video->getSequence()]),
+                ]);
+            } catch (\Throwable $th) {
+                Console::warning("Failed to measure video {$video->getId()}: " . $th->getMessage());
+                return;
+            }
+
+            $gauges[] = ['metric' => METRIC_VIDEOS_STORAGE, 'value' => $storage, 'service' => 'videos', 'resourceType' => 'video', 'resourceId' => $video->getId(), 'resourceInternalId' => (string) $video->getSequence()];
+        });
+
+        return $gauges;
+    }
+
+    /**
+     * Bytes retained for one video, or for the project when no query is passed.
+     *
+     * @param array<int, Query> $queries
+     */
+    private function videoStorage(Database $dbForProject, array $queries = []): int
+    {
+        $storage = 0;
+        foreach (['videosRenditions', 'videosCaptions', 'videosTimelines'] as $collection) {
+            $storage += (int) $dbForProject->sum($collection, 'size', $queries);
+        }
+
+        return $storage;
     }
 
     /**
@@ -337,6 +392,20 @@ class StatsResources extends Action
         });
 
         return $gauges;
+    }
+
+    /**
+     * An exact count reads the whole table once writes clear Postgres' visibility map,
+     * so large collections report the engine's estimate instead.
+     */
+    private function countDocuments(Database $database, string $collection): int
+    {
+        $estimate = $database->estimateCount($collection);
+        if ($estimate !== null && $estimate >= self::ESTIMATE_MIN) {
+            return $estimate;
+        }
+
+        return $database->count($collection);
     }
 
     /** @param array<int, Query> $queries */

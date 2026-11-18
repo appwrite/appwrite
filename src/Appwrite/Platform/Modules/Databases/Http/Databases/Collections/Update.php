@@ -10,8 +10,9 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Database\Collection\Update as CollectionUpdate;
 use Utopia\Database\Database;
-use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Permission;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
@@ -63,13 +64,14 @@ class Update extends Action
                     replaceWith: 'tablesDB.updateTable',
                 ),
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID.', false, ['dbForProject'])
             ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.', true)
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
             ->param('purge', false, new Boolean(true), 'When true, purge all cached list responses for this collection as part of the update. Use this to force readers to see fresh data immediately instead of waiting for the cache TTL to expire.', true)
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the collection.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -78,7 +80,7 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, ?string $name, ?array $permissions, bool $documentSecurity, bool $enabled, bool $purge, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, ?string $name, ?array $permissions, bool $documentSecurity, bool $enabled, bool $purge, ?string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
@@ -92,6 +94,10 @@ class Update extends Action
 
         if ($name) {
             $collection = $collection->setAttribute('name', $name);
+        }
+
+        if (!\is_null($description)) {
+            $collection = $collection->setAttribute('description', $description);
         }
 
         $searchName = $name ?? $collection->getAttribute('name');
@@ -108,11 +114,11 @@ class Update extends Action
                 ->setAttribute('$permissions', $permissions)
                 ->setAttribute('documentSecurity', $documentSecurity)
                 ->setAttribute('enabled', $enabled)
-                ->setAttribute('search', \implode(' ', [$collectionId, $searchName]))
+                ->setAttribute('search', \implode(' ', [$collectionId, $searchName, $collection->getAttribute('description', '')]))
         );
 
-        $dbForDatabases = $getDatabasesDB($database);
-        $dbForDatabases->updateCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $permissions, $documentSecurity);
+        $dbForDatabases = $getDatabasesDB($database, $collection);
+        $dbForDatabases->updateCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), new CollectionUpdate(permissions: $permissions, documentSecurity: $documentSecurity));
 
         $queueForEvents
             ->setContext('database', $database)
@@ -120,7 +126,7 @@ class Update extends Action
             ->setParam($this->getEventsParamKey(), $collection->getId());
 
         if ($purge) {
-            $this->purgeListCache($dbForProject, $collectionId);
+            $this->purgeListCache($dbForProject, $database, $collectionId);
         }
 
         $this->addRowBytesInfo($collection, $dbForProject);

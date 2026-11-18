@@ -92,7 +92,7 @@ using Appwrite;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -149,7 +149,7 @@ let specifications = try await postgresql.listSpecifications(
 package main
 
 import (
-    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
 )
 
 func main() {
@@ -294,7 +294,7 @@ using Appwrite;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -355,8 +355,8 @@ _ = try await postgresql.update(
 package main
 
 import (
-    "github.com/appwrite/sdk-for-go/appwrite"
-    "github.com/appwrite/sdk-for-go/postgresql"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/postgresql"
 )
 
 func main() {
@@ -523,7 +523,7 @@ using Appwrite;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -592,8 +592,8 @@ _ = try await postgresql.update(
 package main
 
 import (
-    "github.com/appwrite/sdk-for-go/appwrite"
-    "github.com/appwrite/sdk-for-go/postgresql"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/postgresql"
 )
 
 func main() {

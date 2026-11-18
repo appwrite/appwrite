@@ -1,6 +1,6 @@
-import type { Models } from '@appwrite.io/console'
 import { ConfirmActionDialog } from '@/components/global/shared/ConfirmActionDialog'
 import { useT } from '@/lib/i18n/translate'
+import type { VideoCaption } from '@/lib/videos/captions'
 
 export function DeleteSubtitle({
   open,
@@ -11,7 +11,7 @@ export function DeleteSubtitle({
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  subtitle: Pick<Models.VideoCaption, 'name' | 'embedded'> | null
+  subtitle: Pick<VideoCaption, 'name' | 'embedded'> | null
   onConfirm: () => void
   isConfirming: boolean
 }) {

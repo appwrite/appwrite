@@ -13,6 +13,7 @@ class MFAChallengeSecret extends MFAChallenge
         $this
             ->addRule('code', [
                 'type' => self::TYPE_STRING,
+                'format' => 'password',
                 'description' => 'Challenge code to be delivered to the end user through a custom channel.',
                 'default' => '',
                 'example' => '446372',

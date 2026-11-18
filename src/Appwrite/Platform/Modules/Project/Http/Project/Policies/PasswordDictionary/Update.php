@@ -12,7 +12,10 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 
 class Update extends Action
 {
@@ -41,6 +44,8 @@ class Update extends Action
                 name: 'updatePasswordDictionaryPolicy',
                 description: <<<EOT
                 Updating this policy allows you to control if new passwords are checked against most common passwords dictionary. When enabled, and user changes their password, password must not be contained in the dictionary.
+
+                Custom denyList entries use case-sensitive equality and apply only while this policy is enabled. Omit denyList or pass null to preserve it, pass an array to replace it, or pass [] to clear it. Entries are stored without trimming or deduplication. Existing passwords remain valid for sign-in and password confirmation. The combined serialized project authentication configuration must fit within 16,384 characters, even when each list meets its entry limits.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -51,6 +56,7 @@ class Update extends Action
                 ],
             ))
             ->param('enabled', null, new Boolean(), 'Toggle password dictionary policy. Set to true if you want password change to block passwords in the dictionary, or false to allow them. When changing this policy, existing passwords remain valid.')
+            ->param('denyList', null, new Nullable(new ArrayList(new Text(256, 1), 100)), 'Custom blocked values using case-sensitive equality. Up to 100 entries of 1 to 256 characters. Omit or pass null to preserve, an array to replace, or [] to clear. Combined authentication settings must fit within 16,384 characters.', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -61,6 +67,7 @@ class Update extends Action
 
     public function action(
         bool $enabled,
+        ?array $denyList,
         Response $response,
         Database $dbForPlatform,
         Document $project,
@@ -69,6 +76,9 @@ class Update extends Action
     ): void {
         $auths = $project->getAttribute('auths', []);
         $auths['passwordDictionary'] = $enabled;
+        if ($denyList !== null) {
+            $auths['passwordDictionaryDenyList'] = $denyList;
+        }
 
         $updates = new Document([
             'auths' => $auths,

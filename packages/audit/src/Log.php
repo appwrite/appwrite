@@ -111,6 +111,17 @@ class Log extends ArrayObject
     }
 
     /**
+     * Get the reason the actor gave for this action.
+     *
+     * ClickHouse-only optional column: returns null when no reason was given.
+     */
+    public function getReason(): ?string
+    {
+        $reason = $this->getAttribute('reason');
+        return \is_string($reason) ? $reason : null;
+    }
+
+    /**
      * Get the parsed user-agent OS short code (e.g. `IOS`, `WIN`).
      *
      * ClickHouse-only optional column: returns null when it was never recorded.

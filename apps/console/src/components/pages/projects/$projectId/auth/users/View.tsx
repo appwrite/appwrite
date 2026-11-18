@@ -34,7 +34,7 @@ import {
   Copy,
   Check,
   ShieldAlert,
-  ShieldCheck,
+  Network,
 } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { AuthenticatorType, MessagingProviderType } from '@appwrite.io/console'
@@ -313,7 +313,7 @@ export function View() {
 
   const handleBack = () => {
     navigate({
-      to: '/projects/$projectId/auth',
+      to: '/projects/$projectId/auth/users',
       params: { projectId: projectId! },
     })
   }
@@ -1181,25 +1181,14 @@ function PasswordBreachStatus({
 }) {
   const t = useT()
 
-  if (passwordPwned === true) {
-    return (
-      <p className="flex items-center gap-1.5 text-[13px] text-red-600 dark:text-red-400 mt-2">
-        <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
-        {t('Password found in a known data breach')}
-      </p>
-    )
+  if (passwordPwned !== true) {
+    return null
   }
-  if (passwordPwned === false) {
-    return (
-      <p className="flex items-center gap-1.5 text-[13px] text-green-600 dark:text-green-400 mt-2">
-        <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-        {t('Password not found in known data breaches')}
-      </p>
-    )
-  }
+
   return (
-    <p className="text-[13px] text-muted-foreground mt-2">
-      {t('Password not checked against known data breaches')}
+    <p className="flex items-center gap-1.5 text-[13px] text-red-600 dark:text-red-400 mt-2">
+      <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+      {t('Password found in a known data breach')}
     </p>
   )
 }
@@ -1929,7 +1918,7 @@ function DeleteUserSection({
       onSuccess: () => {
         toast.success(`${displayName} ${t('has been deleted')}`)
         navigate({
-          to: '/projects/$projectId/auth',
+          to: '/projects/$projectId/auth/users',
           params: { projectId: projectId! },
         })
       },
@@ -2680,6 +2669,7 @@ function IdentitiesTab({
       auth0: 'Auth0',
       authentik: 'Authentik',
       oidc: 'OIDC',
+      ldap: 'LDAP',
     }
     return nameMap[provider.toLowerCase()] || provider
   }
@@ -2697,7 +2687,7 @@ function IdentitiesTab({
       <EmptyState
         icon={Key}
         title={t('No identities available')}
-        description={t('No OAuth identities linked to this user.')}
+        description={t('No identities linked to this user.')}
         isEmpty={true}
         variant="card"
         iconSize="md"
@@ -2712,7 +2702,7 @@ function IdentitiesTab({
           <Info className="h-4 w-4 text-muted-foreground" />
           <p className="text-[13px] text-muted-foreground">
             {t(
-              "User identities are the user's connected OAuth accounts. The user can sign in using these identities.",
+              'Identities link this user to accounts they sign in with elsewhere, such as an OAuth2 provider or an LDAP directory.',
             )}
           </p>
         </div>
@@ -2746,14 +2736,18 @@ function IdentitiesTab({
                   </TableCell>
                   <TableCell className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <img
-                        src={`/icons/${getProviderIcon(identity.provider)}`}
-                        alt={identity.provider}
-                        className={`h-4 w-4 ${PUBLIC_ICON_MUTED_CLASSES}`}
-                        onError={(e) => {
-                          e.currentTarget.src = '/icons/empty.svg'
-                        }}
-                      />
+                      {identity.provider === 'ldap' ? (
+                        <Network className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <img
+                          src={`/icons/${getProviderIcon(identity.provider)}`}
+                          alt={identity.provider}
+                          className={`h-4 w-4 ${PUBLIC_ICON_MUTED_CLASSES}`}
+                          onError={(e) => {
+                            e.currentTarget.src = '/icons/empty.svg'
+                          }}
+                        />
+                      )}
                       <span className="text-[13px] font-medium text-foreground">
                         {getProviderName(identity.provider)}
                       </span>
@@ -3197,6 +3191,7 @@ function SessionsTab({
       discord: 'Discord',
       twitch: 'Twitch',
       spotify: 'Spotify',
+      ldap: 'LDAP',
     }
     return nameMap[provider.toLowerCase()] || provider
   }
@@ -3332,6 +3327,8 @@ function SessionsTab({
                                     e.currentTarget.style.display = 'none'
                                   }}
                                 />
+                              ) : session.provider === 'ldap' ? (
+                                <Network className="h-3 w-3 text-muted-foreground/60" />
                               ) : (
                                 <Key className="h-3 w-3 text-muted-foreground/60" />
                               )}

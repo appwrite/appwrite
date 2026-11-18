@@ -111,7 +111,7 @@ class RedisCluster implements Adapter, Batchable, Retryable
      */
     public function save(string $key, array|string $data, string $hash = '', int $ttl = 0): bool|string|array
     {
-        if ($key === '' || $key === '0' || empty($data)) {
+        if ($key === '' || $key === '0' || $data === '' || $data === '0') {
             return false;
         }
 
@@ -212,11 +212,15 @@ class RedisCluster implements Adapter, Batchable, Retryable
      */
     public function purge(string $key, string $hash = ''): bool
     {
-        if ($hash !== '' && $hash !== '0') {
-            return (bool) $this->execute(fn (): int => $this->redis->hdel($key, $hash));
+        $removed = $hash !== '' && $hash !== '0'
+            ? $this->execute(fn (): Client|int|false => $this->redis->hdel($key, $hash))
+            : $this->execute(fn (): mixed => $this->redis->del($key));
+
+        if (! \is_int($removed)) {
+            throw new \RedisClusterException('Failed to purge '.$key.': '.$this->redis->getLastError());
         }
 
-        return (bool) $this->execute(fn (): int => $this->redis->del($key));
+        return (bool) $removed;
     }
 
     public function flush(): bool

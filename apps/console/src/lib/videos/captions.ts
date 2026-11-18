@@ -4,20 +4,11 @@
  * This module talks to the captions API until a matching SDK ships.
  */
 
-import type { Client, Models, VideoOutput } from '@appwrite.io/console'
+import type { Client } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import type { VideoOutput, VideoSubtitle } from '@/lib/appwrite/videos'
 
-declare module '@appwrite.io/console' {
-  namespace Models {
-    export type VideoCaption = VideoSubtitle
-    export type VideoCaptionList = {
-      total: number
-      captions: VideoSubtitle[]
-    }
-  }
-}
-
-export type VideoCaption = Models.VideoSubtitle
+export type VideoCaption = VideoSubtitle
 
 export type VideoCaptionList = {
   total: number

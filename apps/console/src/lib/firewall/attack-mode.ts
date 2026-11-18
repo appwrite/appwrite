@@ -1,4 +1,5 @@
-import { WafRuleAction, type Models } from '@appwrite.io/console'
+import { WafRuleAction } from '@appwrite.io/console'
+import type { FirewallRule } from '@/lib/firewall/types'
 import {
   serializeFirewallConditions,
   type FirewallConditionDraft,
@@ -63,7 +64,7 @@ export function getAttackModeRuleId(siteId: string): string {
 
 export function isAttackModeRuleForResource(
   rule: Pick<
-    Models.WafRule,
+    FirewallRule,
     '$id' | 'action' | 'name' | 'resourceType' | 'resourceId'
   >,
   resourceType: FirewallResourceType,

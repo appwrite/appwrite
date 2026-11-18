@@ -127,8 +127,8 @@ class Update extends Base
             ->param(static::getClientIdParamName(), null, new Nullable(new Text(256, 0)), static::getClientIdDescription(), optional: true)
             ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true)
             ->param('tenant', null, new Nullable(new Text(256, 0)), 'Microsoft Entra ID tenant identifier. Use \'common\', \'organizations\', \'consumers\' or a specific tenant ID. For example: common', true)
-            ->param('prompt', null, static::getPromptValidator(), static::getPromptDescription(), optional: true, enum: static::getPromptEnum())
             ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
+            ->param('prompt', null, static::getPromptValidator(), static::getPromptDescription(), optional: true, enum: static::getPromptEnum())
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -163,8 +163,8 @@ class Update extends Base
         ?string $applicationId,
         ?string $applicationSecret,
         ?string $tenant,
-        ?array $prompt,
         ?bool $enabled,
+        ?array $prompt,
         Response $response,
         Database $dbForPlatform,
         Document $project,

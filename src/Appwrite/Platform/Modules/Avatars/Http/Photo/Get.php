@@ -22,9 +22,12 @@ use Utopia\Balancer\Algorithm\First;
 use Utopia\Balancer\Balancer;
 use Utopia\Balancer\Option;
 use Utopia\Client\Client;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Image\Image;
+use Utopia\Image\Canvas;
+use Utopia\Image\Format;
+use Utopia\Image\Transform;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
@@ -60,7 +63,7 @@ class Get extends Action
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 type: MethodType::LOCATION,
-                locationAuth: ['Project', 'ImpersonateUserId'],
+                locationAuth: ['Project', 'Environment', 'ImpersonateUserId'],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -74,7 +77,7 @@ class Get extends Action
             ->param('quality', 100, new Range(0, 100), 'Output image quality between 0 and 100. Defaults to 100.', true)
             ->param('output', 'png', new WhiteList(['png', 'jpg', 'webp'], true), 'Output image format. Defaults to \'png\'.', true)
             ->param('rating', 'g', new WhiteList(['g', 'pg', 'r', 'x'], true), 'Maximum image rating to fetch from Gravatar/Libravatar. Defaults to \'g\'.', true)
-            ->param('userId', '', fn (Database $dbForProject) => new KeywordId('current()', $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID to resolve the photo for. Pass \'current()\' for the currently authenticated user. When omitted, the session user is used only if no emailHash and no name is passed.', true, ['dbForProject'], example: 'current()')
+            ->param('userId', '', fn (Database $dbForProject) => new KeywordId('current()', $dbForProject->getMaxUidLength()), 'User ID to resolve the photo for. Pass \'current()\' for the currently authenticated user. When omitted, the session user is used only if no emailHash and no name is passed.', true, ['dbForProject'], example: 'current()')
             ->param('emailHash', '', new Text(64, 64, [...Text::NUMBERS, ...\range('a', 'f'), ...\range('A', 'F')]), 'SHA256 hash of the lowercase, trimmed email address to look up on Gravatar and Libravatar instead of the user\'s own email. Pass the hash, never the address itself.', true)
             ->param('name', '', new Text(128, 0), 'Name to render initials from instead of the user\'s own name. Max length: 128 chars.', true)
             ->inject('response')
@@ -228,21 +231,21 @@ class Get extends Action
      */
     private function process(string $raw, int $width, int $height, int $quality, string $output): string
     {
-        if (! \extension_loaded('imagick') || $raw === '') {
+        if ($raw === '') {
             return $raw;
         }
 
         try {
-            $image = new Image($raw);
+            $image = new Canvas($raw, Config::getParam('storage-image-limits'));
 
             if ($width > 0 || $height > 0) {
-                $image->crop(
-                    $width > 0 ? $width : 256,
-                    $height > 0 ? $height : 256,
-                );
+                $image = $image->apply(new Transform(
+                    width: $width > 0 ? $width : 256,
+                    height: $height > 0 ? $height : 256,
+                ));
             }
 
-            return $image->output($output, $quality);
+            return $image->encode(Format::from($output), $quality);
         } catch (\Throwable) {
             return $raw;
         }

@@ -89,6 +89,30 @@ final class MultiplexingTest extends TestCase
         });
     }
 
+    public function testEmptyArrayIsStored(): void
+    {
+        $this->runCo(function (): void {
+            $cache = $this->makeCache();
+            $cache->purge('empty-array');
+
+            $this->assertSame([], $cache->save('empty-array', [], 'empty-array'));
+            $this->assertSame([], $cache->load('empty-array', 60, 'empty-array'));
+            // A zero TTL reads the entry as expired.
+            $this->assertFalse($cache->load('empty-array', 0, 'empty-array'));
+            $this->assertTrue($cache->purge('empty-array'));
+            $this->assertFalse($cache->load('empty-array', 60, 'empty-array'));
+
+            $this->assertSame([], $cache->saveWithLease('empty-array', [], 'empty-array', $cache->getLease('empty-array')));
+            $this->assertSame([], $cache->load('empty-array', 60, 'empty-array'));
+            $cache->purge('empty-array');
+
+            foreach (['', '0'] as $data) {
+                $this->assertFalse($cache->save('empty-string', $data, 'empty-string'));
+                $this->assertFalse($cache->load('empty-string', 60, 'empty-string'));
+            }
+        });
+    }
+
     public function testCacheTouch(): void
     {
         $this->runCo(function (): void {
@@ -314,5 +338,27 @@ final class MultiplexingTest extends TestCase
             $this->assertEmpty($errors, 'Concurrent errors: ' . implode('; ', $errors));
             $this->assertSame($count, $cache->getSize());
         });
+    }
+
+    public function testAPurgeTheServerRejectsThrowsInsteadOfReportingNothingToPurge(): void
+    {
+        Services::compose('exec', '-T', 'redis', 'redis-cli', 'SET', 'test:plain-string', 'value');
+
+        try {
+            $this->runCo(function (): void {
+                $cache = $this->makeCache();
+
+                try {
+                    $cache->purge('test:plain-string');
+                    $this->fail('A purge Redis rejected must not read as a purge of a missing key');
+                } catch (\RedisException $error) {
+                    $this->assertStringContainsString('WRONGTYPE', $error->getMessage());
+                }
+
+                $this->assertFalse($cache->purge('test:missing'));
+            });
+        } finally {
+            Services::compose('exec', '-T', 'redis', 'redis-cli', 'DEL', 'test:plain-string');
+        }
     }
 }

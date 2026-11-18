@@ -4,7 +4,7 @@ namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
@@ -24,7 +24,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => $name,
             'roles' => $roles,
         ]);
@@ -46,7 +46,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Arsenal',
             'roles' => ['player'],
         ]);
@@ -112,7 +112,7 @@ trait TeamsBase
             $this->assertEquals('There must be at least one owner in the organization.', $response['body']['message']);
         }
 
-        $teamId = ID::unique();
+        $teamId = Id::unique();
         $response2 = $this->postTeam(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -155,7 +155,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Newcastle'
         ]);
 
@@ -167,12 +167,12 @@ trait TeamsBase
         $this->assertEquals(true, $dateValidator->isValid($response3['body']['$createdAt']));
 
         // A project-scoped role is longer than a bare ID
-        $role = 'project-' . ID::unique() . '-developer';
+        $role = 'project-' . Id::unique() . '-developer';
         $response4 = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Aston Villa',
             'roles' => [$role],
         ]);
@@ -446,7 +446,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Demo'
         ]);
 
@@ -461,7 +461,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Demo New'
         ]);
 
@@ -494,7 +494,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Demo'
         ]);
 
@@ -526,6 +526,119 @@ trait TeamsBase
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $response['headers']['status-code']);
+    }
+
+    public function testGetTeamPhoto(): void
+    {
+        $team = $this->createTeamHelper('Photo Team');
+        $headers = $this->getTeamPhotoHeaders();
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $team['teamUid'] . '/photo', $headers);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertNotFalse(\imagecreatefromstring($response['body']));
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . Id::unique() . '/photo', $headers);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+    }
+
+    public function testUpdateTeamPhoto(): void
+    {
+        $team = $this->createTeamHelper('Photo Team');
+        $headers = $this->getTeamPhotoHeaders();
+        $logo = (string) \file_get_contents(__DIR__ . '/../../../resources/logo.png');
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->uploadTeamPhoto($team['teamUid'], $logo, 'logo.png');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($team['teamUid'], $response['body']['$id']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $team['teamUid'] . '/photo', $headers, [
+            'width' => 0,
+            'height' => 0,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSame(\getimagesizefromstring($logo)[0], \getimagesizefromstring($response['body'])[0]);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->uploadTeamPhoto($team['teamUid'], 'not an image', 'photo.txt');
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->uploadTeamPhoto(Id::unique(), $logo, 'logo.png');
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+    }
+
+    public function testDeleteTeamPhoto(): void
+    {
+        $team = $this->createTeamHelper('Photo Team');
+        $headers = $this->getTeamPhotoHeaders();
+        $logo = (string) \file_get_contents(__DIR__ . '/../../../resources/logo.png');
+
+        $initials = $this->client->call(Client::METHOD_GET, '/teams/' . $team['teamUid'] . '/photo', $headers)['body'];
+
+        $response = $this->uploadTeamPhoto($team['teamUid'], $logo, 'logo.png');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $uploaded = $this->client->call(Client::METHOD_GET, '/teams/' . $team['teamUid'] . '/photo', $headers)['body'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $team['teamUid'] . '/photo', $headers);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $team['teamUid'] . '/photo', $headers);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotSame($initials, $response['body']);
+        $this->assertNotSame($uploaded, $response['body']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . Id::unique() . '/photo', $headers);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function getTeamPhotoHeaders(): array
+    {
+        return \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function uploadTeamPhoto(string $teamId, string $contents, string $filename): array
+    {
+        return $this->client->call(Client::METHOD_PUT, '/teams/' . $teamId . '/photo', \array_merge($this->getTeamPhotoHeaders(), [
+            'content-type' => 'multipart/form-data',
+        ]), [
+            'file' => new \CURLFile('data://application/octet-stream;base64,' . \base64_encode($contents), 'application/octet-stream', $filename),
+        ]);
     }
 
     public function testUpdateAndGetUserPrefs(): void

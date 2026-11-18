@@ -7,7 +7,7 @@ import { filterBillingPlansByLocation } from '@/lib/pricing/start-plan'
 import { useBillingPlans } from '@/lib/react-query/hooks'
 
 /**
- * Billing plans a visitor can choose, with country-gated plans (Start in IN/NP)
+ * Billing plans a visitor can choose, with country-gated Start plan regions
  * resolved the same way everywhere plans are sold. `currentPlanRef` keeps the
  * organization's current plan visible even outside its countries.
  */

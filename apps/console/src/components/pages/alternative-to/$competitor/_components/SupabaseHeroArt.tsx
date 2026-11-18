@@ -60,12 +60,14 @@ function OrbitTile({ node, outer }: { node: OrbitNode; outer: boolean }) {
       </span>
       <span
         className={cn(
-          'whitespace-nowrap rounded-full px-1.5 text-[10px] font-medium leading-4 sm:text-[11px]',
+          'flex flex-col items-center rounded-full px-1.5 text-[10px] font-medium leading-4 sm:text-[11px]',
           outer ? 'bg-background/80 text-foreground dark:bg-card/80' : 'text-muted-foreground',
         )}
       >
-        {t(node.label)}
-        {node.soon ? <span className="ms-1 text-[var(--tone-ink)]">{t('Soon')}</span> : null}
+        <span className="whitespace-nowrap">{t(node.label)}</span>
+        {node.soon ? (
+          <span className="text-[var(--tone-ink)]">{t('Soon')}</span>
+        ) : null}
       </span>
     </span>
   )
@@ -80,8 +82,8 @@ export function SupabaseHeroArt() {
   const stars = MARKETING_SOCIAL_STATS.github.stat
 
   return (
-    <div className="relative mx-auto min-w-0 w-full max-w-[560px] overflow-x-clip py-2 sm:py-4">
-      <div className="relative mx-auto aspect-square w-[86%] sm:w-full">
+    <div className="relative mx-auto w-full min-w-0 max-w-[560px] py-2 sm:py-4">
+      <div className="relative mx-auto aspect-square w-[76%] sm:w-[80%]">
         <div className="absolute inset-[4%] rounded-full border border-dashed border-[rgb(var(--tone-rgb)/0.45)]" aria-hidden />
         <div
           className="absolute inset-[4%] rounded-full bg-[radial-gradient(circle,transparent_52%,rgb(var(--tone-rgb)/0.09)_72%,transparent_100%)]"
@@ -140,7 +142,7 @@ export function SupabaseHeroArt() {
         </div>
       </div>
 
-      <ArtChip className="start-0 top-[2%] sm:-start-6" delayMs={1100} floatDelayMs={200}>
+      <ArtChip className="start-2 top-2" delayMs={1100} floatDelayMs={200}>
         <div className="flex items-center gap-2">
           <span className="flex size-7 items-center justify-center rounded-md bg-[rgb(var(--tone-rgb)/0.14)] text-[var(--tone-ink)]">
             <Star className="size-3.5" aria-hidden />
@@ -154,7 +156,7 @@ export function SupabaseHeroArt() {
         </div>
       </ArtChip>
 
-      <ArtChip className="bottom-[2%] end-0 sm:-end-6" delayMs={1400} floatDelayMs={900}>
+      <ArtChip className="bottom-2 end-2" delayMs={1400} floatDelayMs={900}>
         <ul className="space-y-1.5 text-[11px]">
           <li className="flex items-center gap-2 font-medium text-foreground">
             <span className="size-2.5 rounded-full bg-[var(--tone-ink)] shadow-[0_0_10px_rgb(var(--tone-rgb))]" aria-hidden />

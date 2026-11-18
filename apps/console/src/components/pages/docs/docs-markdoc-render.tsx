@@ -2,6 +2,7 @@
 
 import Markdoc from '@markdoc/markdoc'
 import React from 'react'
+import { ArrowRight } from 'lucide-react'
 import { docsMarkdocConfig } from '@/lib/docs/markdoc-config'
 import { useDocsPrompt } from '@/components/pages/docs/DocsPromptContext'
 import { Cards, CardsItem } from './markdoc/Cards'
@@ -60,8 +61,21 @@ const baseMarkdocComponents = {
   MarkdocTableHead,
   MarkdocTableCell,
   Section: () => null,
-  ArrowLink: ({ href, title }: { href?: string; title?: string }) => (
-    <DocsLink href={href}>{title}</DocsLink>
+  ArrowLink: ({
+    href,
+    title,
+    children,
+  }: {
+    href?: string
+    title?: string
+    children?: React.ReactNode
+  }) => (
+    <div className="my-4 [&_p]:m-0 [&_p]:inline">
+      <DocsLink href={href}>
+        {title ?? children}
+        <ArrowRight className="ms-1 inline size-3.5 align-[-2px]" aria-hidden />
+      </DocsLink>
+    </div>
   ),
   CallToAction: ({ href, title }: { href?: string; title?: string }) => (
     <div className="not-prose my-6">

@@ -242,7 +242,28 @@ class Context
      */
     public function addMetric(string $key, int $value): static
     {
+        $this->metrics[] = $this->metric($key, $value);
+
+        return $this;
+    }
+
+    public function addResourceMetric(string $key, int $value, string $resourceType, string $resourceInternalId): static
+    {
         $this->metrics[] = [
+            ...$this->metric($key, $value),
+            'resourceType' => $resourceType,
+            'resourceInternalId' => $resourceInternalId,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function metric(string $key, int $value): array
+    {
+        return [
             'key' => $key,
             'value' => $value,
             'path' => $this->path,
@@ -267,8 +288,6 @@ class Context
             'acceptLanguage' => $this->acceptLanguage,
             'queryKeys' => $this->queryKeys,
         ];
-
-        return $this;
     }
 
     /**

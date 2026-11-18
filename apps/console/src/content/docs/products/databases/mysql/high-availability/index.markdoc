@@ -118,7 +118,7 @@ using Appwrite;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -183,8 +183,8 @@ _ = try await mysql.update(
 package main
 
 import (
-    "github.com/appwrite/sdk-for-go/appwrite"
-    "github.com/appwrite/sdk-for-go/mysql"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/mysql"
 )
 
 func main() {
@@ -325,7 +325,7 @@ using Appwrite;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -382,7 +382,7 @@ let replicas = try await mysql.getReplicas(
 package main
 
 import (
-    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
 )
 
 func main() {
@@ -519,7 +519,7 @@ using Appwrite;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -576,7 +576,7 @@ _ = try await mysql.createFailover(
 package main
 
 import (
-    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
 )
 
 func main() {

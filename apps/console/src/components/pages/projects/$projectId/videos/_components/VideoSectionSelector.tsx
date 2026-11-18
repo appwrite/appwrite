@@ -5,7 +5,6 @@
 
 import { Fragment, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import type { Models } from '@appwrite.io/console'
 import { Check, ChevronDown, SquareArrowOutUpRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -29,6 +28,7 @@ import {
   type VideoTabDefinition,
   type VideoTabGroup,
 } from './video-tabs'
+import type { VideoRendition } from '@/lib/appwrite/videos'
 
 const ITEM_CLASSNAME =
   'flex w-full items-center gap-1.5 rounded-sm px-2 py-1.5 text-start text-[13px] outline-none transition-colors'
@@ -48,7 +48,7 @@ export function VideoSectionSelector({
   tabs: VideoTabDefinition[]
   groups: VideoTabGroup[]
   value: VideoTab
-  renditions: Models.VideoRendition[]
+  renditions: VideoRendition[]
   onOpenInspector?: () => void
   triggerClassName?: string
 }) {

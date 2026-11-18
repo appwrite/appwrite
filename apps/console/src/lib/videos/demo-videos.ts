@@ -23,7 +23,7 @@ export type DemoVideo = {
   id: string
   title: string
   description: string
-  /** Duration in milliseconds, matching `Models.Video.duration`. */
+  /** Duration in milliseconds, matching `Video.duration`. */
   duration: number
   posterUrl: string
   sourceUrl: string

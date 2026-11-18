@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { AlertTriangle, ChevronDown } from 'lucide-react'
-import { VideoOutput } from '@appwrite.io/console'
-import type { Models } from '@appwrite.io/console'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -17,6 +15,7 @@ import { cn } from '@/lib/utils'
 import { formatBitrate, formatResolution } from '@/lib/utils/video-format'
 import { VideoOutputBadge } from './VideoOutputBadge'
 import { VideoTermHint } from './VideoTermHint'
+import { VideoOutput, type VideoProfile } from '@/lib/appwrite/videos'
 
 const OUTPUT_DESCRIPTIONS: Record<VideoOutput, string> = {
   [VideoOutput.Hls]: 'MPEG-TS segments. Plays natively on Safari and iOS.',
@@ -36,9 +35,7 @@ const OUTPUT_SUMMARY: Record<VideoOutput, string> = {
   [VideoOutput.Dash]: 'Not supported natively on Safari.',
 }
 
-export function sortProfilesByPixels(
-  profiles: Models.VideoProfile[],
-): Models.VideoProfile[] {
+export function sortProfilesByPixels(profiles: VideoProfile[]): VideoProfile[] {
   return [...profiles].sort((a, b) => a.width * a.height - b.width * b.height)
 }
 
@@ -49,7 +46,7 @@ export type VideoSourceSize = { width: number; height: number }
  * landscape profiles. A zero or missing size means it is not known yet.
  */
 export function isProfileUpscale(
-  profile: Pick<Models.VideoProfile, 'width' | 'height'>,
+  profile: Pick<VideoProfile, 'width' | 'height'>,
   source: VideoSourceSize | null | undefined,
 ): boolean {
   if (!source || source.width <= 0 || source.height <= 0) return false
@@ -63,7 +60,7 @@ export function isProfileUpscale(
 
 /** Every profile that is not already encoded and would not upscale the source. */
 export function getDefaultProfileSelection(
-  profiles: Models.VideoProfile[],
+  profiles: VideoProfile[],
   source: VideoSourceSize | null | undefined,
   existingProfileIds: ReadonlySet<string> = new Set(),
 ): Set<string> {
@@ -171,7 +168,7 @@ export function ProfilePicker({
 }: {
   projectId: string
   /** Pre-sorted, see `sortProfilesByPixels`. */
-  profiles: Models.VideoProfile[]
+  profiles: VideoProfile[]
   loading: boolean
   selected: ReadonlySet<string>
   onSelectedChange: (selected: Set<string>) => void

@@ -54,7 +54,7 @@ class Delete extends Action
                 contentType: ContentType::NONE
             ))
             ->param('projectId', '', new UID(), 'Project unique ID.')
-            ->param('keyId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Key ID.', false, ['dbForPlatform'])
+            ->param('keyId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Key ID.', false, ['dbForPlatform'])
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('queueForEvents')

@@ -8,7 +8,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Database;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class DocumentsDBIndexTest extends Scope
 {
@@ -26,7 +26,7 @@ final class DocumentsDBIndexTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ],
             [
-                'databaseId' => ID::unique(),
+                'databaseId' => Id::unique(),
                 'name' => 'DocumentsDB Indexes',
             ]
         );
@@ -44,7 +44,7 @@ final class DocumentsDBIndexTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ],
             [
-                'collectionId' => ID::unique(),
+                'collectionId' => Id::unique(),
                 'name' => 'Movies',
                 'documentSecurity' => true,
             ]
@@ -270,7 +270,7 @@ final class DocumentsDBIndexTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ],
             [
-                'databaseId' => ID::unique(),
+                'databaseId' => Id::unique(),
                 'name' => 'DocumentsDB Index Lengths',
             ]
         );
@@ -288,7 +288,7 @@ final class DocumentsDBIndexTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ],
             [
-                'collectionId' => ID::unique(),
+                'collectionId' => Id::unique(),
                 'name' => 'Movies',
                 'documentSecurity' => true,
             ]

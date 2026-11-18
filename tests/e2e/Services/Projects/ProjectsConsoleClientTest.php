@@ -13,10 +13,10 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\System\System;
 
 final class ProjectsConsoleClientTest extends Scope
@@ -37,7 +37,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Project Test',
         ]);
 
@@ -50,7 +50,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4'
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test',
             'teamId' => $team['body']['$id'],
             'region' => System::getEnv('_APP_REGION', 'default')
@@ -73,7 +73,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test',
             'teamId' => $team['body']['$id'],
         ]);
@@ -95,7 +95,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => '',
             'teamId' => $team['body']['$id'],
             'region' => System::getEnv('_APP_REGION', 'default')
@@ -108,7 +108,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test',
             'region' => System::getEnv('_APP_REGION', 'default')
         ]);
@@ -123,7 +123,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'MultiDB Team',
         ]);
 
@@ -135,7 +135,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'MultiDB Project',
             'teamId' => $teamId,
             'region' => System::getEnv('_APP_REGION', 'default')
@@ -152,14 +152,14 @@ final class ProjectsConsoleClientTest extends Scope
 
         // Create legacy database and collection
         $database = $this->client->call(Client::METHOD_POST, '/databases', $projectAdminHeaders, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Legacy DB',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
         $databaseId = $database['body']['$id'];
 
         $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $projectAdminHeaders, [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Legacy Collection',
             'documentSecurity' => true,
             'permissions' => [
@@ -170,14 +170,14 @@ final class ProjectsConsoleClientTest extends Scope
 
         // Create documentsdb database and collection
         $documentsDb = $this->client->call(Client::METHOD_POST, '/documentsdb', $projectAdminHeaders, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Documents DB',
         ]);
         $this->assertEquals(201, $documentsDb['headers']['status-code']);
         $documentsDbId = $documentsDb['body']['$id'];
 
         $documentsCollection = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $documentsDbId . '/collections', $projectAdminHeaders, [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Documents Collection',
             'documentSecurity' => true,
             'permissions' => [
@@ -188,14 +188,14 @@ final class ProjectsConsoleClientTest extends Scope
 
         // Create vectorsdb database and collection
         $vectorDb = $this->client->call(Client::METHOD_POST, '/vectorsdb', $projectAdminHeaders, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Vector DB',
         ]);
         $this->assertEquals(201, $vectorDb['headers']['status-code']);
         $vectorDbId = $vectorDb['body']['$id'];
 
         $vectorCollection = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $vectorDbId . '/collections', $projectAdminHeaders, [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Vector Collection',
             'dimension' => 3,
             'documentSecurity' => true,
@@ -230,7 +230,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Duplicate Test Team',
         ]);
 
@@ -238,7 +238,7 @@ final class ProjectsConsoleClientTest extends Scope
         $teamId = $team['body']['$id'];
 
         // Create a project
-        $projectId = ID::unique();
+        $projectId = Id::unique();
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -281,7 +281,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Team 1',
         ]);
 
@@ -295,7 +295,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Team 2',
         ]);
 
@@ -310,7 +310,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Team 1 Project',
             'teamId' => $team1,
             'region' => System::getEnv('_APP_REGION', 'default'),
@@ -339,7 +339,7 @@ final class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('Team 1 Project', $response['body']['name']);
         $this->assertEquals($team2, $response['body']['teamId']);
 
-        $victimProjectId = ID::unique();
+        $victimProjectId = Id::unique();
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -400,6 +400,96 @@ final class ProjectsConsoleClientTest extends Scope
     }
 
     #[Group('projectsCRUD')]
+    public function testTransferProjectTeamRequiresOwnership(): void
+    {
+        $sourceTeamId = Id::unique();
+        $projectId = $this->setupProject([
+            'projectId' => Id::unique(),
+            'name' => 'Transfer Source Project',
+            'region' => System::getEnv('_APP_REGION', 'default'),
+        ], $sourceTeamId);
+
+        $foreignTeam = $this->createTeamFixture(array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => Id::unique(),
+            'name' => 'Foreign Team',
+        ]);
+        $this->assertSame(200, $foreignTeam['headers']['status-code']);
+        $foreignTeamId = $foreignTeam['body']['$id'];
+
+        $email = 'transfer-' . Id::unique() . '@localhost.test';
+        ['membershipId' => $membershipId] = $this->setupUserMembership([
+            'teamId' => $sourceTeamId,
+            'email' => $email,
+            'name' => 'Transfer User',
+            'roles' => ['owner'],
+        ]);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session['cookies']['a_session_' . $this->getProject()['$id']],
+        ];
+
+        $ownTeam = $this->createTeamFixture($headers, [
+            'teamId' => Id::unique(),
+            'name' => 'Own Team',
+        ]);
+        $this->assertSame(200, $ownTeam['headers']['status-code']);
+        $ownTeamId = $ownTeam['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/team', $headers, [
+            'teamId' => $foreignTeamId,
+        ]);
+        $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertSame(Exception::USER_UNAUTHORIZED, $response['body']['type']);
+
+        foreach ([['developer'], ['project-' . $projectId . '-developer'], ['project-' . $projectId . '-owner']] as $roles) {
+            $this->updateMembershipRole($sourceTeamId, $membershipId, $roles);
+
+            $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/team', $headers, [
+                'teamId' => $ownTeamId,
+            ]);
+            $this->assertSame(401, $response['headers']['status-code'], 'Roles: ' . \implode(',', $roles));
+            $this->assertSame(Exception::USER_UNAUTHORIZED, $response['body']['type']);
+        }
+
+        $project = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertSame(200, $project['headers']['status-code']);
+        $this->assertSame($sourceTeamId, $project['body']['teamId']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $this->updateMembershipRole($sourceTeamId, $membershipId, ['owner']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/team', $headers, [
+            'teamId' => $ownTeamId,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame($ownTeamId, $response['body']['teamId']);
+    }
+
+    #[Group('projectsCRUD')]
     public function testListProject(): void
     {
         $data = $this->setupProjectData();
@@ -453,7 +543,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Project Test 2',
         ]);
 
@@ -466,7 +556,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test 2',
             'teamId' => $team['body']['$id'],
             'region' => System::getEnv('_APP_REGION', 'default')
@@ -597,7 +687,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Query Select Test Team',
         ]);
 
@@ -609,7 +699,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Query Select Test Project',
             'teamId' => $teamId,
             'region' => System::getEnv('_APP_REGION', 'default')
@@ -858,7 +948,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Get Project Test Team',
         ]);
 
@@ -870,7 +960,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test',
             'teamId' => $team['body']['$id'],
             'region' => System::getEnv('_APP_REGION', 'default'),
@@ -1060,7 +1150,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'Key Test',
             'scopes' => ['teams.read', 'teams.write'],
         ]);
@@ -1071,7 +1161,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'platformId' => ID::unique(),
+            'platformId' => Id::unique(),
             'type' => 'web',
             'name' => 'Web App',
             'hostname' => 'localhost',
@@ -1231,10 +1321,9 @@ final class ProjectsConsoleClientTest extends Scope
         $this->assertCount(2, $response['body']['webhooks'][0]['events']);
         $this->assertTrue($response['body']['webhooks'][0]['tls']);
         $this->assertEquals('username', $response['body']['webhooks'][0]['authUsername']);
-        $this->assertEquals('password', $response['body']['webhooks'][0]['authPassword']);
+        $this->assertSame('', $response['body']['webhooks'][0]['authPassword']); // Write only
         $this->assertTrue($response['body']['webhooks'][0]['enabled']);
-        $this->assertIsString($response['body']['webhooks'][0]['secret']);
-        $this->assertNotEmpty($response['body']['webhooks'][0]['secret']);
+        $this->assertSame('', $response['body']['webhooks'][0]['secret']); // Only on create and rotation
         $this->assertIsString($response['body']['webhooks'][0]['$createdAt']);
         $this->assertNotEmpty($response['body']['webhooks'][0]['$createdAt']);
         $this->assertNotFalse(\strtotime($response['body']['webhooks'][0]['$createdAt']));
@@ -1577,7 +1666,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Update Project Test Team',
         ]);
 
@@ -1590,7 +1679,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test',
             'teamId' => $teamId,
             'region' => System::getEnv('_APP_REGION', 'default')
@@ -1607,7 +1696,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test 2',
         ]);
 
@@ -1628,7 +1717,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => '',
         ]);
 
@@ -1729,7 +1818,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Create Project SMTP Tests Test Team',
         ]);
 
@@ -1742,7 +1831,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test',
             'teamId' => $teamId,
             'region' => System::getEnv('_APP_REGION', 'default')
@@ -1782,6 +1871,8 @@ final class ProjectsConsoleClientTest extends Scope
         $this->assertStringContainsStringIgnoringCase('working correctly', $email1['html']);
         $this->assertStringContainsStringIgnoringCase('251 Little Falls Drive', $email1['text']);
         $this->assertStringContainsStringIgnoringCase('251 Little Falls Drive', $email1['html']);
+        $this->assertStringContainsString(APP_EMAIL_LOGO_DARK_URL, (string) $email1['html']);
+        $this->assertStringNotContainsString('{{logoDarkUrl}}', (string) $email1['html']);
         $this->assertEquals('custommailer@appwrite.io', $email2['from'][0]['address']);
 
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/smtp/tests', array_merge([
@@ -1838,7 +1929,7 @@ final class ProjectsConsoleClientTest extends Scope
 
         /** Update Email template, fail due to SMTP disabled */
         $projectWithoutSmtp = $this->setupProject([
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Without SMTP',
             'region' => System::getEnv('_APP_REGION', 'default')
         ]);
@@ -1925,7 +2016,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Session Alert Locale Fallback Test Team',
         ]);
         $this->assertEquals(200, $team['headers']['status-code']);
@@ -1937,7 +2028,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Session Alert Locale Fallback Test',
             'teamId' => $teamId,
             'region' => System::getEnv('_APP_REGION', 'default'),
@@ -2031,7 +2122,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $userEmail,
             'password' => $password,
             'name' => 'Session Alert User',
@@ -2268,7 +2359,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Session Invalidation Test Team',
         ]);
 
@@ -2280,7 +2371,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Session Invalidation Test Project',
             'teamId' => $team['body']['$id'],
             'region' => System::getEnv('_APP_REGION', 'default')
@@ -2343,7 +2434,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Update Project OAuth Test Team',
         ]);
 
@@ -2356,7 +2447,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test',
             'teamId' => $teamId,
             'region' => System::getEnv('_APP_REGION', 'default')
@@ -2478,7 +2569,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Update Project Auth Status Test Team',
         ]);
 
@@ -2491,7 +2582,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test',
             'teamId' => $teamId,
             'region' => System::getEnv('_APP_REGION', 'default')
@@ -2501,7 +2592,7 @@ final class ProjectsConsoleClientTest extends Scope
         $id = $response['body']['$id'];
 
         $auth = require(__DIR__ . '/../../../../app/config/auth.php');
-        unset($auth['passkey']); // Not exposed in these older response formats
+        unset($auth['passkey'], $auth['ldap']); // Not exposed in these older response formats
         $originalEmail = uniqid() . 'user@localhost.test';
         $originalPassword = 'password';
         $originalName = 'User Name';
@@ -2511,7 +2602,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $originalEmail,
             'password' => $originalPassword,
             'name' => $originalName,
@@ -2527,6 +2618,40 @@ final class ProjectsConsoleClientTest extends Scope
         ]);
 
         $session = $response['cookies']['a_session_' . $id];
+
+        // LDAP is hidden from older response formats, whose SDKs reject auth
+        // method IDs outside their enum, and disabled on a fresh project: with
+        // no directory configured it cannot authenticate anyone.
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertArrayNotHasKey('authLDAP', $response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $ldap = \array_values(\array_filter($response['body']['authMethods'], fn ($method) => $method['$id'] === 'ldap'));
+        $this->assertCount(1, $ldap);
+        $this->assertEquals(false, $ldap[0]['enabled']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/ldap', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'username' => 'user',
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(501, $response['headers']['status-code']);
+        $this->assertEquals('user_auth_method_unsupported', $response['body']['type']);
 
         /**
          * Test for SUCCESS
@@ -2566,7 +2691,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -2579,7 +2704,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
             'cookie' => 'a_session_' . $id . '=' . $session,
         ]), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Arsenal'
         ]);
 
@@ -2627,6 +2752,30 @@ final class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(501, $response['headers']['status-code']);
 
+        // LDAP cannot be switched on through the generic auth method endpoint
+        // until a directory is configured: nothing could sign anyone in.
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/ldap', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('project_ldap_config_invalid', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/ldap', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'username' => 'user',
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(501, $response['headers']['status-code']);
+        $this->assertEquals('user_auth_method_unsupported', $response['body']['type']);
+
         // Cleanup
 
         foreach ($auth as $index => $method) {
@@ -2671,7 +2820,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -2684,7 +2833,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Test Team 1',
         ]);
 
@@ -2714,7 +2863,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -2745,7 +2894,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -2757,7 +2906,7 @@ final class ProjectsConsoleClientTest extends Scope
     public function testUpdateProjectAuthSessionsLimit(): void
     {
         $id = $this->setupProject([
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'testUpdateProjectAuthSessionsLimit',
             'region' => System::getEnv('_APP_REGION', 'default')
         ]);
@@ -2789,7 +2938,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -2880,7 +3029,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -2994,7 +3143,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . 'weak-account@localhost.test',
             'password' => $weakPassword,
             'name' => 'Weak Account',
@@ -3007,7 +3156,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
             'x-appwrite-mode' => 'admin',
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . 'weak-user@localhost.test',
             'password' => $weakPassword,
             'name' => 'Weak User',
@@ -3020,7 +3169,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $validPassword,
             'name' => 'Password Strength User',
@@ -3347,7 +3496,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . 'user@localhost.test',
             'password' => $password,
             'name' => $name,
@@ -3363,7 +3512,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
             'x-appwrite-mode' => 'admin',
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . 'user@localhost.test',
             'password' => 'password',
             'name' => 'Cristiano Ronaldo',
@@ -3392,7 +3541,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . 'user@localhost.test',
             'password' => $password,
             'name' => $name,
@@ -3408,7 +3557,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
             'x-appwrite-mode' => 'admin',
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . 'user@localhost.test',
             'password' => 'password',
             'name' => 'Cristiano Ronaldo',
@@ -3482,7 +3631,7 @@ final class ProjectsConsoleClientTest extends Scope
         $email = uniqid() . 'user@localhost.test';
         $password = 'password';
         $name = 'username';
-        $userId = ID::unique();
+        $userId = Id::unique();
 
         $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
             'origin' => 'http://localhost',
@@ -3531,7 +3680,7 @@ final class ProjectsConsoleClientTest extends Scope
         $email = uniqid() . 'user@localhost.test';
         $password = 'password';
         $name = 'username';
-        $userId = ID::unique();
+        $userId = Id::unique();
         $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -3553,13 +3702,13 @@ final class ProjectsConsoleClientTest extends Scope
             // Empty password
             'email' => uniqid() . 'user@localhost.test',
             'name' => 'User',
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
 
         $email = uniqid() . 'user@localhost.test';
-        $userId = ID::unique();
+        $userId = Id::unique();
         $response = $this->client->call(Client::METHOD_POST, '/users', array_merge($this->getHeaders(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
@@ -3597,7 +3746,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Project Test',
         ]);
 
@@ -3610,7 +3759,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-response-format' => '1.9.4',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test',
             'teamId' => $team['body']['$id'],
             'region' => System::getEnv('_APP_REGION', 'default')
@@ -3690,7 +3839,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Project Test',
         ]);
 
@@ -3702,7 +3851,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-response-format' => '1.9.4',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test',
             'teamId' => $team['body']['$id'],
             'region' => System::getEnv('_APP_REGION', 'default')
@@ -3768,7 +3917,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Project Test',
         ]);
         $this->assertEquals(200, $team['headers']['status-code']);
@@ -3780,7 +3929,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-response-format' => '1.9.4',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test',
             'teamId' => $team['body']['$id'],
             'region' => System::getEnv('_APP_REGION', 'default')
@@ -3919,7 +4068,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Arsenal'
         ]);
 
@@ -3987,7 +4136,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'Key Test',
             'scopes' => ['functions.read', 'teams.write'],
         ]);
@@ -4015,7 +4164,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-key' => $keySecret,
             'x-sdk-name' => 'php'
         ]), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Arsenal'
         ]);
 
@@ -4366,7 +4515,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'Key Test',
             'scopes' => ['teams.read', 'teams.write'],
         ]);
@@ -4455,7 +4604,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'Key Test',
             'scopes' => ['unknown'],
         ]);
@@ -4644,7 +4793,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'Key Test',
             'scopes' => ['users.write'],
             'expire' => DateTime::addSeconds(new \DateTime(), 3600),
@@ -4655,7 +4804,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $response['body']['secret']
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -4665,7 +4814,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'Key Test',
             'scopes' => ['health.read'],
             'expire' => null,
@@ -4688,7 +4837,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'Key Test',
             'scopes' => ['health.read'],
             'expire' => DateTime::addSeconds(new \DateTime(), -3600),
@@ -4708,7 +4857,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket',
         ]);
 
@@ -4730,7 +4879,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'Key Test',
             'scopes' => ['teams.read'],
             'expire' => DateTime::addSeconds(new \DateTime(), 3600),
@@ -4750,7 +4899,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test 2',
             'teamId' => $teamId,
             'region' => System::getEnv('_APP_REGION', 'default')
@@ -4764,7 +4913,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'Key Test',
             'scopes' => ['health.read'],
             'expire' => DateTime::addSeconds(new \DateTime(), 3600),
@@ -5784,7 +5933,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Amazing Team',
         ]);
 
@@ -5799,7 +5948,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Amazing Project',
             'teamId' => $teamId,
             'region' => System::getEnv('_APP_REGION', 'default')
@@ -5855,13 +6004,56 @@ final class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
+    /**
+     * An import file waits in the imports directory until its migration runs,
+     * so a project deleted in that window must take the file with it.
+     */
+    public function testDeleteProjectRemovesPendingImports(): void
+    {
+        $team = $this->createTeamFixture(array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => Id::unique(),
+            'name' => 'Imports Team',
+        ]);
+        $this->assertSame(200, $team['headers']['status-code']);
+
+        $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => Id::unique(),
+            'name' => 'Imports Project',
+            'teamId' => $team['body']['$id'],
+            'region' => System::getEnv('_APP_REGION', 'default'),
+        ]);
+        $this->assertSame(201, $project['headers']['status-code']);
+        $projectId = $project['body']['$id'];
+
+        $directory = APP_STORAGE_IMPORTS . '/app-' . $projectId;
+        $this->assertTrue(\mkdir($directory, 0755, true));
+        $this->assertNotFalse(\file_put_contents($directory . '/' . Id::unique() . '_' . Id::unique() . '.csv', "\$id,name\nrow,pending\n"));
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertSame(204, $response['headers']['status-code']);
+
+        $this->assertEventually(function () use ($directory) {
+            \clearstatcache();
+            $this->assertDirectoryDoesNotExist($directory);
+        }, 30_000, 500);
+    }
+
     public function testDeleteSharedProject(): void
     {
         $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Amazing Team',
         ]);
 
@@ -5873,7 +6065,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Amazing Project 1',
             'teamId' => $teamId,
             'region' => System::getEnv('_APP_REGION', 'default')
@@ -5884,7 +6076,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Amazing Project 2',
             'teamId' => $teamId,
             'region' => System::getEnv('_APP_REGION', 'default')
@@ -5898,7 +6090,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'Key Test',
             'scopes' => ['users.read', 'users.write'],
         ]);
@@ -5908,7 +6100,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $project1Id,
             'x-appwrite-key' => $key1['body']['secret'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'test1@appwrite.io',
             'password' => 'password',
         ]);
@@ -5919,7 +6111,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'Key Test',
             'scopes' => ['users.read', 'users.write'],
         ]);
@@ -5929,7 +6121,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $project2Id,
             'x-appwrite-key' => $key2['body']['secret'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'test2@appwrite.io',
             'password' => 'password',
         ]);
@@ -5961,7 +6153,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $project2Id,
             'x-appwrite-key' => $key2['body']['secret'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'test3@appwrite.io'
         ]);
 
@@ -6335,7 +6527,7 @@ final class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Query Select Test Team',
         ]);
 
@@ -6348,7 +6540,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Test project - Labels 1',
             'teamId' => $teamId,
             'region' => System::getEnv('_APP_REGION', 'default')
@@ -6445,7 +6637,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.4',
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Test project - Labels 2',
             'teamId' => $teamId,
             'region' => System::getEnv('_APP_REGION', 'default')
@@ -6553,17 +6745,17 @@ final class ProjectsConsoleClientTest extends Scope
     #[Group('ciIgnore')]
     public function testProjectSpecificPermissionsForListProjects(): void
     {
-        $teamId = ID::unique();
+        $teamId = Id::unique();
         $projectIdA = $this->setupProject([
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test A',
         ], $teamId);
         $projectIdB = $this->setupProject([
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test B',
         ], $teamId, false);
 
-        $testUserEmail = 'test-' . ID::unique() . '@localhost.test';
+        $testUserEmail = 'test-' . Id::unique() . '@localhost.test';
         $testUserName = 'Test User';
 
         [ 'membershipId' => $testUserMembershipId ] = $this->setupUserMembership([
@@ -6621,20 +6813,205 @@ final class ProjectsConsoleClientTest extends Scope
         }
     }
 
+    #[Group('projectsCRUD')]
+    public function testProjectSpecificPermissionsPrefixCollision(): void
+    {
+        // Two projects whose IDs are prefix siblings: 'A' is a string prefix of 'B'. A
+        // project-scoped role for B ("project-{B}-owner") must grant access to B only. The
+        // admin-role match keys off an exact 'project-{projectId}-' boundary; a prefix-only
+        // check (str_starts_with 'project-' . $projectIdA) would have leaked B's grant onto A.
+        $teamId = Id::unique();
+        $base = 'pfx' . \substr(\bin2hex(\random_bytes(5)), 0, 8);
+        $projectIdA = $base;
+        $projectIdB = $base . '2';
+
+        $this->setupProject(['projectId' => $projectIdA, 'name' => 'Prefix A'], $teamId);
+        $this->setupProject(['projectId' => $projectIdB, 'name' => 'Prefix B'], $teamId, false);
+
+        $testUserEmail = 'test-' . Id::unique() . '@localhost.test';
+        [ 'membershipId' => $membershipId ] = $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $testUserEmail,
+            'name' => 'Prefix User',
+            'roles' => ['owner'],
+        ]);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => $testUserEmail,
+            'password' => 'password',
+        ]);
+        $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
+
+        // Grant a role on project B only. The member must see B and never the prefix sibling A.
+        $this->updateMembershipRole($teamId, $membershipId, ["project-$projectIdB-owner"]);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $returnedProjectIds = \array_column($response['body']['projects'], '$id');
+        $this->assertContains($projectIdB, $returnedProjectIds);
+        $this->assertNotContains($projectIdA, $returnedProjectIds);
+
+        // The member can read project B directly, but not the prefix-sibling A.
+        $getB = $this->client->call(Client::METHOD_GET, '/projects/' . $projectIdB, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+        ]);
+        $this->assertEquals(200, $getB['headers']['status-code']);
+
+        $getA = $this->client->call(Client::METHOD_GET, '/projects/' . $projectIdA, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+        ]);
+        $this->assertNotEquals(200, $getA['headers']['status-code']);
+    }
+
+    #[Group('projectsCRUD')]
+    public function testProjectSpecificPermissionsForOrganizationProjects(): void
+    {
+        $teamId = Id::unique();
+        $projectIdA = $this->setupProject([
+            'projectId' => Id::unique(),
+            'name' => 'Organization Project A',
+            'region' => System::getEnv('_APP_REGION', 'default'),
+        ], $teamId);
+        $projectIdB = $this->setupProject([
+            'projectId' => Id::unique(),
+            'name' => 'Organization Project B',
+            'region' => System::getEnv('_APP_REGION', 'default'),
+        ], $teamId, false);
+
+        $email = 'test-' . Id::unique() . '@localhost.test';
+        ['membershipId' => $membershipId] = $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $email,
+            'name' => 'Project Member',
+            'roles' => ['owner'],
+        ]);
+        $this->updateMembershipRole($teamId, $membershipId, ["project-$projectIdA-developer"]);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+        $cookie = 'a_session_' . $this->getProject()['$id'] . '=' . $session['cookies']['a_session_' . $this->getProject()['$id']];
+
+        $consoleHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $cookie,
+            'x-appwrite-project' => 'console',
+            'x-appwrite-organization' => $teamId,
+        ];
+        $adminHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $cookie,
+            'x-appwrite-project' => $projectIdA,
+            'x-appwrite-mode' => 'admin',
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        foreach ([$consoleHeaders, $adminHeaders] as $headers) {
+            $key = $this->client->call(Client::METHOD_POST, '/organization/projects/' . $projectIdA . '/keys', $headers, [
+                'keyId' => Id::unique(),
+                'name' => 'Project A Key',
+                'scopes' => ['users.read'],
+            ]);
+            $this->assertSame(201, $key['headers']['status-code']);
+
+            $project = $this->client->call(Client::METHOD_GET, '/organization/projects/' . $projectIdA, $headers);
+            $this->assertSame(200, $project['headers']['status-code']);
+
+            $project = $this->client->call(Client::METHOD_PATCH, '/organization/projects/' . $projectIdA, $headers, [
+                'name' => 'Organization Project A',
+            ]);
+            $this->assertSame(200, $project['headers']['status-code']);
+        }
+
+        /**
+         * Test for FAILURE
+         */
+        foreach ([$consoleHeaders, $adminHeaders] as $headers) {
+            $key = $this->client->call(Client::METHOD_POST, '/organization/projects/' . $projectIdB . '/keys', $headers, [
+                'keyId' => Id::unique(),
+                'name' => 'Project B Key',
+                'scopes' => ['users.read'],
+            ]);
+            $this->assertSame(401, $key['headers']['status-code']);
+
+            $keys = $this->client->call(Client::METHOD_GET, '/organization/projects/' . $projectIdB . '/keys', $headers);
+            $this->assertSame(401, $keys['headers']['status-code']);
+
+            $project = $this->client->call(Client::METHOD_GET, '/organization/projects/' . $projectIdB, $headers);
+            $this->assertContains($project['headers']['status-code'], [401, 404]);
+
+            $project = $this->client->call(Client::METHOD_PATCH, '/organization/projects/' . $projectIdB, $headers, [
+                'name' => 'Renamed',
+            ]);
+            $this->assertSame(401, $project['headers']['status-code']);
+
+            $project = $this->client->call(Client::METHOD_DELETE, '/organization/projects/' . $projectIdB, $headers);
+            $this->assertSame(401, $project['headers']['status-code']);
+
+            $project = $this->client->call(Client::METHOD_POST, '/organization/projects', $headers, [
+                'projectId' => Id::unique(),
+                'name' => 'New Project',
+                'region' => System::getEnv('_APP_REGION', 'default'),
+            ]);
+            $this->assertSame(401, $project['headers']['status-code']);
+
+            $projects = $this->client->call(Client::METHOD_GET, '/organization/projects', $headers);
+            $this->assertSame(200, $projects['headers']['status-code']);
+            $projectIds = \array_column($projects['body']['projects'], '$id');
+            $this->assertContains($projectIdA, $projectIds);
+            $this->assertNotContains($projectIdB, $projectIds);
+        }
+
+        $project = $this->client->call(Client::METHOD_GET, '/organization/projects/' . $projectIdB, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'x-appwrite-organization' => $teamId,
+        ], $this->getHeaders()));
+        $this->assertSame(200, $project['headers']['status-code']);
+        $this->assertSame('Organization Project B', $project['body']['name']);
+    }
+
     #[Group('ciIgnore')]
     public function testProjectSpecificPermissionsForUpdateProject(): void
     {
-        $teamId = ID::unique();
+        $teamId = Id::unique();
         $projectIdA = $this->setupProject([
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test A',
         ], $teamId);
         $projectIdB = $this->setupProject([
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test B',
         ], $teamId, false);
 
-        $testUserEmail = 'test-' . ID::unique() . '@localhost.test';
+        $testUserEmail = 'test-' . Id::unique() . '@localhost.test';
         $testUserName = 'Test User';
 
         [ 'membershipId' => $testUserMembershipId ] = $this->setupUserMembership([
@@ -6677,7 +7054,7 @@ final class ProjectsConsoleClientTest extends Scope
             $this->updateMembershipRole($teamId, $testUserMembershipId, $testCase['roles']);
 
             foreach ($testCase['successProjectIds'] as $projectId) {
-                $newProjectName = 'Updated Project Name ' . ID::unique();
+                $newProjectName = 'Updated Project Name ' . Id::unique();
                 // Success: User should be able to update the project they have access to.
                 $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId, [
                     'origin' => 'http://localhost',
@@ -6694,7 +7071,7 @@ final class ProjectsConsoleClientTest extends Scope
             }
 
             foreach ($testCase['failureProjectIds'] as $projectId) {
-                $newProjectName = 'Updated Project Name ' . ID::unique();
+                $newProjectName = 'Updated Project Name ' . Id::unique();
                 // Failure: User should not be able to update the project they do not have access to.
                 $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId, [
                     'origin' => 'http://localhost',
@@ -6713,29 +7090,29 @@ final class ProjectsConsoleClientTest extends Scope
     #[Group('ciIgnore')]
     public function testProjectSpecificPermissionsForDeleteProject(): void
     {
-        $teamId = ID::unique();
+        $teamId = Id::unique();
         $projectIdA = $this->setupProject([
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test A',
         ], $teamId);
         $projectIdB = $this->setupProject([
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test B',
         ], $teamId, false);
         $projectIdC = $this->setupProject([
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test C',
         ], $teamId, false);
         $projectIdD = $this->setupProject([
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test D',
         ], $teamId, false);
         $projectIdE = $this->setupProject([
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test E',
         ], $teamId, false);
 
-        $testUserEmail = 'test-' . ID::unique() . '@localhost.test';
+        $testUserEmail = 'test-' . Id::unique() . '@localhost.test';
         $testUserName = 'Test User';
 
         [ 'membershipId' => $testUserMembershipId ] = $this->setupUserMembership([
@@ -6807,17 +7184,17 @@ final class ProjectsConsoleClientTest extends Scope
     #[Group('ciIgnore')]
     public function testProjectSpecificPermissionsForProjectResources(): void
     {
-        $teamId = ID::unique();
+        $teamId = Id::unique();
         $projectIdA = $this->setupProject([
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test A',
         ], $teamId);
         $projectIdB = $this->setupProject([
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test B',
         ], $teamId, false);
 
-        $testUserEmail = 'test-' . ID::unique() . '@localhost.test';
+        $testUserEmail = 'test-' . Id::unique() . '@localhost.test';
         $testUserName = 'Test User';
 
         [ 'membershipId' => $testUserMembershipId ] = $this->setupUserMembership([
@@ -6857,7 +7234,7 @@ final class ProjectsConsoleClientTest extends Scope
         $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
 
         // Setup functions
-        $functionId = ID::unique();
+        $functionId = Id::unique();
         $this->setupFunction($projectIdA, $functionId, $token);
         $this->setupFunction($projectIdB, $functionId, $token);
 
@@ -6865,7 +7242,7 @@ final class ProjectsConsoleClientTest extends Scope
             $this->updateMembershipRole($teamId, $testUserMembershipId, $testCase['roles']);
 
             foreach ($testCase['successProjectIds'] as $projectId) {
-                $variableId = ID::unique();
+                $variableId = Id::unique();
                 $response = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', [
                     'origin' => 'http://localhost',
                     'content-type' => 'application/json',
@@ -6885,7 +7262,7 @@ final class ProjectsConsoleClientTest extends Scope
             }
 
             foreach ($testCase['failureProjectIds'] as $projectId) {
-                $variableId = ID::unique();
+                $variableId = Id::unique();
                 $response = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', [
                     'origin' => 'http://localhost',
                     'content-type' => 'application/json',
@@ -6917,7 +7294,7 @@ final class ProjectsConsoleClientTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()),
             [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => $this->getUser()['email'],
                 'url' => $url,
             ]
@@ -6931,14 +7308,14 @@ final class ProjectsConsoleClientTest extends Scope
         $userEmail = $this->getUser()['email'];
 
         $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) use ($url) {
-            $this->assertStringContainsString($url, (string) ($email['html'] ?? ''));
+            $this->assertStringContainsString(\htmlspecialchars($url, ENT_QUOTES, 'UTF-8'), (string) ($email['html'] ?? ''));
         });
 
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
 
         $expectedUrl = $url . "&userId=" . $userId . "&secret=";
 
-        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
+        $this->assertStringContainsString(\htmlspecialchars($expectedUrl, ENT_QUOTES, 'UTF-8'), (string) $lastEmail['html']);
 
         // With search params, with mobile backlink
         $url = 'appwriteio://signin?id=abcd1234&tenant=efgh5678&domain=example.com&referred=0';
@@ -6951,7 +7328,7 @@ final class ProjectsConsoleClientTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()),
             [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => $userEmail,
                 'url' => $url,
             ]
@@ -6963,14 +7340,14 @@ final class ProjectsConsoleClientTest extends Scope
         $userId = $response['body']['userId'];
 
         $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) use ($url) {
-            $this->assertStringContainsString($url, (string) ($email['html'] ?? ''));
+            $this->assertStringContainsString(\htmlspecialchars($url, ENT_QUOTES, 'UTF-8'), (string) ($email['html'] ?? ''));
         });
 
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
 
         $expectedUrl = $url . "&userId=" . $userId . "&secret=";
 
-        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
+        $this->assertStringContainsString(\htmlspecialchars($expectedUrl, ENT_QUOTES, 'UTF-8'), (string) $lastEmail['html']);
 
         // Without search params
         $url = 'http://localhost/auth/signin';
@@ -6983,7 +7360,7 @@ final class ProjectsConsoleClientTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()),
             [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => $userEmail,
                 'url' => $url,
             ]
@@ -7002,7 +7379,7 @@ final class ProjectsConsoleClientTest extends Scope
 
         $expectedUrl = $url . "?userId=" . $userId . "&secret=";
 
-        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
+        $this->assertStringContainsString(\htmlspecialchars($expectedUrl, ENT_QUOTES, 'UTF-8'), (string) $lastEmail['html']);
 
         // Without search params, with mobile backlink
         $url = 'appwriteio://signin';
@@ -7015,7 +7392,7 @@ final class ProjectsConsoleClientTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()),
             [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => $userEmail,
                 'url' => $url,
             ]
@@ -7034,9 +7411,9 @@ final class ProjectsConsoleClientTest extends Scope
 
         $expectedUrl = $url . "?userId=" . $userId . "&secret=";
 
-        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
+        $this->assertStringContainsString(\htmlspecialchars($expectedUrl, ENT_QUOTES, 'UTF-8'), (string) $lastEmail['html']);
 
-        // With injection (allowed, meant to be protected client-side)
+        // Markup in the URL is escaped in the email
         $url = 'http://localhost/auth/signin\"></a><h1>INJECTED</h1>';
 
         $response = $this->client->call(
@@ -7047,7 +7424,7 @@ final class ProjectsConsoleClientTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()),
             [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => $userEmail,
                 'url' => $url,
             ]
@@ -7059,19 +7436,16 @@ final class ProjectsConsoleClientTest extends Scope
         $userId = $response['body']['userId'];
 
         $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) {
-            $this->assertStringContainsString('INJECTED', (string) ($email['html'] ?? ''));
+            $this->assertStringContainsString('INJECTED&lt;/h1&gt;', (string) ($email['html'] ?? ''));
         });
 
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
 
-        $this->assertStringContainsString('INJECTED', (string) $lastEmail['html']);
-        $this->assertStringContainsString('<h1>', (string) $lastEmail['html']);
-        $this->assertStringContainsString('</h1>', (string) $lastEmail['html']);
-        $this->assertStringContainsString('">', (string) $lastEmail['html']);
-        $this->assertStringContainsString('</a>', (string) $lastEmail['html']);
+        $this->assertStringNotContainsString('<h1>INJECTED</h1>', (string) $lastEmail['html']);
+        $this->assertStringNotContainsString('signin\\">', (string) $lastEmail['html']);
 
-        $expectedUrl = $url . "?userId=" . $userId . "&secret=";
-        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
+        $expectedUrl = $url . '?userId=' . $userId . '&secret=';
+        $this->assertStringContainsString(\htmlspecialchars($expectedUrl, ENT_QUOTES, 'UTF-8'), (string) $lastEmail['html']);
 
     }
 }

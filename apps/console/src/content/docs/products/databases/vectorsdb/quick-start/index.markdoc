@@ -166,7 +166,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your secret API key
 
@@ -409,7 +409,7 @@ foreach ($texts as $i => $text) {
         collectionId: '<COLLECTION_ID>',
         documentId: ID::unique(),
         data: [
-            'embeddings' => $generated['embeddings'][$i]['embedding'],
+            'embeddings' => $generated->embeddings[$i]->embedding,
             'metadata' => ['text' => $text]
         ]
     );
@@ -443,7 +443,7 @@ for i, text in enumerate(texts):
         collection_id = '<COLLECTION_ID>',
         document_id = ID.unique(),
         data = {
-            "embeddings": generated["embeddings"][i]["embedding"],
+            "embeddings": generated.embeddings[i].embedding,
             "metadata": { "text": text }
         }
     )
@@ -487,7 +487,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your secret API key
 
@@ -831,7 +831,7 @@ using Appwrite.Services;
 using Appwrite.Queries;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your secret API key
 
@@ -1045,7 +1045,7 @@ $result = $vectorsDB->listDocuments(
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
     queries: [
-        Query::vectorCosine('embeddings', $generated['embeddings'][0]['embedding']),
+        Query::vectorCosine('embeddings', $generated->embeddings[0]->embedding),
         Query::limit(3)
     ]
 );
@@ -1072,7 +1072,7 @@ result = vectors_db.list_documents(
     database_id = '<DATABASE_ID>',
     collection_id = '<COLLECTION_ID>',
     queries = [
-        Query.vector_cosine('embeddings', generated["embeddings"][0]["embedding"]),
+        Query.vector_cosine('embeddings', generated.embeddings[0].embedding),
         Query.limit(3)
     ]
 )
@@ -1110,7 +1110,7 @@ using Appwrite.Services;
 using Appwrite.Queries;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your secret API key
 

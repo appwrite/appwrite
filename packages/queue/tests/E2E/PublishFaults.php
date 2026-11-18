@@ -17,6 +17,15 @@ final class PublishFaults
     /** @var array<string, string> inbox subscription subject => sid */
     public array $inboxes = [];
 
+    /** Fetch requests to let through before a receive fault fires. */
+    public int $skip = 0;
+
+    /** Sockets the transport has opened. */
+    public int $connects = 0;
+
+    /** Subject prefix of the request to fault. */
+    public string $subject = 'q.';
+
     public function __construct(public int $faults)
     {
     }

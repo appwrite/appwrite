@@ -8,7 +8,9 @@ import {
   useDedicatedDatabaseCardMetrics,
   useMergedDatabaseSpecifications,
   backupPoliciesQueryOptions,
+  coversDatabaseKind,
   dedicatedBackupPoliciesQueryOptions,
+  projectBackupPoliciesQueryOptions,
   dedicatedDatabaseByIdQueryOptions,
 } from '@/lib/react-query/hooks'
 import { type Models } from '@appwrite.io/console'
@@ -23,7 +25,7 @@ import {
   productDatabaseListLink,
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
-import { useQueries } from '@tanstack/react-query'
+import { useQueries, useQuery } from '@tanstack/react-query'
 import { AlertCircle, Database, Loader2 } from 'lucide-react'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
@@ -766,6 +768,11 @@ export function AllDatabasesSection({
     }),
   })
 
+  const projectBackupPolicyQuery = useQuery({
+    ...projectBackupPoliciesQueryOptions(projectId),
+    enabled: showBackups && !!projectId && productDatabasesOnPage.length > 0,
+  })
+
   const productHasBackupPolicyById = useMemo(() => {
     const map = new Map<string, boolean | null>()
     productDatabasesOnPage.forEach((db, index) => {
@@ -774,10 +781,32 @@ export function AllDatabasesSection({
         map.set(db.$id, null)
         return
       }
-      map.set(db.$id, (query.data?.policies?.length ?? 0) > 0)
+      if ((query.data?.policies?.length ?? 0) > 0) {
+        map.set(db.$id, true)
+        return
+      }
+      if (projectBackupPolicyQuery.isLoading || projectBackupPolicyQuery.isError) {
+        map.set(db.$id, null)
+        return
+      }
+      const dbKind = databaseRouteKindFromApiType(
+        db.apiType ?? db.databaseType,
+      )
+      map.set(
+        db.$id,
+        (projectBackupPolicyQuery.data?.policies ?? []).some((policy) =>
+          coversDatabaseKind(policy, dbKind),
+        ),
+      )
     })
     return map
-  }, [productBackupPolicyQueries, productDatabasesOnPage])
+  }, [
+    productBackupPolicyQueries,
+    productDatabasesOnPage,
+    projectBackupPolicyQuery.data,
+    projectBackupPolicyQuery.isError,
+    projectBackupPolicyQuery.isLoading,
+  ])
 
   const errorMessage = error ? getErrorMessage(error) : null
   const hasActiveFilters =

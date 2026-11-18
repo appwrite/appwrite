@@ -41,6 +41,12 @@ class Func extends Model
                 'default' => '',
                 'example' => 'My Function',
             ])
+            ->addRule('description', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Optional description for the function.',
+                'default' => '',
+                'example' => 'Sends a welcome email to newly registered users.',
+            ])
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Function enabled.',
@@ -188,6 +194,24 @@ class Func extends Model
                 'description' => 'Is VCS (Version Control System) connection is in silent mode? When in silence mode, no comments will be posted on the repository pull or merge requests',
                 'default' => false,
                 'example' => false,
+            ])
+            ->addRule('providerComments', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether a build summary is posted on pull requests. Commit statuses are still reported when disabled.',
+                'default' => true,
+                'example' => true,
+            ])
+            ->addRule('providerDeployments', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether pushes that match the branch and path rules are deployed automatically.',
+                'default' => true,
+                'example' => true,
+            ])
+            ->addRule('providerStatuses', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the build status is reported on each commit.',
+                'default' => true,
+                'example' => true,
             ])
             ->addRule('providerBranches', [
                 'type' => self::TYPE_STRING,

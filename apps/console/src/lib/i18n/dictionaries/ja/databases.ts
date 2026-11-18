@@ -13,6 +13,60 @@ export const jaDatabasesDictionary: Record<string, string> = {
     'Appwrite Start。インドの開発者向けに設計されたプラン。',
   'Dismiss banner': 'バナーを閉じる',
   'Namaste India': 'Namaste India',
+  'Namaste Nepal': 'Namaste Nepal',
+  'How far, Nigeria': 'How far, Nigeria',
+  'Salaam Pakistan': 'Salaam Pakistan',
+  'Appwrite Start, a plan built for Nepali developers.':
+    'Appwrite Start。ネパールの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Nigerian developers.':
+    'Appwrite Start。ナイジェリアの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Pakistani developers.':
+    'Appwrite Start。パキスタンの開発者向けに設計されたプラン。',
+  'Salaam Bangladesh': 'Salaam Bangladesh',
+  'Mabuhay Philippines': 'Mabuhay Philippines',
+  'Ahlan Egypt': 'Ahlan Egypt',
+  'Jambo Kenya': 'Jambo Kenya',
+  'Xin chào Vietnam': 'Xin chào Vietnam',
+  'Salam Algeria': 'Salam Algeria',
+  'Marhaba Morocco': 'Marhaba Morocco',
+  'Ayubowan Sri Lanka': 'Ayubowan Sri Lanka',
+  'Aslema Tunisia': 'Aslema Tunisia',
+  'Salom Uzbekistan': 'Salom Uzbekistan',
+  'Oli otya, Uganda': 'Oli otya, Uganda',
+  'Akwaaba Ghana': 'Akwaaba Ghana',
+  'Suostei Cambodia': 'Suostei Cambodia',
+  'Selam Ethiopia': 'Selam Ethiopia',
+  'Karibu Tanzania': 'Karibu Tanzania',
+  'Appwrite Start, a plan built for Bangladeshi developers.':
+    'Appwrite Start。バングラデシュの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Filipino developers.':
+    'Appwrite Start。フィリピンの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Egyptian developers.':
+    'Appwrite Start。エジプトの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Kenyan developers.':
+    'Appwrite Start。ケニアの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Vietnamese developers.':
+    'Appwrite Start。ベトナムの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Algerian developers.':
+    'Appwrite Start。アルジェリアの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Moroccan developers.':
+    'Appwrite Start。モロッコの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Sri Lankan developers.':
+    'Appwrite Start。スリランカの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Tunisian developers.':
+    'Appwrite Start。チュニジアの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Uzbek developers.':
+    'Appwrite Start。ウズベキスタンの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Ugandan developers.':
+    'Appwrite Start。ウガンダの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Ghanaian developers.':
+    'Appwrite Start。ガーナの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Cambodian developers.':
+    'Appwrite Start。カンボジアの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Ethiopian developers.':
+    'Appwrite Start。エチオピアの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Tanzanian developers.':
+    'Appwrite Start。タンザニアの開発者向けに設計されたプラン。',
   'New': '新規',
   'PostgreSQL announcement banner': 'PostgreSQL お知らせバナー',
   'Read more': '詳しく見る',
@@ -97,6 +151,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Backup policies have been created': 'バックアップポリシーを作成しました',
   'Backup policies': 'バックアップポリシー',
   'backup policies': 'バックアップポリシー',
+  'backup policy': 'バックアップポリシー',
   'Backup policy has been deleted': 'バックアップポリシーを削除しました',
   'Backups already taken by this policy are kept until their retention expires.': 'このポリシーで既に取得されたバックアップは、保持期間が満了するまで保持されます。',
   'backup selected': 'バックアップを選択',
@@ -877,7 +932,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'One Relation column within this table': 'このテーブル内の 1 つのリレーション列',
   'One Relation column within this table and another within the related table': 'このテーブル内の 1 つのリレーション列と、関連テーブル内の別のリレーション列',
   'One-way relationship': '一方向リレーション',
-  'Only applicable to string and varchar columns': 'string 列と varchar 列にのみ適用可能',
+  'Only applicable to string, varchar and text columns': 'string 列と varchar 列にのみ適用可能',
   'Only CSV files can be imported': 'インポートできるのは CSV ファイルのみです',
   'only if they have collection permissions': 'コレクション権限を持っている場合のみ',
   'only if they have table permissions': 'テーブル権限を持っている場合のみ',
@@ -1285,6 +1340,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   "You don't have permission to perform this action.": 'この操作を実行する権限がありません。',
   'You have reached the maximum self-serve replica count. Contact sales if you need a custom high availability configuration.': 'セルフサービスのレプリカ数の上限に達しました。カスタムの高可用性構成が必要な場合は営業にお問い合わせください。',
   'Your plan only supports the daily preset policy. Upgrade to create custom policies.': 'お使いのプランは毎日のプリセットポリシーのみサポートしています。カスタムポリシーを作成するにはアップグレードしてください。',
+  'Your plan includes the daily backup policy. Custom schedules and retention are available on Enterprise.': 'お使いのプランには毎日のバックアップポリシーが含まれています。カスタムのスケジュールと保持期間は Enterprise プランでご利用いただけます。',
   // Column drawer (tablesdb)
   'Key is required': 'キーは必須です',
   'Column with this key already exists': 'このキーの列は既に存在します',

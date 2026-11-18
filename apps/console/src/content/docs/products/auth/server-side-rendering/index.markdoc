@@ -217,11 +217,11 @@ try {
     $session = $account->createEmailPasswordSession($email, $password);
 
     // Set the session cookie
-    setcookie('a_session_<PROJECT_ID>', $session['secret'], [
+    setcookie('a_session_<PROJECT_ID>', $session->secret, [
         'httpOnly' => true,
         'secure' => true,
         'sameSite' => 'strict',
-        'expires' => strtotime($session['expire']),
+        'expires' => strtotime($session->expire),
         'path' => '/',
     ]);
 
@@ -252,11 +252,11 @@ def login():
 
         # Set the session cookie
         resp.set_cookie('a_session_<PROJECT_ID>',
-                        session['secret'],
+                        session.secret,
                         httponly=True,
                         secure=True,
                         samesite='Strict',
-                        expires=session['expire'],
+                        expires=session.expire,
                         path='/'
                     )
         return resp
@@ -739,11 +739,11 @@ try {
     $session = $account->createSession($userId, $secret);
 
     // Set the session cookie
-    setcookie('a_session_<PROJECT_ID>', $session['secret'], [
+    setcookie('a_session_<PROJECT_ID>', $session->secret, [
         'httpOnly' => true,
         'secure' => true,
         'sameSite' => 'strict',
-        'expires' => strtotime($session['expire']),
+        'expires' => strtotime($session->expire),
         'path' => '/',
     ]);
 
@@ -780,11 +780,11 @@ def oauth_success():
         #  Set session cookie
         res.set_cookie(
             'a_session_<PROJECT_ID>',
-            session['secret'],
+            session.secret,
             httponly=True,
             secure=True,
             samesite='Strict',
-            max_age=session['expire'],
+            max_age=session.expire,
             path='/'
         )
 

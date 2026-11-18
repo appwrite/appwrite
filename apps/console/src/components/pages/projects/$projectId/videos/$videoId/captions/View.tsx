@@ -5,7 +5,6 @@ import {
   type ReactNode,
 } from 'react'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
-import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { DeleteSubtitle } from '../../_components/DeleteSubtitle'
 import { SubtitleMenuItems } from '../../_components/SubtitleMenuItems'
@@ -37,9 +36,10 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import type { SubtitleDownloadFormat } from '@/lib/videos/subtitle-download'
 import { getVideoSubtitleLanguage } from '@/lib/videos/subtitle-languages'
+import type { VideoCaption, VideoCaptionList } from '@/lib/videos/captions'
 
 type ViewProps = {
-  initialData?: { captions: Models.VideoCaptionList }
+  initialData?: { captions: VideoCaptionList }
 }
 
 export function View({ initialData }: ViewProps = {}) {
@@ -55,11 +55,11 @@ export function View({ initialData }: ViewProps = {}) {
   const updateMutation = useUpdateVideoCaption(projectId, videoId)
   const deleteMutation = useDeleteVideoCaption(projectId, videoId)
   const downloadCaption = useDownloadVideoCaption(projectId, videoId)
-  const [deleting, setDeleting] = useState<Models.VideoCaption | null>(null)
+  const [deleting, setDeleting] = useState<VideoCaption | null>(null)
 
   const captions = data?.captions ?? initialData?.captions.captions ?? []
 
-  const toggleDefault = (caption: Models.VideoCaption) => {
+  const toggleDefault = (caption: VideoCaption) => {
     updateMutation.mutate(
       { captionId: caption.$id, isDefault: !caption.default },
       {
@@ -71,7 +71,7 @@ export function View({ initialData }: ViewProps = {}) {
   }
 
   const download = (
-    caption: Models.VideoCaption,
+    caption: VideoCaption,
     format: SubtitleDownloadFormat,
   ) => {
     downloadCaption(caption, format).catch((error: unknown) =>
@@ -117,7 +117,7 @@ export function View({ initialData }: ViewProps = {}) {
     </VideoActionButton>
   )
 
-  const menuProps = (caption: Models.VideoCaption) => ({
+  const menuProps = (caption: VideoCaption) => ({
     projectId,
     videoId,
     caption,
@@ -204,7 +204,7 @@ function CaptionRow({
 }: ComponentProps<'div'> & {
   projectId: string
   videoId: string
-  caption: Models.VideoCaption
+  caption: VideoCaption
   onOpen: () => void
   menu: ReactNode
 }) {
