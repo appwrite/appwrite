@@ -3624,6 +3624,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2VK": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Webflow": [
             "clientId",
             "clientSecret",
@@ -8036,6 +8041,11 @@
             "enabled"
         ],
         "project.updateOAuth2Vercel": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2VK": [
             "clientId",
             "clientSecret",
             "enabled"
