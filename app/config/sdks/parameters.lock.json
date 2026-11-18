@@ -805,6 +805,20 @@
             "teamId",
             "name"
         ],
+        "teams.getPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "teams.updatePhoto": [
+            "teamId",
+            "file"
+        ],
+        "teams.deletePhoto": [
+            "teamId"
+        ],
         "teams.updatePrefs": [
             "teamId",
             "prefs"
@@ -4790,6 +4804,20 @@
         "teams.updateName": [
             "teamId",
             "name"
+        ],
+        "teams.getPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "teams.updatePhoto": [
+            "teamId",
+            "file"
+        ],
+        "teams.deletePhoto": [
+            "teamId"
         ],
         "teams.updatePrefs": [
             "teamId",
@@ -9170,6 +9198,20 @@
         "teams.updateName": [
             "teamId",
             "name"
+        ],
+        "teams.getPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "teams.updatePhoto": [
+            "teamId",
+            "file"
+        ],
+        "teams.deletePhoto": [
+            "teamId"
         ],
         "teams.updatePrefs": [
             "teamId",
