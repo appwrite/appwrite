@@ -123,6 +123,10 @@ class Update extends Action
         $fileName = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
         $fileTmpName = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
 
+        if (!(new Upload())->isValid($fileTmpName)) {
+            throw new Exception(Exception::STORAGE_INVALID_FILE);
+        }
+
 
         $response->dynamic($updated, Response::MODEL_TEAM);
     }
