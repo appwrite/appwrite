@@ -551,8 +551,8 @@ export const jaVideosDictionary: Record<string, string> = {
     'Apple デバイスや多くの Web プレーヤーには HLS、Android や Shaka Player には DASH を使います。CMAF は 1 組のファイルで両方を配信します。',
   'No ready renditions for this output yet':
     'この出力の準備済みレンディションはまだありません',
-  'Manifest, segment, and subtitle requests use the read permissions of the source file in Storage. Grant read access to Any for public playback, or to signed-in users for private videos.':
-    'マニフェスト、セグメント、字幕のリクエストには、ストレージ上のソースファイルの読み取り権限が使われます。公開再生には Any に、非公開の動画にはログイン済みユーザーに読み取り権限を付与してください。',
+  'Manifest, segment, and subtitle requests use the read permissions of the video. Turn on public playback in Settings to let anyone watch, or grant read access to signed-in users for private videos.':
+    'マニフェスト、セグメント、字幕のリクエストには動画の読み取り権限が使われます。誰でも視聴できるようにするには設定で公開再生をオンにし、非公開の動画にはログイン済みユーザーに読み取り権限を付与してください。',
   'Open bucket': 'バケットを開く',
   'Native HTML': 'ネイティブ HTML',
   'Install a player': 'プレーヤーをインストール',
@@ -1231,4 +1231,17 @@ export const jaVideosDictionary: Record<string, string> = {
     'タイムラインは動画の作成時に生成されます。準備ができるとここにサムネイルが表示されます。',
   'Scroll through the thumbnails and hover one to see its time range and sprite region.':
     'サムネイルをスクロールし、カーソルを合わせると時間範囲とスプライト領域を確認できます。',
+  'Public playback': '公開再生',
+  'Anyone with the link can watch this video on the player page and in embeds.':
+    'リンクを知っている人なら誰でも、プレーヤーページや埋め込みでこの動画を視聴できます。',
+  'Only project members can watch this video. Visitors get an error on the player page and in embeds.':
+    'この動画を視聴できるのはプロジェクトメンバーのみです。訪問者にはプレーヤーページや埋め込みでエラーが表示されます。',
+  'Video is now public': '動画を公開しました',
+  'Video is now private': '動画を非公開にしました',
+  'Make public': '公開する',
+  'Only project members can watch it. Visitors get an error on the player page and in embeds.':
+    '視聴できるのはプロジェクトメンバーのみです。訪問者にはプレーヤーページや埋め込みでエラーが表示されます。',
+  'Visitors get an error here. You can watch because you are a project member.':
+    '訪問者にはここでエラーが表示されます。あなたはプロジェクトメンバーなので視聴できます。',
+  'Open access settings': 'アクセス設定を開く',
 }

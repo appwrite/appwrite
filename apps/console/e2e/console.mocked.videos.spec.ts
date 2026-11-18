@@ -235,6 +235,7 @@ type Calls = {
   bucketLists: URL[]
   sourceViews: URL[]
   manifests: URL[]
+  videoUpdates: Record<string, unknown>[]
 }
 
 /** A preset the mocked server refuses, to cover a partly failed batch. */
@@ -258,6 +259,7 @@ async function mockAppwriteApi(
     bucketLists: [],
     sourceViews: [],
     manifests: [],
+    videoUpdates: [],
   }
 
   await page.route('**/*', async (route) => {
@@ -309,6 +311,16 @@ async function mockAppwriteApi(
     }
     if (apiPath === '/videos') {
       return json(200, { total: 1, videos: [video] })
+    }
+    if (apiPath === `/videos/${VIDEO_ID}` && method !== 'GET') {
+      const body = request.postDataJSON() as Record<string, unknown>
+      calls.videoUpdates.push(body)
+      video = {
+        ...video,
+        name: String(body.name),
+        $permissions: (body.permissions as string[]) ?? video.$permissions,
+      }
+      return json(200, video)
     }
     if (apiPath === `/videos/${VIDEO_ID}`) return json(200, video)
     if (apiPath === `/videos/${VIDEO_ID}/renditions`) {
@@ -560,6 +572,32 @@ test.describe('videos (mocked API)', () => {
     await screenshot(page, 'videos-player-locked.png')
   })
 
+  test('shows encoding progress on every video tab', async ({ page }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page, VIDEO, [
+      { ...RENDITIONS[0], status: 'started', progress: '40', endedAt: '' },
+      {
+        ...RENDITIONS[0],
+        $id: 'rendition000000000000002',
+        name: '1080p',
+        width: 1920,
+        height: 1080,
+      },
+    ])
+    const progress = page.getByText('Processing renditions')
+    const link = page.getByRole('link', { name: 'View renditions' })
+
+    await open(page, `/${VIDEO_ID}`, () => progress)
+    await expect(link).toBeVisible()
+    await screenshot(page, 'videos-progress-overview.png')
+
+    await open(page, `/${VIDEO_ID}/timeline`, () => progress)
+    await expect(link).toBeVisible()
+
+    await open(page, `/${VIDEO_ID}/renditions`, () => progress)
+    await expect(link).toHaveCount(0)
+  })
+
   test('docks a small player while scrolling the overview', async ({
     page,
   }) => {
@@ -631,7 +669,7 @@ test.describe('videos (mocked API)', () => {
 
       await expect(
         page.getByText(
-          'Private video. Only project members can watch it here.',
+          'Visitors get an error here. You can watch because you are a project member.',
         ),
       ).toBeVisible({ timeout: 60_000 })
       expect(
@@ -654,6 +692,42 @@ test.describe('videos (mocked API)', () => {
       })
     })
   }
+
+  test('warns that a video is private and makes it public', async ({
+    page,
+  }) => {
+    await enableVideos(page)
+    const calls = await mockAppwriteApi(page)
+    const warning = page.getByText('This video is private', { exact: true })
+
+    await open(page, `/${VIDEO_ID}`, () => warning)
+    await screenshot(page, 'videos-private-warning.png')
+    await page.getByRole('link', { name: 'Make public' }).click()
+
+    const toggle = page.getByRole('switch', { name: 'Public playback' })
+    await expect(toggle).not.toBeChecked()
+    await toggle.click()
+
+    await expect(toggle).toBeChecked()
+    await expect(warning).toHaveCount(0)
+    expect(calls.videoUpdates).toEqual([
+      { name: VIDEO.name, permissions: ['read("any")'] },
+    ])
+  })
+
+  test('shows no private warning for a public video', async ({ page }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page, { ...VIDEO, $permissions: ['read("any")'] })
+
+    await open(page, `/${VIDEO_ID}/settings`, (page) =>
+      page.getByRole('switch', { name: 'Public playback' }),
+    )
+
+    await expect(
+      page.getByRole('switch', { name: 'Public playback' }),
+    ).toBeChecked()
+    await expect(page.getByText('This video is private')).toHaveCount(0)
+  })
 
   test('asks for a rendition when a video has none', async ({ page }) => {
     await enableVideos(page)

@@ -81,7 +81,6 @@ export function View() {
         <>
           <VideoSectionCard
             title={t('Thumbnails')}
-            term="sprite"
             description={t(
               'Scroll through the thumbnails and hover one to see its time range and sprite region.',
             )}

@@ -10,7 +10,10 @@ import {
   useDeleteVideo,
   useProjectVideo,
   useUpdateVideo,
+  useUpdateVideoPublicPlayback,
 } from '@/lib/react-query/hooks'
+import { isVideoPublic } from '@/lib/videos/public-playback'
+import { Switch } from '@/components/ui/switch'
 import { VideoPage, VideoSectionCard } from '../../_components/VideoPage'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -33,6 +36,7 @@ export function View({ initialData }: ViewProps = {}) {
   return (
     <VideoPage title={t('Settings')}>
       <NameCard projectId={projectId} video={video} />
+      <AccessCard projectId={projectId} video={video} />
       <SourceCard projectId={projectId} video={video} />
       <DeleteCard projectId={projectId} video={video} />
     </VideoPage>
@@ -101,6 +105,61 @@ function NameCard({
         </Button>
       </div>
     </form>
+  )
+}
+
+function AccessCard({
+  projectId,
+  video,
+}: {
+  projectId: string
+  video: Models.Video
+}) {
+  const t = useT()
+  const mutation = useUpdateVideoPublicPlayback(projectId, video)
+  const isPublic = isVideoPublic(video)
+
+  return (
+    <section
+      id="access"
+      className="scroll-mt-4 overflow-hidden rounded-xl border border-border bg-card/50"
+    >
+      <div className="flex items-start justify-between gap-6 px-6 py-4">
+        <div className="min-w-0">
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Public playback')}
+          </h3>
+          <p className="mt-2 text-[13px] text-muted-foreground">
+            {isPublic
+              ? t(
+                  'Anyone with the link can watch this video on the player page and in embeds.',
+                )
+              : t(
+                  'Only project members can watch this video. Visitors get an error on the player page and in embeds.',
+                )}
+          </p>
+        </div>
+        <Switch
+          checked={isPublic}
+          disabled={mutation.isPending}
+          aria-label={t('Public playback')}
+          onCheckedChange={(enabled) =>
+            mutation.mutate(enabled, {
+              onSuccess: () =>
+                toast.success(
+                  enabled
+                    ? t('Video is now public')
+                    : t('Video is now private'),
+                ),
+              onError: (error) =>
+                toast.error(
+                  getErrorMessage(error) || t('Failed to update video'),
+                ),
+            })
+          }
+        />
+      </div>
+    </section>
   )
 }
 

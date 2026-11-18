@@ -536,8 +536,8 @@ export const heVideosDictionary: Record<string, string> = {
     'השתמשו ב-HLS למכשירי Apple ולרוב נגני הווב, וב-DASH ל-Android ול-Shaka Player. CMAF מגיש את שניהם מאותה קבוצת קבצים.',
   'No ready renditions for this output yet':
     'אין עדיין גרסאות קידוד מוכנות לפלט הזה',
-  'Manifest, segment, and subtitle requests use the read permissions of the source file in Storage. Grant read access to Any for public playback, or to signed-in users for private videos.':
-    'בקשות למניפסטים, לסגמנטים ולכתוביות משתמשות בהרשאות הקריאה של קובץ המקור באחסון. תנו הרשאת קריאה ל-Any לניגון ציבורי, או למשתמשים מחוברים לסרטונים פרטיים.',
+  'Manifest, segment, and subtitle requests use the read permissions of the video. Turn on public playback in Settings to let anyone watch, or grant read access to signed-in users for private videos.':
+    'בקשות למניפסטים, לסגמנטים ולכתוביות משתמשות בהרשאות הקריאה של הסרטון. הפעילו ניגון ציבורי בהגדרות כדי לאפשר לכולם לצפות, או תנו הרשאת קריאה למשתמשים מחוברים לסרטונים פרטיים.',
   'Open bucket': 'פתיחת הבאקט',
   'Native HTML': 'HTML מובנה',
   'Install a player': 'התקנת נגן',
@@ -1200,4 +1200,17 @@ export const heVideosDictionary: Record<string, string> = {
     'ציר זמן נוצר כשסרטון נוצר. התמונות הממוזערות יופיעו כאן כשהוא יהיה מוכן.',
   'Scroll through the thumbnails and hover one to see its time range and sprite region.':
     'גללו בין התמונות הממוזערות ורחפו מעל אחת כדי לראות את טווח הזמן ואזור הגיליון שלה.',
+  'Public playback': 'ניגון ציבורי',
+  'Anyone with the link can watch this video on the player page and in embeds.':
+    'כל מי שיש לו את הקישור יכול לצפות בסרטון בדף הנגן ובהטמעות.',
+  'Only project members can watch this video. Visitors get an error on the player page and in embeds.':
+    'רק חברי הפרויקט יכולים לצפות בסרטון. מבקרים יקבלו שגיאה בדף הנגן ובהטמעות.',
+  'Video is now public': 'הסרטון ציבורי עכשיו',
+  'Video is now private': 'הסרטון פרטי עכשיו',
+  'Make public': 'הפיכה לציבורי',
+  'Only project members can watch it. Visitors get an error on the player page and in embeds.':
+    'רק חברי הפרויקט יכולים לצפות בו. מבקרים יקבלו שגיאה בדף הנגן ובהטמעות.',
+  'Visitors get an error here. You can watch because you are a project member.':
+    'מבקרים יקבלו כאן שגיאה. אתם יכולים לצפות כי אתם חברי הפרויקט.',
+  'Open access settings': 'פתיחת הגדרות הגישה',
 }
