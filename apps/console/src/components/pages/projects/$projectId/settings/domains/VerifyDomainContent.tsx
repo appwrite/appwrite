@@ -431,6 +431,8 @@ type DnsBanner = {
   /** Bold lead-in, e.g. "CNAME record" */
   prefix?: string
   text: string
+  /** The DNS checks passed; what is left is the certificate. */
+  dnsSetUp?: boolean
 }
 
 /** One problem, or the next step, above the records. */
@@ -566,6 +568,41 @@ function getDnsBanners(
       },
     ]
   }
+  // The certificate can still be stuck, as the status badge shows.
+  if (
+    rule.status === 'verifying' &&
+    rule.certificateStatus === 'blocked' &&
+    !!rule.logs?.length
+  ) {
+    return [
+      {
+        tone: 'warning',
+        prefix: t('DNS is set up'),
+        text: t(
+          'The certificate is waiting on a DNS record. Add the record shown in View logs.',
+        ),
+        dnsSetUp: true,
+      },
+    ]
+  }
+  // Nothing retries an unverified rule, so the next step is Retry.
+  if (rule.status === 'unverified' && rule.certificateStatus) {
+    return [
+      {
+        tone: 'warning',
+        prefix: t('DNS is set up'),
+        text:
+          rule.certificateStatus === 'blocked'
+            ? t(
+                'The certificate is waiting on a DNS record. Add the record shown in View logs, then Retry.',
+              )
+            : t(
+                'The SSL certificate could not be issued. Check View logs, then Retry.',
+              ),
+        dnsSetUp: true,
+      },
+    ]
+  }
   return [
     {
       tone: 'success',
@@ -578,6 +615,7 @@ function getDnsBanners(
                 'SSL certificate is being issued. This usually takes a couple of minutes.',
               )
             : t('Appwrite will issue the SSL certificate next.'),
+      dnsSetUp: true,
     },
   ]
 }
@@ -1012,7 +1050,7 @@ export function VerifyDomainContent({
   // again" alert, and "DNS is set up" already says the certificate is next.
   // The rule updates live, so that alert also goes once its DNS has passed.
   const wrongRecord = banners.some((banner) => banner.tone === 'error')
-  const dnsSetUp = banners.some((banner) => banner.tone === 'success')
+  const dnsSetUp = banners.some((banner) => banner.dnsSetUp)
   const shownError =
     (wrongRecord || dnsSetUp || !isDnsUnverified(rule)) &&
     typeof verificationError === 'object' &&
