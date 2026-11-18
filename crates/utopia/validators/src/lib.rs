@@ -25,15 +25,31 @@
 //! | `URL::isValid()`, `getDescription()`, `isPrivateUseSchemeURI()` | [`url_ascii`], [`url`], [`url_component`], [`private_use_scheme`], [`url_description`] |
 //! | `Host::getDescription()` | [`host_description`] |
 //! | `Phone::isValid()`, `normalize()` | [`phone`], [`phone_normalize`] |
+//! | `ArrayList::getDescription()` | [`array_list_description`] |
+//! | `JSON\ArrayValidator`, `JSON\ObjectValidator`: `getDescription()`, `hasValidLength()` | [`json_array_description`], [`json_object_description`], [`json_length`] |
+//! | `JSON\FCM::isValid()` | [`FCM_REQUIRED`], [`FCM_OPTIONAL`], [`FCM_URL`], [`non_empty`], [`pem_private_key`], [`https_scheme`] |
+//! | `Globstar::matchGlobstar()` | [`globstar_regex`], [`exclusion`], [`wildcard`] |
+//!
+//! The composing validators (`Nullable`, `ArrayList`, `AllOf`, `AnyOf`, `NoneOf`, `Multiple`)
+//! mostly ask the validators they wrap, which the extension does through the engine, as do the
+//! PHP functions whose state is observable (`json_decode()`, `json_encode()`, `preg_match()`,
+//! `filter_var()`).
 //!
 //! Comparing a value with the PHP values a validator holds (the loose `in_array()` of `Text`'s
 //! allow list and of `WhiteList`, `(string)` of a pattern, `Domain`'s restrictions) is left to
 //! the PHP engine.
 
+mod compose;
 mod network;
 mod scalar;
 mod text;
 
+pub use compose::{
+    ASSOC_DESCRIPTION, FCM_DESCRIPTION, FCM_EMAIL_ERROR, FCM_KEY_ERROR, FCM_OPTIONAL, FCM_REQUIRED, FCM_TYPE_ERROR,
+    FCM_URL, GLOBSTAR_DESCRIPTION, JSON_DESCRIPTION, PEM_BEGIN, PEM_END, array_list_description, exclusion,
+    fcm_optional_error, fcm_required_error, fcm_url_error, globstar_regex, https_scheme, json_array_description,
+    json_length, json_object_description, non_empty, pem_private_key, preg_quote, trim, wildcard,
+};
 pub use network::{
     DOMAIN_DESCRIPTION, HOSTNAME_DESCRIPTION, IP_DESCRIPTION, IpType, LOOPBACK_HOSTS, PHONE_DESCRIPTION, domain,
     explode_count, host_description, hostname, hostname_allowed, ip, ip_str, phone, phone_normalize,
