@@ -4,16 +4,110 @@ declare(strict_types=1);
 
 namespace Utopia\Queue\Tests;
 
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\TestCase;
 use Swoole\Coroutine;
+use Swoole\Event;
 use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Consumer;
 use Utopia\Queue\Message;
 use Utopia\Queue\Queue;
 use Utopia\Queue\Server;
 
+#[RunTestsInSeparateProcesses]
+#[PreserveGlobalState(false)]
 final class PrefetchTest extends TestCase
 {
+    public function testReadyConfirmationsRefillTogether(): void
+    {
+        $consumer = null;
+        $confirmed = 0;
+        $errors = [];
+        Coroutine\run(function () use (&$consumer, &$confirmed, &$errors): void {
+            $consumer = new class () implements Consumer {
+                /** @var list<int> */
+                public array $batches = [];
+                public int $received = 0;
+                public Coroutine\Channel $confirmations;
+
+                public function __construct()
+                {
+                    $this->confirmations = new Coroutine\Channel(4);
+                }
+
+                public function receive(Queue $queue, int $timeout, int $n = 1): array
+                {
+                    if ($this->received === 8) {
+                        // The broker is empty; allow remaining confirmations to finish.
+                        new Coroutine\Channel(1)->pop(0.1);
+                        return [];
+                    }
+                    $messages = [];
+                    while ($n-- > 0 && $this->received < 8) {
+                        $messages[] = new Message(['pid' => (string) ++$this->received, 'queue' => $queue->name, 'timestamp' => time()]);
+                    }
+                    $this->batches[] = \count($messages);
+                    return $messages;
+                }
+
+                public function commit(Queue $queue, Message $message): void
+                {
+                    $reply = new Coroutine\Channel(1);
+                    $this->confirmations->push($reply);
+                    if ($reply->pop(1.0) !== true) {
+                        throw new \RuntimeException('Confirmation did not arrive');
+                    }
+                }
+
+                public function reject(Queue $queue, Message $message): never
+                {
+                    throw new \LogicException('No handler should fail');
+                }
+
+                public function close(): void
+                {
+                }
+            };
+            Coroutine::create(function () use ($consumer): void {
+                for ($batch = 0; $batch < 2; $batch++) {
+                    $replies = [];
+                    for ($i = 0; $i < 4; $i++) {
+                        $reply = $consumer->confirmations->pop(1.0);
+                        $this->assertInstanceOf(Coroutine\Channel::class, $reply);
+                        $replies[] = $reply;
+                    }
+                    // Deliver one transport response after the receiver has parked.
+                    Event::defer(static function () use ($replies): void {
+                        Coroutine::create(static function () use ($replies): void {
+                            foreach ($replies as $reply) {
+                                $reply->push(true);
+                            }
+                        });
+                    });
+                }
+            });
+            $adapter = new Swoole($consumer, 1);
+            $adapter->consume(
+                static fn (): null => null,
+                function () use ($adapter, &$confirmed): void {
+                    if (++$confirmed === 8) {
+                        $adapter->stop();
+                    }
+                },
+                function (?Message $message, \Throwable $error) use ($adapter, &$errors): void {
+                    $errors[] = $error->getMessage();
+                    $adapter->stop();
+                },
+                [['queue' => new Queue('confirmations'), 'coroutines' => 4]],
+            );
+        });
+        $this->assertSame([], $errors);
+        $this->assertSame(8, $confirmed);
+        $this->assertNotNull($consumer);
+        $this->assertSame([4, 4], $consumer->batches, 'A ready confirmation batch must not cause a one-message refill');
+    }
+
     public function testUnconfirmedMessagesCountAgainstPrefetch(): void
     {
         $consumer = new class () implements Consumer {

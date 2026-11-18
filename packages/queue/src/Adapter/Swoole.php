@@ -328,6 +328,13 @@ class Swoole extends Adapter
                 while (($buffer->length() >= $threshold || \count($deliveries) >= $prefetch) && !$this->isStopped()) {
                     $available->pop(0.1);
                 }
+                // Let ready confirmations release their credits before sizing the fetch.
+                // A channel wake-up otherwise interrupts the first result in a batch.
+                $receiver = Coroutine::getCid();
+                Event::defer(static function () use ($receiver): void {
+                    Coroutine::resume($receiver);
+                });
+                Coroutine::yield();
                 if ($this->isStopped()) {
                     break;
                 }
