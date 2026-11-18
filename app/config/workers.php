@@ -49,6 +49,8 @@ return [
         'queue' => 'database_db_main',
         'queueEnv' => '_APP_QUEUE_NAME',
         'coroutines' => 1,
+        // Leave the next schema job in the broker until this one is confirmed.
+        'maxInFlight' => 1,
     ],
     'builds' => [
         'queue' => Event::BUILDS_QUEUE_NAME,

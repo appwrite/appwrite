@@ -120,7 +120,7 @@ final class JobsTest extends TestCase
         $this->assertSame(3, $jobs['functions']['prefetch']);
         $this->assertSame(20, $jobs['functions']['maxInFlight']);
         $this->assertSame(1, $jobs['databases']['prefetch']);
-        $this->assertSame(2, $jobs['databases']['maxInFlight']);
+        $this->assertSame(1, $jobs['databases']['maxInFlight']);
     }
 
     /**

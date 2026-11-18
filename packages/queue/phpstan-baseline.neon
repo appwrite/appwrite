@@ -109,18 +109,6 @@ parameters:
 			path: src/Broker/Nats.php
 
 		-
-			message: '#^Method Utopia\\Queue\\Broker\\Nats\:\:pull\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Broker/Nats.php
-
-		-
-			message: '#^Method Utopia\\Queue\\Broker\\Nats\:\:receive\(\) should return list\<Utopia\\Queue\\Message\> but returns array\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Broker/Nats.php
-
-		-
 			message: '#^Cannot cast mixed to float\.$#'
 			identifier: cast.double
 			count: 1
