@@ -202,6 +202,8 @@ export const heSitesDictionary: Record<string, string> = {
     'התעודה ממתינה לרשומת DNS. הוסיפו את הרשומה שמופיעה בלוגים ולאחר מכן נסו שוב.',
   'The certificate is waiting on a DNS record. Add the record shown in View logs.':
     'התעודה ממתינה לרשומת DNS. הוסיפו את הרשומה שמופיעה בלוגים.',
+  'The SSL certificate could not be issued. Check View logs, then Retry.':
+    'לא ניתן היה להנפיק את תעודת ה-SSL. בדקו את הלוגים ולאחר מכן נסו שוב.',
   'Renewal blocked': 'חידוש התעודה חסום',
   'Certificate renewal started': 'חידוש התעודה התחיל',
   'Certificate expires on {date}.': 'תוקף התעודה יפוג ב-{date}.',
