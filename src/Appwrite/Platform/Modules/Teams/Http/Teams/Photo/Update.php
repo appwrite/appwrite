@@ -131,6 +131,12 @@ class Update extends Action
             throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'File extension not allowed');
         }
 
+        $size = $deviceForLocal->getFileSize($fileTmpName);
+
+        if (!(new FileSize(APP_LIMIT_UPLOAD_CHUNK_SIZE))->isValid($size)) {
+            throw new Exception(Exception::STORAGE_INVALID_FILE_SIZE, 'Photo must be at most 5MB');
+        }
+
 
         $response->dynamic($updated, Response::MODEL_TEAM);
     }
