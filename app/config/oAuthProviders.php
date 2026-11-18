@@ -439,6 +439,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Resend',
     ],
+    'roblox' => [
+        'name' => 'Roblox',
+        'developers' => 'https://create.roblox.com/docs/cloud/auth/oauth2-overview',
+        'icon' => 'icon-roblox',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Roblox',
+    ],
     'salesforce' => [
         'name' => 'Salesforce',
         'developers' => 'https://developer.salesforce.com/docs/',

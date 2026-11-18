@@ -13,6 +13,7 @@ use Appwrite\Auth\OAuth2\Line;
 use Appwrite\Auth\OAuth2\Linear;
 use Appwrite\Auth\OAuth2\Resend;
 use Appwrite\Auth\OAuth2\Vercel;
+use Appwrite\Auth\OAuth2\Roblox;
 use Appwrite\Auth\OAuth2\X;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -39,6 +40,7 @@ final class PKCETest extends TestCase
         yield 'vercel' => [Vercel::class];
         yield 'line' => [Line::class];
         yield 'linear' => [Linear::class];
+        yield 'roblox' => [Roblox::class];
     }
 
     protected function setUp(): void

@@ -3564,6 +3564,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Roblox": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Salesforce": [
             "customerKey",
             "customerSecret",
@@ -7962,6 +7967,11 @@
             "enabled"
         ],
         "project.updateOAuth2Resend": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Roblox": [
             "clientId",
             "clientSecret",
             "enabled"

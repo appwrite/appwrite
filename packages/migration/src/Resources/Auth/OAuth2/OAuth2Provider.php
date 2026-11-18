@@ -56,6 +56,7 @@ final class OAuth2Provider extends Resource
         'atlassian' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'line' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'linear' => ['clientId' => ['target' => self::TARGET_APP_ID]],
+        'roblox' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'workos' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'kakao' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'keycloak' => [

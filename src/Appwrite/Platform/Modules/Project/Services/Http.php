@@ -60,6 +60,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\PaypalSandbox\Update a
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Podio\Update as UpdateOAuth2Podio;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Reddit\Update as UpdateOAuth2Reddit;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Resend\Update as UpdateOAuth2Resend;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Roblox\Update as UpdateOAuth2Roblox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Salesforce\Update as UpdateOAuth2Salesforce;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Slack\Update as UpdateOAuth2Slack;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Spotify\Update as UpdateOAuth2Spotify;
@@ -302,6 +303,7 @@ class Http extends Service
         $this->addAction('updateProjectOAuth2Atlassian', UpdateOAuth2Atlassian::class);
         $this->addAction('updateProjectOAuth2LINE', UpdateOAuth2Line::class);
         $this->addAction('updateProjectOAuth2Linear', UpdateOAuth2Linear::class);
+        $this->addAction('updateProjectOAuth2Roblox', UpdateOAuth2Roblox::class);
         $this->addAction('updateProjectOAuth2WorkOS', UpdateOAuth2WorkOS::class);
         $this->addAction('updateProjectOAuth2Resend', UpdateOAuth2Resend::class);
         $this->addAction('updateProjectOAuth2TikTok', UpdateOAuth2TikTok::class);
