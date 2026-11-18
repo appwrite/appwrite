@@ -267,6 +267,7 @@ import { Route as PublicProjectsProjectIdRealtimeMessagesRouteImport } from './r
 import { Route as PublicProjectsProjectIdReviewsIndexRouteImport } from './routes/_public/projects.$projectId.reviews.index'
 import { Route as PublicProjectsProjectIdReviewsReviewIdRouteImport } from './routes/_public/projects.$projectId.reviews.$reviewId'
 import { Route as PublicProjectsProjectIdReviewsLearningsRouteImport } from './routes/_public/projects.$projectId.reviews.learnings'
+import { Route as PublicProjectsProjectIdReviewsPerformanceRouteImport } from './routes/_public/projects.$projectId.reviews.performance'
 import { Route as PublicProjectsProjectIdReviewsRepositoriesRouteImport } from './routes/_public/projects.$projectId.reviews.repositories'
 import { Route as PublicProjectsProjectIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.settings.index'
 import { Route as PublicProjectsProjectIdSettingsDomainsRouteImport } from './routes/_public/projects.$projectId.settings.domains'
@@ -1923,6 +1924,12 @@ const PublicProjectsProjectIdReviewsLearningsRoute =
   PublicProjectsProjectIdReviewsLearningsRouteImport.update({
     id: '/learnings',
     path: '/learnings',
+    getParentRoute: () => PublicProjectsProjectIdReviewsRoute,
+  } as any)
+const PublicProjectsProjectIdReviewsPerformanceRoute =
+  PublicProjectsProjectIdReviewsPerformanceRouteImport.update({
+    id: '/performance',
+    path: '/performance',
     getParentRoute: () => PublicProjectsProjectIdReviewsRoute,
   } as any)
 const PublicProjectsProjectIdReviewsRepositoriesRoute =
@@ -3853,6 +3860,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
   '/projects/$projectId/reviews/$reviewId': typeof PublicProjectsProjectIdReviewsReviewIdRoute
   '/projects/$projectId/reviews/learnings': typeof PublicProjectsProjectIdReviewsLearningsRoute
+  '/projects/$projectId/reviews/performance': typeof PublicProjectsProjectIdReviewsPerformanceRoute
   '/projects/$projectId/reviews/repositories': typeof PublicProjectsProjectIdReviewsRepositoriesRoute
   '/projects/$projectId/settings/domains': typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   '/projects/$projectId/settings/firewall': typeof PublicProjectsProjectIdSettingsFirewallRoute
@@ -4319,6 +4327,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
   '/projects/$projectId/reviews/$reviewId': typeof PublicProjectsProjectIdReviewsReviewIdRoute
   '/projects/$projectId/reviews/learnings': typeof PublicProjectsProjectIdReviewsLearningsRoute
+  '/projects/$projectId/reviews/performance': typeof PublicProjectsProjectIdReviewsPerformanceRoute
   '/projects/$projectId/reviews/repositories': typeof PublicProjectsProjectIdReviewsRepositoriesRoute
   '/projects/$projectId/settings/firewall': typeof PublicProjectsProjectIdSettingsFirewallRoute
   '/projects/$projectId/settings/identity-servers': typeof PublicProjectsProjectIdSettingsIdentityServersRouteWithChildren
@@ -4799,6 +4808,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
   '/_public/projects/$projectId/reviews/$reviewId': typeof PublicProjectsProjectIdReviewsReviewIdRoute
   '/_public/projects/$projectId/reviews/learnings': typeof PublicProjectsProjectIdReviewsLearningsRoute
+  '/_public/projects/$projectId/reviews/performance': typeof PublicProjectsProjectIdReviewsPerformanceRoute
   '/_public/projects/$projectId/reviews/repositories': typeof PublicProjectsProjectIdReviewsRepositoriesRoute
   '/_public/projects/$projectId/settings/domains': typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   '/_public/projects/$projectId/settings/firewall': typeof PublicProjectsProjectIdSettingsFirewallRoute
@@ -5299,6 +5309,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/realtime/messages'
     | '/projects/$projectId/reviews/$reviewId'
     | '/projects/$projectId/reviews/learnings'
+    | '/projects/$projectId/reviews/performance'
     | '/projects/$projectId/reviews/repositories'
     | '/projects/$projectId/settings/domains'
     | '/projects/$projectId/settings/firewall'
@@ -5765,6 +5776,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/realtime/messages'
     | '/projects/$projectId/reviews/$reviewId'
     | '/projects/$projectId/reviews/learnings'
+    | '/projects/$projectId/reviews/performance'
     | '/projects/$projectId/reviews/repositories'
     | '/projects/$projectId/settings/firewall'
     | '/projects/$projectId/settings/identity-servers'
@@ -6244,6 +6256,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/realtime/messages'
     | '/_public/projects/$projectId/reviews/$reviewId'
     | '/_public/projects/$projectId/reviews/learnings'
+    | '/_public/projects/$projectId/reviews/performance'
     | '/_public/projects/$projectId/reviews/repositories'
     | '/_public/projects/$projectId/settings/domains'
     | '/_public/projects/$projectId/settings/firewall'
@@ -8362,6 +8375,13 @@ declare module '@tanstack/react-router' {
       path: '/learnings'
       fullPath: '/projects/$projectId/reviews/learnings'
       preLoaderRoute: typeof PublicProjectsProjectIdReviewsLearningsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdReviewsRoute
+    }
+    '/_public/projects/$projectId/reviews/performance': {
+      id: '/_public/projects/$projectId/reviews/performance'
+      path: '/performance'
+      fullPath: '/projects/$projectId/reviews/performance'
+      preLoaderRoute: typeof PublicProjectsProjectIdReviewsPerformanceRouteImport
       parentRoute: typeof PublicProjectsProjectIdReviewsRoute
     }
     '/_public/projects/$projectId/reviews/repositories': {
@@ -11504,6 +11524,7 @@ const PublicProjectsProjectIdRealtimeRouteWithChildren =
 interface PublicProjectsProjectIdReviewsRouteChildren {
   PublicProjectsProjectIdReviewsReviewIdRoute: typeof PublicProjectsProjectIdReviewsReviewIdRoute
   PublicProjectsProjectIdReviewsLearningsRoute: typeof PublicProjectsProjectIdReviewsLearningsRoute
+  PublicProjectsProjectIdReviewsPerformanceRoute: typeof PublicProjectsProjectIdReviewsPerformanceRoute
   PublicProjectsProjectIdReviewsRepositoriesRoute: typeof PublicProjectsProjectIdReviewsRepositoriesRoute
   PublicProjectsProjectIdReviewsIndexRoute: typeof PublicProjectsProjectIdReviewsIndexRoute
 }
@@ -11514,6 +11535,8 @@ const PublicProjectsProjectIdReviewsRouteChildren: PublicProjectsProjectIdReview
       PublicProjectsProjectIdReviewsReviewIdRoute,
     PublicProjectsProjectIdReviewsLearningsRoute:
       PublicProjectsProjectIdReviewsLearningsRoute,
+    PublicProjectsProjectIdReviewsPerformanceRoute:
+      PublicProjectsProjectIdReviewsPerformanceRoute,
     PublicProjectsProjectIdReviewsRepositoriesRoute:
       PublicProjectsProjectIdReviewsRepositoriesRoute,
     PublicProjectsProjectIdReviewsIndexRoute:

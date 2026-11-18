@@ -12,6 +12,7 @@ use Utopia\Auth\Proofs\Token;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Roles;
@@ -328,6 +329,57 @@ class User extends Document
     }
 
     /**
+     * Claim an account registered with an address whose owner has now proven it: under the
+     * user row lock, re-read the account and, while the address is still unproven, revoke every
+     * other way in and mark it proven in the same transaction.
+     *
+     * The lock orders the claim against the account's other writers that take it, so of two concurrent
+     * claims only the first revokes and a request that re-checks the account under the same lock, such
+     * as issuing an email token, sees it claimed. `$user` is left holding the locked row, so a caller
+     * that persists it as a whole document cannot bring back what the winning claim revoked, and
+     * can compare its address with the one it proved to tell whether the account moved away from it.
+     * `$proven` is the channel of the proven address, MESSAGE_TYPE_EMAIL or MESSAGE_TYPE_SMS.
+     * Returns true when this claim revoked the credentials, so the caller can purge the cached
+     * user and mirror the revocation to MQTT and realtime once the transaction has committed.
+     */
+    public static function claim(Database $dbForProject, Document $user, Document $project, string $proven = MESSAGE_TYPE_EMAIL, ?Mqtt $mqtt = null): bool
+    {
+        $verification = $proven === MESSAGE_TYPE_SMS ? 'phoneVerification' : 'emailVerification';
+        $channel = $proven === MESSAGE_TYPE_SMS ? 'phone' : 'email';
+        $address = $user->getAttribute($channel);
+
+        $claimed = false;
+        $dbForProject->withTransaction(function () use ($dbForProject, $user, $project, $proven, $verification, $channel, $address, $mqtt, &$claimed): void {
+            $claimed = false; // A retried attempt starts over
+            $locked = $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+            if ($locked->isEmpty()) {
+                return;
+            }
+
+            // The claim decides on the locked row, and leaves the caller holding it in place of the copy
+            // it came with, which a claim that got here first has already stripped of its credentials
+            $user->setAttributes($locked->getArrayCopy());
+
+            // The proof covers the address the caller read, not one the account moved to since. A blocked
+            // account keeps its credentials, so proving its address now would stop a later claim revoking them
+            if ($locked->getAttribute($channel) !== $address || $locked->getAttribute('status') === false) {
+                return;
+            }
+
+            // An address already proven was claimed by someone who holds it, so there is nothing left to revoke
+            if (!$locked->getAttribute($verification, false)) {
+                self::revokeCredentials($dbForProject, $user, $project, $proven, $mqtt);
+                $dbForProject->updateDocument('users', $user->getId(), new Document([$verification => true]));
+                $claimed = true;
+            }
+
+            $user->setAttribute($verification, true);
+        });
+
+        return $claimed;
+    }
+
+    /**
      * Revoke every way into the account other than the address just proven: password,
      * sessions, tokens, MFA factors, passkeys, identities, account keys, the other
      * address and every target not on the proven channel.
@@ -404,5 +456,63 @@ class User extends Document
             ->setAttribute('challenges', [])
             ->setAttribute('authenticators', [])
             ->setAttribute('targets', []);
+    }
+
+    /**
+     * Attach a provider identity to the user it names, keeping the invariant that a
+     * provider email is only ever held by the identities of a single user.
+     *
+     * The invariant cannot be a unique index, because one user may hold several
+     * identities reporting the same email, and reading before the insert is a
+     * time-of-check race: two users linking the same verified address at the same
+     * moment both pass the read and both write. So the row goes in first and the
+     * ownership is read again afterwards. Each of those reads happens after its own
+     * commit, so two racers can never both come up clean, and whichever sees a
+     * foreign identity drops the row it just wrote. A dead heat refuses both links
+     * rather than leaving the email with two owners.
+     *
+     * @return bool false when another user's identity holds the provider email, in
+     *              which case nothing of this link was persisted
+     * @throws Duplicate when (provider, providerUid) is already linked to a user
+     */
+    public static function linkIdentity(Database $dbForProject, Document $identity): bool
+    {
+        $providerEmail = (string) $identity->getAttribute('providerEmail', '');
+        $userInternalId = $identity->getAttribute('userInternalId');
+
+        // Reject the ordinary conflict without writing a row at all
+        if (self::identityEmailTaken($dbForProject, $providerEmail, $userInternalId)) {
+            return false;
+        }
+
+        $created = $dbForProject->createDocument('identities', $identity);
+
+        if (self::identityEmailTaken($dbForProject, $providerEmail, $userInternalId)) {
+            // Authorization is skipped so a lost race always cleans up after itself
+            $dbForProject->getAuthorization()->skip(
+                fn () => $dbForProject->deleteDocument('identities', $created->getId())
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Whether an identity of a user other than $userInternalId already holds $providerEmail.
+     *
+     * @phpstan-impure the answer changes as concurrent requests write their own identities
+     */
+    private static function identityEmailTaken(Database $dbForProject, string $providerEmail, ?string $userInternalId): bool
+    {
+        if ($providerEmail === '') {
+            return false;
+        }
+
+        return !$dbForProject->findOne('identities', [
+            Query::equal('providerEmail', [$providerEmail]),
+            Query::notEqual('userInternalId', $userInternalId),
+        ])->isEmpty();
     }
 }
