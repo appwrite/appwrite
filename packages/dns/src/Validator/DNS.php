@@ -172,7 +172,7 @@ class DNS extends Validator
 
         // A truncated answer may be missing the record being validated
         if ($response->header->truncated) {
-            $response = (new Client($this->dnsServer, timeout: self::TIMEOUT, useTcp: true))->query($query);
+            $response = new Client($this->dnsServer, timeout: self::TIMEOUT, useTcp: true)->query($query);
         }
 
         // Only these two mean the name was looked up; anything else says nothing about its records
