@@ -1,4 +1,5 @@
 import { useMemo, useState, type KeyboardEvent } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
 import {
   DndContext,
@@ -19,6 +20,7 @@ import {
   Check,
   ChevronsUpDown,
   GripVertical,
+  Lock,
   Pencil,
   Plus,
   Trash2,
@@ -41,6 +43,7 @@ import {
 } from '@/components/ui/tooltip'
 import { ConfirmNameDialog } from '@/components/global/shared/ConfirmNameDialog'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
+import { EnvironmentsUpgrade } from '@/components/pages/projects/$projectId/shared/EnvironmentsUpgrade'
 import { RenameEnvironmentDialog } from '@/components/pages/projects/$projectId/shared/RenameEnvironmentDialog'
 import {
   setActiveEnvironment,
@@ -48,8 +51,11 @@ import {
 } from '@/lib/active-environment'
 import {
   projectEnvironmentDotClass,
+  projectEnvironmentExamples,
   projectEnvironmentsAllowance,
+  projectEnvironmentsUpgradePlan,
   sortProjectEnvironments,
+  type ProjectEnvironmentExample,
   type ProjectEnvironmentOption,
 } from '@/lib/project-environments'
 import {
@@ -57,6 +63,7 @@ import {
   parseEnvironmentsOrder,
 } from '@/lib/project-prefs-keys'
 import {
+  billingPlansQueryOptions,
   useDeleteProjectEnvironment,
   useOrganizationPlan,
   useProject,
@@ -94,6 +101,38 @@ function EnvironmentDot({
         className,
       )}
     />
+  )
+}
+
+/**
+ * The dot of an environment that is not there yet: the outline of one, filled
+ * in as an environment's while its row is highlighted.
+ */
+function EnvironmentExampleDot() {
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 10 10"
+      className="size-2.5 shrink-0 text-purple-500"
+    >
+      <circle
+        cx={5}
+        cy={5}
+        r={4}
+        fill="currentColor"
+        className="opacity-0 transition-opacity group-data-[highlighted]:opacity-100"
+      />
+      <circle
+        cx={5}
+        cy={5}
+        r={4}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.25}
+        strokeDasharray="1.9 1.7"
+        className="transition-opacity group-data-[highlighted]:opacity-0"
+      />
+    </svg>
   )
 }
 
@@ -254,12 +293,28 @@ export function EnvironmentSwitcher({
     plan,
     isLoading || error ? undefined : total,
   )
+  // A plan without environments is shown what they are instead of a way to
+  // create one: examples that lead to the upgrade. That takes the plan to
+  // upgrade to, which is only read for a project that has none to offer.
+  const upsellEnvironments =
+    features.billing && allowance.status === 'not-offered'
+  const { data: billingPlans } = useQuery({
+    ...billingPlansQueryOptions(),
+    enabled: environmentsEnabled && upsellEnvironments,
+  })
+  const upgradePlan = upsellEnvironments
+    ? projectEnvironmentsUpgradePlan(plan, billingPlans?.plans ?? {})
+    : null
   // The order members gave the list, kept in the project's prefs
   const { prefs } = useProjectPrefs(projectId, region, environmentsEnabled)
   const updatePrefsMutation = useUpdateProjectPrefs(projectId, region)
 
   const [renameOpen, setRenameOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [upgradeOpen, setUpgradeOpen] = useState(false)
+  // The example that opened the upgrade, kept while the dialog closes
+  const [upgradeExample, setUpgradeExample] =
+    useState<ProjectEnvironmentExample['id']>('staging')
   const [dragging, setDragging] = useState(false)
   // The order as just dragged, shown until the saved prefs carry it
   const [pendingOrder, setPendingOrder] = useState<string[] | null>(null)
@@ -318,6 +373,14 @@ export function EnvironmentSwitcher({
         isDefault: false,
       }
     : production
+
+  // Examples are only offered with an upgrade to point them at, and never
+  // under a name the project already uses for an environment it kept.
+  const examples = upgradePlan
+    ? projectEnvironmentExamples(
+        environmentOptions.map((option) => option.name),
+      )
+    : []
 
   // One environment has nothing to be ordered against, so the rows only make
   // room for a handle from the second one on. The update replaces the whole
@@ -494,33 +557,67 @@ export function EnvironmentSwitcher({
             </SortableContext>
           </DndContext>
           <DropdownMenuSeparator />
-          <DropdownMenuItem asChild className="text-[13px]">
-            <Link
-              to="/projects/$projectId/environments/create"
-              params={{ projectId }}
-              onClick={() => setActiveEnvironment(projectId, null)}
-            >
-              <MenuItemContent
-                icon={Plus}
-                className="flex items-center justify-between gap-2"
-              >
-                {t('Create environment')}
-                {/* The create page explains either one and offers the upgrade */}
-                {allowance.status === 'not-offered' ? (
-                  <Badge
-                    variant="processing"
-                    className="px-1.5 py-0 text-[10px]"
-                  >
-                    {t('Pro')}
-                  </Badge>
-                ) : allowance.status === 'at-limit' ? (
-                  <span className="text-[11px] tabular-nums text-muted-foreground">
-                    {total}/{allowance.limit}
+          {upgradePlan && examples.length > 0 ? (
+            <>
+              <DropdownMenuLabel className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+                {t('Add an environment')}
+                <Badge className="bg-[var(--brand-cta)]/10 px-1.5 py-0 text-[10px] text-[var(--brand-cta)]">
+                  <Lock />
+                  {upgradePlan.name}
+                </Badge>
+              </DropdownMenuLabel>
+              {examples.map((example) => (
+                <DropdownMenuItem
+                  key={example.id}
+                  className="group gap-2"
+                  onSelect={() => {
+                    setUpgradeExample(example.id)
+                    openDialogAfterOverlayCloses(() => setUpgradeOpen(true))
+                  }}
+                >
+                  {reorderable && <span className="h-4 w-4 shrink-0" />}
+                  <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+                    <EnvironmentExampleDot />
                   </span>
-                ) : null}
-              </MenuItemContent>
-            </Link>
-          </DropdownMenuItem>
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate text-[13px]">{example.name}</span>
+                    <span className="truncate text-[11px] text-muted-foreground">
+                      {t(example.description)}
+                    </span>
+                  </span>
+                  <Plus className="size-3.5 shrink-0" />
+                </DropdownMenuItem>
+              ))}
+            </>
+          ) : (
+            <DropdownMenuItem asChild className="text-[13px]">
+              <Link
+                to="/projects/$projectId/environments/create"
+                params={{ projectId }}
+                onClick={() => setActiveEnvironment(projectId, null)}
+              >
+                <MenuItemContent
+                  icon={Plus}
+                  className="flex items-center justify-between gap-2"
+                >
+                  {t('Create environment')}
+                  {/* The create page explains either one and offers the upgrade */}
+                  {allowance.status === 'not-offered' ? (
+                    <Badge
+                      variant="processing"
+                      className="px-1.5 py-0 text-[10px]"
+                    >
+                      {t('Pro')}
+                    </Badge>
+                  ) : allowance.status === 'at-limit' ? (
+                    <span className="text-[11px] tabular-nums text-muted-foreground">
+                      {total}/{allowance.limit}
+                    </span>
+                  ) : null}
+                </MenuItemContent>
+              </Link>
+            </DropdownMenuItem>
+          )}
           {/* The parent is managed from its own settings, so rename and delete
               only apply to the environment being shown. */}
           {!selected.isDefault && (
@@ -549,6 +646,16 @@ export function EnvironmentSwitcher({
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {upgradePlan && project.teamId ? (
+        <EnvironmentsUpgrade
+          open={upgradeOpen}
+          onOpenChange={setUpgradeOpen}
+          orgId={project.teamId}
+          plan={upgradePlan}
+          example={upgradeExample}
+        />
+      ) : null}
 
       <RenameEnvironmentDialog
         open={renameOpen}
