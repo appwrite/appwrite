@@ -268,7 +268,7 @@ class Videos extends Action
         $outcome = 'error';
 
         try {
-            Console::info('Videos worker: timeline started for video ' . $video->getId());
+            $this->log('Videos worker: timeline started for video ' . $video->getId());
             // Compare-and-swap: only one updateDocuments may leave pending.
             // A deleted video or a stale redelivery updates nothing and stops
             // before download or tiling.
@@ -458,7 +458,7 @@ class Videos extends Action
                 $parked = $this->timelineStatus($dbForProject, $video, Base::STATUS_ERROR, $reason);
             } catch (\Throwable $park) {
                 // A bookkeeping failure must not replace the job failure.
-                Console::error('Videos worker: failed to park timeline for video ' . $video->getId() . ': ' . $park->getMessage());
+                $this->log('Videos worker: failed to park timeline for video ' . $video->getId() . ': ' . $park->getMessage(), 'error');
                 Span::add('error.park_failed', true);
                 $parked = $video;
             }
@@ -665,7 +665,7 @@ class Videos extends Action
                     );
                 } catch (\Throwable $park) {
                     // A bookkeeping failure must not replace the job failure.
-                    Console::error('Videos worker: failed to park caption ' . $caption->getId() . ': ' . $park->getMessage());
+                    $this->log('Videos worker: failed to park caption ' . $caption->getId() . ': ' . $park->getMessage(), 'error');
                     Span::add('error.park_failed', true);
                 }
             }
@@ -793,11 +793,12 @@ class Videos extends Action
             Span::add('rendition.name', (string) $rendition->getAttribute('name', ''));
             Span::add('rendition.output', $output);
             Span::add('rendition.codec', $codec);
-            Console::info(
+            $this->log(
                 $tag . ' started as ' . $rendition->getAttribute('name', '')
                 . ' (' . $output . ', ' . $codec . ')'
             );
             $stage = 'download';
+            $this->log($tag . ' download start');
             $this->notify(
                 $queueForRealtime,
                 $project,
@@ -829,6 +830,7 @@ class Videos extends Action
                 VideoAction::Encode->value,
                 $stage
             );
+            $this->log($tag . ' download done');
 
             // Silent reporters: failures reach the span through the exception,
             // so the library must not print its own copy to stdout.
@@ -848,9 +850,11 @@ class Videos extends Action
             );
 
             $stage = 'probe';
+            $this->log($tag . ' probe start');
             if (!$packager->valid($inPath)) {
                 throw new AppwriteException(AppwriteException::VIDEO_NOT_VALID);
             }
+            $this->log($tag . ' probe done');
             $stage = 'encode';
 
             $representation = new Representation(
@@ -866,7 +870,8 @@ class Videos extends Action
             Span::add('encoder.name', $packager->getName());
             Span::add('encoder.threads', $threads);
 
-            Console::info($tag . ' encoding (timeout ' . $timeout . 's, ' . $threads . ' threads)');
+            $this->log($tag . ' conversion start');
+            $this->log($tag . ' encoding (timeout ' . $timeout . 's, ' . $threads . ' threads)');
 
             // Apply loudnorm only when the probe found an audio stream.
             // On inputs under 3s loudnorm falls back to a linear gain from the
@@ -909,12 +914,22 @@ class Videos extends Action
             $path = $deviceForVideos->getPath($video->getId())
                 . '/' . $rendition->getAttribute('name')
                 . '-' . $rendition->getId() . '/';
+            // Persist before the first segment write so a kill mid-upload still
+            // leaves a path the delete worker can remove.
+            $rendition = $dbForProject->updateDocument(
+                'videosRenditions',
+                $rendition->getId(),
+                new Document([
+                    'path' => $path,
+                ])
+            );
             // Segments go up while ffmpeg runs, from a coroutine of their own:
             // the hand-over never waits, so the store's time never counts
             // against the ffmpeg timeout, and scratch holds only the segments
             // the store has not taken yet.
             $uploader = new Uploader($deviceForVideos, $path);
             $uploader->start();
+            $this->log($tag . ' upload start');
 
             // The claim wrote '0'.
             $lastProgress = 0;
@@ -1016,7 +1031,7 @@ class Videos extends Action
             // pack() was the last reader; free a copied or decoded source before
             // persist/upload. A source read in place or over a URL is not ours.
             if (\str_starts_with($inPath, $workspace['inDir']) && \is_file($inPath) && !@\unlink($inPath)) {
-                Console::warning('Videos worker: failed to remove source after encode: ' . $inPath);
+                $this->log('Videos worker: failed to remove source after encode: ' . $inPath, 'warning');
                 Span::add('source.cleanup_failed', true);
             }
             if ($last !== null && $last->speed > 0) {
@@ -1097,20 +1112,21 @@ class Videos extends Action
                 $permissions
             );
 
-            Console::info($tag . ' conversion done');
+            $this->log($tag . ' conversion done');
 
             $stage = 'upload';
             $phaseStart = \microtime(true);
-            // Every segment went through the uploader, init and last ones included:
-            // the final scan inside pack() reports them all, and no output writes
-            // manifests. This only waits for the store to take what was still queued
-            // when ffmpeg exited.
+            // Upload already ran for the whole encode. Every segment went through
+            // the uploader, init and last ones included: the final scan inside
+            // pack() reports them all, and no output writes manifests. This only
+            // waits for the store to take what was still queued when ffmpeg exited.
             $storageBytes = $uploader->finish();
             $this->phase($telemetry, VideoAction::Encode->value, 'upload', $phaseStart);
             Span::add('rendition.size', $storageBytes);
-            Console::info($tag . ' upload done');
+            $this->log($tag . ' upload done');
 
             $stage = 'finalize';
+            $this->log($tag . ' finalize start');
             $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
             if (
                 $current->isEmpty()
@@ -1126,7 +1142,6 @@ class Videos extends Action
                 $rendition->getId(),
                 new Document([
                     'status' => Base::STATUS_READY,
-                    'path' => $path,
                     'progress' => '100',
                     // Retained bytes. The usage event is skipped; StatsResources
                     // sums this column into the videos.storage gauge.
@@ -1146,7 +1161,7 @@ class Videos extends Action
             );
             $outcome = 'ready';
             $status = Base::STATUS_READY;
-            Console::info($tag . ' ready');
+            $this->log($tag . ' ready');
         } catch (\Throwable $th) {
             $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
             // The progress listener stopped ffmpeg because the row left `started`.
@@ -1192,7 +1207,7 @@ class Videos extends Action
                     $status = Base::STATUS_ERROR;
                 } catch (\Throwable $park) {
                     // A bookkeeping failure must not replace the job failure.
-                    Console::error('Videos worker: failed to park rendition ' . $rendition->getId() . ': ' . $park->getMessage());
+                    $this->log('Videos worker: failed to park rendition ' . $rendition->getId() . ': ' . $park->getMessage(), 'error');
                     Span::add('error.park_failed', true);
                 }
             }
@@ -1263,7 +1278,7 @@ class Videos extends Action
                         $computeMs
                     );
                 } catch (\Throwable $th) {
-                    Console::error('Failed to publish video usage for ' . $tag . ': ' . $th->getMessage());
+                    $this->log('Failed to publish video usage for ' . $tag . ': ' . $th->getMessage(), 'error');
                     Span::add('usage.publish_failed', true);
                 }
             }
@@ -1275,7 +1290,7 @@ class Videos extends Action
                 try {
                     $deviceForVideos->delete($path, true);
                 } catch (\Throwable $th) {
-                    Console::warning('Videos worker: failed to remove partial rendition ' . $path . ': ' . $th->getMessage());
+                    $this->log('Videos worker: failed to remove partial rendition ' . $path . ': ' . $th->getMessage(), 'warning');
                     Span::add('rendition.cleanup_failed', true);
                 }
             }
@@ -1654,7 +1669,7 @@ class Videos extends Action
                             );
                         } catch (\Throwable $park) {
                             // The failed extract or registration owns warning.message.
-                            Console::error('Videos worker: failed to park embedded caption ' . $caption->getId() . ': ' . $park->getMessage());
+                            $this->log('Videos worker: failed to park embedded caption ' . $caption->getId() . ': ' . $park->getMessage(), 'error');
                             Span::add('captions.error.park_failed', true);
                         }
                     }
@@ -1867,7 +1882,7 @@ class Videos extends Action
         Span::add('source.compression', (string) $file->getAttribute('algorithm', Compression::NONE));
         // A copy can take as long as the file is large, and the span is printed
         // only when the job ends.
-        Console::info(
+        $this->log(
             'Reading video ' . $video->getId() . ' of project ' . $project->getId()
             . ' for ' . $action . ' (' . (int) $file->getAttribute('sizeOriginal', 0) . ' bytes)'
         );
@@ -1964,7 +1979,7 @@ class Videos extends Action
         // A sweep removing the same tree at the same time fails the walk but
         // leaves nothing behind, which is all that matters here.
         if (!(new Local(\rtrim($root, '/')))->deletePath(\substr($basePath, \strlen($root))) && \is_dir($basePath)) {
-            Console::error('Failed removing files from [' . $basePath . ']');
+            $this->log('Failed removing files from [' . $basePath . ']', 'error');
             Span::add('workspace.cleanup_failed', true);
         }
     }
@@ -2664,5 +2679,18 @@ class Videos extends Action
         $queueForRealtime
             ->setPayload($payload)
             ->trigger();
+    }
+
+    /**
+     * Log a job message with a UTC second timestamp.
+     */
+    private function log(string $message, string $type = 'info'): void
+    {
+        $line = '[' . \gmdate('Y-m-d\TH:i:s') . '] ' . $message;
+        match ($type) {
+            'error' => Console::error($line),
+            'warning' => Console::warning($line),
+            default => Console::info($line),
+        };
     }
 }

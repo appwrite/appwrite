@@ -1581,7 +1581,7 @@ final class VideosCustomServerTest extends Scope
             $this->assertEquals(200, $stale['headers']['status-code']);
             $this->assertEquals('aborted', $stale['body']['status']);
             $this->assertNotEmpty($stale['body']['endedAt'] ?? '');
-            $this->assertSame('Aborted: no progress for 24 hours', $stale['body']['error']);
+            $this->assertSame('Aborted: no progress for 12 hours', $stale['body']['error']);
 
             $fresh = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $freshId, $this->headers());
             $this->assertEquals(200, $fresh['headers']['status-code']);
@@ -1670,7 +1670,7 @@ final class VideosCustomServerTest extends Scope
 
             $this->assertArrayHasKey($staleId, $byId);
             $this->assertEquals('aborted', $byId[$staleId]['status']);
-            $this->assertSame('Aborted: no progress for 24 hours', $byId[$staleId]['error']);
+            $this->assertSame('Aborted: no progress for 12 hours', $byId[$staleId]['error']);
 
             $this->assertArrayHasKey($freshId, $byId);
             $this->assertEquals('started', $byId[$freshId]['status']);

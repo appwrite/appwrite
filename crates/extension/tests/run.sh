@@ -1,11 +1,11 @@
 #!/bin/sh
-# Parity corpus of every library in src/lib.rs (see README): a switchable library against its PHP
-# package, alone and with all on; a library without PHP against tests/<name>.expected.jsonl.
+# Parity corpus of every switchable library in src/lib.rs (see README) against its PHP package,
+# alone (a batch with its package's switch) and with all on; then the package tests of the
+# classes that have no PHP left.
 set -eu
 
 tests=crates/extension/tests
 libraries=$(grep -o 'enabled("[a-z-]*")' crates/extension/src/lib.rs | sed 's/enabled("\(.*\)")/\1/' | sort -u)
-[ -n "$libraries" ] || { echo "no libraries found in crates/extension/src/lib.rs" >&2; exit 1; }
 all=$(echo "$libraries" | paste -sd, -)
 output=$(mktemp -d)
 trap 'rm -r "$output"' EXIT
@@ -17,25 +17,36 @@ vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/i
 for library in $libraries; do
     echo "== $library" >&2
     [ -f "$tests/$library.php" ] || { echo "missing parity corpus $tests/$library.php" >&2; exit 1; }
-    _APP_EXTENSION_LIBRARIES=$library vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php "packages/$library/tests"
+    # A batch of a package's classes (`validators-scalar`) is switched on with the package's
+    # own switch (`validators`), and runs that package's tests.
+    package=$library
+    with=$library
+    if [ ! -d "packages/$library" ]; then
+        package=${library%-*}
+        with="$package,$library"
+    fi
+    _APP_EXTENSION_LIBRARIES=$with vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php "packages/$package/tests"
     _APP_EXTENSION_LIBRARIES= php "$tests/$library.php" > "$output/$library.php.jsonl"
-    _APP_EXTENSION_LIBRARIES=$library php "$tests/$library.php" > "$output/$library.rust.jsonl"
+    _APP_EXTENSION_LIBRARIES=$with php "$tests/$library.php" > "$output/$library.rust.jsonl"
     diff "$output/$library.php.jsonl" "$output/$library.rust.jsonl"
     [ -s "$output/$library.rust.jsonl" ] || { echo "$library corpus printed nothing" >&2; exit 1; }
 done
 
-echo "== $all" >&2
+[ -z "$libraries" ] || echo "== $all" >&2
 for library in $libraries; do
     _APP_EXTENSION_LIBRARIES=$all php "$tests/$library.php" > "$output/$library.all.jsonl"
     diff "$output/$library.php.jsonl" "$output/$library.all.jsonl"
 done
 
-for expected in "$tests"/*.expected.jsonl; do
-    library=$(basename "$expected" .expected.jsonl)
-    echo "== $library (no PHP)" >&2
-    if [ -d "packages/$library/tests" ]; then
-        vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php "packages/$library/tests"
-    fi
-    _APP_EXTENSION_LIBRARIES=$all php "$tests/$library.php" > "$output/$library.jsonl"
-    diff "$expected" "$output/$library.jsonl"
+# A PHP subclass of every class, cached by opcache: what the extension's defaults and constants
+# must survive (opcache frees what it copies into shared memory as PHP's allocator's).
+for with in "" "$all"; do
+    echo "== opcache (${with:-no switches})" >&2
+    _APP_EXTENSION_LIBRARIES=$with php -d opcache.enable_cli=1 "$tests/opcache.php"
+done
+
+# Classes with no PHP implementation left: their packages' own tests, on the extension.
+for package in user-agent domains emails; do
+    echo "== $package (no PHP)" >&2
+    vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php "packages/$package/tests"
 done

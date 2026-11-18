@@ -9,6 +9,9 @@ import type { Client } from '@appwrite.io/console'
 
 import type {
   Review,
+  ReviewAuthorList,
+  ReviewAuthorRange,
+  ReviewCategoryList,
   ReviewEventList,
   ReviewInstallation,
   ReviewLearningList,
@@ -257,6 +260,61 @@ export class Reviews {
       this.uri(apiPath),
       { ...this.headers(), 'content-type': 'application/json' },
       {},
+    )
+  }
+
+  /**
+   * List the authors of the project's reviewed pull requests with how their
+   * pull requests fared in review, most reviewed pull requests first.
+   *
+   * @param {ReviewAuthorRange} params.range - Date range of the reviews. Defaults to 30d.
+   * @param {string} params.repositoryId - Count only the reviews of this repository.
+   * @throws {AppwriteException}
+   * @returns {Promise<ReviewAuthorList>}
+   */
+  listAuthors(
+    params: { range?: ReviewAuthorRange; repositoryId?: string } = {},
+  ): Promise<ReviewAuthorList> {
+    const payload: Record<string, unknown> = {}
+    if (typeof params.range !== 'undefined') {
+      payload['range'] = params.range
+    }
+    if (params.repositoryId) {
+      payload['repositoryId'] = params.repositoryId
+    }
+    return this.client.call(
+      'get',
+      this.uri('/reviews/authors'),
+      this.headers(),
+      payload,
+    )
+  }
+
+  /**
+   * List the categories of the findings posted on the project's pull
+   * requests with how many were fixed and how many dismissed, most dismissed
+   * first.
+   *
+   * @param {ReviewAuthorRange} params.range - Date range of the reviews. Defaults to 30d.
+   * @param {string} params.repositoryId - Count only the reviews of this repository.
+   * @throws {AppwriteException}
+   * @returns {Promise<ReviewCategoryList>}
+   */
+  listCategories(
+    params: { range?: ReviewAuthorRange; repositoryId?: string } = {},
+  ): Promise<ReviewCategoryList> {
+    const payload: Record<string, unknown> = {}
+    if (typeof params.range !== 'undefined') {
+      payload['range'] = params.range
+    }
+    if (params.repositoryId) {
+      payload['repositoryId'] = params.repositoryId
+    }
+    return this.client.call(
+      'get',
+      this.uri('/reviews/categories'),
+      this.headers(),
+      payload,
     )
   }
 

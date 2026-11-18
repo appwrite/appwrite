@@ -805,6 +805,20 @@
             "teamId",
             "name"
         ],
+        "teams.getPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "teams.updatePhoto": [
+            "teamId",
+            "file"
+        ],
+        "teams.deletePhoto": [
+            "teamId"
+        ],
         "teams.updatePrefs": [
             "teamId",
             "prefs"
@@ -3376,6 +3390,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Atlassian": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Auth0": [
             "clientId",
             "clientSecret",
@@ -3481,6 +3500,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Instagram": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Kakao": [
             "clientId",
             "clientSecret",
@@ -3499,6 +3523,16 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Line": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Linear": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Linkedin": [
             "clientId",
             "primaryClientSecret",
@@ -3512,6 +3546,11 @@
             "prompt"
         ],
         "project.updateOAuth2Naver": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Netlify": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -3540,6 +3579,11 @@
             "enabled",
             "prompt"
         ],
+        "project.updateOAuth2Patreon": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Paypal": [
             "clientId",
             "secretKey",
@@ -3555,7 +3599,22 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Railway": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Reddit": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Resend": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Roblox": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -3572,6 +3631,11 @@
             "enabled"
         ],
         "project.updateOAuth2Spotify": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Strava": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -3602,6 +3666,11 @@
             "enabled"
         ],
         "project.updateOAuth2Vercel": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2VK": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -3847,6 +3916,14 @@
         "reviews.list": [
             "queries",
             "total"
+        ],
+        "reviews.listAuthors": [
+            "range",
+            "repositoryId"
+        ],
+        "reviews.listCategories": [
+            "range",
+            "repositoryId"
         ],
         "reviews.listEvents": [
             "reviewId",
@@ -4768,6 +4845,20 @@
         "teams.updateName": [
             "teamId",
             "name"
+        ],
+        "teams.getPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "teams.updatePhoto": [
+            "teamId",
+            "file"
+        ],
+        "teams.deletePhoto": [
+            "teamId"
         ],
         "teams.updatePrefs": [
             "teamId",
@@ -7774,6 +7865,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Atlassian": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Auth0": [
             "clientId",
             "clientSecret",
@@ -7879,6 +7975,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Instagram": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Kakao": [
             "clientId",
             "clientSecret",
@@ -7897,6 +7998,16 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Line": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Linear": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Linkedin": [
             "clientId",
             "primaryClientSecret",
@@ -7910,6 +8021,11 @@
             "prompt"
         ],
         "project.updateOAuth2Naver": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Netlify": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -7938,6 +8054,11 @@
             "enabled",
             "prompt"
         ],
+        "project.updateOAuth2Patreon": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Paypal": [
             "clientId",
             "secretKey",
@@ -7953,7 +8074,22 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Railway": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Reddit": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Resend": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Roblox": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -7970,6 +8106,11 @@
             "enabled"
         ],
         "project.updateOAuth2Spotify": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Strava": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -8000,6 +8141,11 @@
             "enabled"
         ],
         "project.updateOAuth2Vercel": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2VK": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -8215,6 +8361,14 @@
         "reviews.list": [
             "queries",
             "total"
+        ],
+        "reviews.listAuthors": [
+            "range",
+            "repositoryId"
+        ],
+        "reviews.listCategories": [
+            "range",
+            "repositoryId"
         ],
         "reviews.listEvents": [
             "reviewId",
@@ -9126,6 +9280,20 @@
         "teams.updateName": [
             "teamId",
             "name"
+        ],
+        "teams.getPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "teams.updatePhoto": [
+            "teamId",
+            "file"
+        ],
+        "teams.deletePhoto": [
+            "teamId"
         ],
         "teams.updatePrefs": [
             "teamId",

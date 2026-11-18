@@ -26,6 +26,7 @@ final class SubscribePayloadTest extends TestCase
         yield 'not a list' => [['channels' => ['documents']], false];
         yield 'missing channels' => [[['queries' => []]], false];
         yield 'non-string channel' => [[['channels' => [1]]], false];
+        yield 'non-string query' => [[['channels' => ['documents'], 'queries' => [['equal', 'x']]]], false];
         yield 'invalid subscription id' => [[['channels' => ['documents'], 'subscriptionId' => '!']], false];
     }
 

@@ -123,6 +123,7 @@ export const heCatalog: EnCatalog = {
         github: 'GitHub',
         x: 'X',
         youtube: 'YouTube',
+        youtubeChannels: 'ערוצי YouTube',
         linkedIn: 'LinkedIn',
         instagram: 'Instagram',
         discord: 'Discord',
@@ -301,7 +302,7 @@ export const heCatalog: EnCatalog = {
       heroTitleLineOne: 'הענן בקוד פתוח',
       heroTitleLineTwo: 'לסוכנים ולמפתחים',
       heroDescriptionLineOne:
-        'Appwrite היא פלטפורמת OSS מוכוונת MCP וסוכנים לבנייה ולהרחבה של אפליקציות במהירות המחשבה.', // pragma: allowlist secret
+        'Appwrite היא פלטפורמת ענן מוכוונת MCP וסוכנים לבנייה ולהרחבה של אפליקציות במהירות המחשבה.', // pragma: allowlist secret
       heroDescriptionLineTwo:
         'תנו לסוכנים שלכם אימות, מסדי נתונים, אחסון, פונקציות, הודעות, Realtime ואירוח - הכל במקום אחד.',
       heroPreviewWorkspace: 'Appwrite', // pragma: allowlist secret

@@ -13,6 +13,7 @@ import {
   FileText,
   RefreshCw,
   Globe,
+  Pencil,
   Copy,
   Link2,
   FileJson,
@@ -39,6 +40,7 @@ interface ProxyRuleContextMenuProps {
   rule: Models.ProxyRule
   onViewLogs: (rule: Models.ProxyRule) => void
   onRetry: (rule: Models.ProxyRule) => void
+  onUpdate?: (rule: Models.ProxyRule) => void
   onRecords: (rule: Models.ProxyRule) => void
   onDelete: (rule: Models.ProxyRule) => void
   children: React.ReactNode
@@ -49,6 +51,7 @@ export function ProxyRuleContextMenu({
   rule,
   onViewLogs,
   onRetry,
+  onUpdate,
   onRecords,
   onDelete,
   children,
@@ -77,6 +80,14 @@ export function ProxyRuleContextMenu({
           >
             <ContextMenuIcon icon={RefreshCw} />
             {t('Retry')}
+          </ContextMenuItem>
+        )}
+        {onUpdate && (
+          <ContextMenuItem
+            onSelect={() => openDialogAfterOverlayCloses(() => onUpdate(rule))}
+          >
+            <ContextMenuIcon icon={Pencil} />
+            {t('Update')}
           </ContextMenuItem>
         )}
         <ContextMenuItem

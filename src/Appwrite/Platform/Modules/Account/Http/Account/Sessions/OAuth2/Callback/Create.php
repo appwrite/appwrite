@@ -38,6 +38,7 @@ class Create extends Action
             ->param('state', '', new Text(2048 + 512), 'Login state params.', true)
             ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
             ->param('error_description', '', new Text(2048, 0), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
+            ->param('device_id', '', new Text(256, 0), 'Device ID returned from the OAuth2 provider.', true)
             ->inject('request')
             ->inject('response')
             ->callback($this->action(...));
@@ -50,6 +51,7 @@ class Create extends Action
         string $state,
         string $error,
         string $error_description,
+        string $device_id,
         Request $request,
         Response $response,
     ): void {

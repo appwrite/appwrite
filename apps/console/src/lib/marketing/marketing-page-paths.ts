@@ -8,6 +8,8 @@ const ALTERNATIVE_PAGE_PATHS = ALTERNATIVE_IDS.map((id) =>
 
 export const MARKETING_PAGE_PATHS = [
   '/home',
+  /** Factory hero variant of the homepage (noindex). */
+  '/home1',
   '/pricing',
   '/privacy',
   '/terms',

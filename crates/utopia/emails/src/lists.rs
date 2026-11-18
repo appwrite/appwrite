@@ -2,61 +2,108 @@
 //! with.
 //!
 //! PHP: `data/free-domains.php` and `data/disposable-domains.php`.
+//!
+//! The embedded lists are the `data/*.txt` text itself plus, built by
+//! `build.rs`, a hash table of their lines' byte offsets (`table.rs`): a lookup
+//! probes one or two slots, with nothing allocated or built at run time. Both
+//! live in the library's read-only pages, shared by every process.
 
-use std::collections::HashSet;
+use std::borrow::Cow;
 use std::sync::OnceLock;
 
 use php_std::value;
 use serde_json::Value;
 
+mod table {
+    include!("table.rs");
+}
+
+include!(concat!(env!("OUT_DIR"), "/tables.rs"));
+
 /// A set of domains, matched as PHP's `in_array($domain, $list)`: a loose
 /// comparison, so numeric strings compare as numbers (`"1e3"` matches an
 /// entry `"1000"`).
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct DomainList {
-    exact: HashSet<Box<[u8]>>,
-    /// Entries that are numeric strings, which a numeric needle can equal
-    /// without being byte-identical.
-    numeric: Vec<String>,
+    /// The domains, one per line.
+    source: Cow<'static, [u8]>,
+    /// The hash table of `source`'s distinct lines (`table.rs`).
+    table: Cow<'static, [u32]>,
+    /// The number of distinct domains.
+    entries: usize,
+    /// The entries that are numeric strings, which a numeric needle can equal
+    /// without being byte-identical; found on the first numeric needle.
+    numeric: OnceLock<Vec<String>>,
+}
+
+impl Default for DomainList {
+    fn default() -> Self {
+        Self::from_source(Vec::new())
+    }
 }
 
 impl DomainList {
+    /// An embedded list and its build-time table.
+    const fn embedded(source: &'static str, table: &'static [u32], entries: usize) -> Self {
+        Self {
+            source: Cow::Borrowed(source.as_bytes()),
+            table: Cow::Borrowed(table),
+            entries,
+            numeric: OnceLock::new(),
+        }
+    }
+
+    /// A list from text, one domain per line, with its table built now.
+    fn from_source(source: Vec<u8>) -> Self {
+        let (table, entries) = table::build(&source);
+        Self { source: Cow::Owned(source), table: Cow::Owned(table), entries, numeric: OnceLock::new() }
+    }
+
     /// Whether `domain` is on the list.
     ///
     /// PHP: `in_array($domain, $list)`.
     pub fn contains(&self, domain: &[u8]) -> bool {
-        if self.exact.contains(domain) {
+        if table::contains(&self.source, &self.table, domain) {
             return true;
         }
-        if self.numeric.is_empty() || value::numeric_bytes_ex(domain).is_none() {
+        if value::numeric_bytes_ex(domain).is_none() {
+            return false;
+        }
+        let numeric = self.numeric.get_or_init(|| {
+            self.source
+                .split(|&b| b == b'\n')
+                .filter_map(|entry| std::str::from_utf8(entry).ok())
+                .filter(|entry| value::numeric_str(entry).is_some())
+                .map(str::to_owned)
+                .collect()
+        });
+        if numeric.is_empty() {
             return false;
         }
         // A numeric string is ASCII.
         let needle = Value::String(String::from_utf8_lossy(domain).into_owned());
-        self.numeric.iter().any(|entry| value::loose_eq(&needle, &Value::String(entry.clone())))
+        numeric.iter().any(|entry| value::loose_eq(&needle, &Value::String(entry.clone())))
     }
 
     /// The number of entries.
     pub fn len(&self) -> usize {
-        self.exact.len()
+        self.entries
     }
 
     /// Whether the list has no entries.
     pub fn is_empty(&self) -> bool {
-        self.exact.is_empty()
+        self.entries == 0
     }
 }
 
 impl<'a> FromIterator<&'a str> for DomainList {
     fn from_iter<I: IntoIterator<Item = &'a str>>(iter: I) -> Self {
-        let mut list = DomainList::default();
+        let mut source = Vec::new();
         for domain in iter {
-            if value::numeric_str(domain).is_some() {
-                list.numeric.push(domain.to_owned());
-            }
-            list.exact.insert(domain.as_bytes().into());
+            source.extend_from_slice(domain.as_bytes());
+            source.push(b'\n');
         }
-        list
+        Self::from_source(source)
     }
 }
 
@@ -69,7 +116,7 @@ pub struct Lists {
     pub disposable: DomainList,
 }
 
-static GLOBAL: OnceLock<Lists> = OnceLock::new();
+static GLOBAL: Lists = Lists::embedded();
 
 impl Lists {
     /// The free domains the crate embeds: one per line, in the order of
@@ -82,17 +129,21 @@ impl Lists {
 
     /// One list: a domain per line.
     pub fn parse(source: &str) -> DomainList {
-        source.lines().collect()
+        DomainList::from_source(source.as_bytes().to_vec())
     }
 
-    /// The embedded lists, parsed.
-    pub fn embedded() -> Self {
-        Self { free: Self::parse(Self::FREE), disposable: Self::parse(Self::DISPOSABLE) }
+    /// The embedded lists, with tables built at compile time: no work and no
+    /// allocation.
+    pub const fn embedded() -> Self {
+        Self {
+            free: DomainList::embedded(Self::FREE, &FREE_TABLE, FREE_ENTRIES),
+            disposable: DomainList::embedded(Self::DISPOSABLE, &DISPOSABLE_TABLE, DISPOSABLE_ENTRIES),
+        }
     }
 
-    /// The embedded lists, parsed on first use.
+    /// The embedded lists, shared by every caller.
     pub fn global() -> &'static Self {
-        GLOBAL.get_or_init(Self::embedded)
+        &GLOBAL
     }
 
     /// Whether the domain, or else its registrable domain (empty when it has
@@ -136,5 +187,36 @@ mod tests {
             assert!(lines > 30_000, "the list has {lines} domains");
         }
         assert!(lists.is_on_free_list(b"gmail.com") && lists.is_disposable(b"x.mailinator.com", b"mailinator.com"));
+    }
+
+    /// The build-time table finds every line of each embedded list, and only those.
+    #[test]
+    fn embedded_table_finds_every_entry() {
+        let lists = Lists::global();
+        for (list, source) in [(&lists.free, Lists::FREE), (&lists.disposable, Lists::DISPOSABLE)] {
+            for domain in source.lines() {
+                assert!(list.contains(domain.as_bytes()), "{domain} is on its list");
+                assert!(
+                    !list.contains(format!("{domain}x").as_bytes())
+                        || source.lines().any(|l| l == format!("{domain}x"))
+                );
+                assert!(
+                    !list.contains(format!("x{domain}").as_bytes())
+                        || source.lines().any(|l| l == format!("x{domain}"))
+                );
+            }
+            assert!(!list.contains(b"") && !list.contains(b"\n") && !list.contains(b"not-a-listed-domain.invalid"));
+        }
+    }
+
+    /// The build-time table is the one a run-time parse builds.
+    #[test]
+    fn embedded_table_matches_a_parse() {
+        let lists = Lists::global();
+        for (list, source) in [(&lists.free, Lists::FREE), (&lists.disposable, Lists::DISPOSABLE)] {
+            let parsed = Lists::parse(source);
+            assert_eq!(list.table.as_ref(), parsed.table.as_ref());
+            assert_eq!(list.len(), parsed.len());
+        }
     }
 }

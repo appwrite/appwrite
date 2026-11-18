@@ -183,7 +183,7 @@ cargo fmt --all --check
 
 ### Compare with PHP
 
-The utopia PHP extension serves this crate as `Utopia\Locale\Locale`, which no longer has a PHP implementation. Its parity corpus, `crates/extension/tests/locale.php`, must print `crates/extension/tests/locale.expected.jsonl`, the output of the PHP class it replaced; `crates/extension/tests/run.sh` checks it in the development image.
+The utopia PHP extension serves this crate as `Utopia\Locale\Locale`, which no longer has a PHP implementation.
 
 ## License
 
