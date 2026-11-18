@@ -362,6 +362,37 @@ export function getProviderPullRequestUrl(params: {
 }
 
 /**
+ * Build a provider web URL for a repository. Returns null when the provider is
+ * unknown, its host is not known here (self-hosted Gitea), or a path piece is
+ * missing, so callers leave the link out instead of inventing a GitHub URL.
+ */
+export function getProviderRepositoryUrl(params: {
+  provider?: string
+  organization?: string
+  repositoryName?: string
+}): string | null {
+  const meta = getKnownVcsProvider(params.provider)
+  const organization = params.organization?.trim()
+  const repositoryName = params.repositoryName?.trim()
+  if (!meta || !organization || !repositoryName || meta.id === 'gitea') {
+    return null
+  }
+
+  return `${meta.baseUrl(encodeVcsPath(organization))}/${encodeVcsPath(repositoryName)}`
+}
+
+/** The providers code review runs on (`Appwrite\Reviews\Provider`). */
+export const REVIEW_VCS_PROVIDERS: readonly VcsProviderId[] = [
+  'github',
+  'origin',
+]
+
+export function isReviewVcsProvider(provider?: string): boolean {
+  const id = getKnownVcsProvider(provider)?.id
+  return !!id && REVIEW_VCS_PROVIDERS.includes(id)
+}
+
+/**
  * Whether a provider is in a capability list from console variables
  * (`_APP_VCS_PROVIDERS` / `_APP_VCS_PROVIDERS_WITH_REPOSITORY_CREATION` /
  * `_APP_VCS_PROVIDERS_WITH_PUBLIC_REPOSITORIES`). An undefined list means the

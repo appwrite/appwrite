@@ -125,7 +125,7 @@ export function View() {
         hideToolbar={noRepositories}
         {...(activeTab === 'repositories'
           ? {
-              searchPlaceholder: t('Search GitHub repositories...'),
+              searchPlaceholder: t('Search repositories...'),
               searchValue: search,
               onSearchChange: setSearch,
             }
@@ -146,7 +146,7 @@ export function View() {
             variant="card"
             title={t('Review pull requests with AI')}
             description={t(
-              'Add a GitHub repository and every pull request gets a review with findings, a verdict, and a merge confidence grade. Mention the app in a comment to ask it anything.',
+              'Add a GitHub or Origin repository and every pull request gets a review with findings, a verdict, and a merge confidence grade. Mention the app in a comment to ask it anything.',
             )}
             action={
               <Button

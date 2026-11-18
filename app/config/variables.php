@@ -1921,6 +1921,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_VCS_ORIGIN_APP_NAME',
+                'description' => 'Handle that pull request comments mention the Origin app by to ask it for a code review or an answer, such as "@appwrite review". Origin has no mentions of its own. Leave empty to answer only replies in the reviewer\'s threads.',
+                'introduction' => '2.8.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_VCS_ORIGIN_PRIVATE_KEY',
                 'description' => 'Origin app private key. You can generate private keys from your Origin app settings on Cursor.',
                 'introduction' => '2.0.0',
