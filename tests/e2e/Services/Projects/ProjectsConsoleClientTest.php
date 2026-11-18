@@ -1871,6 +1871,8 @@ final class ProjectsConsoleClientTest extends Scope
         $this->assertStringContainsStringIgnoringCase('working correctly', $email1['html']);
         $this->assertStringContainsStringIgnoringCase('251 Little Falls Drive', $email1['text']);
         $this->assertStringContainsStringIgnoringCase('251 Little Falls Drive', $email1['html']);
+        $this->assertStringContainsString(APP_EMAIL_LOGO_DARK_URL, $email1['html']);
+        $this->assertStringNotContainsString('{{logoDarkUrl}}', $email1['html']);
         $this->assertEquals('custommailer@appwrite.io', $email2['from'][0]['address']);
 
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/smtp/tests', array_merge([
