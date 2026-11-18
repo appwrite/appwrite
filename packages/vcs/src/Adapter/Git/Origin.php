@@ -1175,14 +1175,14 @@ class Origin extends Git
         $app = \is_array($author['app'] ?? null) ? $author['app'] : [];
         $serviceAccount = \is_array($author['serviceAccount'] ?? null) ? $author['serviceAccount'] : [];
 
-        $owner = \strval($repositoryOwner['slug'] ?? '');
-        $repositoryName = \strval($repository['name'] ?? '');
-        $pullRequestNumber = (int) ($pullRequest['number'] ?? 0);
-        $threadId = \strval($thread['id'] ?? '');
+        $owner = $this->text($repositoryOwner['slug'] ?? '');
+        $repositoryName = $this->text($repository['name'] ?? '');
+        $pullRequestNumber = \is_numeric($pullRequest['number'] ?? null) ? (int) $pullRequest['number'] : 0;
+        $threadId = $this->text($thread['id'] ?? '');
 
         // An opening comment carries its thread's anchor or timestamps; a reply only the thread's id.
         $isReply = \array_diff(\array_keys($thread), ['id']) === [];
-        $isInline = \strval($thread['path'] ?? '') !== '';
+        $isInline = $this->text($thread['path'] ?? '') !== '';
         $kind = $isReply || $isInline ? 'review' : 'issue';
 
         $authorType = match (true) {
@@ -1192,20 +1192,20 @@ class Origin extends Git
         };
 
         return [[
-            'repositoryId' => \strval($repository['id'] ?? ''),
+            'repositoryId' => $this->text($repository['id'] ?? ''),
             'repositoryName' => $repositoryName,
             'owner' => $owner,
             'installationId' => $installationId,
             'pullRequestNumber' => $pullRequestNumber,
             'action' => 'created',
-            'commentId' => \strval($comment['id'] ?? ''),
+            'commentId' => $this->text($comment['id'] ?? ''),
             'commentKind' => $kind,
             'commentThreadId' => $kind === 'review' ? $threadId : '',
             'commentReplyToId' => $isReply ? $threadId : '',
-            'commentBody' => \strval($comment['body'] ?? ''),
+            'commentBody' => $this->text($comment['body'] ?? ''),
             'commentUrl' => $owner !== '' && $repositoryName !== '' && $pullRequestNumber > 0 ? $this->getPullRequestUrl($owner, $repositoryName, $pullRequestNumber) : '',
-            'commentAuthor' => \strval($user['handle'] ?? $user['id'] ?? $app['id'] ?? $serviceAccount['id'] ?? ''),
-            'commentAuthorId' => \strval($user['id'] ?? $app['id'] ?? $serviceAccount['id'] ?? ''),
+            'commentAuthor' => $this->text($user['handle'] ?? $user['id'] ?? $app['id'] ?? $serviceAccount['id'] ?? ''),
+            'commentAuthorId' => $this->text($user['id'] ?? $app['id'] ?? $serviceAccount['id'] ?? ''),
             'commentAuthorType' => $authorType,
         ]];
     }
@@ -2377,7 +2377,8 @@ class Origin extends Git
             ['Authorization' => "Bearer {$this->accessToken}"],
         );
 
-        $statusCode = $response['headers']['status-code'] ?? 0;
+        $headers = \is_array($response['headers'] ?? null) ? $response['headers'] : [];
+        $statusCode = \is_int($headers['status-code'] ?? null) ? $headers['status-code'] : 0;
         if ($statusCode === 404) {
             return '';
         }
@@ -2387,7 +2388,13 @@ class Origin extends Git
 
         $body = \is_array($response['body'] ?? null) ? $response['body'] : [];
 
-        return \strval($body['permission'] ?? '');
+        return $this->text($body['permission'] ?? '');
+    }
+
+    /** A scalar from a decoded payload as a string; anything else is empty. */
+    private function text(mixed $value): string
+    {
+        return \is_scalar($value) ? (string) $value : '';
     }
 
     /**
