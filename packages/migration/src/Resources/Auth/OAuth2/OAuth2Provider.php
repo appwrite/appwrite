@@ -51,6 +51,7 @@ final class OAuth2Provider extends Resource
         'gitlab' => ['clientId' => ['target' => self::TARGET_APP_ID], 'endpoint' => ['target' => self::TARGET_SECRET]],
         'google' => ['clientId' => ['target' => self::TARGET_APP_ID], 'prompt' => ['target' => self::TARGET_SECRET]],
         'huggingface' => ['clientId' => ['target' => self::TARGET_APP_ID]],
+        'railway' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'reddit' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'vercel' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'atlassian' => ['clientId' => ['target' => self::TARGET_APP_ID]],
