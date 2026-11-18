@@ -5156,6 +5156,58 @@ trait MigrationsBase
         }, 60_000, 500);
     }
 
+    public function testCSVImportRetryByKeyRequiresRowsWrite(): void
+    {
+        [$databaseId, $tableId, $bucketId, $fileId] = $this->prepareCsvImportFixture('retry-scopes');
+        $body = [
+            'fileId' => $fileId,
+            'bucketId' => $bucketId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
+        ];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $first = $this->performCsvMigration($body);
+        $this->assertEventually(function () use ($first, $headers) {
+            $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $first['body']['$id'], $headers);
+            $this->assertEquals('completed', $migration['body']['status']);
+        }, 10_000, 500);
+
+        // The same rows again fail on duplicate ids, leaving a key-created import to retry.
+        $second = $this->performCsvMigration($body);
+        $migrationId = $second['body']['$id'];
+        $this->assertEventually(function () use ($migrationId, $headers) {
+            $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, $headers);
+            $this->assertEquals('failed', $migration['body']['status']);
+        }, 60_000, 500);
+
+        /**
+         * Test for FAILURE: the worker writes this project's rows directly, so the key needs rows.write itself
+         */
+        $retry = $this->client->call(Client::METHOD_PATCH, '/migrations/' . $migrationId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.write']),
+        ]);
+
+        $this->assertSame(401, $retry['headers']['status-code']);
+        $this->assertSame('general_unauthorized_scope', $retry['body']['type']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $retry = $this->client->call(Client::METHOD_PATCH, '/migrations/' . $migrationId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.write', 'rows.write']),
+        ]);
+
+        $this->assertSame(204, $retry['headers']['status-code']);
+    }
+
     private function performCsvMigration(array $body): array
     {
         return $this->client->call(Client::METHOD_POST, '/migrations/csv', [
