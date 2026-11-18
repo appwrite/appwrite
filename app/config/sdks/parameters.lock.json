@@ -3533,6 +3533,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Netlify": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Notion": [
             "oauthClientId",
             "oauthClientSecret",
@@ -3634,6 +3639,11 @@
             "enabled"
         ],
         "project.updateOAuth2Vercel": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2VK": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -7967,6 +7977,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Netlify": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Notion": [
             "oauthClientId",
             "oauthClientSecret",
@@ -8068,6 +8083,11 @@
             "enabled"
         ],
         "project.updateOAuth2Vercel": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2VK": [
             "clientId",
             "clientSecret",
             "enabled"
