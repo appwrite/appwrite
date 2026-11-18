@@ -389,6 +389,7 @@ abstract class Base extends Action
             'huggingface' => HuggingFace\Update::class,
             'instagram' => Instagram\Update::class,
             'patreon' => Patreon\Update::class,
+            'strava' => Strava\Update::class,
             'railway' => Railway\Update::class,
             'reddit' => Reddit\Update::class,
             'vercel' => Vercel\Update::class,
