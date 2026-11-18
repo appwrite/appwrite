@@ -122,7 +122,13 @@ export function DomainTargetCard({
             type="button"
             onClick={() => !branchDisabled && onBehaviourChange('branch')}
             disabled={disabled || branchDisabled}
-            title={branchDisabled ? t('Connect repository first') : undefined}
+            title={
+              deploymentLocked
+                ? lockedReason
+                : branchDisabled
+                  ? t('Connect repository first')
+                  : undefined
+            }
             className={cn(
               'text-start rounded-lg border p-4 transition-all cursor-pointer',
               behaviour === 'branch'
