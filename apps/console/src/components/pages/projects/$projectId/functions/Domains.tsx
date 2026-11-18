@@ -9,6 +9,7 @@ import {
   ExternalLink,
   Globe,
   Mail,
+  Pencil,
 } from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
@@ -375,6 +376,15 @@ export function View() {
                                   >
                                     <MenuItemContent icon={RefreshCw}>
                                       {t('Retry')}
+                                    </MenuItemContent>
+                                  </DropdownMenuItem>
+                                )}
+                                {!isSmtpRule(rule) && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleUpdate(rule)}
+                                  >
+                                    <MenuItemContent icon={Pencil}>
+                                      {t('Update')}
                                     </MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
