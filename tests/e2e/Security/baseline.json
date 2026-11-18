@@ -443,6 +443,7 @@
         "PATCH /v1/project/oauth2/gitlab",
         "PATCH /v1/project/oauth2/google",
         "PATCH /v1/project/oauth2/huggingface",
+        "PATCH /v1/project/oauth2/instagram",
         "PATCH /v1/project/oauth2/kakao",
         "PATCH /v1/project/oauth2/keycloak",
         "PATCH /v1/project/oauth2/kick",
