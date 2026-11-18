@@ -1,7 +1,8 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
-import { useParams, useNavigate, useSearch } from '@tanstack/react-router'
+import { useParams, useSearch } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import {
+  AlertCircle,
   Loader2,
   Globe,
   FileText,
@@ -26,16 +27,21 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
-import { Badge } from '@/components/ui/badge'
 import {
   siteDomainsQueryOptions,
   useProject,
   useOrganizationDomains} from '@/lib/react-query/hooks'
 import { VerifyDomain } from './_components/VerifyDomain'
+import { DomainRecordsDialog } from '@/components/pages/projects/$projectId/settings/domains/DomainRecords'
 import { ViewLogsDialog } from '@/components/pages/projects/$projectId/settings/domains/ViewLogs'
 import { DeleteDomainDialog } from '@/components/pages/projects/$projectId/settings/domains/DeleteDomain'
 import { ProxyRuleContextMenu } from '@/components/pages/projects/$projectId/settings/domains/ProxyRuleContextMenu'
-import { getDomainStatusBadgeConfig } from '@/lib/utils/status-badge'
+import { RuleStatusBadge } from '@/components/pages/projects/$projectId/settings/domains/RuleStatusBadge'
+import { CheckDomain } from '@/components/pages/projects/$projectId/settings/domains/CheckDomain'
+import {
+  getRuleStatusBadgeConfig,
+  isWaitingForDns,
+} from '@/lib/utils/status-badge'
 import {
   canRetryRule,
   canViewRuleLogs,
@@ -46,6 +52,7 @@ import type { Models } from '@appwrite.io/console'
 import { queryParamToMap } from '@/lib/table-filters'
 import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useT } from '@/lib/i18n/translate'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { useVisitUrl } from '@/hooks/use-visit-url'
 
@@ -53,7 +60,6 @@ export function View() {
   const t = useT()
   const visitUrl = useVisitUrl()
   const { projectId, siteId } = useParams({ strict: false })
-  const navigate = useNavigate()
   const search = useSearch({ strict: false }) as
     | { search?: string; query?: string }
     | undefined
@@ -61,6 +67,7 @@ export function View() {
   const [currentPage, setCurrentPage] = useState(0)
   const [pageSize, setPageSize] = useState(DOMAINS_DEFAULT_PAGE_SIZE)
   const [verifyOpen, setVerifyOpen] = useState(false)
+  const [recordsOpen, setRecordsOpen] = useState(false)
   const [viewLogsOpen, setViewLogsOpen] = useState(false)
   const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)
   const [selectedRule, setSelectedRule] = useState<Models.ProxyRule | null>(
@@ -71,6 +78,12 @@ export function View() {
   )
 
   const searchValue = search?.search ?? ''
+  // Go back to the first page in the same render the filters change.
+  const [pageQuery, setPageQuery] = useState(search?.query)
+  if (pageQuery !== search?.query) {
+    setPageQuery(search?.query)
+    setCurrentPage(0)
+  }
   const filterMap = useMemo(
     () => queryParamToMap(search?.query ?? null),
     [search?.query],
@@ -81,7 +94,9 @@ export function View() {
   const {
     data: domainsData,
     isLoading: domainsLoading,
-    isFetching: domainsFetching} = useQuery(
+    isFetching: domainsFetching,
+    error: domainsError,
+    refetch: refetchDomains} = useQuery(
     siteDomainsQueryOptions(
       projectId,
       siteId,
@@ -126,6 +141,13 @@ export function View() {
     })
   }
 
+  const handleRecords = (rule: Models.ProxyRule) => {
+    openDialogAfterOverlayCloses(() => {
+      setSelectedRule(rule)
+      setRecordsOpen(true)
+    })
+  }
+
   const handleViewLogs = (rule: Models.ProxyRule) => {
     openDialogAfterOverlayCloses(() => {
       setViewLogsRule(rule)
@@ -147,7 +169,7 @@ export function View() {
 
   if (domainsLoading && rules.length === 0 && !domainsFetching) {
     return (
-      <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
@@ -156,9 +178,31 @@ export function View() {
   }
 
   const hasFilters = filterMap.size > 0 || !!searchValue
+  const domainsErrorContent = (
+    <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
+      <EmptyState
+        icon={AlertCircle}
+        title={t('Failed to load domains')}
+        description={getErrorMessage(domainsError)}
+        variant="card"
+        iconSize="md"
+        action={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              void refetchDomains()
+            }}
+          >
+            {t('Try again')}
+          </Button>
+        }
+      />
+    </div>
+  )
   const domainsContent =
     rules.length === 0 ? (
-      <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
         <EmptyState
           icon={Globe}
           title={hasFilters ? undefined : t('No domains yet')}
@@ -199,17 +243,16 @@ export function View() {
               </TableHeader>
               <TableBody>
                 {rules.map((rule) => {
-                  const statusConfig = getDomainStatusBadgeConfig(rule.status)
+                  const statusConfig = getRuleStatusBadgeConfig(rule)
 
                   return (
                     <ProxyRuleContextMenu
                       key={rule.$id}
                       projectId={projectId!}
                       rule={rule}
-                      projectTeamId={project?.teamId}
-                      apexToOrgDomainId={apexToOrgDomainId}
                       onViewLogs={handleViewLogs}
                       onRetry={handleRetry}
+                      onRecords={handleRecords}
                       onDelete={handleDelete}
                     >
                       <TableRow>
@@ -240,33 +283,25 @@ export function View() {
                         </TableCell>
                         <TableCell className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <Badge
-                              variant={statusConfig.variant}
-                              className="text-[10px] shrink-0 gap-1.5"
-                              title={
-                                rule.status === 'verifying'
-                                  ? t(
-                                      'SSL certificate is being issued. This usually takes a couple of minutes.',
-                                    )
-                                  : undefined
-                              }
-                            >
-                              {rule.status === 'verifying' && (
-                                <Loader2 className="h-3 w-3 animate-spin" />
+                            <RuleStatusBadge rule={rule} />
+                            {statusConfig.variant !== 'success' &&
+                              canViewRuleLogs(rule) && (
+                                <Button
+                                  variant="link"
+                                  size="sm"
+                                  className="h-auto p-0 text-[13px]"
+                                  onClick={() => handleViewLogs(rule)}
+                                >
+                                  {t('View logs')}
+                                </Button>
                               )}
-                              {t(statusConfig.label)}
-                            </Badge>
-                            {rule.status !== 'verified' && (
-                              <Button
-                                variant="link"
-                                size="sm"
-                                className="h-auto p-0 text-[13px]"
-                                onClick={() => handleViewLogs(rule)}
-                              >
-                                {t('View logs')}
-                              </Button>
-                            )}
-                            {canRetryRule(rule.status) && (
+                            <CheckDomain
+                              projectId={projectId ?? ''}
+                              region={project?.region}
+                              rule={rule}
+                              organizationDomainId={getOrganizationDomainId(rule)}
+                            />
+                            {canRetryRule(rule) && !isWaitingForDns(rule) && (
                               <Button
                                 variant="link"
                                 size="sm"
@@ -300,7 +335,7 @@ export function View() {
                                     </MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
-                                {canRetryRule(rule.status) && (
+                                {canRetryRule(rule) && (
                                   <DropdownMenuItem
                                     onClick={() => handleRetry(rule)}
                                   >
@@ -310,30 +345,7 @@ export function View() {
                                   </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem
-                                  onClick={() => {
-                                    const apex = getApexDomain(rule.domain)
-                                    const orgDomainId = apex
-                                      ? apexToOrgDomainId.get(
-                                          apex.toLowerCase(),
-                                        )
-                                      : undefined
-                                    if (project?.teamId && orgDomainId) {
-                                      navigate({
-                                        to: '/organizations/$orgId/domains/$domainId',
-                                        params: {
-                                          orgId: project.teamId,
-                                          domainId: orgDomainId}})
-                                    }
-                                  }}
-                                  disabled={
-                                    !project?.teamId ||
-                                    !getApexDomain(rule.domain) ||
-                                    !apexToOrgDomainId.has(
-                                      getApexDomain(
-                                        rule.domain,
-                                      )?.toLowerCase() ?? '',
-                                    )
-                                  }
+                                  onClick={() => handleRecords(rule)}
                                 >
                                   <MenuItemContent icon={Globe}>
                                     {t('Records')}
@@ -377,26 +389,26 @@ export function View() {
 
   return (
     <>
-      {domainsContent}
+      {domainsError ? domainsErrorContent : domainsContent}
       {selectedRule && (
         <>
           <VerifyDomain
             open={verifyOpen}
             onOpenChange={setVerifyOpen}
             projectId={projectId ?? ''}
-            rule={selectedRule}
+            rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
             region={project?.region}
             organizationDomainId={getOrganizationDomainId(selectedRule)}
             onVerifySuccess={() => {
               setSelectedRule(null)
             }}
-            onReconfigure={() => {
-              setVerifyOpen(false)
-              setSelectedRule(null)
-              navigate({
-                to: '/projects/$projectId/sites/$siteId/domains/add',
-                params: { projectId: projectId!, siteId: siteId! }})
-            }}
+          />
+          <DomainRecordsDialog
+            open={recordsOpen}
+            onOpenChange={setRecordsOpen}
+            rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
+            region={project?.region}
+            resourceType="site"
           />
           <DeleteDomainDialog
             open={deleteDomainOpen}
@@ -420,6 +432,8 @@ export function View() {
             if (!open) setViewLogsRule(null)
           }}
           rule={rules.find((r) => r.$id === viewLogsRule.$id) ?? viewLogsRule}
+          onRefresh={() => void refetchDomains()}
+          isRefreshing={domainsFetching}
         />
       )}
     </>

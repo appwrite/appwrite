@@ -1,0 +1,72 @@
+---
+layout: integration
+title: MCP with Google Antigravity
+description: Connect Google Antigravity agents to your Appwrite project and docs through the hosted Appwrite MCP server
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/mcp-antigravity/cover.avif
+category: mcp
+product:
+    vendor: Google
+    description: "Google Antigravity is Google's agentic development platform, with an IDE where AI agents plan and carry out coding tasks."
+platform:
+    - 'Cloud'
+---
+
+[Google Antigravity](https://antigravity.google) is Google's agentic development platform. Its IDE includes an **Agent Manager**, where AI agents work through coding tasks with an understanding of your codebase, and an MCP Store for connecting agents to external tools.
+
+# How does the integration work?
+
+The [Appwrite MCP server](/docs/tooling/ai/mcp-servers) connects Antigravity's agents to your Appwrite project through the [Model Context Protocol](https://modelcontextprotocol.io). It is a hosted server at `https://mcp.appwrite.io/` that uses the HTTP transport and signs you in with OAuth, so there is nothing to install and no API key to create.
+
+Once connected, an agent can look up your projects, read and change resources such as users, databases, and tables, and search the Appwrite documentation while it codes. Changes go through a separate write tool that requires confirmation, and each change carries a short reason that appears in your project's **Activity** tab.
+
+{% info title="Self-hosted Appwrite" %}
+The hosted MCP server authenticates against Appwrite Cloud. If you self-host Appwrite, use the [local MCP server](/docs/advanced/self-hosting/mcp) instead. It runs on your machine over stdio and connects to your instance with an API key.
+{% /info %}
+
+# How to implement
+
+To connect Google Antigravity to Appwrite, there are several steps you must complete:
+
+## Step 1: Set up your Appwrite project
+
+First, [create an account on Appwrite Cloud](/sign-up) if you haven't already, and create a project. You don't need an API key: Antigravity opens your browser so you can sign in to Appwrite when it first connects.
+
+## Step 2: Add the Appwrite MCP server to Antigravity
+
+In the Agent window, open the **...** menu and go to **Manage MCP Servers** in the MCP Store. Click **View raw config** and add the Appwrite server to `mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "appwrite": {
+      "serverUrl": "https://mcp.appwrite.io/"
+    }
+  }
+}
+```
+
+Antigravity needs the `serverUrl` key for remote MCP servers. Using `url` or `httpUrl` instead makes tool registration fail without an error.
+
+Sign in to your Appwrite account in the browser window that opens and authorize access, then return to **Manage MCP Servers** and click refresh.
+
+## Step 3: Test the integration
+
+Open the **Agent Manager** and try prompts like:
+
+- `Create a new user in my Appwrite project`
+- `List all databases in my project`
+- `Show me the tables in my database`
+- `How do I set up real-time subscriptions in Appwrite?`
+
+# Read more about Google Antigravity and the Appwrite MCP server
+
+If you would like to learn more about Google Antigravity and the Appwrite MCP server, we have some resources that you should visit:
+
+- [Connect the Appwrite MCP server to Google Antigravity](/docs/tooling/ai/agents/antigravity)
+- [Appwrite MCP server documentation](/docs/tooling/ai/mcp-servers)
+- [Appwrite agent skills](/docs/tooling/ai/skills)
+- [Google Antigravity](https://antigravity.google)

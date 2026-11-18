@@ -30,7 +30,7 @@ const databases = await projectSdk.tablesDB.list() // Returns Models.DatabaseLis
 
 **Unreleased API changes**: `@appwrite.io/console` is generated from the Cloud spec, so an endpoint added or changed in this repository is missing until Cloud releases the next Console SDK. Build the Console against it in the same PR:
 
-1. `bun run sdk:preview` lays this branch's console spec over the pinned SDK's `spec.json`, builds the SDK and installs it into `node_modules` (needs PHP with swoole and `composer install` at the repository root). `bun install --force` restores the pinned SDK.
+1. `bun run sdk:preview` lays this branch's console spec over the pinned SDK's `spec.json`, builds the SDK and installs it into `node_modules` (runs the Appwrite CLI in the `appwrite` Compose service's image, since Appwrite boots only with the utopia extension: run `docker compose build appwrite` at the repository root first; no service needs to be running). `bun install --force` restores the pinned SDK.
 2. Push. On a PR that changes both `apps/console` and the API, the SDK Preview workflow publishes the same build to pkg.pr.new and comments its URL.
 3. Pin `@appwrite.io/console` to the build for your commit, `https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@<sha>`, so the Console build in CI uses it. The `@<pr>` URL in the comment follows the latest push, so it does not stay matched to the lockfile. Once a Console SDK release carries the change, pin that version instead.
 
@@ -1173,7 +1173,7 @@ These flags do not grant backend permissions. Curl cannot call this browser API.
 - `VITE_CONSOLE_USER_VERIFICATION` – `true`/`false` to force post-signup email verification
 - `VITE_CONSOLE_COOKIE_BANNER` – `true`/`false` to enable/disable the cookie consent banner logic (GDPR prompt)
 - `VITE_CONSOLE_BLOG_DRAFTS` – `true`/`false` to show draft blog posts (off in both profiles by default)
-- `VITE_CONSOLE_EXTRA_VCS_OAUTH` – `true`/`false` to show extra Git connect OAuth providers (Origin). GitHub, GitLab, and Bitbucket stay available. Off in both profiles by default.
+- `VITE_CONSOLE_VCS_ORIGIN` – `true`/`false` to show Origin (Cursor) on Git connect. Off in both profiles by default; accounts with the `quality` label can also turn it on from the header Previews menu.
 - `VITE_CONSOLE_PROJECT_ENVIRONMENTS` – `true`/`false` to show the project environments switcher and leave environments out of organization project lists. Off by default; ignored on self-hosted, which has no environments API.
 
 **Pre-launch mode** (not a profile feature; unset = off):
@@ -1382,6 +1382,7 @@ Use manual tracking only for outcomes and flows that generic interaction trackin
 - `Error Shown`
 - `Wizard Opened`
 - `Wizard Option Selected`
+- `Overview Quick Start Clicked`, `Overview Resource Create Clicked`, `Overview Resource Opened`, `Overview Resource View All Clicked`: project dashboard cards. Props: `resource` (service id), `placement` (`header`, `filler`, `empty-card`), `action`, `option` (quick start id such as `postgres`, `git-import`, `node`)
 
 If you add a new reusable manual event name, update `AnalyticsEventName` in `src/lib/analytics.ts` and this section. For click instrumentation of a specific control, prefer a new `ANALYTICS_ACTIONS` entry instead.
 
@@ -1706,6 +1707,21 @@ After flagging a post:
 - Do not reference static files under `/images/open-graph/` (removed). Default OG images use the dynamic `/og/image.png` endpoint via `buildOgImageUrl` - see `getMarketingHomeOgImage` in `src/lib/marketing/route-meta.ts` for the pattern.
 
 ---
+
+## WebMCP tools
+
+appwrite.io exposes tools to in-browser agents through [WebMCP](https://webmachinelearning.github.io/webmcp/) (`document.modelContext`).
+
+- A tool set is a folder under `src/lib/webmcp/` (today `site/`, for the public site):
+  - `tools.ts`: `installSiteTools()` registers every tool with a literal `modelContext.registerTool({...})` and forwards each call to handlers connected later. It runs as an inline script (`SITE_TOOLS_SCRIPT`, rendered with `ScriptOnce` by the `_marketing` and `/docs` layouts), so the tools register while the HTML parses. It is serialized with `toString()`, so it must stay self-contained: no imports or outside values at runtime.
+  - `actions.ts`: what each tool does, as `siteHandlers()` keyed by tool name.
+  - `use-site-tools.ts`: the hook those layouts call. It installs the tools after a client-side navigation, loads `actions.ts` (only in browsers that have WebMCP), connects the handlers, and unregisters the tools when the layout unmounts.
+- Why inline: agent-readiness scanners (Ora) read only inline scripts and same-origin `<script src>`. They don't follow TanStack's modulepreloaded chunks or `import()`, and appwrite.io's chunks are on a CDN origin. Keep the definitions literal; don't build them from arrays or helpers.
+- `src/lib/webmcp/calls.ts`: the `ToolError` result and `recordCalls()`, which sends a `WebMCP Tool Called` analytics event (tool and status, never input) for every call.
+- Name tools `verb_noun` in snake_case, give each a `title`, describe what it returns in one sentence, and describe every input property.
+- Annotations must match behaviour: `readOnlyHint` for tools that only read, `untrustedContentHint` when output contains text other people wrote, and `consequentialHint` for tools that buy, send, delete or publish. Omit a hint instead of setting it to `false`.
+- On failure, an action resolves `toolError(code, message, retryable)` instead of throwing. A tool that navigates answers before navigating: leaving the layout unregisters it, and a tool unregistered mid-call never delivers its result.
+- Cover tool changes in `e2e/website.webmcp.spec.ts` through `openAsAgent()`. Run it against Chrome's native API with `E2E_WEBMCP_CHANNEL=chrome` (Chrome 149+); CI's bundled Chromium uses a registry that follows the spec.
 
 ## Environment
 

@@ -15,6 +15,7 @@
         "ext-json": "*"
     },
     "suggest": {
+        "ext-sockets": "Lets the transports tell a reset connection from an idle one before a request",
         "ext-sodium": "Required for NKey and JWT credential authentication",
         "ext-swoole": "Required for the coroutine-native SwooleTransport"
     },

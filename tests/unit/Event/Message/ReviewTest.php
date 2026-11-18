@@ -30,6 +30,7 @@ final class ReviewTest extends TestCase
             pullNumber: 42,
             headSha: \str_repeat('a', 40),
             trigger: ['kind' => 'opened'],
+            strength: 'expert',
         );
 
         $this->assertSame([
@@ -48,6 +49,7 @@ final class ReviewTest extends TestCase
             'pullNumber' => 42,
             'headSha' => \str_repeat('a', 40),
             'trigger' => ['kind' => 'opened'],
+            'strength' => 'expert',
         ], $message->toArray());
     }
 
@@ -68,6 +70,7 @@ final class ReviewTest extends TestCase
             pullNumber: 42,
             headSha: \str_repeat('a', 40),
             trigger: ['kind' => 'mention', 'comment' => ['id' => 7, 'kind' => 'issue']],
+            strength: 'basic',
         );
 
         $this->assertSame($message->toArray(), Review::fromArray($message->toArray())->toArray());

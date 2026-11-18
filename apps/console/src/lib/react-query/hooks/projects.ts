@@ -14,6 +14,7 @@ import {
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import {
+  AppwriteException,
   Query,
   ID,
   Status,
@@ -38,6 +39,7 @@ import {
 import {
   ensureFingerprintServerTimeSynced,
   generateFingerprintToken,
+  resetFingerprintCache,
 } from '@/lib/fingerprint'
 import {
   DEFAULT_STALE_TIME,
@@ -187,6 +189,23 @@ function projectMatchesActiveListStatus(project: Models.Project): boolean {
  */
 export async function fetchProject(projectId: string) {
   return fetchProjectById(projectId)
+}
+
+/**
+ * Query function to fetch the project itself, whatever environment the Console
+ * is in for it
+ *
+ * Inside an environment `fetchProject` answers as the environment: same ID,
+ * the environment's name. This one leaves the environment, for what belongs to
+ * the project and not to any of its environments, starting with its name.
+ *
+ * @param projectId - The project ID
+ * @returns Project data from the API
+ */
+export async function fetchProductionProject(projectId: string) {
+  return sdk
+    .forProject(projectId, undefined, { environment: null })
+    .project.get()
 }
 
 /**
@@ -806,6 +825,28 @@ export function projectQueryOptions(projectId: string | null | undefined) {
   })
 }
 
+/**
+ * Query options for the project itself, whatever environment the Console is in
+ *
+ * Keyed under the project's own query so renaming the project refreshes both,
+ * and apart from it so the environment's answer never stands in for it.
+ */
+export function productionProjectQueryOptions(
+  projectId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['project', projectId, 'production'],
+    queryFn: () => fetchProductionProject(projectId!),
+    enabled: !!projectId,
+    staleTime: LONG_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
 // ============================================================================
 // HOOKS
 // ============================================================================
@@ -854,6 +895,38 @@ export function useProject(projectId: string | undefined) {
   }
 }
 
+/**
+ * Hook to fetch the project an environment belongs to
+ *
+ * Inside an environment `useProject` is the environment, under the project's
+ * ID. This is the project itself, for where the two are told apart: the
+ * breadcrumb, the project list, what a destructive action names.
+ *
+ * @param projectId - The project ID, or undefined outside an environment so no request is made
+ * @returns The project with loading state
+ */
+export function useProductionProject(projectId: string | undefined) {
+  const { data: projectData, isLoading } = useQuery(
+    productionProjectQueryOptions(projectId),
+  )
+
+  const project = useMemo(() => {
+    if (!projectData) return null
+
+    return {
+      $id: projectData.$id,
+      name: projectData.name,
+      teamId: projectData.teamId,
+      region: projectData.region || 'unknown',
+      createdAt: projectData.$createdAt || new Date().toISOString(),
+      icon: projectData.name.charAt(0).toUpperCase(),
+      archived: projectData.status === 'archived',
+    } as Project
+  }, [projectData])
+
+  return { project, projectData, isLoading }
+}
+
 const CONSOLE_FINGERPRINT_HEADER = 'X-Appwrite-Console-Fingerprint'
 
 function normalizeProjectRegion(region?: string | null): string | undefined {
@@ -895,20 +968,35 @@ export function useResumeProject(projectId: string | undefined) {
         headers?: Record<string, string>
         config?: { endpoint?: string; project?: string }
       }
-      await ensureFingerprintServerTimeSynced(
-        client.config?.endpoint ?? '',
-        client.config?.project ?? 'console',
-      )
-      const fingerprint = await generateFingerprintToken()
-      if (client.headers)
-        client.headers[CONSOLE_FINGERPRINT_HEADER] = fingerprint
+      const resume = async () => {
+        await ensureFingerprintServerTimeSynced(
+          client.config?.endpoint ?? '',
+          client.config?.project ?? 'console',
+        )
+        const fingerprint = await generateFingerprintToken()
+        if (client.headers)
+          client.headers[CONSOLE_FINGERPRINT_HEADER] = fingerprint
+        try {
+          await sdk.forConsole.projects.updateStatus({
+            projectId,
+            status: Status.Active,
+          })
+        } finally {
+          if (client.headers) delete client.headers[CONSOLE_FINGERPRINT_HEADER]
+        }
+      }
       try {
-        await sdk.forConsole.projects.updateStatus({
-          projectId,
-          status: Status.Active,
-        })
-      } finally {
-        if (client.headers) delete client.headers[CONSOLE_FINGERPRINT_HEADER]
+        await resume()
+      } catch (error) {
+        if (
+          !(error instanceof AppwriteException) ||
+          error.code !== 401 ||
+          error.message !== 'Invalid console fingerprint'
+        )
+          throw error
+        // Re-sync the clock and re-collect signals, as a page reload would.
+        resetFingerprintCache()
+        await resume()
       }
     },
     onSuccess: async () => {

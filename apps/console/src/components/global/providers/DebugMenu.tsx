@@ -266,7 +266,6 @@ function isMinimalDebugMenuBadge(
 const DEBUG_MENU_THEME_BADGES: Record<string, string> = {
   light: 'Light',
   dark: 'Dark',
-  system: 'System',
   crazy: 'Crazy',
   stealth: 'Stealth',
   premium: 'Premium',
@@ -1251,7 +1250,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     const themeSource: Array<{ label: string; themeValue: string }> = [
       { label: '☀️ Light', themeValue: 'light' },
       { label: '🌙 Dark', themeValue: 'dark' },
-      { label: '💻 System', themeValue: 'system' },
       { label: '🎨 Crazy', themeValue: 'crazy' },
       { label: '🥷 Stealth', themeValue: 'stealth' },
       { label: '✨ Premium', themeValue: 'premium' },
@@ -1619,7 +1617,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           statusAlertMenuItem,
           {
             label: 'Theme',
-            badge: DEBUG_MENU_THEME_BADGES[theme ?? 'system'],
+            badge: DEBUG_MENU_THEME_BADGES[theme ?? 'dark'],
             icon: <Palette className="h-3 w-3" />,
             submenu: themeOptions,
           },
@@ -1845,11 +1843,11 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Auth & security' },
               ),
               createProfileFeatureFlagItem(
-                'Extra VCS OAuth',
-                'Show Origin on Git connect. GitHub, GitLab, and Bitbucket stay available.',
-                'extraVcsOAuth',
+                'Origin Git provider',
+                'Show Origin (Cursor) on Git connect. Existing installations always render.',
+                'vcsOrigin',
                 profileId,
-                features.extraVcsOAuth,
+                features.vcsOrigin,
                 { category: 'Auth & security' },
               ),
               createProfileFeatureFlagItem(
@@ -2133,7 +2131,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.databaseSpecifications,
     features.accountApplications,
     features.userVerification,
-    features.extraVcsOAuth,
+    features.vcsOrigin,
     features.cookieBanner,
     features.blogDrafts,
     features.orgApiKeys,

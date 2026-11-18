@@ -7,13 +7,15 @@ use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\DeliveryClaim;
+use Appwrite\Vcs\DeliveryClaims;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
@@ -113,35 +115,66 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Invalid webhook payload signature. The delivery could not be verified against Origin\'s published signing keys.');
         }
 
-        // Origin delivers at least once and retries anything not acknowledged
-        // with a 2xx in time. Processing here is synchronous and can outlast
-        // that window, so claim the delivery id before doing the work - a
-        // retry of a delivery already being processed must not deploy again.
-        // TODO: acknowledge first and process asynchronously instead.
-        // Every region handles the delivery for its own projects and they share
-        // the platform database, so the claim is per region. Document ids are
-        // capped at 36 characters; a digest prefix keeps the claim within it.
-        try {
-            $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document([
-                '$id' => 'origin-' . \substr(\hash('sha256', System::getEnv('_APP_REGION', 'default') . ':' . $deliveryId), 0, 29),
-            ])));
-        } catch (Duplicate) {
-            $response->json(['events' => [], 'duplicate' => true]);
-            return;
-        }
+        $this->preprocessEvent($request);
 
         $parsedPayloads = $vcs->getEvents($event, $payload);
 
+        // Origin delivers at least once and retries anything not acknowledged
+        // with a 2xx in time. Processing here is synchronous and can outlast
+        // that window, so a push or pull request claims the delivery for each
+        // repository before deploying it - a retry of a delivery already being
+        // processed must not deploy again.
+        // TODO: acknowledge first and process asynchronously instead.
+        // One push can update several branches; a branch that keeps failing
+        // must not hold back the ones after it, so each is handled on its own
+        // and the first failure fails the delivery.
+        $failure = null;
         foreach ($parsedPayloads as $parsedPayload) {
-            match (true) {
-                $event === Origin::EVENT_PUSH => $this->handlePushEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
-                \str_starts_with($event, Origin::EVENT_PULL_REQUEST . '.') => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
-                \str_starts_with($event, Origin::EVENT_INSTALLATION . '.') => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $getProjectDB),
-                default => null,
-            };
+            try {
+                match (true) {
+                    $event === Origin::EVENT_PUSH => $this->handlePushEvent($parsedPayload, $deliveryId, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
+                    \str_starts_with($event, Origin::EVENT_PULL_REQUEST . '.') => $this->handlePullRequestEvent($parsedPayload, $deliveryId, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
+                    \str_starts_with($event, Origin::EVENT_INSTALLATION . '.') => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $getProjectDB),
+                    default => null,
+                };
+            } catch (\Throwable $error) {
+                $failure ??= $error;
+            }
+        }
+
+        // Runs whatever happened above, so work elsewhere never waits on this
+        // one; its failure fails the delivery as well, and this one's own
+        // failure is the one reported.
+        try {
+            $this->postprocessEvent($request);
+        } catch (\Throwable $error) {
+            $failure ??= $error;
+        }
+
+        if ($failure !== null) {
+            throw $failure;
         }
 
         $response->json(['events' => $parsedPayloads]);
+    }
+
+    /**
+     * Runs once a delivery has verified, before it is handled, like GitHub's.
+     */
+    protected function preprocessEvent(Request $request)
+    {
+        return;
+    }
+
+    /**
+     * Runs once this region has handled a delivery, before it is acknowledged.
+     * Throwing fails the delivery, so Origin delivers it again, and each
+     * repository that already deployed it has it claimed and skips it. Cloud
+     * overrides it to forward the delivery to its other regions and fail the
+     * delivery when one of them did not take it.
+     */
+    protected function postprocessEvent(Request $request): void
+    {
     }
 
     /**
@@ -202,7 +235,15 @@ class Create extends Action
                 $projectId = $installation->getAttribute('projectId', '');
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
-                if (!$project->isEmpty() && $this->isProjectInCurrentRegion($project)) {
+                // Every region gets the delivery, and the installation and repository
+                // rows are shared, so each region removes only its own projects'
+                // ones - or a region that runs later would find nothing to unlink
+                // its resources from. A deleted project's rows go wherever this runs.
+                if (!$project->isEmpty() && !$this->isProjectInCurrentRegion($project)) {
+                    continue;
+                }
+
+                if (!$project->isEmpty()) {
                     $dbForProject = $getProjectDB($project);
 
                     foreach (['functions', 'sites'] as $collection) {
@@ -319,6 +360,7 @@ class Create extends Action
 
     private function handlePushEvent(
         array $parsedPayload,
+        string $deliveryId,
         VcsFactory $vcsFactory,
         Database $dbForPlatform,
         Authorization $authorization,
@@ -347,23 +389,34 @@ class Create extends Action
         Span::add('vcs.origin.event.branch', $providerBranch);
         Span::add('vcs.origin.event.installation.id', $providerInstallationId);
 
+        // Nothing deploys from a deleted branch, or from a commit we pushed
+        if ($providerBranchDeleted || \in_array($providerCommitAuthorEmail, [APP_VCS_GITHUB_EMAIL, APP_VCS_ORIGIN_EMAIL], true)) {
+            return;
+        }
+
+        // Find associated repositories
+        $repositories = $this->findRepositories($providerRepositoryId, [], $dbForPlatform, $authorization);
+
+        // A delivery for a repository nothing deploys from needs no token
+        if (empty($repositories)) {
+            return;
+        }
+
         $vcs = $vcsFactory->fromInstallation(new Document([
             'provider' => 'origin',
             'providerInstallationId' => $providerInstallationId,
         ]));
 
-        // Find associated repositories
-        $repositories = $this->findRepositories($providerRepositoryId, [], $dbForPlatform, $authorization);
+        // Origin push deliveries carry no file lists, so path triggers do not apply
+        $providerAffectedFiles = $parsedPayload['affectedFiles'] ?? [];
 
-        // Create new deployment only on push (not committed by us) and not when branch is deleted
-        if (!\in_array($providerCommitAuthorEmail, [APP_VCS_GITHUB_EMAIL, APP_VCS_ORIGIN_EMAIL], true) && !$providerBranchDeleted) {
-            $providerAffectedFiles = $parsedPayload['affectedFiles'] ?? [];
-            $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory);
-        }
+        // One delivery can update several branches, so each claim names its branch
+        $this->deployOnce($repositories, $deliveryId, 'push:' . $providerBranch, $providerCommitHash, $providerBranch, $dbForPlatform, $authorization, $getProjectDB, fn (Document $repository) => $this->createGitDeployments($vcs, $providerInstallationId, [$repository], $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory));
     }
 
     private function handlePullRequestEvent(
         array $parsedPayload,
+        string $deliveryId,
         VcsFactory $vcsFactory,
         Database $dbForPlatform,
         Authorization $authorization,
@@ -399,6 +452,13 @@ class Create extends Action
                 return;
             }
 
+            $repositories = $this->findRepositories($providerRepositoryId, [Query::orderDesc('$createdAt')], $dbForPlatform, $authorization);
+
+            // A delivery for a repository nothing deploys from needs no token
+            if (empty($repositories)) {
+                return;
+            }
+
             $vcs = $vcsFactory->fromInstallation(new Document([
                 'provider' => 'origin',
                 'providerInstallationId' => $providerInstallationId,
@@ -420,12 +480,109 @@ class Create extends Action
                 ...array_filter(array_column($prFiles, 'previousFilename'))
             ];
 
-            $repositories = $this->findRepositories($providerRepositoryId, [Query::orderDesc('$createdAt')], $dbForPlatform, $authorization);
-
-            $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, \strval($providerPullRequestId), $providerAffectedFiles, $external, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory);
+            $this->deployOnce($repositories, $deliveryId, 'pull:' . $providerPullRequestId, $providerCommitHash, $providerBranch, $dbForPlatform, $authorization, $getProjectDB, fn (Document $repository) => $this->createGitDeployments($vcs, $providerInstallationId, [$repository], $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, \strval($providerPullRequestId), $providerAffectedFiles, $external, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory));
         }
 
         // No cleanup on close: Origin pull requests are never external, so no
         // authorized-contributor entries accumulate on the repository.
+    }
+
+    /**
+     * Deploys each repository of this region once per delivery. Origin retries
+     * a delivery it got an error for. Each repository claims the delivery once
+     * and gives the claim back only when it failed without deploying, so a
+     * retry deploys just the repositories that did not, and one that keeps
+     * failing never redeploys the others. A retry that arrives while an
+     * earlier attempt still holds a repository fails too, as that attempt can
+     * still fail, and Origin delivers it again once it is through.
+     *
+     * @param array<Document> $repositories
+     * @param string $subject What in the delivery is deployed, such as a branch, so one delivery updating several claims each once
+     * @param callable(Document): void $deploy
+     */
+    private function deployOnce(array $repositories, string $deliveryId, string $subject, string $commitHash, string $branch, Database $dbForPlatform, Authorization $authorization, callable $getProjectDB, callable $deploy): void
+    {
+        $claims = new DeliveryClaims($dbForPlatform, $authorization, 'origin');
+        $errors = [];
+        $busy = false;
+        foreach ($repositories as $repository) {
+            // Every region gets the delivery and they share the platform
+            // database, so a region claims only the repositories it deploys -
+            // a claim on another region's would make that region skip it
+            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $repository->getAttribute('projectId', '')));
+            if ($project->isEmpty() || !$this->isProjectInCurrentRegion($project)) {
+                continue;
+            }
+
+            $claim = $claims->take($deliveryId . ':' . $subject . ':' . $repository->getId());
+            if ($claim->status === DeliveryClaim::DONE) {
+                continue;
+            }
+            if ($claim->status === DeliveryClaim::BUSY) {
+                $busy = true;
+                continue;
+            }
+
+            // An attempt that stopped half way may have deployed already
+            if ($claim->resumedFrom !== null && $this->hasDeployed($repository, $commitHash, $branch, $claim->resumedFrom, $dbForPlatform, $authorization, $getProjectDB)) {
+                $claims->finish($claim);
+                continue;
+            }
+
+            $attemptedAt = $claim->resumedFrom ?? DateTime::now();
+            try {
+                $deploy($repository);
+            } catch (\Throwable $error) {
+                $errors[] = $error->getMessage();
+                if (!$this->hasDeployed($repository, $commitHash, $branch, $attemptedAt, $dbForPlatform, $authorization, $getProjectDB)) {
+                    $claims->release($claim);
+                    continue;
+                }
+            }
+
+            $claims->finish($claim);
+        }
+
+        if (!empty($errors)) {
+            throw new Exception(Exception::GENERAL_UNKNOWN, \implode("\n", $errors));
+        }
+
+        if ($busy) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'An earlier attempt at this delivery is still deploying; Origin delivers it again.');
+        }
+    }
+
+    /**
+     * Whether the repository's resource got a deployment of this commit since
+     * the attempt began that did not fail - a push can fail after its
+     * deployment is accepted, and retrying it then would build the commit
+     * twice. One that failed, such as a build that could not be queued, is
+     * retried. One that was canceled counts as deployed: someone stopped it
+     * on purpose, and a retry must not build it again. A lookup that fails
+     * counts as no deployment, so the push is retried rather than dropped.
+     */
+    private function hasDeployed(Document $repository, string $commitHash, string $branch, string $since, Database $dbForPlatform, Authorization $authorization, callable $getProjectDB): bool
+    {
+        try {
+            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $repository->getAttribute('projectId', '')));
+            if ($project->isEmpty() || !$this->isProjectInCurrentRegion($project)) {
+                return false;
+            }
+
+            $dbForProject = $getProjectDB($project);
+
+            return !$authorization->skip(fn () => $dbForProject->findOne('deployments', [
+                Query::equal('resourceId', [$repository->getAttribute('resourceId', '')]),
+                Query::equal('resourceType', [$repository->getAttribute('resourceType') === 'function' ? 'functions' : 'sites']),
+                Query::equal('providerCommitHash', [$commitHash]),
+                Query::equal('providerBranch', [$branch]),
+                Query::greaterThanEqual('$createdAt', $since),
+                Query::notEqual('status', 'failed'),
+            ]))->isEmpty();
+        } catch (\Throwable $error) {
+            Console::warning("Failed to look up deployments of repository '{$repository->getId()}': " . $error->getMessage());
+
+            return false;
+        }
     }
 }

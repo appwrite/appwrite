@@ -13,6 +13,9 @@ export const PUBLIC_ICON_MUTED_CLASSES =
 export const PUBLIC_CATALOG_LOGO_IMAGE_CLASSES =
   'h-full w-full object-contain grayscale invert-[.44] dark:invert-[.63]'
 
-/** Full-color logo inside a marketplace-style tile (user-published apps). */
+/**
+ * Full-color logo inside a marketplace-style tile (user-published apps).
+ * Square logos fill the tile, so round them in proportion to its corners.
+ */
 export const PUBLIC_CATALOG_LOGO_COLOR_CLASSES =
-  'h-full w-full object-contain'
+  'h-full w-full rounded-[22%] object-contain'

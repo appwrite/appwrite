@@ -26,6 +26,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             label: 'Manage billing',
             href: '/docs/advanced/billing/payments',
           },
+          {
+            label: 'Project transfers',
+            href: '/docs/advanced/billing/project-transfers',
+          },
         ],
       },
       {
@@ -2035,6 +2039,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
         label: 'Providers',
         items: [
           {
+            label: 'Push with Appwrite',
+            href: '/docs/products/messaging/appwrite-push',
+          },
+          {
             label: 'Push with APNs',
             href: '/docs/products/messaging/apns',
           },
@@ -2688,6 +2696,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Generate SDK',
             href: '/docs/tooling/command-line/generate',
+          },
+          {
+            label: 'Terminal',
+            href: '/docs/tooling/command-line/terminal',
           },
         ],
       },

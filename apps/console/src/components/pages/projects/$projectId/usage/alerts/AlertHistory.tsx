@@ -13,6 +13,7 @@ import {
   formatMetricValue,
   thresholdRatio,
 } from '@/lib/alerts/metrics'
+import { formatLatency, resultLabel } from '@/lib/alerts/probes'
 import {
   alertLength,
   barWidths,
@@ -26,7 +27,7 @@ import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { AlertDelivery } from '../_components/AlertDelivery'
-import { AlertDrawer } from './AlertDrawer'
+import { AlertDrawer, acknowledgedBy } from './AlertDrawer'
 
 type Filter = 'all' | Alert['status']
 
@@ -36,15 +37,36 @@ const FILTERS: { value: Filter; label: string }[] = [
   { value: 'resolved', label: 'Resolved' },
 ]
 
-/** `Outbound bandwidth > 10 GB`: the condition the alert fired on. */
+/** `Outbound bandwidth > 10 GB`: the condition the alert fired on, or what a probe's check found. */
 export function alertCondition(
   alert: Alert,
   t: (text: string) => string,
 ): string {
+  if (!alert.metric) {
+    return alert.result ? t(resultLabel(alert.result)) : '-'
+  }
   const symbol =
     COMPARATORS.find((entry) => entry.value === alert.comparator)?.symbol ??
     alert.comparator
   return `${t(metricDefinition(alert.metric).label)} ${symbol} ${formatMetricValue(alert.metric, alert.threshold)}`
+}
+
+/** A reading of the alert: the metric's value, or a probe's latency. */
+export function formatAlertValue(alert: Alert, value: number): string {
+  return alert.metric
+    ? formatMetricValue(alert.metric, value)
+    : formatLatency(value)
+}
+
+/** How far over its threshold the alert peaked; null for probes, which have none. */
+export function alertRatio(alert: Alert): string | null {
+  return alert.comparator
+    ? thresholdRatio({
+        comparator: alert.comparator,
+        threshold: alert.threshold,
+        value: alert.peak,
+      })
+    : null
 }
 
 interface AlertHistoryProps {
@@ -159,7 +181,7 @@ export function AlertHistory({
             </p>
             <p className="mx-auto mt-1 max-w-sm text-[13px] text-muted-foreground">
               {t(
-                'A monitor raises an alert when its rules hold, and resolves it when usage recovers.',
+                'A monitor raises an alert when its rules hold or its check fails, and resolves it when they recover.',
               )}
             </p>
             <Link
@@ -230,6 +252,7 @@ export function AlertHistory({
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
         alert={selected}
+        onAlertChange={setSelected}
       />
     </div>
   )
@@ -248,7 +271,7 @@ interface AlertEntryProps {
 function AlertEntry({ alert, now, width, time, onOpen }: AlertEntryProps) {
   const t = useT()
   const firing = alert.status === 'firing'
-  const ratio = thresholdRatio({ ...alert, value: alert.peak })
+  const ratio = alertRatio(alert)
   const length = formatLength(alertLength(alert, now))
   return (
     <li>
@@ -284,17 +307,22 @@ function AlertEntry({ alert, now, width, time, onOpen }: AlertEntryProps) {
             >
               {firing ? t('Firing') : t('Resolved')}
             </span>
+            {firing && alert.acknowledgedAt && (
+              <span className="shrink-0 truncate text-[11px] text-muted-foreground">
+                {acknowledgedBy(alert, t)}
+              </span>
+            )}
           </span>
           <span className="mt-0.5 flex flex-wrap text-[12px] text-muted-foreground sm:block sm:truncate">
             {/* Each part stays whole with the dot after it, so a narrow screen wraps between parts. */}
             {[
               alertCondition(alert, t),
               <>
-                {t('peak')}{' '}
+                {alert.metric ? t('peak') : t('peak latency')}{' '}
                 <span
                   className={cn(firing && 'text-red-600 dark:text-red-400')}
                 >
-                  {formatMetricValue(alert.metric, alert.peak)}
+                  {formatAlertValue(alert, alert.peak)}
                   {ratio ? ` (${ratio})` : ''}
                 </span>
               </>,

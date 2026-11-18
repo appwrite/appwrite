@@ -122,6 +122,7 @@ class Response extends SwooleResponse
     public const MODEL_USER_LIST = 'userList';
     public const MODEL_SESSION = 'session';
     public const MODEL_SESSION_LIST = 'sessionList';
+    public const MODEL_DEVICE = 'device';
     public const MODEL_IDENTITY = 'identity';
     public const MODEL_IDENTITY_LIST = 'identityList';
     public const MODEL_TOKEN = 'token';
@@ -157,6 +158,18 @@ class Response extends SwooleResponse
     public const MODEL_BUCKET_LIST = 'bucketList';
     public const MODEL_RESOURCE_TOKEN = 'resourceToken';
     public const MODEL_RESOURCE_TOKEN_LIST = 'resourceTokenList';
+
+    // Videos
+    public const MODEL_VIDEO = 'video';
+    public const MODEL_VIDEO_LIST = 'videoList';
+    public const MODEL_VIDEO_CODEC = 'videoCodec';
+    public const MODEL_VIDEO_CODEC_LIST = 'videoCodecList';
+    public const MODEL_VIDEO_PROFILE = 'videoProfile';
+    public const MODEL_VIDEO_PROFILE_LIST = 'videoProfileList';
+    public const MODEL_VIDEO_RENDITION = 'videoRendition';
+    public const MODEL_VIDEO_RENDITION_LIST = 'videoRenditionList';
+    public const MODEL_VIDEO_CAPTION = 'videoCaption';
+    public const MODEL_VIDEO_CAPTION_LIST = 'videoCaptionList';
 
     // Locale
     public const MODEL_LOCALE = 'locale';
@@ -292,6 +305,7 @@ class Response extends SwooleResponse
     public const MODEL_POLICY_DENY_CORPORATE_EMAIL = 'policyDenyCorporateEmail';
     public const MODEL_POLICY_DENY_REALTIME_GUESTS = 'policyDenyRealtimeGuests';
     public const MODEL_POLICY_PASSKEY = 'policyPasskey';
+    public const MODEL_POLICY_ACCOUNT_DEVICES = 'policyAccountDevices';
     public const MODEL_AUTH_PROVIDER = 'authProvider';
     public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
     public const MODEL_PLATFORM_APPLE = 'platformApple';
@@ -316,6 +330,13 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_GOOGLE = 'oAuth2Google';
     public const MODEL_OAUTH2_CLOUDFLARE = 'oAuth2Cloudflare';
     public const MODEL_OAUTH2_HUGGINGFACE = 'oAuth2HuggingFace';
+    public const MODEL_OAUTH2_REDDIT = 'oAuth2Reddit';
+    public const MODEL_OAUTH2_VERCEL = 'oAuth2Vercel';
+    public const MODEL_OAUTH2_ATLASSIAN = 'oAuth2Atlassian';
+    public const MODEL_OAUTH2_LINE = 'oAuth2Line';
+    public const MODEL_OAUTH2_LINEAR = 'oAuth2Linear';
+    public const MODEL_OAUTH2_ROBLOX = 'oAuth2Roblox';
+    public const MODEL_OAUTH2_WORKOS = 'oAuth2WorkOS';
     public const MODEL_OAUTH2_ZOOM = 'oAuth2Zoom';
     public const MODEL_OAUTH2_ZOHO = 'oAuth2Zoho';
     public const MODEL_OAUTH2_YANDEX = 'oAuth2Yandex';
@@ -351,6 +372,8 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_RESEND = 'oAuth2Resend';
     public const MODEL_OAUTH2_TIKTOK = 'oAuth2TikTok';
     public const MODEL_OAUTH2_KAKAO = 'oAuth2Kakao';
+    public const MODEL_OAUTH2_NAVER = 'oAuth2Naver';
+    public const MODEL_OAUTH2_VIPPS = 'oAuth2Vipps';
     public const MODEL_OAUTH2_PROVIDER_LIST = 'oAuth2ProviderList';
 
     // Health
@@ -377,6 +400,8 @@ class Response extends SwooleResponse
     public const MODEL_REVIEW_EVENT_LIST = 'reviewEventList';
     public const MODEL_REVIEW_REPOSITORY = 'reviewRepository';
     public const MODEL_REVIEW_REPOSITORY_LIST = 'reviewRepositoryList';
+    public const MODEL_REVIEW_LEARNING = 'reviewLearning';
+    public const MODEL_REVIEW_LEARNING_LIST = 'reviewLearningList';
 
     // Console
     public const MODEL_CONSOLE_VARIABLES = 'consoleVariables';

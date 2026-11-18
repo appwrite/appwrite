@@ -131,7 +131,7 @@ class ClickHouse extends Table
     public function orderBy(array $columns): static
     {
         foreach ($columns as $column) {
-            if (! \preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $column)) {
+            if (! \preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/D', $column)) {
                 throw new ValidationException('Invalid column name in ORDER BY: ' . $column);
             }
         }
@@ -213,7 +213,7 @@ class ClickHouse extends Table
         $sanitized = [];
 
         foreach ($settings as $key => $value) {
-            if (! \preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $key)) {
+            if (! \preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/D', $key)) {
                 throw new ValidationException('Invalid setting name: ' . $key);
             }
 
@@ -224,7 +224,7 @@ class ClickHouse extends Table
             } elseif (\is_float($value)) {
                 $sanitized[$key] = \rtrim(\rtrim(\sprintf('%F', $value), '0'), '.');
             } elseif (\is_string($value)) {
-                if (! \preg_match('/^[A-Za-z0-9_.\-+\/]+$/', $value)) {
+                if (! \preg_match('/^[A-Za-z0-9_.\-+\/]+$/D', $value)) {
                     throw new ValidationException(
                         'Invalid setting value for ' . $key . ': must match [A-Za-z0-9_.\-+/]+'
                     );

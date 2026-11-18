@@ -34,6 +34,35 @@ final class GitDeploymentsTest extends TestCase
         }
     }
 
+    public function testAPushOfTheBranchHeadIsBuiltOnAProviderWithAnInstanceWideSecret(): void
+    {
+        $previousPools = Config::getParam('pools-database', []);
+        Config::setParam('pools-database', ['db_main']);
+        try {
+            $this->pushWithInstanceWideSecret('head123', 'head123');
+        } finally {
+            Config::setParam('pools-database', $previousPools);
+        }
+
+        $deployment = \reset($this->deployments);
+        $this->assertInstanceOf(Document::class, $deployment, 'A push of the branch head must be built');
+        $this->assertSame('head123', $deployment->getAttribute('providerCommitHash'));
+        $this->assertTrue($deployment->getAttribute('activate'), 'A push of the production branch must go live');
+    }
+
+    public function testAPushNamingACommitThatIsNotTheBranchHeadIsRefused(): void
+    {
+        $previousPools = Config::getParam('pools-database', []);
+        Config::setParam('pools-database', ['db_main']);
+        try {
+            $this->pushWithInstanceWideSecret('rollback9', 'head123');
+        } finally {
+            Config::setParam('pools-database', $previousPools);
+        }
+
+        $this->assertSame([], $this->deployments, 'A push naming a commit the branch does not point at must not be built');
+    }
+
     public function testAPullRequestOnABuiltBranchLinksTheDeploymentItsPushMade(): void
     {
         $previousPools = Config::getParam('pools-database', []);
@@ -239,6 +268,105 @@ final class GitDeploymentsTest extends TestCase
         $this->assertSame([false, false], $lockChecks, 'The comment lock must be taken and released with permissions skipped');
     }
 
+    /**
+     * A push delivered by a provider that authenticates every delivery with the one
+     * instance-wide secret Appwrite registers on each connected repository's webhook, so
+     * the body speaks for no particular repository: $providerCommitHash is the commit the
+     * delivery claims the branch now points at, $head the commit the provider reports it
+     * actually points at. The deployments the push makes are left in $this->deployments.
+     */
+    private function pushWithInstanceWideSecret(string $providerCommitHash, string $head): void
+    {
+        $project = new Document(['$id' => 'project', '$sequence' => '5', 'name' => 'Project', 'database' => 'db_main', 'region' => 'default']);
+        $function = new Document([
+            '$id' => 'function',
+            '$sequence' => '10',
+            '$collection' => 'functions',
+            'name' => 'Starter',
+            'runtime' => array_key_first(Config::getParam('runtimes-v2')),
+            'entrypoint' => 'index.js',
+            'repositoryId' => 'repository',
+            'providerBranch' => 'main',
+        ]);
+        $repository = new Document([
+            '$id' => 'repository',
+            '$sequence' => '20',
+            'projectId' => 'project',
+            'resourceId' => 'function',
+            'resourceType' => 'function',
+            'providerRepositoryId' => '42',
+            'installationId' => 'installation',
+            'installationInternalId' => '30',
+        ]);
+
+        $dbForProject = $this->createStub(Database::class);
+        $dbForProject->method('getDocument')->willReturnCallback(function (string $collection, string $id) use ($function): Document {
+            return clone ($collection === 'deployments' ? $this->deployments[$id] : $function);
+        });
+        $dbForProject->method('createDocument')->willReturnCallback(function (string $collection, Document $document): Document {
+            $document->setAttribute('$sequence', '1');
+            $this->deployments[$document->getId()] = $document;
+            return clone $document;
+        });
+        $dbForProject->method('updateDocuments')->willReturnCallback(function (string $collection, Document $update): int {
+            foreach ($this->deployments as $deployment) {
+                $deployment->setAttributes($update->getArrayCopy());
+            }
+            return \count($this->deployments);
+        });
+
+        $dbForPlatform = $this->createStub(Database::class);
+        $dbForPlatform->method('getDocument')->willReturn($project);
+        $dbForPlatform->method('find')->willReturn([]);
+        $dbForPlatform->method('findOne')->willReturn(new Document());
+
+        $git = $this->createStub(Git::class);
+        $git->method('getName')->willReturn('gitea');
+        $git->method('getOwnerName')->willReturn('owner');
+        $git->method('getRepositoryName')->willReturn('repository');
+        $git->method('getSupportedWebhookScopes')->willReturn([Git::WEBHOOK_SCOPE_REPOSITORY]);
+        $git->method('getLatestCommit')->willReturn(['commitHash' => $head]);
+        $git->method('supportsRepositoryArchives')->willReturn(true);
+        $git->method('getRepositoryPresignedUrl')->willReturn('https://example.com/archive.tar.gz');
+
+        $platform = ['apiHostname' => 'localhost', 'consoleUrl' => 'https://console.localhost', 'consoleHostname' => 'console.localhost'];
+        $client = $this->createStub(ClientInterface::class);
+        $publisherForBuilds = $this->createStub(BuildPublisher::class);
+        // The deployment is persisted and refused before it is queued, so the push is
+        // observable through the deployments it made without a build running.
+        $deploymentsFactory = static fn (Database $dbForProject, Document $project): Deployments => new readonly class (new Jobs($client), $dbForProject, $project, $platform, $publisherForBuilds) extends Deployments {
+            protected function admit(Document $resource, Document $deployment): void
+            {
+                throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Deployment limit reached');
+            }
+        };
+
+        (new GitDeployments())->push(
+            vcs: $git,
+            providerInstallationId: '7',
+            repositories: [$repository],
+            providerBranch: 'main',
+            providerBranchUrl: '',
+            providerRepositoryName: 'repository',
+            providerRepositoryUrl: '',
+            providerRepositoryOwner: 'owner',
+            providerCommitHash: $providerCommitHash,
+            providerCommitAuthor: '',
+            providerCommitAuthorUrl: '',
+            providerCommitMessage: 'Update index.js',
+            providerCommitUrl: '',
+            providerPullRequestId: '',
+            providerAffectedFiles: [],
+            external: false,
+            dbForPlatform: $dbForPlatform,
+            authorization: new Authorization(),
+            bus: $this->createStub(Bus::class),
+            getProjectDB: static fn () => $dbForProject,
+            platform: $platform,
+            deploymentsFactory: $deploymentsFactory,
+        );
+    }
+
     private function assertRefusedPush(): void
     {
         $project = new Document(['$id' => 'project', '$sequence' => '5', 'name' => 'Project', 'database' => 'db_main', 'region' => 'default']);
@@ -290,6 +418,8 @@ final class GitDeploymentsTest extends TestCase
         $git->method('getName')->willReturn('github');
         $git->method('getOwnerName')->willReturn('owner');
         $git->method('getRepositoryName')->willReturn('repository');
+        // A GitHub App's webhook secret is the App's own, so its deliveries are taken as they come
+        $git->method('getSupportedWebhookScopes')->willReturn([Git::WEBHOOK_SCOPE_INSTALLATION, Git::WEBHOOK_SCOPE_REPOSITORY]);
         $git->method('supportsRepositoryArchives')->willReturn(true);
         $git->method('getRepositoryPresignedUrl')->willReturn('https://example.com/archive.tar.gz');
         $git->method('updateCheck')->willReturnCallback(static function (string $owner, string $repository, string $sha, string $state) use (&$commitStates): void {
