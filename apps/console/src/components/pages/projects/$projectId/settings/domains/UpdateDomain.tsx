@@ -56,7 +56,16 @@ export function UpdateDomain({
   const [redirectUrl, setRedirectUrl] = useState(rule.redirectUrl ?? '')
   const [statusCode, setStatusCode] = useState(initialStatusCode)
 
-  const canSubmit = !updateMutation.isPending
+  const hasChanges =
+    behaviour !== initialBehaviour ||
+    (behaviour === 'branch' && branch !== rule.deploymentVcsProviderBranch) ||
+    (behaviour === 'redirect' &&
+      (redirectUrl.trim() !== rule.redirectUrl ||
+        statusCode !== initialStatusCode))
+  const isComplete =
+    (behaviour !== 'branch' || !!branch) &&
+    (behaviour !== 'redirect' || !!redirectUrl.trim())
+  const canSubmit = hasChanges && isComplete && !updateMutation.isPending
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
