@@ -39,6 +39,7 @@ interface ProxyRuleContextMenuProps {
   rule: Models.ProxyRule
   onViewLogs: (rule: Models.ProxyRule) => void
   onRetry: (rule: Models.ProxyRule) => void
+  onUpdate?: (rule: Models.ProxyRule) => void
   onRecords: (rule: Models.ProxyRule) => void
   onDelete: (rule: Models.ProxyRule) => void
   children: React.ReactNode
@@ -49,6 +50,7 @@ export function ProxyRuleContextMenu({
   rule,
   onViewLogs,
   onRetry,
+  onUpdate,
   onRecords,
   onDelete,
   children,
