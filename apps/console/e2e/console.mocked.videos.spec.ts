@@ -222,6 +222,7 @@ type Calls = {
   thumbnails: URL[]
   bucketLists: URL[]
   sourceViews: URL[]
+  manifests: URL[]
 }
 
 /** A preset the mocked server refuses, to cover a partly failed batch. */
@@ -242,6 +243,7 @@ async function mockAppwriteApi(
     thumbnails: [],
     bucketLists: [],
     sourceViews: [],
+    manifests: [],
   }
 
   await page.route('**/*', async (route) => {
@@ -326,7 +328,17 @@ async function mockAppwriteApi(
     }
 
     if (apiPath.startsWith(`/videos/${VIDEO_ID}/outputs/`)) {
-      // Leave stream manifests pending: the player stays loading, with controls.
+      calls.manifests.push(url)
+      // The video is private: a visitor's request is refused as not found.
+      if (url.searchParams.get('mode') !== 'admin') {
+        return json(404, {
+          message: 'Video with the requested ID could not be found.',
+          code: 404,
+          type: 'video_not_found',
+          version: '1.0',
+        })
+      }
+      // Leave Console manifests pending: the player stays loading, with controls.
       return
     }
     if (apiPath === '/account') return json(200, ACCOUNT)
@@ -560,6 +572,30 @@ test.describe('videos (mocked API)', () => {
 
     await scrollBy(-5000)
     await expect(player).toHaveCount(0)
+  })
+
+  test('lets a project member watch a private video on the player page', async ({
+    page,
+  }) => {
+    await enableVideos(page)
+    const calls = await mockAppwriteApi(page)
+    await page.goto(`/player/${VIDEO_ID}?project=${PROJECT_ID}`, {
+      waitUntil: 'domcontentloaded',
+    })
+
+    await expect(
+      page.getByText('Private video. Only project members can watch it here.'),
+    ).toBeVisible({ timeout: 60_000 })
+    expect(
+      calls.manifests.some((url) => url.searchParams.get('mode') !== 'admin'),
+    ).toBe(true)
+    expect(
+      calls.manifests.some((url) => url.searchParams.get('mode') === 'admin'),
+    ).toBe(true)
+    await expect(page.getByText(/manifestLoadError/)).toHaveCount(0)
+    await page.screenshot({
+      path: test.info().outputPath('videos-player-private.png'),
+    })
   })
 
   test('asks for a rendition when a video has none', async ({ page }) => {

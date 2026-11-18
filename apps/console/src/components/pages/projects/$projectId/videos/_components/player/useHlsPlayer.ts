@@ -103,6 +103,8 @@ export type HlsPlayerState = {
   events: HlsEventEntry[]
   stats: PlaybackStats | null
   fatalError: string | null
+  /** HTTP status of the request that failed playback, when known. */
+  fatalStatus: number | null
   loadStartedAt: number | null
   manifestLoadedAt: number | null
   firstFrameAt: number | null
@@ -121,6 +123,7 @@ const INITIAL_STATE: HlsPlayerState = {
   events: [],
   stats: null,
   fatalError: null,
+  fatalStatus: null,
   loadStartedAt: null,
   manifestLoadedAt: null,
   firstFrameAt: null,
@@ -388,13 +391,15 @@ export function useHlsPlayer(
           data.response?.code,
           describeError(data),
         )
+        const fatalStatus = data.response?.code || null
         if (data.type === HlsClass.ErrorTypes.NETWORK_ERROR) {
-          setState((prev) => ({ ...prev, fatalError }))
-          if (data.response?.code !== 401) hls.startLoad()
+          setState((prev) => ({ ...prev, fatalError, fatalStatus }))
+          // Retrying cannot fix a refused or missing manifest.
+          if (!fatalStatus || fatalStatus >= 500) hls.startLoad()
         } else if (data.type === HlsClass.ErrorTypes.MEDIA_ERROR) {
           hls.recoverMediaError()
         } else {
-          setState((prev) => ({ ...prev, fatalError }))
+          setState((prev) => ({ ...prev, fatalError, fatalStatus }))
           hls.destroy()
           hlsRef.current = null
         }

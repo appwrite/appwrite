@@ -12,7 +12,10 @@ import { DockedPlayerControls } from './DockedPlayerControls'
 import { Lock, Pause, Play, SquareArrowOutUpRight } from 'lucide-react'
 import { sdk } from '@/lib/appwrite/sdk'
 import { isEmbedUnauthorizedMessage } from '@/lib/videos/embed-player-errors'
-import { applyVideoStreamAccess } from '@/lib/videos/video-stream-access'
+import {
+  applyVideoStreamAccess,
+  type VideoStreamAccess,
+} from '@/lib/videos/video-stream-access'
 import { EmbedUnauthorized } from '@/components/pages/player/EmbedUnauthorized'
 import {
   groupReadyRenditionIds,
@@ -96,7 +99,12 @@ export function VideoStreamPlayer({
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const featured = variant === 'featured'
   const embed = layout === 'embed'
-  const streamAccess = embed ? 'end-user' : 'console'
+  // The player page streams as a visitor would. When that is refused but the
+  // video itself loaded (a project member viewing a private video), it falls
+  // back to Console access once and says the video is private.
+  const [embedAccess, setEmbedAccess] = useState<VideoStreamAccess>('end-user')
+  const streamAccess: VideoStreamAccess = embed ? embedAccess : 'console'
+  const memberPreview = embed && embedAccess === 'console'
   const overlayControls = embed
 
   const readyIds = useMemo(
@@ -292,6 +300,14 @@ export function VideoStreamPlayer({
     reloadToken,
     streamAccess,
   )
+
+  useEffect(() => {
+    if (!embed || embedAccess !== 'end-user') return
+    const status = state.fatalStatus
+    if (status === 401 || status === 403 || status === 404) {
+      setEmbedAccess('console')
+    }
+  }, [embed, embedAccess, state.fatalStatus])
 
   useEffect(() => {
     if (state.firstFrameAt != null || state.fatalError) setReloading(false)
@@ -885,6 +901,17 @@ export function VideoStreamPlayer({
                 </div>
               ) : null}
               {frameMessage}
+              {memberPreview && !state.fatalError ? (
+                <div
+                  className={cn(
+                    'pointer-events-none absolute start-3 top-3 z-10 flex items-center gap-1.5 rounded-md border border-white/15 bg-black/60 px-2.5 py-1.5 text-[12px] text-white/85 backdrop-blur-md transition duration-300',
+                    !controlsVisible && '-translate-y-1 opacity-0',
+                  )}
+                >
+                  <Lock className="size-3.5" aria-hidden />
+                  {t('Private video. Only project members can watch it here.')}
+                </div>
+              ) : null}
               {playerControls ? (
                 <div
                   ref={controlsRef}

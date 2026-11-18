@@ -111,6 +111,8 @@ export type StreamPlayerState = {
   events: StreamEventEntry[]
   stats: PlaybackStats | null
   fatalError: string | null
+  /** HTTP status of the request that failed playback, when known. */
+  fatalStatus: number | null
   loadStartedAt: number | null
   manifestLoadedAt: number | null
   firstFrameAt: number | null
@@ -129,6 +131,7 @@ const INITIAL_STATE: StreamPlayerState = {
   events: [],
   stats: null,
   fatalError: null,
+  fatalStatus: null,
   loadStartedAt: null,
   manifestLoadedAt: null,
   firstFrameAt: null,
@@ -360,6 +363,7 @@ export function useDashPlayer(
             typeof status === 'number' ? status : undefined,
             detail,
           ),
+          fatalStatus: typeof status === 'number' ? status : null,
         }))
       }
     })
@@ -400,7 +404,13 @@ export function useDashPlayer(
         if (cancelled) return
         const detail =
           err instanceof Error ? err.message : describeShakaError(err)
-        setState((prev) => ({ ...prev, fatalError: detail }))
+        const status =
+          err instanceof Error ? undefined : (err as shaka.util.Error).data?.[1]
+        setState((prev) => ({
+          ...prev,
+          fatalError: detail,
+          fatalStatus: typeof status === 'number' ? status : null,
+        }))
         pushEvent({ kind: 'error', name: 'LOAD_FAILED', detail })
       })
 

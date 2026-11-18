@@ -52,6 +52,7 @@ function mapHlsState(state: HlsPlayerState): StreamPlayerState {
     events: state.events,
     stats: state.stats,
     fatalError: state.fatalError,
+    fatalStatus: state.fatalStatus,
     loadStartedAt: state.loadStartedAt,
     manifestLoadedAt: state.manifestLoadedAt,
     firstFrameAt: state.firstFrameAt,

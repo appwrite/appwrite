@@ -252,6 +252,8 @@ export const jaVideosDictionary: Record<string, string> = {
     'レンディションはまだ処理中です。準備ができると再生が始まります。',
   'No renditions are ready to play.':
     '再生できるレンディションはまだありません。',
+  'Private video. Only project members can watch it here.':
+    '非公開の動画です。ここで視聴できるのはプロジェクトメンバーのみです。',
   'Create a rendition to play this video.':
     'この動画を再生するにはレンディションを作成してください。',
   'This video has no source to play.':
