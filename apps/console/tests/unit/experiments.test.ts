@@ -22,15 +22,17 @@ describe('hasQualityLabel', () => {
 })
 
 describe('experiments catalog', () => {
-  test('lists Appwrite Analytics, project environments and Origin', () => {
+  test('lists Appwrite Analytics, project environments, Origin and single sign-on', () => {
     expect(EXPERIMENTS.map((experiment) => experiment.flag)).toEqual([
       'analytics',
       'projectEnvironments',
       'vcsOrigin',
+      'sso',
     ])
     expect(EXPERIMENTS[0]?.name).toBe('Appwrite Analytics')
     expect(EXPERIMENTS[1]?.name).toBe('Project environments')
     expect(EXPERIMENTS[2]?.name).toBe('Origin Git provider')
+    expect(EXPERIMENTS[3]?.name).toBe('Single sign-on')
     for (const experiment of EXPERIMENTS) {
       expect(experiment.description.length).toBeGreaterThan(0)
     }

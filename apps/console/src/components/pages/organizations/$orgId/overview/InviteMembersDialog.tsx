@@ -45,7 +45,6 @@ interface InviteMembersDialogProps {
   memberLimit: number | null
 }
 
-/** Organization roles with their icons and descriptions, shared by every role picker. */
 export const ROLE_OPTIONS = [
   {
     value: 'owner',
