@@ -45,6 +45,7 @@ class Update extends Action
             ->label('scope', 'teams.write')
             ->label('audits.event', 'team.update')
             ->label('audits.resource', 'team/{request.teamId}')
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->param('teamId', '', new UID(), 'Team ID.')
             ->param('file', [], new File(), 'Binary image file of at most 5MB. Allowed file types are png, jpg, jpeg, and webp.', skipValidation: true)
             ->inject('request')
