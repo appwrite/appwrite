@@ -335,7 +335,8 @@ class User extends Document
      * The lock orders the claim against the account's other writers that take it, so of two concurrent
      * claims only the first revokes and a request that re-checks the account under the same lock, such
      * as issuing an email token, sees it claimed. `$user` is left holding the locked row, so a caller
-     * that persists it as a whole document cannot bring back what the winning claim revoked.
+     * that persists it as a whole document cannot bring back what the winning claim revoked, and
+     * can compare its address with the one it proved to tell whether the account moved away from it.
      * `$proven` is the channel of the proven address, MESSAGE_TYPE_EMAIL or MESSAGE_TYPE_SMS.
      * Returns true when this claim revoked the credentials, so the caller can purge the cached
      * user and mirror the revocation to MQTT and realtime once the transaction has committed.
@@ -343,9 +344,11 @@ class User extends Document
     public static function claim(Database $dbForProject, Document $user, Document $project, string $proven = MESSAGE_TYPE_EMAIL, ?Mqtt $mqtt = null): bool
     {
         $verification = $proven === MESSAGE_TYPE_SMS ? 'phoneVerification' : 'emailVerification';
+        $channel = $proven === MESSAGE_TYPE_SMS ? 'phone' : 'email';
+        $address = $user->getAttribute($channel);
 
         $claimed = false;
-        $dbForProject->withTransaction(function () use ($dbForProject, $user, $project, $proven, $verification, $mqtt, &$claimed): void {
+        $dbForProject->withTransaction(function () use ($dbForProject, $user, $project, $proven, $verification, $channel, $address, $mqtt, &$claimed): void {
             $claimed = false; // A retried attempt starts over
             $locked = $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
             if ($locked->isEmpty()) {
@@ -355,6 +358,12 @@ class User extends Document
             // The claim decides on the locked row, and leaves the caller holding it in place of the copy
             // it came with, which a claim that got here first has already stripped of its credentials
             $user->setAttributes($locked->getArrayCopy());
+
+            // The proof covers the address the caller read, not one the account moved to since. A blocked
+            // account keeps its credentials, so proving its address now would stop a later claim revoking them
+            if ($locked->getAttribute($channel) !== $address || $locked->getAttribute('status') === false) {
+                return;
+            }
 
             // An address already proven was claimed by someone who holds it, so there is nothing left to revoke
             if (!$locked->getAttribute($verification, false)) {

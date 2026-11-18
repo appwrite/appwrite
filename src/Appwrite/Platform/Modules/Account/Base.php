@@ -345,7 +345,12 @@ abstract class Base extends Action
                     // Proving an unverified address claims the account, so whoever registered it keeps no other way in.
                     // The claim takes the user row lock, so of two concurrent claims only the first revokes, and a
                     // request that re-checks the account under the same lock finds it already claimed
+                    $address = $user->getAttribute('email');
                     $claimed = $authorization->skip(fn () => User::claim($dbForProject, $user, $project, mqtt: $mqtt));
+
+                    if ($user->getAttribute('email') !== $address) {
+                        throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                    }
 
                     if ($claimed) {
                         $dbForProject->purgeCachedDocument('users', $user->getId());
