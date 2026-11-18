@@ -332,6 +332,7 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_HUGGINGFACE = 'oAuth2HuggingFace';
     public const MODEL_OAUTH2_INSTAGRAM = 'oAuth2Instagram';
     public const MODEL_OAUTH2_PATREON = 'oAuth2Patreon';
+    public const MODEL_OAUTH2_STRAVA = 'oAuth2Strava';
     public const MODEL_OAUTH2_RAILWAY = 'oAuth2Railway';
     public const MODEL_OAUTH2_REDDIT = 'oAuth2Reddit';
     public const MODEL_OAUTH2_VERCEL = 'oAuth2Vercel';
