@@ -413,6 +413,19 @@ class V25 extends Migration
                     }
                     break;
 
+                case 'teams':
+                    // Added for custom team photos
+                    foreach (['photoId', 'photoSize'] as $attribute) {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
+                        }
+                    }
+
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'users':
                     // Added in V23. An install whose V23 users step failed, or one that
                     // upgraded straight from 1.8.x, arrives here without them and every
