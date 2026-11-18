@@ -13,6 +13,7 @@ import {
   FileText,
   RefreshCw,
   Globe,
+  Pencil,
   Copy,
   Link2,
   FileJson,
@@ -79,6 +80,14 @@ export function ProxyRuleContextMenu({
           >
             <ContextMenuIcon icon={RefreshCw} />
             {t('Retry')}
+          </ContextMenuItem>
+        )}
+        {onUpdate && (
+          <ContextMenuItem
+            onSelect={() => openDialogAfterOverlayCloses(() => onUpdate(rule))}
+          >
+            <ContextMenuIcon icon={Pencil} />
+            {t('Update')}
           </ContextMenuItem>
         )}
         <ContextMenuItem
