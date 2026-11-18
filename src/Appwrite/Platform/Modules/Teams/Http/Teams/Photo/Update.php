@@ -148,6 +148,17 @@ class Update extends Action
 
         $deviceForFiles->upload($deviceForLocal->read($fileTmpName), $path, $mimeType);
 
+        try {
+            $updated = $dbForProject->updateDocument('teams', $teamId, new Document([
+                'photoId' => $photoId,
+                'photoSize' => $size,
+            ]));
+        } catch (\Throwable $th) {
+            $deviceForFiles->delete($path);
+
+            throw $th;
+        }
+
 
         $response->dynamic($updated, Response::MODEL_TEAM);
     }
