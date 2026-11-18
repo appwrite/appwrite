@@ -7,6 +7,7 @@ namespace Tests\Unit\Network\Validators;
 use Appwrite\Network\Validator\DNS;
 use PHPUnit\Framework\TestCase;
 use Utopia\DNS\Message\Record;
+use Utopia\DNS\Validator\DNS as BaseDNS;
 
 final class DNSTest extends TestCase
 {
@@ -36,6 +37,32 @@ final class DNSTest extends TestCase
 
         $this->assertFalse($validator->isValid('appwrite.io'));
         $this->assertNotEmpty($validator->getDescription());
+    }
+
+    public function testLookupErrorOutranksNoRecordAcrossResolvers(): void
+    {
+        // One resolver answered NODATA; another could not answer at all. The
+        // fan-out used to keep whichever finished last, so a NODATA reply could
+        // wipe the error and look like "no proof" to resolveOwnership().
+        $nodata = new BaseDNS('target.example', Record::TYPE_TXT, '1.1.1.1');
+        $nodata->reason = '';
+        $nodata->count = 0;
+
+        $error = new BaseDNS('target.example', Record::TYPE_TXT, '8.8.8.8');
+        $error->reason = 'DNS TXT query to 8.8.8.8 failed.';
+        $error->count = 0;
+
+        $failed = null;
+        DNS::retainFailure($nodata, $failed);
+        DNS::retainFailure($error, $failed);
+
+        $this->assertSame($error, $failed);
+
+        $failed = null;
+        DNS::retainFailure($error, $failed);
+        DNS::retainFailure($nodata, $failed);
+
+        $this->assertSame($error, $failed);
     }
 
     public function testValidationFailure(): void
