@@ -123,6 +123,7 @@ export const heCatalog: EnCatalog = {
         github: 'GitHub',
         x: 'X',
         youtube: 'YouTube',
+        youtubeChannels: 'ערוצי YouTube',
         linkedIn: 'LinkedIn',
         instagram: 'Instagram',
         discord: 'Discord',
