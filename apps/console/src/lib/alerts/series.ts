@@ -207,8 +207,6 @@ function source(
     case 'webhooks.events.sent':
     case 'webhooks.events.failed':
     case 'avatars.screenshotsGenerated':
-    case 'analytics.events':
-    case 'analytics.pageviews':
       return whole('counter')
     case 'executions':
     case 'executions.mbSeconds':

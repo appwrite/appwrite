@@ -418,12 +418,11 @@ export function RuleFields({
   const t = useT()
   const { isCloud } = useConsoleProfile()
   const definition = metricDefinition(form.metric)
-  // Dedicated databases and analytics exist only on the cloud profile.
+  // Dedicated databases exist only on the cloud profile.
   const metrics = METRIC_NAMES.filter(
     (metric) =>
       isCloud ||
-      (!metricDefinition(metric).resourceTypes.includes('dedicatedDatabase') &&
-        metricDefinition(metric).category !== 'analytics'),
+      !metricDefinition(metric).resourceTypes.includes('dedicatedDatabase'),
   )
   const groups = METRIC_CATEGORIES.map((category) => ({
     ...category,

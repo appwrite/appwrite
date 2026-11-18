@@ -342,13 +342,13 @@ async function mockAppwriteApi(
 }
 
 /** Cloud profile with analytics on (it is off until launch). */
-async function useProfile(page: Page, features: { alerts?: boolean } = {}) {
-  await page.addInitScript((extra) => {
+async function useProfile(page: Page) {
+  await page.addInitScript(() => {
     window.localStorage.setItem(
       'debug:consoleProfile',
-      JSON.stringify({ id: 'cloud', features: { analytics: true, ...extra } }),
+      JSON.stringify({ id: 'cloud', features: { analytics: true } }),
     )
-  }, features)
+  })
 }
 
 async function openProperty(page: Page, path = '') {
@@ -655,18 +655,6 @@ test.describe('analytics property (mocked API)', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0)
     await chart.click({ position: { x: box.width * 0.5, y: box.height / 2 } })
     await expect(page.getByRole('dialog')).toContainText('Add note')
-  })
-
-  test('links to a pageviews monitor', async ({ page }) => {
-    await useProfile(page, { alerts: true })
-    await mockAppwriteApi(page)
-    await openProperty(page)
-
-    await expect(page.getByRole('link', { name: 'Alert me' })).toHaveAttribute(
-      'href',
-      /\/usage\/monitors\?metric=analytics\.pageviews$/,
-      { timeout: 30_000 },
-    )
   })
 
   test('turns user identification on', async ({ page }) => {

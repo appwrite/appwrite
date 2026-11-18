@@ -4263,10 +4263,5 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'メモはリリース、キャンペーン、障害などをグラフ上に記録し、プロジェクトの全員に表示されます。',
   'Launched the new pricing page': '新しい料金ページを公開',
   'The note is removed from the chart for everyone.': 'このメモは全員のグラフから削除されます。',
-  'Alert me': 'アラートを設定',
-  'Create a monitor on analytics traffic across this project':
-    'このプロジェクト全体のアナリティクストラフィックにモニターを作成します',
-  'Analytics events': 'アナリティクスイベント',
   'Former member': '元メンバー',
-  'Analytics pageviews': 'アナリティクスのページビュー',
 }

@@ -24,7 +24,6 @@ export type MetricCategory =
   | 'messaging'
   | 'webhooks'
   | 'avatars'
-  | 'analytics'
   | 'dedicatedDatabases'
 
 type MetricDefinition = {
@@ -62,7 +61,6 @@ export const METRIC_CATEGORIES: { value: MetricCategory; label: string }[] = [
   { value: 'messaging', label: 'Messaging' },
   { value: 'webhooks', label: 'Webhooks' },
   { value: 'avatars', label: 'Avatars' },
-  { value: 'analytics', label: 'Analytics' },
   { value: 'dedicatedDatabases', label: 'Dedicated databases' },
 ]
 
@@ -229,22 +227,6 @@ export const METRICS: Partial<Record<AlertMetric, MetricDefinition>> = {
     suffix: 'screenshots',
     counter: true,
     category: 'avatars',
-    resourceTypes: ['project'],
-  },
-  'analytics.events': {
-    label: 'Analytics events',
-    unit: 'count',
-    suffix: 'events',
-    counter: true,
-    category: 'analytics',
-    resourceTypes: ['project'],
-  },
-  'analytics.pageviews': {
-    label: 'Analytics pageviews',
-    unit: 'count',
-    suffix: 'pageviews',
-    counter: true,
-    category: 'analytics',
     resourceTypes: ['project'],
   },
   'dedicatedDatabases.cpu': {

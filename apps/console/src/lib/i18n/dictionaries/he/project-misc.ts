@@ -4188,10 +4188,5 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Launched the new pricing page': 'השקנו את דף המחירים החדש',
   'The note is removed from the chart for everyone.':
     'ההערה תוסר מהגרף עבור כולם.',
-  'Alert me': 'התראה',
-  'Create a monitor on analytics traffic across this project':
-    'יצירת ניטור על תעבורת האנליטיקה בכל הפרויקט',
-  'Analytics events': 'אירועי אנליטיקה',
   'Former member': 'חבר לשעבר',
-  'Analytics pageviews': 'צפיות בדפים באנליטיקה',
 }
