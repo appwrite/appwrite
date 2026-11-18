@@ -15,6 +15,10 @@ lazy and memoized: asking only for a device does not run browser or bot rules.
 composer require utopia-php/user-agent
 ```
 
+From 0.2.0, `UserAgent` comes from the `utopia` PHP extension (`ext-utopia`, built from
+`crates/extension` in appwrite/appwrite); this package holds the value objects it returns. 0.1.x
+is the last release with the parser in PHP.
+
 ## Quick start
 
 ```php
@@ -135,18 +139,11 @@ rule data.
 
 ## Performance
 
-The hot path uses direct token checks and a small bounded set of regular
-expressions. There are no YAML files, runtime rule compilation, global caches,
-or third-party runtime dependencies.
-
-Run the bundled comparison benchmark:
-
-```bash
-composer bench
-```
-
-`BENCH_ITERATIONS` controls its duration. Matomo DeviceDetector is installed
-only as a development dependency for differential tests and benchmarks.
+The parser is Rust (`crates/utopia/user-agent`): direct token checks, one pass
+over the string for the whole bot table, and a small bounded set of regular
+expressions compiled once per process. There are no data files, global caches,
+or third-party runtime dependencies. Matomo DeviceDetector is installed only as
+a development dependency for differential tests.
 
 There is no `skipBotDetection()` setting. Bot matching runs only when `bot()`
 or `isBot()` is requested and never prevents the other categories from being

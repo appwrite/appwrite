@@ -3,7 +3,9 @@ import {
   PROJECT_ENVIRONMENT_DOT_CLASS,
   PROJECT_ENVIRONMENT_DOT_CLASS_PRODUCTION,
   projectEnvironmentDotClass,
+  projectEnvironmentExamples,
   projectEnvironmentsAllowance,
+  projectEnvironmentsUpgradePlan,
   sortProjectEnvironments,
   suggestProjectEnvironmentId,
   suggestProjectEnvironmentName,
@@ -179,5 +181,87 @@ describe('project environments on the plan', () => {
     expect(projectEnvironmentsAllowance({}, 0)).toEqual({
       status: 'not-offered',
     })
+  })
+})
+
+describe('the plan to upgrade to for environments', () => {
+  const free = { $id: 'tier-0', order: 0, environments: 0 }
+  const start = { $id: 'tier-1-1', order: 5, environments: 0 }
+  const pro = { $id: 'tier-1', order: 10, environments: 3 }
+  const scale = { $id: 'tier-2', order: 20, environments: 3 }
+  const plans = {
+    [scale.$id]: scale,
+    [free.$id]: free,
+    [pro.$id]: pro,
+    [start.$id]: start,
+  }
+
+  test('the lowest plan above the current one that has environments', () => {
+    expect(projectEnvironmentsUpgradePlan(free, plans)).toBe(pro)
+    // Start sits between Free and Pro and has none either
+    expect(projectEnvironmentsUpgradePlan(start, plans)).toBe(pro)
+  })
+
+  test('a plan an organization cannot move to on its own is passed over', () => {
+    const enterprise = {
+      $id: 'tier-enterprise',
+      order: 8,
+      environments: 10,
+      selfService: false,
+    }
+    const retired = {
+      $id: 'tier-retired',
+      order: 9,
+      environments: 3,
+      isAvailable: false,
+    }
+    expect(
+      projectEnvironmentsUpgradePlan(free, {
+        ...plans,
+        [enterprise.$id]: enterprise,
+        [retired.$id]: retired,
+      }),
+    ).toBe(pro)
+  })
+
+  test('nothing to upgrade to leaves nothing to offer', () => {
+    // No plan above has environments
+    expect(
+      projectEnvironmentsUpgradePlan(free, {
+        [free.$id]: free,
+        [start.$id]: start,
+      }),
+    ).toBeNull()
+    // The plans have not loaded, or the current plan has not
+    expect(projectEnvironmentsUpgradePlan(free, {})).toBeNull()
+    expect(projectEnvironmentsUpgradePlan(undefined, plans)).toBeNull()
+    // Never a plan at or below the current one
+    expect(projectEnvironmentsUpgradePlan(scale, plans)).toBeNull()
+  })
+})
+
+describe('example environments', () => {
+  test('a project with no environments is shown all of them', () => {
+    expect(projectEnvironmentExamples([]).map((example) => example.id)).toEqual(
+      ['staging', 'preview', 'development'],
+    )
+  })
+
+  test('a name the project already uses is not offered again', () => {
+    // Kept from a plan that had environments, under either spelling
+    expect(
+      projectEnvironmentExamples(['Stage', ' DEV ']).map(
+        (example) => example.id,
+      ),
+    ).toEqual(['preview'])
+    expect(
+      projectEnvironmentExamples(['Staging', 'Preview', 'Development']),
+    ).toEqual([])
+  })
+
+  test('every description is short enough for one line of the switcher', () => {
+    for (const example of projectEnvironmentExamples([])) {
+      expect(example.description.length).toBeLessThanOrEqual(24)
+    }
   })
 })

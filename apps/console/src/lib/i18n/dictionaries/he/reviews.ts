@@ -190,8 +190,8 @@ export const heReviewsDictionary: Record<string, string> = {
     'הפעילו סקירת קוד למאגר, וה-Pull requests שלו ייסקרו כשהם נפתחים או מקבלים קומיטים חדשים.',
   'Turn on code review for every repository in {organization} ({count}).':
     'הפעלת סקירת קוד לכל המאגרים ב-{organization} ({count}).',
-  'Repositories added to the installation later are not included.':
-    'מאגרים שיתווספו להתקנה בהמשך לא ייכללו.',
+  'To review repositories added to the installation later, turn on Review new repositories.':
+    'כדי לסקור מאגרים שיתווספו להתקנה בהמשך, הפעילו את סקירת מאגרים חדשים.',
   'Review pull requests in {name}': 'סקירת Pull requests ב-{name}',
 
   // Review strength
@@ -209,4 +209,66 @@ export const heReviewsDictionary: Record<string, string> = {
   'Review strength updated': 'עוצמת הסקירה עודכנה',
   'Failed to update review strength': 'עדכון עוצמת הסקירה נכשל',
   'Review strength for {name}': 'עוצמת הסקירה עבור {name}',
+
+  // New repositories
+  'Review new repositories': 'סקירת מאגרים חדשים',
+  'Turn on code review for repositories added to {organization} on GitHub later.':
+    'הפעלת סקירת קוד למאגרים שיתווספו ל-{organization} ב-GitHub בהמשך.',
+  'New repositories will be reviewed': 'מאגרים חדשים ייסקרו',
+  'New repositories will not be reviewed': 'מאגרים חדשים לא ייסקרו',
+  'Failed to update new repositories': 'עדכון ההגדרה למאגרים חדשים נכשל',
+
+  // Learnings
+  Learnings: 'למידות',
+  learnings: 'למידות',
+  Learning: 'למידה',
+  'Asked by': 'התבקש על ידי',
+  'Learning actions': 'פעולות למידה',
+  'Open conversation on GitHub': 'פתיחת השיחה ב-GitHub',
+  'Learning has been deleted': 'הלמידה נמחקה',
+  'Failed to delete learning': 'מחיקת הלמידה נכשלה',
+  'No learnings yet': 'אין עדיין למידות',
+  'When someone asks the reviewer to remember a preference in a pull request conversation, it shows up here. Later reviews of the repository follow it.':
+    'כשמישהו מבקש מהסוקר לזכור העדפה בשיחה ב-Pull request, היא מופיעה כאן. הסקירות הבאות של ה-repo יפעלו לפיה.',
+  'Delete learning': 'מחיקת למידה',
+  'Later reviews and answers will no longer follow this learning. This action cannot be undone.':
+    'סקירות ותשובות עתידיות לא יפעלו עוד לפי הלמידה הזו. לא ניתן לבטל פעולה זו.',
+
+  // Performance
+  Performance: 'ביצועים',
+  'Unknown author': 'מחבר לא ידוע',
+  'Date range': 'טווח תאריכים',
+  Author: 'מחבר',
+  'Pull requests': 'בקשות משיכה',
+  'First try': 'בניסיון הראשון',
+  'Findings / PR': 'ממצאים / PR',
+  'Critical / major': 'קריטי / משמעותי',
+  Fixed: 'תוקנו',
+  'Last review': 'סקירה אחרונה',
+  'Pull requests reviewed': 'בקשות משיכה שנסקרו',
+  '{count} authors': '{count} מחברים',
+  'Approval rate': 'שיעור אישור',
+  '{rate} approved by the first review': '{rate} אושרו בסקירה הראשונה',
+  'Findings per pull request': 'ממצאים לבקשת משיכה',
+  '{critical} critical, {major} major': '{critical} קריטיים, {major} משמעותיים',
+  'Fix rate': 'שיעור תיקון',
+  '{count} findings fixed by a later commit':
+    '{count} ממצאים תוקנו בקומיט מאוחר יותר',
+  'No completed reviews in this range': 'אין סקירות שהושלמו בטווח הזה',
+  'Performance shows how the authors of your pull requests fare in review once reviews complete. Try a longer range or another repository.':
+    'כאן מוצג איך מחברי בקשות המשיכה שלכם מצליחים בסקירה, לאחר שהסקירות מושלמות. נסו טווח ארוך יותר או מאגר אחר.',
+  'Counts completed reviews in the range. Approval and confidence go by each pull request’s latest review; fixed counts findings resolved by a later commit.':
+    'נספרות סקירות שהושלמו בטווח. אישור וביטחון נקבעים לפי הסקירה האחרונה של כל בקשת משיכה; תוקנו סופר ממצאים שנפתרו בקומיט מאוחר יותר.',
+
+  // Finding outcomes
+  'Useful findings': 'ממצאים מועילים',
+  '{resolved} fixed, {dismissed} dismissed':
+    '{resolved} תוקנו, {dismissed} נדחו',
+  Useful: 'מועילים',
+  Dismissed: 'נדחו',
+  'Findings by category': 'ממצאים לפי קטגוריה',
+  'Categories that are often dismissed are candidates for a learning that tells the reviewer to flag them less.':
+    'קטגוריות שנדחות לעיתים קרובות הן מועמדות ללמידה שתורה לסוקר לסמן אותן פחות.',
+  'Useful findings is the share of settled findings that were fixed rather than dismissed; findings still open count for neither.':
+    'ממצאים מועילים הם החלק מהממצאים שהוכרעו שתוקנו ולא נדחו; ממצאים שעדיין פתוחים אינם נספרים לאף צד.',
 }

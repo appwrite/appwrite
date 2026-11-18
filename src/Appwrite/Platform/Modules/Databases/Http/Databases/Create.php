@@ -152,8 +152,11 @@ class Create extends Action
             throw new Exception(Exception::DATABASE_ALREADY_EXISTS, params: [$database->getId()]);
         } catch (IndexException $e) {
             throw new Exception(Exception::INDEX_INVALID);
-        } catch (LimitException) {
-            throw new Exception(Exception::COLLECTION_LIMIT_EXCEEDED, params: [$database->getId()]);
+        } catch (LimitException $e) {
+            // The schema here is Appwrite's own, from config, so a limit on it means
+            // the server cannot hold the configured collection. It is not anything the
+            // caller asked for, so there is nothing for them to shrink.
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, $e->getMessage());
         }
     }
 }

@@ -2697,6 +2697,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             label: 'Generate SDK',
             href: '/docs/tooling/command-line/generate',
           },
+          {
+            label: 'Terminal',
+            href: '/docs/tooling/command-line/terminal',
+          },
         ],
       },
       {

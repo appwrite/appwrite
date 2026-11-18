@@ -14,6 +14,7 @@ import {
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import {
+  AppwriteException,
   Query,
   ID,
   Status,
@@ -38,6 +39,7 @@ import {
 import {
   ensureFingerprintServerTimeSynced,
   generateFingerprintToken,
+  resetFingerprintCache,
 } from '@/lib/fingerprint'
 import {
   DEFAULT_STALE_TIME,
@@ -966,20 +968,35 @@ export function useResumeProject(projectId: string | undefined) {
         headers?: Record<string, string>
         config?: { endpoint?: string; project?: string }
       }
-      await ensureFingerprintServerTimeSynced(
-        client.config?.endpoint ?? '',
-        client.config?.project ?? 'console',
-      )
-      const fingerprint = await generateFingerprintToken()
-      if (client.headers)
-        client.headers[CONSOLE_FINGERPRINT_HEADER] = fingerprint
+      const resume = async () => {
+        await ensureFingerprintServerTimeSynced(
+          client.config?.endpoint ?? '',
+          client.config?.project ?? 'console',
+        )
+        const fingerprint = await generateFingerprintToken()
+        if (client.headers)
+          client.headers[CONSOLE_FINGERPRINT_HEADER] = fingerprint
+        try {
+          await sdk.forConsole.projects.updateStatus({
+            projectId,
+            status: Status.Active,
+          })
+        } finally {
+          if (client.headers) delete client.headers[CONSOLE_FINGERPRINT_HEADER]
+        }
+      }
       try {
-        await sdk.forConsole.projects.updateStatus({
-          projectId,
-          status: Status.Active,
-        })
-      } finally {
-        if (client.headers) delete client.headers[CONSOLE_FINGERPRINT_HEADER]
+        await resume()
+      } catch (error) {
+        if (
+          !(error instanceof AppwriteException) ||
+          error.code !== 401 ||
+          error.message !== 'Invalid console fingerprint'
+        )
+          throw error
+        // Re-sync the clock and re-collect signals, as a page reload would.
+        resetFingerprintCache()
+        await resume()
       }
     },
     onSuccess: async () => {

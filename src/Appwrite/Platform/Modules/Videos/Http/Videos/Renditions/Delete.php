@@ -47,6 +47,8 @@ class Delete extends Base
                 namespace: 'videos',
                 group: 'renditions',
                 name: 'deleteRendition',
+                // Hidden until videos is generally available; preview SDK builds show it.
+                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/delete-rendition.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
@@ -96,7 +98,7 @@ class Delete extends Base
             self::STATUS_STARTED,
             self::STATUS_ENDED,
         ], true)) {
-            $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '86400');
+            $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '43200');
             $cutoff = DateTime::addSeconds(new \DateTime(), -1 * $retention);
             if ($rendition->getUpdatedAt() > $cutoff) {
                 throw new Exception(Exception::VIDEO_RENDITION_IN_PROGRESS);

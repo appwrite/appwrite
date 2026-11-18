@@ -19,6 +19,9 @@ const OWNER_SCOPES = [
   'analytics.read',
   'analytics.write',
   'billing.read',
+  'monitors.write',
+  'sites.read',
+  'sites.write',
 ] satisfies Models.Roles['scopes']
 
 const ACCOUNT = {
@@ -53,6 +56,7 @@ const ORGANIZATION = {
 
 const PROJECT_ID = 'proj0000000000000000001'
 const PROPERTY_ID = 'prop0000000000000000001'
+const SITE_ID = 'site0000000000000000001'
 
 const PROJECT = {
   $id: PROJECT_ID,
@@ -80,6 +84,25 @@ function property(identifyUsers: boolean, type?: AnalyticsPropertyType) {
     accessedAt: NOW,
     firstAccessedAt: NOW,
   } satisfies Partial<Models.AnalyticsProperty>
+}
+
+/** A site whose first analytics toggle links the property. */
+function site(analyticsEnabled: boolean) {
+  return {
+    $id: SITE_ID,
+    $createdAt: NOW,
+    $updatedAt: NOW,
+    name: 'Acme site',
+    enabled: true,
+    live: true,
+    logging: true,
+    framework: 'react',
+    deploymentId: '',
+    scopes: [],
+    vars: [],
+    analyticsEnabled,
+    analyticsPropertyId: analyticsEnabled ? PROPERTY_ID : '',
+  } satisfies Partial<Models.Site>
 }
 
 function row(
@@ -115,7 +138,22 @@ const MOBILE_EVENT_COUNTS: Record<string, number> = {
   push_opened: 640,
 }
 
-type Mock = { metrics: URL[]; patches: Request[] }
+type Annotation = {
+  $id: string
+  $createdAt: string
+  $updatedAt: string
+  propertyId: string
+  date: string
+  content: string
+  userId: string
+}
+
+type Mock = {
+  metrics: URL[]
+  patches: Request[]
+  annotations: Annotation[]
+  siteAnalytics: Request[]
+}
 
 function corsHeaders(route: Route): Record<string, string> {
   const request = route.request()
@@ -204,7 +242,13 @@ async function mockAppwriteApi(
   options: MockOptions = {},
 ): Promise<Mock> {
   let identifyUsers = options.identifyUsers ?? false
-  const mock: Mock = { metrics: [], patches: [] }
+  let siteAnalyticsEnabled = false
+  const mock: Mock = {
+    metrics: [],
+    patches: [],
+    annotations: [],
+    siteAnalytics: [],
+  }
   const localOrigin = new URL(String(test.info().project.use.baseURL)).origin
 
   await page.route('**/*', async (route) => {
@@ -229,6 +273,46 @@ async function mockAppwriteApi(
       const metrics = metricsFor(url, options)
       return json(200, { total: metrics.length, metrics })
     }
+    const annotationsPath = `/analytics/properties/${PROPERTY_ID}/annotations`
+    if (apiPath === annotationsPath) {
+      if (request.method() === 'POST') {
+        const { annotationId, ...fields } = request.postDataJSON()
+        const annotation = {
+          $id: annotationId,
+          $createdAt: NOW,
+          $updatedAt: NOW,
+          propertyId: PROPERTY_ID,
+          userId: ACCOUNT.$id,
+          ...fields,
+        }
+        mock.annotations.push(annotation)
+        return json(201, annotation)
+      }
+      return json(200, {
+        total: mock.annotations.length,
+        annotations: mock.annotations,
+      })
+    }
+    if (apiPath.startsWith(`${annotationsPath}/`)) {
+      const id = apiPath.slice(annotationsPath.length + 1)
+      const index = mock.annotations.findIndex((note) => note.$id === id)
+      if (index === -1) {
+        return json(404, {
+          message: 'Analytics annotation not found',
+          code: 404,
+          type: 'analytics_annotation_not_found',
+        })
+      }
+      if (request.method() === 'DELETE') {
+        mock.annotations.splice(index, 1)
+        return route.fulfill({ status: 204, headers })
+      }
+      mock.annotations[index] = {
+        ...mock.annotations[index],
+        ...request.postDataJSON(),
+      }
+      return json(200, mock.annotations[index])
+    }
     if (apiPath === `/analytics/properties/${PROPERTY_ID}`) {
       if (request.method() === 'PATCH') {
         mock.patches.push(request)
@@ -241,6 +325,21 @@ async function mockAppwriteApi(
         total: 1,
         properties: [property(identifyUsers, options.type)],
       })
+
+    if (apiPath === `/sites/${SITE_ID}/analytics`) {
+      mock.siteAnalytics.push(request)
+      siteAnalyticsEnabled = request.postDataJSON().enabled
+      return json(200, site(siteAnalyticsEnabled))
+    }
+    if (apiPath === `/sites/${SITE_ID}`)
+      return json(200, site(siteAnalyticsEnabled))
+    // The rest of what the site settings loader waits for.
+    if (apiPath.endsWith('/variables'))
+      return json(200, { total: 0, variables: [] })
+    if (apiPath === '/sites/frameworks')
+      return json(200, { total: 0, frameworks: [] })
+    if (apiPath === '/vcs/installations')
+      return json(200, { total: 0, installations: [] })
 
     if (apiPath === '/account') return json(200, ACCOUNT)
     if (apiPath === '/account/prefs') {
@@ -537,6 +636,73 @@ test.describe('analytics property (mocked API)', () => {
     await expect(cardHeading(page, 'Models and tools')).toHaveCount(0)
   })
 
+  test('adds, edits and deletes a chart note', async ({ page }) => {
+    const mock = await mockAppwriteApi(page)
+    await openProperty(page)
+
+    await page.getByRole('button', { name: 'Add note' }).click({
+      timeout: 30_000,
+    })
+    const dialog = page.getByRole('dialog')
+    await dialog.getByLabel('Note text').fill('Launched pricing page')
+    await dialog.getByRole('button', { name: 'Add', exact: true }).click()
+    await expect(page.getByText('Note added')).toBeVisible()
+    expect(mock.annotations.map((note) => note.content)).toEqual([
+      'Launched pricing page',
+    ])
+
+    await page.getByRole('button', { name: 'Show notes' }).click()
+    const popover = page.locator('[data-slot="popover-content"]')
+    await expect(popover).toContainText('Launched pricing page')
+    await expect(popover).toContainText('You')
+    await attachScreenshot(page, 'property-chart-note')
+
+    await popover.getByRole('button', { name: 'Edit note' }).click()
+    await dialog.getByLabel('Note text').fill('Launched the pricing page')
+    await dialog.getByRole('button', { name: 'Update' }).click()
+    await expect(page.getByText('Note updated')).toBeVisible()
+    expect(mock.annotations[0].content).toBe('Launched the pricing page')
+
+    await page.getByRole('button', { name: 'Show notes' }).click()
+    await popover.getByRole('button', { name: 'Delete note' }).click()
+    await page.getByRole('button', { name: 'Delete', exact: true }).click()
+    await expect(page.getByText('Note deleted')).toBeVisible()
+    expect(mock.annotations).toEqual([])
+    await expect(page.getByRole('button', { name: 'Show notes' })).toHaveCount(
+      0,
+    )
+  })
+
+  test('zooms on a drag without adding a note', async ({ page }) => {
+    const mock = await mockAppwriteApi(page)
+    await openProperty(page)
+
+    const chart = page.getByLabel('Drag on the chart to select a date range')
+    const box = await chart.boundingBox({ timeout: 30_000 })
+    if (!box) throw new Error('Chart has no box')
+    const seriesStarts = () =>
+      mock.metrics
+        .filter((url) => url.searchParams.get('interval'))
+        .map((url) => url.searchParams.get('startAt') ?? '')
+    await expect.poll(() => seriesStarts().length).toBeGreaterThan(0)
+    const initialStart = seriesStarts().sort().at(-1)!
+    const y = box.y + box.height / 2
+    await page.mouse.move(box.x + box.width * 0.3, y)
+    // The brush anchors on the hovered bucket, so wait for the hover to land.
+    await expect(chart.locator('.recharts-tooltip-wrapper')).toBeVisible()
+    await page.mouse.down()
+    await page.mouse.move(box.x + box.width * 0.6, y, { steps: 5 })
+    await page.mouse.up()
+
+    // The zoomed range starts after the initial one, so the brush committed.
+    await expect
+      .poll(() => seriesStarts().some((start) => start > initialStart))
+      .toBe(true)
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await chart.click({ position: { x: box.width * 0.5, y: box.height / 2 } })
+    await expect(page.getByRole('dialog')).toContainText('Add note')
+  })
+
   test('turns user identification on', async ({ page }) => {
     const mock = await mockAppwriteApi(page)
     await openProperty(page, '/settings')
@@ -550,5 +716,35 @@ test.describe('analytics property (mocked API)', () => {
       { identifyUsers: true },
     ])
     await attachScreenshot(page, 'settings-identify-users')
+  })
+
+  test('turns analytics on for a site', async ({ page }) => {
+    const mock = await mockAppwriteApi(page)
+    await page.goto(`/projects/${PROJECT_ID}/sites/${SITE_ID}/settings`, {
+      waitUntil: 'domcontentloaded',
+    })
+
+    const toggle = page.locator('#site-analytics')
+    await expect(toggle).not.toBeChecked({ timeout: 30_000 })
+    await expect(
+      page.getByRole('link', { name: 'View analytics' }),
+    ).toHaveCount(0)
+    await toggle.click()
+    await page
+      .locator('div.rounded-xl')
+      .filter({ has: toggle })
+      .getByRole('button', { name: 'Update', exact: true })
+      .click()
+    await expect(page.getByText('Analytics enabled')).toBeVisible()
+    expect(mock.siteAnalytics.map((patch) => patch.postDataJSON())).toEqual([
+      { enabled: true },
+    ])
+    await expect(
+      page.getByRole('link', { name: 'View analytics' }),
+    ).toHaveAttribute(
+      'href',
+      `/projects/${PROJECT_ID}/analytics/${PROPERTY_ID}`,
+    )
+    await attachScreenshot(page, 'site-settings-analytics')
   })
 })

@@ -504,7 +504,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Updates and migrations",
     "description": "Keep your self-hosted Appwrite instance up-to-date. Learn how to perform updates, manage versions, and ensure your self-hosted Appwrite stays current.",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 7
   },
   {
     "slug": "apis",
@@ -1296,6 +1296,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Explore Appwrite's powerful authentication solutions. Learn how to implement secure user authentication, manage user identities, and enhance your application's security.\"",
     "layout": "article",
     "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/auth/account-switching",
+    "title": "Account switching",
+    "description": "Let users stay signed in to several accounts in one browser or app and switch between them with Appwrite Auth devices, without signing out and back in.",
+    "layout": "article",
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/auth/accounts",
@@ -3007,7 +3014,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Deploy from Git",
     "description": "Learn to version and update your Appwrite Functions' code with deployments.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 7
   },
   {
     "slug": "products/functions/deploy-manually",
@@ -3126,7 +3133,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Appwrite Push",
     "description": "Deliver push notifications from Appwrite to apps built with the Web, Flutter, React Native, Android, and Apple SDKs, without Firebase or device tokens.",
     "layout": "article",
-    "readingTimeMinutes": 17
+    "readingTimeMinutes": 18
   },
   {
     "slug": "products/messaging/fcm",
@@ -3357,7 +3364,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Deploy from Git",
     "description": "Learn to version and update your Appwrite Sites' code with deployments.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 8
   },
   {
     "slug": "products/sites/deploy-manually",
@@ -4338,6 +4345,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Efficiently deploy your Appwrite teams using the Command-Line Tool (CLI).",
     "layout": "article",
     "readingTimeMinutes": 4
+  },
+  {
+    "slug": "tooling/command-line/terminal",
+    "title": "Terminal",
+    "description": "Browse, query, and manage your Appwrite projects in an interactive, keyboard-driven interface with the terminal command in the Appwrite CLI.",
+    "layout": "article",
+    "readingTimeMinutes": 8
   },
   {
     "slug": "tooling/command-line/topics",

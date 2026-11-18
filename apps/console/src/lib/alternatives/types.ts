@@ -16,6 +16,7 @@ export type AlternativeId =
   | 'planetscale'
   | 'posthog'
   | 'plausible'
+  | 'mux'
 
 /**
  * `true` renders a check, `false` a dash, `'partial'` a half mark, `'soon'` a "Coming soon" pill,

@@ -48,6 +48,8 @@ class Delete extends Base
                 namespace: 'videos',
                 group: 'videos',
                 name: 'delete',
+                // Hidden until videos is generally available; preview SDK builds show it.
+                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/delete-video.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
@@ -85,7 +87,7 @@ class Delete extends Base
         // Encode exits if the row is gone while still pending. After claim the
         // worker still writes through started → ended → ready, so delete
         // must wait. Same retention as abortStaleRenditions.
-        $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '86400');
+        $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '43200');
         $cutoff = DateTime::addSeconds(new \DateTime(), -1 * $retention);
         $inProgress = $authorization->skip(fn () => $dbForProject->count('videosRenditions', [
             Query::equal('videoInternalId', [$video->getSequence()]),

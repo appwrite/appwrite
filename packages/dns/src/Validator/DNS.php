@@ -167,7 +167,18 @@ class DNS extends Validator
     private function query(string $value): array
     {
         $dns = new Client($this->dnsServer, timeout: self::TIMEOUT);
-        $response = $dns->query(Message::query(new Question($value, $this->type), recursionDesired: true));
+        $query = Message::query(new Question($value, $this->type), recursionDesired: true);
+        $response = $dns->query($query);
+
+        // A truncated answer may be missing the record being validated
+        if ($response->header->truncated) {
+            $response = new Client($this->dnsServer, timeout: self::TIMEOUT, useTcp: true)->query($query);
+        }
+
+        // Only these two mean the name was looked up; anything else says nothing about its records
+        if (!\in_array($response->header->responseCode, [Message::RCODE_NOERROR, Message::RCODE_NXDOMAIN], true)) {
+            throw new \Exception('DNS query failed with response code ' . $response->header->responseCode . '.');
+        }
 
         // Some DNS servers return all records, not only type that's asked for
         // Likely occurs when no records of specific type are found
