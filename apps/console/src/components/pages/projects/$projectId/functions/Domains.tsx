@@ -33,11 +33,13 @@ import {
 import {
   useFunctionDomains,
   useProject,
+  useProjectFunction,
   useOrganizationDomains,
 } from '@/lib/react-query/hooks'
 import { VerifyDomain } from './_components/VerifyDomain'
 import { DomainRecordsDialog } from '@/components/pages/projects/$projectId/settings/domains/DomainRecords'
 import { ViewLogsDialog } from '@/components/pages/projects/$projectId/settings/domains/ViewLogs'
+import { UpdateDomain } from '@/components/pages/projects/$projectId/settings/domains/UpdateDomain'
 import { DeleteDomainDialog } from '@/components/pages/projects/$projectId/settings/domains/DeleteDomain'
 import { ProxyRuleContextMenu } from '@/components/pages/projects/$projectId/settings/domains/ProxyRuleContextMenu'
 import { RuleStatusBadge } from '@/components/pages/projects/$projectId/settings/domains/RuleStatusBadge'
@@ -78,6 +80,8 @@ export function View() {
   const [smtpVerifyOpen, setSmtpVerifyOpen] = useState(false)
   const [viewLogsOpen, setViewLogsOpen] = useState(false)
   const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)
+  const [updateRule, setUpdateRule] = useState<Models.ProxyRule | null>(null)
+  const { data: func } = useProjectFunction(projectId, functionId)
   const [selectedRule, setSelectedRule] = useState<Models.ProxyRule | null>(
     null,
   )
@@ -457,6 +461,22 @@ export function View() {
             }}
           />
         </>
+      )}
+      {updateRule && (
+        <UpdateDomain
+          key={updateRule.$id}
+          open
+          onOpenChange={(open) => {
+            if (!open) setUpdateRule(null)
+          }}
+          projectId={projectId ?? ''}
+          region={project?.region}
+          rule={updateRule}
+          resourceType="function"
+          resourceId={functionId ?? ''}
+          installationId={func?.installationId}
+          providerRepositoryId={func?.providerRepositoryId}
+        />
       )}
       {viewLogsRule && (
         <ViewLogsDialog
