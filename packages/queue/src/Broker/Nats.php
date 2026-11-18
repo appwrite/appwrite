@@ -71,10 +71,10 @@ use Utopia\Queue\Queue;
  *     leave on the connection that fetched it; rebinding it (see onCommands()) is what
  *     moves the per-message ack path off the receive socket entirely.
  *
- * The two locks are never nested, so they cannot deadlock, and each connection has
- * exactly one lock — a broker built from a live Connection serves both roles from one
- * socket and therefore shares one lock, which is the whole reason $commandsLock is
- * resolved from the source's shape rather than always constructed.
+ * Each connection has one lock. A live Connection serves both roles from one
+ * socket and shares one lock, so receiveEach() invokes callbacks only after the
+ * receive completes. Factory-backed brokers can acknowledge incremental arrivals
+ * on the separate commands connection while the receive lock is held.
  *
  * Together this is what lets a NATS worker run job('…', N) above one, so the broker no
  * longer carries Consumer\Exclusive. Publishing stays on the receive connection: a
@@ -1178,7 +1178,7 @@ class Nats implements Synchronous, Consumer\Streaming, Bounded
     public function receive(Queue $queue, int $timeout, int $n = 1): array
     {
         $messages = [];
-        $this->receiveEach($queue, $timeout, $n, static function (Message $message) use (&$messages): void {
+        $this->receiveInto($queue, $timeout, $n, static function (Message $message) use (&$messages): void {
             $messages[] = $message;
         });
         return $messages;
@@ -1186,12 +1186,38 @@ class Nats implements Synchronous, Consumer\Streaming, Bounded
 
     public function receiveEach(Queue $queue, int $timeout, int $n, callable $onMessage): void
     {
+        if (!$this->source instanceof \Closure) {
+            // A shared socket cannot run commands until the receive lock is released.
+            foreach ($this->receive($queue, $timeout, $n) as $message) {
+                $onMessage($message);
+            }
+            return;
+        }
+        $this->receiveInto($queue, $timeout, $n, $onMessage);
+    }
+
+    /** @param callable(Message): void $onMessage */
+    private function receiveInto(Queue $queue, int $timeout, int $n, callable $onMessage): void
+    {
         try {
             $this->synchronize(function () use ($queue, $timeout, $n, $onMessage): void {
                 $received = 0;
+                $callbackFailed = false;
+                $deliver = static function (Message $message) use ($onMessage, &$callbackFailed): void {
+                    try {
+                        $onMessage($message);
+                    } catch (\Throwable $error) {
+                        $callbackFailed = true;
+                        throw $error;
+                    }
+                };
                 try {
-                    $this->pull($queue, $timeout, max(1, $n), $onMessage, $received);
+                    $this->pull($queue, $timeout, max(1, $n), $deliver, $received);
                 } catch (ConnectionException|ProtocolException $error) {
+                    /** @var bool $callbackFailed Updated by the receive callback. */
+                    if ($callbackFailed) {
+                        throw $error;
+                    }
                     if ($received > 0) {
                         // Keep partial deliveries; a retry could exceed the reserved buffer.
                         $this->report($error);
@@ -1200,7 +1226,7 @@ class Nats implements Synchronous, Consumer\Streaming, Bounded
                     if (!$this->lostConnection($error) || !$this->reconnectReceive()) {
                         throw $error;
                     }
-                    $this->pull($queue, $timeout, max(1, $n), $onMessage, $received);
+                    $this->pull($queue, $timeout, max(1, $n), $deliver, $received);
                 }
             });
         } finally {
@@ -1728,7 +1754,7 @@ class Nats implements Synchronous, Consumer\Streaming, Bounded
             $remaining = $limit ?? $consumer->info(true)->numPending;
             $failure = null;
             while ($remaining > 0) {
-                $jsMessage = $this->fetch($consumer, 1, 1.0, false)[0] ?? null;
+                $jsMessage = $consumer->next(1.0);
                 if (!$jsMessage instanceof JetStreamMessage) {
                     break;
                 }
@@ -2096,22 +2122,6 @@ class Nats implements Synchronous, Consumer\Streaming, Bounded
         if ($this->commandsConnection instanceof NatsConnection && $this->commandsConnection !== $this->connection) {
             $this->commandsConnection->close();
         }
-    }
-
-    /**
-     * Fetch up to $batch deliveries, as a list.
-     *
-     * @return list<JetStreamMessage>
-     */
-    private function fetch(NatsConsumer $consumer, int $batch, float $timeout, bool $noWait): array
-    {
-        $messages = [];
-
-        foreach ($consumer->fetch($batch, $timeout, $noWait) as $message) {
-            $messages[] = $message;
-        }
-
-        return $messages;
     }
 
     /**

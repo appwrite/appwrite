@@ -6,7 +6,7 @@ use Utopia\Queue\Consumer;
 use Utopia\Queue\Message;
 use Utopia\Queue\Queue;
 
-/** Delivers and registers each message before waiting for the rest of a pull. */
+/** Delivers messages through callbacks, incrementally when the connection supports it. */
 interface Streaming extends Consumer
 {
     /** @param callable(Message): void $onMessage */
