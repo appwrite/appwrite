@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Teams\Http\Teams\Photo;
 use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
