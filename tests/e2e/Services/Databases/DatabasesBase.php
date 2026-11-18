@@ -2202,6 +2202,9 @@ trait DatabasesBase
         if (!$this->getSupportForAttributes()) {
             $this->markTestSkipped('Attributes are not supported by this database adapter');
         }
+        if (getenv('_APP_DB_ADAPTER') === 'mongodb') {
+            $this->markTestSkipped('MongoDB has no row width limit to exceed');
+        }
 
         $databaseId = $this->setupDatabase()['databaseId'];
         $headers = [
