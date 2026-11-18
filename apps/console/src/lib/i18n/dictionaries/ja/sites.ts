@@ -87,6 +87,7 @@ export const jaSitesDictionary: Record<string, string> = {
   'Its DNS records and certificate stay the same.': 'DNS レコードと証明書は変更されません。',
   'Domain has been updated': 'ドメインを更新しました',
   'Failed to update domain': 'ドメインの更新に失敗しました',
+  'A domain cannot switch between serving a deployment and redirecting. Delete it and add it again.': 'ドメインをデプロイの配信とリダイレクトの間で切り替えることはできません。削除してから追加し直してください。',
   'Domain has been deleted': 'ドメインを削除しました',
   'Loading domains...': 'ドメインを読み込み中...',
   'Generating certificate': '証明書を発行中',
