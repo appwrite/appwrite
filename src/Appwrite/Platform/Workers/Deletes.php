@@ -722,7 +722,7 @@ class Deletes extends Action
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
-        $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '86400');
+        $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '43200');
         $reason = 'Aborted: no progress for ' . ($retention >= 3600
             ? \max(1, (int) \round($retention / 3600)) . ' hours'
             : \max(1, (int) \round($retention / 60)) . ' minutes');
@@ -833,7 +833,7 @@ class Deletes extends Action
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
-        $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '86400');
+        $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '43200');
         $reason = 'Aborted: no progress for ' . ($retention >= 3600
             ? \max(1, (int) \round($retention / 3600)) . ' hours'
             : \max(1, (int) \round($retention / 60)) . ' minutes');
