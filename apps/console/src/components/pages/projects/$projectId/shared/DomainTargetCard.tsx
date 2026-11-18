@@ -148,6 +148,7 @@ export function DomainTargetCard({
             type="button"
             onClick={() => onBehaviourChange('redirect')}
             disabled={disabled || redirectDisabled}
+            title={redirectDisabled ? lockedReason : undefined}
             className={cn(
               'text-start rounded-lg border p-4 transition-all cursor-pointer',
               behaviour === 'redirect'
