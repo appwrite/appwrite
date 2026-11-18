@@ -49,8 +49,7 @@ export function videoEmbedErrorFromUnknown(error: unknown): VideoEmbedError {
   return {
     kind: 'unknown',
     title: 'Unable to play',
-    message:
-      'Something went wrong while loading this video. Try again later.',
+    message: 'Something went wrong while loading this video. Try again later.',
   }
 }
 
@@ -67,6 +66,22 @@ export const VIDEO_EMBED_UNAUTHORIZED: VideoEmbedError = {
   kind: 'unauthorized',
   title: 'This video is private',
   message: 'Sign in to watch it, or ask the owner to make it public.',
+}
+
+/** Native playback could not load the stream (the status is known). */
+export const PLAYBACK_LOAD_FAILED = 'The stream could not be loaded.'
+/** Native playback failed without an HTTP status. */
+export const PLAYBACK_FAILED = 'The stream could not be played.'
+
+/** Playback messages written by the Console, so they can be translated. */
+export function isConsolePlaybackMessage(
+  message: string | null | undefined,
+): message is string {
+  return (
+    isEmbedUnauthorizedMessage(message) ||
+    message === PLAYBACK_LOAD_FAILED ||
+    message === PLAYBACK_FAILED
+  )
 }
 
 export function isEmbedUnauthorizedMessage(

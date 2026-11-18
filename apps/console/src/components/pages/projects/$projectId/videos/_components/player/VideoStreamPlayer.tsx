@@ -11,7 +11,10 @@ import { createPortal } from 'react-dom'
 import { DockedPlayerControls } from './DockedPlayerControls'
 import { Lock, Pause, Play, SquareArrowOutUpRight } from 'lucide-react'
 import { sdk } from '@/lib/appwrite/sdk'
-import { isEmbedUnauthorizedMessage } from '@/lib/videos/embed-player-errors'
+import {
+  isConsolePlaybackMessage,
+  isEmbedUnauthorizedMessage,
+} from '@/lib/videos/embed-player-errors'
 import {
   applyVideoStreamAccess,
   type VideoStreamAccess,
@@ -312,9 +315,21 @@ export function VideoStreamPlayer({
       state.fatalStatus === 403 ||
       state.fatalStatus === 404)
 
+  // The refused attempt's error stays in state until the Console attempt
+  // starts loading; keep it hidden so the video is not unmounted meanwhile.
+  const [refusedLoadAt, setRefusedLoadAt] = useState<number | null>(null)
+  const refusalShowing =
+    memberRetryPending ||
+    (embed &&
+      embedAccess === 'console' &&
+      refusedLoadAt != null &&
+      state.loadStartedAt === refusedLoadAt)
+
   useEffect(() => {
-    if (memberRetryPending) setEmbedAccess('console')
-  }, [memberRetryPending])
+    if (!memberRetryPending) return
+    setRefusedLoadAt(state.loadStartedAt)
+    setEmbedAccess('console')
+  }, [memberRetryPending, state.loadStartedAt])
 
   useEffect(() => {
     if (state.firstFrameAt != null || state.fatalError) setReloading(false)
@@ -815,10 +830,10 @@ export function VideoStreamPlayer({
         {emptyPlaybackMessage}
       </p>
     </div>
-  ) : state.fatalError && !memberRetryPending ? (
+  ) : state.fatalError && !refusalShowing ? (
     <div className="absolute inset-0 flex items-center justify-center bg-black/70 px-6 text-center">
       <p className="max-w-md text-[13px] text-white/80">
-        {isEmbedUnauthorizedMessage(state.fatalError)
+        {isConsolePlaybackMessage(state.fatalError)
           ? t(state.fatalError)
           : state.fatalError}
       </p>
@@ -827,7 +842,7 @@ export function VideoStreamPlayer({
 
   if (
     embed &&
-    !memberRetryPending &&
+    !refusalShowing &&
     isEmbedUnauthorizedMessage(state.fatalError)
   ) {
     return <EmbedUnauthorized className="h-full" />

@@ -247,6 +247,7 @@ async function mockAppwriteApi(
   renditions: Models.VideoRendition[] = RENDITIONS,
   profiles: Models.VideoProfile[] = PROFILES,
   servePlayableStream = false,
+  visitorStatus: 401 | 404 = 404,
 ): Promise<Calls> {
   const profileStore = [...profiles]
   const localOrigin = new URL(String(test.info().project.use.baseURL)).origin
@@ -344,12 +345,19 @@ async function mockAppwriteApi(
       calls.manifests.push(url)
       // The video is private: a visitor's request is refused as not found.
       if (url.searchParams.get('mode') !== 'admin') {
-        return json(404, {
-          message: 'Video with the requested ID could not be found.',
-          code: 404,
-          type: 'video_not_found',
-          version: '1.0',
-        })
+        return visitorStatus === 401
+          ? json(401, {
+              message: 'The current user is not authorized.',
+              code: 401,
+              type: 'general_unauthorized_scope',
+              version: '1.0',
+            })
+          : json(404, {
+              message: 'Video with the requested ID could not be found.',
+              code: 404,
+              type: 'video_not_found',
+              version: '1.0',
+            })
       }
       // Members get a real stream for the private-video player page; other
       // pages leave it pending so the player stays loading, with controls.
@@ -604,37 +612,47 @@ test.describe('videos (mocked API)', () => {
     await expect(player).toHaveCount(0)
   })
 
-  test('lets a project member watch a private video on the player page', async ({
-    page,
-  }) => {
-    await enableVideos(page)
-    const calls = await mockAppwriteApi(page, VIDEO, RENDITIONS, PROFILES, true)
-    await page.goto(`/player/${VIDEO_ID}?project=${PROJECT_ID}`, {
-      waitUntil: 'domcontentloaded',
-    })
-
-    await expect(
-      page.getByText('Private video. Only project members can watch it here.'),
-    ).toBeVisible({ timeout: 60_000 })
-    expect(
-      calls.manifests.some((url) => url.searchParams.get('mode') !== 'admin'),
-    ).toBe(true)
-    expect(
-      calls.manifests.some((url) => url.searchParams.get('mode') === 'admin'),
-    ).toBe(true)
-    await expect(page.getByText(/manifestLoadError/)).toHaveCount(0)
-    // The Console stream actually plays.
-    await expect
-      .poll(() =>
-        page
-          .locator('video')
-          .evaluate((video: HTMLVideoElement) => video.readyState),
+  for (const status of [404, 401] as const) {
+    test(`lets a project member watch a private video on the player page (${status})`, async ({
+      page,
+    }) => {
+      await enableVideos(page)
+      const calls = await mockAppwriteApi(
+        page,
+        VIDEO,
+        RENDITIONS,
+        PROFILES,
+        true,
       )
-      .toBeGreaterThanOrEqual(2)
-    await page.screenshot({
-      path: test.info().outputPath('videos-player-private.png'),
+      await page.goto(`/player/${VIDEO_ID}?project=${PROJECT_ID}`, {
+        waitUntil: 'domcontentloaded',
+      })
+
+      await expect(
+        page.getByText(
+          'Private video. Only project members can watch it here.',
+        ),
+      ).toBeVisible({ timeout: 60_000 })
+      expect(
+        calls.manifests.some((url) => url.searchParams.get('mode') !== 'admin'),
+      ).toBe(true)
+      expect(
+        calls.manifests.some((url) => url.searchParams.get('mode') === 'admin'),
+      ).toBe(true)
+      await expect(page.getByText(/manifestLoadError/)).toHaveCount(0)
+      // The Console stream actually plays.
+      await expect
+        .poll(() =>
+          page
+            .locator('video')
+            .evaluate((video: HTMLVideoElement) => video.readyState),
+        )
+        .toBeGreaterThanOrEqual(2)
+      await page.screenshot({
+        path: test.info().outputPath('videos-player-private.png'),
+      })
     })
-  })
+  }
 
   test('asks for a rendition when a video has none', async ({ page }) => {
     await enableVideos(page)

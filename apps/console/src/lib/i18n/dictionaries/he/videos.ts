@@ -246,6 +246,8 @@ export const heVideosDictionary: Record<string, string> = {
   'No renditions are ready to play.': 'אין גרסאות קידוד מוכנות לניגון.',
   'Private video. Only project members can watch it here.':
     'סרטון פרטי. רק חברי הפרויקט יכולים לצפות בו כאן.',
+  'The stream could not be loaded.': 'לא ניתן היה לטעון את הזרם.',
+  'The stream could not be played.': 'לא ניתן היה לנגן את הזרם.',
   'Create a rendition to play this video.': 'צרו רינדור כדי לנגן את הסרטון.',
   'This video has no source to play.': 'לסרטון הזה אין מקור לניגון.',
   'Auto quality': 'איכות אוטומטית',

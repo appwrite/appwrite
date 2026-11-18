@@ -254,6 +254,8 @@ export const jaVideosDictionary: Record<string, string> = {
     '再生できるレンディションはまだありません。',
   'Private video. Only project members can watch it here.':
     '非公開の動画です。ここで視聴できるのはプロジェクトメンバーのみです。',
+  'The stream could not be loaded.': 'ストリームを読み込めませんでした。',
+  'The stream could not be played.': 'ストリームを再生できませんでした。',
   'Create a rendition to play this video.':
     'この動画を再生するにはレンディションを作成してください。',
   'This video has no source to play.':

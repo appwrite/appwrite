@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import type Hls from 'hls.js'
 import type { ErrorData, Level, LevelDetails, MediaPlaylist } from 'hls.js'
-import { playbackFatalMessage } from '@/lib/videos/embed-player-errors'
+import {
+  PLAYBACK_FAILED,
+  PLAYBACK_LOAD_FAILED,
+  playbackFatalMessage,
+} from '@/lib/videos/embed-player-errors'
 import {
   applyVideoStreamAccess,
   type VideoStreamAccess,
@@ -271,9 +275,7 @@ export function useHlsPlayer(
             ...prev,
             fatalError: playbackFatalMessage(
               status ?? undefined,
-              status
-                ? `The stream could not be loaded (HTTP ${status}).`
-                : 'The stream could not be played.',
+              status ? PLAYBACK_LOAD_FAILED : PLAYBACK_FAILED,
             ),
             fatalStatus: status,
           }))
