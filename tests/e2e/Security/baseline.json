@@ -797,6 +797,7 @@
         "PUT /v1/tablesdb/:databaseId/tables/:tableId/rows/:rowId",
         "PUT /v1/teams/:teamId",
         "PUT /v1/teams/:teamId/prefs",
+        "PUT /v1/teams/:teamId/photo",
         "PUT /v1/users/:userId/labels",
         "PUT /v1/users/:userId/mfa/recovery-codes",
         "PUT /v1/vectorsdb/:databaseId",
