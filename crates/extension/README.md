@@ -35,7 +35,8 @@ _APP_EXTENSION_LIBRARIES=<package>,<package>   # those packages' classes from th
 A package ported in batches has one switch per batch, `<package>-<batch>`, which needs the
 package's own: `validators,validators-scalar` registers the validators' base and the scalar leaf
 validators, `validators,validators-text` the base and the text ones, `validators,validators-network`
-the base and the network ones, `validators` alone only the base.
+the base and the network ones, `validators,validators-compose` the base and the composing ones,
+`validators` alone only the base.
 
 The extension reads it once, when PHP loads the module, so changing it takes a restart and no
 deploy. Each library is canaried on Cloud this way before it becomes the default.
@@ -303,6 +304,63 @@ difference:
 
 - `Phone` runs its regular expressions without PHP's `preg_*` functions, so `isValid()` and
   `normalize()` leave `preg_last_error()` as it was.
+
+## Utopia\Validator's composing validators
+
+`_APP_EXTENSION_LIBRARIES=validators,validators-compose` also registers `Nullable`, `ArrayList`,
+`AllOf`, `AnyOf`, `NoneOf`, `Multiple`, `Assoc`, `JSON`, `JSON\ArrayValidator`,
+`JSON\ObjectValidator`, `JSON\FCM` and `Globstar`. Nothing outside the package extends them. The
+validators they wrap are whatever they are given: PHP (Appwrite's, utopia-php/database's, a leaf
+whose batch is off) or the extension's.
+
+`src/validators/compose.rs` builds them by hand like the leaf batches, with their state in real
+typed properties declared as `packages/validators` declares them: `$validator` typed `Validator`,
+`AllOf`'s `?Validator $failedRule` in the class body, `Multiple`'s untyped `$rules`, `Globstar`'s
+`private readonly array $patterns`, `FCM`'s `private ?string $error` and private typed array
+constants, and the private methods (`hasValidLength()`, `isNonEmptyString()`, `isHttpsUrl()`,
+`match()`, `matchGlobstar()`). A wrapped validator is called as PHP calls it, through its object's
+`get_method` handler from the calling class's scope (a subclass's override, `__call()`, PHP's
+`Error` for a private or missing method) and `zend_call_known_function`: same order, same number of
+calls, same short-circuits, and its exceptions pass through untouched. Its results are checked as
+the PHP method's return type checks them (`Nullable` and `ArrayList` come from `strict_types` files,
+so a non-bool `isValid()` there is a `TypeError`; elsewhere it converts, `NAN` with its warning);
+`AllOf`, `AnyOf` and `NoneOf` take anything with an `isValid()`, as PHP's `foreach` does, and
+record it in `$failedRule` with the property's type check. `Multiple`'s constructor calls
+`$this->addRule()`, so a subclass's override runs, and `addRule()` appends as `$this->rules[] =`
+does to whatever a subclass left there (`ArrayAccess::offsetSet()`, the `false` deprecation, the
+errors). `getDescription()`'s numbering is the engine's `++$key`. `json_decode()`, `json_encode()`,
+`json_last_error()`, `filter_var()`, `parse_url()`, `get_object_vars()` and `preg_match()` are
+PHP's own, called through the engine, so `json_last_error()` and `preg_last_error()` after a call,
+and `preg_match()`'s warnings for a broken character class, are PHP's. `Globstar` builds its regular
+expression in `crates/utopia/validators` (a port of `matchGlobstar()` and of `preg_quote()`), and
+casts each pattern as often as PHP does (a `Stringable` pattern counts them).
+
+`crates/extension/tests/validators-compose.php` prints a corpus that must be identical on both
+implementations (6,513 lines). The validators it wraps are probes that log every call, so the order,
+number and arguments of the calls and the short-circuits are compared, not only the results. It
+holds each class's reflection (constants, private ones included, properties, methods and their order,
+parameters); 47 validators (over probes that pass, fail, answer by value, throw or return
+non-bools, and over the leaves of the other batches) over 62 values (scalars, `NAN`, `INF`, lists
+and keyed arrays, a 600-deep array, 1,000-item lists, objects, `Stringable`, an enum, JSON text of
+every shape: nesting at depth 512 and 513, big integers, duplicate keys, a BOM, bytes that are not
+UTF-8, lone surrogates); the same validator over a sequence of values (what `$failedRule` and
+`$error` keep); members that are not validators (`__call()`, a private `isValid()`, strings,
+closures, `null`) in `AllOf`, `AnyOf` and `NoneOf`, plain and keyed; `Multiple`'s `addRule()` over
+every kind of `$rules`; every constructor over arguments of every kind PHP converts or rejects,
+strict types (in a child process) and `newInstanceWithoutConstructor()`; `json_last_error()` after
+every JSON check; 143 FCM service accounts (every field missing, blank, of the wrong type, not
+HTTPS), each as an array, JSON, pretty JSON and an object; 48 `Globstar` pattern lists (classes,
+negations, unclosed and POSIX classes, escapes, `**`, exclusions and their order, non-string
+patterns) over 35 paths, with `preg_last_error()`; the private methods through reflection; dumps,
+copies, comparisons and serialization; 19 PHP subclasses reading and writing the protected state,
+replacing a wrapped validator in the middle of a loop, overriding `addRule()` or skipping the parent
+constructor; and, from a child process, the declarations the engine checks against them. It asserts
+these known differences:
+
+- A `TypeError` for an argument the class passes to its own method (`Multiple`'s constructor
+  handing `addRule()` a rule that is not a `Validator`; `Globstar::match()` given a `null` or an
+  array pattern) ends at "given": PHP's adds ", called in …/Multiple.php on line N", and the
+  extension's class has no PHP source to name.
 
 ## Benchmarks
 
