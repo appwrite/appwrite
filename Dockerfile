@@ -16,7 +16,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:2.3.0@sha256:e9519544a2315be040f150625d07c0bb24693a043130fc9e5f628411d4dfd5a7 AS ffmpeg
+FROM appwrite/base:2.3.2@sha256:24a6c6f4c1ddb10a72dd61e16303d94c6f55a412b601f1fff0fe236749817a2d AS ffmpeg
 
 # Same pin as utopia-php/video (docs/design.md, Dockerfile ARG FFMPEG_VERSION).
 # Alpine's apk ffmpeg is an older line and is not what the library CI tests against.
@@ -52,7 +52,7 @@ RUN apk add --no-cache \
 
 # The utopia extension, built against the base image's own PHP headers and
 # libheif so the ABI matches. Alpine's Rust is older than the workspace needs.
-FROM appwrite/base:2.3.1@sha256:8476fd5f134f9953341152c45a7bf1bb5d08b0d039ce76018d062edd20457fd8 AS extension-build
+FROM appwrite/base:2.3.2@sha256:24a6c6f4c1ddb10a72dd61e16303d94c6f55a412b601f1fff0fe236749817a2d AS extension-build
 
 RUN apk add --no-cache rustup clang-dev libheif-dev build-base && \
     rustup-init -y --profile minimal --default-toolchain 1.97.1
@@ -67,7 +67,7 @@ RUN . "$HOME/.cargo/env" && \
     cargo build --release --locked -p utopia-extension && \
     strip target/release/libutopia.so
 
-FROM appwrite/base:2.3.1@sha256:8476fd5f134f9953341152c45a7bf1bb5d08b0d039ce76018d062edd20457fd8 AS base
+FROM appwrite/base:2.3.2@sha256:24a6c6f4c1ddb10a72dd61e16303d94c6f55a412b601f1fff0fe236749817a2d AS base
 
 LABEL maintainer="team@appwrite.io"
 
@@ -212,7 +212,7 @@ EXPOSE 80
 
 CMD [ "php", "app/http.php" ]
 
-FROM appwrite/base:2.3.1-xdebug@sha256:002619e443c3a259ffa64817c1c85683d2a795acc2263e54c75d8a9a60641bca AS xdebug
+FROM appwrite/base:2.3.2-xdebug@sha256:9daf4de81e23d88149922a2789382de6da4340f2faebf11ad14c062fcea466f6 AS xdebug
 
 FROM base AS development
 
@@ -222,7 +222,7 @@ RUN printf 'opcache.validate_timestamps=1\nopcache.revalidate_freq=0\n' > /usr/l
 COPY ./docs /usr/src/code/docs
 COPY ./dev /usr/src/code/dev
 
-# appwrite/base:2.3.1 ships without XDebug, so it cannot reach production or
+# appwrite/base ships without XDebug, so it cannot reach production or
 # Cloud. The -xdebug tag is the same build with the extension; mounting it
 # rather than copying keeps xdebug.so out of every layer unless DEBUG asked
 # for it, and guarantees an ABI match because both tags are one base build.
