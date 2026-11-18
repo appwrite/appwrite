@@ -119,6 +119,10 @@ class Update extends Action
             throw new Exception(Exception::STORAGE_FILE_EMPTY);
         }
 
+        // Make sure we handle a single file and multiple files the same way
+        $fileName = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
+        $fileTmpName = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
+
 
         $response->dynamic($updated, Response::MODEL_TEAM);
     }
