@@ -313,7 +313,7 @@ abstract class Base extends Action
      * @return array{?Document, ?Document} the user and email target created by
      *     this request, if any, so they can be rolled back later
      */
-    protected function resolveUser(User $user, string $provider, string $sub, string $providerEmail, bool $isVerified, string $name, Database $dbForProject, Document $project, array $plan, ProofsPassword $proofForPassword, Authorization $authorization, Mqtt $mqtt, Realtime $queueForRealtime): array
+    protected function resolveUser(User $user, string $provider, string $sub, string $providerEmail, bool $isVerified, string $name, Database $dbForProject, Document $project, array $plan, ProofsPassword $proofForPassword, Authorization $authorization, Mqtt $mqtt, Realtime $queueForRealtime, Bus $bus): array
     {
         $identity = $dbForProject->findOne('identities', [
             Query::equal('provider', [$provider]),
@@ -362,6 +362,9 @@ abstract class Base extends Action
 
                     if ($claimed) {
                         $dbForProject->purgeCachedDocument('users', $user->getId());
+
+                        // The claim is what verified the address, before the caller reads the stored row
+                        $bus->dispatch(new EmailVerified(user: $user->getArrayCopy(), project: $project->getArrayCopy()));
 
                         try {
                             $mqtt->revoke($project->getId(), $user->getId());

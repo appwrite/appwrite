@@ -475,6 +475,9 @@ class Get extends Base
                         if ($claimed) {
                             $dbForProject->purgeCachedDocument('users', $user->getId());
 
+                            // The claim is what verified the address, before the stored row is read below
+                            $bus->dispatch(new EmailVerified(user: $user->getArrayCopy(), project: $project->getArrayCopy()));
+
                             try {
                                 $mqtt->revoke($project->getId(), $user->getId());
                             } catch (\Throwable $error) {
