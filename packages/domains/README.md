@@ -16,9 +16,13 @@ Install the package with Composer:
 composer require utopia-php/domains
 ```
 
-Utopia Domains requires PHP 8.5 or later with the cURL, mbstring, and SimpleXML extensions.
+Utopia Domains requires PHP 8.5 or later with the cURL, mbstring, SimpleXML and `utopia` extensions.
 
 ## Domain parsing
+
+`Domain` comes from the `utopia` PHP extension (`ext-utopia`, built from `crates/extension` in
+appwrite/appwrite); this package holds the validators, the registrars and the Public Suffix List
+(`data/data.php`) the extension embeds. 4.4.x is the last release with the parser in PHP.
 
 ```php
 <?php

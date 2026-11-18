@@ -69,15 +69,11 @@ cargo fmt --all --check
 
 ### Compare with PHP
 
-The utopia PHP extension serves this crate as `Utopia\Emails\Email`. Its parity corpus, `crates/extension/tests/emails.php`, checks every domain of both lists, every provider domain and 20,000 random addresses on PHP's class and on the extension; `crates/extension/tests/run.sh` runs it in the development image. To time both implementations:
-
-```bash
-python3 crates/extension/bench/run.py crates/extension/bench/emails.php . target/release/libutopia.so 5
-```
+The utopia PHP extension serves this crate as `Utopia\Emails\Email`, which no longer has a PHP implementation. `crates/extension/tests/run.sh` runs `packages/emails/tests` on it in the development image.
 
 ### Domain lists
 
-`data/free-domains.txt` and `data/disposable-domains.txt` are `packages/emails/data/{free,disposable}-domains.php` in the crate's format. After refreshing the PHP lists (`composer import:all` in `packages/emails`), regenerate them from the repository root:
+`data/free-domains.txt` and `data/disposable-domains.txt` are `packages/emails/data/{free,disposable}-domains.php` in the crate's format. After refreshing the package's lists (`composer import:all` in `packages/emails`), regenerate them from the repository root:
 
 ```bash
 php crates/utopia/emails/data/export.php

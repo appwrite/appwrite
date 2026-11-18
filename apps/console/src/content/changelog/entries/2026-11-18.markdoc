@@ -1,0 +1,24 @@
+---
+layout: changelog
+title: "Browse, query, and run your project with the new terminal command in the Appwrite CLI"
+date: 2026-11-18
+cover: /images/blog/announcing-cli-terminal/cover.avif
+tags: cli
+---
+
+The Appwrite CLI now includes [`appwrite terminal`](/docs/tooling/command-line/terminal), an interactive, keyboard-driven interface for your projects that runs inside your terminal.
+
+- **A project overview** with resource counts, 24 hours of requests, bandwidth, reads, writes, and executions, and the busiest routes.
+- **Every core resource**, from databases, tables, and rows to functions, sites, storage, users, teams, and messaging, most with a usage tab of their own.
+- **Queries in place.** Filter and sort a table's rows with `/`, for example `status=open sort:-total`.
+- **Actions.** Edit or create rows in your `$EDITOR`, execute functions, download files, and delete rows, files, sessions, or subscribers behind a typed confirmation.
+
+It signs in with your existing `appwrite login` or a stored API key, and works with Appwrite Cloud and self-hosted instances. Update to Appwrite CLI 28.13.3 or later, then run `appwrite terminal`.
+
+{% arrow_link href="/blog/post/announcing-cli-terminal" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/tooling/command-line/terminal" %}
+Learn how to use the terminal command
+{% /arrow_link %}

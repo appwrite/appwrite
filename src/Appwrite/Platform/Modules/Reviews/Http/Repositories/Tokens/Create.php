@@ -72,10 +72,12 @@ class Create extends Base
 
         try {
             $token = match (true) {
+                // GitHub's resolveReviewThread mutation, which the service uses to resolve the
+                // threads of fixed findings, refuses an app token without contents: write.
                 $vcs instanceof GitHub => $vcs->createAccessToken(
                     [(int) $providerRepositoryId],
                     [
-                        'contents' => 'read',
+                        'contents' => 'write',
                         'metadata' => 'read',
                         'pull_requests' => 'write',
                         'issues' => 'write',

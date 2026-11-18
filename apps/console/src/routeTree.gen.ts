@@ -57,6 +57,7 @@ import { Route as MarketingEducationRouteImport } from './routes/_marketing/educ
 import { Route as MarketingEnterpriseRouteImport } from './routes/_marketing/enterprise'
 import { Route as MarketingForAgentsRouteImport } from './routes/_marketing/for-agents'
 import { Route as MarketingHomeRouteImport } from './routes/_marketing/home'
+import { Route as MarketingHome1RouteImport } from './routes/_marketing/home1'
 import { Route as MarketingInnovationTeamsRouteImport } from './routes/_marketing/innovation-teams'
 import { Route as MarketingPartnersRouteImport } from './routes/_marketing/partners'
 import { Route as MarketingPricingRouteImport } from './routes/_marketing/pricing'
@@ -265,6 +266,7 @@ import { Route as PublicProjectsProjectIdRealtimeDebuggerRouteImport } from './r
 import { Route as PublicProjectsProjectIdRealtimeMessagesRouteImport } from './routes/_public/projects.$projectId.realtime.messages'
 import { Route as PublicProjectsProjectIdReviewsIndexRouteImport } from './routes/_public/projects.$projectId.reviews.index'
 import { Route as PublicProjectsProjectIdReviewsReviewIdRouteImport } from './routes/_public/projects.$projectId.reviews.$reviewId'
+import { Route as PublicProjectsProjectIdReviewsLearningsRouteImport } from './routes/_public/projects.$projectId.reviews.learnings'
 import { Route as PublicProjectsProjectIdReviewsRepositoriesRouteImport } from './routes/_public/projects.$projectId.reviews.repositories'
 import { Route as PublicProjectsProjectIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.settings.index'
 import { Route as PublicProjectsProjectIdSettingsDomainsRouteImport } from './routes/_public/projects.$projectId.settings.domains'
@@ -742,6 +744,11 @@ const MarketingForAgentsRoute = MarketingForAgentsRouteImport.update({
 const MarketingHomeRoute = MarketingHomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingHome1Route = MarketingHome1RouteImport.update({
+  id: '/home1',
+  path: '/home1',
   getParentRoute: () => MarketingRoute,
 } as any)
 const MarketingInnovationTeamsRoute =
@@ -1910,6 +1917,12 @@ const PublicProjectsProjectIdReviewsReviewIdRoute =
   PublicProjectsProjectIdReviewsReviewIdRouteImport.update({
     id: '/$reviewId',
     path: '/$reviewId',
+    getParentRoute: () => PublicProjectsProjectIdReviewsRoute,
+  } as any)
+const PublicProjectsProjectIdReviewsLearningsRoute =
+  PublicProjectsProjectIdReviewsLearningsRouteImport.update({
+    id: '/learnings',
+    path: '/learnings',
     getParentRoute: () => PublicProjectsProjectIdReviewsRoute,
   } as any)
 const PublicProjectsProjectIdReviewsRepositoriesRoute =
@@ -3641,6 +3654,7 @@ export interface FileRoutesByFullPath {
   '/enterprise': typeof MarketingEnterpriseRoute
   '/for-agents': typeof MarketingForAgentsRoute
   '/home': typeof MarketingHomeRoute
+  '/home1': typeof MarketingHome1Route
   '/innovation-teams': typeof MarketingInnovationTeamsRoute
   '/partners': typeof MarketingPartnersRoute
   '/pricing': typeof MarketingPricingRoute
@@ -3838,6 +3852,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/realtime/debugger': typeof PublicProjectsProjectIdRealtimeDebuggerRoute
   '/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
   '/projects/$projectId/reviews/$reviewId': typeof PublicProjectsProjectIdReviewsReviewIdRoute
+  '/projects/$projectId/reviews/learnings': typeof PublicProjectsProjectIdReviewsLearningsRoute
   '/projects/$projectId/reviews/repositories': typeof PublicProjectsProjectIdReviewsRepositoriesRoute
   '/projects/$projectId/settings/domains': typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   '/projects/$projectId/settings/firewall': typeof PublicProjectsProjectIdSettingsFirewallRoute
@@ -4135,6 +4150,7 @@ export interface FileRoutesByTo {
   '/enterprise': typeof MarketingEnterpriseRoute
   '/for-agents': typeof MarketingForAgentsRoute
   '/home': typeof MarketingHomeRoute
+  '/home1': typeof MarketingHome1Route
   '/innovation-teams': typeof MarketingInnovationTeamsRoute
   '/partners': typeof MarketingPartnersRoute
   '/pricing': typeof MarketingPricingRoute
@@ -4302,6 +4318,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/realtime/debugger': typeof PublicProjectsProjectIdRealtimeDebuggerRoute
   '/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
   '/projects/$projectId/reviews/$reviewId': typeof PublicProjectsProjectIdReviewsReviewIdRoute
+  '/projects/$projectId/reviews/learnings': typeof PublicProjectsProjectIdReviewsLearningsRoute
   '/projects/$projectId/reviews/repositories': typeof PublicProjectsProjectIdReviewsRepositoriesRoute
   '/projects/$projectId/settings/firewall': typeof PublicProjectsProjectIdSettingsFirewallRoute
   '/projects/$projectId/settings/identity-servers': typeof PublicProjectsProjectIdSettingsIdentityServersRouteWithChildren
@@ -4582,6 +4599,7 @@ export interface FileRoutesById {
   '/_marketing/enterprise': typeof MarketingEnterpriseRoute
   '/_marketing/for-agents': typeof MarketingForAgentsRoute
   '/_marketing/home': typeof MarketingHomeRoute
+  '/_marketing/home1': typeof MarketingHome1Route
   '/_marketing/innovation-teams': typeof MarketingInnovationTeamsRoute
   '/_marketing/partners': typeof MarketingPartnersRoute
   '/_marketing/pricing': typeof MarketingPricingRoute
@@ -4780,6 +4798,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/realtime/debugger': typeof PublicProjectsProjectIdRealtimeDebuggerRoute
   '/_public/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
   '/_public/projects/$projectId/reviews/$reviewId': typeof PublicProjectsProjectIdReviewsReviewIdRoute
+  '/_public/projects/$projectId/reviews/learnings': typeof PublicProjectsProjectIdReviewsLearningsRoute
   '/_public/projects/$projectId/reviews/repositories': typeof PublicProjectsProjectIdReviewsRepositoriesRoute
   '/_public/projects/$projectId/settings/domains': typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   '/_public/projects/$projectId/settings/firewall': typeof PublicProjectsProjectIdSettingsFirewallRoute
@@ -5081,6 +5100,7 @@ export interface FileRouteTypes {
     | '/enterprise'
     | '/for-agents'
     | '/home'
+    | '/home1'
     | '/innovation-teams'
     | '/partners'
     | '/pricing'
@@ -5278,6 +5298,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/realtime/debugger'
     | '/projects/$projectId/realtime/messages'
     | '/projects/$projectId/reviews/$reviewId'
+    | '/projects/$projectId/reviews/learnings'
     | '/projects/$projectId/reviews/repositories'
     | '/projects/$projectId/settings/domains'
     | '/projects/$projectId/settings/firewall'
@@ -5575,6 +5596,7 @@ export interface FileRouteTypes {
     | '/enterprise'
     | '/for-agents'
     | '/home'
+    | '/home1'
     | '/innovation-teams'
     | '/partners'
     | '/pricing'
@@ -5742,6 +5764,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/realtime/debugger'
     | '/projects/$projectId/realtime/messages'
     | '/projects/$projectId/reviews/$reviewId'
+    | '/projects/$projectId/reviews/learnings'
     | '/projects/$projectId/reviews/repositories'
     | '/projects/$projectId/settings/firewall'
     | '/projects/$projectId/settings/identity-servers'
@@ -6021,6 +6044,7 @@ export interface FileRouteTypes {
     | '/_marketing/enterprise'
     | '/_marketing/for-agents'
     | '/_marketing/home'
+    | '/_marketing/home1'
     | '/_marketing/innovation-teams'
     | '/_marketing/partners'
     | '/_marketing/pricing'
@@ -6219,6 +6243,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/realtime/debugger'
     | '/_public/projects/$projectId/realtime/messages'
     | '/_public/projects/$projectId/reviews/$reviewId'
+    | '/_public/projects/$projectId/reviews/learnings'
     | '/_public/projects/$projectId/reviews/repositories'
     | '/_public/projects/$projectId/settings/domains'
     | '/_public/projects/$projectId/settings/firewall'
@@ -6860,6 +6885,13 @@ declare module '@tanstack/react-router' {
       path: '/for-agents'
       fullPath: '/for-agents'
       preLoaderRoute: typeof MarketingForAgentsRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/home1': {
+      id: '/_marketing/home1'
+      path: '/home1'
+      fullPath: '/home1'
+      preLoaderRoute: typeof MarketingHome1RouteImport
       parentRoute: typeof MarketingRoute
     }
     '/_marketing/home': {
@@ -8323,6 +8355,13 @@ declare module '@tanstack/react-router' {
       path: '/$reviewId'
       fullPath: '/projects/$projectId/reviews/$reviewId'
       preLoaderRoute: typeof PublicProjectsProjectIdReviewsReviewIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdReviewsRoute
+    }
+    '/_public/projects/$projectId/reviews/learnings': {
+      id: '/_public/projects/$projectId/reviews/learnings'
+      path: '/learnings'
+      fullPath: '/projects/$projectId/reviews/learnings'
+      preLoaderRoute: typeof PublicProjectsProjectIdReviewsLearningsRouteImport
       parentRoute: typeof PublicProjectsProjectIdReviewsRoute
     }
     '/_public/projects/$projectId/reviews/repositories': {
@@ -10075,6 +10114,7 @@ interface MarketingRouteChildren {
   MarketingEnterpriseRoute: typeof MarketingEnterpriseRoute
   MarketingForAgentsRoute: typeof MarketingForAgentsRoute
   MarketingHomeRoute: typeof MarketingHomeRoute
+  MarketingHome1Route: typeof MarketingHome1Route
   MarketingInnovationTeamsRoute: typeof MarketingInnovationTeamsRoute
   MarketingPartnersRoute: typeof MarketingPartnersRoute
   MarketingPricingRoute: typeof MarketingPricingRoute
@@ -10113,6 +10153,7 @@ const MarketingRouteChildren: MarketingRouteChildren = {
   MarketingEnterpriseRoute: MarketingEnterpriseRoute,
   MarketingForAgentsRoute: MarketingForAgentsRoute,
   MarketingHomeRoute: MarketingHomeRoute,
+  MarketingHome1Route: MarketingHome1Route,
   MarketingInnovationTeamsRoute: MarketingInnovationTeamsRoute,
   MarketingPartnersRoute: MarketingPartnersRoute,
   MarketingPricingRoute: MarketingPricingRoute,
@@ -11462,6 +11503,7 @@ const PublicProjectsProjectIdRealtimeRouteWithChildren =
 
 interface PublicProjectsProjectIdReviewsRouteChildren {
   PublicProjectsProjectIdReviewsReviewIdRoute: typeof PublicProjectsProjectIdReviewsReviewIdRoute
+  PublicProjectsProjectIdReviewsLearningsRoute: typeof PublicProjectsProjectIdReviewsLearningsRoute
   PublicProjectsProjectIdReviewsRepositoriesRoute: typeof PublicProjectsProjectIdReviewsRepositoriesRoute
   PublicProjectsProjectIdReviewsIndexRoute: typeof PublicProjectsProjectIdReviewsIndexRoute
 }
@@ -11470,6 +11512,8 @@ const PublicProjectsProjectIdReviewsRouteChildren: PublicProjectsProjectIdReview
   {
     PublicProjectsProjectIdReviewsReviewIdRoute:
       PublicProjectsProjectIdReviewsReviewIdRoute,
+    PublicProjectsProjectIdReviewsLearningsRoute:
+      PublicProjectsProjectIdReviewsLearningsRoute,
     PublicProjectsProjectIdReviewsRepositoriesRoute:
       PublicProjectsProjectIdReviewsRepositoriesRoute,
     PublicProjectsProjectIdReviewsIndexRoute:
