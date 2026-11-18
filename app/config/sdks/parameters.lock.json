@@ -805,6 +805,20 @@
             "teamId",
             "name"
         ],
+        "teams.getPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "teams.updatePhoto": [
+            "teamId",
+            "file"
+        ],
+        "teams.deletePhoto": [
+            "teamId"
+        ],
         "teams.updatePrefs": [
             "teamId",
             "prefs"
@@ -3876,6 +3890,10 @@
             "queries",
             "total"
         ],
+        "reviews.listAuthors": [
+            "range",
+            "repositoryId"
+        ],
         "reviews.listEvents": [
             "reviewId",
             "queries",
@@ -4796,6 +4814,20 @@
         "teams.updateName": [
             "teamId",
             "name"
+        ],
+        "teams.getPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "teams.updatePhoto": [
+            "teamId",
+            "file"
+        ],
+        "teams.deletePhoto": [
+            "teamId"
         ],
         "teams.updatePrefs": [
             "teamId",
@@ -8272,6 +8304,10 @@
             "queries",
             "total"
         ],
+        "reviews.listAuthors": [
+            "range",
+            "repositoryId"
+        ],
         "reviews.listEvents": [
             "reviewId",
             "queries",
@@ -9182,6 +9218,20 @@
         "teams.updateName": [
             "teamId",
             "name"
+        ],
+        "teams.getPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "teams.updatePhoto": [
+            "teamId",
+            "file"
+        ],
+        "teams.deletePhoto": [
+            "teamId"
         ],
         "teams.updatePrefs": [
             "teamId",

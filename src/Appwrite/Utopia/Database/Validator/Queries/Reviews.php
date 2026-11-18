@@ -7,6 +7,7 @@ class Reviews extends Base
     public const ALLOWED_ATTRIBUTES = [
         'repositoryId',
         'providerPullRequestId',
+        'providerPullRequestAuthor',
         'providerCommitHash',
         'trigger',
         'status',

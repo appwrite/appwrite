@@ -403,6 +403,8 @@ class Response extends SwooleResponse
     public const MODEL_REVIEW_EVENT_LIST = 'reviewEventList';
     public const MODEL_REVIEW_REPOSITORY = 'reviewRepository';
     public const MODEL_REVIEW_REPOSITORY_LIST = 'reviewRepositoryList';
+    public const MODEL_REVIEW_AUTHOR = 'reviewAuthor';
+    public const MODEL_REVIEW_AUTHOR_LIST = 'reviewAuthorList';
     public const MODEL_REVIEW_LEARNING = 'reviewLearning';
     public const MODEL_REVIEW_LEARNING_LIST = 'reviewLearningList';
 
