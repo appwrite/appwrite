@@ -16,6 +16,7 @@ import {
   TubeGeometry,
   Vector3,
   type Texture,
+  type WebGLRenderer,
 } from 'three'
 import { SVGLoader } from 'three/addons/loaders/SVGLoader.js'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
@@ -24,9 +25,23 @@ import {
   InstallerDisplay,
   getProductFramework,
 } from './frameworks'
-import { box, cylinder, ground, merge, panel, roundedPlane } from './geometry'
+import {
+  box,
+  cylinder,
+  ground,
+  merge,
+  mergeFinishes,
+  panel,
+  roundedPlane,
+} from './geometry'
 import { ConsoleDisplay } from './console'
-import { createKitBeam, createKitDisplay, type FactoryKit } from './kit'
+import {
+  FINISHES,
+  createKitBeam,
+  createKitDisplay,
+  type FactoryKit,
+  type Finish,
+} from './kit'
 import { createChevronMaterial } from './materials'
 import type { FactoryPalette } from './palette'
 import {
@@ -358,7 +373,10 @@ function createNetworkCables(): BufferGeometry {
   return merged
 }
 
-type PartKey = 'bed' | 'matte' | 'steel' | 'aluminum' | 'enclosure' | 'glass'
+type PartKey = Extract<
+  Finish,
+  'bed' | 'matte' | 'steel' | 'aluminum' | 'enclosure' | 'glass'
+>
 
 const PART_KEYS: readonly PartKey[] = [
   'bed',
@@ -1013,18 +1031,8 @@ export class FactoryWorld {
     network.userData.noReflection = true
     this.group.add(network)
 
-    const materials: Record<PartKey, Mesh['material']> = {
-      bed: kit.bed,
-      matte: kit.matte,
-      steel: kit.steel,
-      aluminum: kit.aluminum,
-      enclosure: kit.enclosure,
-      glass: kit.glass,
-    }
-    for (const key of PART_KEYS) {
-      if (parts[key].length)
-        this.group.add(new Mesh(track(merge(parts[key])), materials[key]))
-    }
+    // Every static machined part, in all its finishes, is one draw.
+    this.group.add(new Mesh(track(mergeFinishes(parts, FINISHES)), kit.finish))
 
     this.logo = new Mesh(track(createLogoGeometry()), kit.logo)
     this.logo.position.set(CORE.x, LOGO_Y, RACKS.front + 0.014)
@@ -1334,6 +1342,11 @@ export class FactoryWorld {
         0.05 * installOn,
       )
     }
+  }
+
+  /** Sends this frame's screen changes to the GPU (after `update`, before rendering). */
+  upload(renderer: WebGLRenderer) {
+    this.console.upload(renderer)
   }
 
   dispose() {

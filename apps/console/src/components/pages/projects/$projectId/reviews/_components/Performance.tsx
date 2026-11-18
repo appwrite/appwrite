@@ -7,6 +7,7 @@ import {
   Bug,
   GitPullRequest,
   Loader2,
+  Target,
   Wrench,
   type LucideIcon,
 } from 'lucide-react'
@@ -29,10 +30,15 @@ import {
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
-import type { ReviewAuthor, ReviewAuthorRange } from '@/lib/appwrite/reviews'
+import type {
+  ReviewAuthor,
+  ReviewAuthorRange,
+  ReviewCategory,
+} from '@/lib/appwrite/reviews'
 import {
   fetchRepository,
   useReviewAuthors,
+  useReviewCategories,
   useReviewRepositories,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_STALE_TIME } from '@/lib/react-query/hooks/constants'
@@ -57,6 +63,15 @@ const REPOSITORY_FILTER_LIMIT = 100
 
 const ALL_REPOSITORIES = 'all'
 
+/**
+ * Settled findings a category needs before its dismissed share is flagged:
+ * below it, one dismissal reads as a trend.
+ */
+const NOISY_MIN_SETTLED = 3
+
+/** Share of settled findings at or above which a category is flagged noisy. */
+const NOISY_SHARE = 0.5
+
 /** Tiers worst first, so a tier sorts by its index. */
 const TIERS = ['F', 'D', 'C', 'B', 'A', 'S']
 
@@ -67,6 +82,7 @@ type SortKey =
   | 'findingsPerPull'
   | 'severe'
   | 'fixRate'
+  | 'useful'
   | 'tier'
   | 'lastReviewAt'
 
@@ -76,6 +92,17 @@ function ratio(part: number, whole: number): number | null {
 
 function formatPercent(value: number | null): string {
   return value === null ? '-' : `${Math.round(value * 100)}%`
+}
+
+/**
+ * Share of the settled findings that a later commit fixed rather than someone
+ * dismissed. Findings still open count for neither side.
+ */
+function usefulRate(item: {
+  resolved: number
+  dismissed: number
+}): number | null {
+  return ratio(item.resolved, item.resolved + item.dismissed)
 }
 
 function formatNumber(value: number | null): string {
@@ -96,6 +123,8 @@ function sortValue(author: ReviewAuthor, key: SortKey): number | string {
       return author.critical + author.major
     case 'fixRate':
       return ratio(author.resolved, author.findings) ?? -1
+    case 'useful':
+      return usefulRate(author) ?? -1
     case 'tier':
       return TIERS.indexOf(author.tier)
     case 'lastReviewAt':
@@ -179,6 +208,7 @@ export function Performance({ projectId }: { projectId: string }) {
     range,
     repositoryId,
   )
+  const { categories } = useReviewCategories(projectId, range, repositoryId)
 
   // A repository row stores GitHub's ID only; its name comes from GitHub, as
   // on the repositories tab, whose cache this shares.
@@ -218,6 +248,7 @@ export function Performance({ projectId }: { projectId: string }) {
           critical: sum.critical + author.critical,
           major: sum.major + author.major,
           resolved: sum.resolved + author.resolved,
+          dismissed: sum.dismissed + author.dismissed,
         }),
         {
           pulls: 0,
@@ -227,6 +258,7 @@ export function Performance({ projectId }: { projectId: string }) {
           critical: 0,
           major: 0,
           resolved: 0,
+          dismissed: 0,
         },
       ),
     [authors],
@@ -352,7 +384,7 @@ export function Performance({ projectId }: { projectId: string }) {
         />
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             <StatCard
               icon={GitPullRequest}
               label={t('Pull requests reviewed')}
@@ -388,6 +420,14 @@ export function Performance({ projectId }: { projectId: string }) {
                 String(totals.resolved),
               )}
             />
+            <StatCard
+              icon={Target}
+              label={t('Useful findings')}
+              value={formatPercent(usefulRate(totals))}
+              hint={t('{resolved} fixed, {dismissed} dismissed')
+                .replace('{resolved}', String(totals.resolved))
+                .replace('{dismissed}', String(totals.dismissed))}
+            />
           </div>
 
           <div className="rounded-lg border border-border bg-card overflow-hidden">
@@ -401,6 +441,7 @@ export function Performance({ projectId }: { projectId: string }) {
                   {header('findingsPerPull', t('Findings / PR'))}
                   {header('severe', t('Critical / major'))}
                   {header('fixRate', t('Fixed'))}
+                  {header('useful', t('Useful'))}
                   {header('tier', t('Confidence'))}
                   {header('lastReviewAt', t('Last review'))}
                 </TableRow>
@@ -443,6 +484,9 @@ export function Performance({ projectId }: { projectId: string }) {
                     <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums">
                       {formatPercent(ratio(author.resolved, author.findings))}
                     </TableCell>
+                    <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums">
+                      {formatPercent(usefulRate(author))}
+                    </TableCell>
                     <TableCell className="px-4 py-3 text-end">
                       <div className="flex justify-end">
                         <ReviewTierBadge tier={author.tier} />
@@ -461,13 +505,90 @@ export function Performance({ projectId }: { projectId: string }) {
               </TableBody>
             </Table>
           </div>
+          {categories.length > 0 && <Categories categories={categories} />}
           <p className="text-[12px] text-muted-foreground">
             {t(
               'Counts completed reviews in the range. Approval and confidence go by each pull request’s latest review; fixed counts findings resolved by a later commit.',
+            )}{' '}
+            {t(
+              'Useful findings is the share of settled findings that were fixed rather than dismissed; findings still open count for neither.',
             )}
           </p>
         </>
       )}
+    </div>
+  )
+}
+
+/**
+ * How the findings of each category landed, most dismissed first: the signal for
+ * which kinds of findings the reviewer should flag less, or a learning should
+ * narrow.
+ */
+function Categories({ categories }: { categories: ReviewCategory[] }) {
+  const t = useT()
+  return (
+    <div className="space-y-2">
+      <div>
+        <h3 className="text-[14px] font-semibold text-foreground">
+          {t('Findings by category')}
+        </h3>
+        <p className="text-[12px] text-muted-foreground">
+          {t(
+            'Categories that are often dismissed are candidates for a learning that tells the reviewer to flag them less.',
+          )}
+        </p>
+      </div>
+      <div className="rounded-lg border border-border bg-card overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent border-b border-border">
+              <TableHead className={HEAD_CLASS}>{t('Category')}</TableHead>
+              <TableHead className={cn(HEAD_CLASS, 'text-end')}>
+                {t('Findings')}
+              </TableHead>
+              <TableHead className={cn(HEAD_CLASS, 'text-end')}>
+                {t('Useful')}
+              </TableHead>
+              <TableHead className={cn(HEAD_CLASS, 'text-end')}>
+                {t('Dismissed')}
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {categories.map((category) => {
+              const settled = category.resolved + category.dismissed
+              const noisy =
+                settled >= NOISY_MIN_SETTLED &&
+                category.dismissed / settled >= NOISY_SHARE
+              return (
+                <TableRow
+                  key={category.category}
+                  className="border-b border-border/50"
+                >
+                  <TableCell className="px-4 py-3 text-[13px] font-medium text-foreground">
+                    {category.category}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums">
+                    {category.findings}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums">
+                    {formatPercent(usefulRate(category))}
+                  </TableCell>
+                  <TableCell
+                    className={cn(
+                      'px-4 py-3 text-end text-[13px] tabular-nums',
+                      noisy && 'text-destructive',
+                    )}
+                  >
+                    {category.dismissed}
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   )
 }

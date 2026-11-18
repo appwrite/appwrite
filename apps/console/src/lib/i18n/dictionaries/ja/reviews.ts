@@ -263,4 +263,16 @@ export const jaReviewsDictionary: Record<string, string> = {
     'レビューが完了すると、プルリクエストの作成者ごとのレビュー結果がここに表示されます。より長い期間か別のリポジトリをお試しください。',
   'Counts completed reviews in the range. Approval and confidence go by each pull request’s latest review; fixed counts findings resolved by a later commit.':
     '期間内に完了したレビューを集計します。承認と信頼度は各プルリクエストの最新のレビューに基づき、修正済みは後のコミットで解決された指摘を数えます。',
+
+  // Finding outcomes
+  'Useful findings': '有用な指摘',
+  '{resolved} fixed, {dismissed} dismissed':
+    '修正 {resolved} 件、却下 {dismissed} 件',
+  Useful: '有用',
+  Dismissed: '却下',
+  'Findings by category': 'カテゴリ別の指摘',
+  'Categories that are often dismissed are candidates for a learning that tells the reviewer to flag them less.':
+    'よく却下されるカテゴリは、レビュアーに指摘を控えさせる学習の候補です。',
+  'Useful findings is the share of settled findings that were fixed rather than dismissed; findings still open count for neither.':
+    '有用な指摘は、決着した指摘のうち却下されずに修正されたものの割合です。未解決の指摘はどちらにも数えません。',
 }

@@ -2,6 +2,7 @@ import {
   Color,
   MeshBasicMaterial,
   MeshStandardMaterial,
+  Vector2,
   type ShaderMaterial,
   type Texture,
 } from 'three'
@@ -18,7 +19,25 @@ import {
 } from './materials'
 import type { FactoryPalette } from './palette'
 
+/** The machined finishes a rigid assembly is made of, in `aFinish` order. */
+export const FINISHES = [
+  'enclosure',
+  'bed',
+  'aluminum',
+  'steel',
+  'graphite',
+  'matte',
+  'glass',
+  'accent',
+] as const
+export type Finish = (typeof FINISHES)[number]
+
 export type FactoryKit = {
+  /**
+   * Every finish in one material: each vertex picks its color, roughness and
+   * metalness by `aFinish`, so assemblies merge across finishes.
+   */
+  finish: MeshStandardMaterial
   /** Painted column housings. */
   enclosure: MeshStandardMaterial
   /** The bed the machine stands on. */
@@ -31,6 +50,11 @@ export type FactoryKit = {
   graphite: MeshStandardMaterial
   /** Rubber and shadow gaps. */
   matte: MeshStandardMaterial
+  /**
+   * The rubber pads under the products: `matte`, as a material of its own so
+   * instanced and plain meshes never share (and keep switching) a program.
+   */
+  pad: MeshStandardMaterial
   /** Black glass. */
   glass: MeshStandardMaterial
   /** Glossy pink power cables. */
@@ -73,6 +97,7 @@ export function createKit(
   const screen = createScreenMaterial()
 
   const kit: FactoryKit = {
+    finish: createFinishMaterial(),
     // Housings are bead-blasted anodized aluminium, like a phone's frame: fully
     // metallic, satin, so the rounded edges pick up the studio's softboxes.
     // Enclosure and bed carry baked occlusion in vertex colors (see `ground`).
@@ -90,6 +115,7 @@ export function createKit(
     steel: standard(0.14, 1),
     graphite: standard(0.42, 0.75),
     matte: standard(0.9, 0),
+    pad: standard(0.9, 0),
     glass: standard(0.06, 1),
     cable: new MeshStandardMaterial({ roughness: 0.55, metalness: 0.05 }),
     ...createNetworkCable(),
@@ -118,6 +144,71 @@ export function createKit(
 
   applyKitPalette(kit, palette)
   return kit
+}
+
+/**
+ * A standard material whose base color, roughness and metalness come from
+ * the finish each vertex names (`aFinish`), and whose vertex colors carry the
+ * baked occlusion of the parts that have it (white elsewhere).
+ */
+function createFinishMaterial() {
+  const colors = FINISHES.map(() => new Color())
+  const surfaces = FINISHES.map(() => new Vector2())
+  const material = new MeshStandardMaterial({ vertexColors: true })
+  material.userData.colors = colors
+  material.userData.surfaces = surfaces
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.uFinishColor = { value: colors }
+    shader.uniforms.uFinishSurface = { value: surfaces }
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+        attribute float aFinish;
+        flat varying int vFinish;`,
+      )
+      .replace(
+        '#include <begin_vertex>',
+        `#include <begin_vertex>
+        vFinish = int(aFinish + 0.5);`,
+      )
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+        uniform vec3 uFinishColor[${FINISHES.length}];
+        uniform vec2 uFinishSurface[${FINISHES.length}];
+        flat varying int vFinish;`,
+      )
+      .replace(
+        '#include <color_fragment>',
+        `#include <color_fragment>
+        diffuseColor.rgb *= uFinishColor[vFinish];`,
+      )
+      .replace(
+        '#include <roughnessmap_fragment>',
+        `#include <roughnessmap_fragment>
+        roughnessFactor = uFinishSurface[vFinish].x;`,
+      )
+      .replace(
+        '#include <metalnessmap_fragment>',
+        `#include <metalnessmap_fragment>
+        metalnessFactor = uFinishSurface[vFinish].y;`,
+      )
+  }
+  material.customProgramCacheKey = () => 'factory-finish'
+  return material
+}
+
+/** Copies every finish's color and surface into the shared finish material. */
+function syncFinishes(kit: FactoryKit) {
+  const colors = kit.finish.userData.colors as Color[]
+  const surfaces = kit.finish.userData.surfaces as Vector2[]
+  FINISHES.forEach((key, index) => {
+    const material = kit[key]
+    colors[index]!.copy(material.color)
+    surfaces[index]!.set(material.roughness, material.metalness)
+  })
 }
 
 export type NetworkUniforms = {
@@ -230,6 +321,7 @@ export function applyKitPalette(kit: FactoryKit, palette: FactoryPalette) {
   kit.steel.color.copy(palette.steel)
   kit.graphite.color.copy(palette.graphite)
   kit.matte.color.copy(palette.matte)
+  kit.pad.color.copy(palette.matte)
   kit.glass.color.copy(palette.glass)
   kit.cable.color.copy(palette.cable)
   kit.cable.emissive.copy(palette.tones.pink)
@@ -246,6 +338,7 @@ export function applyKitPalette(kit: FactoryKit, palette: FactoryPalette) {
   kit.track.color.set(0xffffff)
   kit.led.color.set(0xffffff)
   for (const lamp of kit.lamps) setLamp(lamp, palette, 0)
+  syncFinishes(kit)
 
   const floor = kit.floor.uniforms
   floor.uBackground!.value.copy(palette.background)
@@ -271,12 +364,14 @@ export function applyKitPalette(kit: FactoryKit, palette: FactoryPalette) {
 
 export function disposeKit(kit: FactoryKit) {
   const materials = [
+    kit.finish,
     kit.enclosure,
     kit.bed,
     kit.aluminum,
     kit.steel,
     kit.graphite,
     kit.matte,
+    kit.pad,
     kit.glass,
     kit.cable,
     kit.networkCable,
