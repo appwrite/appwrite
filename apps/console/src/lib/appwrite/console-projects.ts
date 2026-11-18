@@ -2,7 +2,7 @@ import { ID } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import type { Region } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { WILDCARD_HOSTNAME } from '@/lib/utils/platform'
+import { LOOPBACK_HOSTNAME } from '@/lib/utils/platform'
 
 type ListConsoleProjectsParams = {
   /** Organization / team id. Required for `/organization/projects`. */
@@ -78,8 +78,9 @@ export function listConsoleProjects(
  * Create a project via the org-scoped console Organization SDK
  * (`POST /organization/projects` with `X-Appwrite-Organization`).
  * The org header assigns the project to `teamId`; no separate team update.
- * The project starts with a web platform for any hostname, so a first web app
- * connects without a CORS error; the apps list flags it until it is narrowed.
+ * The project starts with a web platform for LOOPBACK_HOSTNAME, so a first web
+ * app connects from local development without a CORS error; every other origin
+ * stays rejected until the developer adds its hostname on the apps page.
  */
 export async function createConsoleProject(params: {
   projectId: string
@@ -100,8 +101,8 @@ export async function createConsoleProject(params: {
       .forProject(project.$id, project.region)
       .project.createWebPlatform({
         platformId: ID.unique(),
-        name: 'Web app',
-        hostname: WILDCARD_HOSTNAME,
+        name: 'Local development',
+        hostname: LOOPBACK_HOSTNAME,
       })
   } catch (error) {
     // The project exists either way; its apps page still offers to add one.

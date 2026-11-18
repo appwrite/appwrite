@@ -815,6 +815,121 @@ final class ReviewsConsoleClientTest extends Scope
         $this->client->call(Client::METHOD_DELETE, '/reviews/repositories/' . $repositoryId, $this->projectHeaders());
     }
 
+    public function testAuthors(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $installationId = $this->setupInstallation();
+
+        $repository = $this->client->call(Client::METHOD_POST, '/reviews/repositories', $this->projectHeaders(), [
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->providerRepositoryId,
+        ]);
+        $this->assertSame(201, $repository['headers']['status-code']);
+        $repositoryId = $repository['body']['$id'];
+
+        $alicePull = \random_int(1000, 9_999_999);
+        $bobPull = $alicePull + 1;
+
+        // Alice's first review asks for changes; the second, after a push, approves
+        $this->sendPullRequestEvent('opened', $alicePull, \str_repeat('a', 40), 'alice');
+        $first = $this->listReviews($alicePull)['body']['reviews'][0];
+        $this->assertSame('alice', $first['providerPullRequestAuthor']);
+        $this->completeReview($projectId, $first['$id'], 'request_changes', 'C', [
+            ['severity' => 'critical', 'status' => 'posted'],
+            ['severity' => 'major', 'status' => 'posted'],
+            ['severity' => 'minor', 'status' => 'dropped'],
+        ]);
+
+        $findings = $this->callService(Client::METHOD_GET, '/reviews/repositories/' . $repositoryId . '/pulls/' . $alicePull . '/findings', [
+            'projectId' => $projectId,
+        ]);
+        $critical = \array_values(\array_filter($findings['body']['findings'], fn (array $finding) => $finding['severity'] === 'critical'))[0];
+        $resolved = $this->callService(Client::METHOD_PATCH, '/reviews/repositories/' . $repositoryId . '/pulls/' . $alicePull . '/findings/status', [
+            'projectId' => $projectId,
+            'findingIds' => [$critical['id']],
+            'status' => 'resolved',
+            'from' => 'posted',
+        ]);
+        $this->assertSame(204, $resolved['headers']['status-code']);
+
+        $this->sendPullRequestEvent('synchronize', $alicePull, \str_repeat('b', 40), 'alice');
+        $second = $this->listReviews($alicePull, [Query::equal('status', ['queued'])->toString()])['body']['reviews'][0];
+        $this->completeReview($projectId, $second['$id'], 'approve', 'A');
+
+        // Bob's pull request is approved by its first review
+        $this->sendPullRequestEvent('opened', $bobPull, \str_repeat('c', 40), 'bob');
+        $this->completeReview($projectId, $this->listReviews($bobPull)['body']['reviews'][0]['$id'], 'approve', 'S');
+
+        // A review still running counts for nobody
+        $this->sendPullRequestEvent('opened', $bobPull + 1, \str_repeat('d', 40), 'carol');
+
+        /**
+         * Test for SUCCESS
+         */
+
+        $authors = $this->client->call(Client::METHOD_GET, '/reviews/authors', $this->projectHeaders(), [
+            'repositoryId' => $repositoryId,
+        ]);
+        $this->assertSame(200, $authors['headers']['status-code']);
+        $this->assertSame(2, $authors['body']['total']);
+        $this->assertSame(['alice', 'bob'], \array_column($authors['body']['authors'], 'author'));
+
+        $alice = $authors['body']['authors'][0];
+        $this->assertSame(1, $alice['pulls']);
+        $this->assertSame(2, $alice['reviews']);
+        $this->assertSame(1, $alice['approved']);
+        $this->assertSame(0, $alice['approvedFirst']);
+        // The dropped finding was never posted
+        $this->assertSame(2, $alice['findings']);
+        $this->assertSame(1, $alice['critical']);
+        $this->assertSame(1, $alice['major']);
+        $this->assertSame(1, $alice['resolved']);
+        $this->assertSame(0, $alice['dismissed']);
+        // The latest review's tier, not the first one's
+        $this->assertSame('A', $alice['tier']);
+        $this->assertNotEmpty($alice['lastReviewAt']);
+
+        $bob = $authors['body']['authors'][1];
+        $this->assertSame(1, $bob['pulls']);
+        $this->assertSame(1, $bob['approvedFirst']);
+        $this->assertSame(0, $bob['findings']);
+        $this->assertSame('S', $bob['tier']);
+
+        $week = $this->client->call(Client::METHOD_GET, '/reviews/authors', $this->projectHeaders(), [
+            'repositoryId' => $repositoryId,
+            'range' => '7d',
+        ]);
+        $this->assertSame(200, $week['headers']['status-code']);
+        $this->assertSame(2, $week['body']['total']);
+
+        // Reviews can be listed by author
+        $reviews = $this->client->call(Client::METHOD_GET, '/reviews', $this->projectHeaders(), [
+            'queries' => [
+                Query::equal('repositoryId', [$repositoryId])->toString(),
+                Query::equal('providerPullRequestAuthor', ['alice'])->toString(),
+            ],
+        ]);
+        $this->assertSame(2, $reviews['body']['total']);
+
+        /**
+         * Test for FAILURE
+         */
+
+        $invalid = $this->client->call(Client::METHOD_GET, '/reviews/authors', $this->projectHeaders(), [
+            'range' => '1y',
+        ]);
+        $this->assertSame(400, $invalid['headers']['status-code']);
+
+        // Another project sees none of them
+        $authors = $this->client->call(Client::METHOD_GET, '/reviews/authors', $this->projectHeaders($this->getProject(true)['$id']), [
+            'repositoryId' => $repositoryId,
+        ]);
+        $this->assertSame(200, $authors['headers']['status-code']);
+        $this->assertSame(0, $authors['body']['total']);
+
+        $this->client->call(Client::METHOD_DELETE, '/reviews/repositories/' . $repositoryId, $this->projectHeaders());
+    }
+
     public function testServiceNeedsTheSecret(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -912,6 +1027,43 @@ final class ReviewsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-reviews-secret' => System::getEnv('_APP_REVIEWS_SECRET', ''),
         ], $body);
+    }
+
+    /**
+     * Starts and completes a review the way the review service does.
+     *
+     * @param array<array{severity: string, status: string}> $findings
+     */
+    private function completeReview(string $projectId, string $reviewId, string $verdict, string $tier, array $findings = []): void
+    {
+        $started = $this->callService(Client::METHOD_PATCH, '/reviews/' . $reviewId . '/status', [
+            'projectId' => $projectId,
+            'status' => 'processing',
+            'headSha' => \str_repeat('e', 40),
+            'baseSha' => \str_repeat('f', 40),
+        ]);
+        $this->assertSame(204, $started['headers']['status-code']);
+
+        $completed = $this->callService(Client::METHOD_PATCH, '/reviews/' . $reviewId . '/status', [
+            'projectId' => $projectId,
+            'status' => 'completed',
+            'verdict' => $verdict,
+            'tier' => $tier,
+            'findings' => \array_map(fn (array $finding, int $index) => [
+                'path' => 'src/index.ts',
+                'startLine' => $index + 1,
+                'endLine' => $index + 1,
+                'severity' => $finding['severity'],
+                'category' => 'bug',
+                'title' => 'Finding ' . $index,
+                'body' => 'Something is off.',
+                'suggestion' => null,
+                'status' => $finding['status'],
+                'dropReason' => $finding['status'] === 'dropped' ? 'Not confirmed by verification.' : null,
+                'providerCommentId' => null,
+            ], $findings, \array_keys($findings)),
+        ]);
+        $this->assertSame(204, $completed['headers']['status-code']);
     }
 
     private function listReviews(int $pullRequest, array $queries = [], ?string $projectId = null): array
@@ -1025,7 +1177,7 @@ final class ReviewsConsoleClientTest extends Scope
         return $repositories;
     }
 
-    private function sendPullRequestEvent(string $action, int $pullRequest, string $head): array
+    private function sendPullRequestEvent(string $action, int $pullRequest, string $head, string $author = 'appwrite-test'): array
     {
         $payload = [
             'action' => $action,
@@ -1033,7 +1185,7 @@ final class ReviewsConsoleClientTest extends Scope
             'pull_request' => [
                 'head' => ['ref' => 'review-e2e', 'sha' => $head, 'user' => ['login' => 'appwrite-test']],
                 'base' => ['ref' => 'main', 'user' => ['login' => 'appwrite-test']],
-                'user' => ['avatar_url' => ''],
+                'user' => ['login' => $author, 'avatar_url' => ''],
             ],
             'repository' => [
                 'id' => (int) $this->providerRepositoryId,
