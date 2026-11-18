@@ -276,6 +276,7 @@ export function View() {
                       rule={rule}
                       onViewLogs={handleViewLogs}
                       onRetry={handleRetry}
+                      onUpdate={isSmtpRule(rule) ? undefined : setUpdateRule}
                       onRecords={handleRecords}
                       onDelete={handleDelete}
                     >
