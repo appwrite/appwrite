@@ -44,6 +44,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\GitHub\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Gitlab\Update as UpdateOAuth2Gitlab;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Google\Update as UpdateOAuth2Google;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\HuggingFace\Update as UpdateOAuth2HuggingFace;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Instagram\Update as UpdateOAuth2Instagram;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Kakao\Update as UpdateOAuth2Kakao;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Keycloak\Update as UpdateOAuth2Keycloak;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Kick\Update as UpdateOAuth2Kick;
@@ -56,6 +57,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Netlify\Update as Upda
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Notion\Update as UpdateOAuth2Notion;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Oidc\Update as UpdateOAuth2Oidc;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Okta\Update as UpdateOAuth2Okta;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Patreon\Update as UpdateOAuth2Patreon;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Paypal\Update as UpdateOAuth2Paypal;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\PaypalSandbox\Update as UpdateOAuth2PaypalSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Podio\Update as UpdateOAuth2Podio;
@@ -66,6 +68,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Roblox\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Salesforce\Update as UpdateOAuth2Salesforce;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Slack\Update as UpdateOAuth2Slack;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Spotify\Update as UpdateOAuth2Spotify;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Strava\Update as UpdateOAuth2Strava;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Stripe\Update as UpdateOAuth2Stripe;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TikTok\Update as UpdateOAuth2TikTok;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Tradeshift\Update as UpdateOAuth2Tradeshift;
@@ -301,6 +304,9 @@ class Http extends Service
         $this->addAction('updateProjectOAuth2Apple', UpdateOAuth2Apple::class);
         $this->addAction('updateProjectOAuth2Microsoft', UpdateOAuth2Microsoft::class);
         $this->addAction('updateProjectOAuth2Hugging Face', UpdateOAuth2HuggingFace::class);
+        $this->addAction('updateProjectOAuth2Instagram', UpdateOAuth2Instagram::class);
+        $this->addAction('updateProjectOAuth2Patreon', UpdateOAuth2Patreon::class);
+        $this->addAction('updateProjectOAuth2Strava', UpdateOAuth2Strava::class);
         $this->addAction('updateProjectOAuth2VK', UpdateOAuth2VK::class);
         $this->addAction('updateProjectOAuth2Netlify', UpdateOAuth2Netlify::class);
         $this->addAction('updateProjectOAuth2Railway', UpdateOAuth2Railway::class);
