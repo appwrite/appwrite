@@ -70,8 +70,12 @@ export function DomainTargetCard({
   disabled = false,
 }: DomainTargetCardProps) {
   const t = useT()
-  const branchDisabled = !hasRepository
-  const redirectDisabled = false
+  const deploymentLocked = ruleType === 'redirect'
+  const branchDisabled = !hasRepository || deploymentLocked
+  const redirectDisabled = ruleType === 'deployment'
+  const lockedReason = t(
+    'A domain cannot switch between serving a deployment and redirecting. Delete it and add it again.',
+  )
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
