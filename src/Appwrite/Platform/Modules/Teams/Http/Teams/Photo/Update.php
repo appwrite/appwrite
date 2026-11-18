@@ -41,6 +41,7 @@ class Update extends Action
             ->setHttpPath('/v1/teams/:teamId/photo')
             ->desc('Update photo')
             ->groups(['api', 'teams'])
+            ->label('event', 'teams.[teamId].update')
             ->label('scope', 'teams.write')
             ->param('teamId', '', new UID(), 'Team ID.')
             ->param('file', [], new File(), 'Binary image file of at most 5MB. Allowed file types are png, jpg, jpeg, and webp.', skipValidation: true)
