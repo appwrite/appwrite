@@ -929,6 +929,7 @@ class Videos extends Action
             // the store has not taken yet.
             $uploader = new Uploader($deviceForVideos, $path);
             $uploader->start();
+            $this->log($tag . ' upload start');
 
             // The claim wrote '0'.
             $lastProgress = 0;
@@ -1114,12 +1115,11 @@ class Videos extends Action
             $this->log($tag . ' conversion done');
 
             $stage = 'upload';
-            $this->log($tag . ' upload start');
             $phaseStart = \microtime(true);
-            // Every segment went through the uploader, init and last ones included:
-            // the final scan inside pack() reports them all, and no output writes
-            // manifests. This only waits for the store to take what was still queued
-            // when ffmpeg exited.
+            // Upload already ran for the whole encode. Every segment went through
+            // the uploader, init and last ones included: the final scan inside
+            // pack() reports them all, and no output writes manifests. This only
+            // waits for the store to take what was still queued when ffmpeg exited.
             $storageBytes = $uploader->finish();
             $this->phase($telemetry, VideoAction::Encode->value, 'upload', $phaseStart);
             Span::add('rendition.size', $storageBytes);
