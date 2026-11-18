@@ -816,6 +816,9 @@
             "teamId",
             "file"
         ],
+        "teams.deletePhoto": [
+            "teamId"
+        ],
         "teams.updatePrefs": [
             "teamId",
             "prefs"
@@ -4778,6 +4781,9 @@
         "teams.updatePhoto": [
             "teamId",
             "file"
+        ],
+        "teams.deletePhoto": [
+            "teamId"
         ],
         "teams.updatePrefs": [
             "teamId",
@@ -9135,6 +9141,9 @@
         "teams.updatePhoto": [
             "teamId",
             "file"
+        ],
+        "teams.deletePhoto": [
+            "teamId"
         ],
         "teams.updatePrefs": [
             "teamId",
