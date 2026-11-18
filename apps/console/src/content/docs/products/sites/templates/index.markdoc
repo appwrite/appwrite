@@ -47,7 +47,7 @@ The production branch specifies the branch connected to your Appwrite Site. When
 
 The root directory specifies the folder containing the source code of your your site.
 
-When a PR is made to the branch, a new deployment is built and a preview URL becomes available. Appwrite comments on your PR with the build status and preview URL. You can turn off comments, commit statuses, or deploying on push later in the site's [Git automation](/docs/products/sites/deploy-from-git#git-automation) settings.
+When you push to another branch, a new deployment is built and a preview URL becomes available. When you open a PR, Appwrite comments on it with the build status and preview URL. You can turn off comments, commit statuses, or deploying on push later in the site's [Git automation](/docs/products/sites/deploy-from-git#git-automation) settings.
 
 ## Add required environment variables
 

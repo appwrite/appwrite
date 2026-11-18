@@ -12,7 +12,7 @@ With Appwrite Sites, you can seamlessly deploy updates from Git repositories, en
 
 The recommended way to manage your Appwrite Sites deployments is to use a version control system like Git. This offers simple versioning and collaboration that will easily fit into the rest of your development workflow.
 
-You can only use Git deployment for Appwrite Sites connected to Git. [Create a new site with GitHub](/docs/products/sites/quick-start) or connect your existing site to a GitHub repository in your site’s **Settings** > **Git repository** > **Connect Git**.
+You can only use Git deployment for Appwrite Sites connected to Git. [Create a new site with GitHub](/docs/products/sites/quick-start) or connect your existing site to a Git repository in your site’s **Settings** > **Version control (Git)**.
 
 {% only_dark %}
 ![Git repository](/images/docs/sites/dark/git-repo.avif)
@@ -38,7 +38,7 @@ When you push a commit to a branch other than the production branch, a new deplo
 
 # Git configuration
 
-If you need to update your Git configuration, navigate to **Sites** > your site > **Settings** > **Git repository**.
+If you need to update your Git configuration, navigate to **Sites** > your site > **Settings** > **Version control (Git)**.
 
 ## Git automation {% #git-automation %}
 
@@ -51,7 +51,7 @@ Git automation controls what Appwrite does when you push to the connected reposi
 ---
 * **Deploy on push**
 * `providerDeployments`
-* Every push and pull request that matches your [build triggers](#build-triggers) creates a deployment. Pushes to the production branch activate it, and other branches get a [preview link](/docs/products/sites/previews).
+* Every push that matches your [build triggers](#build-triggers) creates a deployment. Pushes to the production branch activate it, and other branches get a [preview link](/docs/products/sites/previews).
 ---
 * **Post build summaries**
 * `providerComments`
@@ -59,20 +59,22 @@ Git automation controls what Appwrite does when you push to the connected reposi
 ---
 * **Report commit status**
 * `providerStatuses`
-* Appwrite reports each build on its commit as building, passed, or failed. On GitHub, it adds a check run. On Entire, it adds a check run and a deployment entry. On GitLab, Gitea, and Bitbucket, it sets a commit status.
+* Appwrite reports each build on its commit as building, passed, or failed. On GitHub, it adds a check run. On Entire, it adds a check run and a deployment entry. On GitLab and Gitea, it sets a commit status, and on Bitbucket, a build status.
 {% /table %}
 
 Changes apply from the next push, without a redeploy.
 
 ### Deploy on push {% #deploy-on-push %}
 
-When **Deploy on push** is off, pushes and pull requests no longer create deployments, including preview deployments, and your site keeps serving its active deployment. The repository stays connected, so you can deploy a branch whenever you choose: open the site's **Deployments** tab, click **Create deployment**, and select **Git**. You pick the branch and whether to activate the deployment when it finishes building.
+When **Deploy on push** is off, pushes no longer create deployments, including preview deployments, and your site keeps serving its active deployment. The repository stays connected, so you can deploy a branch whenever you choose: open the site's **Deployments** tab, click **Create deployment**, and select **Git**. You pick the branch and whether to activate the deployment when it finishes building.
 
 While it's off, the Console disables **Production branch** and **Post build summaries**, because a deployment you create yourself has no pull request and decides for itself whether to go live. **Report commit status** still works for the commits you deploy.
 
 ### Post build summaries {% #post-build-summaries %}
 
 Turn off **Post build summaries** to keep Appwrite's comment out of pull requests. Preview deployments are still created, and if **Report commit status** stays on, each commit still shows whether the build passed.
+
+Appwrite posts the summary when a pull request is opened or reopened, so turning the switch on doesn't add one to a pull request that's already open. Entire doesn't get build summaries.
 
 ### Report commit status {% #report-commit-status %}
 
@@ -84,11 +86,11 @@ If a branch protection rule requires Appwrite's check, pull requests to that bra
 
 ### Silent mode {% #silent-mode %}
 
-You can turn on **Silent mode** when you create a site from a repository. Silent mode turns off build summaries and commit statuses, whatever the switches say, and the **Git automation** card shows both as off while it's on. Saving the card turns silent mode off. It doesn't affect **Deploy on push**.
+You can turn on **Silent mode** when you create a site from a repository. Silent mode turns off build summaries and commit statuses, whatever the switches say, and the **Git automation** card shows both as off while it's on. Saving the card turns silent mode off and saves both switches as the card shows them, so turn on the ones you want before you click **Update**. Silent mode doesn't affect **Deploy on push**.
 
 ### Configure Git automation with a Server SDK {% #git-automation-server-sdk %}
 
-Pass `providerDeployments`, `providerComments`, and `providerStatuses` when you create or update a site. Settings you leave out of an update keep their current values.
+Pass `providerDeployments`, `providerComments`, and `providerStatuses` when you create or update a site. Settings you leave out of an update keep their current values, except the repository: `sites.update()` disconnects it unless you pass `providerRepositoryId` as `null` or send the current connection again.
 
 {% multicode %}
 ```server-nodejs
@@ -106,6 +108,7 @@ await sites.update({
     siteId: '<SITE_ID>',
     name: '<NAME>', // name and framework are required by update
     framework: sdk.Framework.Nextjs,
+    providerRepositoryId: null, // null keeps the repository connected
     providerDeployments: false
 });
 ```
@@ -121,11 +124,18 @@ client.set_key('<API_KEY>') # Your secret API key
 
 sites = Sites(client)
 
+# Python leaves out None values, so send the current connection to keep it
+site = sites.get(site_id='<SITE_ID>')
+
 # Stop deploying on push, and deploy branches by hand instead
 sites.update(
-    site_id='<SITE_ID>',
-    name='<NAME>',  # name and framework are required by update
-    framework=Framework.NEXTJS,
+    site_id=site.id,
+    name=site.name,
+    framework=Framework(site.framework),
+    installation_id=site.installationid,
+    provider_repository_id=site.providerrepositoryid,
+    provider_branch=site.providerbranch,
+    provider_root_directory=site.providerrootdirectory,
     provider_deployments=False
 )
 ```
@@ -227,4 +237,4 @@ These setups aren't supported:
 
 - If you updated your site's configuration but the deployment is not working as expected, you may need to first redeploy your site before the changes take effect.
 - If you're missing some code files at build time, verify your **build command** and ensure that the build output is included in the Git configuration's **output directory**. Only files in the output directory folder will be available after deployment.
-- If you're self-hosting Appwrite, you will need to configure some [environment variables](https://appwrite.io/docs/advanced/self-hosting/functions) to enable Git deployments.
+- If you're self-hosting Appwrite, you will need to configure some [environment variables](/docs/advanced/self-hosting/configuration/version-control) to enable Git deployments.

@@ -19,7 +19,7 @@ faqs:
   - question: "Can I require a passing Appwrite build before a pull request merges?"
     answer: "Yes. Keep **Report commit status** on, and Appwrite reports each build on its commit as building, passed, or failed. On GitHub, that's a check run you can add to a branch protection rule as a required status check. If you later turn the switch off, remove the requirement first, or pull requests will wait for a status that never arrives."
   - question: "What happened to silent mode?"
-    answer: "Silent mode still works. It turns off build summaries and commit statuses whatever the switches say, and the Git automation card shows both as off while it's on. Saving the card turns silent mode off. The `providerSilentMode` API parameter is unchanged."
+    answer: "Silent mode still works. It turns off build summaries and commit statuses whatever the switches say, and the Git automation card shows both as off while it's on. Saving the card turns silent mode off and saves both switches as shown, so turn on the ones you want first. The `providerSilentMode` API parameter is unchanged."
   - question: "Do I need to redeploy after changing Git automation settings?"
     answer: "No. Changes apply from the next push."
 ---
@@ -36,7 +36,7 @@ Today, we are announcing **Git automation** for Appwrite Sites and Functions: a 
 - **Build summaries on your terms.** Turn off the pull request comment without losing commit statuses.
 - **Commit statuses on their own.** Keep the check that branch protection relies on, or turn it off where you don't want one.
 - **One place for Git behavior.** The production branch moves into the same card, next to the switches that decide what a push does.
-- **Every major Git provider.** The switches work the same with GitHub, GitLab, Gitea, Bitbucket, and Entire.
+- **Every Git provider.** The switches work with GitHub, GitLab, Gitea, Bitbucket, and Entire. Entire doesn't get build summaries, so only deploy on push and commit statuses apply there.
 - **API and Server SDK support.** Set `providerDeployments`, `providerComments`, and `providerStatuses` when you create or update a site or function.
 
 # Configure Git automation in the Console
@@ -54,7 +54,7 @@ All three switches are on by default, so nothing changes for existing projects u
 
 ## Deploy on push
 
-With **Deploy on push** off, pushes and pull requests stop creating deployments, including preview deployments for Sites. Your site or function keeps serving its active deployment, and the repository stays connected.
+With **Deploy on push** off, pushes stop creating deployments, including preview deployments for Sites. Your site or function keeps serving its active deployment, and the repository stays connected.
 
 When you're ready to ship, open the **Deployments** tab, click **Create deployment**, and select **Git**. Pick a branch and choose whether to activate the deployment once it builds. From a script or a CI pipeline, call `createVcsDeployment()` with a branch name or a commit hash instead.
 
@@ -68,7 +68,7 @@ Turn it off when your team already follows builds through checks, or doesn't wan
 
 ## Report commit status
 
-With **Report commit status** on, Appwrite reports each build on its commit. On GitHub, that's a check run. On Entire, it's a check run plus a deployment entry. On GitLab, Gitea, and Bitbucket, it's a commit status. It also covers deployments you create by hand from Git, so it keeps working with deploy on push off.
+With **Report commit status** on, Appwrite reports each build on its commit. On GitHub, that's a check run. On Entire, it's a check run plus a deployment entry. On GitLab and Gitea, it's a commit status, and on Bitbucket, a build status. It also covers deployments you create by hand from Git, so it keeps working with deploy on push off.
 
 That status is what makes a passing Appwrite build something you can require. Add it to a branch protection rule, such as GitHub's [required status checks](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches#require-status-checks-before-merging), and a pull request can't merge until its build passes.
 
@@ -120,11 +120,11 @@ functions.update(
 ```
 {% /multicode %}
 
-Sites take the same three parameters on `sites.create()` and `sites.update()`. The function and site models return them too, so you can read the current settings before you change them.
+Sites take the same three parameters on `sites.create()` and `sites.update()`. When you update a site, keep its repository connected by passing `providerRepositoryId` as `null` or sending the current connection again, as the [Sites docs](/docs/products/sites/deploy-from-git#git-automation-server-sdk) show. The function and site models return the three settings too, so you can read them before you change them.
 
 # Silent mode keeps working
 
-If you turned on silent mode for a site or function, it stays on. Silent mode turns off build summaries and commit statuses whatever the switches say, so the Git automation card shows both as off. Saving the card turns silent mode off and hands control to the switches.
+If you turned on silent mode for a site or function, it stays on. Silent mode turns off build summaries and commit statuses whatever the switches say, so the Git automation card shows both as off. Saving the card turns silent mode off and hands control to the switches, so switch on the ones you want before you click **Update**.
 
 The `providerSilentMode` API parameter is unchanged, and you can still turn on silent mode when you create a site or function from a repository.
 
@@ -148,4 +148,4 @@ Open a connected site or function, go to **Settings** > **Version control (Git)*
 - [Git automation for Sites](/docs/products/sites/deploy-from-git#git-automation)
 - [Git automation for Functions](/docs/products/functions/deploy-from-git#git-automation)
 - [Build triggers](/docs/products/functions/deploy-from-git#build-triggers)
-- [Sign up for Appwrite Cloud](/sign-in)
+- [Sign up for Appwrite Cloud](/sign-up)
