@@ -432,8 +432,6 @@ export function View() {
             if (!open) setViewLogsRule(null)
           }}
           rule={rules.find((r) => r.$id === viewLogsRule.$id) ?? viewLogsRule}
-          onRefresh={() => void refetchDomains()}
-          isRefreshing={domainsFetching}
         />
       )}
     </>
