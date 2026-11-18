@@ -816,4 +816,117 @@ final class UserTest extends TestCase
         $this->assertTrue($linked);
         $this->assertCount(2, $database->find('identities'));
     }
+
+    public function testClaimRevokesEveryOtherWayIn(): void
+    {
+        $database = $this->createProjectDatabase();
+        $user = $this->createRegistrant($database);
+
+        $claimed = User::claim($database, $user, new Document(['$id' => 'project']));
+
+        $this->assertTrue($claimed);
+        $stored = $database->getDocument('users', $user->getId());
+        $this->assertTrue($stored->getAttribute('emailVerification'));
+        $this->assertNull($stored->getAttribute('password'));
+        $this->assertTrue($user->getAttribute('emailVerification'));
+        $this->assertEmpty($database->find('sessions'));
+        $this->assertEmpty($database->find('tokens'));
+    }
+
+    public function testClaimSkipsAnAddressProvenSinceItWasRead(): void
+    {
+        $database = $this->createProjectDatabase();
+        $project = new Document(['$id' => 'project']);
+        $registrant = $this->createRegistrant($database);
+
+        // The copy a second claim read before the first one took the user lock
+        $stale = new User($registrant->getArrayCopy());
+
+        // The first claim takes the lock, revokes the registrant's credentials and proves the address
+        $this->assertTrue(User::claim($database, $registrant, $project));
+
+        // Its own session lands after the revocation
+        $database->createDocument('sessions', new Document([
+            '$id' => Id::custom('claimant'),
+            'userId' => $registrant->getId(),
+            'userInternalId' => $registrant->getSequence(),
+            'provider' => SESSION_PROVIDER_EMAIL,
+            'providerUid' => 'registrant@example.com',
+            'secret' => 'claimant-secret',
+            'expire' => DateTime::addSeconds(new \DateTime(), 60 * 60),
+        ]));
+
+        $claimed = User::claim($database, $stale, $project);
+
+        $this->assertFalse($claimed);
+        $this->assertTrue($stale->getAttribute('emailVerification'));
+        $this->assertCount(1, $database->find('sessions'));
+        $this->assertSame('claimant', $database->find('sessions')[0]->getId());
+
+        // The copy the caller goes on to persist as a whole document must not bring the revoked password back
+        $this->assertEmpty($stale->getAttribute('password'));
+        $database->updateDocument('users', $stale->getId(), $stale);
+        $this->assertEmpty($database->getDocument('users', $stale->getId())->getAttribute('password'));
+    }
+
+    private function createProjectDatabase(): Database
+    {
+        $authorization = new Authorization();
+        $authorization->disable();
+
+        $database = (new Database(new Memory(), new Cache(new MemoryCache())))
+            ->setDatabase('appwrite')
+            ->setNamespace('_1')
+            ->setAuthorization($authorization);
+
+        $database->create();
+
+        $collections = Config::getParam('collections', [])['projects'];
+        foreach (['users', 'sessions', 'tokens', 'challenges', 'authenticators', 'identities', 'memberships', 'targets', 'subscribers'] as $id) {
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: $collections[$id]['attributes'],
+                indexes: $collections[$id]['indexes'],
+            ));
+        }
+
+        return $database;
+    }
+
+    /**
+     * An account registered with an email that was never verified, holding a password,
+     * a session and a token.
+     */
+    private function createRegistrant(Database $database): User
+    {
+        $user = $database->createDocument('users', new Document([
+            '$id' => Id::custom('registrant'),
+            'email' => 'registrant@example.com',
+            'emailVerification' => false,
+            'password' => 'registrant-password-hash',
+            'status' => true,
+            'name' => 'Registrant',
+        ]));
+
+        $database->createDocument('sessions', new Document([
+            '$id' => Id::custom('registrant-session'),
+            'userId' => $user->getId(),
+            'userInternalId' => $user->getSequence(),
+            'provider' => SESSION_PROVIDER_EMAIL,
+            'providerUid' => 'registrant@example.com',
+            'secret' => 'registrant-secret',
+            'expire' => DateTime::addSeconds(new \DateTime(), 60 * 60),
+        ]));
+
+        $database->createDocument('tokens', new Document([
+            '$id' => Id::custom('registrant-token'),
+            'userId' => $user->getId(),
+            'userInternalId' => $user->getSequence(),
+            'type' => TOKEN_TYPE_RECOVERY,
+            'secret' => 'registrant-token-secret',
+            'expire' => DateTime::addSeconds(new \DateTime(), 60 * 60),
+        ]));
+
+        return new User($database->getDocument('users', $user->getId())->getArrayCopy());
+    }
 }

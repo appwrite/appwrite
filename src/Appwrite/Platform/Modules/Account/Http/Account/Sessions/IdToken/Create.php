@@ -249,7 +249,8 @@ class Create extends Base
             throw new Exception(Exception::USER_BLOCKED);
         }
 
-        if (empty($user->getAttribute('email')) && !empty($providerEmail)) {
+        $backfilled = empty($user->getAttribute('email')) && !empty($providerEmail);
+        if ($backfilled) {
             $this->backfillEmail($user, $providerEmail, $isVerified, $dbForProject, $project, $plan, $authorization);
         }
 
@@ -284,13 +285,21 @@ class Create extends Base
             'photo' => $photo ?: null,
         ], $changes, $dbForProject, $authorization, $newUser, $newTarget);
 
+        // Only what this request changed: its copy predates any claim or password change that landed since
+        $changes = ['status' => true];
+
         if (empty($user->getAttribute('name'))) {
             $user->setAttribute('name', $name);
+            $changes['name'] = $name;
+        }
+
+        if ($backfilled) {
+            $changes += \array_intersect_key($user->getArrayCopy(), \array_flip(['email', 'emailVerification', 'emailCanonical', 'emailIsCanonical', 'emailIsCorporate', 'emailIsDisposable', 'emailIsFree']));
         }
 
         $user->setAttribute('status', true);
 
-        $dbForProject->updateDocument('users', $user->getId(), $user);
+        $dbForProject->updateDocument('users', $user->getId(), new Document($changes));
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -429,7 +438,6 @@ class Create extends Base
             }
         }
     }
-
 
     /**
      * Attach the provider email to a user created without one (e.g. an
