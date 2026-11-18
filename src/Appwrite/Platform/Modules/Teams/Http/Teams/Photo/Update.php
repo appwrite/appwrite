@@ -127,6 +127,10 @@ class Update extends Action
             throw new Exception(Exception::STORAGE_INVALID_FILE);
         }
 
+        if (!(new FileExt(self::ALLOWED_EXTENSIONS))->isValid($fileName)) {
+            throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'File extension not allowed');
+        }
+
 
         $response->dynamic($updated, Response::MODEL_TEAM);
     }
