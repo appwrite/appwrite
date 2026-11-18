@@ -159,6 +159,10 @@ export function View() {
     })
   }
 
+  const handleUpdate = (rule: Models.ProxyRule) => {
+    openDialogAfterOverlayCloses(() => setUpdateRule(rule))
+  }
+
   const handleDelete = (rule: Models.ProxyRule) => {
     openDialogAfterOverlayCloses(() => {
       setSelectedRule(rule)
