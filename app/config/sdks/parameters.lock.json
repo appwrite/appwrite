@@ -805,6 +805,13 @@
             "teamId",
             "name"
         ],
+        "teams.getPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
         "teams.updatePrefs": [
             "teamId",
             "prefs"
@@ -4756,6 +4763,13 @@
         "teams.updateName": [
             "teamId",
             "name"
+        ],
+        "teams.getPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
         ],
         "teams.updatePrefs": [
             "teamId",
@@ -9102,6 +9116,13 @@
         "teams.updateName": [
             "teamId",
             "name"
+        ],
+        "teams.getPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
         ],
         "teams.updatePrefs": [
             "teamId",
