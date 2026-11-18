@@ -56,6 +56,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Naver\Update as Update
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Notion\Update as UpdateOAuth2Notion;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Oidc\Update as UpdateOAuth2Oidc;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Okta\Update as UpdateOAuth2Okta;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Patreon\Update as UpdateOAuth2Patreon;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Paypal\Update as UpdateOAuth2Paypal;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\PaypalSandbox\Update as UpdateOAuth2PaypalSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Podio\Update as UpdateOAuth2Podio;
@@ -301,6 +302,7 @@ class Http extends Service
         $this->addAction('updateProjectOAuth2Microsoft', UpdateOAuth2Microsoft::class);
         $this->addAction('updateProjectOAuth2Hugging Face', UpdateOAuth2HuggingFace::class);
         $this->addAction('updateProjectOAuth2Instagram', UpdateOAuth2Instagram::class);
+        $this->addAction('updateProjectOAuth2Patreon', UpdateOAuth2Patreon::class);
         $this->addAction('updateProjectOAuth2Railway', UpdateOAuth2Railway::class);
         $this->addAction('updateProjectOAuth2Reddit', UpdateOAuth2Reddit::class);
         $this->addAction('updateProjectOAuth2Vercel', UpdateOAuth2Vercel::class);
