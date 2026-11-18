@@ -56,6 +56,7 @@ use Appwrite\Utopia\Response\Filters\V26 as ResponseV26;
 use Appwrite\Utopia\Response\Filters\V27 as ResponseV27;
 use Appwrite\Utopia\Response\Filters\V28 as ResponseV28;
 use Appwrite\Utopia\Response\Filters\V29 as ResponseV29;
+use Appwrite\Utopia\Response\Filters\V30 as ResponseV30;
 use Appwrite\Utopia\View;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
@@ -601,8 +602,11 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                     throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Executor response headers could not be decoded', view: $errorView);
                 }
 
-                // A failed response may be replaced by a branded page, which needs the whole body.
-                $streamed = $statusCode < 400;
+                // A runtime may send header names in any casing.
+                $headers = \array_change_key_case($headers);
+
+                // A failed response may be replaced by a branded page, and a sized one keeps its content-length; both need the whole body.
+                $streamed = $statusCode < 400 && !\array_key_exists('content-length', $headers);
 
                 if ($streamed) {
                     $headers[$type === 'function' ? 'x-appwrite-execution-id' : 'x-appwrite-log-id'] = $execution->getId();
@@ -617,8 +621,8 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                             continue;
                         }
 
-                        // Length and framing describe the buffered response, not the chunked one.
-                        if ($lowercased === 'content-length' || $lowercased === 'transfer-encoding') {
+                        // Framing describes the buffered response, not the chunked one.
+                        if ($lowercased === 'transfer-encoding') {
                             continue;
                         }
 
@@ -789,10 +793,6 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 }
             }
 
-            if ($streamed === true) {
-                unset($executionResponse['headers']['content-length'], $executionResponse['headers']['Content-Length']);
-            }
-
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
                 if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_RESPONSE)) {
@@ -835,13 +835,10 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
             $execution
                 ->setAttribute('duration', \microtime(true) - $durationStart)
-                ->setAttribute('responseStatusCode', 500);
+                ->setAttribute('responseStatusCode', 500)
+                ->setAttribute('status', 'failed')
+                ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
 
-            if ($type === 'function') {
-                $execution
-                    ->setAttribute('status', 'failed')
-                    ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
-            }
             Console::error($th->getMessage());
 
             if ($th instanceof AppwriteException) {
@@ -1125,6 +1122,9 @@ Http::init()
          */
         $responseFormat = $request->getHeaderLine('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
+            if (version_compare($responseFormat, '2.8.0', '<')) {
+                $response->addFilter(new ResponseV30());
+            }
             if (version_compare($responseFormat, '2.4.0', '<')) {
                 $response->addFilter(new ResponseV29());
             }
@@ -1515,6 +1515,7 @@ Http::error()
             case 412: // Error allowed publicly
             case 416: // Error allowed publicly
             case 422: // Error allowed publicly
+            case 424: // Error allowed publicly
             case 429: // Error allowed publicly
             case 451: // Error allowed publicly
             case 501: // Error allowed publicly
@@ -1631,6 +1632,8 @@ Http::get('/robots.txt')
         } else {
             if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $bus, $executor, $geo, $getIsResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $publisherForDeletes, $executionsRetentionCount, $lock)) {
                 $utopia->match($request)?->route->label('router', true);
+            } else {
+                throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
             }
         }
     });
@@ -1665,6 +1668,8 @@ Http::get('/humans.txt')
         } else {
             if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $bus, $executor, $geo, $getIsResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $publisherForDeletes, $executionsRetentionCount, $lock)) {
                 $utopia->match($request)?->route->label('router', true);
+            } else {
+                throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
             }
         }
     });

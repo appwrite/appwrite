@@ -68,9 +68,9 @@ export const heReviewsDictionary: Record<string, string> = {
     'אין לכם הרשאה להוסיף repos.',
   'Add all repositories': 'הוספת כל המאגרים',
   'Adding repositories...': 'מוסיף מאגרים...',
-  'repositories added': 'מאגרים נוספו',
-  'repositories already on': 'מאגרים כבר פעילים',
-  'repositories failed': 'מאגרים נכשלו',
+  'Added: {count}': 'נוספו: {count}',
+  'Already on: {count}': 'כבר פעילים: {count}',
+  'Failed: {count}': 'נכשלו: {count}',
   'Some repositories could not be added': 'לא ניתן היה להוסיף חלק מהמאגרים',
   'Counting repositories...': 'סופר מאגרים...',
   'Turn on code review for every repository in the installation?':
@@ -168,4 +168,69 @@ export const heReviewsDictionary: Record<string, string> = {
   '{count} step': 'שלב {count}',
   '{count} steps': '{count} שלבים',
   running: 'פועל',
+
+  // Repositories tab
+  repositories: 'מאגרים',
+  Reviewed: 'בסקירה',
+  'All repositories': 'כל המאגרים',
+  'Reviewed since': 'בסקירה מאז',
+  'Review all': 'סקירת הכל',
+  'Review all repositories': 'סקירת כל המאגרים',
+  'Choose repositories': 'בחירת מאגרים',
+  'Browse repositories': 'עיון במאגרים',
+  'Search GitHub repositories...': 'חיפוש מאגרים ב-GitHub...',
+  'No repositories match your search': 'אין מאגרים שתואמים לחיפוש',
+  'No repositories reviewed yet': 'עדיין אין מאגרים בסקירה',
+  'No GitHub installation': 'אין התקנת GitHub',
+  'Connect GitHub to review pull requests':
+    'חברו את GitHub כדי לסקור Pull requests',
+  'Install the GitHub app on your account or organization, then pick the repositories to review.':
+    'התקינו את אפליקציית GitHub בחשבון או בארגון שלכם, ואז בחרו את המאגרים לסקירה.',
+  'Turn on code review for a repository and its pull requests are reviewed when they are opened or get new commits.':
+    'הפעילו סקירת קוד למאגר, וה-Pull requests שלו ייסקרו כשהם נפתחים או מקבלים קומיטים חדשים.',
+  'Turn on code review for every repository in {organization} ({count}).':
+    'הפעלת סקירת קוד לכל המאגרים ב-{organization} ({count}).',
+  'To review repositories added to the installation later, turn on Review new repositories.':
+    'כדי לסקור מאגרים שיתווספו להתקנה בהמשך, הפעילו את סקירת מאגרים חדשים.',
+  'Review pull requests in {name}': 'סקירת Pull requests ב-{name}',
+
+  // Review strength
+  Strength: 'עוצמה',
+  Basic: 'בסיסית',
+  Normal: 'רגילה',
+  Expert: 'מומחה',
+  'Cheaper models that read the code without running it':
+    'מודלים זולים יותר שקוראים את הקוד בלי להריץ אותו',
+  'The default models, running commands in a sandbox':
+    'מודלי ברירת המחדל, עם הרצת פקודות בסביבה מבודדת',
+  'Stronger models that split the work across subagents':
+    'מודלים חזקים יותר שמחלקים את העבודה בין תת-סוכנים',
+  '{credits} credits per review': '{credits} קרדיטים לכל סקירה',
+  'Review strength updated': 'עוצמת הסקירה עודכנה',
+  'Failed to update review strength': 'עדכון עוצמת הסקירה נכשל',
+  'Review strength for {name}': 'עוצמת הסקירה עבור {name}',
+
+  // New repositories
+  'Review new repositories': 'סקירת מאגרים חדשים',
+  'Turn on code review for repositories added to {organization} on GitHub later.':
+    'הפעלת סקירת קוד למאגרים שיתווספו ל-{organization} ב-GitHub בהמשך.',
+  'New repositories will be reviewed': 'מאגרים חדשים ייסקרו',
+  'New repositories will not be reviewed': 'מאגרים חדשים לא ייסקרו',
+  'Failed to update new repositories': 'עדכון ההגדרה למאגרים חדשים נכשל',
+
+  // Learnings
+  Learnings: 'למידות',
+  learnings: 'למידות',
+  Learning: 'למידה',
+  'Asked by': 'התבקש על ידי',
+  'Learning actions': 'פעולות למידה',
+  'Open conversation on GitHub': 'פתיחת השיחה ב-GitHub',
+  'Learning has been deleted': 'הלמידה נמחקה',
+  'Failed to delete learning': 'מחיקת הלמידה נכשלה',
+  'No learnings yet': 'אין עדיין למידות',
+  'When someone asks the reviewer to remember a preference in a pull request conversation, it shows up here. Later reviews of the repository follow it.':
+    'כשמישהו מבקש מהסוקר לזכור העדפה בשיחה ב-Pull request, היא מופיעה כאן. הסקירות הבאות של ה-repo יפעלו לפיה.',
+  'Delete learning': 'מחיקת למידה',
+  'Later reviews and answers will no longer follow this learning. This action cannot be undone.':
+    'סקירות ותשובות עתידיות לא יפעלו עוד לפי הלמידה הזו. לא ניתן לבטל פעולה זו.',
 }

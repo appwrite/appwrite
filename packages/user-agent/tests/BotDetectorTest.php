@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Utopia\UserAgent\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\UserAgent\UserAgent;
 
+#[RequiresPhpExtension('utopia')]
 final class BotDetectorTest extends TestCase
 {
     /**

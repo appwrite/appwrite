@@ -30,6 +30,25 @@ final class LimitTest extends TestCase
         $this->assertSame(3600, $limit->seconds);
     }
 
+    public function testTrustedCallersAreExemptFromAThroughputLimit(): void
+    {
+        $limit = Limit::attempts(['url', 'ip'], 10);
+
+        $this->assertFalse($limit->everyone);
+        $this->assertTrue($limit->counts(trusted: false));
+        $this->assertFalse($limit->counts(trusted: true));
+    }
+
+    public function testALimitForEveryoneCountsTrustedCallersToo(): void
+    {
+        // A key, or a console caller in admin mode, guessing the code on a verification confirmation route.
+        $limit = Limit::attempts(['projectId', 'url', 'param.userId'], 10, everyone: true);
+
+        $this->assertTrue($limit->everyone);
+        $this->assertTrue($limit->counts(trusted: false));
+        $this->assertTrue($limit->counts(trusted: true));
+    }
+
     /**
      * @return \Iterator<string, array{list<string>, int, int}>
      */
@@ -42,6 +61,11 @@ final class LimitTest extends TestCase
         yield 'unknown part' => [['project.$id'], 10, 60];
         yield 'placeholder syntax' => [['{ip}'], 10, 60];
         yield 'unnamed param' => [['param.'], 10, 60];
+        // One abuse store serves the whole instance, and ids and addresses repeat across projects, so these
+        // would let a caller on one project spend the quota of an account or an address on every other project.
+        yield 'account without the project' => [['url', 'userId'], 10, 60];
+        yield 'address without the project' => [['url', 'param.email'], 10, 60];
+        yield 'account param without the project' => [['param.userId'], 10, 60];
     }
 
     /**
@@ -53,6 +77,26 @@ final class LimitTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
 
         Limit::failures($by, $limit, $seconds);
+    }
+
+    /**
+     * @return \Iterator<string, array{list<string>}>
+     */
+    public static function callerScoped(): \Iterator
+    {
+        yield 'per project' => [['projectId', 'url', 'param.userId']];
+        // A count also kept per ip only ever counts one caller's own requests, so no project can spend another's.
+        yield 'per ip' => [['url', 'ip', 'param.userId']];
+        yield 'per ip and account' => [['ip', 'method', 'url', 'userId']];
+    }
+
+    /**
+     * @param list<string> $by
+     */
+    #[DataProvider('callerScoped')]
+    public function testAccountLimitIsKeptPerProjectOrPerIp(array $by): void
+    {
+        $this->assertSame($by, Limit::failures($by, 10)->by);
     }
 
     public function testKeyFromTheRequestsValues(): void
@@ -69,5 +113,23 @@ final class LimitTest extends TestCase
             'projectId:project,url:/v1/account/sessions/email,param.email:someone@example.com,param.userId:from-path,ip:203.0.113.10,param.phone:',
             Limit::failures(['projectId', 'url', 'param.email', 'param.userId', 'ip', 'param.phone'], 10)->key($values),
         );
+    }
+
+    public function testDirectoryUsernameVariantsShareOneKey(): void
+    {
+        $route = new Route('POST', '/v1/account/sessions/ldap');
+        $limit = Limit::failures(['projectId', 'url', 'param.username'], 10);
+
+        $keys = [];
+        foreach (['alice', 'Alice', 'ALICE', ' aLiCe '] as $username) {
+            $swoole = new SwooleRequest();
+            $swoole->server = ['remote_addr' => '203.0.113.10', 'request_method' => 'POST'];
+            $swoole->post = ['username' => $username];
+
+            $keys[] = $limit->key(Limit::values($route, new Request($swoole), new Document(['$id' => 'project']), new Document(['$id' => 'user']), []));
+        }
+
+        // A directory finds the same entry for every spelling, so they share one failure budget.
+        $this->assertSame(['projectId:project,url:/v1/account/sessions/ldap,param.username:alice'], \array_values(\array_unique($keys)));
     }
 }

@@ -1,0 +1,71 @@
+---
+layout: integration
+title: Self-host Appwrite with Coolify
+description: Deploy self-hosted Appwrite on your own server with Coolify's one-click Appwrite service
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/self-hosted-coolify/cover.avif
+category: self-hosting
+product:
+    vendor: Coolify
+    description: "Coolify is an open-source, self-hostable platform for deploying applications, databases, and services on your own servers."
+platform:
+    - 'Self-hosted'
+---
+
+[Coolify](https://coolify.io) is an open-source, self-hostable platform for deploying applications, databases, and services on your own servers. It manages containers, domains, and environment variables from a web dashboard, and offers one-click deployments for a catalog of services.
+
+# How does the integration work?
+
+Appwrite is one of the services in Coolify's one-click catalog. Coolify deploys the full Appwrite stack on your server with recommended settings and generated environment variables, and gives you links to the Appwrite Console once it is running. You manage Appwrite's configuration from the Coolify dashboard, and redeploy the service to apply changes.
+
+# Prerequisites
+
+- A server that meets Appwrite's [system requirements](/docs/advanced/self-hosting/installation#system-requirements): at least 2 CPU cores, 4 GB of RAM, and 2 GB of swap memory.
+- SSH access to the server to install Coolify.
+
+# How to implement
+
+To self-host Appwrite with Coolify, there are several steps you must complete:
+
+## Step 1: Install Coolify
+
+Install Coolify on your server:
+
+```bash
+curl -sSL https://coolify.io/install | bash
+```
+
+When the installation completes, open the Coolify dashboard in your browser and sign up for an account.
+
+## Step 2: Deploy the Appwrite service
+
+1. Click **Create Project** to start a new project.
+2. Select an environment. A **production** environment is available by default.
+3. Click **Add new resource**, then search for and select **Appwrite**.
+4. Review the pre-filled configuration and click **Deploy**.
+
+When the deployment finishes, open the Appwrite Console from the **Links** section of the Appwrite service and create your account.
+
+## Step 3: Configure additional features
+
+Coolify generates most environment variables for you. To enable more features, edit them in the service's settings and redeploy:
+
+- **Email:** set the `_APP_SMTP_*` variables to send emails such as verification and recovery messages. See [email configuration](/docs/advanced/self-hosting/configuration/email).
+- **SMS:** set `_APP_SMS_PROVIDER` and `_APP_SMS_FROM` to send SMS for phone authentication. See [SMS configuration](/docs/advanced/self-hosting/configuration/sms).
+- **Git deployments:** set the `_APP_VCS_GITHUB_*` variables of your GitHub App to deploy Functions and Sites from GitHub. See [version control configuration](/docs/advanced/self-hosting/configuration/version-control).
+
+# Troubleshooting redirect loops
+
+If the Console fails with `ERR_TOO_MANY_REDIRECTS`, turn off **Strip Prefixes** in the **Settings** page of the Appwrite Console and Appwrite Realtime services. If you proxy your domain through Cloudflare and the loop persists, set Cloudflare's SSL/TLS encryption mode to **Full**.
+
+# Read more about Coolify and Appwrite
+
+If you would like to learn more about Coolify and Appwrite, we have some resources that you should visit:
+
+- [Self-host Appwrite with Coolify](/docs/advanced/self-hosting/platforms/coolify)
+- [Self-hosting Appwrite with Coolify](/blog/post/self-hosting-appwrite-with-coolify)
+- [Appwrite in the Coolify docs](https://coolify.io/docs/services/appwrite)
+- [Self-hosting environment variables](/docs/advanced/self-hosting/configuration/environment-variables)

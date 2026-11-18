@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Reviews\Strength;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
@@ -39,6 +40,14 @@ class ReviewRepository extends Model
                 'description' => 'VCS (Version Control System) repository ID.',
                 'default' => '',
                 'example' => '583127841',
+            ])
+            ->addRule('strength', [
+                'type' => self::TYPE_ENUM,
+                'description' => 'How hard pull requests are reviewed. Possible values: basic, normal, expert.',
+                'default' => Strength::Normal->value,
+                'example' => Strength::Normal->value,
+                'enum' => Strength::values(),
+                'enumSDKName' => 'ReviewStrength',
             ]);
     }
 

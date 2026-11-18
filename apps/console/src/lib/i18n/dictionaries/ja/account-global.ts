@@ -309,6 +309,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Remember your password?': 'パスワードを覚えていますか?',
   'Requested resources': '要求されたリソース',
   'Resend verification email': '確認メールを再送信',
+  'Resend email in {seconds}s': '{seconds}秒後に再送信できます',
   'Reset password': 'パスワードをリセット',
   'Reset your password': 'パスワードをリセット',
   'Send recovery link': 'リカバリーリンクを送信',
@@ -1257,7 +1258,6 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Close panel': 'パネルを閉じる',
   'Switch to dark mode': 'ダークモードに切り替え',
   'Switch to light mode': 'ライトモードに切り替え',
-  'Use system theme': 'システムテーマを使用',
 
   // GitHub Education program sign-up flow (/education/join)
   'Appwrite and GitHub': 'Appwrite と GitHub',

@@ -5,7 +5,7 @@ namespace Utopia\Agents\Adapters;
 /**
  * Perplexity Sonar, over its OpenAI-compatible API.
  */
-class Perplexity extends OpenAI
+class Perplexity extends Compatible
 {
     protected const string ENDPOINT = 'https://api.perplexity.ai/chat/completions';
 

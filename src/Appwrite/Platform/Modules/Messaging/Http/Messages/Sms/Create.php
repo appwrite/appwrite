@@ -154,6 +154,7 @@ class Create extends Action
                 'content' => $content,
             ],
             'status' => $status,
+            'scheduledAt' => $scheduledAt,
         ]);
         try {
             $message = $dbForProject->createDocument('messages', $message);

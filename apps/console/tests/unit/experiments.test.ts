@@ -2,9 +2,11 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import { isRedirect } from '@tanstack/react-router'
 import {
   CONSOLE_PROFILES,
+  getDebugProfileFeatureOverrides,
   setDebugProfileFeatureOverride,
 } from '@/lib/console-profiles'
 import { EXPERIMENTS, hasQualityLabel } from '@/lib/experiments'
+import { Route as IdentityServersRoute } from '@/routes/_public/projects.$projectId.settings.identity-servers'
 import { Route as AlertsRoute } from '@/routes/_public/projects.$projectId.usage.alerts'
 import { Route as MonitorsRoute } from '@/routes/_public/projects.$projectId.usage.monitors'
 
@@ -20,17 +22,23 @@ describe('hasQualityLabel', () => {
 })
 
 describe('experiments catalog', () => {
-  test('lists Appwrite Analytics, project environments and project transfers', () => {
+  test('lists Appwrite Analytics, project environments and Origin', () => {
     expect(EXPERIMENTS.map((experiment) => experiment.flag)).toEqual([
       'analytics',
       'projectEnvironments',
-      'projectTransfers',
+      'vcsOrigin',
     ])
     expect(EXPERIMENTS[0]?.name).toBe('Appwrite Analytics')
     expect(EXPERIMENTS[1]?.name).toBe('Project environments')
-    expect(EXPERIMENTS[2]?.name).toBe('Project transfers')
+    expect(EXPERIMENTS[2]?.name).toBe('Origin Git provider')
     for (const experiment of EXPERIMENTS) {
       expect(experiment.description.length).toBeGreaterThan(0)
+    }
+  })
+
+  test('Origin is off in every profile until the experiment turns it on', () => {
+    for (const profile of Object.values(CONSOLE_PROFILES)) {
+      expect(profile.features.vcsOrigin).toBe(false)
     }
   })
 
@@ -43,6 +51,49 @@ describe('experiments catalog', () => {
     for (const profile of Object.values(CONSOLE_PROFILES)) {
       expect(profile.features.alerts).toBe(false)
     }
+  })
+})
+
+describe('Origin flag rename', () => {
+  const globals = globalThis as { window?: unknown; localStorage?: unknown }
+  const originalWindow = globals.window
+  const originalLocalStorage = globals.localStorage
+
+  afterEach(() => {
+    globals.window = originalWindow
+    globals.localStorage = originalLocalStorage
+  })
+
+  test('an Origin override saved under extraVcsOAuth carries over to vcsOrigin', () => {
+    // Saved before the rename: the old key, and no vcsOrigin
+    const features: Record<string, unknown> = {
+      ...CONSOLE_PROFILES.cloud.features,
+    }
+    delete features.vcsOrigin
+    const storage = new Map<string, string>([
+      [
+        'debug:consoleProfile',
+        JSON.stringify({
+          ...CONSOLE_PROFILES.cloud,
+          features: { ...features, extraVcsOAuth: true },
+        }),
+      ],
+    ])
+    const localStorage = {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => void storage.set(key, value),
+      removeItem: (key: string) => void storage.delete(key),
+    }
+    globals.localStorage = localStorage
+    globals.window = {
+      localStorage,
+      location: new URL('https://cloud.appwrite.io/console'),
+      dispatchEvent: () => true,
+    }
+
+    const overrides = getDebugProfileFeatureOverrides()
+    expect(overrides.vcsOrigin).toBe(true)
+    expect('extraVcsOAuth' in overrides).toBe(false)
   })
 })
 
@@ -103,5 +154,54 @@ describe('usage alerts flag', () => {
 
     setDebugProfileFeatureOverride('alerts', false)
     expect(isRedirect(enter(MonitorsRoute))).toBe(true)
+  })
+})
+
+describe('identity servers', () => {
+  const params = { projectId: 'project' }
+
+  function enter(pathname: string): unknown {
+    const beforeLoad = IdentityServersRoute.options
+      .beforeLoad as unknown as (context: {
+      location: { pathname: string }
+      params: typeof params
+    }) => unknown
+    try {
+      beforeLoad({ location: { pathname }, params })
+      return null
+    } catch (thrown) {
+      return thrown
+    }
+  }
+
+  test('is generally available: no feature flag and not in the previews menu', () => {
+    for (const profile of Object.values(CONSOLE_PROFILES)) {
+      expect(profile.features).not.toHaveProperty('identityServers')
+    }
+    expect(
+      EXPERIMENTS.some(
+        (experiment) => (experiment.flag as string) === 'identityServers',
+      ),
+    ).toBe(false)
+  })
+
+  test('the index opens LDAP, the only identity server so far', () => {
+    for (const pathname of [
+      '/projects/project/settings/identity-servers',
+      '/projects/project/settings/identity-servers/',
+    ]) {
+      const thrown = enter(pathname)
+      expect(isRedirect(thrown)).toBe(true)
+      expect(
+        (thrown as { options: { to: string; params: unknown } }).options,
+      ).toMatchObject({
+        to: '/projects/$projectId/settings/identity-servers/ldap',
+        params,
+      })
+    }
+  })
+
+  test('the LDAP page opens without a redirect', () => {
+    expect(enter('/projects/project/settings/identity-servers/ldap')).toBeNull()
   })
 })

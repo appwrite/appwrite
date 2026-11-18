@@ -95,6 +95,7 @@ class Get extends Action
             'deny-corporate-email' => Response::MODEL_POLICY_DENY_CORPORATE_EMAIL,
             'deny-realtime-guests' => Response::MODEL_POLICY_DENY_REALTIME_GUESTS,
             'passkey' => Response::MODEL_POLICY_PASSKEY,
+            'account-devices' => Response::MODEL_POLICY_ACCOUNT_DEVICES,
         ];
     }
 
@@ -259,6 +260,13 @@ class Get extends Action
                     'origins' => Ceremony::getOrigins($project),
                 ]),
                 Response::MODEL_POLICY_PASSKEY,
+            ],
+            'account-devices' => [
+                new Document([
+                    '$id' => 'account-devices',
+                    'enabled' => $auths['accountDevices'] ?? true,
+                ]),
+                Response::MODEL_POLICY_ACCOUNT_DEVICES,
             ],
             default => null,
         };

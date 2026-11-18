@@ -13,6 +13,7 @@ class TokenSecret extends Token
         $this
             ->addRule('secret', [
                 'type' => self::TYPE_STRING,
+                'format' => 'password',
                 'description' => 'Token secret key. Exchange it for a session with the create session endpoint.',
                 'default' => '',
                 'example' => '',

@@ -20,10 +20,13 @@ import { sdk } from '@/lib/appwrite/sdk'
 import type {
   Review,
   ReviewEventList,
+  ReviewLearningList,
   ReviewList,
+  ReviewRepository,
   ReviewRepositoryList,
+  ReviewStrength,
 } from '@/lib/appwrite/reviews'
-import { DEFAULT_STALE_TIME } from './constants'
+import { DEFAULT_PAGE_SIZE, DEFAULT_STALE_TIME } from './constants'
 import { fetchRepositories } from './vcs'
 
 /** Reviews are fanned out by the review service, so poll while one is running. */
@@ -32,8 +35,8 @@ const REVIEW_POLL_INTERVAL = 5 * 1000
 /** Steps loaded per request; a long trace takes several. */
 const REVIEW_EVENTS_PAGE_SIZE = 500
 
-/** A project reviews a handful of repositories; load them in one page. */
-export const REVIEW_REPOSITORIES_LIMIT = 100
+/** Repositories listed per page, on both the reviewed and the GitHub list. */
+export const REVIEW_REPOSITORIES_PAGE_SIZE = 10
 
 /** Every listed repository is inspected by the server, so page in small steps. */
 const INSTALLATION_REPOSITORIES_PAGE_SIZE = 25
@@ -109,10 +112,13 @@ export async function fetchReviewEvents(
 }
 
 /**
- * Query function to fetch the repositories the project reviews.
+ * Query function to fetch a page of the repositories the project reviews,
+ * newest first.
  */
 export async function fetchReviewRepositories(
   projectId: string,
+  page: number,
+  limit: number,
 ): Promise<ReviewRepositoryList> {
   if (!projectId) {
     return { repositories: [], total: 0 }
@@ -121,7 +127,59 @@ export async function fetchReviewRepositories(
   return await sdk.forProject(projectId).reviews.listRepositories({
     queries: [
       Query.orderDesc('$createdAt'),
-      Query.limit(REVIEW_REPOSITORIES_LIMIT),
+      Query.limit(limit),
+      Query.offset(page * limit),
+    ],
+  })
+}
+
+/**
+ * Query function to fetch which of the given GitHub repositories the project
+ * reviews, keyed by GitHub repository ID.
+ */
+export async function fetchReviewedRepositories(
+  projectId: string,
+  providerRepositoryIds: readonly string[],
+): Promise<Map<string, ReviewRepository>> {
+  if (!projectId || providerRepositoryIds.length === 0) {
+    return new Map()
+  }
+
+  const { repositories } = await sdk
+    .forProject(projectId)
+    .reviews.listRepositories({
+      queries: [
+        Query.equal('providerRepositoryId', [...providerRepositoryIds]),
+        Query.limit(providerRepositoryIds.length),
+      ],
+      total: false,
+    })
+  return new Map(
+    repositories.map((repository) => [
+      repository.providerRepositoryId,
+      repository,
+    ]),
+  )
+}
+
+/**
+ * Query function to fetch a page of what the reviewer was asked to remember,
+ * newest first.
+ */
+export async function fetchReviewLearnings(
+  projectId: string,
+  page: number,
+  limit: number,
+): Promise<ReviewLearningList> {
+  if (!projectId) {
+    return { learnings: [], total: 0 }
+  }
+
+  return await sdk.forProject(projectId).reviews.listLearnings({
+    queries: [
+      Query.orderDesc('$createdAt'),
+      Query.limit(limit),
+      Query.offset(page * limit),
     ],
   })
 }
@@ -190,17 +248,58 @@ export function reviewEventsQueryOptions(
 
 export function reviewRepositoriesQueryOptions(
   projectId: string | null | undefined,
+  page: number = 0,
+  limit: number = REVIEW_REPOSITORIES_PAGE_SIZE,
 ) {
   return queryOptions({
-    queryKey: ['review-repositories', 'project', projectId],
-    queryFn: () => fetchReviewRepositories(projectId!),
+    queryKey: ['review-repositories', 'project', projectId, page, limit],
+    queryFn: () => fetchReviewRepositories(projectId!, page, limit),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function reviewLearningsQueryOptions(
+  projectId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+) {
+  return queryOptions({
+    queryKey: ['review-learnings', 'project', projectId, page, limit],
+    queryFn: () => fetchReviewLearnings(projectId!, page, limit),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function reviewedRepositoriesQueryOptions(
+  projectId: string | null | undefined,
+  providerRepositoryIds: readonly string[],
+) {
+  return queryOptions({
+    queryKey: [
+      'review-repositories',
+      'project',
+      projectId,
+      'reviewed',
+      providerRepositoryIds,
+    ],
+    queryFn: () => fetchReviewedRepositories(projectId!, providerRepositoryIds),
+    enabled: !!projectId && providerRepositoryIds.length > 0,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
   })
 }
 
@@ -254,17 +353,58 @@ export function useReviewEvents(
   }
 }
 
-export function useReviewRepositories(projectId: string | null | undefined) {
-  const { data, isLoading, error } = useQuery(
-    reviewRepositoriesQueryOptions(projectId),
+export function useReviewRepositories(
+  projectId: string | null | undefined,
+  page: number = 0,
+  limit: number = REVIEW_REPOSITORIES_PAGE_SIZE,
+) {
+  const { data, isLoading, isFetching, isPlaceholderData, error } = useQuery(
+    reviewRepositoriesQueryOptions(projectId, page, limit),
   )
 
   return {
     repositories: data?.repositories ?? [],
     total: data?.total ?? 0,
     isLoading,
+    isFetching,
+    isPlaceholderData,
     error,
   }
+}
+
+export function useReviewLearnings(
+  projectId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+) {
+  const { data, isLoading, isFetching, isPlaceholderData, error } = useQuery(
+    reviewLearningsQueryOptions(projectId, page, limit),
+  )
+
+  return {
+    learnings: data?.learnings ?? [],
+    total: data?.total ?? 0,
+    isLoading,
+    isFetching,
+    isPlaceholderData,
+    error,
+  }
+}
+
+/**
+ * Which of the given GitHub repositories the project reviews, keyed by GitHub
+ * repository ID. Works for any number of reviewed repositories, since only the
+ * listed ones are looked up.
+ */
+export function useReviewedRepositories(
+  projectId: string | null | undefined,
+  providerRepositoryIds: readonly string[],
+) {
+  const { data, isLoading } = useQuery(
+    reviewedRepositoriesQueryOptions(projectId, providerRepositoryIds),
+  )
+
+  return { reviewed: data ?? new Map<string, ReviewRepository>(), isLoading }
 }
 
 /**
@@ -290,8 +430,8 @@ export function useCreateReviewRepository(
 
 /**
  * Turns code review on for every repository of a GitHub installation that the
- * project does not review yet. A repository that is already on counts as
- * skipped; any other failure is counted and the rest carry on.
+ * project does not review yet, a page at a time. A repository that is already
+ * on counts as skipped; any other failure is counted and the rest carry on.
  */
 export function useCreateAllReviewRepositories(
   projectId: string | null | undefined,
@@ -301,9 +441,10 @@ export function useCreateAllReviewRepositories(
   return useMutation({
     mutationFn: async (params: {
       installationId: string
-      enrolledIds: ReadonlySet<string>
+      onProgress?: (done: number, total: number) => void
     }) => {
-      const ids: string[] = []
+      const outcome = { added: 0, skipped: 0, failed: 0 }
+      let seen = 0
       for (let page = 0; ; page++) {
         const result = await fetchRepositories(
           projectId!,
@@ -312,49 +453,69 @@ export function useCreateAllReviewRepositories(
           page,
           INSTALLATION_REPOSITORIES_PAGE_SIZE,
         )
-        const repositories = result.runtimeProviderRepositories ?? []
-        ids.push(...repositories.map((repository) => repository.id))
+        const ids = (result.runtimeProviderRepositories ?? []).map(
+          (repository) => repository.id,
+        )
+        const reviewed = await fetchReviewedRepositories(projectId!, ids)
+        const pending = ids.filter((id) => !reviewed.has(id))
+        outcome.skipped += ids.length - pending.length
+
+        for (let i = 0; i < pending.length; i += ADD_ALL_CONCURRENCY) {
+          const results = await Promise.allSettled(
+            pending
+              .slice(i, i + ADD_ALL_CONCURRENCY)
+              .map((providerRepositoryId) =>
+                sdk.forProject(projectId!).reviews.createRepository({
+                  installationId: params.installationId,
+                  providerRepositoryId,
+                }),
+              ),
+          )
+          for (const settled of results) {
+            if (settled.status === 'fulfilled') {
+              outcome.added++
+            } else if (
+              settled.reason instanceof AppwriteException &&
+              settled.reason.code === 409
+            ) {
+              outcome.skipped++
+            } else {
+              outcome.failed++
+            }
+          }
+        }
+
+        seen += ids.length
+        params.onProgress?.(seen, result.total)
         if (
-          repositories.length < INSTALLATION_REPOSITORIES_PAGE_SIZE ||
-          ids.length >= result.total
+          ids.length < INSTALLATION_REPOSITORIES_PAGE_SIZE ||
+          seen >= result.total
         ) {
           break
-        }
-      }
-
-      const pending = ids.filter((id) => !params.enrolledIds.has(id))
-      const outcome = {
-        added: 0,
-        skipped: ids.length - pending.length,
-        failed: 0,
-      }
-      for (let i = 0; i < pending.length; i += ADD_ALL_CONCURRENCY) {
-        const results = await Promise.allSettled(
-          pending
-            .slice(i, i + ADD_ALL_CONCURRENCY)
-            .map((providerRepositoryId) =>
-              sdk.forProject(projectId!).reviews.createRepository({
-                installationId: params.installationId,
-                providerRepositoryId,
-              }),
-            ),
-        )
-        for (const result of results) {
-          if (result.status === 'fulfilled') {
-            outcome.added++
-          } else if (
-            result.reason instanceof AppwriteException &&
-            result.reason.code === 409
-          ) {
-            outcome.skipped++
-          } else {
-            outcome.failed++
-          }
         }
       }
       return outcome
     },
     onSettled: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['review-repositories', 'project', projectId],
+      })
+    },
+  })
+}
+
+/**
+ * Changes how hard a repository's pull requests are reviewed.
+ */
+export function useUpdateReviewRepositoryStrength(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (params: { repositoryId: string; strength: ReviewStrength }) =>
+      sdk.forProject(projectId!).reviews.updateRepositoryStrength(params),
+    onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['review-repositories', 'project', projectId],
       })
@@ -376,6 +537,45 @@ export function useDeleteReviewRepository(
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['review-repositories', 'project', projectId],
+      })
+    },
+  })
+}
+
+/**
+ * Chooses whether repositories added to a GitHub installation later are
+ * reviewed, and how hard.
+ */
+export function useUpdateReviewInstallation(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (params: {
+      installationId: string
+      newRepositories: boolean
+    }) => sdk.forProject(projectId!).reviews.updateInstallation(params),
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['vcs', 'installations', projectId],
+      })
+    },
+  })
+}
+
+/**
+ * Forgets a learning: later reviews and answers no longer follow it.
+ */
+export function useDeleteReviewLearning(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (learningId: string) =>
+      sdk.forProject(projectId!).reviews.deleteLearning({ learningId }),
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['review-learnings', 'project', projectId],
       })
     },
   })

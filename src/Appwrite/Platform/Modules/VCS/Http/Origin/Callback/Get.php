@@ -5,13 +5,17 @@ namespace Appwrite\Platform\Modules\VCS\Http\Origin\Callback;
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\State;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Id;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -38,9 +42,11 @@ class Get extends Action
             ->label('error', APP_VIEWS_DIR . '/general/error.phtml')
             ->param('installation_id', '', new Text(256, 0), 'Origin installation ID', true)
             ->param('installation_receipt', '', new Text(8192, 0), 'Origin installation receipt JWT, signed by Cursor.', true)
-            ->param('state', '', new Text(4096, 0), 'Origin state. Contains info sent when starting the installation flow.', true)
+            ->param('state', '', new Text(APP_LIMIT_VCS_STATE, 0), 'Origin state. Contains info sent when starting the installation flow.', true)
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('user')
+            ->inject('authorization')
             ->inject('platform')
             ->inject('vcsFactory')
             ->callback($this->action(...));
@@ -52,6 +58,8 @@ class Get extends Action
         string $state,
         Response $response,
         Database $dbForPlatform,
+        User $user,
+        Authorization $authorization,
         array $platform,
         VcsFactory $vcsFactory,
     ) {
@@ -79,23 +87,44 @@ class Get extends Action
         }
         $providerInstallationId = $receiptInstallationId;
 
-        // Cursor echoes the state given to the install URL as a receipt claim;
-        // accept a query parameter carrying the same value as a fallback.
-        $state = !empty($state) ? $state : \strval($receiptClaims['state'] ?? '');
+        // Cursor echoes the state given to the install URL as a receipt claim,
+        // so the claim is the authoritative one; a query parameter may only
+        // carry the same value, never a different one.
+        $receiptState = $receiptClaims['state'] ?? '';
+        if (!\is_string($receiptState)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
+        }
+        if (!empty($receiptState) && !empty($state) && !\hash_equals($receiptState, $state)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Receipt state does not match the state parameter.');
+        }
+
+        $state = !empty($receiptState) ? $receiptState : $state;
         if (empty($state)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing state parameter. Please restart the installation from the Appwrite Console.');
         }
 
-        $state = \json_decode($state, true) ?? [];
-        $projectId = $state['projectId'] ?? '';
-        $redirectFailure = $state['failure'] ?? '';
-
-        // The receipt authenticates Cursor, and this HMAC authenticates the
-        // Appwrite Console that started the flow -- without it anyone could
+        // The receipt authenticates Cursor, and this signature the Appwrite
+        // Console session that started the flow -- without it anyone could
         // attach an installation to an arbitrary projectId.
-        $signature = \is_string($state['signature'] ?? null) ? $state['signature'] : '';
-        if (!\array_any(EncryptionKey::accepted(), fn (string $key) => \hash_equals(\hash_hmac('sha256', \json_encode([$projectId, $state['success'] ?? '', $redirectFailure]), $key), $signature))) {
+        $state = State::verify($state, ...EncryptionKey::accepted());
+
+        if ($state === null) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
+        }
+
+        $projectId = $state->projectId;
+        $settings = ($platform['consoleUrl'] ?? '') . "/projects/$projectId/settings";
+        $redirectSuccess = $state->success ?: $settings;
+        $redirectFailure = $state->failure ?: $settings;
+
+        if ($state->isExpired()) {
+            $this->failure($response, $redirectFailure, 'The installation request has expired. Please restart the installation from the Appwrite Console.');
+            return;
+        }
+
+        if ($user->isEmpty() || $user->getId() !== $state->userId) {
+            $this->failure($response, $redirectFailure, 'The installation was started by a different Appwrite account. Please sign in with that account, or restart the installation from the Appwrite Console.');
+            return;
         }
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
@@ -104,15 +133,6 @@ class Get extends Action
             $this->failure($response, $redirectFailure, 'Project with the ID from state could not be found.', Exception::PROJECT_NOT_FOUND);
             return;
         }
-
-        $defaultState = [
-            'success' => ($platform['consoleUrl'] ?? '') . "/projects/$projectId/settings",
-            'failure' => ($platform['consoleUrl'] ?? '') . "/projects/$projectId/settings",
-        ];
-
-        $state = \array_merge($defaultState, \array_filter($state));
-        $redirectSuccess = $state['success'] ?? '';
-        $redirectFailure = $state['failure'] ?? '';
 
         if (empty($providerInstallationId)) {
             $this->failure($response, $redirectFailure, 'Origin installation ID is missing.');
@@ -130,6 +150,31 @@ class Get extends Action
             $organization = $adapter->getOwnerName($providerInstallationId);
         } catch (\Throwable $e) {
             Console::warning('Failed to resolve Origin installation owner: ' . $e->getMessage());
+        }
+
+        // Each state completes one installation; ids are capped at 36 characters
+        try {
+            $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document([
+                '$id' => 'vcs-state-' . \substr(\hash('sha256', $state->nonce), 0, 26),
+            ])));
+        } catch (Duplicate) {
+            $this->failure($response, $redirectFailure, 'This installation request was already used. Please restart the installation from the Appwrite Console.');
+            return;
+        }
+
+        // Receipts are single-use too: one replayed within its life must not
+        // attach the installation again. Cursor's receipts need not carry a
+        // jti, so one without names itself by its signed header and claims;
+        // not by the whole token, as its signature segment can be re-encoded.
+        $receiptId = \strval($receiptClaims['jti'] ?? '');
+        $receiptId = $receiptId !== '' ? 'jti:' . $receiptId : 'token:' . \implode('.', \array_slice(\explode('.', $installationReceipt), 0, 2));
+        try {
+            $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document([
+                // Document ids are capped at 36 characters; a digest prefix keeps the claim within it
+                '$id' => 'origin-receipt-' . \substr(\hash('sha256', $receiptId), 0, 21),
+            ])));
+        } catch (Duplicate) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'The installation receipt was already used. Please restart the installation from the Appwrite Console.');
         }
 
         $projectInternalId = $project->getSequence();

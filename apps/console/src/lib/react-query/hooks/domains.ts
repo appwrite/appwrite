@@ -1253,12 +1253,13 @@ export function useRetryDomainVerification(
     mutationFn: async (domainId: string) => {
       return await retryDomainVerification(domainId)
     },
-    onSuccess: (_, domainId) => {
-      queryClient.invalidateQueries({
-        queryKey: ['domains', 'organization', organizationId],
-      })
-      queryClient.invalidateQueries({
+    onSuccess: async (_, domainId) => {
+      await queryClient.refetchQueries({
         queryKey: ['domain', domainId],
+      })
+      // Refetch inactive lists too: they use refetchOnMount: false, so invalidating would leave them stale
+      queryClient.refetchQueries({
+        queryKey: ['domains', 'organization', organizationId],
       })
     },
   })
@@ -1357,6 +1358,7 @@ export function useDomainRecords(
     data: recordsData,
     isLoading,
     isFetching,
+    isSuccess,
     error,
     refetch,
   } = useQuery(
@@ -1382,10 +1384,12 @@ export function useDomainRecords(
 
   return {
     dnsRecords,
-    total: recordsData?.total || 0,
+    // Leave a missing total undefined so callers can tell "not loaded" from 0.
+    total: recordsData?.total,
     totalPages,
     isLoading,
     isFetching,
+    isSuccess,
     error,
     refetch,
   }

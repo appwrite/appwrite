@@ -1,0 +1,110 @@
+---
+layout: integration
+title: Laravel with managed PostgreSQL and MySQL
+description: Run Laravel, Eloquent, and queue workers on an Appwrite native PostgreSQL or MySQL database
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/sql-laravel/cover.avif
+category: databases
+product:
+    vendor: Laravel
+    description: 'Laravel is an open-source PHP web framework with the Eloquent ORM, schema migrations, and queues.'
+platform:
+    - 'Cloud'
+---
+
+[Laravel](https://laravel.com/docs) is a PHP web framework with the Eloquent ORM, a query builder, schema migrations, and queue workers. It supports PostgreSQL and MySQL through its `pgsql` and `mysql` connections.
+
+# How does the integration work?
+
+Appwrite native PostgreSQL and MySQL databases are standard engines that Appwrite provisions in your project's region, each with its own hostname, credentials, and TLS. Laravel connects to them through its regular `pgsql` and `mysql` connections, so Eloquent, relationships, transactions, migrations, and queues behave as they would against any other server.
+
+The right port depends on how your app runs. Long-running processes, such as PHP-FPM, Laravel Octane, and queue workers, connect directly. Serverless deployments route through the database's connection pooler and keep a direct connection for migrations.
+
+{% info title="Available on Appwrite Cloud" %}
+Native PostgreSQL and MySQL databases run in every Appwrite Cloud region and are available on paid plans.
+{% /info %}
+
+# How to implement
+
+To connect Laravel to an Appwrite native database, there are several steps you must complete:
+
+## Step 1: Create a native database
+
+[Create an account on Appwrite Cloud](/sign-up) if you haven't already. In your project, go to **Databases**, click **Create database**, and select **PostgreSQL** or **MySQL** from the **Native databases** group. Pick a specification and click **Create database**. The database becomes `ready` within a few minutes.
+
+For PostgreSQL, open the database and click **Credentials** to copy the host, password, and database name from the **Details** tab. For MySQL, read them from the database object with `mysql.get()` and an API key that has the `databases.read` scope.
+
+## Step 2: Configure the connection
+
+Set the connection in `.env`, which the scaffolded `config/database.php` already reads. Never commit `.env`:
+
+{% tabs %}
+{% tabsitem #env-postgresql title="PostgreSQL" %}
+```env
+DB_CONNECTION=pgsql
+DB_HOST=db-<hash>.<region>.appwrite.center
+DB_PORT=5432
+DB_DATABASE=<database>
+DB_USERNAME=admin
+DB_PASSWORD=<password>
+DB_SSLMODE=require
+```
+
+For full certificate verification, set `DB_SSLMODE=verify-full` and add an `sslrootcert` key to the `pgsql` connection that points at a trusted root store. The certificate is signed by a public CA, so there is no Appwrite-specific CA to download.
+{% /tabsitem %}
+
+{% tabsitem #env-mysql title="MySQL" %}
+```env
+DB_CONNECTION=mysql
+DB_HOST=db-<hash>.<region>.appwrite.center
+DB_PORT=3306
+DB_DATABASE=default
+DB_USERNAME=admin.<hash>
+DB_PASSWORD=<password>
+DB_CHARSET=utf8mb4
+DB_COLLATION=utf8mb4_unicode_ci
+```
+
+Appwrite Cloud requires TLS. If your PHP runtime needs an explicit CA bundle, set `MYSQL_ATTR_SSL_CA` to a trusted root store path.
+{% /tabsitem %}
+{% /tabs %}
+
+## Step 3: Run migrations
+
+Apply migrations against the direct port (`5432` or `3306`), not the pooler, because DDL needs a stable session connection:
+
+```bash
+php artisan migrate --force
+```
+
+## Step 4: Pool serverless traffic
+
+For serverless or per-request deployments, point `DB_PORT` at the pooler, `6432` for PostgreSQL or `6033` for MySQL, and keep a direct connection for schema work:
+
+- **PostgreSQL:** set `DB_POOLED=true` and add a `direct` array (host, port, username, password, and `sslmode`) to the `pgsql` connection. Laravel then uses the direct connection for migrations, schema dumps, and inspection commands, and `DB::connection('pgsql::direct')` gives you the direct port on demand.
+- **MySQL:** add a second connection, such as `mysql_direct`, that reads `DB_DIRECT_*` variables on port `3306`, and run `php artisan migrate --database=mysql_direct --force`.
+
+The transaction-mode pooler does not keep session state, so server-side prepared statements, advisory locks, `LISTEN`/`NOTIFY`, user variables, and temporary tables need the direct port or a session-mode pooler.
+
+## Step 5: Run queue workers on a direct connection
+
+Queue workers and Laravel Horizon processes hold a connection for their whole lifetime, so connect them to the direct port or a session-mode pooler, never the transaction-mode pooler. Restart them periodically, and size `maxProcesses` against your specification's connection budget:
+
+```bash
+php artisan queue:work --max-time=3600 --max-jobs=500
+```
+
+To test migrations in CI, run `php artisan migrate --force` against a [PostgreSQL](/docs/products/databases/postgresql/branches) or [MySQL](/docs/products/databases/mysql/branches) branch, then delete it when the job finishes.
+
+# Read more about Laravel and Appwrite Databases
+
+If you would like to learn more about Laravel and Appwrite Databases, we have some resources that you should visit:
+
+- [Use Laravel with a native PostgreSQL database](/docs/products/databases/postgresql/integrations/laravel)
+- [Use Laravel with a native MySQL database](/docs/products/databases/mysql/integrations/laravel)
+- [Managed PostgreSQL on Appwrite](/docs/products/databases/postgresql)
+- [Native MySQL databases on Appwrite](/docs/products/databases/mysql)
+- [Laravel database documentation](https://laravel.com/docs/database)

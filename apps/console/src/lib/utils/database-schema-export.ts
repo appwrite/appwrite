@@ -352,10 +352,7 @@ function getTypeScriptType(col: ColumnSchema): string {
  * Formats schema as SVG diagram
  */
 export function formatSchemaAsSVG(schema: DatabaseSchema): string {
-  const isDark =
-    typeof window !== 'undefined' &&
-    (isHtmlDarkChrome() ||
-      window.matchMedia('(prefers-color-scheme: dark)').matches)
+  const isDark = isHtmlDarkChrome()
 
   const cardColor = isDark ? '#242424' : '#ffffff'
   const foregroundColor = isDark ? '#ffffff' : '#000000'

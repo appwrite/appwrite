@@ -1,0 +1,73 @@
+---
+layout: integration
+title: MCP with OpenCode
+description: Connect OpenCode to your Appwrite project and docs through the hosted Appwrite MCP server
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/mcp-opencode/cover.avif
+category: mcp
+product:
+    vendor: OpenCode
+    description: "OpenCode is an open-source AI coding agent for the terminal, IDE, and desktop that works with models from many providers."
+platform:
+    - 'Cloud'
+---
+
+[OpenCode](https://opencode.ai) is an open-source AI coding agent. It helps you write code from your terminal, IDE, or desktop, works with models from more than 75 providers, and reads its settings, including MCP servers, from an `opencode.json` file.
+
+# How does the integration work?
+
+The [Appwrite MCP server](/docs/tooling/ai/mcp-servers) connects OpenCode to your Appwrite project through the [Model Context Protocol](https://modelcontextprotocol.io). It is a hosted server at `https://mcp.appwrite.io/` that uses the HTTP transport and signs you in with OAuth, so there is nothing to install and no API key to create.
+
+Once connected, OpenCode can look up your projects, read and change resources such as users, databases, and tables, and search the Appwrite documentation while it codes. Changes go through a separate write tool that requires confirmation, and each change carries a short reason that appears in your project's **Activity** tab.
+
+{% info title="Self-hosted Appwrite" %}
+The hosted MCP server authenticates against Appwrite Cloud. If you self-host Appwrite, use the [local MCP server](/docs/advanced/self-hosting/mcp) instead. It runs on your machine over stdio and connects to your instance with an API key.
+{% /info %}
+
+# How to implement
+
+To connect OpenCode to Appwrite, there are several steps you must complete:
+
+## Step 1: Set up your Appwrite project
+
+First, [create an account on Appwrite Cloud](/sign-up) if you haven't already, and create a project. You don't need an API key: OpenCode asks you to sign in to Appwrite the first time it connects to the server.
+
+## Step 2: Add the Appwrite MCP server to OpenCode
+
+Add the Appwrite server to your `opencode.json` file:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "appwrite": {
+      "type": "remote",
+      "enabled": true,
+      "url": "https://mcp.appwrite.io/"
+    }
+  }
+}
+```
+
+When OpenCode first connects, complete the sign-in flow in your browser to sign in to your Appwrite account and authorize access.
+
+## Step 3: Test the integration
+
+Start OpenCode and try prompts like:
+
+- `Create a new user in my Appwrite project`
+- `List all databases in my project`
+- `Show me the tables in my database`
+- `How do I set up real-time subscriptions in Appwrite?`
+
+# Read more about OpenCode and the Appwrite MCP server
+
+If you would like to learn more about OpenCode and the Appwrite MCP server, we have some resources that you should visit:
+
+- [Connect the Appwrite MCP server to OpenCode](/docs/tooling/ai/agents/opencode)
+- [Appwrite MCP server documentation](/docs/tooling/ai/mcp-servers)
+- [Appwrite agent skills](/docs/tooling/ai/skills)
+- [OpenCode](https://opencode.ai)

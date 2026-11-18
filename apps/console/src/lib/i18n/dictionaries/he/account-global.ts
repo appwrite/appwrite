@@ -427,6 +427,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Remember your password?': 'זוכרים את הסיסמה?',
   'Requested resources': 'משאבים מבוקשים',
   'Resend verification email': 'שליחה חוזרת של אימייל האימות',
+  'Resend email in {seconds}s': 'שליחה חוזרת בעוד {seconds} שניות',
   'Reset password': 'איפוס סיסמה',
   'Reset your password': 'איפוס הסיסמה שלכם',
   'Send recovery link': 'שליחת קישור שחזור',
@@ -1260,7 +1261,6 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Close panel': 'סגירת החלונית',
   'Switch to dark mode': 'מעבר למצב כהה',
   'Switch to light mode': 'מעבר למצב בהיר',
-  'Use system theme': 'שימוש בערכת הנושא של המערכת',
 
   // GitHub Education program sign-up flow (/education/join)
   'Appwrite and GitHub': 'Appwrite ו-GitHub',

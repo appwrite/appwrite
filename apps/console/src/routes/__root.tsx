@@ -111,13 +111,13 @@ interface MyRouterContext {
 /**
  * Inline script that runs before first paint (via ScriptOnce). Applies theme
  * class to <html> so the initial loader respects user choice first, then
- * system preference. Must match next-themes storageKey ("theme") and logic.
+ * defaults to dark. Must match next-themes storageKey ("theme") and logic.
  */
 const THEME_SCRIPT = `(function(){
   try {
-    var t = localStorage.getItem('theme') || 'system';
-    if (t === 'classic') { localStorage.setItem('theme', 'dark'); t = 'dark'; }
-    var r = t === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t;
+    var t = localStorage.getItem('theme') || 'dark';
+    if (t === 'classic' || t === 'system') { localStorage.setItem('theme', 'dark'); t = 'dark'; }
+    var r = t;
     var e = document.documentElement;
     ['light','dark','system','crazy','stealth','classic','premium','high-contrast','barbie','nineties','legacy'].forEach(function(c){e.classList.remove(c);});
     e.classList.add(r);
@@ -267,11 +267,11 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   shellComponent: RootDocument,
 })
 
-/** Remap removed debug theme so old localStorage values do not leave stale classes. */
+/** Remap removed themes so old localStorage values do not leave stale classes. */
 function MigrateRemovedThemes() {
   const { theme, setTheme } = useTheme()
   useEffect(() => {
-    if (theme === 'classic') setTheme('dark')
+    if (theme === 'classic' || theme === 'system') setTheme('dark')
   }, [theme, setTheme])
   return null
 }
@@ -318,13 +318,12 @@ function ClientThemeProvider({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider
       attribute="class"
-      defaultTheme="system"
-      enableSystem
+      defaultTheme="dark"
+      enableSystem={false}
       disableTransitionOnChange
       themes={[
         'light',
         'dark',
-        'system',
         'crazy',
         'stealth',
         'premium',

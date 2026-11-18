@@ -1,0 +1,71 @@
+---
+layout: integration
+title: MCP with Zenflow
+description: Connect Zenflow agents to your Appwrite project and docs through the hosted Appwrite MCP server
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/mcp-zenflow/cover.avif
+category: mcp
+product:
+    vendor: Zencoder
+    description: "Zenflow, from Zencoder, is a standalone app that coordinates AI agents to carry out software development tasks."
+platform:
+    - 'Cloud'
+---
+
+[Zenflow](https://zencoder.ai/zenflow) is a standalone app from Zencoder that coordinates AI agents to build software. You describe a task, Zenflow's agents work on it, and you follow and steer the work in the task's chat. MCP servers are configured per agent.
+
+# How does the integration work?
+
+The [Appwrite MCP server](/docs/tooling/ai/mcp-servers) connects Zenflow's agents to your Appwrite project through the [Model Context Protocol](https://modelcontextprotocol.io). It is a hosted server at `https://mcp.appwrite.io/` that uses the HTTP transport and signs you in with OAuth, so there is nothing to install and no API key to create.
+
+Once connected, an agent can look up your projects, read and change resources such as users, databases, and tables, and search the Appwrite documentation while it works on a task. Changes go through a separate write tool that requires confirmation, and each change carries a short reason that appears in your project's **Activity** tab.
+
+{% info title="Self-hosted Appwrite" %}
+The hosted MCP server authenticates against Appwrite Cloud. If you self-host Appwrite, use the [local MCP server](/docs/advanced/self-hosting/mcp) instead. It runs on your machine over stdio and connects to your instance with an API key.
+{% /info %}
+
+# How to implement
+
+To connect Zenflow to Appwrite, there are several steps you must complete:
+
+## Step 1: Set up your Appwrite project
+
+First, [create an account on Appwrite Cloud](/sign-up) if you haven't already, and create a project. You don't need an API key: Zenflow asks you to sign in to Appwrite the first time it connects to the server.
+
+## Step 2: Add the Appwrite MCP server to Zenflow
+
+In Zenflow, go to **Settings** > **MCP servers**, select the agent you want to configure, and add a custom MCP server with this configuration:
+
+```json
+{
+  "mcpServers": {
+    "appwrite": {
+      "url": "https://mcp.appwrite.io/",
+      "type": "http"
+    }
+  }
+}
+```
+
+Click **Save**. When Zenflow first connects, complete the sign-in flow in your browser to sign in to your Appwrite account and authorize access. Zenflow then loads the server's tools.
+
+## Step 3: Test the integration
+
+Open **Zenflow Chat** for an existing task. If you don't have one, click **New Task**, select a task type, write a task description, and click **Create and Run**. Then try prompts like:
+
+- `Create a new user in my Appwrite project`
+- `List all databases in my project`
+- `Show me the tables in my database`
+- `How do I implement file uploads with Appwrite Storage?`
+
+# Read more about Zenflow and the Appwrite MCP server
+
+If you would like to learn more about Zenflow and the Appwrite MCP server, we have some resources that you should visit:
+
+- [Connect the Appwrite MCP server to Zenflow](/docs/tooling/ai/vibe-coding/zenflow)
+- [Appwrite MCP server documentation](/docs/tooling/ai/mcp-servers)
+- [Set up Zenflow](https://docs.zencoder.ai/user-guides/guides/set-up-your-zenflow)
+- [Zenflow](https://zencoder.ai/zenflow)

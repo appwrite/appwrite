@@ -242,6 +242,9 @@ $server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $
                     if (($counts['delivered'] ?? 0) > 0) {
                         $context->addMetric(METRIC_MQTT_MESSAGES_DELIVERED, (int) $counts['delivered']);
                     }
+                    if (($counts['acked'] ?? 0) > 0) {
+                        $context->addMetric(METRIC_MQTT_MESSAGES_ACKED, (int) $counts['acked']);
+                    }
 
                     $publisherForUsage->enqueue(new UsageMessage(
                         project: $project,
