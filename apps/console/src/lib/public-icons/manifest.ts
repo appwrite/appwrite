@@ -175,6 +175,7 @@ export const PUBLIC_ICON_FILENAMES = [
   'remix.svg',
   'resend.svg',
   'retool.svg',
+  'roblox.svg',
   'ruby.svg',
   'rust.svg',
   'rxdb.svg',
