@@ -7,6 +7,7 @@ use Appwrite\Bus\Events\RuleDeleted;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\DNS as ValidatorDNS;
 use Appwrite\Platform\Action as PlatformAction;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Swoole\Coroutine;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\Bus\Bus;
@@ -408,7 +409,16 @@ class Action extends PlatformAction
             throw new Exception(Exception::RULE_VERIFICATION_FAILED, 'DNS verification failed as the project assigned to domain ' . $domain . ' could not be resolved. ' . $validator->getDescription());
         }
 
-        return $validator->count > 0 ? false : null;
+        // A wildcard or CNAME can answer this name with unrelated TXT records, such as SPF.
+        // Only a value that could be a project ID assigns the domain to another project.
+        $customId = new CustomId();
+        foreach ($validator->records as $record) {
+            if ($customId->isValid($record)) {
+                return false;
+            }
+        }
+
+        return null;
     }
 
     /**
