@@ -588,6 +588,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\VippsSandbox',
     ],
+    'vk' => [
+        'name' => 'VK',
+        'developers' => 'https://id.vk.com/about/business/go/docs/ru/vkid/latest/vk-id/connection/start-integration/how-auth-works',
+        'icon' => 'icon-vk',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\VK',
+    ],
     'webflow' => [
         'name' => 'Webflow',
         'developers' => 'https://developers.webflow.com/data/reference/oauth-app',
