@@ -10,6 +10,7 @@ use Appwrite\Auth\OAuth2\Cloudflare;
 use Appwrite\Auth\OAuth2\Etsy;
 use Appwrite\Auth\OAuth2\Kick;
 use Appwrite\Auth\OAuth2\Line;
+use Appwrite\Auth\OAuth2\Linear;
 use Appwrite\Auth\OAuth2\Resend;
 use Appwrite\Auth\OAuth2\Vercel;
 use Appwrite\Auth\OAuth2\X;
@@ -37,6 +38,7 @@ final class PKCETest extends TestCase
         yield 'cloudflare' => [Cloudflare::class];
         yield 'vercel' => [Vercel::class];
         yield 'line' => [Line::class];
+        yield 'linear' => [Linear::class];
     }
 
     protected function setUp(): void

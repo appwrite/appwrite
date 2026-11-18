@@ -333,6 +333,7 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_VERCEL = 'oAuth2Vercel';
     public const MODEL_OAUTH2_ATLASSIAN = 'oAuth2Atlassian';
     public const MODEL_OAUTH2_LINE = 'oAuth2Line';
+    public const MODEL_OAUTH2_LINEAR = 'oAuth2Linear';
     public const MODEL_OAUTH2_WORKOS = 'oAuth2WorkOS';
     public const MODEL_OAUTH2_ZOOM = 'oAuth2Zoom';
     public const MODEL_OAUTH2_ZOHO = 'oAuth2Zoho';

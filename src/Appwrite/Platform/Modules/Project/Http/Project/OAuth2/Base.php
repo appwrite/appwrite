@@ -390,6 +390,7 @@ abstract class Base extends Action
             'vercel' => Vercel\Update::class,
             'atlassian' => Atlassian\Update::class,
             'line' => Line\Update::class,
+            'linear' => Linear\Update::class,
             'workos' => WorkOS\Update::class,
             'linkedin' => Linkedin\Update::class,
             'disqus' => Disqus\Update::class,

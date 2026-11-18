@@ -64,6 +64,7 @@ class OAuth2ProviderList extends Model
                     Response::MODEL_OAUTH2_VERCEL,
                     Response::MODEL_OAUTH2_ATLASSIAN,
                     Response::MODEL_OAUTH2_LINE,
+                    Response::MODEL_OAUTH2_LINEAR,
                     Response::MODEL_OAUTH2_WORKOS,
                     Response::MODEL_OAUTH2_RESEND,
                     Response::MODEL_OAUTH2_CLOUDFLARE,

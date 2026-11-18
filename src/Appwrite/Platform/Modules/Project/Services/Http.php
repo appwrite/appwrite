@@ -48,6 +48,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Kakao\Update as Update
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Keycloak\Update as UpdateOAuth2Keycloak;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Kick\Update as UpdateOAuth2Kick;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Line\Update as UpdateOAuth2Line;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Linear\Update as UpdateOAuth2Linear;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Linkedin\Update as UpdateOAuth2Linkedin;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Microsoft\Update as UpdateOAuth2Microsoft;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Naver\Update as UpdateOAuth2Naver;
@@ -298,6 +299,7 @@ class Http extends Service
         $this->addAction('updateProjectOAuth2Vercel', UpdateOAuth2Vercel::class);
         $this->addAction('updateProjectOAuth2Atlassian', UpdateOAuth2Atlassian::class);
         $this->addAction('updateProjectOAuth2LINE', UpdateOAuth2Line::class);
+        $this->addAction('updateProjectOAuth2Linear', UpdateOAuth2Linear::class);
         $this->addAction('updateProjectOAuth2WorkOS', UpdateOAuth2WorkOS::class);
         $this->addAction('updateProjectOAuth2Resend', UpdateOAuth2Resend::class);
         $this->addAction('updateProjectOAuth2TikTok', UpdateOAuth2TikTok::class);
