@@ -41,11 +41,16 @@ pub const VALUE: &[Param] = &[("value", 0, None)];
 /// `int|float`.
 pub const NUMBER: u32 = MAY_BE_LONG | MAY_BE_DOUBLE;
 
+/// The class type `Utopia\Validator\Validator`, in place of a mask: not a type bit, so
+/// [`patch`] leaves the class type the builder declared as it is.
+pub const VALIDATOR: u32 = 1 << 30;
+
 /// The type ext-php-rs builds a parameter or return with, before [`patch`] sets the exact
 /// one: what the inheritance checks at registration see, so it must be compatible with the
 /// parent's (`int` stands in for `int|float`, `mixed` for untyped).
 fn data_type(mask: u32) -> DataType {
     match mask {
+        VALIDATOR => DataType::object(crate::validators::BASE),
         MAY_BE_BOOL => DataType::Bool,
         MAY_BE_LONG | NUMBER => DataType::Long,
         MAY_BE_STRING => DataType::String,
@@ -99,11 +104,13 @@ pub fn patch(class: &ClassEntry, methods: &[Method], tables: ArgInfoTables, unpr
     for method in methods {
         let Some(info) = engine::arg_info(class, method.name) else { continue };
         let (returns, params) = info.split_at_mut(1);
-        if method.name != "__construct" {
+        if method.name != "__construct" && method.returns != VALIDATOR {
             engine::set_type(&mut returns[0], method.returns);
         }
         for ((name, mask, _), param) in method.params.iter().zip(params.iter_mut()) {
-            engine::set_type(param, *mask);
+            if *mask != VALIDATOR {
+                engine::set_type(param, *mask);
+            }
             if method.name == "__construct" && !unpromoted.contains(name) {
                 param.type_.type_mask |= engine::IS_PROMOTED;
             }

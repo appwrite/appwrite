@@ -138,7 +138,7 @@ pub fn set_option_on(this: &mut ZendObject, class: &ClassEntry, key: &[u8], valu
     if exact(this, class) {
         return store(this, key, value);
     }
-    engine::call_method(this, "setOption", &[&string(key), &value]).map(drop)
+    engine::call_own_method(this, "setOption", &[&string(key), &value]).map(drop)
 }
 
 /// `$this->getOption($key)` on an object of `class` or a subclass.
@@ -146,7 +146,7 @@ pub fn option_of(this: &mut ZendObject, class: &ClassEntry, key: &[u8]) -> Optio
     if exact(this, class) {
         return lookup(this, key, Zval::new());
     }
-    engine::call_method(this, "getOption", &[&string(key)])
+    engine::call_own_method(this, "getOption", &[&string(key)])
 }
 
 /// `$this->getOptions()` on an object of `class` or a subclass.
@@ -154,7 +154,7 @@ pub fn options_of(this: &mut ZendObject, class: &ClassEntry) -> Option<Zval> {
     if exact(this, class) {
         return options(this);
     }
-    engine::call_method(this, "getOptions", &[])
+    engine::call_own_method(this, "getOptions", &[])
 }
 
 /// `$this->getName()` on an object of `class` (named `name`) or a subclass.
@@ -162,7 +162,7 @@ pub fn name_of(this: &mut ZendObject, class: &ClassEntry, name: &str) -> Option<
     if exact(this, class) {
         return Some(string(name.as_bytes()));
     }
-    engine::call_method(this, "getName", &[])
+    engine::call_own_method(this, "getName", &[])
 }
 
 /// `$this` as the method's return value (the setters' `static`).
@@ -213,7 +213,7 @@ extern "C" fn set_options(ex: &mut ExecuteData, retval: &mut Zval) {
                 }
             }
             Key::Name(name) => {
-                if engine::call_method(this, "setOption", &[&string(&name), &value]).is_none() {
+                if engine::call_own_method(this, "setOption", &[&string(&name), &value]).is_none() {
                     return;
                 }
             }
@@ -233,7 +233,7 @@ extern "C" fn set_options(ex: &mut ExecuteData, retval: &mut Zval) {
                 }
                 let mut index = Zval::new();
                 index.set_long(i);
-                if engine::call_method(this, "setOption", &[&index, &value]).is_none() {
+                if engine::call_own_method(this, "setOption", &[&index, &value]).is_none() {
                     return;
                 }
             }

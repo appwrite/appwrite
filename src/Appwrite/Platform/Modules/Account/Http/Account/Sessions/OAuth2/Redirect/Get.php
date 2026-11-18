@@ -9,6 +9,7 @@ use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OAuth2;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
+use Appwrite\Bus\Events\EmailVerified;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -29,6 +30,7 @@ use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
 use Utopia\Auth\Proofs\Token as ProofsToken;
 use Utopia\Auth\Store;
+use Utopia\Bus\Bus;
 use Utopia\Client\Client;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
@@ -102,6 +104,7 @@ class Get extends Base
             ->inject('queueForRealtime')
             ->inject('authDevice')
             ->inject('publisherForDeletes')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -134,6 +137,7 @@ class Get extends Base
         Realtime $queueForRealtime,
         ?Document $authDevice,
         DeletePublisher $publisherForDeletes,
+        Bus $bus,
     ): void {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
@@ -471,6 +475,9 @@ class Get extends Base
                         if ($claimed) {
                             $dbForProject->purgeCachedDocument('users', $user->getId());
 
+                            // The claim is what verified the address, before the stored row is read below
+                            $bus->dispatch(new EmailVerified(user: $user->getArrayCopy(), project: $project->getArrayCopy()));
+
                             try {
                                 $mqtt->revoke($project->getId(), $user->getId());
                             } catch (\Throwable $error) {
@@ -593,6 +600,10 @@ class Get extends Base
         if (false === $user->getAttribute('status')) { // Account is blocked
             $failureRedirect(Exception::USER_BLOCKED); // User is in status blocked
         }
+
+        // Only a user this sign-in created and an address it fills in turn verified from here, and both are
+        // saved below; a claim already dispatched EmailVerified and left the account verified
+        $wasVerified = $newUser === null && $user->getAttribute('emailVerification', false);
 
         $backfilled = empty($user->getAttribute('email')) && !empty($providerEmail);
         if ($backfilled) {
@@ -771,6 +782,10 @@ class Get extends Base
         $user->setAttribute('status', true);
 
         $dbForProject->updateDocument('users', $user->getId(), new Document($changes));
+
+        if (!$wasVerified && $user->getAttribute('emailVerification', false)) {
+            $bus->dispatch(new EmailVerified(user: $user->getArrayCopy(), project: $project->getArrayCopy()));
+        }
 
         $authorization->addRole(Role::user($user->getId())->toString());
 

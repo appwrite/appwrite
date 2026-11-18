@@ -114,7 +114,7 @@ fn hash_of(
     if exact(this, class) {
         return native(this, value);
     }
-    let hashed = engine::call_method(this, "hash", &[&string(value)])?;
+    let hashed = engine::call_own_method(this, "hash", &[&string(value)])?;
     Some(hashed.zend_str().map(|s| s.as_bytes().to_vec()).unwrap_or_default())
 }
 
@@ -1017,7 +1017,7 @@ fn random_on(this: &mut ZendObject, count: i64) -> Option<Vec<u8>> {
     if exact(this, stored(&PHPASS)) {
         return random_of(this, count);
     }
-    let bytes = engine::call_method(this, "getRandomBytes", &[&long(count)])?;
+    let bytes = engine::call_own_method(this, "getRandomBytes", &[&long(count)])?;
     Some(bytes.zend_str().map(|s| s.as_bytes().to_vec()).unwrap_or_default())
 }
 
@@ -1043,7 +1043,7 @@ fn encode64_on(this: &mut ZendObject, input: &[u8], count: i64) -> Option<Vec<u8
     if exact(this, stored(&PHPASS)) {
         return encode64_of(this, input, count);
     }
-    let encoded = engine::call_method(this, "encode64", &[&string(input), &long(count)])?;
+    let encoded = engine::call_own_method(this, "encode64", &[&string(input), &long(count)])?;
     Some(encoded.zend_str().map(|s| s.as_bytes().to_vec()).unwrap_or_default())
 }
 

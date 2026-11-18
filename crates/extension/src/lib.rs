@@ -7,7 +7,7 @@
 //! `Utopia\Emails\Email` are always registered: they have no PHP implementation.
 //! Every other library still has one, and its class is registered only when
 //! `_APP_EXTENSION_LIBRARIES` names its package (`validators`) or, for a package ported in
-//! batches, the package and the batch (`validators,validators-scalar`, `validators,validators-text`), so each can be
+//! batches, the package and the batch (`validators,validators-scalar`, `validators,validators-text`, `validators,validators-compose`), so each can be
 //! canaried and switched back to PHP with a restart, not a deploy. `auth` switches on the
 //! password hashes of `utopia-php/auth` (`Utopia\Auth\Hash` and `Hashes\*`).
 
@@ -64,6 +64,9 @@ fn startup(_kind: i32, _module: i32) -> i32 {
             }
             if enabled("validators-network") {
                 validators::network::register()?;
+            }
+            if enabled("validators-compose") {
+                validators::compose::register()?;
             }
         }
         if enabled("auth") {
