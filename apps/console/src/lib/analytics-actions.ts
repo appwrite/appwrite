@@ -75,6 +75,8 @@ export const ANALYTICS_ACTIONS = {
   'marketing-view-pricing': 'Marketing View Pricing Clicked',
   'home-start-project': 'Home Start Project Clicked',
   'home-view-docs': 'Home View Docs Clicked',
+  'home-console-open': 'Home Console Open Clicked',
+  'home-factory-station': 'Home Factory Station Clicked',
   'home-start-building': 'Home Start Building Clicked',
   'home-view-pricing': 'Home View Pricing Clicked',
   'home-join-init': 'Home Join Init Clicked',
