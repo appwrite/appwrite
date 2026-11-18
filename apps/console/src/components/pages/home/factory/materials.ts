@@ -104,6 +104,8 @@ export function createFloorMaterial(shadow: Texture) {
         color *= 1.0 - shade * uOcclusion;
 
         #ifdef USE_REFLECTION
+        // Skipped outright once the engine has faded the reflection out.
+        if (uReflectivity > 0.0) {
           // The mirrored camera sees every floor point at the same height and the opposite side.
           vec2 uv = gl_FragCoord.xy / uResolution;
           uv.x = 1.0 - uv.x;
@@ -123,6 +125,7 @@ export function createFloorMaterial(shadow: Texture) {
             + textureLod(uReflection, uv + vec2(-texel.x, texel.y), lod)) * 0.0625;
           float gloss = uReflectivity * exp(-away * 0.8);
           color = color * (1.0 - mirror.a * gloss) + mirror.rgb * gloss;
+        }
         #endif
 
         gl_FragColor = vec4(color, 1.0);

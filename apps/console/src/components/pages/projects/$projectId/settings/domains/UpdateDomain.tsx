@@ -14,7 +14,10 @@ import {
   type DomainBehaviour,
 } from '@/components/pages/projects/$projectId/shared/DomainTargetCard'
 import { useUpdateDomainRule } from '@/lib/react-query/hooks'
-import { getErrorMessage } from '@/lib/utils/error-formatting'
+import {
+  formatResourceNotFoundError,
+  getErrorMessage,
+} from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 
 interface UpdateDomainProps {
@@ -97,7 +100,11 @@ export function UpdateDomain({
       toast.success(t('Domain has been updated'))
       onOpenChange(false)
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error) || t('Failed to update domain'))
+      toast.error(
+        formatResourceNotFoundError(error)?.message ||
+          getErrorMessage(error) ||
+          t('Failed to update domain'),
+      )
     }
   }
 

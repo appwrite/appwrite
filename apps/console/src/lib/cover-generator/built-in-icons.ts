@@ -164,6 +164,8 @@ const COVER_BUILT_IN_ICON_CATEGORY_ICONS: Record<string, string[]> = {
     'linear.svg',
     'roblox.svg',
     'railway.svg',
+    'patreon.svg',
+    'strava.svg',
     'netlify.svg',
     'discord-simple.svg',
     'discord.svg',

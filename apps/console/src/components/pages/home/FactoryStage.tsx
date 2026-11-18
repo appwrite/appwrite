@@ -15,11 +15,20 @@ import { isHtmlDarkChrome } from '@/lib/html-theme'
 import { useT } from '@/lib/i18n/translate'
 import { PRODUCT_REGISTRY } from '@/lib/products/registry'
 import { cn } from '@/lib/utils'
-import { canUseWebGL } from '@/lib/webgl'
 import { STATION_IDS, type FactoryStationId } from './factory/layout'
 import type { FactoryEngine } from './factory/engine'
 
-const loadFactory = createClientOnlyFn(() => import('./factory/engine'))
+const importFactory = createClientOnlyFn(() => import('./factory/engine'))
+let factory: ReturnType<typeof importFactory> | null = null
+/** The engine (and three.js) download once, starting as early as the stage renders. */
+const loadFactory = () => {
+  if (!factory) {
+    factory = importFactory()
+    // A failed download is handled where the engine is created (the fallback).
+    factory?.catch(() => {})
+  }
+  return factory
+}
 
 /** Hero console screenshots, used only when WebGL is unavailable. */
 const FALLBACK_LIGHT_SRC = '/images/heroes/console-app-light.avif?v=20260729'
@@ -52,6 +61,8 @@ export function FactoryStage({
   onCoverChange?: (covering: boolean) => void
 }) {
   const t = useT()
+  // Start downloading the engine while the page hydrates, not after it has.
+  if (typeof window !== 'undefined') void loadFactory()
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const linkRefs = useRef<(HTMLLIElement | null)[]>([])
@@ -106,10 +117,8 @@ export function FactoryStage({
     const container = containerRef.current
     const canvas = canvasRef.current
     if (!container || !canvas) return
-    if (!canUseWebGL()) {
-      setState('fallback')
-      return
-    }
+    // No separate WebGL probe: it would create a context only to drop it. If
+    // the engine cannot get one, creating it throws and the stage falls back.
 
     let disposed = false
     let engine: FactoryEngine | null = null

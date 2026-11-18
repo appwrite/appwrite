@@ -104,6 +104,9 @@ class Mails extends Action
         $preview = $payload['preview'] ?? '';
 
         $variables['year'] = date('Y');
+        // Only the default logo has a light variant; a custom logo shows as-is in dark mode
+        $logoUrl = $variables['logoUrl'] ?? '';
+        $variables['logoDarkUrl'] ??= $logoUrl === APP_EMAIL_LOGO_URL ? APP_EMAIL_LOGO_DARK_URL : $logoUrl;
 
         $subjectTemplate = Template::fromString($subject);
         foreach ($variables as $key => $value) {
