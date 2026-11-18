@@ -33,6 +33,11 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
 import { RuleStatusBadge } from './RuleStatusBadge'
@@ -236,6 +241,54 @@ function RecordStatus({
   }
 }
 
+/**
+ * What DNS returned for a record, on one line: the first value, then the
+ * others in a tooltip, as IPv6 addresses would wrap the line.
+ */
+function FoundValues({
+  values,
+  wrong,
+}: {
+  values: string[]
+  /** Underline the value as the one to change. */
+  wrong: boolean
+}) {
+  const t = useT()
+  const [first, ...rest] = values
+  return (
+    <p className="flex min-w-0 items-baseline gap-1.5 text-[12px] text-muted-foreground">
+      <span className="shrink-0">{t('Found:')}</span>
+      <span
+        className={`min-w-0 truncate pb-1 font-mono text-foreground ${wrong ? 'underline decoration-wavy decoration-red-500 underline-offset-2' : ''}`}
+        title={first}
+      >
+        {first}
+      </span>
+      {rest.length > 0 && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className="shrink-0 cursor-default rounded-sm whitespace-nowrap underline decoration-dotted underline-offset-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {t('and {n} more').replace('{n}', String(rest.length))}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-sm text-xs">
+            <ul className="space-y-0.5 font-mono">
+              {values.map((value) => (
+                <li key={value} className="break-all">
+                  {value}
+                </li>
+              ))}
+            </ul>
+          </TooltipContent>
+        </Tooltip>
+      )}
+    </p>
+  )
+}
+
 /** One group of records: a heading, a badge, then the records with their status. */
 function RecordSection({
   title,
@@ -329,27 +382,8 @@ function RecordSection({
                   {found.length > 0 && (
                     <TableRow className="hover:bg-transparent">
                       <TableCell colSpan={2} className="pt-0 pb-3" />
-                      <TableCell
-                        colSpan={3}
-                        className="whitespace-normal px-4 pt-0 pb-3"
-                      >
-                        <p className="text-[12px] text-muted-foreground break-words">
-                          {t('Found:')}{' '}
-                          {found.map((value, i) => (
-                            <Fragment key={value}>
-                              {i > 0 && ', '}
-                              <span
-                                className={
-                                  r.type === 'CAA'
-                                    ? 'font-mono text-foreground'
-                                    : 'font-mono text-foreground underline decoration-wavy decoration-red-500 underline-offset-4'
-                                }
-                              >
-                                {value}
-                              </span>
-                            </Fragment>
-                          ))}
-                        </p>
+                      <TableCell colSpan={3} className="px-4 pt-0 pb-3">
+                        <FoundValues values={found} wrong={r.type !== 'CAA'} />
                       </TableCell>
                     </TableRow>
                   )}
