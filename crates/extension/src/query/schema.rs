@@ -330,16 +330,13 @@ struct Layout {
     slots: Rc<[Option<usize>]>,
 }
 
-/// `Builder\\Statement`, and its property slots where it declares all of them.
-type StatementClass = (&'static ClassEntry, Option<[usize; 5]>);
-
 thread_local! {
     /// The layouts found this request. A blueprint is a handful of classes, so this stays short.
     static LAYOUTS: RefCell<Vec<Layout>> = const { RefCell::new(Vec::new()) };
     /// The package's classes looked up this request, by the name they were asked for.
     static CLASSES: RefCell<Vec<(&'static str, &'static ClassEntry)>> = const { RefCell::new(Vec::new()) };
-    /// `Builder\Statement` and the slots of [`STATEMENT_PROPERTIES`], found once a request.
-    static STATEMENT_SLOTS: Cell<Option<StatementClass>> = const { Cell::new(None) };
+    /// The slots of [`STATEMENT_PROPERTIES`] in the package's `Statement`, found once a request.
+    static STATEMENT_SLOTS: Cell<Option<[usize; 5]>> = const { Cell::new(None) };
 }
 
 /// Forgets the classes at the end of a request, when PHP frees them.
@@ -691,9 +688,17 @@ fn built(json: bool, builder: &Zval) -> PhpResult<(Built, Zval)> {
         .object()
         .and_then(|object| object.get_properties().ok())
         .ok_or_else(|| type_error(format!("A builder must build a {STATEMENT}")))?;
-    let property = |name: &str| fields.get(name).map(|found| found.indirect().unwrap_or(found));
-    let query = property("query").and_then(Zval::zend_str).map(|found| inward(json, found.as_bytes())).transpose()?;
-    let bindings = property("bindings").map_or_else(empty, Zval::shallow_clone);
+    // A statement whose constructor never ran has neither: PHP's error for reading one.
+    let property = |name: &str| {
+        let found = fields.get(name).map(|found| found.indirect().unwrap_or(found));
+        // SAFETY: a slot's type tag is readable in any state; 0 is a property never initialized.
+        found.filter(|found| unsafe { found.u1.type_info } != 0).ok_or_else(|| {
+            let message = format!("Typed property {STATEMENT}::${name} must not be accessed before initialization");
+            PhpException::new(message, 0, ce::error())
+        })
+    };
+    let query = property("query")?.zend_str().map(|found| inward(json, found.as_bytes())).transpose()?;
+    let bindings = property("bindings")?.shallow_clone();
     Ok((Built(query.unwrap_or_default()), bindings))
 }
 
@@ -720,16 +725,13 @@ fn statement<S: Dialect>(
     bindings: Option<Zval>,
 ) -> PhpResult<Zval> {
     let compiled = compiled.map_err(|error| thrown(S::JSON, &error))?;
-    let (class, slots) = match STATEMENT_SLOTS.get() {
-        Some(found) => found,
-        None => {
-            let class = known(STATEMENT)?;
-            let slots: Vec<usize> = STATEMENT_PROPERTIES.iter().filter_map(|name| slot_of(class, name)).collect();
-            let found = (class, slots.try_into().ok());
-            STATEMENT_SLOTS.set(Some(found));
-            found
-        }
-    };
+    let class = known(STATEMENT)?;
+    let slots = STATEMENT_SLOTS.get().or_else(|| {
+        let slots: Vec<usize> = STATEMENT_PROPERTIES.iter().filter_map(|name| slot_of(class, name)).collect();
+        let slots = slots.try_into().ok();
+        STATEMENT_SLOTS.set(slots);
+        slots
+    });
     let mut read_only = Zval::new();
     read_only.set_bool(compiled.read_only);
     let mut values = [
@@ -741,7 +743,8 @@ fn statement<S: Dialect>(
     ];
     let object = match slots {
         // What the constructor does, without the call: it only assigns its promoted
-        // properties, and these values already have the types it declares.
+        // properties, and these values already have the types it declares. If `Statement.php`'s
+        // constructor ever does more, this has to do it too.
         Some(slots) => {
             let mut object = class.new();
             for (slot, value) in slots.into_iter().zip(values) {
@@ -751,6 +754,7 @@ fn statement<S: Dialect>(
             }
             object
         }
+        // A `Statement` that is not the package's, lacking one of the properties.
         None => construct(class, &mut values[..4])?,
     };
     object.into_zval(false).map_err(PhpException::from)

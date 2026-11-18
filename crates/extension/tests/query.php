@@ -2149,6 +2149,22 @@ emit('schema subclass', outcome(function (): array {
     return [$own->table('t')->drop(), $own->table('t')->dropIfExists(), $own->table('t')->truncate(), $own->table('t')::class, $own instanceof Schema\SQL];
 }));
 
+// A builder may hand back a statement whose constructor never ran: reading it is PHP's error.
+readonly class HollowStatement extends Utopia\Query\Builder\Statement
+{
+    public function __construct()
+    {
+    }
+}
+class HollowBuilder extends Utopia\Query\Builder\MySQL
+{
+    public function build(): Utopia\Query\Builder\Statement
+    {
+        return new HollowStatement();
+    }
+}
+emit('view of a hollow statement', outcome(fn () => (new Utopia\Query\Schema\MySQL())->createView('v', new HollowBuilder())));
+
 // --- The classes themselves ----------------------------------------------------------------
 
 emit('cases', array_map(fn (Type $type): array => [$type->name, $type->value], Type::cases()));

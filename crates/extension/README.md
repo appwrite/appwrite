@@ -373,8 +373,8 @@ to read the blueprint out of PHP objects first. Three things got it under PHP's 
 28% over it on Alpine:
 
 - The extension allocates with mimalloc. More than half of a `compileCreate()` was `malloc` and
-  `free`, and musl's are slow. This is the allocator of every library in the extension, and PHP's own
-  allocations stay with PHP's.
+  `free`, and musl's are slow. This is the allocator of all the extension's Rust code. PHP's own
+  allocations stay with PHP's, and libheif and libwebp, which are C, keep libc's.
 - The crate writes a column's definition into one string, where it joined a list of parts.
 - A `Statement` is made by setting its properties, which is all its constructor does. Calling a PHP
   constructor from Rust costs more than `new` does in PHP.

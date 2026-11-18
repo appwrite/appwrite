@@ -665,44 +665,48 @@ impl Query {
         if depth > 64 {
             return false;
         }
-        out.extend_from_slice(b"{\"method\":");
-        let mut plain = json::push_string(out, self.method.as_str().as_bytes());
+        out.extend_from_slice(b"{\"method\":\"");
+        out.extend_from_slice(self.method.as_str().as_bytes());
+        out.push(b'"');
         if !self.attribute.is_empty() && self.attribute != b"0" {
             out.extend_from_slice(b",\"attribute\":");
-            plain &= json::push_string(out, &self.attribute);
+            if !json::push_string(out, &self.attribute) {
+                return false;
+            }
         }
         if !self.alias.is_empty() {
             out.extend_from_slice(b",\"alias\":");
-            plain &= json::push_string(out, &self.alias);
+            if !json::push_string(out, &self.alias) {
+                return false;
+            }
         }
         out.extend_from_slice(b",\"values\":[");
         for (index, value) in self.values().enumerate() {
             if index > 0 {
                 out.push(b',');
             }
-            plain &= if value.is_null() {
+            if value.is_null() {
                 out.extend_from_slice(b"null");
-                true
             } else if let Some(flag) = value.bool() {
                 out.extend_from_slice(if flag { b"true" } else { b"false" });
-                true
             } else if let Some(number) = value.long() {
                 json::push_int(out, number);
-                true
             } else if let Some(text) = value.zend_str() {
-                json::push_string(out, text.as_bytes())
+                if !json::push_string(out, text.as_bytes()) {
+                    return false;
+                }
             } else {
                 // A subclass with its own `toArray()` is PHP's to encode.
-                query_of(value).is_some_and(|query| {
+                let plain = query_of(value).is_some_and(|query| {
                     !overridden(query.std.get_class_entry(), "toarray") && query.json(out, depth + 1)
-                })
-            };
-            if !plain {
-                return false;
+                });
+                if !plain {
+                    return false;
+                }
             }
         }
         out.extend_from_slice(b"]}");
-        plain
+        true
     }
 
     /// `toArray()`.

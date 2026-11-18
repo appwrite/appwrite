@@ -294,7 +294,7 @@ const HEX: &[u8; 16] = b"0123456789abcdef";
 /// could: PHP refuses one that is not UTF-8, and what is appended then is not JSON.
 pub fn push_string(out: &mut Vec<u8>, s: &[u8]) -> bool {
     let mut encoder = Encoder { out: std::mem::take(out), depth: 0, max_depth: 0, error: ErrorCode::None };
-    let written = encoder.string(s, Flags::NONE).is_ok() && matches!(encoder.error, ErrorCode::None);
+    let written = encoder.string(s, Flags::NONE).is_ok();
     *out = encoder.out;
     written
 }
