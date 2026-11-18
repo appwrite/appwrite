@@ -33,7 +33,7 @@ import {
 } from '@/lib/react-query/hooks/videos'
 import {
   getVideoPlayerViewportStyle,
-  resolveVideoViewportAspect,
+  resolvePlayerAspect,
 } from '@/lib/utils/video-format'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -524,16 +524,18 @@ export function VideoStreamPlayer({
     : featured
       ? 'max(240px, min(800px, calc(100cqh - 32px)))'
       : 'max(240px, min(800px, calc(100cqh - 24px)))'
-  const viewportAspect = useMemo(() => {
-    if (mediaPixelSize) {
-      return mediaPixelSize
-    }
-    return resolveVideoViewportAspect(
-      video.width,
-      video.height,
-      video.aspectRatio,
-    )
-  }, [mediaPixelSize, video.width, video.height, video.aspectRatio])
+  const viewportAspect = useMemo(
+    () =>
+      resolvePlayerAspect(
+        {
+          width: video.width,
+          height: video.height,
+          aspectRatio: video.aspectRatio,
+        },
+        mediaPixelSize,
+      ),
+    [mediaPixelSize, video.width, video.height, video.aspectRatio],
+  )
   const viewportStyle = useMemo(
     () =>
       embed

@@ -572,6 +572,27 @@ test.describe('videos (mocked API)', () => {
     await screenshot(page, 'videos-player-locked.png')
   })
 
+  test('keeps the player size when the stream loads', async ({ page }) => {
+    await enableVideos(page)
+    // Rendition sizes round, so the 16:9 stream is a hair off the source
+    // ratio. The frame keeps the source ratio it rendered with first.
+    await mockAppwriteApi(
+      page,
+      { ...VIDEO, width: 1000, height: 560 },
+      RENDITIONS,
+      PROFILES,
+      true,
+    )
+    await open(page, `/${VIDEO_ID}`, (page) => page.locator('video'))
+    const video = page.locator('video')
+    await expect
+      .poll(() => video.evaluate((node: HTMLVideoElement) => node.readyState))
+      .toBeGreaterThanOrEqual(1)
+
+    const frame = (await video.boundingBox())!
+    expect(Math.abs(frame.height - (frame.width * 560) / 1000)).toBeLessThan(1)
+  })
+
   test('shows encoding progress on every video tab', async ({ page }) => {
     await enableVideos(page)
     await mockAppwriteApi(page, VIDEO, [
