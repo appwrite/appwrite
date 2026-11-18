@@ -124,7 +124,7 @@ functions.update(
 ```
 {% /multicode %}
 
-Sites take the same three parameters on `sites.create()` and `sites.update()`. When you update a site, keep its repository connected by passing `providerRepositoryId` as `null` or sending the current connection again, as the [Sites docs](/docs/products/sites/deploy-from-git#git-automation-server-sdk) show. The function and site models return the three settings too, so you can read them before you change them.
+Sites take the same three parameters on `sites.create()` and `sites.update()`, as the [Sites docs](/docs/products/sites/deploy-from-git#git-automation-server-sdk) show. The function and site models return the three settings too, so you can read them before you change them.
 
 # Silent mode keeps working
 

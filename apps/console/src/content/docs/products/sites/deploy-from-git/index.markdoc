@@ -99,7 +99,7 @@ You can turn on **Silent mode** when you create a site from a repository. Silent
 
 ### Configure Git automation with a Server SDK {% #git-automation-server-sdk %}
 
-Pass `providerDeployments`, `providerComments`, and `providerStatuses` when you create or update a site. Settings you leave out of an update keep their current values, except the repository: `sites.update()` disconnects it unless you pass `providerRepositoryId` as `null` or send the current connection again.
+Pass `providerDeployments`, `providerComments`, and `providerStatuses` when you create or update a site. Settings you leave out of an update keep their current values.
 
 {% multicode %}
 ```server-nodejs
@@ -117,7 +117,6 @@ await sites.update({
     siteId: '<SITE_ID>',
     name: '<NAME>', // name and framework are required by update
     framework: sdk.Framework.Nextjs,
-    providerRepositoryId: null, // null keeps the repository connected
     providerDeployments: false
 });
 ```
@@ -133,18 +132,11 @@ client.set_key('<API_KEY>') # Your secret API key
 
 sites = Sites(client)
 
-# Python leaves out None values, so send the current connection to keep it
-site = sites.get(site_id='<SITE_ID>')
-
 # Stop deploying on push, and deploy branches by hand instead
 sites.update(
-    site_id=site.id,
-    name=site.name,
-    framework=Framework(site.framework),
-    installation_id=site.installationid,
-    provider_repository_id=site.providerrepositoryid,
-    provider_branch=site.providerbranch,
-    provider_root_directory=site.providerrootdirectory,
+    site_id='<SITE_ID>',
+    name='<NAME>',  # name and framework are required by update
+    framework=Framework.NEXTJS,
     provider_deployments=False
 )
 ```
