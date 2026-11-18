@@ -24,6 +24,7 @@ const DISPLAY_NAME_OVERRIDES: Record<string, string> = {
   [OAuthProvider.Fusionauth]: 'FusionAuth',
   [OAuthProvider.Huggingface]: 'Hugging Face',
   [OAuthProvider.Keycloak]: 'Keycloak',
+  [OAuthProvider.Line]: 'LINE',
   [OAuthProvider.Wordpress]: 'WordPress',
   [OAuthProvider.Workos]: 'WorkOS',
 }
