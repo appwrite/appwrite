@@ -84,6 +84,7 @@ export const jaSitesDictionary: Record<string, string> = {
   'Deployed from': 'デプロイ元',
   'View logs': 'ログを表示',
   'Update domain': 'ドメインを更新',
+  'Its DNS records and certificate stay the same.': 'DNS レコードと証明書は変更されません。',
   'Domain has been deleted': 'ドメインを削除しました',
   'Loading domains...': 'ドメインを読み込み中...',
   'Generating certificate': '証明書を発行中',
