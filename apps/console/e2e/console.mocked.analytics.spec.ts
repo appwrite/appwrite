@@ -267,6 +267,13 @@ async function mockAppwriteApi(
     if (apiPath.startsWith(`${annotationsPath}/`)) {
       const id = apiPath.slice(annotationsPath.length + 1)
       const index = mock.annotations.findIndex((note) => note.$id === id)
+      if (index === -1) {
+        return json(404, {
+          message: 'Analytics annotation not found',
+          code: 404,
+          type: 'analytics_annotation_not_found',
+        })
+      }
       if (request.method() === 'DELETE') {
         mock.annotations.splice(index, 1)
         return route.fulfill({ status: 204, headers })
