@@ -159,6 +159,17 @@ class Update extends Action
             throw $th;
         }
 
+        // The new photo is live, so a file left behind here only waits for team deletion to remove the team's photo folder
+        $previous = $team->getAttribute('photoId', '');
+
+        if ($previous !== '') {
+            try {
+                $deviceForFiles->delete($deviceForFiles->getPath(APP_STORAGE_TEAM_PHOTOS . '/' . $teamId . '/' . $previous));
+            } catch (\Throwable $th) {
+                Console::warning('Failed to remove previous team photo ' . $previous . ': ' . $th->getMessage());
+            }
+        }
+
 
         $response->dynamic($updated, Response::MODEL_TEAM);
     }
