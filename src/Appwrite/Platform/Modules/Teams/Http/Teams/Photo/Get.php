@@ -64,6 +64,7 @@ class Get extends Action
             ->param('width', 256, new Range(0, 2000), 'Output image width in pixels. Pass an integer between 0 and 2000. Defaults to 256.', true)
             ->param('height', 256, new Range(0, 2000), 'Output image height in pixels. Pass an integer between 0 and 2000. Defaults to 256.', true)
             ->param('quality', 100, new Range(0, 100), 'Output image quality between 0 and 100. Defaults to 100.', true)
+            ->param('output', 'png', new WhiteList(['png', 'jpg', 'webp'], true), 'Output image format. Defaults to \'png\'.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('deviceForFiles')
