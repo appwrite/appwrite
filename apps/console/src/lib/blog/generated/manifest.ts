@@ -10,7 +10,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "date": "2026-11-18",
     "lastUpdated": "2026-11-18",
     "timeToRead": 6,
-    "author": "aditya-oberai",
+    "author": "harsh-mahajan",
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-git-automation/cover.avif",
