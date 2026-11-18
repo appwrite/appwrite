@@ -115,6 +115,20 @@ final class CorsTest extends TestCase
         $this->assertSame('https://example.com', $result[Cors::HEADER_ALLOW_ORIGIN]);
     }
 
+    public function testAllowedOriginVariesOnOrigin(): void
+    {
+        $cors = new Cors(
+            allowedHosts: ['example.com'],
+            allowedMethods: ['GET'],
+            allowedHeaders: [],
+            exposedHeaders: [],
+        );
+
+        $result = $cors->headers('https://example.com');
+
+        $this->assertSame('Origin', $result[Cors::HEADER_VARY]);
+    }
+
     public function testNonHttpSchemeOriginIsMatchedByHost(): void
     {
         $cors = new Cors(

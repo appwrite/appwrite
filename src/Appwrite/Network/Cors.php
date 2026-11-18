@@ -19,6 +19,7 @@ final class Cors
     public const string HEADER_ALLOW_CREDENTIALS = 'Access-Control-Allow-Credentials';
     public const string HEADER_EXPOSE_HEADERS    = 'Access-Control-Expose-Headers';
     public const string HEADER_MAX_AGE           = 'Access-Control-Max-Age';
+    public const string HEADER_VARY              = 'Vary';
 
     /**
      * @param array<string> $allowedHosts     Array of allowed hosts
@@ -92,6 +93,8 @@ final class Cors
         // Accepted. Echo the caller's origin exactly, never a wildcard, so the
         // browser's own literal-match rule stays the last line of defence.
         $headers[self::HEADER_ALLOW_ORIGIN] = $origin;
+        // The response now depends on the request's Origin: shared caches must key on it.
+        $headers[self::HEADER_VARY] = 'Origin';
 
         return $headers;
     }

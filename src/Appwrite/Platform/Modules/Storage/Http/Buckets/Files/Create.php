@@ -262,6 +262,11 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $filename->getDescription());
         }
 
+        // Most filesystems cap a name at 255 bytes; keep downloads portable.
+        if (\strlen($fileName) > 255) {
+            $fileName = \substr($fileName, 0, 255);
+        }
+
         /**
          * Validators
          */

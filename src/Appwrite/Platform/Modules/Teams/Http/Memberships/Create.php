@@ -141,6 +141,12 @@ class Create extends Action
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
+        // Optional cap on team size, for self-hosted instances that want to bound it.
+        $maxMembers = (int) System::getEnv('_APP_TEAMS_MEMBERS_MAX', '0');
+        if ($maxMembers > 0 && $team->getAttribute('total', 0) > $maxMembers) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Team has reached the maximum of ' . $maxMembers . ' members.');
+        }
+
         $isOwner = $authorization->hasRole('team:' . $team->getId() . '/owner');
 
         // Same console rule as membership role updates: organization developer
