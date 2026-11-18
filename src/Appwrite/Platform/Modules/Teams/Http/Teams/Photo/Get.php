@@ -115,6 +115,10 @@ class Get extends Action
             default => 'image/png',
         };
 
+        $response
+            ->addHeader('Cache-Control', 'private, no-store') // photo can change at any time
+            ->setContentType($contentType)
+            ->file($this->process($data, $width, $height, $quality, $output));
     }
 
     private function process(string $raw, int $width, int $height, int $quality, string $output): string
