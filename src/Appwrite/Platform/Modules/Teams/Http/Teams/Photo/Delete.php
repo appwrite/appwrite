@@ -88,6 +88,17 @@ class Delete extends Action
 
         $deviceForFiles->upload(new Stream($photo), $path, 'image/png');
 
+        try {
+            $dbForProject->updateDocument('teams', $teamId, new Document([
+                'photoId' => $photoId,
+                'photoSize' => \strlen($photo),
+            ]));
+        } catch (\Throwable $th) {
+            $deviceForFiles->delete($path);
+
+            throw $th;
+        }
+
 
         $response->noContent();
     }
