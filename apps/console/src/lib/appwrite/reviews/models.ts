@@ -1,6 +1,6 @@
 /**
  * Reviews response models, copied from `Review`, `ReviewFinding`,
- * `ReviewRepository`, `ReviewLearning` and `ReviewAuthor` in `src/Appwrite/Utopia/Response/Model`. Delete with
+ * `ReviewRepository`, `ReviewLearning`, `ReviewAuthor` and `ReviewCategory` in `src/Appwrite/Utopia/Response/Model`. Delete with
  * `service.ts` once the generated SDK carries the `reviews` service.
  */
 
@@ -346,4 +346,32 @@ export type ReviewAuthorList = {
    * Authors with the most reviewed pull requests first.
    */
   authors: ReviewAuthor[]
+}
+
+/**
+ * Review Category: how the findings of one category landed over a range.
+ */
+export type ReviewCategory = {
+  /** Finding category, such as bug, security or performance. */
+  category: string
+  /** Findings of the category posted on pull requests. */
+  findings: number
+  /** Findings fixed by a later commit. */
+  resolved: number
+  /** Findings settled without a change: declined in their thread, or whose thread a maintainer resolved. */
+  dismissed: number
+}
+
+/**
+ * Review Categories List
+ */
+export type ReviewCategoryList = {
+  /**
+   * Total number of categories.
+   */
+  total: number
+  /**
+   * Categories with the most dismissed findings first.
+   */
+  categories: ReviewCategory[]
 }
