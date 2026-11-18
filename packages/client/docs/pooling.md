@@ -79,6 +79,19 @@ $pool = new Pool(new Connections(
   connections at the same time.
 - Reuse is per origin. A pool whose requests span many hosts re-dials on each host
   change, so pooling pays off most against a single upstream.
-- A stale pooled connection (dropped by the server while idle) is handled by the
-  transport: the cURL handle and the Swoole client both detect a dead socket and
-  reconnect on the next request.
+- The Swoole adapter closes and redials a pooled connection idle longer than the
+  server's `Keep-Alive: timeout=N` less one second, or its idle timeout (4 seconds by
+  default, set on the Swoole adapter with `withIdleTimeout()` in `init`), whichever is
+  sooner. Swoole's own liveness check only sees a close that has already arrived; a
+  close that crosses the next request on the wire, or an idle flow a load balancer or
+  NAT dropped silently, goes unseen, and a request sent on it fails with
+  `ConnectionException` rather than being resent. A hint can shorten the idle timeout
+  but never extend it, since it says nothing about middleboxes; behind a proxy that
+  strips hop-by-hop headers (Traefik and other Go proxies do) the configured idle
+  timeout governs.
+- This only avoids drops after the deadline. A server or middlebox that drops a
+  connection sooner still fails the request sent on it, and the margin assumes the
+  sink keeps up with the final response, since the idle clock starts once the
+  response has been read.
+- The cURL handle detects a socket the server has closed and reconnects on the next
+  request.

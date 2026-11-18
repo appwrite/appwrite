@@ -164,9 +164,12 @@ final class ClientTest extends AdapterContract
     {
         // An allowed proxy in front of a disallowed target: checking the proxy's address alone would pass
         $proxy = \stream_socket_server('tcp://127.0.0.1:0');
-        $target = \stream_socket_server('tcp://127.0.0.2:0');
         $this->assertNotFalse($proxy);
-        $this->assertNotFalse($target);
+
+        $target = @\stream_socket_server('tcp://127.0.0.2:0');
+        if ($target === false) {
+            $this->markTestSkipped('127.0.0.2 is not bindable on this host.');
+        }
 
         $client = $this->createAdapter(destinations: new PublicInternet(new IPRange('127.0.0.1')));
         $request = new Request\Factory()->createRequest(Method::GET, 'http://' . \stream_socket_get_name($target, false) . '/');

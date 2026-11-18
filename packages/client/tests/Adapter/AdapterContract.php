@@ -846,8 +846,11 @@ abstract class AdapterContract extends TestCase
     public function testItChecksEveryRedirectHopAgainstTheDestination(): void
     {
         // Something listening on the redirect target, so only the destination can stop it
-        $target = \stream_socket_server('tcp://127.0.0.2:0');
-        $this->assertNotFalse($target);
+        $target = @\stream_socket_server('tcp://127.0.0.2:0');
+        if ($target === false) {
+            $this->markTestSkipped('127.0.0.2 is not bindable on this host.');
+        }
+
         $targetUrl = 'http://' . \stream_socket_get_name($target, false) . '/final';
 
         Http::serve(function (int $port) use ($target, $targetUrl): void {

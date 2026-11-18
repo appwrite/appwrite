@@ -61,6 +61,27 @@ a single persisted handle (reset between requests, connection cache preserved),
 and the Swoole adapter keeps a kept-alive coroutine client. A connection is bound
 to its origin, so a request to a different host transparently gets a new one.
 
+The Swoole adapter does not reuse a connection that has been idle longer than the
+server's `Keep-Alive: timeout=N` less one second, or the idle timeout (4 seconds by
+default), whichever is sooner: it closes the connection and dials a fresh one instead
+of sending into a socket the server or a middlebox may already have dropped.
+
+The idle timeout is a Swoole adapter setting, so it is set on the adapter:
+
+```php
+<?php
+
+use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleAdapter;
+use Utopia\Client\Client;
+
+$client = new Client((new SwooleAdapter())->withConnectionReuse()->withIdleTimeout(2.0));
+```
+
+A `Keep-Alive` hint can shorten the idle timeout but never extend it, since it says
+nothing about load balancers or NAT between the client and the server. Behind a proxy
+that strips hop-by-hop headers (Traefik and other Go proxies do), no hint arrives and
+the configured idle timeout governs, so set it below the shortest idle limit on the path.
+
 Reuse is most useful when one adapter sends many requests to the same host — see
 [pooling](pooling.md) for spreading a bounded set of reused connections across
 concurrent callers.
