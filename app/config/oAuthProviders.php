@@ -43,6 +43,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Appwrite',
     ],
+    'atlassian' => [
+        'name' => 'Atlassian',
+        'developers' => 'https://developer.atlassian.com/console/myapps/',
+        'icon' => 'icon-atlassian',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Atlassian',
+    ],
     'auth0' => [
         'name' => 'Auth0',
         'developers' => 'https://auth0.com/developers',

@@ -23,6 +23,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\MockPhone\XList as ListMockPh
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Amazon\Update as UpdateOAuth2Amazon;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Apple\Update as UpdateOAuth2Apple;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Appwrite\Update as UpdateOAuth2Appwrite;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Atlassian\Update as UpdateOAuth2Atlassian;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Auth0\Update as UpdateOAuth2Auth0;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Authentik\Update as UpdateOAuth2Authentik;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Autodesk\Update as UpdateOAuth2Autodesk;
@@ -294,6 +295,7 @@ class Http extends Service
         $this->addAction('updateProjectOAuth2Microsoft', UpdateOAuth2Microsoft::class);
         $this->addAction('updateProjectOAuth2Hugging Face', UpdateOAuth2HuggingFace::class);
         $this->addAction('updateProjectOAuth2Vercel', UpdateOAuth2Vercel::class);
+        $this->addAction('updateProjectOAuth2Atlassian', UpdateOAuth2Atlassian::class);
         $this->addAction('updateProjectOAuth2WorkOS', UpdateOAuth2WorkOS::class);
         $this->addAction('updateProjectOAuth2Resend', UpdateOAuth2Resend::class);
         $this->addAction('updateProjectOAuth2TikTok', UpdateOAuth2TikTok::class);
