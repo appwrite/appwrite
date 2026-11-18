@@ -16,7 +16,7 @@ use crate::locale::Value;
 use crate::string::{Bytes, PhpString};
 
 /// A PHP string of `bytes`.
-fn string(bytes: &[u8]) -> Zval {
+pub(crate) fn string(bytes: &[u8]) -> Zval {
     let mut zval = Zval::new();
     zval.set_zend_string(ZendStr::new(bytes, false));
     zval
@@ -24,7 +24,7 @@ fn string(bytes: &[u8]) -> Zval {
 
 /// `new $class(...$arguments)`, calling the constructor as `new` does: an exception it
 /// throws is the error.
-fn construct(class: &ClassEntry, arguments: &mut [Zval]) -> PhpResult<ZBox<ZendObject>> {
+pub(crate) fn construct(class: &ClassEntry, arguments: &mut [Zval]) -> PhpResult<ZBox<ZendObject>> {
     let mut object = class.new();
     if !class.constructor.is_null() {
         let mut result = Zval::new();
@@ -47,7 +47,7 @@ fn construct(class: &ClassEntry, arguments: &mut [Zval]) -> PhpResult<ZBox<ZendO
 }
 
 /// The exception a PHP call left pending, rethrown as itself.
-fn thrown() -> PhpResult<()> {
+pub(crate) fn thrown() -> PhpResult<()> {
     match ExecutorGlobals::take_exception() {
         Some(exception) => {
             let thrown = exception.into_zval(false).map_err(PhpException::from)?;
@@ -69,7 +69,7 @@ fn exception(error: &Error) -> PhpException {
 }
 
 /// A PHP string the binding made.
-pub struct Text(Vec<u8>);
+pub struct Text(pub(crate) Vec<u8>);
 
 impl IntoZval for Text {
     const TYPE: DataType = DataType::String;

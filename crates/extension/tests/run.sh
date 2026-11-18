@@ -25,7 +25,10 @@ for library in $libraries; do
         package=${library%-*}
         with="$package,$library"
     fi
-    _APP_EXTENSION_LIBRARIES=$with vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php "packages/$package/tests"
+    # packages/query/tests/E2E needs MySQL, PostgreSQL, ClickHouse and MongoDB servers.
+    unit=; [ "$library" = query ] && unit='--exclude-filter \\E2E\\'
+    # shellcheck disable=SC2086
+    _APP_EXTENSION_LIBRARIES=$with vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php $unit "packages/$package/tests"
     _APP_EXTENSION_LIBRARIES= php "$tests/$library.php" > "$output/$library.php.jsonl"
     _APP_EXTENSION_LIBRARIES=$with php "$tests/$library.php" > "$output/$library.rust.jsonl"
     diff "$output/$library.php.jsonl" "$output/$library.rust.jsonl"
