@@ -3558,6 +3558,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Railway": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Reddit": [
             "clientId",
             "clientSecret",
@@ -3860,6 +3865,10 @@
         "reviews.list": [
             "queries",
             "total"
+        ],
+        "reviews.listAuthors": [
+            "range",
+            "repositoryId"
         ],
         "reviews.listEvents": [
             "reviewId",
@@ -7969,6 +7978,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Railway": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Reddit": [
             "clientId",
             "clientSecret",
@@ -8241,6 +8255,10 @@
         "reviews.list": [
             "queries",
             "total"
+        ],
+        "reviews.listAuthors": [
+            "range",
+            "repositoryId"
         ],
         "reviews.listEvents": [
             "reviewId",

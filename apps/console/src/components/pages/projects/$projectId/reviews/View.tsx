@@ -18,6 +18,7 @@ import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
 import { useT } from '@/lib/i18n/translate'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { Learnings } from './_components/Learnings'
+import { Performance } from './_components/Performance'
 import { Repositories } from './_components/Repositories'
 import { ReviewsTable } from './_components/ReviewsTable'
 
@@ -32,7 +33,9 @@ export function View() {
     ? 'repositories'
     : segments.includes('learnings')
       ? 'learnings'
-      : 'reviews'
+      : segments.includes('performance')
+        ? 'performance'
+        : 'reviews'
 
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
@@ -95,6 +98,12 @@ export function View() {
         to: '/projects/$projectId/reviews/learnings',
         params: { projectId },
       },
+      {
+        id: 'performance',
+        label: t('Performance'),
+        to: '/projects/$projectId/reviews/performance',
+        params: { projectId },
+      },
     ],
     [projectId, repositoriesTotal, learningsTotal, t],
   )
@@ -129,7 +138,7 @@ export function View() {
               searchValue: search,
               onSearchChange: setSearch,
             }
-          : activeTab === 'learnings'
+          : activeTab === 'learnings' || activeTab === 'performance'
             ? {}
             : {
                 createLabel: t('Add repository'),
@@ -160,6 +169,8 @@ export function View() {
               </Button>
             }
           />
+        ) : activeTab === 'performance' ? (
+          <Performance projectId={projectId} />
         ) : activeTab === 'learnings' ? (
           <Learnings projectId={projectId} canWrite={canWrite} />
         ) : activeTab === 'repositories' ? (

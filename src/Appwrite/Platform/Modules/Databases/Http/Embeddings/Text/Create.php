@@ -3,6 +3,9 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Embeddings\Text;
 
 use Appwrite\Abuse\Limit;
+use Appwrite\Auth\Key;
+use Appwrite\Event\Message\Usage as UsageMessage;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action as CreateDocumentAction;
 use Appwrite\SDK\AuthType;
@@ -78,10 +81,12 @@ class Create extends CreateDocumentAction
             ->inject('project')
             ->inject('embedder')
             ->inject('usage')
+            ->inject('publisherForUsage')
+            ->inject('apiKey')
             ->callback($this->action(...));
     }
 
-    public function action(array $texts, string $model, UtopiaResponse $response, Document $project, AppwriteAdapter $embedder, Context $usage): void
+    public function action(array $texts, string $model, UtopiaResponse $response, Document $project, AppwriteAdapter $embedder, Context $usage, UsagePublisher $publisherForUsage, ?Key $apiKey): void
     {
         $embedder = $embedder->withModel($model);
         $dimension = $embedder->getDimension();
@@ -117,7 +122,34 @@ class Create extends CreateDocumentAction
 
         Span::add('embedding.errors', $totalErrors);
         if ($totalErrors > 0 && $totalErrors === \count($texts)) {
-            throw new Exception(Exception::GENERAL_EMBEDDING_UNAVAILABLE, previous: $failure);
+            $exception = new Exception(Exception::GENERAL_EMBEDDING_UNAVAILABLE, previous: $failure);
+
+            // Usage shutdown hooks are skipped once the action throws, so publish the errors here.
+            if ($project->getId() !== 'console') {
+                $usage
+                    ->setStatus($exception->getCode())
+                    ->addMetric(METRIC_EMBEDDINGS_TEXT_TOTAL_ERROR, $totalErrors)
+                    ->addMetric(\str_replace('{embeddingModel}', $model, METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_ERROR), $totalErrors);
+
+                $disabledMetrics = $apiKey?->getDisabledMetrics() ?? [];
+                $metrics = \array_values(\array_filter($usage->getMetrics(), function (array $metric) use ($disabledMetrics) {
+                    foreach ($disabledMetrics as $pattern) {
+                        if (\str_ends_with($metric['key'], $pattern)) {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                }));
+
+                $publisherForUsage->enqueue(new UsageMessage(
+                    project: $project,
+                    metrics: $metrics,
+                    reduce: $usage->getReduce(),
+                ));
+            }
+
+            throw $exception;
         }
 
         $embedded = \count($texts) - $totalErrors;

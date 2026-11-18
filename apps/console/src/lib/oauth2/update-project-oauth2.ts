@@ -60,6 +60,7 @@ const OAUTH2_UPDATE_BY_PROVIDER: Partial<
   [ProjectOAuthProviderId.Paypal]: (p, b) => p.updateOAuth2Paypal(b),
   [ProjectOAuthProviderId.PaypalSandbox]: (p, b) => p.updateOAuth2PaypalSandbox(b),
   [ProjectOAuthProviderId.Podio]: (p, b) => p.updateOAuth2Podio(b),
+  [ProjectOAuthProviderId.Railway]: (p, b) => p.updateOAuth2Railway(b),
   [ProjectOAuthProviderId.Reddit]: (p, b) => p.updateOAuth2Reddit(b),
   [ProjectOAuthProviderId.Resend]: (p, b) => p.updateOAuth2Resend(b),
   [ProjectOAuthProviderId.Roblox]: (p, b) => p.updateOAuth2Roblox(b),
