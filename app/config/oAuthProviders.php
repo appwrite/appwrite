@@ -522,6 +522,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Spotify',
     ],
+    'strava' => [
+        'name' => 'Strava',
+        'developers' => 'https://developers.strava.com/docs/authentication/',
+        'icon' => 'icon-strava',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Strava',
+    ],
     'stripe' => [
         'name' => 'Stripe',
         'developers' => 'https://stripe.com/docs/api',
