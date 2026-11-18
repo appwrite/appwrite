@@ -29,6 +29,13 @@ class Update extends Action
 {
     use HTTP;
 
+    private const ALLOWED_EXTENSIONS = [
+        FileExt::TYPE_PNG,
+        FileExt::TYPE_JPG,
+        FileExt::TYPE_JPEG,
+        'webp',
+    ];
+
     public static function getName(): string
     {
         return 'updateTeamPhoto';
