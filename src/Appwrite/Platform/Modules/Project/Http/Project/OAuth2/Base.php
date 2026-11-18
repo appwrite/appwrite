@@ -388,6 +388,7 @@ abstract class Base extends Action
             'yahoo' => Yahoo\Update::class,
             'huggingface' => HuggingFace\Update::class,
             'vk' => VK\Update::class,
+            'netlify' => Netlify\Update::class,
             'railway' => Railway\Update::class,
             'reddit' => Reddit\Update::class,
             'vercel' => Vercel\Update::class,
