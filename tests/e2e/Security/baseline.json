@@ -68,6 +68,7 @@
         "DELETE /v1/tablesdb/transactions/:transactionId",
         "DELETE /v1/teams/:teamId",
         "DELETE /v1/teams/:teamId/memberships/:membershipId",
+        "DELETE /v1/teams/:teamId/photo",
         "DELETE /v1/tokens/:tokenId",
         "DELETE /v1/users/:userId",
         "DELETE /v1/users/:userId/mfa/authenticators/:type",
