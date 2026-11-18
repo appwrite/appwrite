@@ -74,7 +74,7 @@ export const authProductContent: ProductPageContent = {
     {
       question: 'Can users sign in with Active Directory or LDAP?',
       answer:
-        'Yes. Connect your project to an LDAP directory, such as Active Directory or OpenLDAP, under Settings > Identity servers, and users sign in with their directory username and password. The directory checks the password, so Appwrite never stores it. You can limit sign-in to one group, and each account keeps its name, email, and phone number in step with the directory.',
+        'Yes. Connect your project to an LDAP directory, such as Active Directory or OpenLDAP, under Settings > Identity servers, and users sign in with their directory username and password. The directory checks the password, so Appwrite never stores it. You can limit sign-in to one group, and each account keeps its name, email, and phone number in sync with the directory.',
       links: [{ label: 'LDAP login', href: '/docs/products/auth/ldap' }],
     },
     {

@@ -6,7 +6,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "slug": "announcing-ldap-login",
     "href": "/blog/post/announcing-ldap-login",
     "title": "Announcing LDAP login: Sign in with your directory",
-    "description": "Appwrite Auth now supports LDAP login. Users sign in with their Active Directory or OpenLDAP username and password, with group access and synced accounts.",
+    "description": "Appwrite Auth now supports LDAP login. Users sign in with their Active Directory or OpenLDAP username and password, with group restrictions and attribute mapping.",
     "date": "2026-11-17",
     "lastUpdated": "2026-11-17",
     "timeToRead": 7,

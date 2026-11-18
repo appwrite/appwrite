@@ -1379,7 +1379,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "LDAP login",
     "description": "Let users sign in to your app with the username and password from your LDAP directory, such as Active Directory or OpenLDAP, with group restrictions and attribute mapping.",
     "layout": "article",
-    "readingTimeMinutes": 10
+    "readingTimeMinutes": 11
   },
   {
     "slug": "products/auth/magic-url",

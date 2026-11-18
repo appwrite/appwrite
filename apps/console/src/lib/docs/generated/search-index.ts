@@ -2156,7 +2156,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/auth/ldap",
     "title": "LDAP login",
     "description": "Let users sign in to your app with the username and password from your LDAP directory, such as Active Directory or OpenLDAP, with group restrictions and attribute mapping.",
-    "excerpt": "LDAP login lets users sign in to your app with the username and password they already use in your organization's directory, such as Active Directory or OpenLDAP. The directory checks the password, so it is never stored in Appwrite. The first sign-in creates an Appwrite account from the user's directory entry, and every later sign-in keeps the account's name, email, and phone number in step with the directory. Use LDAP login for internal tools, employee portals, and apps you sell…",
+    "excerpt": "LDAP login lets users sign in to your app with the username and password they already use in your organization's directory, such as Active Directory or OpenLDAP. The directory checks the password, so it is never stored in Appwrite. The first sign-in creates an Appwrite account from the user's directory entry, and every later sign-in keeps the account's name, email, and phone number in sync with the directory. Use LDAP login for internal tools, employee and student portals, and apps…",
     "breadcrumbs": [
       "Auth",
       "Guides",

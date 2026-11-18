@@ -4,9 +4,9 @@ title: LDAP login
 description: Let users sign in to your app with the username and password from your LDAP directory, such as Active Directory or OpenLDAP, with group restrictions and attribute mapping.
 ---
 
-LDAP login lets users sign in to your app with the username and password they already use in your organization's directory, such as Active Directory or OpenLDAP. The directory checks the password, so it is never stored in Appwrite. The first sign-in creates an Appwrite account from the user's directory entry, and every later sign-in keeps the account's name, email, and phone number in step with the directory.
+LDAP login lets users sign in to your app with the username and password they already use in your organization's directory, such as Active Directory or OpenLDAP. The directory checks the password, so it is never stored in Appwrite. The first sign-in creates an Appwrite account from the user's directory entry, and every later sign-in keeps the account's name, email, and phone number in sync with the directory.
 
-Use LDAP login for internal tools, employee portals, and apps you sell to companies that manage their people in a directory. You can limit sign-in to the members of one group, and map any attribute your directory uses to the account.
+Use LDAP login for internal tools, employee and student portals, and apps you sell to companies and schools that manage their people in a directory. You can limit sign-in to the members of one group, and map any attribute your directory uses to the account.
 
 LDAP login is available on Appwrite Cloud, and is coming to self-hosted Appwrite soon.
 
@@ -23,7 +23,7 @@ When a user signs in with their directory username and password, Appwrite:
 An unknown username, a username that matches more than one entry, a wrong password, and a missing group membership all return the same error, so nobody can probe your directory for valid usernames.
 
 {% info title="Appwrite must reach your directory" %}
-Appwrite connects to your directory over the network, so your directory hosts must be reachable from Appwrite. Appwrite refuses hosts that resolve to private or reserved addresses. On a self-hosted instance, you can [allow internal addresses](#self-hosted).
+Appwrite connects to your directory over the network and refuses hosts that resolve to private or reserved addresses, so on Appwrite Cloud your directory must be reachable from the internet. Expose it over LDAPS, and if you sign its certificate yourself, add the [certificate](#connection) to trust. Enterprise teams that need a private connection, such as a VPN, can [contact us](/enterprise).
 {% /info %}
 
 # Configure your directory {% #configure %}
@@ -37,7 +37,7 @@ Appwrite connects to your directory over the network, so your directory hosts mu
 
 1. In the Appwrite Console, open your project and go to **Settings** > **Identity servers** > **LDAP**.
 2. Under **Connection**, add your directory's hosts and choose the encryption.
-3. Under **Directory**, enter the base DN, and the bind DN and bind password of a service account that can search for users.
+3. Under **Directory**, enter the base DN, and the bind DN and bind password of a read-only service account that can search for users.
 4. Under **Sign-in rules**, adjust the user filter, and optionally enter a group users must belong to.
 5. Under **Attribute mapping**, check which attributes hold each user's ID, email, name, and phone number.
 6. Select **Update**.
@@ -63,7 +63,7 @@ Pasting an LDAP URL, such as `ldaps://ldap.example.com:636/dc=example,dc=com`, i
 * Checks the directory's certificate before sending any password. On by default. While it is on, use the hostname on the directory's certificate, not an IP address.
 ---
 * Certificate
-* The certificate of the authority that signed your directory's certificate, or the directory's own certificate when it is self-signed, in PEM format. You can paste several. Leave it empty to use the system trust store.
+* The certificate of the authority that signed your directory's certificate, or the directory's own certificate when it is self-signed, in PEM format. You can paste several, one after another, such as a root and an intermediate certificate. Leave it empty to use the system trust store.
 ---
 * Timeout
 * How many seconds to wait for the directory to connect and answer each operation, from 1 to 30. Defaults to 10.
@@ -79,7 +79,7 @@ Pasting an LDAP URL, such as `ldaps://ldap.example.com:636/dc=example,dc=com`, i
 * The subtree Appwrite searches for users, such as `ou=people,dc=example,dc=com`. Required.
 ---
 * Bind DN
-* The service account Appwrite searches as, such as `cn=appwrite,ou=services,dc=example,dc=com`. Leave it empty if your directory allows anonymous search.
+* The service account Appwrite searches as, such as `cn=appwrite,ou=services,dc=example,dc=com`. Use a dedicated account with read-only access, so its password can't be used to change your directory. Leave it empty if your directory allows anonymous search.
 ---
 * Bind password
 * The service account's password. It is write-only: Appwrite never returns it. Enter it again when you change the hosts, port, encryption, certificate verification, certificate, or bind DN, so a stored password can't be sent to another server.
@@ -176,11 +176,13 @@ Select **Test connection** to check your saved settings without signing anyone i
 
 The test uses the saved settings, so select **Update** before you test a change.
 
+When a user can't sign in, they only see a generic error, so your directory's details stay private. To find the reason, test with their username. The test looks them up, checks the required group, and names the step that fails, all without their password. To check the password step, use a test account in your directory that is set up like theirs, under the same base DN and in the same groups. Never ask users for their directory password.
+
 # Turn on LDAP login {% #enable %}
 
 Turn on **Enable LDAP sign-in** at the top of the LDAP settings and select **Update**, or turn on **LDAP** under **Auth** > **Settings**. You need at least one host and a base DN first.
 
-Turning on LDAP from its settings connects to your directory, binds as the service account, and reads the base DN, and fails if any of those steps does. While LDAP is on, every change to its settings is checked the same way. This check doesn't look anyone up, so it can't catch a user filter that matches nobody, a wrong required group, or a missing ID attribute. [Test the connection](#test) with a real username, and a password, before you turn LDAP on. Turning on **LDAP** under **Auth** > **Settings** only checks that a host and a base DN are set.
+Turning on LDAP from its settings connects to your directory, binds as the service account, and reads the base DN, and fails if any of those steps does. While LDAP is on, every change to its settings is checked the same way. This check doesn't look anyone up, so it can't catch a user filter that matches nobody, a wrong required group, or a missing ID attribute. Before you turn LDAP on, [test the connection](#test) with the username and password of a test account set up like your users' accounts. Turning on **LDAP** under **Auth** > **Settings** only checks that a host and a base DN are set.
 
 ## Configure with a server SDK {% #server-sdk %}
 
