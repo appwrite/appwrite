@@ -172,6 +172,11 @@ export function DomainTargetCard({
                   )}
                   disabled={disabled}
                 />
+                {redirectUrlError && (
+                  <p className="text-[11px] text-destructive mt-1">
+                    {redirectUrlError}
+                  </p>
+                )}
               </div>
               <div>
                 <Label className="text-[12px]">{t('Status code')}</Label>
