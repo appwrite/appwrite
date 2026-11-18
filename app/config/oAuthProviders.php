@@ -401,6 +401,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Okta',
     ],
+    'patreon' => [
+        'name' => 'Patreon',
+        'developers' => 'https://docs.patreon.com/#oauth',
+        'icon' => 'icon-patreon',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Patreon',
+    ],
     'paypal' => [
         'name' => 'PayPal',
         'developers' => 'https://developer.paypal.com/docs/api/overview/',
