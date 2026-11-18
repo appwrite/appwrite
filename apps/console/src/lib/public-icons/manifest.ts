@@ -112,6 +112,7 @@ export const PUBLIC_ICON_FILENAMES = [
   'kubernetes.svg',
   'laravel.svg',
   'lemon-squeezy.svg',
+  'line.svg',
   'linkedin.svg',
   'linux.svg',
   'lovable.svg',
