@@ -252,7 +252,7 @@ export function ruleFormError(
   return undefined
 }
 
-function durationOptions(
+export function durationOptions(
   presets: { value: number; label: string }[],
   current: number,
   t: (text: string) => string,
@@ -386,11 +386,11 @@ interface RuleFieldsProps {
 }
 
 /** A muted word between the controls of the condition sentence. */
-function Word({ children }: { children: ReactNode }) {
+export function Word({ children }: { children: ReactNode }) {
   return <span className="text-[13px] text-muted-foreground">{children}</span>
 }
 
-function SectionHeading({
+export function SectionHeading({
   title,
   description,
 }: {
@@ -445,11 +445,6 @@ export function RuleFields({
       resourceId: resourceType === form.resourceType ? form.resourceId : '',
     })
   }
-
-  // Folded unless the monitor already sets either, so a new monitor shows only what it needs.
-  const [optional, setOptional] = useState(
-    form.name !== '' || form.cooldown !== emptyRuleForm().cooldown,
-  )
 
   return (
     <div className="space-y-7">
@@ -654,169 +649,213 @@ export function RuleFields({
         </div>
       </section>
 
-      <section>
-        <SectionHeading
-          title={t('Notify')}
-          description={t(
-            'Members with these roles get an email and a console notification when the monitor fires and again when it resolves.',
-          )}
-        />
-        <div className="flex flex-wrap gap-2">
-          {NOTIFY_ROLES.map((role) => {
-            const selected = form.notify.includes(role)
-            return (
-              <button
-                key={role}
-                type="button"
-                role="checkbox"
-                aria-checked={selected}
-                disabled={disabled}
-                onClick={() =>
-                  onChange({
-                    notify: selected
-                      ? form.notify.filter((entry) => entry !== role)
-                      : [...form.notify, role],
-                  })
-                }
-                className={cn(
-                  'inline-flex h-8 items-center gap-2 rounded-md border px-3 text-[13px] transition-colors disabled:cursor-not-allowed disabled:opacity-60',
-                  selected
-                    ? 'border-foreground text-foreground ring-1 ring-inset ring-foreground'
-                    : 'border-border text-muted-foreground hover:bg-accent/40',
-                )}
-              >
-                <span
-                  aria-hidden
-                  className={cn(
-                    'flex h-3.5 w-3.5 items-center justify-center rounded-[4px] border-[1.5px]',
-                    selected
-                      ? 'border-foreground bg-foreground text-background'
-                      : 'border-muted-foreground/60',
-                  )}
-                >
-                  {selected && (
-                    <Check className="h-2.5 w-2.5" strokeWidth={3} />
-                  )}
-                </span>
-                {t(roleLabel(role))}
-              </button>
-            )
-          })}
-        </div>
-        <p className="mt-2 text-[12px] text-muted-foreground">
-          {form.notify.length === 0
-            ? t(
-                'Nobody is emailed or notified. The alerts still fire their events for project webhooks and functions.',
-              )
-            : t(
-                'Project webhooks and functions can also listen to its alert events.',
-              )}
-        </p>
-        <div className="mt-4">
-          <Label id="alert-severity" className="text-[13px] font-semibold">
-            {t('Severity')}
-          </Label>
-          {/* Radix gives the group one tab stop and moves the selection with the arrow keys. */}
-          <RadioGroupPrimitive.Root
-            aria-labelledby="alert-severity"
-            value={form.severity}
-            onValueChange={(severity) =>
-              onChange({ severity: severity as MonitorSeverity })
-            }
-            disabled={disabled}
-            orientation="horizontal"
-            className="mt-2 flex flex-wrap gap-2"
-          >
-            {SEVERITIES.map(({ value, label, icon: Icon, tone, ...level }) => (
-              <RadioGroupPrimitive.Item
-                key={value}
-                value={value}
-                className={cn(
-                  'inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60',
-                  form.severity === value
-                    ? cn('font-medium ring-1 ring-inset', level.selected)
-                    : 'border-border text-muted-foreground hover:bg-accent/40',
-                )}
-              >
-                <Icon aria-hidden className={cn('h-3.5 w-3.5', tone)} />
-                {t(label)}
-              </RadioGroupPrimitive.Item>
-            ))}
-          </RadioGroupPrimitive.Root>
-          <p className="mt-2 text-[12px] text-muted-foreground">
-            {t(
-              SEVERITIES.find(({ value }) => value === form.severity)?.hint ??
-                '',
-            )}
-          </p>
-        </div>
-      </section>
+      <NotifyFields
+        notify={form.notify}
+        severity={form.severity}
+        onChange={onChange}
+        disabled={disabled}
+      />
 
-      <section className="border-t border-border pt-4">
-        <button
-          type="button"
-          onClick={() => setOptional((open) => !open)}
-          aria-expanded={optional}
-          className="flex w-full items-center justify-between text-[13px] text-muted-foreground hover:text-foreground"
-        >
-          <span>{t('Name, cooldown')}</span>
-          <span className="inline-flex items-center gap-1">
-            {t('Optional')}
-            <ChevronDown
-              className={cn(
-                'h-4 w-4 transition-transform',
-                optional && 'rotate-180',
-              )}
-            />
-          </span>
-        </button>
-        {optional && (
-          <div className="mt-4 space-y-4">
-            <div>
-              <Label htmlFor="alert-name" className="text-[13px] font-semibold">
-                {t('Name')}
-              </Label>
-              <Input
-                id="alert-name"
-                className="mt-2"
-                placeholder={suggestedName(form, t)}
-                value={form.name}
-                onChange={(event) => onChange({ name: event.target.value })}
-                disabled={disabled}
-                maxLength={128}
-              />
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Word>{t('Cooldown')}</Word>
-              <Select
-                value={String(form.cooldown)}
-                onValueChange={(next) => onChange({ cooldown: Number(next) })}
-                disabled={disabled}
-              >
-                <SelectTrigger
-                  className="h-9 w-auto min-w-32"
-                  aria-label={t('Cooldown')}
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {durationOptions(COOLDOWNS, form.cooldown, t).map(
-                    (option) => (
-                      <SelectItem
-                        key={option.value}
-                        value={String(option.value)}
-                      >
-                        {option.label}
-                      </SelectItem>
-                    ),
-                  )}
-                </SelectContent>
-              </Select>
-              <Word>{t('between two alerts from this monitor.')}</Word>
-            </div>
-          </div>
-        )}
-      </section>
+      <OptionalFields
+        name={form.name}
+        cooldown={form.cooldown}
+        placeholder={suggestedName(form, t)}
+        onChange={onChange}
+        disabled={disabled}
+      />
     </div>
+  )
+}
+
+/** Who a monitor notifies, and how urgently. */
+export function NotifyFields({
+  notify,
+  severity,
+  onChange,
+  disabled,
+}: {
+  notify: string[]
+  severity: MonitorSeverity
+  onChange: (changes: { notify?: string[]; severity?: MonitorSeverity }) => void
+  disabled?: boolean
+}) {
+  const t = useT()
+  return (
+    <section>
+      <SectionHeading
+        title={t('Notify')}
+        description={t(
+          'Members with these roles get an email and a console notification when the monitor fires and again when it resolves.',
+        )}
+      />
+      <div className="flex flex-wrap gap-2">
+        {NOTIFY_ROLES.map((role) => {
+          const selected = notify.includes(role)
+          return (
+            <button
+              key={role}
+              type="button"
+              role="checkbox"
+              aria-checked={selected}
+              disabled={disabled}
+              onClick={() =>
+                onChange({
+                  notify: selected
+                    ? notify.filter((entry) => entry !== role)
+                    : [...notify, role],
+                })
+              }
+              className={cn(
+                'inline-flex h-8 items-center gap-2 rounded-md border px-3 text-[13px] transition-colors disabled:cursor-not-allowed disabled:opacity-60',
+                selected
+                  ? 'border-foreground text-foreground ring-1 ring-inset ring-foreground'
+                  : 'border-border text-muted-foreground hover:bg-accent/40',
+              )}
+            >
+              <span
+                aria-hidden
+                className={cn(
+                  'flex h-3.5 w-3.5 items-center justify-center rounded-[4px] border-[1.5px]',
+                  selected
+                    ? 'border-foreground bg-foreground text-background'
+                    : 'border-muted-foreground/60',
+                )}
+              >
+                {selected && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
+              </span>
+              {t(roleLabel(role))}
+            </button>
+          )
+        })}
+      </div>
+      <p className="mt-2 text-[12px] text-muted-foreground">
+        {notify.length === 0
+          ? t(
+              'Nobody is emailed or notified. The alerts still fire their events for project webhooks and functions.',
+            )
+          : t(
+              'Project webhooks and functions can also listen to its alert events.',
+            )}
+      </p>
+      <div className="mt-4">
+        <Label id="alert-severity" className="text-[13px] font-semibold">
+          {t('Severity')}
+        </Label>
+        {/* Radix gives the group one tab stop and moves the selection with the arrow keys. */}
+        <RadioGroupPrimitive.Root
+          aria-labelledby="alert-severity"
+          value={severity}
+          onValueChange={(next) =>
+            onChange({ severity: next as MonitorSeverity })
+          }
+          disabled={disabled}
+          orientation="horizontal"
+          className="mt-2 flex flex-wrap gap-2"
+        >
+          {SEVERITIES.map(({ value, label, icon: Icon, tone, ...level }) => (
+            <RadioGroupPrimitive.Item
+              key={value}
+              value={value}
+              className={cn(
+                'inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60',
+                severity === value
+                  ? cn('font-medium ring-1 ring-inset', level.selected)
+                  : 'border-border text-muted-foreground hover:bg-accent/40',
+              )}
+            >
+              <Icon aria-hidden className={cn('h-3.5 w-3.5', tone)} />
+              {t(label)}
+            </RadioGroupPrimitive.Item>
+          ))}
+        </RadioGroupPrimitive.Root>
+        <p className="mt-2 text-[12px] text-muted-foreground">
+          {t(SEVERITIES.find(({ value }) => value === severity)?.hint ?? '')}
+        </p>
+      </div>
+    </section>
+  )
+}
+
+/** A monitor's name and cooldown, folded unless it already sets either. */
+export function OptionalFields({
+  name,
+  cooldown,
+  placeholder,
+  onChange,
+  disabled,
+}: {
+  name: string
+  cooldown: number
+  /** The name the monitor gets when none is typed. */
+  placeholder: string
+  onChange: (changes: { name?: string; cooldown?: number }) => void
+  disabled?: boolean
+}) {
+  const t = useT()
+  // Folded unless the monitor already sets either, so a new monitor shows only what it needs.
+  const [optional, setOptional] = useState(
+    name !== '' || cooldown !== emptyRuleForm().cooldown,
+  )
+  return (
+    <section className="border-t border-border pt-4">
+      <button
+        type="button"
+        onClick={() => setOptional((open) => !open)}
+        aria-expanded={optional}
+        className="flex w-full items-center justify-between text-[13px] text-muted-foreground hover:text-foreground"
+      >
+        <span>{t('Name, cooldown')}</span>
+        <span className="inline-flex items-center gap-1">
+          {t('Optional')}
+          <ChevronDown
+            className={cn(
+              'h-4 w-4 transition-transform',
+              optional && 'rotate-180',
+            )}
+          />
+        </span>
+      </button>
+      {optional && (
+        <div className="mt-4 space-y-4">
+          <div>
+            <Label htmlFor="alert-name" className="text-[13px] font-semibold">
+              {t('Name')}
+            </Label>
+            <Input
+              id="alert-name"
+              className="mt-2"
+              placeholder={placeholder}
+              value={name}
+              onChange={(event) => onChange({ name: event.target.value })}
+              disabled={disabled}
+              maxLength={128}
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Word>{t('Cooldown')}</Word>
+            <Select
+              value={String(cooldown)}
+              onValueChange={(next) => onChange({ cooldown: Number(next) })}
+              disabled={disabled}
+            >
+              <SelectTrigger
+                className="h-9 w-auto min-w-32"
+                aria-label={t('Cooldown')}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {durationOptions(COOLDOWNS, cooldown, t).map((option) => (
+                  <SelectItem key={option.value} value={String(option.value)}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Word>{t('between two alerts from this monitor.')}</Word>
+          </div>
+        </div>
+      )}
+    </section>
   )
 }

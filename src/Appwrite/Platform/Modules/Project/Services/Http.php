@@ -23,6 +23,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\MockPhone\XList as ListMockPh
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Amazon\Update as UpdateOAuth2Amazon;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Apple\Update as UpdateOAuth2Apple;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Appwrite\Update as UpdateOAuth2Appwrite;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Atlassian\Update as UpdateOAuth2Atlassian;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Auth0\Update as UpdateOAuth2Auth0;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Authentik\Update as UpdateOAuth2Authentik;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Autodesk\Update as UpdateOAuth2Autodesk;
@@ -46,6 +47,8 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\HuggingFace\Update as 
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Kakao\Update as UpdateOAuth2Kakao;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Keycloak\Update as UpdateOAuth2Keycloak;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Kick\Update as UpdateOAuth2Kick;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Line\Update as UpdateOAuth2Line;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Linear\Update as UpdateOAuth2Linear;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Linkedin\Update as UpdateOAuth2Linkedin;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Microsoft\Update as UpdateOAuth2Microsoft;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Naver\Update as UpdateOAuth2Naver;
@@ -55,7 +58,10 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Okta\Update as UpdateO
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Paypal\Update as UpdateOAuth2Paypal;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\PaypalSandbox\Update as UpdateOAuth2PaypalSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Podio\Update as UpdateOAuth2Podio;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Railway\Update as UpdateOAuth2Railway;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Reddit\Update as UpdateOAuth2Reddit;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Resend\Update as UpdateOAuth2Resend;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Roblox\Update as UpdateOAuth2Roblox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Salesforce\Update as UpdateOAuth2Salesforce;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Slack\Update as UpdateOAuth2Slack;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Spotify\Update as UpdateOAuth2Spotify;
@@ -293,7 +299,13 @@ class Http extends Service
         $this->addAction('updateProjectOAuth2Apple', UpdateOAuth2Apple::class);
         $this->addAction('updateProjectOAuth2Microsoft', UpdateOAuth2Microsoft::class);
         $this->addAction('updateProjectOAuth2Hugging Face', UpdateOAuth2HuggingFace::class);
+        $this->addAction('updateProjectOAuth2Railway', UpdateOAuth2Railway::class);
+        $this->addAction('updateProjectOAuth2Reddit', UpdateOAuth2Reddit::class);
         $this->addAction('updateProjectOAuth2Vercel', UpdateOAuth2Vercel::class);
+        $this->addAction('updateProjectOAuth2Atlassian', UpdateOAuth2Atlassian::class);
+        $this->addAction('updateProjectOAuth2LINE', UpdateOAuth2Line::class);
+        $this->addAction('updateProjectOAuth2Linear', UpdateOAuth2Linear::class);
+        $this->addAction('updateProjectOAuth2Roblox', UpdateOAuth2Roblox::class);
         $this->addAction('updateProjectOAuth2WorkOS', UpdateOAuth2WorkOS::class);
         $this->addAction('updateProjectOAuth2Resend', UpdateOAuth2Resend::class);
         $this->addAction('updateProjectOAuth2TikTok', UpdateOAuth2TikTok::class);

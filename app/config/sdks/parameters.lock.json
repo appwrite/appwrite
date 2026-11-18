@@ -3378,6 +3378,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Atlassian": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Auth0": [
             "clientId",
             "clientSecret",
@@ -3501,6 +3506,16 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Line": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Linear": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Linkedin": [
             "clientId",
             "primaryClientSecret",
@@ -3557,7 +3572,22 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Railway": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Reddit": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Resend": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Roblox": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -3849,6 +3879,10 @@
         "reviews.list": [
             "queries",
             "total"
+        ],
+        "reviews.listAuthors": [
+            "range",
+            "repositoryId"
         ],
         "reviews.listEvents": [
             "reviewId",
@@ -7778,6 +7812,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Atlassian": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Auth0": [
             "clientId",
             "clientSecret",
@@ -7901,6 +7940,16 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Line": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Linear": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Linkedin": [
             "clientId",
             "primaryClientSecret",
@@ -7957,7 +8006,22 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Railway": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Reddit": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Resend": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Roblox": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -8219,6 +8283,10 @@
         "reviews.list": [
             "queries",
             "total"
+        ],
+        "reviews.listAuthors": [
+            "range",
+            "repositoryId"
         ],
         "reviews.listEvents": [
             "reviewId",
