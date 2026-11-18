@@ -3474,6 +3474,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Instagram": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Kakao": [
             "clientId",
             "clientSecret",
@@ -7886,6 +7891,11 @@
             "nativeEnabled"
         ],
         "project.updateOAuth2HuggingFace": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Instagram": [
             "clientId",
             "clientSecret",
             "enabled"
