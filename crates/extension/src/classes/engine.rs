@@ -653,16 +653,11 @@ pub fn interned(bytes: &[u8]) -> Zval {
 /// A persistent immutable list of strings (`['0', '1', ...]`), as a constant of an internal
 /// class holds an array: nothing counts references to it, and it lives for the process.
 ///
-/// An empty list is the engine's `zend_empty_array`, as `ZVAL_EMPTY_ARRAY` gives: opcache
-/// persists a user subclass's copy of an inherited default, and frees the data of an
-/// initialized empty table as if the engine's allocator held it.
+/// Not for an empty list: opcache frees the data of an initialized empty table it persists
+/// (a PHP subclass's copy of an inherited default) as if the engine's allocator held it, so
+/// `[]` is [`empty_array`].
 pub fn string_list(items: &[&str]) -> Zval {
-    if items.is_empty() {
-        let mut zval = Zval::new();
-        zval.value.arr = std::ptr::addr_of!(ext_php_rs::ffi::zend_empty_array).cast_mut();
-        zval.u1.type_info = IS_ARRAY;
-        return zval;
-    }
+    debug_assert!(!items.is_empty(), "an empty list is `empty_array()`");
     // SAFETY: called in MINIT; the table is allocated persistently and never freed, its
     // values are interned strings, and the flags mark it immutable so the engine copies the
     // zval without touching a reference count.

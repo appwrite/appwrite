@@ -49,6 +49,12 @@ implementations, first one library at a time (a batch with its package's switch,
 package's tests), then with all of them on. A new library needs only
 its `enabled()` call, its corpus and its package tests; there is no CI step to add.
 
+`tests/opcache.php` then declares a PHP subclass of every class the extension registers and runs
+with opcache on, with no switch and with all of them: opcache copies a cached subclass, with the
+defaults and constants it inherits, into shared memory and frees what it copied from as PHP's
+allocator's memory. A default or constant built outside that allocator (an initialized empty array
+rather than `engine::empty_array()`) corrupts the heap there, and the script crashes.
+
 Once a library has run on the extension everywhere, its PHP class is removed and the class is
 registered unconditionally. Its corpus goes with it, since there is nothing left to compare
 against; the package's own tests keep running on the extension. The package stays published at its

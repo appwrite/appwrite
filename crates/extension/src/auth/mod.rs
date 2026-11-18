@@ -72,7 +72,7 @@ fn abstract_method(name: &str, args: Vec<Arg<'static>>, returns: DataType) -> Fu
 }
 
 fn register_base(class: &'static mut ClassEntry, tables: ArgInfoTables) {
-    engine::declare(class, &OPTIONS, MAY_BE_ARRAY, Some(engine::string_list(&[])));
+    engine::declare(class, &OPTIONS, MAY_BE_ARRAY, Some(engine::empty_array()));
     BASE_CLASS.store(class, Ordering::Release);
     leaf::patch(class, BASE_METHODS, tables, &[]);
 }
