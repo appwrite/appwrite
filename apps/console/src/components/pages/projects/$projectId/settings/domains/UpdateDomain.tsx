@@ -77,7 +77,9 @@ export function UpdateDomain({
       trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')
         ? trimmedUrl
         : `https://${trimmedUrl}`
-    if (behaviour === 'redirect' && !URL.canParse(url)) {
+    // Browsers percent-encode a space in the host instead of rejecting it
+    const hasWhitespace = [...url].some((char) => !char.trim())
+    if (behaviour === 'redirect' && (hasWhitespace || !URL.canParse(url))) {
       setUrlError(t('Invalid URL'))
       return
     }
