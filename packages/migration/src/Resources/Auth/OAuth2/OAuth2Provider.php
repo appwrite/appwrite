@@ -53,6 +53,7 @@ final class OAuth2Provider extends Resource
         'huggingface' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'instagram' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'patreon' => ['clientId' => ['target' => self::TARGET_APP_ID]],
+        'strava' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'railway' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'reddit' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'vercel' => ['clientId' => ['target' => self::TARGET_APP_ID]],
