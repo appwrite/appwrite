@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-18T10:47:00Z",
+  "updated": "2026-11-18T11:58:00Z",
   "tasks": [
     {
       "id": "crate-layout",
@@ -784,6 +784,14 @@
       "status": "todo",
       "updated": "2026-11-18T10:47:00Z",
       "note": "Main changed about 155 lines of utopia-php/queue after the Nov 16 merge: the Swoole adapter's receive buffer and refill, a KubernetesJob heartbeat that keeps extending a message's delivery deadline while its job runs, and NATS retrying a reap on a rebuilt commands connection (a fix for the PHP NATS client; check whether async-nats needs it). Not ported in the Nov 18 merge; the queue marker stays behind."
+    },
+    {
+      "id": "teams-photo",
+      "title": "Teams: port the team photo endpoints to Rust",
+      "area": "Services",
+      "status": "todo",
+      "updated": "2026-11-18T11:58:00Z",
+      "note": "Main added GET, PUT and DELETE /v1/teams/:teamId/photo and photoId/photoSize attributes on teams. Until the Rust Teams service has them, Traefik's Rust router excludes ^/v1/teams/[^/]+/photo$ (docker-compose.override.yml), so they stay with PHP. The docs site's route list reads only Path and PathPrefix and still counts them under Rust."
     }
   ]
 }
