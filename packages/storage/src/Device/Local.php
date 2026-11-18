@@ -9,6 +9,7 @@ use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
 use Utopia\Storage\DeviceType;
 use Utopia\Storage\Exception\NotFoundException;
+use Utopia\Storage\Exception\NotModifiedException;
 use Utopia\Storage\Exception\PreconditionFailedException;
 use Utopia\Storage\Exception\StorageException;
 use Utopia\Storage\Exception\UploadException;
@@ -80,10 +81,8 @@ class Local extends Device
 
         $chunkFilePath = $tmp . DIRECTORY_SEPARATOR . pathinfo($path, PATHINFO_FILENAME) . '.part.' . $chunk;
 
-        // skip writing chunk if the chunk was re-uploaded
-        if (! file_exists($chunkFilePath)) {
-            $this->writeFile($chunkFilePath, $data);
-        }
+        // A resent chunk replaces the stored one, as S3 does with a resent part.
+        $this->writeAtomic($chunkFilePath, $data);
 
         $chunksReceived = $this->countChunks($tmp, $path);
         $metadata['parts'][$chunk] = true;
@@ -246,8 +245,12 @@ class Local extends Device
      *
      * @throws StorageException
      */
-    public function read(string $path, int $offset = 0, ?int $length = null, ?string $etag = null): StreamInterface
+    public function read(string $path, int $offset = 0, ?int $length = null, ?string $etag = null, ?\DateTimeInterface $modifiedSince = null): StreamInterface
     {
+        if ($etag !== null && $modifiedSince instanceof \DateTimeInterface) {
+            throw new \InvalidArgumentException('A read cannot be conditional on both an ETag and a time');
+        }
+
         if (! $this->exists($path)) {
             throw new NotFoundException('File not found');
         }
@@ -255,6 +258,15 @@ class Local extends Device
         $handle = fopen($path, 'rb');
         if ($handle === false) {
             throw new StorageException('Failed to read file ' . $path);
+        }
+
+        if ($modifiedSince instanceof \DateTimeInterface) {
+            $stat = fstat($handle);
+            if ($stat !== false && $stat['mtime'] <= $modifiedSince->getTimestamp()) {
+                fclose($handle);
+
+                throw new NotModifiedException('File ' . $path . ' has not been modified');
+            }
         }
 
         if ($etag !== null && $this->hashHandle($handle, $path) !== $etag) {

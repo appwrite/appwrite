@@ -16,6 +16,8 @@ import { useT } from '@/lib/i18n/translate'
 interface VerifyEmailProps {
   onResend?: () => void
   isResendLoading?: boolean
+  /** Seconds until another email may be sent; the resend button waits until it reaches 0. */
+  resendCooldown?: number
   /** Optional redirect path to preserve when linking to sign-in (e.g. / or /projects/xyz) */
   redirect?: string
   /** When 'confirming', only show the verifying message (same card layout as sign-in) */
@@ -27,6 +29,7 @@ interface VerifyEmailProps {
 export function VerifyEmail({
   onResend,
   isResendLoading,
+  resendCooldown = 0,
   redirect,
   status = 'pending',
   preview = false,
@@ -70,9 +73,18 @@ export function VerifyEmail({
                   variant="brandCta"
                   className="w-full"
                   onClick={onResend}
-                  disabled={isResendLoading || isSigningOutToSignIn}
+                  disabled={
+                    isResendLoading ||
+                    isSigningOutToSignIn ||
+                    resendCooldown > 0
+                  }
                 >
-                  {t('Resend verification email')}
+                  {resendCooldown > 0
+                    ? t('Resend email in {seconds}s').replace(
+                        '{seconds}',
+                        String(resendCooldown),
+                      )
+                    : t('Resend verification email')}
                 </Button>
               )}
               {preview ? (

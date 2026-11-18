@@ -1149,6 +1149,7 @@ return [
                 'value' => 'disabled',
                 'placeholder' => 'sk_.....',
                 'required' => false,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1482,6 +1483,7 @@ return [
                 'value' => '',
                 'placeholder' => 'sk_.....',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
         ]
@@ -1529,6 +1531,7 @@ return [
                 'value' => '',
                 'placeholder' => 'a0b1...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1616,5 +1619,90 @@ return [
                 'type' => 'text'
             ],
         ]
+    ],
+    [
+        'key' => 'catchall',
+        'name' => 'Catchall',
+        'tagline' => 'A shared inbox for testing your app\'s emails, built on Appwrite Functions email triggers.',
+        'score' => 7, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [SiteUseCases::DASHBOARD],
+        'screenshotDark' => $url . '/images/sites/templates/catchall-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/catchall-light.png',
+        'frameworks' => [
+            getFramework('TANSTACK_START', [
+                'providerRootDirectory' => './tanstack-start/email-testing',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.7.*',
+        'variables' => [],
+        'scopes' => [
+            'rows.read',
+            'rows.write',
+            'files.read',
+            'files.write',
+            'teams.read',
+            'databases.read',
+            'databases.write',
+            'tables.read',
+            'tables.write',
+            'buckets.read',
+            'buckets.write',
+            'functions.read',
+            'functions.write',
+            'project.read',
+            'project.write',
+            'sites.read',
+            'sites.write',
+        ],
+    ],
+    [
+        'key' => 'livepage',
+        'name' => 'Livepage',
+        'tagline' => 'Pages and databases your team edits together live, with AI on your own provider key.',
+        'score' => 7, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [SiteUseCases::DOCUMENTATION, SiteUseCases::AI],
+        'screenshotDark' => $url . '/images/sites/templates/livepage-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/livepage-light.png',
+        'frameworks' => [
+            getFramework('TANSTACK_START', [
+                'providerRootDirectory' => './tanstack-start/livepage',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.7.*',
+        'variables' => [],
+        'scopes' => [
+            'rows.read',
+            'rows.write',
+            'files.read',
+            'files.write',
+            'teams.read',
+            'teams.write',
+            'users.read',
+            'users.write',
+            'databases.read',
+            'databases.write',
+            'tables.read',
+            'tables.write',
+            'buckets.read',
+            'buckets.write',
+            'vectorsdb.read',
+            'project.read',
+            'project.write',
+            'sites.read',
+            'sites.write',
+            'platforms.write',
+            'vectorsdb.write',
+            'vectorsdb.collections.read',
+            'vectorsdb.collections.write',
+            'vectorsdb.documents.read',
+            'vectorsdb.documents.write',
+            'embeddings.write',
+        ],
     ]
 ];

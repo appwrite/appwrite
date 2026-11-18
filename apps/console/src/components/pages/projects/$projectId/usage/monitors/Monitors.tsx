@@ -58,7 +58,7 @@ import {
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
-import type { ParsedMonitor } from '@/lib/appwrite/monitors'
+import type { ParsedMonitor, ProbeType } from '@/lib/appwrite/monitors'
 import {
   COMPARATORS,
   metricDefinition,
@@ -67,6 +67,13 @@ import {
   formatMetricValue,
   thresholdRatio,
 } from '@/lib/alerts/metrics'
+import {
+  PROBE_TYPES,
+  formatLatency,
+  isProbeType,
+  probeTarget,
+  resultLabel,
+} from '@/lib/alerts/probes'
 import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
@@ -187,19 +194,25 @@ export function Monitors({
   const [filter, setFilter] = useState<Filter>('all')
   const [createOpen, setCreateOpen] = useState(false)
   const [initial, setInitial] = useState<Partial<RuleForm> | undefined>()
+  const [initialType, setInitialType] = useState<'usage' | ProbeType>('usage')
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selected, setSelected] = useState<ParsedMonitor | null>(null)
   const [toDelete, setToDelete] = useState<ParsedMonitor | null>(null)
 
-  const openCreate = (fields?: Partial<RuleForm>) => {
+  const openCreate = (
+    fields?: Partial<RuleForm>,
+    type: 'usage' | ProbeType = 'usage',
+  ) => {
     if (createDisabled) return
     setInitial(fields)
+    setInitialType(type)
     openDialogAfterOverlayCloses(() => setCreateOpen(true))
   }
 
   useEffect(() => {
     if (!prefill || createDisabled) return
     setInitial(prefill)
+    setInitialType('usage')
     setCreateOpen(true)
     onPrefillConsumed?.()
   }, [prefill, createDisabled, onPrefillConsumed])
@@ -243,6 +256,7 @@ export function Monitors({
           !query ||
           monitor.name.toLowerCase().includes(query) ||
           monitor.metric.toLowerCase().includes(query) ||
+          probeTarget(monitor).toLowerCase().includes(query) ||
           t(metricDefinition(monitor.metric).label)
             .toLowerCase()
             .includes(query) ||
@@ -268,7 +282,11 @@ export function Monitors({
 
   const handleToggle = (monitor: ParsedMonitor) => {
     updateMutation.mutate(
-      { monitorId: monitor.$id, changes: { enabled: !monitor.enabled } },
+      {
+        monitorId: monitor.$id,
+        type: monitor.type,
+        changes: { enabled: !monitor.enabled },
+      },
       {
         onSuccess: () =>
           toast.success(
@@ -301,8 +319,9 @@ export function Monitors({
     })
   }
 
-  /** `Outbound bandwidth > 10 GB within 1 hour` */
+  /** `Outbound bandwidth > 10 GB within 1 hour`, or a probe's target: `GET https://example.com` */
   const sentence = (monitor: ParsedMonitor) => {
+    if (isProbeType(monitor.type)) return probeTarget(monitor)
     const definition = metricDefinition(monitor.metric)
     const symbol =
       COMPARATORS.find((entry) => entry.value === monitor.comparator)?.symbol ??
@@ -314,6 +333,8 @@ export function Monitors({
   }
 
   const scope = (monitor: ParsedMonitor) => {
+    const probe = PROBE_TYPES.find((entry) => entry.value === monitor.type)
+    if (probe) return t('{type} check').replace('{type}', probe.label)
     if (monitor.resourceType === 'project') return t('Project')
     const type = RESOURCE_TYPES.find(
       (entry) => entry.value === monitor.resourceType,
@@ -348,6 +369,7 @@ export function Monitors({
           projectId={projectId}
           onCreate={() => openCreate()}
           onPreset={(preset) => openCreate(preset.form)}
+          onProbe={(type) => openCreate(undefined, type)}
           createDisabled={createDisabled}
           createDisabledTooltip={createDisabledTooltip}
         />
@@ -464,15 +486,19 @@ export function Monitors({
                         {scope(monitor)}
                       </p>
                     </div>
-                    <RuleSparkline
-                      projectId={projectId}
-                      rule={monitor}
-                      className={cn(
-                        'hidden md:block',
-                        state === 'paused' && 'opacity-50',
-                      )}
-                    />
-                    {monitor.critical && (
+                    {isProbeType(monitor.type) ? (
+                      <div className="hidden h-8 w-28 shrink-0 md:block" />
+                    ) : (
+                      <RuleSparkline
+                        projectId={projectId}
+                        rule={monitor}
+                        className={cn(
+                          'hidden md:block',
+                          state === 'paused' && 'opacity-50',
+                        )}
+                      />
+                    )}
+                    {monitor.severity === 'critical' && (
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <span
@@ -597,6 +623,7 @@ export function Monitors({
         onOpenChange={setCreateOpen}
         projectId={projectId}
         initial={initial}
+        initialType={initialType}
       />
 
       <MonitorDrawer
@@ -666,8 +693,11 @@ function MonitorState({
 }) {
   const t = useT()
   const style = STATE_STYLES[state]
+  const probe = isProbeType(monitor.type)
   const ratio =
-    state === 'firing' && monitor.value != null ? thresholdRatio(monitor) : null
+    !probe && state === 'firing' && monitor.value != null
+      ? thresholdRatio(monitor)
+      : null
   const label = (
     <span
       className={cn(
@@ -680,7 +710,7 @@ function MonitorState({
     </span>
   )
   return (
-    <div className="w-[72px] shrink-0 text-end sm:w-32">
+    <div className="w-[72px] shrink-0 text-end sm:w-44">
       {state === 'firing' && monitor.alertId ? (
         <Link
           to="/projects/$projectId/usage/alerts"
@@ -698,6 +728,20 @@ function MonitorState({
       <p className="mt-0.5 hidden truncate text-[11px] tabular-nums text-muted-foreground sm:block">
         {state === 'pending' ? (
           t('Waiting for the first check')
+        ) : probe ? (
+          <>
+            {monitor.result
+              ? monitor.result === 'ok' && monitor.latency != null
+                ? formatLatency(monitor.latency)
+                : t(resultLabel(monitor.result))
+              : t('No data')}
+            {monitor.evaluatedAt && (
+              <>
+                <span className="mx-1">·</span>
+                <DateTooltip date={monitor.evaluatedAt} />
+              </>
+            )}
+          </>
         ) : (
           <>
             {monitor.value != null

@@ -74,7 +74,9 @@ class Create extends Base
             $at = $event['at'] ?? null;
             $data = $event['data'] ?? [];
 
-            if (!\is_string($type) || $type === '' || \strlen($type) > 64 || !\is_string($at) || !\is_array($data)) {
+            // The request keeps an empty JSON object as stdClass, so a step with no data arrives
+            // as one; it is still an object, and stored as one.
+            if (!\is_string($type) || $type === '' || \strlen($type) > 64 || !\is_string($at) || !(\is_array($data) || $data instanceof \stdClass)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Event {$index} is invalid: it needs type, at (ISO 8601) and an object as data.");
             }
 

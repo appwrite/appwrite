@@ -47,6 +47,7 @@ function StorageBucketsPlanLimitBanner() {
         planId: organizationPlan?.$id,
       })}
       resourceName={t('buckets')}
+      resourceNameSingular="bucket"
       orgId={project.teamId}
     />
   )

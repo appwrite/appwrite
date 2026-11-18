@@ -469,6 +469,7 @@ class Handler implements MqttHandler
         Span::add('mqtt.sequence', $delivery['sequence']);
         $this->mqtt->messagesAcked->add(1);
         $this->mqtt->pubacksReceived->add(1);
+        $this->mqtt->recordAcks($connection->prefix, 1);
 
         $cache = ($this->getCache)();
         $key = $this->cursorKey($connection);

@@ -367,13 +367,8 @@ export function View() {
 
   // Get theme for screenshot selection
   const isDark = useMemo(() => {
-    if (typeof window === 'undefined') return true // Default to dark during SSR
-    return (
-      resolvedTheme === 'dark' ||
-      (resolvedTheme === 'system' &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches) ||
-      theme === 'dark'
-    )
+    if (typeof window === 'undefined') return true
+    return (resolvedTheme ?? theme ?? 'dark') !== 'light'
   }, [theme, resolvedTheme])
 
   // Reset loaded screenshots when theme changes
@@ -645,6 +640,7 @@ export function View() {
     <EmptyState icon={Globe} isEmpty={false} hasFilters variant="card" />
   ) : (
     <SitesEmptyState
+      projectId={projectId!}
       onCreate={() => {
         navigate({
           to: '/projects/$projectId/sites/create',
@@ -737,6 +733,7 @@ export function View() {
                 planId: organizationPlan?.$id,
               })}
               resourceName={t('sites')}
+              resourceNameSingular="site"
               orgId={project?.teamId}
               fullWidth={false}
             />

@@ -527,7 +527,10 @@ export function IndexDrawer({
                         )
                         const isSizedStringColumn =
                           selectedColumn?.type === 'string' ||
-                          selectedColumn?.type === 'varchar'
+                          selectedColumn?.type === 'varchar' ||
+                          ['text', 'mediumtext', 'longtext'].includes(
+                            selectedColumn?.type ?? '',
+                          )
 
                         if (!isSizedStringColumn) {
                           return null
@@ -554,7 +557,9 @@ export function IndexDrawer({
                               disabled={isLoading}
                             />
                             <p className="text-[10px] text-muted-foreground">
-                              {t('Only applicable to string and varchar columns')}
+                              {t(
+                                'Only applicable to string, varchar and text columns',
+                              )}
                             </p>
                           </div>
                         )

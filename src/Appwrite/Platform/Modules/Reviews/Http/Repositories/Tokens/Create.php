@@ -16,7 +16,8 @@ use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 /**
- * A GitHub installation token for the review service, limited to the one repository it reviews.
+ * A GitHub installation token for the review service, limited to the one repository it reviews
+ * and to the permissions reviews need.
  * Appwrite holds the GitHub App's private key; the service never does.
  */
 class Create extends Base
@@ -71,7 +72,18 @@ class Create extends Base
         }
 
         try {
-            $token = $vcs->createAccessToken([(int) $repository->getAttribute('providerRepositoryId')]);
+            // GitHub's resolveReviewThread mutation, which the service uses to resolve the threads
+            // of fixed findings, refuses an app token without contents: write.
+            $token = $vcs->createAccessToken(
+                [(int) $repository->getAttribute('providerRepositoryId')],
+                [
+                    'contents' => 'write',
+                    'metadata' => 'read',
+                    'pull_requests' => 'write',
+                    'issues' => 'write',
+                    'checks' => 'write',
+                ],
+            );
         } catch (\Throwable $error) {
             throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to create repository token: ' . $error->getMessage());
         }

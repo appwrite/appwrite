@@ -31,6 +31,7 @@ use Utopia\Storage\Device\S3\Response as S3Response;
 use Utopia\Storage\Device\S3\RetryStrategy;
 use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Exception\NotFoundException;
+use Utopia\Storage\Exception\NotModifiedException;
 use Utopia\Storage\Exception\PreconditionFailedException;
 use Utopia\Storage\Exception\RemoteException;
 use Utopia\Storage\Exception\StorageException;
@@ -382,6 +383,51 @@ final class S3Test extends TestCase
         $this->assertSame(base64_encode(md5('Hello World', true)), $request->getHeaderLine('content-md5'));
         $this->assertStringStartsWith('AWS4-HMAC-SHA256 Credential=test-key/', $request->getHeaderLine('authorization'));
         $this->assertSame('utopia-php/storage', $request->getHeaderLine('user-agent'));
+    }
+
+    /**
+     * Recomputes the signature the way an S3 server does, from the request as
+     * sent and the secret, so a wrong signing key cannot pass.
+     */
+    public function testAuthorizationHeaderCarriesAValidSigV4Signature(): void
+    {
+        $client = new ScriptedClient([new Response(200)->withHeader('etag', '"abc"')]);
+        $this->device($client)->write('/root/file.txt', new Stream('Hello World'), 'text/plain');
+        $request = $client->requests[0];
+
+        // Which headers were signed is the sender's choice; everything else is recomputed
+        $authorization = $request->getHeaderLine('authorization');
+        $signedHeaders = str_replace('SignedHeaders=', '', explode(',', $authorization)[1] ?? '');
+        $date = substr($request->getHeaderLine('x-amz-date'), 0, 8);
+        $scope = $date . '/us-east-1/s3/aws4_request';
+
+        $canonical = [$request->getMethod(), $request->getUri()->getPath(), $request->getUri()->getQuery()];
+        foreach (explode(';', $signedHeaders) as $name) {
+            $canonical[] = $name . ':' . trim($request->getHeaderLine($name));
+        }
+        $canonical[] = '';
+        $canonical[] = $signedHeaders;
+        $canonical[] = hash('sha256', 'Hello World');
+
+        $stringToSign = implode("\n", [
+            'AWS4-HMAC-SHA256',
+            $request->getHeaderLine('x-amz-date'),
+            $scope,
+            hash('sha256', implode("\n", $canonical)),
+        ]);
+
+        $key = 'AWS4test-secret';
+        foreach ([$date, 'us-east-1', 's3', 'aws4_request'] as $part) {
+            $key = hash_hmac('sha256', $part, $key, true);
+        }
+
+        $this->assertContains('host', explode(';', $signedHeaders));
+        $this->assertSame(
+            'AWS4-HMAC-SHA256 Credential=test-key/' . $scope
+            . ',SignedHeaders=' . $signedHeaders
+            . ',Signature=' . hash_hmac('sha256', $stringToSign, $key),
+            $authorization,
+        );
     }
 
     public function testEndpointPathIsExcludedFromHostHeader(): void
@@ -1059,6 +1105,42 @@ final class S3Test extends TestCase
 
         $this->expectException(PreconditionFailedException::class);
         $this->device($client)->read('/root/file.txt', 0, 5, 'abc');
+    }
+
+    public function testReadSinceATimeSendsIfModifiedSince(): void
+    {
+        $client = new ScriptedClient([new Response(200, body: new Stream('Hello'))]);
+
+        $this->assertSame('Hello', (string) $this->device($client)->read('/root/file.txt', modifiedSince: new \DateTimeImmutable('2026-01-02 03:04:05', new \DateTimeZone('+02:00'))));
+
+        $this->assertCount(1, $client->requests);
+        $this->assertSame('GET', $client->requests[0]->getMethod());
+        $this->assertSame('Fri, 02 Jan 2026 01:04:05 GMT', $client->requests[0]->getHeaderLine('if-modified-since'));
+        $this->assertStringContainsString('if-modified-since', $client->requests[0]->getHeaderLine('authorization'));
+    }
+
+    public function testReadOfAnUnmodifiedObjectIsRefusedInOneRequest(): void
+    {
+        $client = new ScriptedClient([new Response(304)]);
+
+        try {
+            $this->device($client)->read('/root/file.txt', modifiedSince: new \DateTimeImmutable());
+            $this->fail('A 304 must not read as an empty file');
+        } catch (NotModifiedException) {
+            $this->assertCount(1, $client->requests);
+        }
+    }
+
+    public function testReadCannotBeConditionalOnBothAnEtagAndATime(): void
+    {
+        $client = new ScriptedClient([]);
+
+        try {
+            $this->device($client)->read('/root/file.txt', etag: 'abc', modifiedSince: new \DateTimeImmutable());
+            $this->fail('Services disagree on which condition wins');
+        } catch (\InvalidArgumentException) {
+            $this->assertSame([], $client->requests);
+        }
     }
 
     public function testGetFileInfoReadsTheHeaders(): void

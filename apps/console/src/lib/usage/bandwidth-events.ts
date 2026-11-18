@@ -137,6 +137,8 @@ export async function fetchProjectBandwidthOverview(
 ): Promise<ProjectBandwidthOverview> {
   const includeBreakdown = options?.includeBreakdown !== false
   const queries = options?.queries
+  const resourceId = options?.resourceId
+  const resourceType = options?.resourceType
   const logRetentionHours =
     options?.logRetentionHours ?? DEFAULT_USAGE_LOG_RETENTION_HOURS
 
@@ -148,6 +150,8 @@ export async function fetchProjectBandwidthOverview(
       interval,
       queries,
       logRetentionHours,
+      resourceId,
+      resourceType,
     ),
     includeBreakdown
       ? fetchUsageMetricsBreakdownByMetric(
@@ -157,8 +161,8 @@ export async function fetchProjectBandwidthOverview(
           ['path'],
           OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
           queries,
-          undefined,
-          undefined,
+          resourceId,
+          resourceType,
           logRetentionHours,
         )
       : Promise.resolve(new Map<string, UsageTopEndpoint[]>()),

@@ -103,9 +103,8 @@ class Specs extends Action
      * Override in a subclass to customise flags (platform, sdk, mode, etc.).
      *
      * @param string $version Spec version being generated
-     * @return Command|string A prepared command, or a shell string from an override that predates it
      */
-    protected function getSdksCommand(string $version): Command|string
+    protected function getSdksCommand(string $version): Command
     {
         $cli = \realpath(__DIR__ . '/../../../../app') . '/cli.php';
 

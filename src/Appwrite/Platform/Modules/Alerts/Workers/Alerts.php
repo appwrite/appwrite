@@ -2,18 +2,20 @@
 
 namespace Appwrite\Platform\Modules\Alerts\Workers;
 
+use Appwrite\Alert\Change;
 use Appwrite\Alert\Comparator;
 use Appwrite\Alert\Email;
+use Appwrite\Alert\Events;
 use Appwrite\Alert\Meter;
 use Appwrite\Alert\Quantity;
 use Appwrite\Alert\Schedules;
+use Appwrite\Alert\Severity;
 use Appwrite\Alert\State;
 use Appwrite\Alert\Status;
 use Appwrite\Alert\Unsubscribe;
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Alert as AlertMessage;
-use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Notification as NotificationMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
@@ -22,7 +24,6 @@ use Appwrite\Event\Webhook;
 use Appwrite\Platform\Action;
 use Appwrite\Usage\Connection;
 use Appwrite\Utopia\Database\Documents\User;
-use Appwrite\Utopia\Response\Model\Alert as AlertModel;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -282,7 +283,7 @@ class Alerts extends Action
                 'region' => (string) $monitor->getAttribute('region', ''),
                 'status' => State::Firing->value,
                 'rules' => $monitor->getAttribute('rules', []),
-                'critical' => (bool) $monitor->getAttribute('critical', false),
+                'severity' => $monitor->getAttribute('severity') ?: Severity::Warning->value,
                 'type' => (string) $monitor->getAttribute('type'),
                 'resourceType' => (string) $monitor->getAttribute('resourceType'),
                 'resourceId' => (string) $monitor->getAttribute('resourceId'),
@@ -342,35 +343,7 @@ class Alerts extends Action
         FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
     ): void {
-        if ($project->isEmpty() || $project->getId() === 'console' || (string) $alert->getAttribute('projectId', '') !== $project->getId()) {
-            return;
-        }
-
-        $queueForEvents
-            ->setProject($project)
-            ->setEvent('monitors.[monitorId].alerts.[alertId].' . $state->value)
-            ->setParam('monitorId', (string) $alert->getAttribute('monitorId'))
-            ->setParam('alertId', $alert->getId())
-            ->setPayload((new AlertModel())->payload($alert));
-
-        if ($queueForWebhooks->from($queueForEvents)->trigger() === false) {
-            throw new \RuntimeException('The alert event for webhooks was not accepted by the queue.');
-        }
-
-        $function = $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
-            event: $queueForEvents->getEvent(),
-            params: $queueForEvents->getParams(),
-            project: $queueForEvents->getProject(),
-            payload: $queueForEvents->getPayload(),
-        ));
-        if ($function === false) {
-            throw new \RuntimeException('The alert event for functions was not accepted by the queue.');
-        }
-
-        $queueForRealtime
-            ->setSubscribers(['console', $project->getId()])
-            ->from($queueForEvents)
-            ->trigger();
+        (new Events($queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime))->trigger(Change::from($state->value), $alert, $project);
     }
 
     /**
@@ -541,9 +514,12 @@ class Alerts extends Action
                     'title' => ($status === Status::Firing ? 'Firing: ' : 'Resolved: ') . (string) $monitor->getAttribute('name'),
                     'body' => \implode(' ', \array_filter([$email->summary(), $notice['location']])),
                     'tag' => 'alert:' . $alert->getId(),
-                    'critical' => (bool) $monitor->getAttribute('critical', false),
+                    // The severity the alert opened with, so editing the monitor later
+                    // does not change how this alert's pushes are delivered.
+                    'critical' => $alert->getAttribute('severity') === Severity::Critical->value,
                     'data' => [
                         'type' => 'alert',
+                        'severity' => $alert->getAttribute('severity') ?: Severity::Warning->value,
                         'status' => $status === Status::Firing ? State::Firing->value : State::Resolved->value,
                         'alertId' => $alert->getId(),
                         'monitorId' => $monitor->getId(),

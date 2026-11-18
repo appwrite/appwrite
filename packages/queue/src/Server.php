@@ -385,6 +385,9 @@ class Server
                                         $message->getPayload(),
                                     );
                                     $hook->getAction()(...$arguments);
+                                    if ($message->isSkipped()) {
+                                        return;
+                                    }
                                 }
                             }
                         }
@@ -398,6 +401,9 @@ class Server
                                         $message->getPayload(),
                                     );
                                     $hook->getAction()(...$arguments);
+                                    if ($message->isSkipped()) {
+                                        return;
+                                    }
                                 }
                             }
                         }

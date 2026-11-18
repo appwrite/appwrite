@@ -11,6 +11,7 @@ use Utopia\Psr7\Stream;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\DeviceType;
 use Utopia\Storage\Exception\NotFoundException;
+use Utopia\Storage\Exception\NotModifiedException;
 use Utopia\Storage\Exception\PreconditionFailedException;
 use Utopia\Storage\Exception\UploadException;
 use Utopia\Storage\FileInfo;
@@ -927,6 +928,35 @@ final class LocalTest extends TestCase
 
         $this->expectException(PreconditionFailedException::class);
         $this->object->replace($path, new Stream('third'), md5('second'), 'text/plain');
+    }
+
+    public function testReadSinceATimeComparesTheModifiedTime(): void
+    {
+        $path = $this->object->getPath('modified-since.txt');
+        $this->object->write($path, new Stream('Hello'), 'text/plain');
+        touch($path, 1000);
+
+        try {
+            $this->assertSame('Hello', (string) $this->object->read($path, modifiedSince: new \DateTimeImmutable('@999')));
+
+            foreach ([1000, 1001] as $time) {
+                try {
+                    $this->object->read($path, modifiedSince: new \DateTimeImmutable('@' . $time));
+                    $this->fail('A file not modified after the time must not be read');
+                } catch (NotModifiedException) {
+                    $this->assertFileExists($path);
+                }
+            }
+        } finally {
+            $this->object->delete($path);
+        }
+    }
+
+    public function testReadCannotBeConditionalOnBothAnEtagAndATime(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        $this->object->read($this->object->getPath('missing.txt'), etag: 'abc', modifiedSince: new \DateTimeImmutable());
     }
 
     public function testReadWithEtagRefusesAReplacedFile(): void

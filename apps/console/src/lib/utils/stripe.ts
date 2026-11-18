@@ -32,7 +32,7 @@ export function getStripeInstance(
 /**
  * Get Stripe appearance configuration based on theme
  *
- * @param theme - Current theme ('light' | 'dark' | 'system')
+ * @param theme - Current theme ('light' | 'dark')
  * @returns Stripe appearance configuration
  */
 export function getStripeAppearance(theme: string | undefined): {
@@ -47,11 +47,7 @@ export function getStripeAppearance(theme: string | undefined): {
     borderRadius?: string
   }
 } {
-  const isDark =
-    theme === 'dark' ||
-    (theme === 'system' &&
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-color-scheme: dark)').matches)
+  const isDark = !theme || theme === 'dark' || theme === 'system'
 
   if (isDark) {
     return {

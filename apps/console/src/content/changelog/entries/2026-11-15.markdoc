@@ -1,0 +1,30 @@
+---
+layout: changelog
+title: PostgreSQL 18.7 and 17.12 security update rolled out to every managed database
+date: 2026-11-15
+tags: security, databases
+---
+
+On November 12, the PostgreSQL project released 18.7 and 17.12, which fix [52 security vulnerabilities](https://www.postgresql.org/support/security/). Most are rated High (CVSS 8.8), and many let a database user who can sign in run arbitrary code on the server. One more lets a client that hasn't signed in make a PostgreSQL 18 server restart.
+
+**Appwrite Cloud** has rolled the patched build out to every managed [PostgreSQL](/docs/products/databases/postgresql) database, in every region. The update is mandatory, so there is nothing to opt into:
+
+- PostgreSQL 18 databases move to 18.7, and PostgreSQL 17 databases move to 17.12.
+- It is a patch release within the same major version. Your data, extensions, connection strings, and credentials stay the same.
+- A database switches at its next restart, such as waking from idle, a failover, or a resize. The update adds no downtime of its own.
+
+To switch right away, [pause and resume](/docs/products/databases/postgresql/maintenance#pause-resume) the database, which stops it briefly. Run `SELECT version();` to see which version it is on.
+
+The PostgreSQL release also fixes index corruption from earlier versions. After your database is on the new version, run `REINDEX INDEX CONCURRENTLY` on any of these you use:
+
+- GiST indexes that use `gist_trgm_ops` from `pg_trgm`
+- B-tree indexes on `bpchar` columns declared without a length (`char(n)` is not affected)
+- GIN indexes that have returned missing or unrelated rows
+
+{% arrow_link href="https://www.postgresql.org/about/news/postgresql-187-1712-1616-1520-1425-and-19-rc-2-released-3442/" %}
+Read the PostgreSQL release notes
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/databases/postgresql/maintenance" %}
+Learn how database maintenance works
+{% /arrow_link %}

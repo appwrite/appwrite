@@ -22,7 +22,7 @@ trait CompositePrimary
         }
 
         foreach ($columns as $column) {
-            if (! \preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $column)) {
+            if (! \preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/D', $column)) {
                 throw new ValidationException('Invalid column name in composite primary key: ' . $column);
             }
         }

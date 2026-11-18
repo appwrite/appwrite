@@ -479,7 +479,16 @@ class Store
             $conditions[] = 'source.createdAt < {createdBefore:String}';
         }
 
-        $latest = $this->latestSql(\implode(' AND ', $conditions));
+        // Most executions in the window were tombstoned by an earlier run, and
+        // their tombstones stay until the TTL drops them. Resolving the latest
+        // snapshot reads every column, the document included, so pick the
+        // executions still live from the id, version and deleted columns
+        // first and resolve snapshots only for those.
+        $where = \implode(' AND ', $conditions);
+        $live = 'SELECT source.id FROM ' . $this->table()
+            . " AS source WHERE {$where} GROUP BY source.id"
+            . ' HAVING argMax(source.deleted, source.version) = 0';
+        $latest = $this->latestSql("{$where} AND source.id IN ({$live})");
         $columns = \implode(', ', \array_filter(
             self::COLUMNS,
             fn (string $column) => !\in_array($column, ['expiresAt', 'deleted', 'version'], true)

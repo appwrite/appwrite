@@ -23,6 +23,16 @@ You can also configure the maximum timeout that can be set on individual Appwrit
 
 {% partial file="update-variables.md" /%}
 
+# Configure streaming responses {% #streaming %}
+
+Streaming is enabled by default, so a function that [returns a stream](/docs/products/functions/develop#streaming-responses) sends each chunk to the client through its domain as soon as the chunk is ready. To send each response only once it is complete, set `_APP_COMPUTE_STREAMING` to `disabled`. The setting applies to both functions and sites.
+
+```bash
+_APP_COMPUTE_STREAMING=disabled
+```
+
+{% partial file="update-variables.md" /%}
+
 # SSL certificates for function domains {% #ssl-certificates %}
 
 Before setting up SSL certificates, ensure you have configured your DNS settings properly. You'll need to create a CNAME record that points your wildcard function domain (e.g. `*.functions.appwrite.myapp.com`) to your Appwrite domain.
