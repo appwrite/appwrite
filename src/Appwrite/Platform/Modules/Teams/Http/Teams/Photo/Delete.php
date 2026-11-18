@@ -25,6 +25,7 @@ class Delete extends Action
 {
     use HTTP;
 
+    private const RESOLUTION = 1024;
 
     public static function getName(): string
     {
