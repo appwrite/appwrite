@@ -168,6 +168,7 @@ export const heSitesDictionary: Record<string, string> = {
   Retry: 'ניסיון חוזר',
   Logs: 'לוגים',
   Records: 'רשומות',
+  'Update domain': 'עדכון דומיין',
   'Domain has been deleted': 'הדומיין נמחק',
   'Loading domains...': 'טוען דומיינים...',
   Verified: 'מאומת',

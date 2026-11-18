@@ -83,6 +83,7 @@ export const jaSitesDictionary: Record<string, string> = {
   'Redirect to': 'リダイレクト先',
   'Deployed from': 'デプロイ元',
   'View logs': 'ログを表示',
+  'Update domain': 'ドメインを更新',
   'Domain has been deleted': 'ドメインを削除しました',
   'Loading domains...': 'ドメインを読み込み中...',
   'Generating certificate': '証明書を発行中',
