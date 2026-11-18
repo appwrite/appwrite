@@ -644,6 +644,8 @@ test.describe('analytics property (mocked API)', () => {
     const initialStart = seriesStarts().sort().at(-1)!
     const y = box.y + box.height / 2
     await page.mouse.move(box.x + box.width * 0.3, y)
+    // The brush anchors on the hovered bucket, so wait for the hover to land.
+    await expect(chart.locator('.recharts-tooltip-wrapper')).toBeVisible()
     await page.mouse.down()
     await page.mouse.move(box.x + box.width * 0.6, y, { steps: 5 })
     await page.mouse.up()
