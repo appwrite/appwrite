@@ -1,6 +1,6 @@
 /**
  * Reviews response models, copied from `Review`, `ReviewFinding`,
- * `ReviewRepository` and `ReviewLearning` in `src/Appwrite/Utopia/Response/Model`. Delete with
+ * `ReviewRepository`, `ReviewLearning`, `ReviewAuthor` and `ReviewCategory` in `src/Appwrite/Utopia/Response/Model`. Delete with
  * `service.ts` once the generated SDK carries the `reviews` service.
  */
 
@@ -109,6 +109,11 @@ export type Review = {
    * Pull request number.
    */
   providerPullRequestId: string
+  /**
+   * VCS login of who opened the pull request. Empty for reviews queued before
+   * it was recorded.
+   */
+  providerPullRequestAuthor: string
   /**
    * Head commit of the pull request.
    */
@@ -291,4 +296,82 @@ export type ReviewLearningList = {
    * List of learnings.
    */
   learnings: ReviewLearning[]
+}
+
+/** Date range the author performance is computed over. */
+export type ReviewAuthorRange = '7d' | '30d' | '90d'
+
+/**
+ * Review Author: how one author's pull requests fared in review over a range.
+ */
+export type ReviewAuthor = {
+  /**
+   * VCS login of the pull requests' author. Empty for pull requests reviewed
+   * before authors were recorded.
+   */
+  author: string
+  /** Pull requests reviewed. */
+  pulls: number
+  /** Completed reviews of the pull requests. */
+  reviews: number
+  /** Pull requests whose latest review approved. */
+  approved: number
+  /** Pull requests approved by their first review. */
+  approvedFirst: number
+  /** Findings posted on the pull requests. */
+  findings: number
+  /** Critical findings posted. */
+  critical: number
+  /** Major findings posted. */
+  major: number
+  /** Findings fixed by a later commit. */
+  resolved: number
+  /** Findings settled in their thread or dismissed by a maintainer. */
+  dismissed: number
+  /** Average merge confidence tier of the latest reviews, S to F; empty when none has one. */
+  tier: string
+  /** Date of the latest review in ISO 8601 format. */
+  lastReviewAt: string
+}
+
+/**
+ * Review Authors List
+ */
+export type ReviewAuthorList = {
+  /**
+   * Total number of authors.
+   */
+  total: number
+  /**
+   * Authors with the most reviewed pull requests first.
+   */
+  authors: ReviewAuthor[]
+}
+
+/**
+ * Review Category: how the findings of one category landed over a range.
+ */
+export type ReviewCategory = {
+  /** Finding category, such as bug, security or performance. */
+  category: string
+  /** Findings of the category posted on pull requests. */
+  findings: number
+  /** Findings fixed by a later commit. */
+  resolved: number
+  /** Findings settled without a change: declined in their thread, or whose thread a maintainer resolved. */
+  dismissed: number
+}
+
+/**
+ * Review Categories List
+ */
+export type ReviewCategoryList = {
+  /**
+   * Total number of categories.
+   */
+  total: number
+  /**
+   * Categories with the most dismissed findings first.
+   */
+  categories: ReviewCategory[]
 }

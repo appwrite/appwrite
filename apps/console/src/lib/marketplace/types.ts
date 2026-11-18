@@ -85,16 +85,6 @@ export const MARKETPLACE_CATEGORY_ICONS: Record<
   messaging: MessageSquare,
 }
 
-/** Appwrite list APIs cap `total` at 5000. */
-export const MARKETPLACE_TOTAL_CAP = 5000
-
-/** Display form of a list total: caps at "5000+". */
-export function formatMarketplaceCount(total: number): string {
-  return total >= MARKETPLACE_TOTAL_CAP
-    ? `${MARKETPLACE_TOTAL_CAP}+`
-    : String(total)
-}
-
 export const MARKETPLACE_CATEGORY_ORDER: MarketplaceAppCategory[] = [
   'auth',
   'storage',

@@ -7,7 +7,7 @@
 //! `Utopia\Emails\Email` are always registered: they have no PHP implementation.
 //! Every other library still has one, and its class is registered only when
 //! `_APP_EXTENSION_LIBRARIES` names its package (`validators`) or, for a package ported in
-//! batches, the package and the batch (`validators,validators-scalar`), so each can be
+//! batches, the package and the batch (`validators,validators-scalar`, `validators,validators-text`), so each can be
 //! canaried and switched back to PHP with a restart, not a deploy.
 
 mod canvas;
@@ -57,6 +57,12 @@ fn startup(_kind: i32, _module: i32) -> i32 {
         validators::register()?;
         if enabled("validators-scalar") {
             validators::scalar::register()?;
+        }
+        if enabled("validators-text") {
+            validators::text::register()?;
+        }
+        if enabled("validators-network") {
+            validators::network::register()?;
         }
         Ok(())
     })

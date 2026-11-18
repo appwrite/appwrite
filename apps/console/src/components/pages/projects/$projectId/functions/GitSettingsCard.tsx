@@ -195,6 +195,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
           installationId: selectedInstallationId,
           providerRepositoryId: selectedRepositoryId,
           providerBranch,
+          providerSilentMode: false,
         }),
       )
     },

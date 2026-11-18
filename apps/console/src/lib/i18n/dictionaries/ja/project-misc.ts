@@ -3460,6 +3460,26 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'environments per project.': '個の環境をプロジェクトごとに作成できます。',
   'Delete an environment to create another.':
     '別の環境を作成するには、環境を 1 つ削除してください。',
+  // Environments for a plan without them: examples in the switcher and the upgrade they open
+  'Add an environment': '環境を追加',
+  'Test before you release': 'リリース前にテスト',
+  'Share work in progress': '作業中の内容を共有',
+  'Break things freely': '気兼ねなく試せる',
+  'Try changes before your users do': 'ユーザーより先に変更を試す',
+  'An environment is a separate copy of your project, with its own resources and users.':
+    '環境はプロジェクトの独立したコピーで、独自のリソースとユーザーを持ちます。',
+  '{plan} includes up to {limit} environments per project.':
+    '{plan} プランでは、プロジェクトごとに最大 {limit} 個の環境を作成できます。',
+  'Start from a copy of production': '本番のコピーから始める',
+  'Copy databases, functions and settings. Bringing data is optional.':
+    'データベース、Functions、設定をコピーできます。データのコピーは任意です。',
+  'Keep production untouched': '本番には影響しません',
+  'Each environment has its own data, files and users.':
+    '環境ごとにデータ、ファイル、ユーザーが分かれています。',
+  'Switch with one line': '1 行で切り替え',
+  'Same project ID and endpoint. Set the environment ID in your SDK.':
+    'プロジェクト ID とエンドポイントはそのままです。SDK に環境 ID を設定するだけです。',
+  'Upgrade to {plan}': '{plan} にアップグレード',
   // Settings of an environment: its name, its ID, and deleting it
   'Environment name has been updated': '環境名を更新しました',
   'Failed to update environment name': '環境名の更新に失敗しました',
@@ -4249,4 +4269,17 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'From the port': 'ポートから判断',
   'Upgrade with STARTTLS': 'STARTTLS でアップグレード',
   'Implicit TLS': '暗黙的 TLS',
+  'Add note': 'メモを追加',
+  'Edit note': 'メモを編集',
+  'Delete note': 'メモを削除',
+  'Show notes': 'メモを表示',
+  'Note added': 'メモを追加しました',
+  'Note updated': 'メモを更新しました',
+  'Note deleted': 'メモを削除しました',
+  'Note text': 'メモの内容',
+  'Notes mark releases, campaigns or incidents on the chart for everyone in the project.':
+    'メモはリリース、キャンペーン、障害などをグラフ上に記録し、プロジェクトの全員に表示されます。',
+  'Launched the new pricing page': '新しい料金ページを公開',
+  'The note is removed from the chart for everyone.': 'このメモは全員のグラフから削除されます。',
+  'Former member': '元メンバー',
 }

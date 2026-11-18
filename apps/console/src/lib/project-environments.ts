@@ -121,6 +121,84 @@ export function projectEnvironmentsAllowance(
 }
 
 /**
+ * The plan to point a project at when its own offers no environments: the
+ * lowest plan above it that has them and that an organization can move to on
+ * its own, so the upgrade it names is one the wizard can complete. Null when
+ * the current plan is unknown or no such plan exists, and then there is
+ * nothing to upsell.
+ */
+export function projectEnvironmentsUpgradePlan<
+  T extends {
+    order: number
+    environments?: number | null
+    selfService?: boolean
+    isAvailable?: boolean
+  },
+>(
+  currentPlan: { order: number } | null | undefined,
+  plans: Readonly<Record<string, T>>,
+): T | null {
+  if (!currentPlan) return null
+  let upgrade: T | null = null
+  for (const plan of Object.values(plans)) {
+    if (plan.order <= currentPlan.order) continue
+    if (Number(plan.environments ?? 0) <= 0) continue
+    if (plan.selfService === false || plan.isAvailable === false) continue
+    if (!upgrade || plan.order < upgrade.order) upgrade = plan
+  }
+  return upgrade
+}
+
+/**
+ * Environments a project usually keeps beside production, shown in the
+ * switcher to a project whose plan offers none. They are examples to pick, not
+ * environments: picking one opens the upgrade. A name already used by an
+ * environment the project kept is left out, under any of its aliases, so the
+ * list never offers what is already there. The names are names, as the ones the
+ * creation wizard suggests, and stay as written; the descriptions are wrapped
+ * in t() where they render.
+ */
+export interface ProjectEnvironmentExample {
+  id: 'staging' | 'preview' | 'development'
+  name: string
+  /** One short line: the switcher shows it on a single line and cuts the rest. */
+  description: string
+  aliases: readonly string[]
+}
+
+const PROJECT_ENVIRONMENT_EXAMPLES: readonly ProjectEnvironmentExample[] = [
+  {
+    id: 'staging',
+    name: 'Staging',
+    description: 'Test before you release',
+    aliases: ['staging', 'stage'],
+  },
+  {
+    id: 'preview',
+    name: 'Preview',
+    description: 'Share work in progress',
+    aliases: ['preview'],
+  },
+  {
+    id: 'development',
+    name: 'Development',
+    description: 'Break things freely',
+    aliases: ['development', 'dev'],
+  },
+]
+
+export function projectEnvironmentExamples(
+  takenNames: readonly string[],
+): ProjectEnvironmentExample[] {
+  const taken = new Set(
+    takenNames.map((name) => name.trim().toLowerCase()).filter(Boolean),
+  )
+  return PROJECT_ENVIRONMENT_EXAMPLES.filter(
+    (example) => !example.aliases.some((alias) => taken.has(alias)),
+  )
+}
+
+/**
  * The environment a project document answers as, or null for production: while
  * the Console is in an environment, the project answers as that environment.
  * The pinned Console SDK's `Models.Project` does not carry `environmentId` yet.
