@@ -109,6 +109,12 @@ class Get extends Action
             throw new Exception(Exception::AVATAR_NOT_FOUND);
         }
 
+        $contentType = match ($output) {
+            'jpg' => 'image/jpeg',
+            'webp' => 'image/webp',
+            default => 'image/png',
+        };
+
     }
 
 }
