@@ -165,7 +165,11 @@ export function DomainTargetCard({
                   placeholder="https://example.com"
                   value={redirectUrl}
                   onChange={(e) => onRedirectUrlChange(e.target.value)}
-                  className="font-mono mt-1.5"
+                  aria-invalid={!!redirectUrlError}
+                  className={cn(
+                    'font-mono mt-1.5',
+                    redirectUrlError && 'border-destructive',
+                  )}
                   disabled={disabled}
                 />
               </div>
