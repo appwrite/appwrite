@@ -95,7 +95,7 @@ export class ProductLine {
     )
     this.pads = new InstancedMesh(
       new BoxGeometry(1, 1, 1).translate(0, 0.5, 0),
-      kit.matte,
+      kit.pad,
       MAX_PRODUCTS,
     )
 
@@ -139,7 +139,10 @@ export class ProductLine {
     }
 
     PRODUCT_KINDS.forEach((kind, index) => {
-      kit.screenUniforms.uShape.value[index]!.set(...this.specs[kind].shape)
+      const spec = this.specs[kind]
+      kit.screenUniforms.uShape.value[index]!.set(...spec.shape)
+      kit.screenUniforms.uCutout.value[index]!.set(...spec.cutout)
+      kit.screenUniforms.uBezelTone.value[index] = spec.bezelTone
     })
   }
 
@@ -193,10 +196,14 @@ export class ProductLine {
       const bodies = this.bodies[kind]
       const bodyIndex = this.counts[kind]++
       bodies.setMatrixAt(bodyIndex, matrix)
-      bodies.setColorAt(
-        bodyIndex,
-        finishColor.copy(palette.finishes[getProductFinish(index)]!),
-      )
+      // Desktops come in colors; the Mac mini only in silver.
+      const finish =
+        kind === 'mini'
+          ? palette.finishes[0]!
+          : (kind === 'desktop' ? palette.desktopFinishes : palette.finishes)[
+              getProductFinish(index)
+            ]!
+      bodies.setColorAt(bodyIndex, finishColor.copy(finish))
 
       // Screen stage: the framework, then one layer per station that worked on it.
       let stage = 0
@@ -230,7 +237,7 @@ export class ProductLine {
       this.screenFx.setXYZW(
         count,
         flash + (stage === STATION_COUNT + 1 ? 0.05 : 0),
-        stage === WIPE_STAGE ? 1 : 0,
+        stage === WIPE_STAGE && this.specs[kind].flat ? 1 : 0,
         getProductFramework(index, kind),
         HUES[Math.floor(hash01(index * 5 + 11) * HUES.length)]!,
       )

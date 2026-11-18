@@ -2132,9 +2132,9 @@ return [
             ],
             [
                 'name' => '_APP_MAINTENANCE_RETENTION_RENDITION',
-                'description' => 'Maximum age (in seconds) of an in-flight video rendition (`pending`, `started`, or `ended`) or caption (`pending` or `started`) before maintenance parks it as `aborted`. The default value is 86400 seconds (1 day).',
+                'description' => 'Maximum age (in seconds) of an in-flight video rendition (`pending`, `started`, or `ended`) or caption (`pending` or `started`) before maintenance parks it as `aborted`. The default value is 43200 seconds (12 hours).',
                 'introduction' => '2.4.0',
-                'default' => '86400',
+                'default' => '43200',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

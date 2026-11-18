@@ -3,6 +3,8 @@ import {
   LinearFilter,
   LinearMipmapLinearFilter,
   SRGBColorSpace,
+  Vector2,
+  type WebGLRenderer,
 } from 'three'
 import { hash01 } from './layout'
 import type { FactoryPalette } from './palette'
@@ -64,12 +66,26 @@ export class ConsoleDisplay {
   readonly texture: CanvasTexture
   private readonly canvas: HTMLCanvasElement
   private readonly context: CanvasRenderingContext2D | null
+  /** The chart alone: all that changes between redraws, uploaded on its own. */
+  private readonly chart: CanvasTexture
+  private readonly chartContext: CanvasRenderingContext2D | null
+  /** Where the chart lands in the texture (rows count up from the bottom). */
+  private readonly chartPosition = new Vector2(
+    COVER.left,
+    CANVAS.height - COVER.bottom,
+  )
   private readonly images: Partial<Record<Theme, HTMLImageElement>> = {}
   private theme: Theme
   private background = '#1b1a1f'
   /** The capture currently painted on the canvas, if any. */
   private painted: Theme | null = null
+  /** The theme of the blank screen shown while the capture loads. */
+  private blank: Theme | null = null
   private lastDraw = Number.NEGATIVE_INFINITY
+  /** The whole screen needs uploading (first paint, theme change). */
+  private repainted = false
+  /** Only the chart changed since the last upload. */
+  private replotted = false
 
   constructor(palette: FactoryPalette) {
     this.theme = palette.dark ? 'dark' : 'light'
@@ -82,6 +98,11 @@ export class ConsoleDisplay {
     this.texture.generateMipmaps = true
     this.texture.minFilter = LinearMipmapLinearFilter
     this.texture.magFilter = LinearFilter
+    const chart = document.createElement('canvas')
+    chart.width = COVER.right - COVER.left
+    chart.height = COVER.bottom - COVER.top
+    this.chartContext = chart.getContext('2d')
+    this.chart = new CanvasTexture(chart)
     this.load(this.theme)
   }
 
@@ -104,16 +125,21 @@ export class ConsoleDisplay {
 
   update(time: number) {
     const context = this.context
-    if (!context || Math.abs(time - this.lastDraw) < STEP) return
+    const chart = this.chartContext
+    if (!context || !chart || Math.abs(time - this.lastDraw) < STEP) return
     this.lastDraw = time
     const image = this.images[this.theme]
     if (!image) {
+      // A blank screen until the capture loads, painted once per theme.
+      if (this.blank === this.theme) return
       context.fillStyle = this.theme === 'dark' ? '#19181d' : '#ffffff'
       context.fillRect(0, 0, CANVAS.width, CANVAS.height)
+      this.blank = this.theme
       this.painted = null
-      this.texture.needsUpdate = true
+      this.repainted = true
       return
     }
+    this.blank = null
     if (this.painted !== this.theme) {
       context.drawImage(image, 0, 0, CANVAS.width, CANVAS.height)
       const [r = 0, g = 0, b = 0] = context.getImageData(
@@ -124,9 +150,39 @@ export class ConsoleDisplay {
       ).data
       this.background = `rgb(${r}, ${g}, ${b})`
       this.painted = this.theme
+      this.repainted = true
     }
-    this.drawChart(context, time)
-    this.texture.needsUpdate = true
+    chart.save()
+    chart.translate(-COVER.left, -COVER.top)
+    this.drawChart(chart, time)
+    chart.restore()
+    // Keep the full canvas current for the next whole upload.
+    context.drawImage(
+      this.chart.image as HTMLCanvasElement,
+      COVER.left,
+      COVER.top,
+    )
+    this.replotted = true
+  }
+
+  /**
+   * Sends this frame's changes to the GPU: the whole screen after a repaint,
+   * otherwise just the chart's rectangle (a tenth of the pixels).
+   */
+  upload(renderer: WebGLRenderer) {
+    if (this.repainted) {
+      this.texture.needsUpdate = true
+      this.repainted = false
+      this.replotted = false
+    } else if (this.replotted) {
+      renderer.copyTextureToTexture(
+        this.chart,
+        this.texture,
+        null,
+        this.chartPosition,
+      )
+      this.replotted = false
+    }
   }
 
   /** Replots the bandwidth chart, scrolling left as new samples arrive. */
@@ -203,5 +259,6 @@ export class ConsoleDisplay {
 
   dispose() {
     this.texture.dispose()
+    this.chart.dispose()
   }
 }
