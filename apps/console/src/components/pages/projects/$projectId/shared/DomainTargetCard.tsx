@@ -78,14 +78,23 @@ export function DomainTargetCard({
   )
 
   return (
-    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-      <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">
-          {t('Target')}
-        </h3>
-      </div>
-      <div className="border-t border-border" />
-      <div className="px-6 py-4 space-y-4">
+    <div
+      className={cn(
+        !ruleType &&
+          'rounded-xl border border-border bg-card/50 overflow-hidden',
+      )}
+    >
+      {!ruleType && (
+        <>
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {t('Target')}
+            </h3>
+          </div>
+          <div className="border-t border-border" />
+        </>
+      )}
+      <div className={cn('space-y-4', !ruleType && 'px-6 py-4')}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <button
             type="button"
