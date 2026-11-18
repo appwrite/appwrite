@@ -623,18 +623,28 @@ test.describe('analytics property (mocked API)', () => {
   })
 
   test('zooms on a drag without adding a note', async ({ page }) => {
-    await mockAppwriteApi(page)
+    const mock = await mockAppwriteApi(page)
     await openProperty(page)
 
     const chart = page.getByLabel('Drag on the chart to select a date range')
     const box = await chart.boundingBox({ timeout: 30_000 })
     if (!box) throw new Error('Chart has no box')
+    const seriesStarts = () =>
+      mock.metrics
+        .filter((url) => url.searchParams.get('interval'))
+        .map((url) => url.searchParams.get('startAt') ?? '')
+    await expect.poll(() => seriesStarts().length).toBeGreaterThan(0)
+    const initialStart = seriesStarts().sort().at(-1)!
     const y = box.y + box.height / 2
     await page.mouse.move(box.x + box.width * 0.3, y)
     await page.mouse.down()
     await page.mouse.move(box.x + box.width * 0.6, y, { steps: 5 })
     await page.mouse.up()
 
+    // The zoomed range starts after the initial one, so the brush committed.
+    await expect
+      .poll(() => seriesStarts().some((start) => start > initialStart))
+      .toBe(true)
     await expect(page.getByRole('dialog')).toHaveCount(0)
     await chart.click({ position: { x: box.width * 0.5, y: box.height / 2 } })
     await expect(page.getByRole('dialog')).toContainText('Add note')
