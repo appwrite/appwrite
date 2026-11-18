@@ -63,8 +63,9 @@ const POINTING_METHODS: Record<string, VerificationMethod> = {
 /**
  * The check of an ALIAS record. DNS answers an ALIAS with the target's
  * addresses, so the server's A and AAAA checks are its check: verified when
- * either is, otherwise the one that asks the most of the developer, with the
- * addresses both found.
+ * either is, otherwise the one that asks the most of the developer. It keeps
+ * no found values or message: they are the addresses the domain resolves to,
+ * never the target the developer set.
  */
 function getAliasCheck(
   checks: ProxyRuleRecord[] | null,
@@ -82,7 +83,8 @@ function getAliasCheck(
     ...check,
     type: ALIAS_TYPE,
     value,
-    found: [...new Set(addresses.flatMap((c) => c.found))],
+    found: [],
+    message: '',
   }
 }
 
@@ -452,16 +454,24 @@ function getDnsBanners(
   if (!verified) {
     for (const check of pointing) {
       if (check.status !== 'mismatch') continue
+      // DNS shows no ALIAS target, only the addresses it resolves to.
+      if (check.type === ALIAS_TYPE) {
+        banners.push({
+          tone: 'error',
+          prefix: t('{type} record').replace('{type}', t('ALIAS or ANAME')),
+          text: t(
+            'Your domain points somewhere else. Set this record to {value}.',
+          ).replace('{value}', check.value),
+        })
+        continue
+      }
       const more =
         check.found.length > 1
           ? ` ${t('and {n} more').replace('{n}', String(check.found.length - 1))}`
           : ''
       banners.push({
         tone: 'error',
-        prefix: t('{type} record').replace(
-          '{type}',
-          check.type === ALIAS_TYPE ? t('ALIAS or ANAME') : check.type,
-        ),
+        prefix: t('{type} record').replace('{type}', check.type),
         text: t('It points to {found}. Change it to {value}.')
           .replace('{found}', `${check.found[0] ?? ''}${more}`)
           .replace('{value}', check.value),
