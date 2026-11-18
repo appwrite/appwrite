@@ -19,8 +19,10 @@
 //! as PHP does, so this crate does not parse domains.
 //!
 //! The lists are embedded in the crate (`data/*-domains.txt`, exported from
-//! the PHP package's `data/*-domains.php` by `data/export.php`) and parsed
-//! once, on first use. The PHP validators, providers and import task are not
+//! the PHP package's `data/*-domains.php` by `data/export.php`) with hash
+//! tables of their lines built at compile time (`build.rs`), so a lookup
+//! allocates nothing and both live in the library's read-only pages, shared by
+//! every process. The PHP validators, providers and import task are not
 //! ported: `Email` is.
 
 #![warn(missing_docs)]

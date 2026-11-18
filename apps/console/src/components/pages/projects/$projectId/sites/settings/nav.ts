@@ -21,6 +21,8 @@ export const SITE_SETTINGS_NAV: ResourceSettingsNavItem[] = [
       'disabled',
       'status',
       'toggle',
+      'analytics',
+      'tracker',
       'delete',
       'remove',
       'trash',

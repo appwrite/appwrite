@@ -4,6 +4,7 @@
 //! native method takes and rejects arguments exactly as the PHP method it replaces.
 
 use std::ffi::{CStr, CString, c_char, c_void};
+use std::sync::OnceLock;
 use std::sync::atomic::{AtomicU32, Ordering};
 
 use ext_php_rs::args::ArgInfo;
@@ -31,6 +32,14 @@ pub const MAY_BE_STRING: u32 = 1 << 6;
 pub const MAY_BE_ARRAY: u32 = 1 << 7;
 /// `MAY_BE_ANY`: every type bit; clearing them leaves an argument untyped.
 pub const MAY_BE_ANY: u32 = 0x3fe;
+/// `MAY_BE_NULL`.
+pub const MAY_BE_NULL: u32 = 1 << 1;
+/// `MAY_BE_FALSE`.
+pub const MAY_BE_FALSE: u32 = 1 << 2;
+/// `MAY_BE_STATIC`: a `static` return type.
+pub const MAY_BE_STATIC: u32 = 1 << 15;
+/// `_ZEND_TYPE_NAME_BIT`: a type naming a class (its name in the type's pointer).
+const TYPE_NAME_BIT: u32 = 1 << 24;
 
 unsafe extern "C" {
     fn zend_declare_typed_property(
@@ -71,10 +80,16 @@ unsafe extern "C" {
     fn zend_fetch_dimension_const(result: *mut zval, container: *mut zval, dim: *mut zval, ty: i32);
     fn add_function(result: *mut zval, op1: *mut zval, op2: *mut zval) -> i32;
     fn zend_error(ty: i32, format: *const c_char, ...);
+    fn zend_undefined_method(ce: *const zend_class_entry, method: *const zend_string);
+    fn zend_verify_scalar_type_hint(type_mask: u32, arg: *mut zval, strict: bool, is_internal_arg: bool) -> bool;
+    fn zend_verify_return_error(function: *const zend_function, value: *const zval);
+    fn increment_function(op: *mut zval) -> i32;
 }
 
 /// `ZEND_ACC_PROMOTED`: a property declared by a constructor parameter.
 const ACC_PROMOTED: i32 = 1 << 8;
+/// `ZEND_ACC_READONLY`.
+const ACC_READONLY: i32 = 1 << 7;
 /// `_ZEND_IS_PROMOTED_BIT`: the constructor parameter that declares a property.
 pub const IS_PROMOTED: u32 = 1 << 28;
 
@@ -131,33 +146,92 @@ pub fn declare_uninitialized(class: &mut ClassEntry, property: &Property, mask: 
 }
 
 fn declare_as(class: &mut ClassEntry, property: &Property, mask: u32, default: Option<Zval>, promoted: bool) {
+    let flags = PropertyFlags::Protected.bits().try_into().expect("property flags fit an int");
+    let flags = if promoted { flags | ACC_PROMOTED } else { flags };
+    declare_typed(class, property, zend_type { ptr: std::ptr::null_mut(), type_mask: mask }, flags, default);
+}
+
+/// What a property declared with [`declare_property`] is: its visibility and modifiers.
+#[derive(Clone, Copy)]
+pub struct Declared {
+    /// `private`, rather than `protected`.
+    pub private: bool,
+    /// `readonly`.
+    pub readonly: bool,
+    /// Declared by a constructor parameter.
+    pub promoted: bool,
+}
+
+/// A property's type: a mask of scalar types (0: untyped), or the class `name` (`null` too
+/// when `nullable`).
+#[derive(Clone, Copy)]
+pub enum PropertyType {
+    Mask(u32),
+    Class { name: &'static str, nullable: bool },
+}
+
+/// Declares `property` of `class` as `declared` says, of type `ty`, with `default` (`None`:
+/// uninitialized, as a typed property without a default, or a promoted one, starts).
+pub fn declare_property(
+    class: &mut ClassEntry,
+    property: &Property,
+    ty: PropertyType,
+    declared: Declared,
+    default: Option<Zval>,
+) {
+    let visibility = if declared.private { PropertyFlags::Private } else { PropertyFlags::Protected };
+    let mut flags: i32 = visibility.bits().try_into().expect("property flags fit an int");
+    if declared.readonly {
+        flags |= ACC_READONLY;
+    }
+    if declared.promoted {
+        flags |= ACC_PROMOTED;
+    }
+    let ty = match ty {
+        PropertyType::Mask(mask) => zend_type { ptr: std::ptr::null_mut(), type_mask: mask },
+        // SAFETY: called in MINIT: the name is interned and persistent, as a type must hold it.
+        PropertyType::Class { name, nullable } => unsafe {
+            let init = ext_php_rs::ffi::zend_string_init_interned.expect("zend_string_init_interned");
+            let name = init(name.as_ptr().cast(), name.len(), true);
+            zend_type { ptr: name.cast(), type_mask: TYPE_NAME_BIT | if nullable { MAY_BE_NULL } else { 0 } }
+        },
+    };
+    declare_typed(class, property, ty, flags, default);
+}
+
+fn declare_typed(class: &mut ClassEntry, property: &Property, ty: zend_type, flags: i32, default: Option<Zval>) {
     let mut value = default.unwrap_or_else(|| {
         let mut undef = Zval::new();
         undef.u1.type_info = 0;
         undef
     });
+    // An untyped property without a default holds `null`, as PHP declares it.
+    if ty.ptr.is_null() && ty.type_mask == 0 && unsafe { value.u1.type_info } == 0 {
+        value.set_null();
+    }
     // SAFETY: called while the class is registered (MINIT): the name is interned and
-    // persistent, the engine takes the default with `ZVAL_COPY_VALUE` (scalars here), and
-    // a mask-only type needs no pointer.
+    // persistent, the engine takes the default with `ZVAL_COPY_VALUE` (scalars, `null` or the
+    // immutable empty array here), and the type's name, if any, is interned.
     let info = unsafe {
         let init = ext_php_rs::ffi::zend_string_init_interned.expect("zend_string_init_interned");
         let name = init(property.name.as_ptr().cast(), property.name.len(), true);
-        let flags: i32 = PropertyFlags::Protected.bits().try_into().expect("property flags fit an int");
-        let flags = if promoted { flags | ACC_PROMOTED } else { flags };
-        zend_declare_typed_property(
-            class,
-            name,
-            &raw mut value,
-            flags,
-            std::ptr::null_mut(),
-            zend_type { ptr: std::ptr::null_mut(), type_mask: mask },
-        )
+        zend_declare_typed_property(class, name, &raw mut value, flags, std::ptr::null_mut(), ty)
     };
     std::mem::forget(value);
     // SAFETY: the engine returns the property's info, alive for the process.
     if let Some(info) = unsafe { info.as_ref() } {
         property.offset.store(info.offset, Ordering::Release);
     }
+}
+
+/// The immutable empty array (`[]`), as a property default or constant holds it.
+pub fn empty_array() -> Zval {
+    let mut zval = Zval::new();
+    // SAFETY: the engine's empty array is immutable and lives for the process; a zval of it
+    // is not reference counted.
+    zval.value.arr = (&raw const ext_php_rs::ffi::zend_empty_array).cast_mut();
+    zval.u1.type_info = IS_ARRAY;
+    zval
 }
 
 /// `$this->property` read from `scope`, as a method of `scope` reads it: an uninitialized
@@ -600,15 +674,48 @@ pub fn string_list(items: &[&str]) -> Zval {
     }
 }
 
+/// A persistent immutable array of strings keyed by strings (`['a' => 'x', ...]`), as a
+/// constant of an internal class holds one.
+pub fn string_map(items: &[(&str, &str)]) -> Zval {
+    // SAFETY: as [`string_list`]: allocated persistently in MINIT, never freed, its keys and
+    // values interned, and flagged immutable.
+    unsafe {
+        let ht = ext_php_rs::ffi::__zend_malloc(std::mem::size_of::<HashTable>()).cast::<HashTable>();
+        _zend_hash_init(ht, u32::try_from(items.len()).unwrap_or(8), std::ptr::null_mut(), true);
+        for (key, item) in items {
+            let mut value = interned(item.as_bytes());
+            zend_hash_str_add(ht, key.as_ptr().cast(), key.len(), &raw mut value);
+            std::mem::forget(value);
+        }
+        (*ht).gc.refcount = 2;
+        (*ht).gc.u.type_info = IS_ARRAY | IMMUTABLE_ARRAY;
+        let mut zval = Zval::new();
+        zval.value.arr = ht;
+        zval.u1.type_info = IS_ARRAY;
+        zval
+    }
+}
+
 /// Declares the public constant `name` of `class` with `value` (a scalar, an interned
 /// string or a [`string_list`]) and type `mask` (0: untyped).
-pub fn declare_constant(class: &mut ClassEntry, name: &str, mut value: Zval, mask: u32) {
+pub fn declare_constant(class: &mut ClassEntry, name: &str, value: Zval, mask: u32) {
+    declare_constant_as(class, name, value, mask, ext_php_rs::flags::ConstantFlags::Public);
+}
+
+/// Declares the constant `name` of `class` with `value`, type `mask` and visibility `flags`.
+pub fn declare_constant_as(
+    class: &mut ClassEntry,
+    name: &str,
+    mut value: Zval,
+    mask: u32,
+    flags: ext_php_rs::flags::ConstantFlags,
+) {
     // SAFETY: called in MINIT, while the class is registered; the name is interned and the
     // value is not reference counted, as an internal class's constants must be.
     unsafe {
         let init = ext_php_rs::ffi::zend_string_init_interned.expect("zend_string_init_interned");
         let name = init(name.as_ptr().cast(), name.len(), true);
-        let flags: i32 = ext_php_rs::flags::ConstantFlags::Public.bits().try_into().expect("constant flags fit an int");
+        let flags: i32 = flags.bits().try_into().expect("constant flags fit an int");
         zend_declare_typed_class_constant(
             class,
             name,
@@ -673,6 +780,26 @@ pub fn dimension(container: &Zval, key: &str) -> Option<Zval> {
     if ExecutorGlobals::has_exception() { None } else { Some(result) }
 }
 
+/// PHP `$container[$index]` read for an integer `index`, as [`dimension`] reads a key.
+pub fn dimension_index(container: &Zval, index: i64) -> Option<Zval> {
+    let mut result = Zval::new();
+    let mut container = container.dereference().shallow_clone();
+    let mut dim = Zval::new();
+    dim.set_long(index);
+    // SAFETY: as in [`dimension`].
+    unsafe { zend_fetch_dimension_const(&raw mut result, &raw mut container, &raw mut dim, 0) };
+    if ExecutorGlobals::has_exception() { None } else { Some(result) }
+}
+
+/// Raises the `E_DEPRECATED` `message`, as the engine raises one.
+pub fn deprecated(message: &str) {
+    /// `E_DEPRECATED`.
+    const E_DEPRECATED: i32 = 1 << 13;
+    let message = CString::new(message.replace('\0', "")).unwrap_or_default();
+    // SAFETY: the engine formats `%s` with a NUL-terminated string.
+    unsafe { zend_error(E_DEPRECATED, c"%s".as_ptr(), message.as_ptr()) };
+}
+
 /// PHP `$a + $b`: the engine's addition, with its coercions, warnings and `TypeError`s;
 /// `None` with an exception pending.
 pub fn add(a: &Zval, b: &Zval) -> Option<Zval> {
@@ -684,25 +811,262 @@ pub fn add(a: &Zval, b: &Zval) -> Option<Zval> {
     if ExecutorGlobals::has_exception() { None } else { Some(result) }
 }
 
-/// Calls the PHP function `name` with `args`, as a function in a file without
+/// Calls the PHP function `name` with `args` (at most three), as a function in a file without
 /// `declare(strict_types=1)` calls it (an internal caller passes arguments in weak mode), so
 /// its coercions, deprecations and errors are PHP's; `None` with an exception pending.
 pub fn call(name: &str, args: &[&Zval]) -> Option<Zval> {
-    let mut function = string(name.as_bytes());
-    let mut params: Vec<Zval> = args.iter().map(|arg| arg.dereference().shallow_clone()).collect();
+    // SAFETY: the engine's function table, whose functions live for the process (the
+    // internal ones this calls) or the request.
+    let function = unsafe {
+        zend_hash_str_find_ptr_lc(ExecutorGlobals::get().function_table, name.as_ptr().cast(), name.len())
+            .cast::<zend_function>()
+    };
+    let mut params = [Zval::new(), Zval::new(), Zval::new()];
+    for (param, arg) in params.iter_mut().zip(args) {
+        *param = arg.dereference().shallow_clone();
+    }
+    let count = u32::try_from(args.len().min(3)).unwrap_or(3);
     let mut retval = Zval::new();
-    let count = u32::try_from(params.len()).unwrap_or(u32::MAX);
-    // SAFETY: the name and the arguments are live zvals laid out contiguously; the engine
-    // writes the result into `retval`, which the returned `Zval` owns.
-    let result = unsafe {
-        ext_php_rs::ffi::_call_user_function_impl(
+    if function.is_null() {
+        // Not defined (a disabled function): the engine raises PHP's error for the name.
+        let mut function = string(name.as_bytes());
+        // SAFETY: the name and the arguments are live zvals laid out contiguously; the engine
+        // writes the result into `retval`, which the returned `Zval` owns.
+        let result = unsafe {
+            ext_php_rs::ffi::_call_user_function_impl(
+                std::ptr::null_mut(),
+                &raw mut function,
+                &raw mut retval,
+                count,
+                params.as_mut_ptr(),
+                std::ptr::null_mut(),
+            )
+        };
+        return if result < 0 || ExecutorGlobals::has_exception() { None } else { Some(retval) };
+    }
+    // SAFETY: a function of the table, called as `call_user_function()` would call it once
+    // resolved; the arguments are live zvals laid out contiguously.
+    unsafe {
+        ext_php_rs::ffi::zend_call_known_function(
+            function,
             std::ptr::null_mut(),
-            &raw mut function,
+            std::ptr::null_mut(),
             &raw mut retval,
             count,
-            params.as_mut_ptr(),
+            params.as_mut_ptr().cast(),
             std::ptr::null_mut(),
-        )
+        );
+    }
+    if ExecutorGlobals::has_exception() { None } else { Some(retval) }
+}
+
+/// Throws an `Error` with `message`, as the engine throws one.
+pub fn error(message: &str) {
+    let _ = throw(ce::error(), message);
+}
+
+/// A method the extension calls on PHP objects, its name and lowercase key interned in MINIT
+/// ([`Callee::intern`]) so a call neither allocates nor lowercases them.
+pub struct Callee {
+    name: &'static str,
+    strings: OnceLock<CalleeStrings>,
+}
+
+/// The interned name and lowercase key of a [`Callee`].
+struct CalleeStrings {
+    name: *mut zend_string,
+    key: *mut zend_string,
+}
+
+// SAFETY: persistent interned strings, created once in MINIT and never freed or changed.
+unsafe impl Send for CalleeStrings {}
+// SAFETY: as above.
+unsafe impl Sync for CalleeStrings {}
+
+impl Callee {
+    pub const fn new(name: &'static str) -> Self {
+        Self { name, strings: OnceLock::new() }
+    }
+
+    /// Interns the name and its key; called in MINIT, before any call.
+    pub fn intern(&self) {
+        self.strings.get_or_init(|| CalleeStrings {
+            name: interned(self.name.as_bytes()).value_str(),
+            key: interned(self.name.to_ascii_lowercase().as_bytes()).value_str(),
+        });
+    }
+}
+
+/// The string an [`interned`] zval holds.
+trait InternedValue {
+    fn value_str(self) -> *mut zend_string;
+}
+
+impl InternedValue for Zval {
+    fn value_str(self) -> *mut zend_string {
+        // SAFETY: an interned string zval: nothing counts references to the string.
+        let string = unsafe { self.value.str_ };
+        std::mem::forget(self);
+        string
+    }
+}
+
+/// PHP `$object->name(...$args)` from the executing method's class: the object's own method
+/// (a subclass's override, `__call()`), its visibility checked against that class, and
+/// PHP's `Error` for a value that is not an object or a method that does not exist; `None`
+/// with an exception pending. At most two arguments.
+pub fn call_method(object: &Zval, method: &Callee, args: &[&Zval]) -> Option<Zval> {
+    let object = object.dereference();
+    let Some(target) = object.object() else {
+        error(&format!("Call to a member function {}() on {}", method.name, value_name(object)));
+        return None;
     };
-    if result < 0 || ExecutorGlobals::has_exception() { None } else { Some(retval) }
+    let strings = method.strings.get().expect("method names are interned in MINIT");
+    let mut key = Zval::new();
+    key.value.str_ = strings.key;
+    key.u1.type_info = IS_STRING;
+    let mut target = std::ptr::from_ref(target).cast_mut().cast::<zend_object>();
+    // SAFETY: a live object and its own handlers; `get_method` resolves the method as the
+    // `INIT_METHOD_CALL` opcode does (from the executing scope, which is this method's class,
+    // with the lowercase key the opcode carries), and the call adds what references it needs
+    // to the arguments.
+    unsafe {
+        let get_method = (*(*target).handlers).get_method.expect("get_method");
+        let function = get_method(&raw mut target, strings.name, &raw const key);
+        if function.is_null() {
+            if !ExecutorGlobals::has_exception() {
+                zend_undefined_method((*target).ce, strings.name);
+            }
+            return None;
+        }
+        let mut params = [Zval::new(), Zval::new()];
+        for (param, arg) in params.iter_mut().zip(args) {
+            *param = arg.dereference().shallow_clone();
+        }
+        let mut retval = Zval::new();
+        ext_php_rs::ffi::zend_call_known_function(
+            function,
+            target,
+            (*target).ce,
+            &raw mut retval,
+            u32::try_from(args.len().min(2)).unwrap_or(2),
+            params.as_mut_ptr().cast(),
+            std::ptr::null_mut(),
+        );
+        if ExecutorGlobals::has_exception() { None } else { Some(retval) }
+    }
+}
+
+/// `ZEND_ACC_STRICT_TYPES`: a function from a file declaring `strict_types=1`.
+const ACC_STRICT_TYPES: u32 = 1 << 31;
+
+/// Whether the code that called the method declares `strict_types=1` (an internal caller,
+/// such as reflection, does not): what decides how PHP coerces its arguments.
+pub fn caller_strict(ex: &ExecuteData) -> bool {
+    // SAFETY: the frames and functions are the engine's, alive during the call.
+    unsafe {
+        let Some(prev) = ex.prev_execute_data.as_ref() else { return false };
+        let Some(func) = prev.func.as_ref() else { return false };
+        func.type_ & 1 == 0 && func.common.fn_flags & ACC_STRICT_TYPES != 0
+    }
+}
+
+/// Argument `num` of the method coerced to the scalar types `mask` as a userland parameter
+/// of that type takes it (`null` refused unless `mask` allows it), or the `TypeError` naming
+/// it `expected`; `None` with the exception pending.
+pub fn scalar_arg(ex: &ExecuteData, num: u32, arg: &Zval, mask: u32, expected: &str) -> Option<Zval> {
+    let mut value = arg.dereference().shallow_clone();
+    if type_matches(&value, mask) {
+        return Some(value);
+    }
+    // SAFETY: a live zval, which the engine coerces in place.
+    if unsafe { zend_verify_scalar_type_hint(mask, &raw mut value, caller_strict(ex), false) } {
+        return (!ExecutorGlobals::has_exception()).then_some(value);
+    }
+    if !ExecutorGlobals::has_exception() {
+        type_error(ex, num, expected, arg.dereference());
+    }
+    None
+}
+
+/// Whether `value`'s own type is one of `mask`'s (what the engine checks before coercing).
+fn type_matches(value: &Zval, mask: u32) -> bool {
+    // SAFETY: reading a live zval's type byte.
+    let ty = unsafe { value.u1.type_info } & 0xff;
+    ty < 32 && mask & (1 << ty) != 0
+}
+
+/// `value` coerced to the scalar types `mask` as a weak-mode userland parameter takes it:
+/// `Some(Some(value))` coerced, `Some(None)` refused (the caller throws its `TypeError`),
+/// `None` with an exception pending (a `__toString()` that threw).
+pub fn coerce_weak(value: &Zval, mask: u32) -> Option<Option<Zval>> {
+    let mut value = value.dereference().shallow_clone();
+    if type_matches(&value, mask) {
+        return Some(Some(value));
+    }
+    // SAFETY: a live zval, which the engine coerces in place.
+    let coerced = unsafe { zend_verify_scalar_type_hint(mask, &raw mut value, false, false) };
+    if ExecutorGlobals::has_exception() {
+        return None;
+    }
+    Some(coerced.then_some(value))
+}
+
+/// The method's return `value` checked against its scalar return types `mask` as a userland
+/// function declared in a file with (`strict`) or without `strict_types=1` checks it: coerced
+/// in weak mode, or the engine's `TypeError` ("X::f(): Return value must be of type string,
+/// null returned"); `None` with the exception pending.
+pub fn verify_return(ex: &ExecuteData, value: Zval, mask: u32, strict: bool) -> Option<Zval> {
+    let mut value = value.dereference().shallow_clone();
+    if type_matches(&value, mask) {
+        return Some(value);
+    }
+    // SAFETY: a live zval, which the engine coerces in place; the function is the method's own.
+    unsafe {
+        if zend_verify_scalar_type_hint(mask, &raw mut value, strict, false) {
+            return (!ExecutorGlobals::has_exception()).then_some(value);
+        }
+        if !ExecutorGlobals::has_exception() {
+            zend_verify_return_error(ex.func, &raw const value);
+        }
+    }
+    None
+}
+
+/// PHP truthiness of a condition (`if ($valid)`), with the warning PHP 8.5 raises for NAN.
+pub fn condition(value: &Zval) -> bool {
+    if value.dereference().double().is_some_and(f64::is_nan) {
+        warning("unexpected NAN value was coerced to bool");
+    }
+    truthy(value)
+}
+
+/// PHP `++$value`: the engine's increment, with its deprecations; `None` with an exception
+/// pending.
+pub fn increment(value: &Zval) -> Option<Zval> {
+    let mut value = value.dereference().shallow_clone();
+    // SAFETY: a live zval, which the engine increments in place.
+    unsafe { increment_function(&raw mut value) };
+    if ExecutorGlobals::has_exception() { None } else { Some(value) }
+}
+
+/// The values `foreach ($list as $key => $value)` visits from the executing method's class:
+/// an array's, a `Traversable`'s, an object's properties visible from that class
+/// (`get_object_vars()`), and nothing (with PHP's warning) for anything else; `None` with an
+/// exception pending. The array holds its keys as `foreach` sees them.
+pub fn foreach_items(list: &Zval) -> Option<Zval> {
+    let list = list.dereference();
+    if list.is_array() {
+        return Some(list.shallow_clone());
+    }
+    if list.object().is_some() {
+        if truthy(&call("is_iterable", &[list])?) {
+            let mut preserve = Zval::new();
+            preserve.set_bool(true);
+            return call("iterator_to_array", &[list, &preserve]);
+        }
+        return call("get_object_vars", &[list]);
+    }
+    warning(&format!("foreach() argument must be of type array|object, {} given", value_name(list)));
+    Some(empty_array())
 }
