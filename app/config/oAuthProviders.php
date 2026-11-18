@@ -500,6 +500,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Twitch',
     ],
+    'vercel' => [
+        'name' => 'Vercel',
+        'developers' => 'https://vercel.com/docs/sign-in-with-vercel',
+        'icon' => 'icon-vercel',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Vercel',
+    ],
     'vipps' => [
         'name' => 'Vipps MobilePay',
         'developers' => 'https://developer.vippsmobilepay.com/docs/APIs/login-api/',

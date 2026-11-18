@@ -158,6 +158,7 @@ const COVER_BUILT_IN_ICON_CATEGORY_ICONS: Record<string, string[]> = {
     'fusionauth.svg',
     'oidc.svg',
     'okta.svg',
+    'workos.svg',
     'discord-simple.svg',
     'discord.svg',
     'notion.svg',

@@ -331,6 +331,7 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_CLOUDFLARE = 'oAuth2Cloudflare';
     public const MODEL_OAUTH2_HUGGINGFACE = 'oAuth2HuggingFace';
     public const MODEL_OAUTH2_REDDIT = 'oAuth2Reddit';
+    public const MODEL_OAUTH2_VERCEL = 'oAuth2Vercel';
     public const MODEL_OAUTH2_WORKOS = 'oAuth2WorkOS';
     public const MODEL_OAUTH2_ZOOM = 'oAuth2Zoom';
     public const MODEL_OAUTH2_ZOHO = 'oAuth2Zoho';
@@ -395,6 +396,8 @@ class Response extends SwooleResponse
     public const MODEL_REVIEW_EVENT_LIST = 'reviewEventList';
     public const MODEL_REVIEW_REPOSITORY = 'reviewRepository';
     public const MODEL_REVIEW_REPOSITORY_LIST = 'reviewRepositoryList';
+    public const MODEL_REVIEW_LEARNING = 'reviewLearning';
+    public const MODEL_REVIEW_LEARNING_LIST = 'reviewLearningList';
 
     // Console
     public const MODEL_CONSOLE_VARIABLES = 'consoleVariables';

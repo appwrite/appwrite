@@ -3594,6 +3594,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Vercel": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Webflow": [
             "clientId",
             "clientSecret",
@@ -3823,6 +3828,9 @@
             "providerRepositoryId",
             "strength"
         ],
+        "reviews.deleteLearning": [
+            "learningId"
+        ],
         "reviews.deleteRepository": [
             "repositoryId"
         ],
@@ -3835,6 +3843,10 @@
         ],
         "reviews.listEvents": [
             "reviewId",
+            "queries",
+            "total"
+        ],
+        "reviews.listLearnings": [
             "queries",
             "total"
         ],
@@ -7973,6 +7985,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Vercel": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Webflow": [
             "clientId",
             "clientSecret",
@@ -8172,6 +8189,9 @@
             "providerRepositoryId",
             "strength"
         ],
+        "reviews.deleteLearning": [
+            "learningId"
+        ],
         "reviews.deleteRepository": [
             "repositoryId"
         ],
@@ -8184,6 +8204,10 @@
         ],
         "reviews.listEvents": [
             "reviewId",
+            "queries",
+            "total"
+        ],
+        "reviews.listLearnings": [
             "queries",
             "total"
         ],

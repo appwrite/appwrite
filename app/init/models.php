@@ -162,6 +162,7 @@ use Appwrite\Utopia\Response\Model\OAuth2Stripe;
 use Appwrite\Utopia\Response\Model\OAuth2TikTok;
 use Appwrite\Utopia\Response\Model\OAuth2Tradeshift;
 use Appwrite\Utopia\Response\Model\OAuth2Twitch;
+use Appwrite\Utopia\Response\Model\OAuth2Vercel;
 use Appwrite\Utopia\Response\Model\OAuth2Vipps;
 use Appwrite\Utopia\Response\Model\OAuth2Webflow;
 use Appwrite\Utopia\Response\Model\OAuth2WordPress;
@@ -218,6 +219,7 @@ use Appwrite\Utopia\Response\Model\ResourceToken;
 use Appwrite\Utopia\Response\Model\Review;
 use Appwrite\Utopia\Response\Model\ReviewEvent;
 use Appwrite\Utopia\Response\Model\ReviewFinding;
+use Appwrite\Utopia\Response\Model\ReviewLearning;
 use Appwrite\Utopia\Response\Model\ReviewRepository;
 use Appwrite\Utopia\Response\Model\Row;
 use Appwrite\Utopia\Response\Model\Rule;
@@ -344,6 +346,7 @@ Response::setModel(new BaseList('Reports List', Response::MODEL_REPORT_LIST, 're
 Response::setModel(new BaseList('Reviews List', Response::MODEL_REVIEW_LIST, 'reviews', Response::MODEL_REVIEW));
 Response::setModel(new BaseList('Review Events List', Response::MODEL_REVIEW_EVENT_LIST, 'events', Response::MODEL_REVIEW_EVENT));
 Response::setModel(new BaseList('Review Repositories List', Response::MODEL_REVIEW_REPOSITORY_LIST, 'repositories', Response::MODEL_REVIEW_REPOSITORY));
+Response::setModel(new BaseList('Review Learnings List', Response::MODEL_REVIEW_LEARNING_LIST, 'learnings', Response::MODEL_REVIEW_LEARNING));
 
 // Entities
 Response::setModel(new Database());
@@ -487,6 +490,7 @@ Response::setModel(new OAuth2Yahoo());
 Response::setModel(new OAuth2Cloudflare());
 Response::setModel(new OAuth2HuggingFace());
 Response::setModel(new OAuth2Reddit());
+Response::setModel(new OAuth2Vercel());
 Response::setModel(new OAuth2WorkOS());
 Response::setModel(new OAuth2Linkedin());
 Response::setModel(new OAuth2Disqus());
@@ -596,6 +600,7 @@ Response::setModel(new Report());
 Response::setModel(new Review());
 Response::setModel(new ReviewEvent());
 Response::setModel(new ReviewFinding());
+Response::setModel(new ReviewLearning());
 Response::setModel(new ReviewRepository());
 
 // Videos

@@ -65,6 +65,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TikTok\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Tradeshift\Update as UpdateOAuth2Tradeshift;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TradeshiftSandbox\Update as UpdateOAuth2TradeshiftSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Twitch\Update as UpdateOAuth2Twitch;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Vercel\Update as UpdateOAuth2Vercel;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Vipps\Update as UpdateOAuth2Vipps;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\VippsSandbox\Update as UpdateOAuth2VippsSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Webflow\Update as UpdateOAuth2Webflow;
@@ -294,6 +295,7 @@ class Http extends Service
         $this->addAction('updateProjectOAuth2Microsoft', UpdateOAuth2Microsoft::class);
         $this->addAction('updateProjectOAuth2Hugging Face', UpdateOAuth2HuggingFace::class);
         $this->addAction('updateProjectOAuth2Reddit', UpdateOAuth2Reddit::class);
+        $this->addAction('updateProjectOAuth2Vercel', UpdateOAuth2Vercel::class);
         $this->addAction('updateProjectOAuth2WorkOS', UpdateOAuth2WorkOS::class);
         $this->addAction('updateProjectOAuth2Resend', UpdateOAuth2Resend::class);
         $this->addAction('updateProjectOAuth2TikTok', UpdateOAuth2TikTok::class);
