@@ -1982,6 +1982,8 @@ class Nats implements Synchronous, Consumer, Bounded
         // swept, for the adapter's error callback. A tick that could not reconnect
         // leaves the connection disconnected, and command() drops it, so the reaps
         // below run on a freshly built one rather than failing on the same corpse.
+        // Not every client's tick notices a socket the server closed, though, so a
+        // reap can still be the first to find out; see reapOnLiveConnection().
         $failure = null;
 
         if ($this->commandsConnection instanceof NatsConnection && $this->commandsConnection !== $this->connection) {
@@ -1995,7 +1997,7 @@ class Nats implements Synchronous, Consumer, Bounded
 
         foreach ($this->served as $queue) {
             try {
-                $this->reap($queue, limit: self::REAP_LIMIT);
+                $this->reapOnLiveConnection($queue, $failure);
             } catch (\Throwable $error) {
                 $failure ??= $error;
             }
@@ -2004,6 +2006,35 @@ class Nats implements Synchronous, Consumer, Bounded
         if ($failure !== null) {
             throw $failure;
         }
+    }
+
+    /**
+     * Reap, and reap once more on a rebuilt commands connection if the first pass found
+     * that connection gone.
+     *
+     * utopia-php/nats up to 1.6.0 ticks a quiet connection without reading it, so it
+     * still reads as connected after the server has closed the socket under it: the
+     * tick passes, and the reap's first request is what meets the closed socket. Left
+     * at that, every queue's stranded messages wait for the next maintenance tick.
+     *
+     * Retrying is safe: every read in reap() is idempotent, a reading is only recorded
+     * once the consumer info has come back, and bury() is safe to repeat (see reap()).
+     * The lost connection is still reported, through $failure, so the adapter hears of it.
+     */
+    private function reapOnLiveConnection(Queue $queue, ?\Throwable &$failure): void
+    {
+        try {
+            $this->reap($queue, limit: self::REAP_LIMIT);
+
+            return;
+        } catch (ConnectionException|ProtocolException $error) {
+            if (!$this->lostConnection($error) || !$this->command($this->reconnectCommands(...))) {
+                throw $error;
+            }
+            $failure ??= $error;
+        }
+
+        $this->reap($queue, limit: self::REAP_LIMIT);
     }
 
     /**

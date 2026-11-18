@@ -1021,8 +1021,16 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         ];
 
         $requestedChannels = $request->getQuery('channels', []);
-        if (\is_array($requestedChannels) && \count($requestedChannels) > $limits['channels']) {
+        if (!\is_array($requestedChannels)) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'channels is not a valid array.');
+        }
+        if (\count($requestedChannels) > $limits['channels']) {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'channels must contain at most ' . $limits['channels'] . ' channels.');
+        }
+        foreach ($requestedChannels as $channel) {
+            if (!\is_string($channel)) {
+                throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'channels must contain only strings.');
+            }
         }
 
         $channels = Realtime::convertChannels($requestedChannels, $subscriberId);

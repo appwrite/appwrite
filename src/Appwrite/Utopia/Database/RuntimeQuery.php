@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Database;
 
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Query\Method;
 
@@ -53,7 +54,7 @@ class RuntimeQuery extends Query
      * Validates a select query - only select("*") is allowed in Realtime
      *
      * @param Query $query
-     * @throws \InvalidArgumentException
+     * @throws QueryException
      */
     public static function validateSelectQuery(Query $query): void
     {
@@ -62,7 +63,7 @@ class RuntimeQuery extends Query
         }
 
         if (!self::isSelectAll($query)) {
-            throw new \InvalidArgumentException(
+            throw new QueryException(
                 'Only select("*") is allowed in Realtime queries. select("*") means "listen to all events".'
             );
         }
