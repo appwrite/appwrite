@@ -110,6 +110,15 @@ class Update extends Action
 
         $file = $request->getFiles('file');
 
+        // GraphQL multipart spec adds files with index keys
+        if (empty($file)) {
+            $file = $request->getFiles(0);
+        }
+
+        if (empty($file)) {
+            throw new Exception(Exception::STORAGE_FILE_EMPTY);
+        }
+
 
         $response->dynamic($updated, Response::MODEL_TEAM);
     }
