@@ -10,7 +10,7 @@ Appwrite Sites and Functions connected to a Git repository now have a **Git auto
 
 All three switches are on by default. Turn off **Deploy on push** to keep the repository connected and deploy branches yourself. Turn off **Post build summaries** to keep pull requests free of comments while commit statuses keep working. Through the API, set `providerDeployments`, `providerComments`, and `providerStatuses` when you create or update a site or function. Silent mode keeps working as before.
 
-[Git automation](/docs/products/sites/deploy-from-git#git-automation) is available on Appwrite Cloud, and comes to self-hosted Appwrite in the next release.
+[Git automation](/docs/products/sites/deploy-from-git#git-automation) is available on Appwrite Cloud, and comes to self-hosted Appwrite soon.
 
 {% arrow_link href="/blog/post/announcing-git-automation" %}
 Read the announcement

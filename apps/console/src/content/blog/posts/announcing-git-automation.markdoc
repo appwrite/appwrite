@@ -139,7 +139,7 @@ The defaults suit most projects. These are the setups where changing them pays o
 
 To control *which* pushes deploy rather than *whether* they do, use [build triggers](/docs/products/sites/deploy-from-git#build-triggers) with branch and path filters. The two work together: build triggers filter the pushes, and Git automation decides what Appwrite does with the ones that match.
 
-Git automation is available on Appwrite Cloud today, and comes to self-hosted Appwrite in the next release.
+Git automation is available on Appwrite Cloud today, and comes to self-hosted Appwrite soon.
 
 # Getting started with Git automation
 
