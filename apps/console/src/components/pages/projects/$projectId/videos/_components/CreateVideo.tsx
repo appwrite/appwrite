@@ -12,14 +12,17 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useVideoCreateSourcePref } from '@/hooks/use-video-create-source-pref'
 import { sdk } from '@/lib/appwrite/sdk'
 import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
-import { canCreateBucket } from '@/lib/console-access-checks'
 import {
+  canCreateBucket,
+  canManageVideoProfiles,
+} from '@/lib/console-access-checks'
+import {
+  bucketsQueryOptions,
   Dependencies,
   isVideoRenditionActive,
   useOrganizationPlan,
   useOrganizationScopes,
   useProject,
-  useProjectBuckets,
   useVideoCodecs,
   useVideoProfiles,
   videoProfileSupportsOutput,
@@ -63,6 +66,7 @@ import {
   ProfilePicker,
   sortProfilesByPixels,
 } from './RenditionOptions'
+import { CreateProfile } from './CreateProfile'
 
 interface CreateVideoProps {
   open: boolean
@@ -171,6 +175,7 @@ function CreateVideoWizard({
   const [meta, setMeta] = useState<CreateVideoSourceMeta | null>(null)
   const [run, setRun] = useState<RunState | null>(null)
   const [preparingFile, setPreparingFile] = useState(false)
+  const [createProfilesOpen, setCreateProfilesOpen] = useState(false)
   const detachedRef = useRef(false)
   const finishOnceRef = useRef(false)
 
@@ -189,11 +194,15 @@ function CreateVideoWizard({
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const { plan } = useOrganizationPlan(project?.teamId)
-  const {
-    buckets,
-    total: bucketsTotal,
-    isLoading: bucketsLoading,
-  } = useProjectBuckets(projectId, 0, 100)
+  // Buckets are often created elsewhere (Storage, another tab) while choosing
+  // a destination, so the list refreshes on open and when the tab regains focus.
+  const { data: bucketsData, isLoading: bucketsLoading } = useQuery({
+    ...bucketsQueryOptions(projectId, 0, 100),
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: 'always',
+  })
+  const buckets = useMemo(() => bucketsData?.buckets ?? [], [bucketsData])
+  const bucketsTotal = bucketsData?.total ?? 0
   const { data: profilesData, isLoading: profilesLoading } =
     useVideoProfiles(projectId)
   const { data: codecs } = useVideoCodecs(projectId)
@@ -366,7 +375,9 @@ function CreateVideoWizard({
     selectedProfiles.has(p.$id),
   )
   const uploadIssue =
-    tab === 'upload' && uploadFile ? getBucketFileIssue(bucket, uploadFile) : null
+    tab === 'upload' && uploadFile
+      ? getBucketFileIssue(bucket, uploadFile)
+      : null
   const demoIssue =
     tab === 'demo' && demo && demoVariant
       ? getBucketFileIssue(bucket, {
@@ -415,9 +426,7 @@ function CreateVideoWizard({
       : undefined
     if (result.failedSteps.length > 0) {
       toast.warning(t('Video created with issues'), {
-        description: t(
-          'Open the video to retry the steps that failed.',
-        ),
+        description: t('Open the video to retry the steps that failed.'),
         action,
       })
       return
@@ -468,7 +477,10 @@ function CreateVideoWizard({
       name: name.trim() || defaultName,
       options,
       onStep: (id, state) =>
-        update((prev) => ({ ...prev, states: { ...prev.states, [id]: state } })),
+        update((prev) => ({
+          ...prev,
+          states: { ...prev.states, [id]: state },
+        })),
       onVideo: (video) => update((prev) => ({ ...prev, video })),
     })
       .then((result) => {
@@ -516,7 +528,11 @@ function CreateVideoWizard({
   useEffect(() => {
     if (run?.phase !== 'encoding' || !run.video || finishOnceRef.current) return
     if (liveRenditions.length < run.expectedRenditions) return
-    if (liveRenditions.some((rendition) => isVideoRenditionActive(rendition.status))) {
+    if (
+      liveRenditions.some((rendition) =>
+        isVideoRenditionActive(rendition.status),
+      )
+    ) {
       return
     }
     finishOnceRef.current = true
@@ -666,6 +682,17 @@ function CreateVideoWizard({
           }}
           source={sourceSize}
           openManageInNewTab
+          onCreateProfiles={
+            canManageVideoProfiles(access, features)
+              ? () => setCreateProfilesOpen(true)
+              : undefined
+          }
+        />
+        <CreateProfile
+          open={createProfilesOpen}
+          onOpenChange={setCreateProfilesOpen}
+          projectId={projectId}
+          aboveWizard
         />
         <p className="text-[12px] text-muted-foreground">
           {t(
@@ -686,9 +713,7 @@ function CreateVideoWizard({
       maxWidth="max-w-6xl"
       useSidebar={!run}
       skipInitialFieldFocus
-      contentClassName={
-        run ? 'mx-auto w-full min-w-0 max-w-xl' : 'min-w-0'
-      }
+      contentClassName={run ? 'mx-auto w-full min-w-0 max-w-xl' : 'min-w-0'}
       sidebar={
         <CreateVideoSummary
           source={source}

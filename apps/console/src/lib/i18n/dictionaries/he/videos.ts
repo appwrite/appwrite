@@ -244,6 +244,7 @@ export const heVideosDictionary: Record<string, string> = {
   'Renditions are still encoding. Playback starts when one is ready.':
     'גרסאות הקידוד עדיין בעיבוד. הניגון יתחיל כשאחת מהן תהיה מוכנה.',
   'No renditions are ready to play.': 'אין גרסאות קידוד מוכנות לניגון.',
+  'Create a rendition to play this video.': 'צרו רינדור כדי לנגן את הסרטון.',
   'This video has no source to play.': 'לסרטון הזה אין מקור לניגון.',
   'Auto quality': 'איכות אוטומטית',
   'Subtitles off': 'ללא כתוביות',
@@ -1175,6 +1176,12 @@ export const heVideosDictionary: Record<string, string> = {
   'Captions are listed in the manifest, so viewers can pick a language in any player.':
     'הכתוביות מופיעות במניפסט, כך שהצופים יכולים לבחור שפה בכל נגן.',
   // Codecs and timeline status (Stream v8)
+  'No profiles yet. Add a few presets to encode this video.':
+    'עדיין אין פרופילים. הוסיפו כמה תבניות כדי לקודד את הסרטון.',
+  'Create profiles': 'יצירת פרופילים',
+  'Choose presets to add rendition qualities.':
+    'הוסיפו איכויות רינדור באמצעות תבניות מוכנות.',
+  'profiles created': 'פרופילים נוצרו',
   'Choose a preset to add a rendition quality.':
     'בחרו תבנית מוכנה כדי להוסיף איכות קידוד.',
   'Profiles define the codec, resolution, and bitrate of each rendition. A profile keeps the codec it was created with.':

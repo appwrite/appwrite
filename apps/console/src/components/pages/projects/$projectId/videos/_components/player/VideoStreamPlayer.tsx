@@ -8,7 +8,7 @@ import {
   type CSSProperties,
 } from 'react'
 import { createPortal } from 'react-dom'
-import { Pause, Play, SquareArrowOutUpRight } from 'lucide-react'
+import { Lock, Pause, Play, SquareArrowOutUpRight } from 'lucide-react'
 import { sdk } from '@/lib/appwrite/sdk'
 import { isEmbedUnauthorizedMessage } from '@/lib/videos/embed-player-errors'
 import { applyVideoStreamAccess } from '@/lib/videos/video-stream-access'
@@ -196,8 +196,15 @@ export function VideoStreamPlayer({
   }, [inspectorContainer, video.name, t])
 
   const hasStorageFile = Boolean(video.bucketId && video.fileId)
+  // Playback stays locked until at least one rendition is ready, even though
+  // the source file exists: the player only streams encoded renditions.
+  const locked =
+    readyIds.hls.length === 0 &&
+    readyIds.dash.length === 0 &&
+    readyIds.cmaf.length === 0
 
   const playerSource: PlayerSource | null = useMemo(() => {
+    if (locked) return null
     const adaptiveReady =
       (output === 'hls' && readyIds.hls.length > 0) ||
       (output === 'dash' && readyIds.dash.length > 0) ||
@@ -212,7 +219,14 @@ export function VideoStreamPlayer({
       return { url: sourceFileUrl, type: 'file' }
     }
     return null
-  }, [activeManifestUrl, hasStorageFile, output, readyIds, sourceFileUrl])
+  }, [
+    activeManifestUrl,
+    hasStorageFile,
+    locked,
+    output,
+    readyIds,
+    sourceFileUrl,
+  ])
 
   useEffect(() => {
     setLoadedKey(outputReadyKey)
@@ -449,8 +463,7 @@ export function VideoStreamPlayer({
     [embed, featured, viewportAspect, playerMaxHeight],
   )
 
-  const audioOnly =
-    (video.duration ?? 0) > 0 && !isVideoMetadataReady(video)
+  const audioOnly = (video.duration ?? 0) > 0 && !isVideoMetadataReady(video)
 
   const playerContainerRef = useRef<HTMLDivElement | null>(null)
   const [fullscreen, setFullscreen] = useState(false)
@@ -542,14 +555,16 @@ export function VideoStreamPlayer({
 
   let emptyPlaybackMessage: string | null = null
   if (!playerSource) {
-    if (renditions.some((rendition) => isVideoRenditionActive(rendition.status))) {
+    if (
+      renditions.some((rendition) => isVideoRenditionActive(rendition.status))
+    ) {
       emptyPlaybackMessage = t(
         'Renditions are still encoding. Playback starts when one is ready.',
       )
     } else if (renditions.length > 0) {
       emptyPlaybackMessage = t('No renditions are ready to play.')
     } else {
-      emptyPlaybackMessage = t('This video has no source to play.')
+      emptyPlaybackMessage = t('Create a rendition to play this video.')
     }
   }
 
@@ -622,35 +637,36 @@ export function VideoStreamPlayer({
     [subtitleInsetPx, subtitleSize],
   )
 
-  const playerControls = !state.fatalError ? (
-    <VideoStreamPlayerControls
-      videoRef={videoRef}
-      output={output}
-      outputOptions={outputOptions}
-      onOutputChange={changeOutput}
-      playerState={state}
-      onSelectLevel={selectLevel}
-      onSelectSubtitleTrack={selectSubtitleTrack}
-      subtitleSize={subtitleSize}
-      onSelectSubtitleSize={selectSubtitleSize}
-      onReload={() => reload()}
-      hasNewRenditions={hasNewRenditions}
-      isLoading={streamLoading}
-      scrubCues={timelineCues}
-      fullscreen={fullscreen}
-      onToggleFullscreen={toggleFullscreen}
-      onOpenInspector={openInspector}
-      menuOnlyAdvanced={menuOnlyAdvanced}
-      portalContainer={
-        embed || fullscreen
-          ? (playerContainerRef.current ?? undefined)
-          : undefined
-      }
-      className={
-        controlsVisible ? 'pointer-events-auto' : 'pointer-events-none'
-      }
-    />
-  ) : null
+  const playerControls =
+    !state.fatalError && !locked ? (
+      <VideoStreamPlayerControls
+        videoRef={videoRef}
+        output={output}
+        outputOptions={outputOptions}
+        onOutputChange={changeOutput}
+        playerState={state}
+        onSelectLevel={selectLevel}
+        onSelectSubtitleTrack={selectSubtitleTrack}
+        subtitleSize={subtitleSize}
+        onSelectSubtitleSize={selectSubtitleSize}
+        onReload={() => reload()}
+        hasNewRenditions={hasNewRenditions}
+        isLoading={streamLoading}
+        scrubCues={timelineCues}
+        fullscreen={fullscreen}
+        onToggleFullscreen={toggleFullscreen}
+        onOpenInspector={openInspector}
+        menuOnlyAdvanced={menuOnlyAdvanced}
+        portalContainer={
+          embed || fullscreen
+            ? (playerContainerRef.current ?? undefined)
+            : undefined
+        }
+        className={
+          controlsVisible ? 'pointer-events-auto' : 'pointer-events-none'
+        }
+      />
+    ) : null
 
   const showInlineInspector = featured && !embed && !inspectorContainer
 
@@ -692,7 +708,14 @@ export function VideoStreamPlayer({
   )
 
   const frameMessage = emptyPlaybackMessage ? (
-    <div className="absolute inset-0 flex items-center justify-center bg-black px-6 text-center">
+    <div
+      role="status"
+      data-player-state="locked"
+      className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black px-6 text-center"
+    >
+      <span className="flex size-11 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/80">
+        <Lock className="size-5" aria-hidden />
+      </span>
       <p className="max-w-sm text-[13px] leading-relaxed text-white/75">
         {emptyPlaybackMessage}
       </p>
@@ -733,9 +756,7 @@ export function VideoStreamPlayer({
           'min-w-0',
           embed && 'relative flex min-h-0 flex-1 flex-col dark bg-black',
           (fullscreen || overlayControls) && 'dark relative bg-black',
-          (fullscreen || overlayControls) &&
-            !controlsVisible &&
-            'cursor-none',
+          (fullscreen || overlayControls) && !controlsVisible && 'cursor-none',
         )}
       >
         <div

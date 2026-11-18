@@ -4,6 +4,7 @@ import { ArrowLeft, SlidersHorizontal } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
@@ -15,12 +16,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
+  useCreateVideoProfiles,
   useSaveVideoProfile,
   useVideoCodecs,
   useVideoProfiles,
 } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
+import {
+  WIZARD_DIALOG_CONTENT_Z,
+  WIZARD_DIALOG_OVERLAY_Z,
+} from '@/lib/wizard-portal-z'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   formatBitrate,
@@ -79,6 +85,8 @@ type CreateProfileProps = {
   projectId: string
   /** When set, the dialog updates this profile instead of creating one. */
   profile?: Models.VideoProfile | null
+  /** Stack the dialog above a fullscreen wizard. */
+  aboveWizard?: boolean
 }
 
 export function CreateProfile({
@@ -86,13 +94,18 @@ export function CreateProfile({
   onOpenChange,
   projectId,
   profile,
+  aboveWizard = false,
 }: CreateProfileProps) {
   const t = useT()
   const [form, setForm] = useState<FormState>(() => toForm(profile))
   const [mode, setMode] = useState<'preset' | 'custom'>('preset')
-  const [preset, setPreset] = useState<ProfilePreset>(DEFAULT_PROFILE_PRESET)
+  const [presets, setPresets] = useState<Set<string>>(
+    () => new Set([DEFAULT_PROFILE_PRESET.name]),
+  )
   const [codec, setCodec] = useState<string>(VideoCodec.H264)
   const saveMutation = useSaveVideoProfile(projectId)
+  const createMutation = useCreateVideoProfiles(projectId)
+  const pending = saveMutation.isPending || createMutation.isPending
   const { data: profilesData } = useVideoProfiles(projectId)
   const { data: codecs = [] } = useVideoCodecs(projectId)
   const isUpdate = !!profile
@@ -101,17 +114,34 @@ export function CreateProfile({
   const codecName = (id: string) =>
     codecs.find((item) => item.$id === id)?.name ?? id.toUpperCase()
   const showCodecPicker = !isUpdate && codecs.length > 1
+  const presetExists = (item: ProfilePreset) =>
+    existingProfiles.some(
+      (existing) =>
+        (existing.codec || VideoCodec.H264) === codec &&
+        isSameSpec(existing, item),
+    )
+  // A preset that already exists for the codec cannot be added again.
+  const chosenPresets = PROFILE_PRESETS.filter(
+    (item) => presets.has(item.name) && !presetExists(item),
+  )
+  const togglePreset = (name: string, checked: boolean) =>
+    setPresets((current) => {
+      const next = new Set(current)
+      if (checked) next.add(name)
+      else next.delete(name)
+      return next
+    })
 
   useEffect(() => {
     if (!open) return
     setForm(toForm(profile))
     setMode('preset')
-    setPreset(DEFAULT_PROFILE_PRESET)
+    setPresets(new Set([DEFAULT_PROFILE_PRESET.name]))
     setCodec(profile?.codec || VideoCodec.H264)
   }, [open, profile])
 
   const openCustom = () => {
-    setForm(toForm(preset))
+    setForm(toForm(chosenPresets[0] ?? DEFAULT_PROFILE_PRESET))
     setMode('custom')
   }
 
@@ -126,33 +156,64 @@ export function CreateProfile({
     { field: 'audioBitRate', label: t('Audio bitrate'), unit: 'kbps' },
   ]
 
-  const isValid =
-    !isCustom ||
-    (form.name.trim().length > 0 &&
-      numericFields.every(({ field }) => isInRange(field, form[field])))
+  const isValid = isCustom
+    ? form.name.trim().length > 0 &&
+      numericFields.every(({ field }) => isInRange(field, form[field]))
+    : chosenPresets.length > 0
+
+  const createPresets = () => {
+    createMutation.mutate(
+      chosenPresets.map((item) => ({
+        name: item.name,
+        width: item.width,
+        height: item.height,
+        videoBitRate: item.videoBitRate,
+        audioBitRate: item.audioBitRate,
+        codec: codec as VideoCodec,
+      })),
+      {
+        onSuccess: (failures) => {
+          const created = chosenPresets.length - failures.length
+          if (created > 0) {
+            toast.success(
+              created === 1
+                ? t('Profile created')
+                : `${created} ${t('profiles created')}`,
+            )
+          }
+          if (failures.length === 0) {
+            onOpenChange(false)
+            return
+          }
+          // Keep only the failed presets selected so the user can retry them.
+          setPresets(new Set(failures.map(({ input }) => input.name)))
+          for (const { input, error } of failures) {
+            toast.error(
+              `${input.name}: ${getErrorMessage(error) || t('Failed to save profile')}`,
+            )
+          }
+        },
+      },
+    )
+  }
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
     if (!isValid) return
+    if (!isCustom) {
+      createPresets()
+      return
+    }
     saveMutation.mutate(
-      isCustom
-        ? {
-            profileId: profile?.$id,
-            name: form.name.trim(),
-            width: Number(form.width),
-            height: Number(form.height),
-            videoBitRate: Number(form.videoBitRate),
-            audioBitRate: Number(form.audioBitRate),
-            codec: codec as VideoCodec,
-          }
-        : {
-            name: preset.name,
-            width: preset.width,
-            height: preset.height,
-            videoBitRate: preset.videoBitRate,
-            audioBitRate: preset.audioBitRate,
-            codec: codec as VideoCodec,
-          },
+      {
+        profileId: profile?.$id,
+        name: form.name.trim(),
+        width: Number(form.width),
+        height: Number(form.height),
+        videoBitRate: Number(form.videoBitRate),
+        audioBitRate: Number(form.audioBitRate),
+        codec: codec as VideoCodec,
+      },
       {
         onSuccess: () => {
           toast.success(isUpdate ? t('Profile updated') : t('Profile created'))
@@ -167,7 +228,7 @@ export function CreateProfile({
   }
 
   let title = t('Create profile')
-  let description = t('Choose a preset to add a rendition quality.')
+  let description = t('Choose presets to add rendition qualities.')
   if (isUpdate) {
     title = t('Update profile')
     description = t(
@@ -180,7 +241,13 @@ export function CreateProfile({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg p-0 max-h-[90dvh] overflow-y-auto">
+      <DialogContent
+        className={cn(
+          'sm:max-w-lg p-0 max-h-[90dvh] overflow-y-auto',
+          aboveWizard && WIZARD_DIALOG_CONTENT_Z,
+        )}
+        overlayClassName={aboveWizard ? WIZARD_DIALOG_OVERLAY_Z : undefined}
+      >
         <form onSubmit={handleSubmit}>
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>{title}</DialogTitle>
@@ -283,36 +350,33 @@ export function CreateProfile({
             </div>
           ) : (
             <div className="px-6 pb-4 pt-4">
-              <RadioGroup
-                value={preset.name}
-                onValueChange={(name) =>
-                  setPreset(
-                    PROFILE_PRESETS.find((item) => item.name === name) ??
-                      DEFAULT_PROFILE_PRESET,
-                  )
-                }
+              <div
+                role="group"
                 aria-label={t('Presets')}
-                className="gap-0 divide-y divide-border overflow-hidden rounded-lg border border-border"
+                className="divide-y divide-border overflow-hidden rounded-lg border border-border"
               >
                 {PROFILE_PRESETS.map((item) => {
-                  const selected = item.name === preset.name
-                  const exists = existingProfiles.some(
-                    (existing) =>
-                      (existing.codec || VideoCodec.H264) === codec &&
-                      isSameSpec(existing, item),
-                  )
+                  const exists = presetExists(item)
+                  const checked = !exists && presets.has(item.name)
                   return (
                     <Label
                       key={item.name}
                       htmlFor={`video-profile-preset-${item.name}`}
                       className={cn(
-                        'flex cursor-pointer items-center gap-3 px-3 py-2.5 font-normal transition-colors hover:bg-muted/40',
-                        selected && 'bg-muted/40',
+                        'flex items-center gap-3 px-3 py-2.5 font-normal transition-colors',
+                        exists
+                          ? 'cursor-default opacity-60'
+                          : 'cursor-pointer hover:bg-muted/40',
+                        checked && 'bg-muted/40',
                       )}
                     >
-                      <RadioGroupItem
+                      <Checkbox
                         id={`video-profile-preset-${item.name}`}
-                        value={item.name}
+                        checked={checked}
+                        disabled={exists || pending}
+                        onCheckedChange={(value) =>
+                          togglePreset(item.name, value === true)
+                        }
                       />
                       <span className="flex min-w-0 flex-1 items-center gap-2">
                         <span className="text-[13px] font-medium">
@@ -339,7 +403,7 @@ export function CreateProfile({
                     </Label>
                   )
                 })}
-              </RadioGroup>
+              </div>
             </div>
           )}
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
@@ -349,7 +413,7 @@ export function CreateProfile({
                 variant="ghost"
                 className="sm:me-auto text-muted-foreground"
                 onClick={isCustom ? () => setMode('preset') : openCustom}
-                disabled={saveMutation.isPending}
+                disabled={pending}
               >
                 {isCustom ? (
                   <ArrowLeft className="rtl:rotate-180" />
@@ -364,12 +428,16 @@ export function CreateProfile({
               variant="outline"
               className={cn(isUpdate && 'sm:ms-auto')}
               onClick={() => onOpenChange(false)}
-              disabled={saveMutation.isPending}
+              disabled={pending}
             >
               {t('Cancel')}
             </Button>
-            <Button type="submit" disabled={!isValid || saveMutation.isPending}>
-              {isUpdate ? t('Update') : t('Create')}
+            <Button type="submit" disabled={!isValid || pending}>
+              {isUpdate
+                ? t('Update')
+                : !isCustom && chosenPresets.length > 1
+                  ? `${t('Create')} (${chosenPresets.length})`
+                  : t('Create')}
             </Button>
           </div>
         </form>

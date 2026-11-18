@@ -1,8 +1,9 @@
 import { VideoOutput, type Models } from '@appwrite.io/console'
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { AlertTriangle, ChevronDown } from 'lucide-react'
+import { AlertTriangle, ChevronDown, Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   Collapsible,
@@ -167,6 +168,7 @@ export function ProfilePicker({
   existingProfileIds,
   source,
   openManageInNewTab = false,
+  onCreateProfiles,
 }: {
   projectId: string
   /** Pre-sorted, see `sortProfilesByPixels`. */
@@ -177,6 +179,8 @@ export function ProfilePicker({
   existingProfileIds?: ReadonlySet<string>
   source?: VideoSourceSize | null
   openManageInNewTab?: boolean
+  /** Offered when there are no profiles; omit when the user cannot create them. */
+  onCreateProfiles?: () => void
 }) {
   const t = useT()
   const exists = (profileId: string) => !!existingProfileIds?.has(profileId)
@@ -249,9 +253,24 @@ export function ProfilePicker({
             {t('Loading profiles...')}
           </p>
         ) : profiles.length === 0 ? (
-          <p className="px-3 py-6 text-center text-[13px] text-muted-foreground">
-            {t('No profiles. Create a profile first.')}
-          </p>
+          <div className="flex flex-col items-center gap-3 px-3 py-6 text-center">
+            <p className="text-[13px] text-muted-foreground">
+              {onCreateProfiles
+                ? t('No profiles yet. Add a few presets to encode this video.')
+                : t('No profiles. Create a profile first.')}
+            </p>
+            {onCreateProfiles ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onCreateProfiles}
+              >
+                <Plus />
+                {t('Create profiles')}
+              </Button>
+            ) : null}
+          </div>
         ) : (
           <div className="divide-y divide-border">
             {profiles.map((profile) => {

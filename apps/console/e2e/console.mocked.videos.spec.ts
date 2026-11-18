@@ -220,15 +220,29 @@ type Calls = {
   profileLists: URL[]
   profileCreates: Request[]
   thumbnails: URL[]
+  bucketLists: URL[]
+  sourceViews: URL[]
 }
+
+/** A preset the mocked server refuses, to cover a partly failed batch. */
+const REJECTED_PRESET = '1440p'
 
 /** Every `/v1` call, on any region host, is answered here; the app itself is served live. */
 async function mockAppwriteApi(
   page: Page,
   video: Models.Video = VIDEO,
+  renditions: Models.VideoRendition[] = RENDITIONS,
+  profiles: Models.VideoProfile[] = PROFILES,
 ): Promise<Calls> {
+  const profileStore = [...profiles]
   const localOrigin = new URL(String(test.info().project.use.baseURL)).origin
-  const calls: Calls = { profileLists: [], profileCreates: [], thumbnails: [] }
+  const calls: Calls = {
+    profileLists: [],
+    profileCreates: [],
+    thumbnails: [],
+    bucketLists: [],
+    sourceViews: [],
+  }
 
   await page.route('**/*', async (route) => {
     const request = route.request()
@@ -255,24 +269,34 @@ async function mockAppwriteApi(
       calls.profileLists.push(url)
       // The API lists one codec per request and defaults to h264.
       const codec = url.searchParams.get('codec') || 'h264'
-      const profiles = PROFILES.filter((profile) => profile.codec === codec)
-      return json(200, { total: profiles.length, profiles })
+      const listed = profileStore.filter((profile) => profile.codec === codec)
+      return json(200, { total: listed.length, profiles: listed })
     }
     if (apiPath === '/project/videos/profiles' && method === 'POST') {
       calls.profileCreates.push(request)
       const body = request.postDataJSON() as Record<string, unknown>
-      return json(201, {
+      if (body.name === REJECTED_PRESET) {
+        return json(409, {
+          message: 'Profile already exists.',
+          code: 409,
+          type: 'video_profile_already_exists',
+          version: '1.0',
+        })
+      }
+      const created = {
         ...PROFILES[0],
-        $id: 'profile00000000000000003',
+        $id: `profile${String(profileStore.length + 1).padStart(17, '0')}`,
         ...body,
-      })
+      } as Models.VideoProfile
+      profileStore.push(created)
+      return json(201, created)
     }
     if (apiPath === '/videos') {
       return json(200, { total: 1, videos: [video] })
     }
     if (apiPath === `/videos/${VIDEO_ID}`) return json(200, video)
     if (apiPath === `/videos/${VIDEO_ID}/renditions`) {
-      return json(200, { total: RENDITIONS.length, renditions: RENDITIONS })
+      return json(200, { total: renditions.length, renditions })
     }
     if (apiPath === `/videos/${VIDEO_ID}/captions`) {
       return json(200, { total: CAPTIONS.length, captions: CAPTIONS })
@@ -330,8 +354,17 @@ async function mockAppwriteApi(
       apiPath === '/project'
     )
       return json(200, PROJECT)
-    if (apiPath === '/storage/buckets')
+    if (apiPath === '/storage/buckets') {
+      calls.bucketLists.push(url)
       return json(200, { total: 0, buckets: [] })
+    }
+    if (
+      apiPath ===
+      `/storage/buckets/${video.bucketId}/files/${video.fileId}/view`
+    ) {
+      calls.sourceViews.push(url)
+      return route.fulfill({ status: 200, headers, body: '' })
+    }
 
     return json(404, {
       message: 'Not found',
@@ -416,6 +449,127 @@ test.describe('videos (mocked API)', () => {
     expect(calls.profileCreates[0].postDataJSON()).toMatchObject({
       codec: 'vp9',
     })
+  })
+
+  test('creates several preset profiles at once', async ({ page }) => {
+    await enableVideos(page)
+    const calls = await mockAppwriteApi(page)
+    await open(page, '/profiles', (page) => profileRow(page, '720p'))
+
+    await page.getByRole('button', { name: 'Create profile' }).first().click()
+    const dialog = page.getByRole('dialog')
+    // 720p is selected by default; add two more.
+    await expect(dialog.getByRole('checkbox', { name: /720p/ })).toBeChecked()
+    await dialog.getByRole('checkbox', { name: /360p/ }).click()
+    await dialog
+      .getByRole('checkbox', { name: new RegExp(REJECTED_PRESET) })
+      .click()
+    await page.screenshot({
+      path: test.info().outputPath('videos-profile-presets.png'),
+    })
+    await dialog
+      .getByRole('button', { name: 'Create (3)', exact: true })
+      .click()
+
+    await expect.poll(() => calls.profileCreates.length).toBe(3)
+    expect(
+      calls.profileCreates.map((request) => request.postDataJSON().name).sort(),
+    ).toEqual(['1440p', '360p', '720p'])
+    // The rejected preset stays selected so it can be retried.
+    await expect(page.getByText('2 profiles created')).toBeVisible()
+    await expect(dialog).toBeVisible()
+    await expect(
+      dialog.getByRole('checkbox', { name: new RegExp(REJECTED_PRESET) }),
+    ).toBeChecked()
+    await expect(
+      dialog.getByRole('checkbox', { name: /360p/ }),
+    ).not.toBeChecked()
+  })
+
+  test('locks the player until a rendition is ready', async ({ page }) => {
+    await enableVideos(page)
+    const calls = await mockAppwriteApi(page, VIDEO, [
+      { ...RENDITIONS[0], status: 'started', progress: '40', endedAt: '' },
+    ])
+    await open(page, `/${VIDEO_ID}`, (page) =>
+      page.locator('[data-player-state="locked"]'),
+    )
+
+    await expect(
+      page.getByText(
+        'Renditions are still encoding. Playback starts when one is ready.',
+      ),
+    ).toBeVisible()
+    await expect(page.getByRole('button', { name: /^Play/ })).toHaveCount(0)
+    expect(calls.sourceViews).toHaveLength(0)
+
+    await screenshot(page, 'videos-player-locked.png')
+  })
+
+  test('asks for a rendition when a video has none', async ({ page }) => {
+    await enableVideos(page)
+    const calls = await mockAppwriteApi(page, VIDEO, [])
+    await open(page, `/${VIDEO_ID}`, (page) =>
+      page.getByText('Create a rendition to play this video.'),
+    )
+
+    await expect(page.locator('[data-player-state="locked"]')).toBeVisible()
+    expect(calls.sourceViews).toHaveLength(0)
+  })
+
+  test('reloads buckets each time the create wizard opens', async ({
+    page,
+  }) => {
+    await enableVideos(page)
+    const calls = await mockAppwriteApi(page)
+    await open(page, '', (page) =>
+      page.getByRole('button', { name: 'Create video' }).first(),
+    )
+
+    const createVideo = page
+      .getByRole('button', { name: 'Create video' })
+      .first()
+    await createVideo.click()
+    await expect(page.getByText('Destination bucket').first()).toBeVisible()
+    await expect.poll(() => calls.bucketLists.length).toBeGreaterThan(0)
+    const afterFirstOpen = calls.bucketLists.length
+
+    await page.keyboard.press('Escape')
+    await expect(page.getByText('Destination bucket')).toHaveCount(0)
+    await createVideo.click()
+    await expect(page.getByText('Destination bucket').first()).toBeVisible()
+    await expect
+      .poll(() => calls.bucketLists.length)
+      .toBeGreaterThan(afterFirstOpen)
+  })
+
+  test('creates profiles from the wizard when there are none', async ({
+    page,
+  }) => {
+    await enableVideos(page)
+    const calls = await mockAppwriteApi(page, VIDEO, RENDITIONS, [])
+    await open(page, '', (page) =>
+      page.getByRole('button', { name: 'Create video' }).first(),
+    )
+    await page.getByRole('button', { name: 'Create video' }).first().click()
+
+    await page.getByRole('button', { name: 'Create profiles' }).click()
+    const dialog = page.getByRole('dialog')
+    await dialog.getByRole('checkbox', { name: /360p/ }).click()
+    await dialog
+      .getByRole('button', { name: 'Create (2)', exact: true })
+      .click()
+
+    await expect.poll(() => calls.profileCreates.length).toBe(2)
+    await expect(dialog).toBeHidden()
+    // The new profiles show up in the wizard, selected.
+    await expect(
+      page.getByRole('checkbox', { name: 'Select all' }),
+    ).toBeChecked()
+    await expect(
+      page.getByText('No profiles yet.', { exact: false }),
+    ).toHaveCount(0)
+    await screenshot(page, 'videos-wizard-profiles.png')
   })
 
   test('shows the timeline from its thumbnail sheets', async ({ page }) => {

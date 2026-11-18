@@ -418,9 +418,7 @@ export function videoProfilesQueryOptions(
   })
 }
 
-export function videoCodecsQueryOptions(
-  projectId: string | null | undefined,
-) {
+export function videoCodecsQueryOptions(projectId: string | null | undefined) {
   return queryOptions({
     queryKey: videoKeys.codecs(projectId),
     queryFn: () => fetchVideoCodecs(projectId!),
@@ -469,7 +467,8 @@ export function useVideoTimeline(
   const state = getVideoTimelineState(video)
   const query = useQuery({
     ...videoTimelineQueryOptions(projectId, videoId),
-    enabled: !!projectId && !!videoId && !!video && canFetchVideoTimeline(video),
+    enabled:
+      !!projectId && !!videoId && !!video && canFetchVideoTimeline(video),
   })
   return {
     ...query,
@@ -738,6 +737,32 @@ export function useSaveVideoProfile(projectId: string | null | undefined) {
         : project.createVideoProfile({ ...payload, codec })
     },
     onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: videoKeys.profiles(projectId),
+      })
+    },
+  })
+}
+
+/**
+ * Create several profiles at once. Every create is attempted; the result
+ * lists the inputs the server rejected with their error.
+ */
+export function useCreateVideoProfiles(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (inputs: VideoProfileInput[]) => {
+      const project = sdk.forProject(projectId!).project
+      const results = await Promise.allSettled(
+        inputs.map((input) => project.createVideoProfile(input)),
+      )
+      return results.flatMap((result, index) =>
+        result.status === 'rejected'
+          ? [{ input: inputs[index], error: result.reason as unknown }]
+          : [],
+      )
+    },
+    onSettled: async () => {
       await queryClient.refetchQueries({
         queryKey: videoKeys.profiles(projectId),
       })

@@ -252,6 +252,8 @@ export const jaVideosDictionary: Record<string, string> = {
     'レンディションはまだ処理中です。準備ができると再生が始まります。',
   'No renditions are ready to play.':
     '再生できるレンディションはまだありません。',
+  'Create a rendition to play this video.':
+    'この動画を再生するにはレンディションを作成してください。',
   'This video has no source to play.':
     'この動画には再生できるソースがありません。',
   'Auto quality': '自動画質',
@@ -1205,6 +1207,12 @@ export const jaVideosDictionary: Record<string, string> = {
   'Captions are listed in the manifest, so viewers can pick a language in any player.':
     '字幕はマニフェストに含まれるため、視聴者はどのプレーヤーでも言語を選択できます。',
   // Codecs and timeline status (Stream v8)
+  'No profiles yet. Add a few presets to encode this video.':
+    'プロファイルがまだありません。プリセットを追加してこの動画をエンコードします。',
+  'Create profiles': 'プロファイルを作成',
+  'Choose presets to add rendition qualities.':
+    'プリセットを選んでレンディションの画質を追加します。',
+  'profiles created': '件のプロファイルを作成しました',
   'Choose a preset to add a rendition quality.':
     'プリセットを選んでレンディションの画質を追加します。',
   'Profiles define the codec, resolution, and bitrate of each rendition. A profile keeps the codec it was created with.':
