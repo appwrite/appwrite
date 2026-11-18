@@ -8,6 +8,7 @@ use Appwrite\Auth\Validator\PasswordHistory;
 use Appwrite\Auth\Validator\PasswordPwned;
 use Appwrite\Auth\Validator\PasswordStrength;
 use Appwrite\Auth\Validator\PersonalData;
+use Appwrite\Bus\Events\EmailVerified;
 use Appwrite\Event\Event;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
@@ -23,6 +24,7 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
 use Utopia\Auth\Proofs\Token as ProofsToken;
+use Utopia\Bus\Bus;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -86,6 +88,7 @@ class Update extends Action
             ->inject('pwnedPasswords')
             ->inject('mqtt')
             ->inject('queueForRealtime')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -105,6 +108,7 @@ class Update extends Action
         PasswordPwned $pwnedPasswords,
         Mqtt $mqtt,
         Realtime $queueForRealtime,
+        Bus $bus,
     ): void {
         /** @var User $profile */
         $profile = $dbForProject->getDocument('users', $userId);
@@ -209,6 +213,11 @@ class Update extends Action
         }
 
         $dbForProject->purgeCachedDocument('users', $profile->getId());
+
+        // A claimed account is one whose unverified email this recovery just verified
+        if ($claimed) {
+            $bus->dispatch(new EmailVerified(user: $user->getArrayCopy(), project: $project->getArrayCopy()));
+        }
 
         try {
             $mqtt->revoke($project->getId(), $profile->getId());
