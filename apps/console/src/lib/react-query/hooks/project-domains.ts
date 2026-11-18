@@ -312,3 +312,51 @@ export function useDeleteDomain(
     },
   })
 }
+
+/**
+ * Hook to change what a site or function domain serves: the active
+ * deployment, a branch, or a redirect. The domain and its certificate stay.
+ */
+export function useUpdateDomainRule(
+  projectId: string | null | undefined,
+  region?: string,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: {
+      ruleId: string
+      resourceType: 'site' | 'function'
+      resourceId: string
+      behaviour: 'active' | 'branch' | 'redirect'
+      branch?: string
+      redirectUrl?: string
+      statusCode?: string
+    }) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      const projectSdk = sdk.forProject(projectId, region)
+      const { ruleId, resourceType, resourceId, behaviour } = params
+      const branch = behaviour === 'branch' ? params.branch : undefined
+
+      if (resourceType === 'site') {
+        return await projectSdk.proxy.updateSiteRule({
+          ruleId,
+          siteId: resourceId,
+          branch,
+        })
+      }
+      return await projectSdk.proxy.updateFunctionRule({
+        ruleId,
+        functionId: resourceId,
+        branch,
+      })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['proxy-rules'],
+      })
+    },
+  })
+}
