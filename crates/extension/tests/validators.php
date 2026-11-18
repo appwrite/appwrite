@@ -134,7 +134,7 @@ function child(string $code): array
 }
 
 // The base class, as reflection shows it. `isInternal()`, the file and the doc comments differ
-// by construction; `isValid()`'s parameter type is a waiver below.
+// by construction.
 $class = new ReflectionClass(Validator::class);
 emit('class', outcome(fn () => [
     'name' => $class->getName(), 'abstract' => $class->isAbstract(), 'final' => $class->isFinal(), 'interface' => $class->isInterface(),
@@ -356,26 +356,7 @@ foreach ($declarations as $name => $code) {
     emit('declaration ' . $name, child($code));
 }
 
-// Known differences of the extension, each a waiver in crates/extension/README.md.
-$waivers = [
-    // An internal argument has a type; `mixed` is the nearest to PHP's untyped `$value`, and
-    // the two accept and override alike (the declarations above).
-    'isValid parameter type' => outcome(fn () => (string) (new ReflectionParameter([Validator::class, 'isValid'], 0))->getType()),
-    // The engine names the parent's signature in its message, typed on the extension.
-    'incompatible override message' => child('new class () extends Utopia\Validator\Validator { public function getDescription(): string { return ""; } public function isArray(): bool { return false; } public function isValid(string $value): bool { return true; } public function getType(): string { return ""; } };'),
-];
-$incompatible = "Fatal error: Declaration of Utopia\\Validator\\Validator@anonymous::isValid(string \$value): bool must be compatible with Utopia\\Validator\\Validator::isValid(%s\$value): bool in Command line code on line 1\nStack trace:\n#0 {main}";
-$expected = $internal ? [
-    'isValid parameter type' => ['value' => 'mixed'],
-    'incompatible override message' => ['stdout' => '', 'stderr' => sprintf($incompatible, 'mixed '), 'exit' => 255],
-] : [
-    'isValid parameter type' => ['value' => ''],
-    'incompatible override message' => ['stdout' => '', 'stderr' => sprintf($incompatible, ''), 'exit' => 255],
-];
-foreach ($expected as $name => $outcome) {
-    if ($waivers[$name] !== $outcome) {
-        fwrite(STDERR, "Waiver changed: {$name}: " . json_encode(exported($waivers[$name])) . PHP_EOL);
-        exit(1);
-    }
-}
-fwrite(STDERR, count($expected) . ' waivers hold' . PHP_EOL);
+// What the engine shows of the base's untyped `isValid($value)`: the parameter's (absent)
+// type, and the parent's signature in the message for an incompatible override.
+emit('isValid parameter type', outcome(fn () => (string) (new ReflectionParameter([Validator::class, 'isValid'], 0))->getType()));
+emit('incompatible override message', child('new class () extends Utopia\Validator\Validator { public function getDescription(): string { return ""; } public function isArray(): bool { return false; } public function isValid(string $value): bool { return true; } public function getType(): string { return ""; } };'));

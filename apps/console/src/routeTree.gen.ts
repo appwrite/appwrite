@@ -57,6 +57,7 @@ import { Route as MarketingEducationRouteImport } from './routes/_marketing/educ
 import { Route as MarketingEnterpriseRouteImport } from './routes/_marketing/enterprise'
 import { Route as MarketingForAgentsRouteImport } from './routes/_marketing/for-agents'
 import { Route as MarketingHomeRouteImport } from './routes/_marketing/home'
+import { Route as MarketingHome1RouteImport } from './routes/_marketing/home1'
 import { Route as MarketingInnovationTeamsRouteImport } from './routes/_marketing/innovation-teams'
 import { Route as MarketingPartnersRouteImport } from './routes/_marketing/partners'
 import { Route as MarketingPricingRouteImport } from './routes/_marketing/pricing'
@@ -743,6 +744,11 @@ const MarketingForAgentsRoute = MarketingForAgentsRouteImport.update({
 const MarketingHomeRoute = MarketingHomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingHome1Route = MarketingHome1RouteImport.update({
+  id: '/home1',
+  path: '/home1',
   getParentRoute: () => MarketingRoute,
 } as any)
 const MarketingInnovationTeamsRoute =
@@ -3648,6 +3654,7 @@ export interface FileRoutesByFullPath {
   '/enterprise': typeof MarketingEnterpriseRoute
   '/for-agents': typeof MarketingForAgentsRoute
   '/home': typeof MarketingHomeRoute
+  '/home1': typeof MarketingHome1Route
   '/innovation-teams': typeof MarketingInnovationTeamsRoute
   '/partners': typeof MarketingPartnersRoute
   '/pricing': typeof MarketingPricingRoute
@@ -4143,6 +4150,7 @@ export interface FileRoutesByTo {
   '/enterprise': typeof MarketingEnterpriseRoute
   '/for-agents': typeof MarketingForAgentsRoute
   '/home': typeof MarketingHomeRoute
+  '/home1': typeof MarketingHome1Route
   '/innovation-teams': typeof MarketingInnovationTeamsRoute
   '/partners': typeof MarketingPartnersRoute
   '/pricing': typeof MarketingPricingRoute
@@ -4591,6 +4599,7 @@ export interface FileRoutesById {
   '/_marketing/enterprise': typeof MarketingEnterpriseRoute
   '/_marketing/for-agents': typeof MarketingForAgentsRoute
   '/_marketing/home': typeof MarketingHomeRoute
+  '/_marketing/home1': typeof MarketingHome1Route
   '/_marketing/innovation-teams': typeof MarketingInnovationTeamsRoute
   '/_marketing/partners': typeof MarketingPartnersRoute
   '/_marketing/pricing': typeof MarketingPricingRoute
@@ -5091,6 +5100,7 @@ export interface FileRouteTypes {
     | '/enterprise'
     | '/for-agents'
     | '/home'
+    | '/home1'
     | '/innovation-teams'
     | '/partners'
     | '/pricing'
@@ -5586,6 +5596,7 @@ export interface FileRouteTypes {
     | '/enterprise'
     | '/for-agents'
     | '/home'
+    | '/home1'
     | '/innovation-teams'
     | '/partners'
     | '/pricing'
@@ -6033,6 +6044,7 @@ export interface FileRouteTypes {
     | '/_marketing/enterprise'
     | '/_marketing/for-agents'
     | '/_marketing/home'
+    | '/_marketing/home1'
     | '/_marketing/innovation-teams'
     | '/_marketing/partners'
     | '/_marketing/pricing'
@@ -6873,6 +6885,13 @@ declare module '@tanstack/react-router' {
       path: '/for-agents'
       fullPath: '/for-agents'
       preLoaderRoute: typeof MarketingForAgentsRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/home1': {
+      id: '/_marketing/home1'
+      path: '/home1'
+      fullPath: '/home1'
+      preLoaderRoute: typeof MarketingHome1RouteImport
       parentRoute: typeof MarketingRoute
     }
     '/_marketing/home': {
@@ -10095,6 +10114,7 @@ interface MarketingRouteChildren {
   MarketingEnterpriseRoute: typeof MarketingEnterpriseRoute
   MarketingForAgentsRoute: typeof MarketingForAgentsRoute
   MarketingHomeRoute: typeof MarketingHomeRoute
+  MarketingHome1Route: typeof MarketingHome1Route
   MarketingInnovationTeamsRoute: typeof MarketingInnovationTeamsRoute
   MarketingPartnersRoute: typeof MarketingPartnersRoute
   MarketingPricingRoute: typeof MarketingPricingRoute
@@ -10133,6 +10153,7 @@ const MarketingRouteChildren: MarketingRouteChildren = {
   MarketingEnterpriseRoute: MarketingEnterpriseRoute,
   MarketingForAgentsRoute: MarketingForAgentsRoute,
   MarketingHomeRoute: MarketingHomeRoute,
+  MarketingHome1Route: MarketingHome1Route,
   MarketingInnovationTeamsRoute: MarketingInnovationTeamsRoute,
   MarketingPartnersRoute: MarketingPartnersRoute,
   MarketingPricingRoute: MarketingPricingRoute,
