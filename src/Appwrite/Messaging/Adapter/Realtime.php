@@ -1020,7 +1020,10 @@ class Realtime extends MessagingAdapter
     {
         // Same as the REST API: a value count alone does not bound how long one value can be.
         foreach ((array) $queries as $query) {
-            if (\is_string($query) && \strlen($query) > APP_LIMIT_ARRAY_ELEMENT_SIZE) {
+            if (!\is_string($query)) {
+                throw new QueryException('A query must be a string.');
+            }
+            if (\strlen($query) > APP_LIMIT_ARRAY_ELEMENT_SIZE) {
                 throw new QueryException('A query must be at most ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.');
             }
         }
