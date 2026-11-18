@@ -20,7 +20,7 @@ faqs:
   - question: "Why didn't my push to Entire create a deployment?"
     answer: "Check three things: the repository is connected to the Site or Function, the branch matches the branch filters under **Settings** > **Build** > **Triggers**, and at least one changed file matches the path filters. Path filters match from the repository root. For the first push of a new branch, Appwrite compares it with the point where it branched off the default branch."
   - question: "Does Appwrite comment on Entire trails?"
-    answer: "No. Unless Silent mode is on, Appwrite reports each build to Entire as a check run on the commit instead, and the deployment itself, with its logs and preview, lives in the Appwrite Console."
+    answer: "No. Instead, while **Report commit status** is on in the site or function's Git automation settings, Appwrite reports each build to Entire as a check run on the commit. The deployment itself, with its logs and preview, lives in the Appwrite Console."
 ---
 
 Entire is a Git forge built for coding agents: it stores the agent session behind each change alongside the code. Appwrite supports Entire as a Git provider, so once you connect an Entire project, every push to a connected repository builds and deploys your site or function.
@@ -33,7 +33,7 @@ To deploy from Entire, you must connect your Entire project to Appwrite from **P
 
 - **Production branch:** the deployment builds and activates.
 - **Any other branch:** the deployment builds but stays inactive. Sites get preview URLs for the branch and the commit.
-- **Every build:** unless Silent mode is on, Appwrite reports the result back to Entire as a check run on the commit.
+- **Every build:** while **Report commit status** is on, Appwrite reports the result back to Entire as a check run on the commit.
 
 Under the hood, Appwrite installs as a plugin on your Entire project. Entire notifies Appwrite of each push, Appwrite fetches that commit through Entire's own Git tooling, builds it, and reports the outcome back.
 
