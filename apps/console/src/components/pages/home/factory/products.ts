@@ -95,7 +95,7 @@ export class ProductLine {
     )
     this.pads = new InstancedMesh(
       new BoxGeometry(1, 1, 1).translate(0, 0.5, 0),
-      kit.matte,
+      kit.pad,
       MAX_PRODUCTS,
     )
 
