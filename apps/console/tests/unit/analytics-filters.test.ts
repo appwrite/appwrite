@@ -7,6 +7,8 @@ import {
   equalFilterEntry,
   isAnalyticsFilterShapeSupported,
   sanitizeAnalyticsFilterMap,
+  trafficKindFilterEntry,
+  trafficKindOfFilterKey,
   type AnalyticsFilter,
 } from '@/lib/analytics/analytics-filters'
 import type { CompactFilterKey, FilterMap } from '@/lib/table-filters'
@@ -113,5 +115,46 @@ describe('analytics filter columns', () => {
     expect(props.map((column) => [column.id, column.title])).toEqual([
       ['props.plan', 'plan'],
     ])
+  })
+})
+
+describe('humans / bots filter', () => {
+  test('filters on trafficType by its label', () => {
+    expect(trafficKindFilterEntry('human')).toEqual({
+      key: { c: 'trafficType', o: 'equal', v: 'human' },
+      query: equalFilterEntry('trafficType', 'human').query,
+    })
+    expect(trafficKindFilterEntry('bot').key).toEqual({
+      c: 'trafficType',
+      o: 'equal',
+      v: 'bot',
+    })
+  })
+
+  test('reads the kind back from trafficType and older botCategory keys', () => {
+    expect(trafficKindOfFilterKey({ c: 'trafficType', o: 'equal', v: 'human' })).toBe('human')
+    expect(trafficKindOfFilterKey({ c: 'trafficType', o: 'notEqual', v: 'human' })).toBe('bot')
+    expect(trafficKindOfFilterKey({ c: 'botCategory', o: 'equal', v: '' })).toBe('human')
+    expect(trafficKindOfFilterKey({ c: 'botCategory', o: 'notEqual', v: '' })).toBe('bot')
+    expect(trafficKindOfFilterKey({ c: 'trafficType', o: 'equal', v: 'robot' })).toBeNull()
+    expect(trafficKindOfFilterKey({ c: 'botCategory', o: 'equal', v: 'datacenter' })).toBeNull()
+  })
+
+  test('trafficType keeps only equal and notEqual', () => {
+    const sanitized = sanitizeAnalyticsFilterMap(
+      mapOf(trafficKindFilterEntry('human'), {
+        key: { c: 'trafficType', o: 'contains', v: 'hum' },
+        query: 'contains("trafficType", ["hum"])',
+      }),
+    )
+    expect([...sanitized.keys()].map((key) => key.o)).toEqual(['equal'])
+    const column = analyticsFilterColumns([]).find((c) => c.id === 'trafficType')
+    expect(column?.allowedOperators).toEqual(['equal', 'notEqual'])
+  })
+
+  test('the traffic type breakdown filters on trafficType', () => {
+    expect(
+      analyticsFilterAttributeForTab({ dimension: AnalyticsDimension.TrafficType }),
+    ).toBe('trafficType')
   })
 })
