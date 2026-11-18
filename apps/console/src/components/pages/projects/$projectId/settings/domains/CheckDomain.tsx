@@ -1,6 +1,4 @@
 import type { Models } from '@appwrite.io/console'
-import { useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -21,9 +19,9 @@ interface CheckDomainProps {
 }
 
 /**
- * Row action for a domain Appwrite is still working on. While it waits for
- * DNS, it shows when the records were last checked and checks them now. While
- * its certificate is issued, it reloads the status.
+ * Row action for a domain whose DNS Appwrite is still checking: when the
+ * records were last checked, and a check right now. Realtime updates the
+ * status, so a domain whose certificate is being issued needs none here.
  */
 export function CheckDomain({
   projectId,
@@ -32,9 +30,7 @@ export function CheckDomain({
   organizationDomainId,
 }: CheckDomainProps) {
   const t = useT()
-  const queryClient = useQueryClient()
   const verifyDomainMutation = useVerifyDomain(projectId, region)
-  const [refreshing, setRefreshing] = useState(false)
 
   const handleCheck = async () => {
     try {
@@ -67,52 +63,23 @@ export function CheckDomain({
     }
   }
 
-  const handleRefresh = async () => {
-    setRefreshing(true)
-    try {
-      // Every proxy rule list of this project, as after a verification.
-      await queryClient.refetchQueries({
-        queryKey: ['proxy-rules'],
-        predicate: (query) => query.queryKey.includes(projectId),
-      })
-    } finally {
-      setRefreshing(false)
-    }
-  }
+  if (!isWaitingForDns(rule)) return null
 
-  if (isWaitingForDns(rule)) {
-    return (
-      <>
-        <span className="text-[12px] text-muted-foreground inline-flex items-center gap-1 whitespace-nowrap">
-          {t('Last check:')}
-          <DateTooltip date={rule.$updatedAt} live disableTooltip />
-        </span>
-        <Button
-          variant="link"
-          size="sm"
-          className="h-auto p-0 text-[13px]"
-          disabled={verifyDomainMutation.isPending}
-          onClick={handleCheck}
-        >
-          {verifyDomainMutation.isPending ? t('Checking...') : t('Check now')}
-        </Button>
-      </>
-    )
-  }
-
-  if (rule.status === 'verifying') {
-    return (
+  return (
+    <>
+      <span className="text-[12px] text-muted-foreground inline-flex items-center gap-1 whitespace-nowrap">
+        {t('Last check:')}
+        <DateTooltip date={rule.$updatedAt} live disableTooltip />
+      </span>
       <Button
         variant="link"
         size="sm"
         className="h-auto p-0 text-[13px]"
-        disabled={refreshing}
-        onClick={handleRefresh}
+        disabled={verifyDomainMutation.isPending}
+        onClick={handleCheck}
       >
-        {refreshing ? t('Refreshing...') : t('Refresh')}
+        {verifyDomainMutation.isPending ? t('Checking...') : t('Check now')}
       </Button>
-    )
-  }
-
-  return null
+    </>
+  )
 }
