@@ -402,13 +402,6 @@ export function AnalyticsOverview({
   const [hasRevealed, setHasRevealed] = useState(false)
   const isComparing = comparisonRange !== null
   const { features, isCloud } = useConsoleProfile()
-  // Monitors read the project's metered analytics usage, which only Cloud records.
-  const alertMetric =
-    isCloud &&
-    features.alerts &&
-    (activeSeries === 'pageviews' || activeSeries === 'events')
-      ? (`analytics.${activeSeries}` as const)
-      : undefined
   // Hooks can't be conditional: with comparison off, pass a null property ID
   // so the comparison queries stay disabled, and any range as a placeholder.
   const comparePropertyId = isComparing ? propertyId : null
@@ -477,6 +470,13 @@ export function AnalyticsOverview({
     requestedMetric.source === 'aggregate' && statsUnsupported
       ? metrics[0]
       : requestedMetric
+  // Monitors read the project's metered analytics usage, which only Cloud records.
+  const alertMetric =
+    isCloud &&
+    features.alerts &&
+    (activeMetric.key === 'pageviews' || activeMetric.key === 'events')
+      ? (`analytics.${activeMetric.key}` as const)
+      : undefined
 
   const chartPoints = useMemo(
     () => buildAnalyticsChartPoints(seriesData?.points ?? [], range, interval),
