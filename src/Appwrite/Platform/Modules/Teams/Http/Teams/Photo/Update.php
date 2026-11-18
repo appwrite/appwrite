@@ -43,6 +43,8 @@ class Update extends Action
             ->groups(['api', 'teams'])
             ->label('event', 'teams.[teamId].update')
             ->label('scope', 'teams.write')
+            ->label('audits.event', 'team.update')
+            ->label('audits.resource', 'team/{request.teamId}')
             ->param('teamId', '', new UID(), 'Team ID.')
             ->param('file', [], new File(), 'Binary image file of at most 5MB. Allowed file types are png, jpg, jpeg, and webp.', skipValidation: true)
             ->inject('request')
