@@ -704,6 +704,7 @@ class Create extends Action
             'providerRepositoryOwner' => $parsedPayload['owner'] ?? '',
             'providerRepositoryName' => $parsedPayload['repositoryName'] ?? '',
             'providerPullRequestId' => (string) $pullNumber,
+            'providerPullRequestAuthor' => $parsedPayload['pullRequestAuthor'] ?? '',
             'providerCommitHash' => $headSha,
             'trigger' => $trigger['kind'],
             'providerCommentId' => isset($trigger['comment']) ? (string) $trigger['comment']['id'] : '',
@@ -925,7 +926,7 @@ class Create extends Action
     /**
      * The repository as the review service's jobs name it.
      *
-     * @return array{projectId: string, projectInternalId: string, repositoryId: string, installationId: string, providerInstallationId: string, providerRepositoryId: string, owner: string, name: string, consoleUrl?: string}
+     * @return array{projectId: string, projectInternalId: string, repositoryId: string, installationId: string, providerInstallationId: string, providerRepositoryId: string, owner: string, name: string, consoleUrl?: string, imagesUrl?: string}
      */
     private function getReviewRepository(array $parsedPayload, Document $project, Document $repository, array $platform): array
     {
@@ -944,6 +945,13 @@ class Create extends Action
         $consoleUrl = $platform['consoleUrl'] ?? '';
         if ($consoleUrl !== '') {
             $reviewRepository['consoleUrl'] = $consoleUrl;
+        }
+
+        // For the status images in the summary comment, served from here as for Sites and Functions comments.
+        $hostname = $platform['consoleHostname'] ?? '';
+        if ($hostname !== '') {
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+            $reviewRepository['imagesUrl'] = $protocol . '://' . $hostname;
         }
 
         return $reviewRepository;

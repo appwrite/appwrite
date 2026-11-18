@@ -71,6 +71,8 @@ class Get extends Action
                             Response::MODEL_OAUTH2_INSTAGRAM,
                             Response::MODEL_OAUTH2_PATREON,
                             Response::MODEL_OAUTH2_STRAVA,
+                            Response::MODEL_OAUTH2_VK,
+                            Response::MODEL_OAUTH2_NETLIFY,
                             Response::MODEL_OAUTH2_RAILWAY,
                             Response::MODEL_OAUTH2_REDDIT,
                             Response::MODEL_OAUTH2_VERCEL,
