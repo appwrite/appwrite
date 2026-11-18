@@ -1010,10 +1010,11 @@ export function VerifyDomainContent({
   const banners = checks ? getDnsBanners(t, rule, pointingChecks, caaCheck) : []
   // A banner that names the wrong record replaces the generic "wait and try
   // again" alert, and "DNS is set up" already says the certificate is next.
+  // The rule updates live, so that alert also goes once its DNS has passed.
   const wrongRecord = banners.some((banner) => banner.tone === 'error')
   const dnsSetUp = banners.some((banner) => banner.tone === 'success')
   const shownError =
-    wrongRecord &&
+    (wrongRecord || dnsSetUp || !isDnsUnverified(rule)) &&
     typeof verificationError === 'object' &&
     verificationError?.pending
       ? null
