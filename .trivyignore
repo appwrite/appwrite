@@ -1,0 +1,6 @@
+# picomatch ReDoS (GHSA-fc5q-39xc-vjpf): no fixed release yet; 4.0.7 is the
+# latest and the last affected. It reaches apps/crates and apps/compat only as
+# a build-time dependency of Vite and TanStack Start, matching globs from the
+# apps' own config, never user input. Remove once a fixed picomatch ships
+# (the same entry is in apps/{crates,compat}/osv-scanner.toml).
+CVE-2026-112366
