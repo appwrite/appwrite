@@ -4251,4 +4251,17 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'From the port': 'ポートから判断',
   'Upgrade with STARTTLS': 'STARTTLS でアップグレード',
   'Implicit TLS': '暗黙的 TLS',
+  'Add note': 'メモを追加',
+  'Edit note': 'メモを編集',
+  'Delete note': 'メモを削除',
+  'Show notes': 'メモを表示',
+  'Note added': 'メモを追加しました',
+  'Note updated': 'メモを更新しました',
+  'Note deleted': 'メモを削除しました',
+  'Note text': 'メモの内容',
+  'Notes mark releases, campaigns or incidents on the chart for everyone in the project.':
+    'メモはリリース、キャンペーン、障害などをグラフ上に記録し、プロジェクトの全員に表示されます。',
+  'Launched the new pricing page': '新しい料金ページを公開',
+  'The note is removed from the chart for everyone.': 'このメモは全員のグラフから削除されます。',
+  'Former member': '元メンバー',
 }

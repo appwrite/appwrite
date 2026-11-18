@@ -4175,4 +4175,18 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'From the port': 'לפי הפורט',
   'Upgrade with STARTTLS': 'שדרוג עם STARTTLS',
   'Implicit TLS': 'TLS מובנה',
+  'Add note': 'הוספת הערה',
+  'Edit note': 'עריכת הערה',
+  'Delete note': 'מחיקת הערה',
+  'Show notes': 'הצגת הערות',
+  'Note added': 'ההערה נוספה',
+  'Note updated': 'ההערה עודכנה',
+  'Note deleted': 'ההערה נמחקה',
+  'Note text': 'תוכן ההערה',
+  'Notes mark releases, campaigns or incidents on the chart for everyone in the project.':
+    'הערות מסמנות על הגרף גרסאות, קמפיינים או תקלות, לכל מי שבפרויקט.',
+  'Launched the new pricing page': 'השקנו את דף המחירים החדש',
+  'The note is removed from the chart for everyone.':
+    'ההערה תוסר מהגרף עבור כולם.',
+  'Former member': 'חבר לשעבר',
 }

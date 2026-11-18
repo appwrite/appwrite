@@ -42,7 +42,10 @@ import {
 } from '@/lib/usage/usage-date-range-presets'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useAnalyticsChartPrefs } from '@/hooks/use-analytics-chart-prefs'
-import { canWriteRules } from '@/lib/console-access-checks'
+import {
+  canCreateAnalyticsProperty,
+  canWriteRules,
+} from '@/lib/console-access-checks'
 import { isCloudProfile } from '@/lib/console-profiles'
 import { AnalyticsOverview } from '../_components/AnalyticsOverview'
 import {
@@ -664,6 +667,7 @@ export function View({
               onRefresh={handleRefresh}
               showUsers={showUsersPanel}
               type={resolvedType}
+              canAnnotate={canCreateAnalyticsProperty(access, features)}
             />
 
             <div className="mx-auto w-full max-w-7xl space-y-4 px-4 py-6 sm:px-6">
