@@ -682,7 +682,7 @@ final class DatabasesCustomServerTest extends Scope
         ]);
         $this->assertSame(400, $tooLong['headers']['status-code']);
         $this->assertSame('general_embedding_text_too_long', $tooLong['body']['type']);
-        $this->assertStringContainsString('Text at index 1 has', $tooLong['body']['message']);
+        $this->assertStringContainsString('Text at index 1 has', (string) $tooLong['body']['message']);
 
         // Error: every text fails, as the stack loads only nomic-embed-text
         $unavailable = $this->client->call(Client::METHOD_POST, '/embeddings/text', [
