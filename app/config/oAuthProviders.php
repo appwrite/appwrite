@@ -269,6 +269,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\HuggingFace',
     ],
+    'instagram' => [
+        'name' => 'Instagram',
+        'developers' => 'https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login',
+        'icon' => 'icon-instagram',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Instagram',
+    ],
     'kakao' => [
         'name' => 'Kakao',
         'developers' => 'https://developers.kakao.com/docs/latest/en/kakaologin/common',
