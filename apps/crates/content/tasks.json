@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-17T15:12:00Z",
+  "updated": "2026-11-18T10:47:00Z",
   "tasks": [
     {
       "id": "crate-layout",
@@ -774,8 +774,16 @@
       "title": "dsn, image, locale and user-agent leave compat: PHP runs the Rust crates",
       "area": "Libraries",
       "status": "done",
-      "updated": "2026-11-17T15:12:00Z",
-      "note": "Main removed the PHP Utopia\\DSN\\DSN, Utopia\\Locale\\Locale, Utopia\\Image\\Image and (Nov 17) Utopia\\UserAgent\\UserAgent: the utopia extension (crates/extension) registers the Rust crates in their place, so there is no PHP implementation left to compare against. Their compat cases, adapters and documentation-example twins are gone; each crate's parity with the PHP class it replaced is checked by the extension's corpus (crates/extension/tests/<name>.php against <name>.expected.jsonl) in CI's Extension job. domains and emails keep their PHP classes (the extension serves them only when _APP_EXTENSION_LIBRARIES names them) and stay in compat. auth also follows web-auth/webauthn-lib 5.3.12's passkey validation (612 cases, 68,650 fuzz inputs, 0 differences)."
+      "updated": "2026-11-18T10:47:00Z",
+      "note": "Main removed the PHP Utopia\\DSN\\DSN, Utopia\\Locale\\Locale, Utopia\\Image\\Image and (Nov 17) Utopia\\UserAgent\\UserAgent: the utopia extension (crates/extension) registers the Rust crates in their place, so there is no PHP implementation left to compare against. Their compat cases, adapters and documentation-example twins are gone; each crate's parity with the PHP class it replaced is checked by the extension's corpus (crates/extension/tests/<name>.php against <name>.expected.jsonl) in CI's Extension job. domains and emails keep their PHP classes (the extension serves them only when _APP_EXTENSION_LIBRARIES names them) and stay in compat. auth also follows web-auth/webauthn-lib 5.3.12's passkey validation (612 cases, 68,650 fuzz inputs, 0 differences). Nov 17-18: the extension also took validators' scalar and text checks (Utopia\\Validator classes stay in PHP until enabled); utopia-validators keeps its full API and delegates those rules to the extension's check modules."
+    },
+    {
+      "id": "queue-nov18",
+      "title": "utopia-queue: follow main's Swoole, Kubernetes and NATS reap changes",
+      "area": "Libraries",
+      "status": "todo",
+      "updated": "2026-11-18T10:47:00Z",
+      "note": "Main changed about 155 lines of utopia-php/queue after the Nov 16 merge: the Swoole adapter's receive buffer and refill, a KubernetesJob heartbeat that keeps extending a message's delivery deadline while its job runs, and NATS retrying a reap on a rebuilt commands connection (a fix for the PHP NATS client; check whether async-nats needs it). Not ported in the Nov 18 merge; the queue marker stays behind."
     }
   ]
 }
