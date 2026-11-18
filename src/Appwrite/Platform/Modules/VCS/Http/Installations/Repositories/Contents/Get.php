@@ -96,13 +96,8 @@ class Get extends Action
 
         $vcsContents = [];
         foreach ($contents as $content) {
-            $isDirectory = false;
-            if ($content['type'] === 'dir') {
-                $isDirectory = true;
-            }
-
             $vcsContents[] = new Document([
-                'isDirectory' => $isDirectory,
+                'isDirectory' => $content['type'] === 'dir',
                 'name' => $content['name'] ?? '',
                 'size' => $content['size'] ?? 0
             ]);
