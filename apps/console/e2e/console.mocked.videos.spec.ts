@@ -864,6 +864,26 @@ test.describe('videos (mocked API)', () => {
     await screenshot(page, 'videos-timeline.png')
   })
 
+  test('skips a black opening frame for the poster', async ({ page }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page)
+    // Later routes win: the first sheet frame is black, the second detailed.
+    await page.route(`**/v1/videos/${VIDEO_ID}/thumbnails/**`, (route) =>
+      route.fulfill({
+        status: 200,
+        headers: { ...corsHeaders(route), 'content-type': 'image/png' },
+        body: fixture('sprite-poster.png'),
+      }),
+    )
+    await open(page, `/${VIDEO_ID}/settings`, (page) =>
+      page.locator('aside [style*="background-position"]').first(),
+    )
+
+    await expect(
+      page.locator('aside [style*="background-position"]').first(),
+    ).toHaveCSS('background-position', '-160px 0px')
+  })
+
   test('reports a timeline that failed', async ({ page }) => {
     await enableVideos(page)
     await mockAppwriteApi(page, {

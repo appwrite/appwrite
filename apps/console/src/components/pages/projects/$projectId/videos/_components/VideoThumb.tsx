@@ -14,12 +14,13 @@ import {
   videoThumbAspectRatio,
 } from '@/lib/utils/video-format'
 import { TimelineSpriteThumb } from './player/TimelineSpriteThumb'
+import { usePosterCue } from './use-poster-cue'
 
 const HOVER_FRAME_INTERVAL_MS = 180
 
 /**
- * Poster from the first timeline frame when a timeline exists, else a
- * placeholder. Hover cycles timeline frames.
+ * Poster from the best timeline frame when a timeline exists (see
+ * `usePosterCue`), else a placeholder. Hover cycles timeline frames.
  */
 export function VideoThumb({
   projectId,
@@ -90,7 +91,7 @@ export function VideoThumb({
     return () => window.clearInterval(id)
   }, [hovering, hoverFrames.length])
 
-  const posterCue = hasTimelineCues ? cues![0] : null
+  const posterCue = usePosterCue(hasTimelineCues ? cues : null)
   const activeCue =
     hasTimelineCues && hovering && hoverFrames.length > 1
       ? hoverFrames[hoverFrameIndex]
