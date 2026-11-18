@@ -528,6 +528,28 @@ trait TeamsBase
         $this->assertEquals(404, $response['headers']['status-code']);
     }
 
+    /**
+     * @return array<string, string>
+     */
+    private function getTeamPhotoHeaders(): array
+    {
+        return \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function uploadTeamPhoto(string $teamId, string $contents, string $filename): array
+    {
+        return $this->client->call(Client::METHOD_PUT, '/teams/' . $teamId . '/photo', \array_merge($this->getTeamPhotoHeaders(), [
+            'content-type' => 'multipart/form-data',
+        ]), [
+            'file' => new \CURLFile('data://application/octet-stream;base64,' . \base64_encode($contents), 'application/octet-stream', $filename),
+        ]);
+    }
+
     public function testUpdateAndGetUserPrefs(): void
     {
         $data = $this->createTeamHelper();
