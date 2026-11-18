@@ -417,6 +417,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Podio',
     ],
+    'reddit' => [
+        'name' => 'Reddit',
+        'developers' => 'https://www.reddit.com/prefs/apps',
+        'icon' => 'icon-reddit',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Reddit',
+    ],
     'resend' => [
         'name' => 'Resend',
         'developers' => 'https://resend.com/docs/guides/building-a-resend-oauth-client',

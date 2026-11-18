@@ -457,6 +457,7 @@
         "PATCH /v1/project/oauth2/paypal",
         "PATCH /v1/project/oauth2/paypalSandbox",
         "PATCH /v1/project/oauth2/podio",
+        "PATCH /v1/project/oauth2/reddit",
         "PATCH /v1/project/oauth2/resend",
         "PATCH /v1/project/oauth2/salesforce",
         "PATCH /v1/project/oauth2/slack",
