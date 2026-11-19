@@ -4,6 +4,7 @@ require_once __DIR__ . '/init.php';
 $registerWorkerMessageResources = require __DIR__ . '/init/worker/message.php';
 
 use Appwrite\Auth\EncryptionKey;
+use Appwrite\Certificates\External;
 use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Workers\Jobs;
@@ -48,8 +49,9 @@ $container->set('authorization', function () {
 
 $container->set('project', fn () => new Document([]), []);
 
-$container->set('certificates', function () {
-    return new LetsEncrypt(System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', '')));
+$container->set('certificates', fn () => match (System::getEnv('_APP_CERTIFICATES_PROVIDER', 'letsencrypt')) {
+    'external' => new External(),
+    default => new LetsEncrypt(System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', ''))),
 }, []);
 
 $platform = new Appwrite();
