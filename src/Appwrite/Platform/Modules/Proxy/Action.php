@@ -185,7 +185,12 @@ class Action extends PlatformAction
 
         $authorization->skip(fn () => $dbForPlatform->deleteDocument('rules', $existingRule->getId()));
 
-        // No deletes job runs for this rule, and the claiming rule gets a certificate of its own
+        // No deletes job runs for this rule, so its record checks go here
+        $authorization->skip(fn () => $dbForPlatform->deleteDocuments('ruleRecords', [
+            Query::equal('ruleInternalId', [$existingRule->getSequence()]),
+        ]));
+
+        // The claiming rule gets a certificate of its own
         $certificateId = $existingRule->getAttribute('certificateId', '');
         if ($certificateId !== '') {
             $authorization->skip(fn () => $dbForPlatform->deleteDocument('certificates', $certificateId));
