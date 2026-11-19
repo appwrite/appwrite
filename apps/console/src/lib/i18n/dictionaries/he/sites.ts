@@ -191,7 +191,7 @@ export const heSitesDictionary: Record<string, string> = {
   'Not verified yet. Appwrite keeps checking.':
     'עדיין לא אומת. Appwrite ממשיך לבדוק.',
   'Not needed. Your {type} record is set.':
-    'לא נדרש. רשומת ה-{type} שלכם מוגדרת.',
+    'אין צורך ברשומה הזו. רשומת ה-{type} שלכם מוגדרת.',
   'Called CNAME flattening on Cloudflare (set it to DNS only) and Alias on Route 53. Some providers name it ANAME.':
     'ב-Cloudflare זה נקרא CNAME flattening (הגדירו DNS only), וב-Route 53 זה נקרא Alias. יש ספקים שקוראים לזה ANAME.',
   'It points to {found}. Change it to {value}.':
@@ -637,7 +637,7 @@ export const heSitesDictionary: Record<string, string> = {
   'Last check': 'בדיקה אחרונה',
   'Found:': 'נמצא:',
   'Wrong value': 'ערך שגוי',
-  'Blocks certificate': 'חוסמת את התעודה',
+  'Blocks certificate': 'התעודה חסומה',
   "Couldn't check": 'לא ניתן לבדוק',
   Alternative: 'חלופה',
   'CAA record': 'רשומת CAA',
@@ -663,6 +663,6 @@ export const heSitesDictionary: Record<string, string> = {
   'All records are verified.': 'כל הרשומות אומתו.',
   'Appwrite will issue the SSL certificate next.':
     'בשלב הבא Appwrite יפיק את תעודת ה-SSL.',
-  'Not detected yet': 'עדיין לא זוהתה',
-  'Not detected': 'לא זוהתה',
+  'Not detected yet': 'עדיין אין רשומה',
+  'Not detected': 'אין רשומה',
 }
