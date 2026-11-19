@@ -619,4 +619,8 @@ export const heSitesDictionary: Record<string, string> = {
     'פרסו אתר עובד בכמה קליקים, ואז התאימו אותו לצרכים שלכם.',
   "This site's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
     'התקנת ה-Git של האתר הזה כבר לא מגיעה ל-repo שלו, ולכן Push חדש לא ייפרס. נתקו את ה-repo ואז חברו אותו מחדש דרך ההתקנה שבה הוא נמצא עכשיו.',
+  'Tracked pageviews and events are billed as analytics usage, which adds up quickly on a high-traffic site.':
+    'צפיות בדפים ואירועים שנמדדים מחויבים כשימוש באנליטיקה, והעלות מצטברת מהר באתר עם תנועה גבוהה.',
+  'If your site sets a Content-Security-Policy, in a header or a <meta> tag, add these sources. Otherwise the browser blocks the tracker and no data is recorded.':
+    'אם האתר שלכם מגדיר Content-Security-Policy, בכותרת או בתגית <meta>, הוסיפו את המקורות האלה. אחרת הדפדפן חוסם את סקריפט המעקב ולא נאספים נתונים.',
 }
