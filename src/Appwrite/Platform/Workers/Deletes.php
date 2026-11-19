@@ -37,6 +37,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Conflict;
+use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
@@ -1428,14 +1429,24 @@ class Deletes extends Action
 
             $projectTables = !\in_array($dsn->getHost(), $sharedTables);
 
+            // Provisioning creates a project's tables one by one with no rollback, so
+            // a project whose run died before `databases` existed, or whose metadata
+            // table is already gone, reaches this job with no linked databases to
+            // clean. It still has its remaining tables and its storage to remove.
+            try {
+                $linkedDatabases = $dbForProject->find('databases', [
+                    Query::equal('type', [DATABASE_TYPE_DOCUMENTSDB, DATABASE_TYPE_VECTORSDB]),
+                    Query::limit(5000),
+                ]);
+            } catch (NotFound) {
+                $linkedDatabases = [];
+            }
+
             $allDatabases = [
                 new Document([
                     'database' => $document->getAttribute('database')
                 ]),
-                ...$dbForProject->find('databases', [
-                    Query::equal('type', [DATABASE_TYPE_DOCUMENTSDB, DATABASE_TYPE_VECTORSDB]),
-                    Query::limit(5000),
-                ]),
+                ...$linkedDatabases,
             ];
             $databasesToClean = [];
 
