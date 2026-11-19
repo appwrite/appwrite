@@ -81,6 +81,18 @@ function linearScore(value: number, best: number, worst: number): number {
   return Math.round(100 * (1 - (value - best) / (worst - best)))
 }
 
+/**
+ * How visible upscaling is: past 1.1× the picture starts to soften, past
+ * 1.6× it looks blurry. The tile, the score and Diagnostics all read this.
+ */
+export function gradeUpscale(
+  upscale: number | null,
+): 'good' | 'fair' | 'poor' | null {
+  if (upscale == null) return null
+  if (upscale <= 1.1) return 'good'
+  return upscale <= 1.6 ? 'fair' : 'poor'
+}
+
 export function computeQoeMetrics(
   qoe: QoeState,
   player: StreamPlayerState,
@@ -119,7 +131,9 @@ export function computeQoeMetrics(
     const bitrateScore =
       averageBitrate && maxBitrate ? (averageBitrate / maxBitrate) * 100 : 100
     const upscalePenalty =
-      upscale && upscale > 1.1 ? linearScore(upscale, 1.1, 3) : 100
+      upscale != null && gradeUpscale(upscale) !== 'good'
+        ? linearScore(upscale, 1.1, 3)
+        : 100
     const quality = Math.round(Math.min(bitrateScore, upscalePenalty))
     const stability = linearScore(droppedRatio, 0, 0.1)
     const overall = player.fatalError
