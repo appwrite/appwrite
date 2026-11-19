@@ -37,6 +37,8 @@ import { VariablesSettingsCard } from '@/components/global/shared/VariablesSetti
 import type { WizardVariable } from './WizardContext'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { AnalyticsToggle } from './AnalyticsToggle'
 import { validateVariables } from '@/lib/variables'
 
 // GitHub Icon Component
@@ -79,6 +81,8 @@ export function QuickDeployView({
   envKeys,
 }: QuickDeployViewProps) {
   const t = useT()
+  const { features } = useConsoleProfile()
+  const [analytics, setAnalytics] = useState(true)
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -198,6 +202,7 @@ export function QuickDeployView({
         startCommand: startCommand || undefined,
         outputDirectory: outputDirectory || defaults.outputDirectory,
         adapter: defaults.adapter || undefined,
+        analytics: features.analytics && analytics,
       })
       createdSiteId = site.$id
 
@@ -447,6 +452,13 @@ export function QuickDeployView({
               placeholder={t('Auto-generated')}
             />
           </div>
+
+          {features.analytics && (
+            <AnalyticsToggle
+              checked={analytics}
+              onCheckedChange={setAnalytics}
+            />
+          )}
 
           {/* Framework selector */}
           <div className="space-y-2">
