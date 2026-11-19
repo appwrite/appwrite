@@ -1250,6 +1250,36 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
 
     $error = null;
     try {
+        $message = \json_decode($message, true);
+
+        // Pings are the SDK heartbeat, so they skip the message limit and never wait on the database.
+        if (\is_array($message) && ($message['type'] ?? null) === 'ping') {
+            $messageType = 'ping';
+
+            if ($realtime->isExpired($connection, \time())) {
+                $responseCode = $unauthorized->getCode();
+                $server->send([$connection], $unauthorizedPayloadJson);
+                $server->close($connection, $unauthorized->getCode());
+                $outboundBytes += \strlen($unauthorizedPayloadJson);
+                return;
+            }
+
+            $responseJson = \json_encode($messageDispatcher->dispatch(new Container($container), $message));
+            $server->send([$connection], $responseJson);
+            $outboundBytes += \strlen($responseJson);
+
+            if (!empty($projectId) && $projectId !== 'console') {
+                $usage->add([
+                    METRIC_REALTIME_INBOUND => $rawSize,
+                    METRIC_REALTIME_OUTBOUND => \strlen($responseJson),
+                    METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT => 1,
+                ], $projectId);
+            }
+
+            $success = true;
+            return;
+        }
+
         if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
             $isRateLimited = $container->get('timelimit')(
                 'project:{project},container:{container},connection:{connection}',
@@ -1336,8 +1366,6 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
                 METRIC_REALTIME_INBOUND => $rawSize,
             ], $project->getId());
         }
-
-        $message = json_decode($message, true);
 
         if (is_null($message) || (!array_key_exists('type', $message) && !array_key_exists('data', $message))) {
             throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Message format is not valid.');
