@@ -105,7 +105,9 @@ export function VideoThumb({
   return (
     <div
       className={cn(
-        'relative flex items-center justify-center overflow-hidden bg-muted text-muted-foreground',
+        'relative flex items-center justify-center overflow-hidden text-muted-foreground',
+        // Letterbox bars read as part of the picture, like a player.
+        activeCue ? 'bg-black' : 'bg-muted',
         uniformSize && 'aspect-video',
         className,
       )}

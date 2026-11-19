@@ -946,6 +946,23 @@ test.describe('videos (mocked API)', () => {
     ).toHaveCSS('background-position', '-160px 0px')
   })
 
+  test('letterboxes list thumbnails in black', async ({ page }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page)
+    const frame = page
+      .locator(
+        `main a[href$="/videos/${VIDEO_ID}"] [style*="background-position"]`,
+      )
+      .first()
+
+    await open(page, '', () => frame)
+
+    await expect(frame.locator('..')).toHaveCSS(
+      'background-color',
+      'rgb(0, 0, 0)',
+    )
+  })
+
   test('reports a timeline that failed', async ({ page }) => {
     await enableVideos(page)
     await mockAppwriteApi(page, {
