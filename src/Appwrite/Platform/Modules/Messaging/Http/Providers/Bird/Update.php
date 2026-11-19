@@ -42,7 +42,9 @@ class Update extends Action
                 namespace: 'messaging',
                 group: 'providers',
                 name: 'updateBirdProvider',
-                description: '/docs/references/messaging/update-bird-provider.md',
+                description: <<<EOT
+                Update a Bird provider by its unique ID.
+                EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
