@@ -1687,6 +1687,7 @@ dependencies = [
  "unsafe-libyaml",
  "whirlpool",
  "xxhash-rust",
+ "zeroize",
 ]
 
 [[package]]

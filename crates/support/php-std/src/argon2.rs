@@ -9,7 +9,9 @@
 use blake2::digest::{Digest, Update, VariableOutput};
 use blake2::{Blake2b512, Blake2bVar};
 use std::mem::MaybeUninit;
+use std::sync::{Mutex, PoisonError};
 use std::thread;
+use zeroize::Zeroize;
 
 /// libargon2's `argon2_type` values, which the initial hash and the address blocks hash.
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -145,6 +147,25 @@ pub(crate) fn hash(params: &Params, password: &[u8], salt: &[u8], out: &mut [u8]
         chunk.copy_from_slice(&word.to_le_bytes());
     }
     long(&[&bytes], out);
+
+    // libargon2 wipes its memory before freeing it (`clear_internal_memory`, on by default), so
+    // what was derived from the password does not outlive the hash. Shared out between the lanes'
+    // threads, which take chunks until none are left; a thread the system would not start leaves
+    // its share to the others.
+    let chunks = Mutex::new(memory.chunks_mut(total.div_ceil(threads * 4)).collect::<Vec<_>>());
+    let wipe = || {
+        while let Some(chunk) = chunks.lock().unwrap_or_else(PoisonError::into_inner).pop() {
+            chunk.zeroize();
+        }
+    };
+    thread::scope(|scope| {
+        for _ in 1..threads {
+            let _ = thread::Builder::new().spawn_scoped(scope, wipe);
+        }
+        wipe();
+    });
+    last.0.zeroize();
+    bytes.zeroize();
     Some(())
 }
 

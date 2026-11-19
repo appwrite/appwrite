@@ -36,6 +36,8 @@ xxhash-rust.workspace = true
 # yaml_parse(): libyaml 0.2.5 translated to Rust, the parser ext-yaml links, so
 # documents are accepted, refused and split into events exactly as in PHP.
 unsafe-libyaml.workspace = true
+# Wipes Argon2's memory after a hash, as libargon2 does.
+zeroize.workspace = true
 
 [dev-dependencies]
 # The reference src/argon2.rs is tested against.
