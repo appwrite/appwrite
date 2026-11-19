@@ -63,7 +63,7 @@ Pasting an LDAP URL, such as `ldaps://ldap.example.com:636/dc=example,dc=com`, i
 * Checks the directory's certificate before sending any password. On by default. While it is on, use the hostname on the directory's certificate, not an IP address.
 ---
 * Certificate
-* The certificate of the authority that signed your directory's certificate, or the directory's own certificate when it is self-signed, in PEM format. You can paste several, one after another, such as a root and an intermediate certificate. Leave it empty to use the system trust store.
+* The certificate to trust, in PEM format. Use the root certificate of the authority that issued your directory's certificate, or the directory's own certificate when it is self-signed. An intermediate certificate on its own isn't enough. If your directory doesn't send its intermediate certificates, paste them along with the root, one after another, in any order. Leave it empty to use the system trust store.
 ---
 * Timeout
 * How many seconds to wait for the directory to connect and answer each operation, from 1 to 30. Defaults to 10.

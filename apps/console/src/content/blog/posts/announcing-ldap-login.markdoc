@@ -21,7 +21,7 @@ faqs:
   - question: "What happens when someone leaves the directory or the required group?"
     answer: "Their next sign-in fails, because the directory no longer finds them or they are no longer in the group. Sessions they already have stay valid until they expire, so delete their sessions or block the user in the Appwrite Console to sign them out right away."
   - question: "Can Appwrite reach an LDAP directory on a private network?"
-    answer: "No. Appwrite Cloud connects to your directory over the internet and refuses hosts that resolve to private addresses. Expose the directory over LDAPS, which encrypts the connection. If you sign its certificate yourself, paste your certificate authority's certificate, or the self-signed certificate, into the LDAP settings, and Appwrite checks that it is talking to your directory before it sends any password. Enterprise teams that need a private connection, such as a VPN, can [contact us](/enterprise)."
+    answer: "No. Appwrite Cloud connects to your directory over the internet and refuses hosts that resolve to private addresses. Expose the directory over LDAPS, which encrypts the connection. If you sign its certificate yourself, paste your certificate authority's root certificate, or the self-signed certificate, into the LDAP settings, and Appwrite checks that it is talking to your directory before it sends any password. Enterprise teams that need a private connection, such as a VPN, can [contact us](/enterprise)."
   - question: "Does LDAP login work with multi-factor authentication?"
     answer: "Yes. An LDAP sign-in counts as the password factor, so users who turned on MFA complete a second factor next, as they would after an email and password sign-in."
 ---
