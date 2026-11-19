@@ -3500,7 +3500,8 @@ pre.prism-code .token-line > span {
 }
 
 .init5-caret {
-  animation: init5-caret-blink 0.7s steps(1, end) var(--init5-caret-delay, 1.3s) 3;
+  animation: init5-caret-blink 0.7s steps(1, end) var(--init5-caret-delay, 1.3s)
+    3;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3509,6 +3510,120 @@ pre.prism-code .token-line > span {
   }
 }
 
+/* Init 5 wordmark: short comets of light trace each letter's outline. */
+@keyframes init5-wordmark-trace {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.init5-wordmark-trail {
+  /* Two comets per letter, each with a bright head and a soft halo. */
+  stroke-dasharray: 13 37;
+  stroke-linecap: round;
+  animation: init5-wordmark-trace 6.4s linear infinite;
+  filter: drop-shadow(0 0 3px var(--brand-cta))
+    drop-shadow(0 0 8px color-mix(in oklch, var(--brand-cta) 60%, transparent));
+}
+
+.init5-wordmark-glow {
+  filter: drop-shadow(
+    0 0 14px color-mix(in oklch, var(--brand-cta) 70%, transparent)
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .init5-wordmark-trail {
+    display: none;
+  }
+}
+
+/*
+ * Init 5 light frame: the hero's light trails in miniature. A comet of
+ * peach -> pink -> violet light circles a hairline border, with a soft halo
+ * trailing it outside the box. Reduced motion keeps the arc still.
+ */
+@property --init5-trail-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes init5-trail-orbit {
+  to {
+    --init5-trail-angle: 360deg;
+  }
+}
+
+.init5-light-frame {
+  --init5-trail: conic-gradient(
+    from var(--init5-trail-angle),
+    transparent 0deg 228deg,
+    color-mix(in oklch, var(--network-globe-edge) 70%, transparent) 290deg,
+    var(--brand-cta) 336deg,
+    var(--network-globe-region) 354deg,
+    transparent 360deg
+  );
+  position: relative;
+  isolation: isolate;
+}
+
+.init5-light-frame::before,
+.init5-light-frame::after {
+  content: '';
+  position: absolute;
+  border-radius: inherit;
+  pointer-events: none;
+  animation: init5-trail-orbit var(--init5-trail-duration, 7s) linear infinite;
+  animation-delay: var(--init5-trail-delay, 0s);
+}
+
+/* Hairline border with the comet riding on it. */
+.init5-light-frame::before {
+  inset: 0;
+  padding: 1px;
+  background: var(--init5-trail), linear-gradient(var(--border), var(--border));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+}
+
+/*
+ * Soft halo: the comet is painted on the box-sized content area, blurred out
+ * into a wide transparent margin, then the box itself is masked away. It
+ * glows around the edge, fades out softly, and never washes over the content.
+ */
+.init5-light-frame::after {
+  inset: -36px;
+  padding: 36px;
+  z-index: -1;
+  background: var(--init5-trail) content-box;
+  filter: blur(14px);
+  opacity: var(--init5-trail-glow, 0.45);
+  transition: opacity 0.4s ease-out;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .init5-light-frame::before,
+  .init5-light-frame::after {
+    animation: none;
+    --init5-trail-angle: 40deg;
+  }
+}
 
 /*
  * Homepage Console section: the screenshot tilts up into place as it scrolls

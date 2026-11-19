@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import { cn } from '@/lib/utils'
 
 /** Aeonik Pro Black Italic @ 100px, -0.025em tracking; each glyph is local + horizontal translate. */
@@ -33,6 +34,8 @@ type InitWordmarkProps = {
   accentColor?: string
   /** Extra classes on the underscore group (e.g. the Init 5 caret blink). */
   underscoreClassName?: string
+  /** Init 5: comets of light trace each letter and the underscore glows. */
+  lightTrails?: boolean
   'aria-label'?: string
 }
 
@@ -44,8 +47,21 @@ export function InitWordmark({
   className,
   accentColor = 'var(--brand-cta)',
   underscoreClassName,
+  lightTrails = false,
   'aria-label': ariaLabel = 'init',
 }: InitWordmarkProps) {
+  const gradientId = `init-wordmark-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
+  const trail = lightTrails
+    ? {
+        fill: 'none',
+        stroke: `url(#${gradientId})`,
+        strokeWidth: 1.5,
+        strokeLinejoin: 'round' as const,
+        pathLength: 100,
+        className: 'init5-wordmark-trail',
+      }
+    : null
+
   return (
     <svg
       viewBox={INIT_WORDMARK_VIEWBOX}
@@ -53,21 +69,43 @@ export function InitWordmark({
       xmlns="http://www.w3.org/2000/svg"
       className={cn(
         'inline-block h-[1em] w-auto shrink-0 align-[-0.05em] leading-none',
+        // Let the trails' and underscore's glow spill past the glyph box.
+        lightTrails && 'overflow-visible',
         className,
       )}
       role="img"
       aria-label={ariaLabel}
     >
+      {trail ? (
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="var(--network-globe-region)" />
+            <stop offset="50%" stopColor="var(--brand-cta)" />
+            <stop offset="100%" stopColor="var(--network-globe-edge)" />
+          </linearGradient>
+        </defs>
+      ) : null}
       {INIT_WORDMARK_LETTERS.map((letter, index) => (
         <g key={`init-letter-${index}`} transform={`translate(${letter.x} 0)`}>
           <path fill="currentColor" d={letter.d} />
+          {trail ? (
+            <path
+              {...trail}
+              d={letter.d}
+              style={{ animationDelay: `${-index * 1.4}s` }}
+            />
+          ) : null}
         </g>
       ))}
       <g
         transform={`translate(${INIT_WORDMARK_UNDERSCORE.x} 0)`}
         className={underscoreClassName}
       >
-        <path fill={accentColor} d={INIT_WORDMARK_UNDERSCORE.d} />
+        <path
+          fill={accentColor}
+          d={INIT_WORDMARK_UNDERSCORE.d}
+          className={lightTrails ? 'init5-wordmark-glow' : undefined}
+        />
       </g>
     </svg>
   )

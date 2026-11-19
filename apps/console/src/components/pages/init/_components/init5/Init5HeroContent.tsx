@@ -45,6 +45,7 @@ function WordmarkReveal({
     <InitWordmark
       className="text-[clamp(68px,11vw,150px)] text-foreground"
       underscoreClassName={reduceMotion ? undefined : 'init5-caret'}
+      lightTrails
     />
   )
   if (reduceMotion) return <div className="mt-5 sm:mt-6">{wordmark}</div>
@@ -53,12 +54,13 @@ function WordmarkReveal({
       className="mt-5 sm:mt-6"
       style={{ '--init5-caret-delay': `${delay + 0.95}s` } as CSSProperties}
       initial={{
-        clipPath: 'inset(-15% 100% -15% -6%)',
+        clipPath: 'inset(-45% 100% -45% -10%)',
         opacity: 0,
         filter: 'blur(10px)',
       }}
       animate={{
-        clipPath: 'inset(-15% -8% -15% -6%)',
+        // Generous insets so the underscore's glow is never cut off.
+        clipPath: 'inset(-45% -25% -45% -10%)',
         opacity: 1,
         filter: 'blur(0px)',
       }}

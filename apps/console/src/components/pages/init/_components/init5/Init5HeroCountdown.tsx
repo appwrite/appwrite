@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { resolveInitDayUnlockDate } from '@/lib/init/dates'
 import { useT } from '@/lib/i18n/translate'
+import { cn } from '@/lib/utils'
 
 const DIGIT_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1]
 
@@ -90,7 +91,7 @@ export function Init5HeroCountdown({
     <div
       role="timer"
       aria-label={`${t('Starts in')} ${days}d ${hours}h ${minutes}m`}
-      className="flex flex-col items-center gap-3 sm:flex-row sm:gap-5 lg:items-center"
+      className="flex flex-col items-center gap-3 lg:items-start"
     >
       <span className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.26em] text-muted-foreground">
         <span className="relative flex size-1.5" aria-hidden>
@@ -101,27 +102,62 @@ export function Init5HeroCountdown({
         </span>
         {t('Starts in')}
       </span>
-      <span
+      {/*
+        A comet of the hero's light circles the panel (see `.init5-light-frame`).
+        Hover brightens its halo, a spotlight follows the cursor, and the
+        digits under it lift and glow.
+      */}
+      <div
         aria-hidden
-        className="flex items-start gap-2.5 font-mono text-[22px] leading-none tabular-nums text-foreground sm:text-[24px]"
+        onPointerMove={(event) => {
+          const box = event.currentTarget.getBoundingClientRect()
+          event.currentTarget.style.setProperty(
+            '--init5-spot-x',
+            `${event.clientX - box.left}px`,
+          )
+          event.currentTarget.style.setProperty(
+            '--init5-spot-y',
+            `${event.clientY - box.top}px`,
+          )
+        }}
+        className="init5-light-frame group/counter flex rounded-2xl bg-background/75 backdrop-blur-md transition-shadow duration-500 hover:[--init5-trail-glow:0.9] hover:shadow-[0_18px_50px_-24px_color-mix(in_oklch,var(--brand-cta)_70%,transparent)]"
       >
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[radial-gradient(150px_circle_at_var(--init5-spot-x,50%)_var(--init5-spot-y,50%),color-mix(in_oklch,var(--brand-cta)_16%,transparent),transparent_70%)] opacity-0 transition-opacity duration-300 group-hover/counter:opacity-100"
+        />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-[color-mix(in_oklch,var(--brand-cta)_55%,transparent)] to-transparent transition-[left,right] duration-500 group-hover/counter:inset-x-2"
+        />
         {segments.map((segment, index) => (
           <Fragment key={segment.id}>
             {index > 0 ? (
-              <span className="pt-0.5 text-muted-foreground/40">:</span>
+              <span className="relative my-3 w-px bg-gradient-to-b from-transparent via-border to-transparent" />
             ) : null}
-            <span className="flex flex-col items-center">
-              <RollingDigits
-                value={segment.value}
-                reduceMotion={reduceMotion}
-              />
-              <span className="mt-1.5 font-sans text-[9px] font-medium uppercase tracking-[0.22em] text-muted-foreground/80">
+            <span className="group/cell relative flex min-w-[64px] flex-col items-center px-3 py-3 sm:min-w-[76px] sm:px-4 sm:py-3.5">
+              <span
+                className={cn(
+                  'font-mono text-[26px] font-light leading-none tabular-nums transition-[transform,text-shadow] duration-300 ease-out sm:text-[30px]',
+                  '[text-shadow:0_0_18px_color-mix(in_oklch,var(--brand-cta)_38%,transparent)]',
+                  'group-hover/cell:-translate-y-0.5 group-hover/cell:[text-shadow:0_0_22px_color-mix(in_oklch,var(--brand-cta)_80%,transparent)] motion-reduce:group-hover/cell:translate-y-0',
+                  segment.id === 'seconds'
+                    ? 'text-[var(--brand-cta)]'
+                    : 'text-foreground',
+                )}
+              >
+                <RollingDigits
+                  value={segment.value}
+                  reduceMotion={reduceMotion}
+                />
+              </span>
+              <span className="mt-2 text-[9px] font-medium uppercase tracking-[0.24em] text-muted-foreground/80 transition-colors duration-300 group-hover/cell:text-foreground">
                 {segment.label}
               </span>
             </span>
           </Fragment>
         ))}
-      </span>
+      </div>
     </div>
   )
 }

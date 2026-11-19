@@ -206,7 +206,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     dateRangeLabel: 'NOVEMBER 30 - DECEMBER 4',
     headline: 'Init returns November 30 - December 4',
     description:
-      'Init returns November 30 - December 4. Five days of launches including Appwrite Videos, Appwrite Analytics, TablesDB upgrades, and Appwrite Distribution.',
+      'Init returns November 30 - December 4. Five days of launches, live sessions, and giveaways, with a new announcement revealed each day.',
     startDate: '2026-11-30',
     endDate: '2026-12-04',
     status: 'upcoming',

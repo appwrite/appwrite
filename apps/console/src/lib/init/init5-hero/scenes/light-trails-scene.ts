@@ -19,11 +19,11 @@ import {
 import type { Init5SceneFactory } from '../scene-types'
 
 /**
- * Concept B - "Light-trail 5".
+ * Light-trail 5.
  * Init's line-art heritage, rebuilt in light: the outline is drawn on by a
  * pen of light, then comets race along the outline and a stack of inset /
  * outset contours. Lines bend around the cursor, flare on click, and sit on a
- * slow aurora.
+ * slow aurora that lightning flickers through now and then.
  */
 
 type Comet = {
@@ -285,6 +285,9 @@ uniform vec3 uColorB;
 uniform vec3 uColorC;
 uniform vec3 uPointer;
 uniform float uPointerStrength;
+/** Lightning inside the fog: xy = strike point (plane units), z = brightness. */
+uniform vec3 uBolt;
+uniform vec3 uBoltColor;
 varying vec2 vUv;
 
 float hash(vec2 p) {
@@ -319,13 +322,28 @@ void main() {
   vec2 q = vec2(fbm(p * 1.05 + vec2(t, -t)), fbm(p * 1.05 + vec2(-t * 0.7, t * 1.3) + 5.2));
   float n = fbm(p * 1.5 + q * 1.9 + vec2(t * 0.5, 0.0));
   vec2 m = p * vec2(0.85, 0.95);
-  float mask = exp(-dot(m, m) * 1.9);
+  // Gathered around the 5: a tighter falloff keeps the fog off the edges.
+  float mask = exp(-dot(m, m) * 3.2);
+  // A soft fog body with gentle ridged filaments for a little structure.
+  float body = smoothstep(0.3, 0.86, n);
+  float r = fbm(p * 3.4 + q * 2.2 + vec2(-t * 0.8, t * 0.6) + 11.3);
+  float wisps = pow(1.0 - abs(r * 2.0 - 1.0), 4.0) * smoothstep(0.2, 0.7, n);
+  float density = body * 0.9 + wisps * 0.4;
   vec3 color = mix(uColorB, uColorA, smoothstep(0.3, 0.72, n));
   color = mix(color, uColorC, smoothstep(0.55, 0.9, q.x) * 0.55);
-  float a = smoothstep(0.28, 0.9, n) * mask * uIntensity;
+  color = mix(color, uColorC, wisps * 0.3);
+  float a = density * mask * uIntensity;
   float pd = length(p - uPointer.xy * 1.0);
   a *= 1.0 + uPointerStrength * exp(-pd * pd * 2.5) * 0.9;
-  gl_FragColor = vec4(color * a, a);
+
+  // Lightning: light blooms from the strike point and scatters through the
+  // fog, so the denser cloud lights up most and the thin gaps stay dark.
+  vec2 bd = p - uBolt.xy;
+  float reach = exp(-dot(bd, bd) * 1.4);
+  float wide = exp(-dot(m, m) * 2.0);
+  float lit = uBolt.z * reach * (0.15 + density * 1.25) * wide;
+
+  gl_FragColor = vec4(color * a + uBoltColor * lit, a + lit * 0.5);
 }
 `
 
@@ -466,6 +484,11 @@ export const createLightTrailsScene: Init5SceneFactory = (options) =>
     let shockAge = 99
     let flash = 0
     let flashed = false
+    const boltTone = new THREE.Color()
+    const bolt = new THREE.Vector3(0, 0, 0)
+    let nextBoltAt = 4.2
+    let boltStartedAt = -1
+    let boltStrikes: Array<{ at: number; peak: number; decay: number }> = []
     let rotationX = 0
     let rotationY = 0
 
@@ -561,11 +584,13 @@ export const createLightTrailsScene: Init5SceneFactory = (options) =>
       uColorC: { value: tones.peach },
       uPointer: { value: pointerLocal },
       uPointerStrength: { value: 0 },
+      uBolt: { value: bolt },
+      uBoltColor: { value: boltTone },
     }
     const auroraMaterial = new THREE.ShaderMaterial({
       uniforms: auroraUniforms,
       vertexShader: auroraVertex,
-      fragmentShader: auroraFragment(runtime.quality === 'low' ? 2 : 4),
+      fragmentShader: auroraFragment(runtime.quality === 'low' ? 3 : 5),
       transparent: true,
       depthWrite: false,
       depthTest: false,
@@ -596,6 +621,10 @@ export const createLightTrailsScene: Init5SceneFactory = (options) =>
         displayColor(palette.foreground, tones.hot)
         tones.peach.lerp(tones.accent, 0.35)
       }
+      // Cool, nearly white light with a violet cast, like lightning in cloud.
+      boltTone
+        .copy(palette.isDark ? tones.hot : tones.accent)
+        .lerp(tones.violet, 0.3)
       const blending = palette.isDark
         ? THREE.AdditiveBlending
         : THREE.NormalBlending
@@ -621,6 +650,34 @@ export const createLightTrailsScene: Init5SceneFactory = (options) =>
     const SWEEP_EVERY = 7
     let nextSweepAt = 2.6
     let sweepStartedAt = -1
+
+    /** A strike is a quick flash, a dimmer re-flash or two, then darkness. */
+    const scheduleBolt = (time: number) => {
+      boltStartedAt = time
+      nextBoltAt = time + 5 + Math.random() * 6
+      const angle = Math.random() * Math.PI * 2
+      const radius = 0.45 + Math.random() * 0.55
+      bolt.x = Math.cos(angle) * radius * 1.1
+      bolt.y = Math.sin(angle) * radius * 0.85
+      const count = 1 + Math.floor(Math.random() * 3)
+      boltStrikes = Array.from({ length: count }, (_, index) => ({
+        at: index === 0 ? 0 : 0.06 + index * 0.08 + Math.random() * 0.06,
+        peak: index === 0 ? 1 : 0.35 + Math.random() * 0.4,
+        decay: 8 + Math.random() * 6,
+      }))
+    }
+
+    const boltEnvelope = (time: number) => {
+      if (boltStartedAt < 0) return 0
+      const t = time - boltStartedAt
+      let value = 0
+      for (const strike of boltStrikes) {
+        if (t >= strike.at) {
+          value += strike.peak * Math.exp(-(t - strike.at) * strike.decay)
+        }
+      }
+      return Math.min(1, value)
+    }
 
     return {
       update: (rt: SceneRuntime, dt: number) => {
@@ -675,6 +732,12 @@ export const createLightTrailsScene: Init5SceneFactory = (options) =>
         const cometFade = rt.reducedMotion ? 1 : clamp01((time - 1.5) / 1.1)
         const fade = 1 - clamp01(rt.scroll * 1.15)
 
+        if (!rt.reducedMotion && time >= nextBoltAt) scheduleBolt(time)
+        const boltLight = boltEnvelope(time)
+        bolt.z = boltLight * (rt.palette.isDark ? 0.5 : 0.18) * fade
+        // The 5's lines catch a faint echo of each strike.
+        flash = Math.max(flash, boltLight * 0.12)
+
         for (const line of lines) {
           const { spec, uniforms } = line
           const drawT = rt.reducedMotion
@@ -700,7 +763,7 @@ export const createLightTrailsScene: Init5SceneFactory = (options) =>
         auroraUniforms.uTime.value = clock
         auroraUniforms.uPointerStrength.value = presence
         auroraUniforms.uIntensity.value =
-          (rt.palette.isDark ? 0.34 : 0.16) * clamp01((time - 0.4) / 2.6) * fade
+          (rt.palette.isDark ? 0.4 : 0.18) * clamp01((time - 0.4) / 2.6) * fade
       },
       onPalette: applyPalette,
       onResize: applySize,
@@ -716,6 +779,9 @@ export const createLightTrailsScene: Init5SceneFactory = (options) =>
         shockAge = 99
         nextSweepAt = 2.6
         sweepStartedAt = -1
+        nextBoltAt = 4.2
+        boltStartedAt = -1
+        bolt.z = 0
       },
       dispose: () => {
         for (const line of lines) {
