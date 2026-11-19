@@ -346,6 +346,7 @@ export function canSeeProjectNavItem(
     case 'reviews':
       return access.canSeeReviews
     case 'usage':
+    case 'monitors':
     case 'playground':
     case 'analytics':
       return access.canSeeProjects

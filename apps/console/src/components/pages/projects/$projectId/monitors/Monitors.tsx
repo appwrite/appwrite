@@ -82,7 +82,7 @@ import {
 } from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
-import { AlertDelivery } from '../_components/AlertDelivery'
+import { AlertDelivery } from './_components/AlertDelivery'
 import { MonitorsEmptyState } from './MonitorsEmptyState'
 import { MonitorDrawer } from './MonitorDrawer'
 import { CreateMonitor } from './CreateMonitor'
@@ -713,7 +713,7 @@ function MonitorState({
     <div className="w-[72px] shrink-0 text-end sm:w-44">
       {state === 'firing' && monitor.alertId ? (
         <Link
-          to="/projects/$projectId/usage/alerts"
+          to="/projects/$projectId/monitors/alerts"
           params={{ projectId }}
           search={{ alert: monitor.alertId }}
           onClick={(event) => event.stopPropagation()}
