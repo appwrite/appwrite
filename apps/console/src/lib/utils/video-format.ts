@@ -137,6 +137,39 @@ export function resolvePlayerAspect(
     : media
 }
 
+/**
+ * The frame a stream decodes at, known before it loads. The encoder fits the
+ * picture inside each rendition's box and pads the rest with black, so a
+ * 2.39:1 video in 1920x1080 renditions plays as a 16:9 frame. Null when the
+ * ready renditions of `output` differ in shape, or there are none.
+ */
+export function renditionFrame(
+  renditions: ReadonlyArray<{
+    output: string
+    status: string
+    width: number
+    height: number
+  }>,
+  output: string,
+): { width: number; height: number } | null {
+  const ready = renditions.filter(
+    (rendition) =>
+      rendition.output === output &&
+      rendition.status === 'ready' &&
+      rendition.width > 0 &&
+      rendition.height > 0,
+  )
+  const first = ready[0]
+  if (!first) return null
+  const ratio = first.width / first.height
+  const sameShape = ready.every(
+    (rendition) =>
+      Math.abs(rendition.width / rendition.height / ratio - 1) <=
+      SAME_SHAPE_TOLERANCE,
+  )
+  return sameShape ? { width: first.width, height: first.height } : null
+}
+
 /** CSS `aspect-ratio` value for a video thumb (timeline frame size, then API metadata). */
 export function videoThumbAspectRatio(
   video: {

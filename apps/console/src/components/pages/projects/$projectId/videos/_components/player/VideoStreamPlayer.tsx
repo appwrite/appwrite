@@ -33,6 +33,7 @@ import {
 } from '@/lib/react-query/hooks/videos'
 import {
   getVideoPlayerViewportStyle,
+  renditionFrame,
   resolvePlayerAspect,
 } from '@/lib/utils/video-format'
 import { useT } from '@/lib/i18n/translate'
@@ -524,6 +525,12 @@ export function VideoStreamPlayer({
     : featured
       ? 'max(240px, min(800px, calc(100cqh - 32px)))'
       : 'max(240px, min(800px, calc(100cqh - 24px)))'
+  // Size the frame from the renditions before the stream loads: their padded
+  // box, not the source, is the shape that decodes.
+  const expectedFrame = useMemo(
+    () => renditionFrame(renditions, output),
+    [renditions, output],
+  )
   const viewportAspect = useMemo(
     () =>
       resolvePlayerAspect(
@@ -532,9 +539,15 @@ export function VideoStreamPlayer({
           height: video.height,
           aspectRatio: video.aspectRatio,
         },
-        mediaPixelSize,
+        mediaPixelSize ?? expectedFrame,
       ),
-    [mediaPixelSize, video.width, video.height, video.aspectRatio],
+    [
+      mediaPixelSize,
+      expectedFrame,
+      video.width,
+      video.height,
+      video.aspectRatio,
+    ],
   )
   const viewportStyle = useMemo(
     () =>

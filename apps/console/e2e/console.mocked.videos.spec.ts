@@ -573,6 +573,50 @@ test.describe('videos (mocked API)', () => {
     await screenshot(page, 'videos-player-locked.png')
   })
 
+  test('keeps the overview player size for a letterboxed video', async ({
+    page,
+  }) => {
+    await enableVideos(page)
+    // A 2.39:1 source in 16:9 renditions decodes as a padded 16:9 frame.
+    await mockAppwriteApi(
+      page,
+      { ...VIDEO, width: 1920, height: 804, aspectRatio: '2.39:1' },
+      RENDITIONS,
+      PROFILES,
+      true,
+    )
+    await open(page, `/${VIDEO_ID}/settings`, (page) =>
+      page.getByRole('switch', { name: 'Public playback' }),
+    )
+    await page.evaluate(() => {
+      const heights: number[] = []
+      ;(window as unknown as { heights: number[] }).heights = heights
+      const sample = () => {
+        const frame = document.querySelector('video')?.parentElement
+        if (frame)
+          heights.push(Math.round(frame.getBoundingClientRect().height))
+        requestAnimationFrame(sample)
+      }
+      sample()
+    })
+
+    await page
+      .locator(`a[href$="/videos/${VIDEO_ID}"][data-status]`)
+      .first()
+      .click()
+    const video = page.locator('video')
+    await expect
+      .poll(() => video.evaluate((node: HTMLVideoElement) => node.videoHeight))
+      .toBeGreaterThan(0)
+    await page.waitForTimeout(500)
+
+    const heights = await page.evaluate(
+      () => (window as unknown as { heights: number[] }).heights,
+    )
+    expect(heights.length).toBeGreaterThan(0)
+    expect(new Set(heights).size).toBe(1)
+  })
+
   test('keeps the player size when the stream loads', async ({ page }) => {
     await enableVideos(page)
     // Rendition sizes round, so the 16:9 stream is a hair off the source
