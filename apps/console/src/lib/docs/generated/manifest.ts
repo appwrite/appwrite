@@ -3679,7 +3679,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Renditions",
     "description": "Learn how Appwrite Videos encodes a rendition per profile and output, how rendition status and progress work, and how to retry a failed encode.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/videos/timeline",

@@ -28,46 +28,304 @@ Audio-only sources, such as a podcast episode, stream the same way as video, but
 In the Console, open **Videos** and click **Create video**. You can upload a new file, pick one from Storage, or import a demo movie. You can also open a video or audio file in Storage and click **Create video** there. The Console also queues renditions for the profiles you select. See the [quick start](/docs/products/videos/quick-start).
 
 {% only_dark %}
-![Create video wizard with a demo movie selected, the Videos destination bucket, CMAF output, and three profiles](/images/docs/videos/dark/create-video.avif)
+![Create video wizard with a video file attached for upload, the Videos destination bucket, CMAF output, and three profiles](/images/docs/videos/dark/create-video.avif)
 {% /only_dark %}
 {% only_light %}
-![Create video wizard with a demo movie selected, the Videos destination bucket, CMAF output, and three profiles](/images/docs/videos/create-video.avif)
+![Create video wizard with a video file attached for upload, the Videos destination bucket, CMAF output, and three profiles](/images/docs/videos/create-video.avif)
 {% /only_light %}
 
 With a server SDK, create the video and then its renditions:
 
 {% multicode %}
-  ```server-nodejs
-  const sdk = require('node-appwrite');
+```server-nodejs
+const sdk = require('node-appwrite');
 
-  const client = new sdk.Client()
-      .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-      .setProject('<PROJECT_ID>')
-      .setKey('<API_KEY>');
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
 
-  const videos = new sdk.Videos(client);
+const videos = new sdk.Videos(client);
 
-  const video = await videos.create({
-      bucketId: '<BUCKET_ID>',
-      fileId: '<FILE_ID>',
-      name: 'Launch keynote', // optional, defaults to the file name
-      permissions: [sdk.Permission.read(sdk.Role.any())] // optional, who can watch
-  });
-  ```
+const video = await videos.create({
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    name: 'Launch keynote', // optional
+    permissions: [sdk.Permission.read(sdk.Role.any())] // optional
+});
+```
 
-  ```http
-  POST /v1/videos HTTP/1.1
-  Content-Type: application/json
-  X-Appwrite-Project: <PROJECT_ID>
-  X-Appwrite-Key: <API_KEY>
+```server-python
+from appwrite.client import Client
+from appwrite.services.videos import Videos
+from appwrite.permission import Permission
+from appwrite.role import Role
 
-  {
-    "bucketId": "<BUCKET_ID>",
-    "fileId": "<FILE_ID>",
-    "name": "Launch keynote",
-    "permissions": ["read(\"any\")"]
-  }
-  ```
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+videos = Videos(client)
+
+video = videos.create(
+    bucket_id = '<BUCKET_ID>',
+    file_id = '<FILE_ID>',
+    name = 'Launch keynote', # optional
+    permissions = [Permission.read(Role.any())] # optional
+)
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+Videos videos = Videos(client);
+
+final video = await videos.create(
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    name: 'Launch keynote', // (optional)
+    permissions: [Permission.read(Role.any())], // (optional)
+);
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Videos;
+use Appwrite\Permission;
+use Appwrite\Role;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<API_KEY>');
+
+$videos = new Videos($client);
+
+$video = $videos->create(
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    name: 'Launch keynote', // optional
+    permissions: [Permission::read(Role::any())] // optional
+);
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<API_KEY>')
+
+videos = Videos.new(client)
+
+video = videos.create(
+    bucket_id: '<BUCKET_ID>',
+    file_id: '<FILE_ID>',
+    name: 'Launch keynote', # optional
+    permissions: [Permission.read(Role.any())] # optional
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<API_KEY>");
+
+Videos videos = new Videos(client);
+
+Video video = await videos.Create(
+    bucketId: "<BUCKET_ID>",
+    fileId: "<FILE_ID>",
+    name: "Launch keynote", // optional
+    permissions: new List<string> { Permission.Read(Role.Any()) } // optional
+);
+```
+
+```server-deno
+import { Client, Videos, Permission, Role } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const videos = new Videos(client);
+
+const video = await videos.create({
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    name: 'Launch keynote', // optional
+    permissions: [Permission.read(Role.any())] // optional
+});
+```
+
+```server-go
+package main
+
+import (
+	"fmt"
+
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/permission"
+	"github.com/appwrite/sdk-for-go/v7/role"
+	"github.com/appwrite/sdk-for-go/v7/videos"
+)
+
+func main() {
+	client := appwrite.NewClient(
+		appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+		appwrite.WithProject("<PROJECT_ID>"),
+		appwrite.WithKey("<API_KEY>"),
+	)
+
+	service := videos.New(client)
+
+	video, err := service.Create(
+		"<BUCKET_ID>",
+		"<FILE_ID>",
+		service.WithCreateName("Launch keynote"),
+		service.WithCreatePermissions([]string{permission.Read(role.Any())}),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(video)
+}
+```
+
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+let videos = Videos(client)
+
+let video = try await videos.create(
+    bucketId: "<BUCKET_ID>",
+    fileId: "<FILE_ID>",
+    name: "Launch keynote", // optional
+    permissions: [Permission.read(Role.any())] // optional
+)
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.Permission
+import io.appwrite.Role
+import io.appwrite.services.Videos
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+val videos = Videos(client)
+
+val video = videos.create(
+    bucketId = "<BUCKET_ID>",
+    fileId = "<FILE_ID>",
+    name = "Launch keynote", // optional
+    permissions = listOf(Permission.read(Role.any())) // optional
+)
+```
+
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.exceptions.AppwriteException;
+import io.appwrite.Permission;
+import io.appwrite.Role;
+import io.appwrite.services.Videos;
+import java.util.List;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>");
+
+Videos videos = new Videos(client);
+
+try {
+    videos.create(
+        "<BUCKET_ID>", // bucketId
+        "<FILE_ID>", // fileId
+        "Launch keynote", // name (optional)
+        List.of(Permission.read(Role.any())), // permissions (optional)
+        new CoroutineCallback<>((result, error) -> {
+            if (error != null) {
+                error.printStackTrace();
+                return;
+            }
+
+            System.out.println(result);
+        })
+    );
+} catch (AppwriteException e) {
+    e.printStackTrace();
+}
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::permission::Permission;
+use appwrite::role::Role;
+use appwrite::services::Videos;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let videos = Videos::new(&client);
+
+    let video = videos.create(
+        "<BUCKET_ID>",
+        "<FILE_ID>",
+        Some("Launch keynote"), // name
+        Some(vec![Permission::read(Role::any()).to_string()]) // permissions
+    ).await?;
+
+    println!("{:?}", video);
+
+    Ok(())
+}
+```
+
+```http
+POST /v1/videos HTTP/1.1
+Content-Type: application/json
+X-Appwrite-Project: <PROJECT_ID>
+X-Appwrite-Key: <API_KEY>
+
+{
+  "bucketId": "<BUCKET_ID>",
+  "fileId": "<FILE_ID>",
+  "name": "Launch keynote",
+  "permissions": ["read(\"any\")"]
+}
+```
 {% /multicode %}
 
 Creating a video stores the document and queues [timeline](/docs/products/videos/timeline) generation. Nothing is encoded until you [create renditions](/docs/products/videos/renditions#create-renditions).
@@ -131,16 +389,241 @@ A video with one ready rendition and another still encoding shows **Encoding**, 
 
 List videos with [queries](/docs/products/databases/tablesdb/queries). You can filter and sort on `bucketId`, `fileId`, `name`, `size`, `format`, `duration`, `width`, `height`, `videoCodec`, `videoBitRate`, `audioCodec`, and `audioBitRate`.
 
-```js
-const { Query } = sdk;
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
 
-const { videos: longVideos } = await videos.list({
-    queries: [
-        Query.greaterThan('duration', 600000), // longer than 10 minutes
-        Query.orderDesc('$createdAt')
-    ]
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const videos = new sdk.Videos(client);
+
+const result = await videos.list({
+    queries: [sdk.Query.greaterThan('duration', 600000), sdk.Query.orderDesc('$createdAt')] // optional
 });
 ```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.videos import Videos
+from appwrite.query import Query
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+videos = Videos(client)
+
+result = videos.list(
+    queries = [Query.greater_than('duration', 600000), Query.order_desc('$createdAt')] # optional
+)
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+Videos videos = Videos(client);
+
+final result = await videos.list(
+    queries: [Query.greaterThan('duration', 600000), Query.orderDesc('\$createdAt')], // (optional)
+);
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Videos;
+use Appwrite\Query;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<API_KEY>');
+
+$videos = new Videos($client);
+
+$result = $videos->list(
+    queries: [Query::greaterThan('duration', 600000), Query::orderDesc('$createdAt')] // optional
+);
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<API_KEY>')
+
+videos = Videos.new(client)
+
+result = videos.list(
+    queries: [Query.greater_than('duration', 600000), Query.order_desc('$createdAt')] # optional
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<API_KEY>");
+
+Videos videos = new Videos(client);
+
+VideoList result = await videos.List(
+    queries: new List<string> { Query.GreaterThan("duration", 600000), Query.OrderDesc("$createdAt") } // optional
+);
+```
+
+```server-deno
+import { Client, Videos, Query } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const videos = new Videos(client);
+
+const result = await videos.list({
+    queries: [Query.greaterThan('duration', 600000), Query.orderDesc('$createdAt')] // optional
+});
+```
+
+```server-go
+package main
+
+import (
+	"fmt"
+
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/query"
+	"github.com/appwrite/sdk-for-go/v7/videos"
+)
+
+func main() {
+	client := appwrite.NewClient(
+		appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+		appwrite.WithProject("<PROJECT_ID>"),
+		appwrite.WithKey("<API_KEY>"),
+	)
+
+	service := videos.New(client)
+
+	result, err := service.List(
+		service.WithListQueries([]string{query.GreaterThan("duration", 600000), query.OrderDesc("$createdAt")}),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(result)
+}
+```
+
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+let videos = Videos(client)
+
+let result = try await videos.list(
+    queries: [Query.greaterThan("duration", value: 600000), Query.orderDesc("$createdAt")] // optional
+)
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.Query
+import io.appwrite.services.Videos
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+val videos = Videos(client)
+
+val result = videos.list(
+    queries = listOf(Query.greaterThan("duration", 600000), Query.orderDesc("\$createdAt")) // optional
+)
+```
+
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.exceptions.AppwriteException;
+import io.appwrite.Query;
+import io.appwrite.services.Videos;
+import java.util.List;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>");
+
+Videos videos = new Videos(client);
+
+try {
+    videos.list(
+        List.of(Query.greaterThan("duration", 600000), Query.orderDesc("$createdAt")), // queries (optional)
+        new CoroutineCallback<>((result, error) -> {
+            if (error != null) {
+                error.printStackTrace();
+                return;
+            }
+
+            System.out.println(result);
+        })
+    );
+} catch (AppwriteException e) {
+    e.printStackTrace();
+}
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::query::Query;
+use appwrite::services::Videos;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let videos = Videos::new(&client);
+
+    let result = videos.list(
+        Some(vec![Query::greater_than("duration", 600000).to_string(), Query::order_desc("$createdAt").to_string()]) // queries
+    ).await?;
+
+    println!("{:?}", result);
+
+    Ok(())
+}
+```
+{% /multicode %}
 
 To search by name or source file ID, pass `Query.search('search', 'keynote')` in `queries`.
 

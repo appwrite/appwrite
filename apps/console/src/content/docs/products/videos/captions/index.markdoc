@@ -58,7 +58,8 @@ Upload a **WebVTT** (`.vtt`) or **SubRip** (`.srt`) file to a Storage bucket, th
 
 With a server SDK:
 
-```js
+{% multicode %}
+```server-nodejs
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -68,19 +69,287 @@ const client = new sdk.Client()
 
 const videos = new sdk.Videos(client);
 
-await videos.createCaption({
+const caption = await videos.createCaption({
     videoId: '<VIDEO_ID>',
     bucketId: '<BUCKET_ID>',
     fileId: '<CAPTION_FILE_ID>',
     name: 'English',
     code: 'eng',
-    xdefault: true
+    xdefault: true // optional
 });
 ```
 
+```server-python
+from appwrite.client import Client
+from appwrite.services.videos import Videos
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+videos = Videos(client)
+
+caption = videos.create_caption(
+    video_id = '<VIDEO_ID>',
+    bucket_id = '<BUCKET_ID>',
+    file_id = '<CAPTION_FILE_ID>',
+    name = 'English',
+    code = 'eng',
+    default = True # optional
+)
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+Videos videos = Videos(client);
+
+final caption = await videos.createCaption(
+    videoId: '<VIDEO_ID>',
+    bucketId: '<BUCKET_ID>',
+    fileId: '<CAPTION_FILE_ID>',
+    name: 'English',
+    code: 'eng',
+    xdefault: true, // (optional)
+);
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Videos;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<API_KEY>');
+
+$videos = new Videos($client);
+
+$caption = $videos->createCaption(
+    videoId: '<VIDEO_ID>',
+    bucketId: '<BUCKET_ID>',
+    fileId: '<CAPTION_FILE_ID>',
+    name: 'English',
+    code: 'eng',
+    default: true // optional
+);
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<API_KEY>')
+
+videos = Videos.new(client)
+
+caption = videos.create_caption(
+    video_id: '<VIDEO_ID>',
+    bucket_id: '<BUCKET_ID>',
+    file_id: '<CAPTION_FILE_ID>',
+    name: 'English',
+    code: 'eng',
+    default: true # optional
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<API_KEY>");
+
+Videos videos = new Videos(client);
+
+VideoCaption caption = await videos.CreateCaption(
+    videoId: "<VIDEO_ID>",
+    bucketId: "<BUCKET_ID>",
+    fileId: "<CAPTION_FILE_ID>",
+    name: "English",
+    code: "eng",
+    @default: true // optional
+);
+```
+
+```server-deno
+import { Client, Videos } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const videos = new Videos(client);
+
+const caption = await videos.createCaption({
+    videoId: '<VIDEO_ID>',
+    bucketId: '<BUCKET_ID>',
+    fileId: '<CAPTION_FILE_ID>',
+    name: 'English',
+    code: 'eng',
+    xdefault: true // optional
+});
+```
+
+```server-go
+package main
+
+import (
+	"fmt"
+
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/videos"
+)
+
+func main() {
+	client := appwrite.NewClient(
+		appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+		appwrite.WithProject("<PROJECT_ID>"),
+		appwrite.WithKey("<API_KEY>"),
+	)
+
+	service := videos.New(client)
+
+	caption, err := service.CreateCaption(
+		"<VIDEO_ID>",
+		"<BUCKET_ID>",
+		"<CAPTION_FILE_ID>",
+		"English",
+		"eng",
+		service.WithCreateCaptionDefault(true),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(caption)
+}
+```
+
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+let videos = Videos(client)
+
+let caption = try await videos.createCaption(
+    videoId: "<VIDEO_ID>",
+    bucketId: "<BUCKET_ID>",
+    fileId: "<CAPTION_FILE_ID>",
+    name: "English",
+    code: "eng",
+    default: true // optional
+)
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Videos
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+val videos = Videos(client)
+
+val caption = videos.createCaption(
+    videoId = "<VIDEO_ID>",
+    bucketId = "<BUCKET_ID>",
+    fileId = "<CAPTION_FILE_ID>",
+    name = "English",
+    code = "eng",
+    default = true // optional
+)
+```
+
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.exceptions.AppwriteException;
+import io.appwrite.services.Videos;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>");
+
+Videos videos = new Videos(client);
+
+try {
+    videos.createCaption(
+        "<VIDEO_ID>", // videoId
+        "<BUCKET_ID>", // bucketId
+        "<CAPTION_FILE_ID>", // fileId
+        "English", // name
+        "eng", // code
+        true, // default (optional)
+        new CoroutineCallback<>((result, error) -> {
+            if (error != null) {
+                error.printStackTrace();
+                return;
+            }
+
+            System.out.println(result);
+        })
+    );
+} catch (AppwriteException e) {
+    e.printStackTrace();
+}
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::services::Videos;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let videos = Videos::new(&client);
+
+    let caption = videos.create_caption(
+        "<VIDEO_ID>",
+        "<BUCKET_ID>",
+        "<CAPTION_FILE_ID>",
+        "English",
+        "eng",
+        Some(true) // default
+    ).await?;
+
+    println!("{:?}", caption);
+
+    Ok(())
+}
+```
+{% /multicode %}
+
 The `name` is what viewers see in the player's captions menu, so make it clear, such as `Spanish` or `English (SDH)`. Names are up to 128 characters and allow the letters `A-Z` and `a-z`, numbers, spaces, and `- . , ( ) _ '`. Accented and non-Latin characters are not allowed in names, but are fine inside the caption text.
 
-The parameter is called `xdefault` because `default` is a reserved word in several SDK languages. In the REST API it is `default`.
+The REST API calls the default flag `default`. Because `default` is a reserved word in JavaScript and Dart, the Node.js, Deno, Dart, and web SDKs call it `xdefault`, and the .NET SDK calls it `@default`.
 
 You can add up to 30 captions per video per hour. Past that, `videos.createCaption()` returns a `general_rate_limit_exceeded` error until the hour is up.
 
@@ -102,17 +371,276 @@ Embedded tracks without a language tag show as `und` (undetermined).
 
 To fix a track's language in the Console, open the caption and change **Language** in the editor's **Settings** panel. Retagging updates the name, code, or default flag without re-processing the file. Changing the file itself re-packages the track.
 
-With a server SDK, pass only the fields you want to change:
+With a server SDK, pass only the fields you want to change. For example, to tag an embedded track that came in as `und`:
 
-```js
-// Tag an embedded track that came in as "und"
-await videos.updateCaption({
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const videos = new sdk.Videos(client);
+
+const caption = await videos.updateCaption({
     videoId: '<VIDEO_ID>',
     captionId: '<CAPTION_ID>',
-    code: 'heb',
-    name: 'Hebrew'
+    name: 'Hebrew', // optional
+    code: 'heb' // optional
 });
 ```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.videos import Videos
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+videos = Videos(client)
+
+caption = videos.update_caption(
+    video_id = '<VIDEO_ID>',
+    caption_id = '<CAPTION_ID>',
+    name = 'Hebrew', # optional
+    code = 'heb' # optional
+)
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+Videos videos = Videos(client);
+
+final caption = await videos.updateCaption(
+    videoId: '<VIDEO_ID>',
+    captionId: '<CAPTION_ID>',
+    name: 'Hebrew', // (optional)
+    code: 'heb', // (optional)
+);
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Videos;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<API_KEY>');
+
+$videos = new Videos($client);
+
+$caption = $videos->updateCaption(
+    videoId: '<VIDEO_ID>',
+    captionId: '<CAPTION_ID>',
+    name: 'Hebrew', // optional
+    code: 'heb' // optional
+);
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<API_KEY>')
+
+videos = Videos.new(client)
+
+caption = videos.update_caption(
+    video_id: '<VIDEO_ID>',
+    caption_id: '<CAPTION_ID>',
+    name: 'Hebrew', # optional
+    code: 'heb' # optional
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<API_KEY>");
+
+Videos videos = new Videos(client);
+
+VideoCaption caption = await videos.UpdateCaption(
+    videoId: "<VIDEO_ID>",
+    captionId: "<CAPTION_ID>",
+    name: "Hebrew", // optional
+    code: "heb" // optional
+);
+```
+
+```server-deno
+import { Client, Videos } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const videos = new Videos(client);
+
+const caption = await videos.updateCaption({
+    videoId: '<VIDEO_ID>',
+    captionId: '<CAPTION_ID>',
+    name: 'Hebrew', // optional
+    code: 'heb' // optional
+});
+```
+
+```server-go
+package main
+
+import (
+	"fmt"
+
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/videos"
+)
+
+func main() {
+	client := appwrite.NewClient(
+		appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+		appwrite.WithProject("<PROJECT_ID>"),
+		appwrite.WithKey("<API_KEY>"),
+	)
+
+	service := videos.New(client)
+
+	caption, err := service.UpdateCaption(
+		"<VIDEO_ID>",
+		"<CAPTION_ID>",
+		service.WithUpdateCaptionName("Hebrew"),
+		service.WithUpdateCaptionCode("heb"),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(caption)
+}
+```
+
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+let videos = Videos(client)
+
+let caption = try await videos.updateCaption(
+    videoId: "<VIDEO_ID>",
+    captionId: "<CAPTION_ID>",
+    name: "Hebrew", // optional
+    code: "heb" // optional
+)
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Videos
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+val videos = Videos(client)
+
+val caption = videos.updateCaption(
+    videoId = "<VIDEO_ID>",
+    captionId = "<CAPTION_ID>",
+    name = "Hebrew", // optional
+    code = "heb" // optional
+)
+```
+
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.exceptions.AppwriteException;
+import io.appwrite.services.Videos;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>");
+
+Videos videos = new Videos(client);
+
+try {
+    videos.updateCaption(
+        "<VIDEO_ID>", // videoId
+        "<CAPTION_ID>", // captionId
+        null, // bucketId (optional)
+        null, // fileId (optional)
+        "Hebrew", // name (optional)
+        "heb", // code (optional)
+        new CoroutineCallback<>((result, error) -> {
+            if (error != null) {
+                error.printStackTrace();
+                return;
+            }
+
+            System.out.println(result);
+        })
+    );
+} catch (AppwriteException e) {
+    e.printStackTrace();
+}
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::services::Videos;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let videos = Videos::new(&client);
+
+    let caption = videos.update_caption(
+        "<VIDEO_ID>",
+        "<CAPTION_ID>",
+        None, // bucketId
+        None, // fileId
+        Some("Hebrew"), // name
+        Some("heb") // code
+    ).await?;
+
+    println!("{:?}", caption);
+
+    Ok(())
+}
+```
+{% /multicode %}
 
 To replace the text of a track, pass a new `bucketId` and `fileId` together. List a video's tracks with `videos.listCaptions({ videoId })`.
 
