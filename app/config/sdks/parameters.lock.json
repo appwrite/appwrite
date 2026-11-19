@@ -64,14 +64,16 @@
             "success",
             "failure",
             "scopes",
-            "state"
+            "state",
+            "link"
         ],
         "account.createOAuth2Token": [
             "provider",
             "success",
             "failure",
             "scopes",
-            "state"
+            "state",
+            "link"
         ],
         "account.createPasskey": [
             "passkeyId",
@@ -1090,14 +1092,16 @@
             "success",
             "failure",
             "scopes",
-            "state"
+            "state",
+            "link"
         ],
         "account.createOAuth2Token": [
             "provider",
             "success",
             "failure",
             "scopes",
-            "state"
+            "state",
+            "link"
         ],
         "account.createPasskey": [
             "passkeyId",
@@ -5634,14 +5638,16 @@
             "success",
             "failure",
             "scopes",
-            "state"
+            "state",
+            "link"
         ],
         "account.createOAuth2Token": [
             "provider",
             "success",
             "failure",
             "scopes",
-            "state"
+            "state",
+            "link"
         ],
         "account.createPasskey": [
             "passkeyId",
