@@ -111,6 +111,10 @@ final class Recorder implements Handler
             $this->adapter->close($connection->fd);
             $this->log[] = ['hangup', $connection->fd, $connection->closed, $connection->active];
         }
+        if ($connect->password === 'throw') {
+            // As when the rate-limit store is unreachable.
+            throw new \RuntimeException('Connection refused');
+        }
         if ($connect->password === 'deny' || $connect->authData === 'deny') {
             return Connack::refuse(Connack::NOT_AUTHORIZED);
         }

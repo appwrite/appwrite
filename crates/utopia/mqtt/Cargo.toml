@@ -32,4 +32,4 @@ utopia-async.workspace = true
 
 [package.metadata.utopia]
 category = "servers"
-php-sync = "4bef4bfe4b0d3114f23539fa3a3ac1ed50154ba6"
+php-sync = "8c6a33cc88bb52aab0e6139676bc81f6ce631fb7"

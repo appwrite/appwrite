@@ -673,6 +673,7 @@
               "up_down_counter",
               "mqtt.connections.active",
               [
+                0,
                 1,
                 1,
                 -1
@@ -1107,6 +1108,7 @@
               "up_down_counter",
               "mqtt.connections.active",
               [
+                0,
                 1,
                 -1
               ]
@@ -1467,6 +1469,13 @@
                 1,
                 1
               ]
+            ],
+            [
+              "up_down_counter",
+              "mqtt.connections.active",
+              [
+                0
+              ]
             ]
           ]
         }
@@ -1737,6 +1746,13 @@
                 1,
                 1,
                 1
+              ]
+            ],
+            [
+              "up_down_counter",
+              "mqtt.connections.active",
+              [
+                0
               ]
             ]
           ]
@@ -2064,6 +2080,7 @@
               "up_down_counter",
               "mqtt.connections.active",
               [
+                0,
                 1,
                 -1
               ]
@@ -2353,6 +2370,7 @@
               "up_down_counter",
               "mqtt.connections.active",
               [
+                0,
                 1,
                 -1
               ]
@@ -2692,6 +2710,7 @@
               "up_down_counter",
               "mqtt.connections.active",
               [
+                0,
                 1,
                 -1,
                 1,
@@ -3285,6 +3304,7 @@
               "up_down_counter",
               "mqtt.connections.active",
               [
+                0,
                 1,
                 -1
               ]
@@ -3519,6 +3539,7 @@
               "up_down_counter",
               "mqtt.connections.active",
               [
+                0,
                 1,
                 -1
               ]
@@ -3835,6 +3856,13 @@
               [
                 1
               ]
+            ],
+            [
+              "up_down_counter",
+              "mqtt.connections.active",
+              [
+                0
+              ]
             ]
           ]
         }
@@ -4035,6 +4063,7 @@
               "up_down_counter",
               "mqtt.connections.active",
               [
+                0,
                 1
               ]
             ]
@@ -4522,6 +4551,7 @@
               "up_down_counter",
               "mqtt.connections.active",
               [
+                0,
                 1,
                 1
               ]

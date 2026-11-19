@@ -494,6 +494,10 @@ impl Handler for Recorder {
         if connect.password.as_deref() == Some(b"deny") || connect.auth_data.as_deref() == Some(b"deny") {
             return Ok(ConnectReply::Connack(Connack::refuse(Connack::NOT_AUTHORIZED, None)));
         }
+        if connect.password.as_deref() == Some(b"throw") {
+            // As when the rate-limit store is unreachable.
+            return Err(Error::Runtime("Connection refused".into()));
+        }
         if connect.password.as_deref() == Some(b"busy") {
             return Ok(ConnectReply::Connack(Connack::refuse(Connack::SERVER_BUSY, None)));
         }

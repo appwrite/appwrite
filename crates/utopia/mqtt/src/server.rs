@@ -108,12 +108,15 @@ struct Metrics {
 
 impl Metrics {
     fn new(telemetry: &dyn Telemetry) -> Self {
-        Self {
+        let metrics = Self {
             packets_received: telemetry.counter("mqtt.packets.received", None, None),
             connections_opened: telemetry.counter("mqtt.connections.opened", None, None),
             connections_active: telemetry.up_down_counter("mqtt.connections.active", None, None),
             subscriptions: telemetry.counter("mqtt.subscriptions", None, None),
-        }
+        };
+        // Reported as 0 from the start, so a broker that never accepts a connection still has the series.
+        metrics.connections_active.add(0, &[]);
+        metrics
     }
 }
 
@@ -430,7 +433,13 @@ impl<A: Adapter + Send + Sync, H: Handler> Server<A, H> {
                     state.keep_alive = self.keep_alive(connect.keep_alive, connect.protocol_level);
                 }
                 connection.set_client_id(&connect.client_id);
-                let reply = self.inner.handler.on_connect(&connect, connection)?;
+                let reply = match self.inner.handler.on_connect(&connect, connection) {
+                    Ok(reply) => reply,
+                    Err(error) => {
+                        self.metrics().connections_opened.add(1, &[("result", Attribute::from("error"))]);
+                        return Err(error);
+                    }
+                };
                 // The handler may yield, and the client may be gone by the
                 // time it returns.
                 if connection.state().closed {

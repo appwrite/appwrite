@@ -2118,6 +2118,191 @@
               [
                 1
               ]
+            ],
+            [
+              "up_down_counter",
+              "mqtt.connections.active",
+              [
+                0
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testActiveConnectionsAreReportedFromTheStart",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "timeline"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.new",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.telemetry",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.start",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.metrics",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            [
+              "up_down_counter",
+              "mqtt.connections.active",
+              [
+                0
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testConnectThatThrowsIsCountedAndClosed",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "timeline"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.new",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.telemetry",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.error",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.start",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 9
+          },
+          "expect": null
+        },
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "client-9",
+            "keep_alive": 60,
+            "clean_session": true,
+            "username": "u",
+            "password": "throw"
+          },
+          "bind": "p",
+          "expect": {
+            "$bytes": "EB4ABE1RVFQEwgA8AAhjbGllbnQtOQABdQAFdGhyb3c="
+          }
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 9,
+            "data": {
+              "$ref": "p"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.metrics",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "mqtt.packets.received",
+              [
+                1
+              ]
+            ],
+            [
+              "counter",
+              "mqtt.connections.opened",
+              [
+                1
+              ]
+            ],
+            [
+              "up_down_counter",
+              "mqtt.connections.active",
+              [
+                0
+              ]
             ]
           ]
         }
@@ -2311,6 +2496,7 @@
               "up_down_counter",
               "mqtt.connections.active",
               [
+                0,
                 1,
                 -1
               ]
@@ -2501,6 +2687,7 @@
               "up_down_counter",
               "mqtt.connections.active",
               [
+                0,
                 1,
                 -1
               ]
