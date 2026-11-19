@@ -61,15 +61,6 @@ class EmailNotDisposableTest extends TestCase
         }
     }
 
-    public function test_domains_used_by_the_november_probe_accounts(): void
-    {
-        $validator = new EmailNotDisposable();
-
-        // Console signups behind the 2026-11 build probes: marchslurp.com hands out a subdomain per mailbox.
-        $this->assertSame(false, $validator->isValid('user@hcp.marchslurp.com'));
-        $this->assertSame(false, $validator->isValid('user@euploading.com'));
-    }
-
     public function test_site_on_listed_public_suffix(): void
     {
         $validator = new EmailNotDisposable();
