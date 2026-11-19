@@ -2408,6 +2408,13 @@
             "qos",
             "expiry"
         ],
+        "messaging.createBirdProvider": [
+            "providerId",
+            "name",
+            "from",
+            "apiKey",
+            "enabled"
+        ],
         "messaging.createEmail": [
             "messageId",
             "subject",
@@ -2684,6 +2691,13 @@
             "enabled",
             "qos",
             "expiry"
+        ],
+        "messaging.updateBirdProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "from"
         ],
         "messaging.updateEmail": [
             "messageId",
@@ -6918,6 +6932,13 @@
             "qos",
             "expiry"
         ],
+        "messaging.createBirdProvider": [
+            "providerId",
+            "name",
+            "from",
+            "apiKey",
+            "enabled"
+        ],
         "messaging.createEmail": [
             "messageId",
             "subject",
@@ -7194,6 +7215,13 @@
             "enabled",
             "qos",
             "expiry"
+        ],
+        "messaging.updateBirdProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "from"
         ],
         "messaging.updateEmail": [
             "messageId",

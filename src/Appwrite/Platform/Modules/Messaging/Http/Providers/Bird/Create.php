@@ -44,7 +44,9 @@ class Create extends Action
                 namespace: 'messaging',
                 group: 'providers',
                 name: 'createBirdProvider',
-                description: '/docs/references/messaging/create-bird-provider.md',
+                description: <<<EOT
+                Create a new Bird provider. It sends SMS through Bird with a workspace API key that holds the `sms:write` scope.
+                EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
