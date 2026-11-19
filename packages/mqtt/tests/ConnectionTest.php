@@ -334,8 +334,72 @@ final class ConnectionTest extends TestCase
         $this->assertInstanceOf(Connection::class, $handler->connection);
         $this->assertTrue($handler->connection->closed);
         $this->assertFalse($handler->connection->active, 'a connection closed during onConnect was marked active');
-        $this->assertArrayNotHasKey('mqtt.connections.active', $telemetry->upDownCounters, 'a connection closed during onConnect moved the active gauge');
+        $this->assertSame([0], $telemetry->upDownCounters['mqtt.connections.active']->values, 'a connection closed during onConnect moved the active gauge');
         $this->assertArrayNotHasKey('mqtt.connections.opened', $telemetry->counters, 'a connection closed during onConnect was counted as opened');
+    }
+
+    public function testActiveConnectionsAreReportedFromTheStart(): void
+    {
+        $telemetry = new TestTelemetry();
+        (new Server(new RecordingAdapter(), new AcceptingHandler()))->setTelemetry($telemetry)->start();
+
+        // Test for SUCCESS: a broker that has accepted nothing still reports 0.
+        $this->assertSame([0], $telemetry->upDownCounters['mqtt.connections.active']->values);
+    }
+
+    public function testConnectThatThrowsIsCountedAndClosed(): void
+    {
+        $adapter = new RecordingAdapter();
+        $handler = new class () implements Handler {
+            public function onConnect(Connect $connect, Connection $connection): Connack
+            {
+                throw new \RuntimeException('Connection refused');
+            }
+
+            public function onAuthenticate(Auth $auth, Connection $connection): Connack|Auth|Disconnect
+            {
+                throw new \LogicException('not exercised');
+            }
+
+            public function onSubscribe(Subscribe $subscribe, Connection $connection): Suback
+            {
+                throw new \LogicException('not exercised');
+            }
+
+            public function onUnsubscribe(Unsubscribe $unsubscribe, Connection $connection): Unsuback
+            {
+                throw new \LogicException('not exercised');
+            }
+
+            public function onPublish(Publish $publish, Connection $connection, iterable $subscribers): void
+            {
+            }
+
+            public function onPuback(Puback $puback, Connection $connection): void
+            {
+            }
+
+            public function onDisconnect(?Disconnect $disconnect, Connection $connection): void
+            {
+            }
+        };
+        $telemetry = new TestTelemetry();
+        $errors = [];
+        (new Server($adapter, $handler))
+            ->setTelemetry($telemetry)
+            ->error(function (\Throwable $error, string $action) use (&$errors): void {
+                $errors[] = $action . ': ' . $error->getMessage();
+            })
+            ->start();
+
+        // Test for FAILURE: onConnect throws, as it did when the rate-limit store was unreachable.
+        $adapter->deliver(9, V5::connect('client-9'));
+
+        $this->assertSame([], $adapter->sent, 'a CONNECT that threw was sent a CONNACK');
+        $this->assertSame([9], $adapter->closed);
+        $this->assertSame(['receive: Connection refused'], $errors);
+        $this->assertSame([1], $telemetry->counters['mqtt.connections.opened']->values, 'a CONNECT that threw was not counted');
+        $this->assertSame([0], $telemetry->upDownCounters['mqtt.connections.active']->values, 'a CONNECT that threw moved the active gauge');
     }
 
     public function testSecondConnectIsAProtocolErrorThatClosesTheConnection(): void
