@@ -56,7 +56,7 @@ https://<REGION>.cloud.appwrite.io/v1/videos/<VIDEO_ID>/outputs/cmaf/master.m3u8
 
 Most players cannot send Appwrite headers, so the project ID travels in the URL. Every playlist, segment, and caption link inside the manifest carries it too.
 
-In the Console, open a video and select **Streaming** to copy every URL, including the per-rendition playlists and caption manifests. The SDKs build the same URLs with `getHlsManifest()`, `getDashManifest()`, `getCmafHlsManifest()`, and `getCmafDashManifest()`.
+In the Console, open a video and select **Streaming** to copy every URL, including the per-rendition playlists and caption manifests. The web SDK builds the same URLs with `getHlsManifest()`, `getDashManifest()`, `getCmafHlsManifest()`, and `getCmafDashManifest()`. Server SDKs download the manifest instead of returning its URL.
 
 A master manifest lists only renditions that are `ready`. Until a rendition for that output is ready, the master manifest returns `404` with the `video_rendition_not_found` error. When more renditions finish, the manifest grows, and players pick them up the next time they load it.
 

@@ -30,7 +30,7 @@ The timeline is generated once per video and is not retried if it fails.
 
 # WebVTT index {% #webvtt-index %}
 
-Load the index from `/v1/videos/<VIDEO_ID>/timelines?project=<PROJECT_ID>`. The SDKs expose it as `videos.getTimelines({ videoId })`. Each cue points at a sprite and the region of one thumbnail inside it, using a `#xywh=x,y,width,height` media fragment. For a short 16:9 clip:
+Load the index from `/v1/videos/<VIDEO_ID>/timelines?project=<PROJECT_ID>`. The web SDK returns this URL from `videos.getTimelines({ videoId })`, and server SDKs download the file. Each cue points at a sprite and the region of one thumbnail inside it, using a `#xywh=x,y,width,height` media fragment. For a short 16:9 clip:
 
 ```text
 WEBVTT
