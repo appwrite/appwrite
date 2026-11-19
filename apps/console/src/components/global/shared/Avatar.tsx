@@ -17,6 +17,7 @@ import {
 import {
   getTeamPhotoVersion,
   subscribeTeamPhotoVersion,
+  withTeamPhotoVersion,
 } from '@/lib/team-photo'
 import {
   getUserPhotoVersion,
@@ -339,7 +340,7 @@ export function TeamAvatar({
       width: pixels,
       height: pixels,
     })
-    return version > 0 ? `${url}&v=${version}` : url
+    return withTeamPhotoVersion(url, version)
   }, [teamId, pixels, version])
   const [failedSrc, setFailedSrc] = useState<string | null>(null)
 
