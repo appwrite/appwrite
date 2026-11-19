@@ -1264,8 +1264,8 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
             return;
         }
 
-        if ($messageDispatcher->isLimited($type) && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
-            $isRateLimited = $container->get('timelimit')(
+        if ($messageDispatcher->isRateLimited($type) && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+            $isOverLimit = $container->get('timelimit')(
                 'project:{project},container:{container},connection:{connection}',
                 APP_LIMIT_REALTIME_MESSAGES,
                 60,
@@ -1279,7 +1279,7 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
                     ->limited,
             );
 
-            if ($isRateLimited) {
+            if ($isOverLimit) {
                 throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES);
             }
         }

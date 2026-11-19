@@ -11,7 +11,7 @@ class Dispatcher
     public const LABEL_MESSAGE_TYPE = 'messageType';
     public const LABEL_PAYLOAD_SHAPE = 'payloadShape';
     public const LABEL_REQUIRES_PROJECT = 'requiresProjectContext';
-    public const LABEL_LIMITED = 'limited';
+    public const LABEL_RATE_LIMITED = 'rateLimited';
 
     public const PAYLOAD_SHAPE_OBJECT = 'object';
     public const PAYLOAD_SHAPE_LIST = 'list';
@@ -34,11 +34,11 @@ class Dispatcher
     }
 
     /**
-     * Whether a message of this type counts towards the connection's message limit. Unknown types do.
+     * Whether a message of this type counts towards the connection's message rate limit. Unknown types do.
      */
-    public function isLimited(mixed $type): bool
+    public function isRateLimited(mixed $type): bool
     {
-        return $this->label($type, self::LABEL_LIMITED);
+        return $this->label($type, self::LABEL_RATE_LIMITED);
     }
 
     /**

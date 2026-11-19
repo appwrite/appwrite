@@ -34,9 +34,9 @@ final class DispatcherTest extends TestCase
     }
 
     #[DataProvider('types')]
-    public function testIsLimited(mixed $type, bool $expected): void
+    public function testIsRateLimited(mixed $type, bool $expected): void
     {
-        $this->assertSame($expected, $this->dispatcher()->isLimited($type));
+        $this->assertSame($expected, $this->dispatcher()->isRateLimited($type));
     }
 
     #[DataProvider('types')]
