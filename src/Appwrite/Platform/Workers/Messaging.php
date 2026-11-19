@@ -1630,6 +1630,7 @@ class Messaging extends Action
         $critical = $message['data']['critical'] ?? null;
         $priority = $message['data']['priority'] ?? null;
         $channelId = $message['data']['channelId'] ?? null;
+        $mutableContent = $message['data']['mutableContent'] ?? null;
 
         if ($title === '') {
             $title = null;
@@ -1658,7 +1659,8 @@ class Messaging extends Action
             $contentAvailable,
             $critical,
             $priority,
-            $channelId
+            $channelId,
+            $mutableContent,
         );
     }
 

@@ -2910,12 +2910,14 @@ trait MessagingBase
             'title' => 'New blog post',
             'body' => 'Check out the new blog post',
             'data' => $data,
+            'mutableContent' => true,
             'draft' => true,
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertEquals(MessageStatus::DRAFT, $response['body']['status']);
         $this->assertEquals($data, $response['body']['data']['data']);
+        $this->assertTrue($response['body']['data']['mutableContent']);
 
         $messageId = $response['body']['$id'];
         $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, [
@@ -2926,6 +2928,19 @@ trait MessagingBase
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals($data, $message['body']['data']['data']);
+        $this->assertTrue($message['body']['data']['mutableContent']);
+
+        $updated = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'mutableContent' => false,
+        ]);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertFalse($updated['body']['data']['mutableContent']);
+        $this->assertEquals($data, $updated['body']['data']['data']);
     }
 
     public function testCreateDraftEmailKeepsNullAttachments(): void
@@ -2989,6 +3004,7 @@ trait MessagingBase
             'scheduledAt' => null,
             'contentAvailable' => null,
             'critical' => null,
+            'mutableContent' => null,
             'priority' => null,
         ]);
         $this->assertSame(201, $response['headers']['status-code']);

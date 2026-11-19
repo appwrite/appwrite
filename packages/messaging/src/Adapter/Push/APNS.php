@@ -75,6 +75,12 @@ class APNS extends PushAdapter
         if (!\is_null($message->getContentAvailable())) {
             $payload['aps']['content-available'] = (int) $message->getContentAvailable();
         }
+        // APNs has no image field: the URL goes beside `aps`, and mutable-content runs the app's notification
+        // service extension so it can download and attach it. An explicit mutableContent still wins.
+        if (!\is_null($message->getImage())) {
+            $payload['image'] = $message->getImage();
+            $payload['aps']['mutable-content'] = 1;
+        }
         if (!\is_null($message->getMutableContent())) {
             $payload['aps']['mutable-content'] = (int) $message->getMutableContent();
         }

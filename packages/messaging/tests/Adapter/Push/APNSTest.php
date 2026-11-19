@@ -127,6 +127,20 @@ final class APNSTest extends TestCase
         // The tag collapses a later push onto this one on the device.
         $this->assertContains('apns-collapse-id: alert:1', $stub->capturedHeaders);
 
+        // A plain alert carries no image and leaves the service extension alone.
+        $this->assertArrayNotHasKey('image', $stub->capturedBodies[0]);
+        $this->assertArrayNotHasKey('mutable-content', $stub->capturedBodies[0]['aps']);
+
+        // An image rides beside `aps` with mutable-content, so the app's service extension can attach it.
+        $image = new APNSStub($this->authKey(), 'keyId', 'teamId', 'com.example.app');
+        $image->send(new Push(
+            to: ['token'],
+            title: 'Title',
+            image: 'https://example.com/cover.jpg',
+        ));
+        $this->assertSame('https://example.com/cover.jpg', $image->capturedBodies[0]['image']);
+        $this->assertSame(1, $image->capturedBodies[0]['aps']['mutable-content']);
+
         // APNs refuses a collapse ID over 64 bytes, so a longer tag is left out.
         $long = new APNSStub($this->authKey(), 'keyId', 'teamId', 'com.example.app');
         $long->send(new Push(
