@@ -58,6 +58,13 @@ Most players cannot send Appwrite headers, so the project ID travels in the URL.
 
 In the Console, open a video and select **Streaming** to copy every URL, including the per-rendition playlists and caption manifests. The web SDK builds the same URLs with `getHlsManifest()`, `getDashManifest()`, `getCmafHlsManifest()`, and `getCmafDashManifest()`. Server SDKs download the manifest instead of returning its URL.
 
+{% only_dark %}
+![Streaming page with a master manifest URL for each output](/images/docs/videos/dark/streaming.avif)
+{% /only_dark %}
+{% only_light %}
+![Streaming page with a master manifest URL for each output](/images/docs/videos/streaming.avif)
+{% /only_light %}
+
 A master manifest lists only renditions that are `ready`. Until a rendition for that output is ready, the master manifest returns `404` with the `video_rendition_not_found` error. When more renditions finish, the manifest grows, and players pick them up the next time they load it.
 
 The URL is stable. It does not change when you add or delete renditions, so you can store it, or rebuild it from the video ID whenever you need it.

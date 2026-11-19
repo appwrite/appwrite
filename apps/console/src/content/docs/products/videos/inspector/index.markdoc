@@ -12,6 +12,13 @@ The **inspector** shows what the player in the Console is doing while it plays a
 2. Play the video on its **Overview**. The inspector shows under the player and fills in as the session runs.
 3. To give it more room, select **Inspector** under **Playback** in the video menu, or click **Inspector** in the player controls. It opens in its own window, so you can keep the video and the inspector side by side.
 
+{% only_dark %}
+![Inspector overview with an excellent experience score, no issues detected, and startup, bitrate, and upscaling metrics](/images/docs/videos/dark/inspector.avif)
+{% /only_dark %}
+{% only_light %}
+![Inspector overview with an excellent experience score, no issues detected, and startup, bitrate, and upscaling metrics](/images/docs/videos/inspector.avif)
+{% /only_light %}
+
 The inspector measures the session in your browser on your connection. To see how a stream behaves for slower viewers, throttle the network in your browser's developer tools and play again.
 
 # Key metrics {% #key-metrics %}

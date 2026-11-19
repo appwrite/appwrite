@@ -60,6 +60,13 @@ In the Console, open the video, select **Settings**, and use the **Access** card
 - **Public playback** grants or removes **Read** for **Any** as soon as you flip it.
 - **Permissions** edits read, update, and delete for any role. Click **Update** to save.
 
+{% only_dark %}
+![Access settings of a video with Public playback turned on and Read granted to Any](/images/docs/videos/dark/settings-access.avif)
+{% /only_dark %}
+{% only_light %}
+![Access settings of a video with Public playback turned on and Read granted to Any](/images/docs/videos/settings-access.avif)
+{% /only_light %}
+
 While a video has no Read for Any, every tab of the video shows a **This video is private** notice with a link to these settings.
 
 With a server SDK, update the video's permissions with `videos.update()`. The new list replaces the old one, and `name` is required, so pass the current name to keep it:

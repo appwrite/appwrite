@@ -10,6 +10,13 @@ Appwrite Videos streams work with standard HLS and DASH players. You give the pl
 Open a video and select **Install**. Pick a platform, player, framework, and format to get install steps and code with your stream URL already filled in. **Copy prompt** copies the same setup as instructions for an AI coding agent.
 {% /info %}
 
+{% only_dark %}
+![Install page with the Web platform, hls.js, Vanilla, and CMAF (HLS) selected, and the install steps and code](/images/docs/videos/dark/install.avif)
+{% /only_dark %}
+{% only_light %}
+![Install page with the Web platform, hls.js, Vanilla, and CMAF (HLS) selected, and the install steps and code](/images/docs/videos/install.avif)
+{% /only_light %}
+
 # Before you start {% #before-you-start %}
 
 1. Make sure the video has at least one `ready` [rendition](/docs/products/videos/renditions) for the output you want to play.

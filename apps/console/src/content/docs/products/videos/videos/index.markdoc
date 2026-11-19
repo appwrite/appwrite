@@ -27,6 +27,13 @@ Audio-only sources, such as a podcast episode, stream the same way as video, but
 
 In the Console, open **Videos** and click **Create video**. You can upload a new file, pick one from Storage, or import a demo movie. You can also open a video or audio file in Storage and click **Create video** there. The Console also queues renditions for the profiles you select. See the [quick start](/docs/products/videos/quick-start).
 
+{% only_dark %}
+![Create video wizard with a demo movie selected, the Videos destination bucket, CMAF output, and three profiles](/images/docs/videos/dark/create-video.avif)
+{% /only_dark %}
+{% only_light %}
+![Create video wizard with a demo movie selected, the Videos destination bucket, CMAF output, and three profiles](/images/docs/videos/create-video.avif)
+{% /only_light %}
+
 With a server SDK, create the video and then its renditions:
 
 {% multicode %}

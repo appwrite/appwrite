@@ -49,6 +49,13 @@ Upload a **WebVTT** (`.vtt`) or **SubRip** (`.srt`) file to a Storage bucket, th
 5. Turn on **Default caption** to have players show it automatically.
 6. Click **Create**.
 
+{% only_dark %}
+![Captions tab with an English caption marked as the default track](/images/docs/videos/dark/captions.avif)
+{% /only_dark %}
+{% only_light %}
+![Captions tab with an English caption marked as the default track](/images/docs/videos/captions.avif)
+{% /only_light %}
+
 With a server SDK:
 
 ```js
@@ -130,6 +137,13 @@ To retry a failed caption, update it with a corrected file by passing a new `buc
 # Caption editor {% #caption-editor %}
 
 Click **Create caption** to write a track from scratch, or open an existing caption to change it. The editor shows the player, a list of cues, and a timeline under the picture.
+
+{% only_dark %}
+![Caption editor with a cue selected, the player, the cue list, and the timeline of cues](/images/docs/videos/dark/caption-editor.avif)
+{% /only_dark %}
+{% only_light %}
+![Caption editor with a cue selected, the player, the cue list, and the timeline of cues](/images/docs/videos/caption-editor.avif)
+{% /only_light %}
 
 - Add a cue at the playhead, split a cue, or drag cues and their edges on the timeline to retime them.
 - From the **Tools** menu, use **Shift timings** to move all cues, or only the selected ones, when a track is out of sync.

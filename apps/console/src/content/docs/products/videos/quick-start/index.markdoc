@@ -17,6 +17,13 @@ New projects have no [encoding profiles](/docs/products/videos/profiles), so cre
 3. Click **Create profile**.
 4. Select the **360p**, **720p**, and **1080p** presets, and click **Create**.
 
+{% only_dark %}
+![Create profile dialog with the 360p, 720p, and 1080p presets selected](/images/docs/videos/dark/create-profiles.avif)
+{% /only_dark %}
+{% only_light %}
+![Create profile dialog with the 360p, 720p, and 1080p presets selected](/images/docs/videos/create-profiles.avif)
+{% /only_light %}
+
 # Create a video {% #create-a-video %}
 
 1. Select **Videos** and click **Create video**.
@@ -29,6 +36,13 @@ New projects have no [encoding profiles](/docs/products/videos/profiles), so cre
 5. Keep the output at **CMAF**, the default. CMAF encodes once and serves both an HLS and a DASH manifest. To pick HLS or DASH instead, open **Advanced settings**.
 6. Click **Create video**.
 
+{% only_dark %}
+![Create video wizard with a demo movie selected, the Videos destination bucket, CMAF output, and three profiles](/images/docs/videos/dark/create-video.avif)
+{% /only_dark %}
+{% only_light %}
+![Create video wizard with a demo movie selected, the Videos destination bucket, CMAF output, and three profiles](/images/docs/videos/create-video.avif)
+{% /only_light %}
+
 The Console uploads the file from your browser, creates the video, and queues a rendition for each profile you selected. You can close the wizard while this runs, but keep the tab open until the upload finishes and the renditions are queued. Encoding runs on Appwrite and continues after you close the tab.
 
 You can also start from Storage: open a video or audio file and click **Create video** to open the wizard with that file selected.
@@ -36,6 +50,13 @@ You can also start from Storage: open a video or audio file and click **Create v
 # Watch it encode {% #watch-it-encode %}
 
 Open the video and select **Renditions**. Each rendition moves from **Queued** to **Encoding** to **Ready**, with a progress percentage while it encodes.
+
+{% only_dark %}
+![Renditions tab with two renditions queued and the 360p rendition encoding, with a progress bar for each](/images/docs/videos/dark/renditions-encoding.avif)
+{% /only_dark %}
+{% only_light %}
+![Renditions tab with two renditions queued and the 360p rendition encoding, with a progress bar for each](/images/docs/videos/renditions-encoding.avif)
+{% /only_light %}
 
 The video page shows a player as soon as one rendition is ready.
 
@@ -46,11 +67,25 @@ A video you create in the Console is private. Only API keys and members of your 
 1. Open the video and select **Settings**.
 2. Under **Access**, turn on **Public playback**.
 
+{% only_dark %}
+![Access settings of a video with Public playback turned on and Read granted to Any](/images/docs/videos/dark/settings-access.avif)
+{% /only_dark %}
+{% only_light %}
+![Access settings of a video with Public playback turned on and Read granted to Any](/images/docs/videos/settings-access.avif)
+{% /only_light %}
+
 This grants **Read** to **Any** on the video. The source file in Storage can stay private, because playback checks the video's permissions, not the file's. See [Permissions](/docs/products/videos/permissions) to share videos only with signed-in users or teams instead.
 
 # Play the stream {% #play-the-stream %}
 
 Select **Install** on the video page. Pick a platform, player, and format, then copy the install steps and code. For a web page with [hls.js](https://github.com/video-dev/hls.js):
+
+{% only_dark %}
+![Install page with the Web platform, hls.js, Vanilla, and CMAF (HLS) selected, and the install steps and code](/images/docs/videos/dark/install.avif)
+{% /only_dark %}
+{% only_light %}
+![Install page with the Web platform, hls.js, Vanilla, and CMAF (HLS) selected, and the install steps and code](/images/docs/videos/install.avif)
+{% /only_light %}
 
 ```sh
 npm install hls.js

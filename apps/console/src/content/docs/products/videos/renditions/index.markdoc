@@ -71,6 +71,13 @@ The profile's codec must support the output you ask for. H.264, the only codec a
 
 A rendition reports its `status` and a `progress` percentage while it encodes.
 
+{% only_dark %}
+![Renditions tab with two renditions queued and the 360p rendition encoding, with a progress bar for each](/images/docs/videos/dark/renditions-encoding.avif)
+{% /only_dark %}
+{% only_light %}
+![Renditions tab with two renditions queued and the 360p rendition encoding, with a progress bar for each](/images/docs/videos/renditions-encoding.avif)
+{% /only_light %}
+
 | Status | Console label | Meaning |
 |--------|---------------|---------|
 | `pending` | Queued | Waiting for an encoding worker |

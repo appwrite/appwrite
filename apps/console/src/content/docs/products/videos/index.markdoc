@@ -10,6 +10,13 @@ The source file stays in its bucket, untouched. Each video has its own [permissi
 
 You manage videos under **Videos** in your project, and encoding profiles under **Videos** > **Encoding profiles**.
 
+{% only_dark %}
+![Video page in the Console with the player paused on a frame of the video and its English caption on screen](/images/docs/videos/dark/video-overview.avif)
+{% /only_dark %}
+{% only_light %}
+![Video page in the Console with the player paused on a frame of the video and its English caption on screen](/images/docs/videos/video-overview.avif)
+{% /only_light %}
+
 # Why stream instead of serving the file {% #why-stream %}
 
 You could put an MP4 in Storage and point a `<video>` tag at it. That works for short clips, but the viewer downloads one large file at one quality, whatever their connection. Streaming fixes this:

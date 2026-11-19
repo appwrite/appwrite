@@ -16,6 +16,13 @@ Appwrite queues timeline generation when you create a video. The job downloads i
 
 Open the video and select **Timeline** to browse the generated thumbnails. From there you can copy the timeline URL, download the timeline file, or download every sprite with a matching `timeline.vtt` as a `.tar.gz` archive.
 
+{% only_dark %}
+![Timeline tab with sprite thumbnails, the thumbnail interval and size, and the timeline file URL](/images/docs/videos/dark/timeline.avif)
+{% /only_dark %}
+{% only_light %}
+![Timeline tab with sprite thumbnails, the thumbnail interval and size, and the timeline file URL](/images/docs/videos/timeline.avif)
+{% /only_light %}
+
 The video's `timelineStatus` shows how far the job has got:
 
 | Status | Meaning |
