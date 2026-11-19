@@ -1679,4 +1679,14 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Nameservers changed': 'ネームサーバーが変更されました',
   'The nameservers for this domain no longer point to Appwrite. The domain status has been updated.':
     'このドメインのネームサーバーは Appwrite を指していません。ドメインのステータスを更新しました。',
+  'Organization photo': '組織の写真',
+  'Shown next to your organization name across the Console.': 'コンソール全体で組織名の横に表示されます。',
+  'PNG, JPEG, or WebP up to 5MB.': 'PNG、JPEG、WebP(5MBまで)。',
+  'Only organization owners can change the photo.': '写真を変更できるのは組織のオーナーのみです。',
+  'Organization photo updated': '組織の写真を更新しました',
+  'Failed to update organization photo': '組織の写真の更新に失敗しました',
+  'Organization photo removed': '組織の写真を削除しました',
+  'Failed to remove organization photo': '組織の写真の削除に失敗しました',
+  'Remove organization photo': '組織の写真を削除',
+  'The photo is replaced with a placeholder. You can upload a new photo at any time.': '写真はプレースホルダーに置き換えられます。新しい写真はいつでもアップロードできます。',
 }
