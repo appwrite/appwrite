@@ -13,12 +13,13 @@ parameters:
   scanFiles:
     # Utopia\Image\Canvas, which the utopia extension registers
     - packages/image/stubs/Canvas.php
-    # Utopia\DSN\DSN, Utopia\Locale\Locale, Utopia\UserAgent\UserAgent, Utopia\Domains\Domain and Utopia\Emails\Email, which the extension registers
+    # Utopia\DSN\DSN, Utopia\Locale\Locale, Utopia\UserAgent\UserAgent, Utopia\Domains\Domain, Utopia\Emails\Email and the validators, which the extension registers
     - crates/extension/stubs/DSN.php
     - crates/extension/stubs/Locale.php
     - packages/user-agent/stubs/UserAgent.php
     - packages/domains/stubs/Domain.php
     - packages/emails/stubs/Email.php
+    - packages/validators/stubs/Validators.php
     # Classes the compat database recorder generates with eval()
     - tests/compat/database/recorder/Classes.stub
     # The migration suite's test doubles, which the compat migration adapter extends

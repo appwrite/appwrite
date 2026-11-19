@@ -23,6 +23,7 @@ import {
   useCreateSiteDomainRule,
   useProjectSite,
   useProject,
+  useProjectDomain,
   useVerifyDomain,
   useDeleteDomain,
 } from '@/lib/react-query/hooks'
@@ -72,6 +73,12 @@ export function AddDomainWizard() {
   const [submitError, setSubmitError] = useState('')
   const domainError = domainFieldError(domain, domainTouched, t) || submitError
   const [rule, setRule] = useState<Models.ProxyRule | null>(null)
+  // A verify, failed or not, saves the checked records on the stored rule.
+  const { rule: liveRule } = useProjectDomain(
+    projectId,
+    project?.region,
+    rule?.$id,
+  )
   // Set while the create waits for the domain's ownership TXT record
   const [claimDomain, setClaimDomain] = useState<string | null>(null)
   const [claimReason, setClaimReason] = useState<DomainClaimReason>('pointed')
@@ -253,7 +260,7 @@ export function AddDomainWizard() {
         }
       >
         <VerifyDomainContent
-          rule={rule}
+          rule={liveRule ?? rule}
           region={project?.region}
           resourceType="site"
           verificationError={verificationError}

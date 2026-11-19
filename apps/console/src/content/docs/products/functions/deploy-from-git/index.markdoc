@@ -17,7 +17,7 @@ This offers simple versioning and collaboration that will easily fit into the re
 
 You can only use Git deployment for Appwrite Functions connected to Git. 
 [Create a new function with Git](/docs/products/functions/functions#create-function) or 
-connect your existing function to a Git repository in your function's **Settings** > **Configuration** > **Git settings** > **Connect Git**. 
+connect your existing function to a Git repository in your function's **Settings** > **Version control (Git)**.
 
 {% only_dark %}
 ![Git repository](/images/docs/functions/dark/git-repo.avif)
@@ -31,6 +31,8 @@ connect your existing function to a Git repository in your function's **Settings
 3. Push your new commit.
 4. A new deployment will be automatically created, built and activated.
 
+Pushes deploy automatically while **Deploy on push** is on in the function's [Git automation](#git-automation) settings.
+
 ## Commits to the production branch {% #commits-to-production-branch %}
 
 When you push a commit to the production branch, usually `main`, a new deployment will be created, built, and activated.
@@ -42,8 +44,109 @@ When you push a commit to a branch other than the production branch, a new deplo
 This means, the new deployment will not handle any incoming requests until it is activated.
 
 # Git configuration
-If you need to update your Git configuration, navigate to **Functions** > your function > 
-**Settings** > **Configuration** > **Git settings**. 
+If you need to update your Git configuration, navigate to **Functions** > your function >
+**Settings** > **Version control (Git)**.
+
+## Git automation {% #git-automation %}
+
+Git automation controls what Appwrite does when you push to the connected repository. Once your function is connected to a repository, open its **Settings** > **Version control (Git)** and find the **Git automation** card.
+
+{% only_dark %}
+![Git automation card in the Appwrite Console](/images/docs/functions/dark/git-automation.avif)
+{% /only_dark %}
+{% only_light %}
+![Git automation card in the Appwrite Console](/images/docs/functions/git-automation.avif)
+{% /only_light %}
+
+The card holds the **Production branch** and three switches, all on by default:
+
+{% table %}
+* Switch
+* API parameter
+* When it's on
+---
+* **Deploy on push**
+* `providerDeployments`
+* Every push that matches your [build triggers](#build-triggers) creates a deployment. Pushes to the production branch activate it.
+---
+* **Post build summaries**
+* `providerComments`
+* Appwrite posts one comment on each pull request with the build status, and updates it as builds finish.
+---
+* **Report commit status**
+* `providerStatuses`
+* Appwrite reports each build on its commit as building, passed, or failed. On GitHub, it adds a check run. On Entire, it adds a check run and a deployment entry. On GitLab and Gitea, it sets a commit status, and on Bitbucket, a build status.
+{% /table %}
+
+Changes apply from the next push, without a redeploy.
+
+### Deploy on push {% #deploy-on-push %}
+
+When **Deploy on push** is off, pushes no longer create deployments, and your function keeps serving its active deployment. The repository stays connected, so you can deploy a branch whenever you choose: open the function's **Deployments** tab, click **Create deployment**, and select **Git**. You pick the branch and whether to activate the deployment when it finishes building.
+
+While it's off, the Console disables **Production branch** and **Post build summaries**, because a deployment you create yourself has no pull request and decides for itself whether to go live. **Report commit status** still works for the commits you deploy.
+
+### Post build summaries {% #post-build-summaries %}
+
+Turn off **Post build summaries** to keep Appwrite's comment out of pull requests. If **Report commit status** stays on, each commit still shows whether the build passed.
+
+Appwrite posts the summary when a pull request is opened or reopened, so turning the switch on doesn't add one to a pull request that's already open. Entire doesn't get build summaries.
+
+### Report commit status {% #report-commit-status %}
+
+Turn off **Report commit status** to stop Appwrite from adding checks, statuses, and deployment entries to your commits.
+
+{% info title="Required status checks" %}
+If a branch protection rule requires Appwrite's check, pull requests to that branch wait for a status that never arrives while this switch is off. Remove the check from the rule before you turn the switch off.
+{% /info %}
+
+### Silent mode {% #silent-mode %}
+
+You can turn on **Silent mode** when you create a function from a repository. Silent mode turns off build summaries and commit statuses, whatever the switches say, and the **Git automation** card shows both as off while it's on. Saving the card turns silent mode off and saves both switches as the card shows them, so turn on the ones you want before you click **Update**. Silent mode doesn't affect **Deploy on push**.
+
+### Configure Git automation with a Server SDK {% #git-automation-server-sdk %}
+
+Pass `providerDeployments`, `providerComments`, and `providerStatuses` when you create or update a function. Settings you leave out of an update keep their current values.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>') // Your project ID
+    .setKey('<API_KEY>'); // Your secret API key
+
+const functions = new sdk.Functions(client);
+
+// Keep deploying on push, without comments on pull requests
+await functions.update({
+    functionId: '<FUNCTION_ID>',
+    name: '<NAME>', // name is required by update
+    providerComments: false
+});
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.functions import Functions
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<PROJECT_ID>') # Your project ID
+client.set_key('<API_KEY>') # Your secret API key
+
+functions = Functions(client)
+
+# Keep deploying on push, without comments on pull requests
+functions.update(
+    function_id='<FUNCTION_ID>',
+    name='<NAME>',  # name is required by update
+    provider_comments=False
+)
+```
+{% /multicode %}
+
+To deploy a branch or commit while **Deploy on push** is off, call `functions.createVcsDeployment()` with `type` set to `branch` or `commit`, the branch name or commit hash as `reference`, and `activate` set to `true` to make it live once it builds.
 
 ## Build triggers {% #build-triggers %}
 
@@ -91,7 +194,7 @@ If you have a monorepo, you can specify the subdirectory that contains the funct
 
 If you're sharing code between multiple Appwrite Functions in a monorepo, referencing files outside of the entry point file will not work.
 To share code between multiple functions, set the root directory to be the common root of the mono repo, and use `cd <working directory>`
-in your **Build settings** to navigate to the function's directory before building.
+in your build commands, under **Settings** > **Build** > **Commands**, to navigate to the function's directory before building.
 
 Another option is to use submodules in your Git repository to include shared code in each function's repository.
 
@@ -100,9 +203,9 @@ Another option is to use submodules in your Git repository to include shared cod
 you may need to first redeploy your function before the changes take effect.
 
 - If you notice your function is missing dependencies during build or at runtimes, update it's build settings.
-Navigate to **Functions** > your function > **Settings** > **Configuration** > **Build settings**. 
+Navigate to **Functions** > your function > **Settings** > **Build** > **Commands**.
 These commands will be ran before the function is built and can be used to install dependencies.
 
 - If you're missing some code files at build time, make sure they are included in the Git configuration's **Root directory**. Only files in the root directory folder will be copied to the executor.
 
-- If you're self-hosting Appwrite, you will need to configure some [environment variables](/docs/advanced/self-hosting/functions) to enable Git deployments.
+- If you're self-hosting Appwrite, you will need to configure some [environment variables](/docs/advanced/self-hosting/configuration/version-control) to enable Git deployments.

@@ -1,7 +1,6 @@
 //! The scalar leaf validators of `packages/validators`: `Boolean`, `Integer`,
 //! `FloatValidator`, `Numeric`, `Range` (a `Numeric`), `Port`, `HexColor` and `Wildcard`,
-//! over [`utopia_validators`], behind `validators-scalar` (and `validators`, whose base
-//! they extend).
+//! over [`utopia_validators`], extending the base.
 //!
 //! Each is built by hand, like the base: no Rust object, and the state its PHP
 //! constructor keeps in real typed protected properties, declared as `packages/validators`

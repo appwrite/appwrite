@@ -137,6 +137,11 @@ export class DroneFleet {
     /** What the cards say they carry (translated), over the model's mark. */
     private label: string,
     private rtl: boolean,
+    /**
+     * Factory time no drone sets out before: where the line starts, so none
+     * hangs still in the air while the factory assembles.
+     */
+    private readonly launch: number,
   ) {
     const track = <T extends BufferGeometry>(geometry: T) => {
       this.geometries.push(geometry)
@@ -281,8 +286,10 @@ export class DroneFleet {
     for (let cycle = current - 2; cycle <= current + 2; cycle++) {
       const index = ((cycle % MODELS.length) + MODELS.length) % MODELS.length
       const drone = this.drones[index]!
-      const since = time - (getInstallStart(cycle) - LEAD)
+      const delivery = getInstallStart(cycle) - LEAD
+      const since = time - delivery
       if (since < TRIP.arrive || since > TRIP.gone) continue
+      if (delivery + TRIP.arrive < this.launch) continue
       drone.root.visible = true
 
       flight(since, position)

@@ -179,10 +179,9 @@ abstract class Platform
      *
      * Single-queue: `init(TYPE_WORKER, ['workerName' => 'functions', 'jobs' => [...]])`.
      * Combined: pass `workers` (`['all']` or a list) and `jobs` keyed by
-     * action name with that queue's `queue` / `coroutines` / `prefetch`.
-     * Coroutines defaults to one; prefetch defaults to coroutines and limits
-     * all unacknowledged messages, including those awaiting confirmation.
-     * Explicit prefetch below coroutines is rejected by {@see Server::job()}.
+     * action name with that queue's `queue` / `coroutines` / `prefetch` / `maxInFlight`.
+     * Prefetch limits buffered messages and defaults to coroutines (one by default).
+     * MaxInFlight limits all unacknowledged messages and defaults to their sum.
      * Queue name and concurrency are defined only on jobs — never on the adapter.
      *
      * Prefer passing `consumerFactory` in `$params` so the Adapter owns the
@@ -204,7 +203,7 @@ abstract class Platform
         }
         $names = array_map(static fn ($name): string => strtolower((string) $name), $names);
         $all = $names === [] || \in_array('all', $names, true);
-        /** @var array<string, array{queue?: ?string, coroutines?: int, prefetch?: int}> $jobs */
+        /** @var array<string, array{queue?: ?string, coroutines?: int, prefetch?: int, maxInFlight?: int}> $jobs */
         $jobs = $params['jobs'] ?? [];
 
         foreach ($services as $service) {
@@ -240,6 +239,7 @@ abstract class Platform
                             $queue,
                             max(1, (int) ($config['coroutines'] ?? 1)),
                             $config['prefetch'] ?? null,
+                            $config['maxInFlight'] ?? null,
                         );
                         break;
                 }

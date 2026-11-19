@@ -1,7 +1,7 @@
 //! The Rust driver: reads requests as JSON lines on stdin and answers on
 //! stdout, the same protocol `tests/compat/php/driver.php` speaks.
 //!
-//! Request:  `{"id": 7, "lib": "validators", "op": "validate", "args": {...}}`
+//! Request:  `{"id": 7, "lib": "database", "op": "find", "args": {...}}`
 //! Replies:  `{"id": 7, "ok": <value>}`
 //!           `{"id": 7, "err": {"class": "<PHP exception class>", "message": "..." | {"$bytes": ...}}}`
 //!           `{"id": 7, "fault": "<harness problem>"}`
@@ -141,13 +141,13 @@ mod tests {
         let mut s = Session::default();
         let Ok(Outcome::Ok(v)) = handle(&json!({"op": "$hello"}), &mut s).await else { panic!() };
         assert_eq!(v["runtime"], "rust");
-        assert!(v["libs"].get("validators").is_some());
+        assert!(v["libs"].get("database").is_some());
     }
 
     #[utopia_async::test]
     async fn unknown_operations_are_faults() {
         let mut s = Session::default();
-        let r = handle(&json!({"lib": "validators", "op": "nope"}), &mut s).await;
+        let r = handle(&json!({"lib": "database", "op": "nope"}), &mut s).await;
         assert!(matches!(r, Err(Fault(_))));
     }
 }

@@ -12,6 +12,7 @@ use Tests\Unit\Mqtt\Fakes\Accounts;
 use Tests\Unit\Mqtt\Fakes\NullPubSub;
 use Tests\Unit\Mqtt\Fakes\RecordingAdapter;
 use Tests\Unit\Mqtt\Fakes\RecordingRedis;
+use Utopia\Abuse\Adapter\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\DI\Container;
 use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Packet\Connack;
@@ -35,6 +36,8 @@ final class LimitsTest extends TestCase
 
     private const SUBSCRIBE_LIMIT = 32;
 
+    private const CONNECT_LIMIT = 128;
+
     private RecordingAdapter $network;
 
     private Accounts $accounts;
@@ -56,7 +59,7 @@ final class LimitsTest extends TestCase
         $redis = $this->redis;
 
         $container = new Container();
-        $container->set('getRedis', fn (): \Closure => fn (): \Redis => $redis);
+        $container->set('timelimit', fn (): \Closure => fn (string $key, int $limit, int $seconds, callable $callback): mixed => $callback(new TimeLimitRedis($key, $limit, $seconds, $redis)));
         $container->set('authenticator', fn (): \Closure => $this->accounts->authenticate(...));
         $container->set('authorizer', fn (): \Closure => $this->accounts->authorize(...));
         $container->set('getPlan', fn (): \Closure => fn (string $projectId): array => $this->plan);
@@ -207,6 +210,36 @@ final class LimitsTest extends TestCase
         $this->assertSame(0, $this->subacks(1));
         $this->assertSame(Disconnect::QUOTA_EXCEEDED, $this->network->disconnects(1)[0]->reasonCode ?? null);
         $this->assertSame([1], $this->network->closed);
+    }
+
+    public function testConnectRateIsLimitedPerUser(): void
+    {
+        // Each connection is closed again, so the open-connection cap never applies.
+        for ($fd = 1; $fd <= self::CONNECT_LIMIT; $fd++) {
+            $this->assertSame(Connack::SUCCESS, $this->connect($fd, 'user'), "CONNECT {$fd} is within the limit");
+            $this->network->close($fd);
+        }
+
+        // Test for FAILURE
+        $overflow = self::CONNECT_LIMIT + 1;
+        $this->assertSame(Connack::QUOTA_EXCEEDED, $this->connect($overflow, 'user'));
+        $this->assertContains($overflow, $this->network->closed);
+
+        // Test for SUCCESS: the budget is per user and project.
+        $this->assertSame(Connack::SUCCESS, $this->connect($overflow + 1, 'other'));
+        $this->assertSame(Connack::SUCCESS, $this->connect($overflow + 2, 'user', 'project2'));
+    }
+
+    public function testConnectRateIsNotLimitedWithAbuseDisabled(): void
+    {
+        \putenv(self::ABUSE_OPTION . '=disabled');
+
+        for ($fd = 1; $fd <= self::CONNECT_LIMIT + 1; $fd++) {
+            $this->assertSame(Connack::SUCCESS, $this->connect($fd, 'user'));
+            $this->network->close($fd);
+        }
+
+        $this->assertSame([], $this->redis->keys, 'a CONNECT reached the limiter with abuse disabled');
     }
 
     public function testOpenConnectionsPerUserAreCapped(): void

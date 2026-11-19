@@ -8,8 +8,10 @@ export type FrameState = {
   time: number
   /** Real seconds since the previous frame. */
   dt: number
-  /** Real seconds since the scene booted. Drives the power-up. */
+  /** Power-up seconds (running faster than real ones) since the assembled line started powering up. */
   introTime: number
+  /** Real seconds since the scene first showed, as the factory assembles (see `assembly.ts`). */
+  assembly: number
   line: LineState
   palette: FactoryPalette
   glows: GlowLayer
@@ -21,8 +23,8 @@ export type FrameState = {
   /** Real shadow maps are on, so fake contact blobs can step back. */
   realShadows: boolean
   /**
-   * How far every display's mast rises (0 → 1): one height for all, so no
-   * open display meets the page copy laid over the scene.
+   * How high every hologram's screen floats (0 → 1): one height for all,
+   * so no hologram meets the page copy laid over the scene.
    */
   lift: number
 }

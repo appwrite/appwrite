@@ -495,6 +495,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_CERTIFICATES_PROVIDER',
+                'description' => 'Who issues TLS certificates for the main domain, custom domains, and function and site domains. By default, set to \'letsencrypt\', which issues them with Let\'s Encrypt over an HTTP-01 challenge. Set to \'external\' when a reverse proxy in front of Appwrite, such as Traefik, Caddy, Nginx Proxy Manager or Cloudflare, terminates TLS: a domain is then verified by its DNS records alone, and Appwrite never runs Certbot or sends certificate failure emails.',
+                'introduction' => '2.8.0',
+                'default' => 'letsencrypt',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_LOGGING_CONFIG',
                 'description' => 'This variable allows you to report server errors to Sentry. This value is empty by default, set a DSN value `sentry://PROJECT_ID:SENTRY_API_KEY@SENTRY_HOST/` to enable it. Sentry is the only supported provider; other DSN schemes are rejected at startup and disable reporting. The same DSN is used by the API, workers, CLI tasks and the realtime server. Errors are exported as spans, so every attribute added with `Span::add()` during the request or job is attached to the Sentry event.',
                 'introduction' => '0.12.0',

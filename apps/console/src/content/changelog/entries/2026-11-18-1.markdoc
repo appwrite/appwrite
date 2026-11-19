@@ -1,0 +1,21 @@
+---
+layout: changelog
+title: "Choose what each Git push does with Git automation"
+date: 2026-11-18
+cover: /images/blog/announcing-git-automation/cover.avif
+tags: sites, functions, console, api
+---
+
+Appwrite Sites and Functions connected to a Git repository now have a **Git automation** card under **Settings** > **Version control (Git)**. Its three switches control whether pushes create deployments, whether Appwrite comments on pull requests with a build summary, and whether it reports each build's status on the commit. The production branch moves into the same card.
+
+All three switches are on by default. Turn off **Deploy on push** to keep the repository connected and deploy branches yourself. Turn off **Post build summaries** to keep pull requests free of comments while commit statuses keep working. Through the API, set `providerDeployments`, `providerComments`, and `providerStatuses` when you create or update a site or function. Silent mode keeps working as before.
+
+[Git automation](/docs/products/sites/deploy-from-git#git-automation) is available on Appwrite Cloud, and comes to self-hosted Appwrite soon.
+
+{% arrow_link href="/blog/post/announcing-git-automation" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/sites/deploy-from-git#git-automation" %}
+Configure Git automation
+{% /arrow_link %}

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Validator\Tests;
 
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Validator\AllOf;
 use Utopia\Validator\AnyOf;
@@ -12,6 +13,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\Validator;
 
+#[RequiresPhpExtension('utopia')]
 final class MultipleOfTest extends TestCase
 {
     public function setUp(): void

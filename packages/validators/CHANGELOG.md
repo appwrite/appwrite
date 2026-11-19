@@ -15,6 +15,7 @@ All notable changes to `utopia-php/validators` are documented in this file.
 
 ### Changed
 
+- **Breaking:** the validators (`Validator` and every class under `Utopia\Validator\`, except the PHPStan extension) are no longer PHP: the `utopia` PHP extension (`ext-utopia`, `crates/extension` in appwrite/appwrite) registers them, and the package requires it. `stubs/Validators.php` declares them for static analysis. 2.0.x is the last release with the validators in PHP.
 - Move the base class from `Utopia\Validator` to `Utopia\Validator\Validator` and the PHPStan extension from `Utopia\PHPStan\DisallowAssertEqualsExtension` to `Utopia\Validator\PHPStan\DisallowAssertEqualsExtension`, so the package declares a single `Utopia\Validator\` prefix. Every other class keeps its name.
 - The old names remain as aliases until the next major release (`src/compat.php`, autoloaded via `files`). `Utopia\Validator` is aliased up front, so code that extends it or declares it as a type keeps working. The PHPStan extension is aliased only when its old name is autoloaded, so installs without PHPStan never load it.
 

@@ -14,7 +14,7 @@ import type { VideoGlossaryTerm } from '@/lib/videos/glossary'
 export type VideoTab =
   | 'overview'
   | 'renditions'
-  | 'subtitles'
+  | 'captions'
   | 'timeline'
   | 'streaming'
   | 'install'
@@ -41,8 +41,8 @@ export const VIDEO_TABS: VideoTabDefinition[] = [
     term: 'rendition',
   },
   {
-    id: 'subtitles',
-    label: 'Subtitles',
+    id: 'captions',
+    label: 'Captions',
     icon: Captions,
     group: 'encoding',
   },

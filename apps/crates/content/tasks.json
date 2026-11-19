@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-18T11:58:00Z",
+  "updated": "2026-11-19T16:16:00Z",
   "tasks": [
     {
       "id": "crate-layout",
@@ -771,11 +771,11 @@
     },
     {
       "id": "extension-retires-compat",
-      "title": "dsn, image, locale and user-agent leave compat: PHP runs the Rust crates",
+      "title": "dsn, image, locale, user-agent and validators leave compat: PHP runs the Rust crates",
       "area": "Libraries",
       "status": "done",
-      "updated": "2026-11-18T10:47:00Z",
-      "note": "Main removed the PHP Utopia\\DSN\\DSN, Utopia\\Locale\\Locale, Utopia\\Image\\Image and (Nov 17) Utopia\\UserAgent\\UserAgent: the utopia extension (crates/extension) registers the Rust crates in their place, so there is no PHP implementation left to compare against. Their compat cases, adapters and documentation-example twins are gone; each crate's parity with the PHP class it replaced is checked by the extension's corpus (crates/extension/tests/<name>.php against <name>.expected.jsonl) in CI's Extension job. domains and emails keep their PHP classes (the extension serves them only when _APP_EXTENSION_LIBRARIES names them) and stay in compat. auth also follows web-auth/webauthn-lib 5.3.12's passkey validation (612 cases, 68,650 fuzz inputs, 0 differences). Nov 17-18: the extension also took validators' scalar and text checks (Utopia\\Validator classes stay in PHP until enabled); utopia-validators keeps its full API and delegates those rules to the extension's check modules."
+      "updated": "2026-11-19T16:16:00Z",
+      "note": "Main removed the PHP Utopia\\DSN\\DSN, Utopia\\Locale\\Locale, Utopia\\Image\\Image and (Nov 17) Utopia\\UserAgent\\UserAgent: the utopia extension (crates/extension) registers the Rust crates in their place, so there is no PHP implementation left to compare against. Their compat cases, adapters and documentation-example twins are gone; each crate's parity with the PHP class it replaced is checked by the extension's corpus (crates/extension/tests/<name>.php against <name>.expected.jsonl) in CI's Extension job. domains and emails keep their PHP classes (the extension serves them only when _APP_EXTENSION_LIBRARIES names them) and stay in compat. auth also follows web-auth/webauthn-lib 5.3.12's passkey validation (612 cases, 68,650 fuzz inputs, 0 differences). Nov 17-18: the extension also took validators' scalar and text checks (Utopia\\Validator classes stay in PHP until enabled); utopia-validators keeps its full API and delegates those rules to the extension's check modules. Nov 19: main removed the PHP validators (546cc47995); the extension always registers Utopia\\Validator\\Validator and its leaves, so validators left compat too."
     },
     {
       "id": "queue-nov18",

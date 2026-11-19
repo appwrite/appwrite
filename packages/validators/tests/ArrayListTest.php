@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Utopia\Validator\Tests;
 
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Numeric;
 use Utopia\Validator\Text;
 
+#[RequiresPhpExtension('utopia')]
 final class ArrayListTest extends TestCase
 {
     public function testDescription(): void

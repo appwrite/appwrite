@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Utopia\Validator\Tests;
 
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Validator\Numeric;
 
+#[RequiresPhpExtension('utopia')]
 final class NumericTest extends TestCase
 {
     public function testCanValidateNumerics(): void

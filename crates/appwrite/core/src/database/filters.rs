@@ -99,26 +99,27 @@ fn all() -> Vec<(&'static str, Arc<dyn Filter>)> {
         sub("subQueryIndexes", SubQuery::Indexes, 114, 117),
         sub("subQueryPlatforms", SubQuery::Platforms, 129, 132),
         sub("subQueryKeys", SubQuery::Keys("projects"), 149, 152),
-        sub("subQueryDevKeys", SubQuery::Empty, 167, 170),
-        sub("subQueryWebhooks", SubQuery::ByProject("webhooks"), 177, 180),
-        sub("subQuerySessions", SubQuery::ByUser("sessions", false), 191, 194),
-        sub("subQueryDeviceSessions", SubQuery::ByDevice("sessions"), 204, 207),
-        sub("subQueryTokens", SubQuery::ByUser("tokens", false), 217, 220),
-        sub("subQueryChallenges", SubQuery::ByUser("challenges", false), 231, 234),
-        sub("subQueryAuthenticators", SubQuery::ByUser("authenticators", true), 245, 248),
-        sub("subQueryMemberships", SubQuery::ByUser("memberships", false), 260, 263),
-        sub("subQueryVariables", SubQuery::Variables, 274, 277),
+        sub("subQueryRuleRecords", SubQuery::RuleRecords, 164, 167),
+        sub("subQueryDevKeys", SubQuery::Empty, 181, 184),
+        sub("subQueryWebhooks", SubQuery::ByProject("webhooks"), 191, 194),
+        sub("subQuerySessions", SubQuery::ByUser("sessions", false), 205, 208),
+        sub("subQueryDeviceSessions", SubQuery::ByDevice("sessions"), 218, 221),
+        sub("subQueryTokens", SubQuery::ByUser("tokens", false), 231, 234),
+        sub("subQueryChallenges", SubQuery::ByUser("challenges", false), 245, 248),
+        sub("subQueryAuthenticators", SubQuery::ByUser("authenticators", true), 259, 262),
+        sub("subQueryMemberships", SubQuery::ByUser("memberships", false), 274, 277),
+        sub("subQueryVariables", SubQuery::Variables, 288, 291),
         ("encrypt", Arc::new(Encrypt)),
-        sub("subQueryProjectVariables", SubQuery::ProjectVariables, 327, 330),
-        search("userSearch", Search::User, 341, 357),
-        sub("subQueryTargets", SubQuery::ByUser("targets", false), 364, 367),
-        sub("subQueryTopicTargets", SubQuery::TopicTargets, 378, 381),
-        search("providerSearch", Search::Provider, 406, 418),
-        search("topicSearch", Search::Topic, 425, 436),
-        search("messageSearch", Search::Message, 443, 472),
-        sub("subQueryOrganizationKeys", SubQuery::Keys("teams"), 480, 483),
-        sub("subQueryAccountKeys", SubQuery::Keys("users"), 495, 498),
-        sub("subQueryReportInsights", SubQuery::ReportInsights, 510, 513),
+        sub("subQueryProjectVariables", SubQuery::ProjectVariables, 341, 344),
+        search("userSearch", Search::User, 355, 371),
+        sub("subQueryTargets", SubQuery::ByUser("targets", false), 378, 381),
+        sub("subQueryTopicTargets", SubQuery::TopicTargets, 392, 395),
+        search("providerSearch", Search::Provider, 420, 432),
+        search("topicSearch", Search::Topic, 439, 450),
+        search("messageSearch", Search::Message, 457, 486),
+        sub("subQueryOrganizationKeys", SubQuery::Keys("teams"), 494, 497),
+        sub("subQueryAccountKeys", SubQuery::Keys("users"), 509, 512),
+        sub("subQueryReportInsights", SubQuery::ReportInsights, 524, 527),
     ]
 }
 
@@ -211,7 +212,7 @@ impl Filter for Encrypt {
     }
 
     fn signature(&self) -> String {
-        signature(297, 314)
+        signature(311, 328)
     }
 }
 
@@ -226,6 +227,8 @@ enum SubQuery {
     Platforms,
     /// `subQueryKeys`, `subQueryOrganizationKeys`, `subQueryAccountKeys`: keys of a resource type.
     Keys(&'static str),
+    /// `subQueryRuleRecords`: a rule's DNS records.
+    RuleRecords,
     /// `subQueryDevKeys`: always empty.
     Empty,
     /// `subQueryWebhooks`: by `projectInternalId`.
@@ -433,6 +436,14 @@ impl Filter for Sub {
                         PermissionType::Read,
                     ))
                     .await?
+            }
+            SubQuery::RuleRecords => {
+                find_skipping(
+                    database,
+                    "ruleRecords",
+                    vec![Query::equal("ruleInternalId", [sequence(document)]), Query::limit(LIMIT_SUBQUERY)],
+                )
+                .await?
             }
             SubQuery::ReportInsights => {
                 find_skipping(

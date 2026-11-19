@@ -170,9 +170,9 @@ function marketingProductFooterLink(
 function getExpandedFooterGroups(
   marketing: boolean,
   footerCopy: ReturnType<typeof useI18n>['catalog']['app']['footer'],
-  options: { agent: boolean; isCloud: boolean; analytics: boolean },
+  options: { agent: boolean; isCloud: boolean; analytics: boolean; videos: boolean },
 ): readonly ExpandedFooterGroup[] {
-  const { agent, isCloud, analytics } = options
+  const { agent, isCloud, analytics, videos } = options
   return [
   {
     title: footerCopy.groups.quickStarts,
@@ -390,6 +390,9 @@ function getExpandedFooterGroups(
             comparisonFooterLink(footerCopy.expanded.compare.vsPlausible, 'plausible', marketing),
           ]
         : []),
+      ...(videos
+        ? [comparisonFooterLink(footerCopy.expanded.compare.vsMux, 'mux', marketing)]
+        : []),
       blogFooterLink(footerCopy.expanded.compare.nextjsHosting, 'free-nextjs-hosting', marketing),
       blogFooterLink(footerCopy.expanded.compare.reactHosting, 'free-react-hosting', marketing),
       blogFooterLink(footerCopy.expanded.compare.vueHosting, 'free-vuejs-hosting', marketing),
@@ -465,7 +468,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
   const expandedFooterGroups = getExpandedFooterGroups(
     localMarketing,
     footerCopy,
-    { agent: features.agent, isCloud, analytics: features.analytics },
+    { agent: features.agent, isCloud, analytics: features.analytics, videos: features.videos },
   )
 
   const resourceLinks = [

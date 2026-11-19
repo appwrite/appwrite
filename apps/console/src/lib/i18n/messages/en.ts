@@ -196,6 +196,7 @@ export const enCatalog = {
           vsPlanetScale: 'Appwrite vs. PlanetScale', // pragma: allowlist secret
           vsPostHog: 'Appwrite vs. PostHog', // pragma: allowlist secret
           vsPlausible: 'Appwrite vs. Plausible', // pragma: allowlist secret
+          vsMux: 'Appwrite vs. Mux', // pragma: allowlist secret
           nextjsHosting: 'Next.js hosting',
           reactHosting: 'React hosting',
           vueHosting: 'Vue.js hosting',
@@ -229,6 +230,7 @@ export const enCatalog = {
         activity: 'Activity',
         logs: 'Logs',
         usage: 'Usage',
+        monitors: 'Monitors',
         analytics: 'Analytics',
         errors: 'Errors',
         advisor: 'Advisor',
@@ -388,6 +390,7 @@ export const enCatalog = {
         storage: 'Storage',
         functions: 'Functions',
         messaging: 'Messaging',
+        videos: 'Videos',
         realtime: 'Realtime',
         sites: 'Sites',
         analytics: 'Analytics',
@@ -416,6 +419,7 @@ export const enCatalog = {
           storageTagline: 'Upload, transform, and deliver files on CDN.',
           functionsTagline: 'APIs, cron jobs, and event handlers at scale.',
           messagingTagline: 'Email, SMS, and push with topics and targets.',
+          videosTagline: 'Adaptive HLS, DASH, and CMAF streams with subtitles.',
           sitesTagline: 'Static, SSR, and CSR deploys from Git.',
           realtimeName: 'Realtime',
           realtimeTagline: 'Live events, channels, and presence.',

@@ -75,7 +75,7 @@ export type ConsoleProfileFeatures = {
   reviews: boolean
   /** Project environments switcher in the project sidebar (`/project/environments`, Cloud only). */
   projectEnvironments: boolean
-  /** Internal only, switched on from the debug menu. Usage monitors and the alerts they raise: the Usage sidebar's Monitors and Alerts pages, their quick actions, budget monitors in billing, and the alert events in the webhook event picker. */
+  /** An experiment, off by default; the quality team turns it on from the header Previews menu. Usage monitors and the alerts they raise: the Usage sidebar's Monitors and Alerts pages, their quick actions, budget monitors in billing, and the alert events in the webhook event picker. */
   alerts: boolean
   /** Multi-region support (region picker/labels in project UX). */
   multiRegion: boolean
@@ -102,13 +102,6 @@ export type ConsoleProfileFeatures = {
   blogDrafts: boolean
   /** Product analytics: tracked properties, visitor stats, and per-event metrics */
   analytics: boolean
-  /**
-   * Clicking Humans / Bots in analytics filters the page. `trafficType` isn't
-   * a query attribute, so this filters on an empty vs non-empty
-   * `botCategory`, which depends on how the backend stores human events.
-   * Off until that's confirmed.
-   */
-  analyticsTrafficFilter: boolean
   /** Appwrite push messaging provider (create wizard and its QoS/expiry settings). */
   appwritePush: boolean
 }
@@ -153,7 +146,6 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   cookieBanner: 'Cookie banner',
   blogDrafts: 'Blog drafts',
   analytics: 'Analytics',
-  analyticsTrafficFilter: 'Analytics humans/bots filter',
   appwritePush: 'Appwrite push',
 }
 
@@ -210,7 +202,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       blogDrafts: false,
       // Off until launch; enable from Debug → Feature flags.
       analytics: false,
-      analyticsTrafficFilter: false,
       appwritePush: true,
     },
   },
@@ -254,7 +245,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       cookieBanner: false,
       blogDrafts: false,
       analytics: false,
-      analyticsTrafficFilter: false,
       appwritePush: true,
     },
   },
@@ -624,18 +614,43 @@ export function getActiveProfileWithoutDebugOverride(): ConsoleProfile {
   }
 }
 
-export function getActiveProfile(): ConsoleProfile {
-  const stored = getStoredProfile()
-  const profileId = stored?.id ?? getProfileFromEnv()
-  const canonical = CONSOLE_PROFILES[profileId]
+function resolveProfile(stored: StoredConsoleProfile | null): ConsoleProfile {
   if (!stored) {
     return getActiveProfileWithoutDebugOverride()
   }
-  const mergedFeatures = applyCloudOnlyFeatureGates(profileId, {
-    ...applyEnvFeatureOverrides(profileId, canonical.features),
+  const canonical = CONSOLE_PROFILES[stored.id]
+  const mergedFeatures = applyCloudOnlyFeatureGates(stored.id, {
+    ...applyEnvFeatureOverrides(stored.id, canonical.features),
     ...stored.features,
   } as ConsoleProfileFeatures)
   return { ...stored, features: mergedFeatures }
+}
+
+export function getActiveProfile(): ConsoleProfile {
+  return resolveProfile(getStoredProfile())
+}
+
+const DEBUG_PROFILE_COOKIE_PATTERN = new RegExp(
+  `(?:^|;\\s*)${DEBUG_PROFILE_COOKIE}=([^;]*)`,
+)
+
+/**
+ * Feature flags for a document request on the server, honoring the debug
+ * profile override through its cookie mirror (localStorage is browser-only).
+ */
+export function getProfileFeaturesForCookieHeader(
+  cookieHeader: string | null | undefined,
+): ConsoleProfileFeatures {
+  const raw = cookieHeader?.match(DEBUG_PROFILE_COOKIE_PATTERN)?.[1]
+  let stored: StoredConsoleProfile | null = null
+  if (raw) {
+    try {
+      stored = parseStoredProfileRaw(decodeURIComponent(raw))
+    } catch {
+      stored = null
+    }
+  }
+  return resolveProfile(stored).features
 }
 
 /**

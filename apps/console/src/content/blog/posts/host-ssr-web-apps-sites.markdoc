@@ -21,7 +21,7 @@ faqs:
   - question: "Can I import environment variables from an existing .env file?"
     answer: "Yes. In the deployment configuration page, you can define environment variables manually or import them from an existing .env file. These are made available at both build time and runtime depending on framework conventions."
   - question: "Does Appwrite Sites auto-deploy on every Git push?"
-    answer: "Yes. Once you connect a GitHub repository and pick a production branch, Appwrite pulls new commits, rebuilds, and deploys automatically. You can enable silent mode if you don't want it to add comments on GitHub PRs."
+    answer: "Yes, by default. Once you connect a GitHub repository and pick a production branch, Appwrite pulls new commits, rebuilds, and deploys automatically. In the site's [Git automation](/docs/products/sites/deploy-from-git#git-automation) settings, you can turn off **Deploy on push** to deploy branches yourself, or **Post build summaries** to keep Appwrite's comments off your pull requests."
 ---
 
 When you're building a modern web app, how you serve your content matters. Some pages need to be pre-rendered ahead of time for speed. Others need to be generated dynamically on the server for personalization or real-time data. This process is called Server-Side Rendering (SSR), and Appwrite Sites supports SSR, just like it supports Client-Side Rendering (CSR) and Static Site Generation (SSG).
@@ -62,7 +62,7 @@ Once your repository is connected, you'll land on the deployment configuration p
 - **Name**: A name for your site, usually taken from your repository.
 - **Branch**: The branch you want to use for production (typically `main` or `master`).
 - **Root directory**: Leave this as `./` unless your app lives in a subfolder.
-- **Silent mode**: This prevents Appwrite from adding GitHub comments when changes are pushed.
+- **Silent mode**: This stops Appwrite from commenting on pull requests and adding checks to commits. Once the site exists, its [Git automation](/docs/products/sites/deploy-from-git#git-automation) settings control each of these separately.
 - **Framework**: Optional, but recommended. Selecting your framework here helps Appwrite apply sensible defaults and display SSR instructions specific to your setup.
 
 Now, scroll down to the **Build settings** section. This is where you define how your app gets built:

@@ -1265,4 +1265,135 @@ export const jaProductPagesDictionary: Record<string, string> = {
   'Specifications docs': '仕様のドキュメント',
   'Use the same hostname and credentials with Prisma, Drizzle, Sequelize, TypeORM, SQLAlchemy, psql, and the rest of your PostgreSQL toolchain. Copy DSN, .env, and ORM snippets from the Console Credentials tab, or follow integration guides in the docs.':
     'Prisma、Drizzle、Sequelize、TypeORM、SQLAlchemy、psql など、PostgreSQL ツールチェーンと同じホスト名と認証情報で接続できます。Console の Credentials タブから DSN、.env、ORM スニペットをコピーするか、ドキュメントの統合ガイドに従ってください。',
+
+  // Videos product page
+  'Stream video and audio with Appwrite Videos. Turn files in Storage into adaptive HLS, DASH, and CMAF streams with encoding profiles, subtitles, and scrubbing thumbnails.':
+    'Appwrite Videos で動画と音声をストリーミング。ストレージのファイルを、エンコードプロファイル、字幕、シークサムネイル付きのアダプティブ HLS、DASH、CMAF ストリームに変換します。',
+  'Adaptive video streaming from your Storage files':
+    'ストレージのファイルからアダプティブ動画ストリーミング',
+  'Turn video and audio files into HLS, DASH, and CMAF streams with an encoding ladder, subtitles, and scrubbing thumbnails. First frame under 100 ms, by design. One API, in the same project as your Auth, Databases, and Storage.':
+    '動画・音声ファイルを、エンコードラダー、字幕、シークサムネイル付きの HLS、DASH、CMAF ストリームに変換します。最初のフレームは設計上 100 ms 未満。認証、データベース、ストレージと同じプロジェクトで使える 1 つの API です。',
+  'Start streaming with Videos': '動画のストリーミングを始める',
+  'Upload a file to Storage, create a video, and get an adaptive stream URL for any HLS or DASH player.':
+    'ストレージにファイルをアップロードして動画を作成すれば、あらゆる HLS / DASH プレーヤーで使えるアダプティブストリーム URL が手に入ります。',
+  'Which files can I turn into a video?': 'どのファイルを動画にできますか？',
+  'Any video or audio file in an Appwrite Storage bucket. Create a video from the bucket and file IDs, and the source file stays in Storage untouched. Audio-only sources stream the same way but have no timeline thumbnails.':
+    'Appwrite Storage のバケットにある動画・音声ファイルなら何でも使えます。バケット ID とファイル ID から動画を作成でき、元のファイルはストレージにそのまま残ります。音声のみのソースも同じようにストリーミングできますが、タイムラインのサムネイルは生成されません。',
+  'What is the difference between a profile and a rendition?':
+    'プロファイルとレンディションの違いは何ですか？',
+  'A profile is a reusable encoding target with a resolution, video and audio bitrate, and codec. A rendition is one encode of a video against a profile, packaged for one output. Each video has at most one rendition per profile and output. Updating a profile does not re-encode existing renditions.':
+    'プロファイルは、解像度、動画と音声のビットレート、コーデックを持つ再利用可能なエンコード設定です。レンディションは、動画をプロファイルに沿って 1 回エンコードし、1 つの出力形式にパッケージしたものです。各動画には、プロファイルと出力の組み合わせごとに最大 1 つのレンディションがあります。プロファイルを更新しても、既存のレンディションは再エンコードされません。',
+  'Which streaming formats are supported?': 'どのストリーミング形式に対応していますか？',
+  'HLS, DASH, and CMAF. HLS uses MPEG-TS segments, DASH uses fMP4 segments, and CMAF encodes fMP4 once and exposes both an HLS and a DASH master manifest. Players request the master manifest and follow it to renditions, segments, and subtitles.':
+    'HLS、DASH、CMAF に対応しています。HLS は MPEG-TS セグメント、DASH は fMP4 セグメントを使い、CMAF は fMP4 を 1 回エンコードして HLS と DASH の両方のマスターマニフェストを公開します。プレーヤーはマスターマニフェストを取得し、そこからレンディション、セグメント、字幕をたどります。',
+  'How do subtitles work?': '字幕はどのように機能しますか？',
+  'Upload a WebVTT or SubRip file to Storage and attach it to a video with a name and an ISO 639-2 language code. Uploads are converted to WebVTT and segmented for streaming. Subtitle tracks embedded in the source are extracted automatically during the first encoding job, and you can retag their language at any time.':
+    'WebVTT または SubRip ファイルをストレージにアップロードし、名前と ISO 639-2 の言語コードを付けて動画に追加します。アップロードしたファイルは WebVTT に変換され、ストリーミング用にセグメント化されます。ソースに埋め込まれた字幕トラックは最初のエンコードジョブで自動的に抽出され、言語はいつでも付け直せます。',
+  'What happens when I delete a video?': '動画を削除するとどうなりますか？',
+  'Deleting a video removes its renditions, subtitles, previews, and transcoded segments. Deleting a profile keeps the renditions that were already encoded with it.':
+    '動画を削除すると、そのレンディション、字幕、プレビュー、トランスコード済みセグメントが削除されます。プロファイルを削除しても、そのプロファイルでエンコード済みのレンディションは残ります。',
+  'How do you reach a first frame under 100 ms?': '最初のフレームを 100 ms 未満にするには？',
+  'The pipeline is designed for that startup budget. Players load a small master manifest, pick a rendition from the ladder that the connection can fetch immediately, and request a short first segment instead of the source file. Use the inspector to watch time to first frame on a real session.':
+    'パイプラインはその起動予算向けに設計されています。プレーヤーは小さなマスターマニフェストを読み込み、回線がすぐ取れるレンディションをラダーから選び、ソースファイルではなく短い最初のセグメントを要求します。実際のセッションの最初のフレームまでの時間はインスペクターで確認できます。',
+  'Who can manage videos in my organization?': '組織内で誰が動画を管理できますか？',
+  'Videos follows your organization roles. The videos.read and videos.write scopes control who can view and manage videos, profiles, renditions, and subtitles.':
+    '動画は組織のロールに従います。videos.read と videos.write のスコープで、動画、プロファイル、レンディション、字幕を閲覧・管理できるユーザーを制御します。',
+  'Start from any file in Storage': 'ストレージ内の任意のファイルから開始',
+  'Create a video from a file that is already in a Storage bucket. The first encoding job probes codecs, resolution, frame rate, duration, and bitrate, so you never parse media metadata yourself.':
+    'ストレージのバケットにあるファイルから動画を作成します。最初のエンコードジョブがコーデック、解像度、フレームレート、再生時間、ビットレートを解析するので、メディアのメタデータを自分でパースする必要はありません。',
+  'Encode an adaptive bitrate ladder': 'アダプティブビットレートラダーをエンコード',
+  'Every new project starts with a default ladder of encoding profiles. Renditions encode in the background and report status and progress until they are ready to stream. Add your own profiles when you need a different resolution or bitrate.':
+    '新しいプロジェクトには、デフォルトのエンコードプロファイルのラダーが用意されています。レンディションはバックグラウンドでエンコードされ、ストリーミングの準備ができるまでステータスと進捗を報告します。別の解像度やビットレートが必要なときは独自のプロファイルを追加できます。',
+  'HLS, DASH, and CMAF from one source': '1 つのソースから HLS、DASH、CMAF',
+  'Package each rendition for the players you support. Every output has a master manifest that players follow to the right rendition for each viewer and connection.':
+    'サポートするプレーヤーに合わせて各レンディションをパッケージします。各出力にはマスターマニフェストがあり、プレーヤーは視聴者と回線に合ったレンディションを選びます。',
+  'Subtitles, uploaded or extracted': 'アップロードまたは抽出した字幕',
+  'Upload WebVTT or SubRip files from Storage, or use the tracks already embedded in the source. Tag each track with a language, choose a default, and players pick it up from the manifest.':
+    'ストレージから WebVTT や SubRip ファイルをアップロードするか、ソースに埋め込まれたトラックをそのまま使えます。各トラックに言語を設定してデフォルトを選べば、プレーヤーはマニフェストから読み込みます。',
+  'Scrubbing thumbnails on the timeline': 'タイムラインのシークサムネイル',
+  'Generate sprite sheets with a WebVTT index so viewers see a preview frame while they scrub. The same sprites give every video a poster image.':
+    'WebVTT インデックス付きのスプライトシートを生成し、視聴者がシーク中にプレビューフレームを見られるようにします。同じスプライトがすべての動画のポスター画像にもなります。',
+  'Play anywhere': 'どこでも再生',
+  'Hand the master manifest URL to hls.js, dash.js, Shaka Player, AVPlayer, or ExoPlayer. Or copy an embed snippet from the Console and drop it into any page.':
+    'マスターマニフェストの URL を hls.js、dash.js、Shaka Player、AVPlayer、ExoPlayer に渡すだけです。コンソールから埋め込みスニペットをコピーして、任意のページに貼り付けることもできます。',
+  'One rendition per profile and output. Encode the same profile for more than one output.':
+    'プロファイルと出力の組み合わせごとにレンディションは 1 つ。同じプロファイルを複数の出力向けにエンコードできます。',
+  'For Safari, iOS, tvOS, and hls.js on every other browser.':
+    'Safari、iOS、tvOS、およびその他のブラウザーの hls.js 向け。',
+  'For dash.js, Shaka Player, ExoPlayer, and smart TVs.':
+    'dash.js、Shaka Player、ExoPlayer、スマートテレビ向け。',
+  'Encode fMP4 segments once and serve both an HLS and a DASH master.':
+    'fMP4 セグメントを 1 回エンコードし、HLS と DASH の両方のマスターを配信します。',
+  'Uploads are converted to WebVTT and segmented for streaming. Retag an embedded track from und to its real language without replacing the file.':
+    'アップロードしたファイルは WebVTT に変換され、ストリーミング用にセグメント化されます。埋め込みトラックは、ファイルを置き換えずに und から実際の言語に付け直せます。',
+  English: '英語',
+  Hebrew: 'ヘブライ語',
+  'Scrubbing preview': 'シークプレビュー',
+  Encode: 'エンコード',
+  Stream: 'ストリーム',
+  'Probed metadata': '解析済みメタデータ',
+  'Welcome to the launch': 'ローンチへようこそ',
+  '3 outputs': '3 つの出力',
+  'HLS, DASH, and CMAF': 'HLS、DASH、CMAF',
+  Adaptive: 'アダプティブ',
+  'Default bitrate ladder': 'デフォルトのビットレートラダー',
+  'Uploaded or extracted': 'アップロードまたは抽出',
+  Timeline: 'タイムライン',
+  'Scrubbing thumbnails': 'シークサムネイル',
+  'Any player': '任意のプレーヤー',
+  'Web, iOS, and Android': 'Web、iOS、Android',
+  'From the first encode': '最初のエンコードから',
+  'Source stays in Storage': 'ソースはストレージに残る',
+  'The original file is never replaced': '元のファイルは置き換えられません',
+  'Default project ladder': 'プロジェクトのデフォルトラダー',
+  'Add a profile for any other bitrate': '別のビットレート用にプロファイルを追加',
+  'Upload or extract': 'アップロードまたは抽出',
+  'Retag an embedded track without replacing the file':
+    'ファイルを置き換えずに埋め込みトラックの言語を付け直す',
+  'Poster frame included': 'ポスターフレーム付き',
+  'Same sprites, same index': '同じスプライト、同じインデックス',
+  'Master manifest URL': 'マスターマニフェスト URL',
+  Excerpt: '抜粋',
+  'Demo video by McPix22': 'McPix22 のデモ動画',
+  'Inspect quality as viewers play': '再生中の品質を検査',
+  'Pop the inspector out beside any video in the Console. Watch a live experience score for that session, then drill into buffer, bitrate, dropped frames, and diagnostics when a stream misses the sub 100 ms first frame.':
+    'コンソールで任意の動画の横にインスペクターを切り離して開けます。そのセッションのライブ体験スコアを確認し、ストリームが 100 ms 未満の最初のフレームを逃したときは、バッファ、ビットレート、ドロップフレーム、診断を掘り下げられます。',
+  'Live experience score': 'ライブ体験スコア',
+  'Follows the playing video': '再生中の動画に追従',
+  'Pop out beside the player': 'プレーヤーの横に切り離して表示',
+  '100 ms': '100 ms',
+  'To first frame': '最初のフレームまで',
+  'First frame': '最初のフレーム',
+  'First frame in 100 ms': '最初のフレームは 100 ms',
+  'Web, mobile, and native': 'Web、モバイル、ネイティブ',
+  'Embed a built-in player': '内蔵プレーヤーを埋め込む',
+  'Copy an iframe from the Console and drop the Appwrite player on any page. Set a start time, choose captions, lock a rendition, or leave quality on Auto. The stream is designed for a first frame in under 100 ms.':
+    'コンソールから iframe をコピーして、任意のページに Appwrite プレーヤーを置けます。開始位置、字幕、レンディションの固定、または画質 Auto を選べます。ストリームは最初のフレームを 100 ms 未満で出すように設計されています。',
+  'Use any player on any platform': 'どのプラットフォームでも任意のプレーヤーを使用',
+  'Prefer your own player? The same master manifest works with hls.js, Shaka Player, and Video.js on the web, AVPlayer on Apple platforms, ExoPlayer on Android, and the usual Flutter and React Native players.':
+    '既存のプレーヤーを使いたい場合も、同じマスターマニフェストが Web の hls.js、Shaka Player、Video.js、Apple の AVPlayer、Android の ExoPlayer、通常の Flutter と React Native プレーヤーで再生できます。',
+  Autoplay: '自動再生',
+  Captions: '字幕',
+  Quality: '画質',
+  'Embed on any page': '任意のページに埋め込み',
+  'Flutter · React Native': 'Flutter · React Native',
+  'First frame under 100 ms': '最初のフレームは 100 ms 未満',
+  'Press play, see picture in under 100 ms': '再生を押して 100 ms 未満で映像を表示',
+  'No waiting on the whole file. Streams open from a few kilobytes and one short segment, so picture lands before anyone notices.':
+    'ファイル全体を待つ必要はありません。ストリームは数 KB と短いセグメント 1 つで始まり、誰かが気づく前に映像が表示されます。',
+  'Master manifest': 'マスターマニフェスト',
+  'First segment': '最初のセグメント',
+  'Under 100 ms': '100 ms 未満',
+  'Appwrite stream': 'Appwrite ストリーム',
+  'Init segment': 'init セグメント',
+  'Progressive download': 'プログレッシブダウンロード',
+  'Whole file first': 'まずファイル全体',
+  'Still downloading, no picture yet': 'ダウンロード中、まだ映像なし',
+  budget: '予算',
+  'to spare': '余裕',
+  'Manifest to map the stream': 'ストリームを示すマニフェスト',
+  'Starting rung, 1080p next': '開始の段、次に 1080p',
+  'Segment to paint a frame': 'フレーム描画までのセグメント',
+  'Picture on screen': '映像を表示中',
+  'Climbs the ladder': 'ラダーを上がる',
 }

@@ -1,4 +1,10 @@
-import { FlaskConical, GitBranch, Layers, type LucideIcon } from 'lucide-react'
+import {
+  FlaskConical,
+  Gauge,
+  GitBranch,
+  Layers,
+  type LucideIcon,
+} from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { Button } from '@/components/ui/button'
 import {
@@ -25,6 +31,7 @@ import { useMarkExperimentsSeen } from '@/lib/react-query/hooks'
 import { parseExperimentsSeenAt, type UserPrefs } from '@/lib/user-prefs-keys'
 
 const EXPERIMENT_ICONS = {
+  alerts: Gauge,
   analytics: ANALYTICS_PRODUCT_ICON,
   projectEnvironments: Layers,
   vcsOrigin: GitBranch,

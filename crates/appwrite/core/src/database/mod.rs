@@ -227,7 +227,7 @@ mod tests {
             [
                 "default-cache-console:appwrite:_console::collection:projects",
                 "default-cache-console:appwrite:_console::collection:projects:p1",
-                "default-cache-console:appwrite:_console::collection:projects:p1:8f61be1117ab951258a4217d25967aae",
+                "default-cache-console:appwrite:_console::collection:projects:p1:67f56d14d59bc98c71d921f4188bf4ea",
             ]
         );
         assert_eq!(
@@ -235,13 +235,13 @@ mod tests {
             [
                 "default-cache-database_db_main:appwrite:_7::collection:users",
                 "default-cache-database_db_main:appwrite:_7::collection:users:u1",
-                "default-cache-database_db_main:appwrite:_7::collection:users:u1:8f61be1117ab951258a4217d25967aae",
+                "default-cache-database_db_main:appwrite:_7::collection:users:u1:67f56d14d59bc98c71d921f4188bf4ea",
             ]
         );
         let selects = ["name".to_owned(), "$id".to_owned()];
         assert_eq!(
             db.cache_keys("users", Some("u1"), &selects).await.unwrap().2,
-            "default-cache-database_db_main:appwrite:_7::collection:users:u1:aaa49b49f21a9a4396c0b4ab60fe16fe"
+            "default-cache-database_db_main:appwrite:_7::collection:users:u1:3522f7212613c8f664748f0c32b9d926"
         );
         assert_eq!(
             db.query_cache_key("users", None).await.unwrap(),
@@ -252,7 +252,7 @@ mod tests {
             db.skip_filters(Some(skipped.as_slice()), db.cache_keys("users", Some("u1"), &[])).await.unwrap();
         assert_eq!(
             hash,
-            "default-cache-database_db_main:appwrite:_7::collection:users:u1:471a80ba4e7e2505658f5fbab52c7048"
+            "default-cache-database_db_main:appwrite:_7::collection:users:u1:7ee0dad570ec2d37570419d8fefd0fa6"
         );
     }
 }
