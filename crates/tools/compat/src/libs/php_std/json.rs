@@ -22,9 +22,13 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
     let flags = || -> Result<Flags, Fault> { Ok(Flags::from_php(a.opt_i64("flags")?.unwrap_or(0))) };
     let depth = || -> Result<i64, Fault> { Ok(a.opt_i64("depth")?.unwrap_or(json::DEFAULT_DEPTH)) };
     Ok(Outcome::Ok(match op {
-        "json.encode" => encoded(json::encode(&decode(a.value("v")?)?, flags()?, depth()?))?,
+        "json.encode" => return encoded(json::encode(&decode(a.value("v")?)?, flags()?, depth()?)),
         "json.encode_value" => {
-            encoded(json::encode(&php_std::Value::<php_std::Never>::from_json(a.value("v")?), flags()?, depth()?))?
+            return encoded(json::encode(
+                &php_std::Value::<php_std::Never>::from_json(a.value("v")?),
+                flags()?,
+                depth()?,
+            ));
         }
         "json.encode_throw" => {
             match json::encode(&decode(a.value("v")?)?, flags()? | Flags::THROW_ON_ERROR, depth()?) {
@@ -69,12 +73,13 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
     }))
 }
 
-/// `['json' => json_encode(...), 'error' => json_last_error(), 'message' => json_last_error_msg()]`.
-fn encoded(result: Result<String, Error>) -> Result<Value, Fault> {
-    Ok(match result {
+/// `['json' => json_encode(...), 'error' => json_last_error(), 'message' => json_last_error_msg()]`,
+/// or the `ValueError` thrown for an invalid argument.
+fn encoded(result: Result<String, Error>) -> OpResult {
+    Ok(Outcome::Ok(match result {
         Ok(s) => json!({"json": s, "error": 0, "message": json::ErrorCode::None.message()}),
         Err(Error::Partial { json, code }) => json!({"json": json, "error": code.code(), "message": code.message()}),
         Err(Error::Json(code)) => json!({"json": false, "error": code.code(), "message": code.message()}),
-        Err(e) => return Err(Fault::new(format!("unexpected error {e:?}"))),
-    })
+        Err(e) => return Ok(Outcome::err(e.php_class(), e.message())),
+    }))
 }

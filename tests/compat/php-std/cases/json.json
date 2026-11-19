@@ -255,7 +255,7 @@
       }
     },
     {
-      "name": "depth is cast to int",
+      "name": "depth outside an int is a ValueError",
       "op": "json.encode",
       "args": {
         "v": [
@@ -264,9 +264,10 @@
         "depth": 4294967297
       },
       "expect": {
-        "json": "[1]",
-        "error": 0,
-        "message": "No error"
+        "$error": {
+          "class": "ValueError",
+          "message": "json_encode(): Argument #3 ($depth) must be between -2147483648 and 2147483647"
+        }
       }
     },
     {
