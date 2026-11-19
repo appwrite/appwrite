@@ -6,9 +6,12 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
-import { sdk } from '@/lib/appwrite/sdk'
+import { getProjectApiEndpoint, sdk } from '@/lib/appwrite/sdk'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+
+const codeClassName =
+  'rounded bg-muted/80 px-1.5 py-0.5 font-mono text-[12px] text-foreground/90'
 
 interface AnalyticsCardProps {
   projectId: string | null | undefined
@@ -47,6 +50,8 @@ export function AnalyticsCard({ projectId, siteId, site }: AnalyticsCardProps) {
       })
     },
     onError: (error: unknown) => {
+      // The switch would otherwise keep reading as on while the server value is off.
+      setEnabled(site?.analyticsEnabled ?? false)
       toast.error(getErrorMessage(error, t('Failed to update analytics')))
     },
   })
@@ -80,6 +85,11 @@ export function AnalyticsCard({ projectId, siteId, site }: AnalyticsCardProps) {
                     'Disabled - no tracker is added. Existing analytics data is kept.',
                   )}
             </p>
+            <p className="text-[12px] text-muted-foreground mt-1">
+              {t(
+                'Tracked pageviews and events are billed as analytics usage, which adds up quickly on a high-traffic site.',
+              )}
+            </p>
           </div>
           <Switch
             id="site-analytics"
@@ -89,6 +99,23 @@ export function AnalyticsCard({ projectId, siteId, site }: AnalyticsCardProps) {
             className="shrink-0"
           />
         </div>
+        {enabled && projectId ? (
+          <div className="mt-4 rounded-lg border border-border bg-muted/30 px-4 py-3">
+            <p className="text-[12px] text-muted-foreground">
+              {t(
+                'If your site sets a Content-Security-Policy, in a header or a <meta> tag, add these sources. Otherwise the browser blocks the tracker and no data is recorded.',
+              )}
+            </p>
+            <div className="mt-2 flex flex-col items-start gap-1.5">
+              <code className={codeClassName}>
+                script-src https://sdk.appwrite.io
+              </code>
+              <code className={codeClassName}>
+                connect-src {new URL(getProjectApiEndpoint(projectId)).origin}
+              </code>
+            </div>
+          </div>
+        ) : null}
       </div>
       <div className="px-6 py-4 border-t border-border bg-muted/30 flex items-center justify-between gap-4">
         <Button
