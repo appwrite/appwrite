@@ -1,0 +1,80 @@
+---
+layout: integration
+title: Query Redis Cloud
+description: Store and read key-value data in a Redis Cloud database from an Appwrite Function
+date: 2026-11-09
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/query-redis/cover.avif
+category: databases
+product:
+    vendor: Redis
+    description: "Redis is an in-memory data store used for caching, sessions, queues, and real-time data, and Redis Cloud is its managed service."
+platform:
+    - 'Cloud'
+---
+
+[Redis](https://redis.io/) is an in-memory data store. It keeps data in memory for sub-millisecond reads and writes, which makes it a common choice for caches, sessions, rate limits, and leaderboards. Redis Cloud is the managed service from Redis, the company formerly called Redis Labs.
+
+# How does the integration work?
+
+The **Query Redis Labs** function template shows how to work with a Redis Cloud database from Appwrite Functions using the official `redis` client. Each `GET` request stores a warehouse with a random location and capacity as a hash under a `warehouses:<hash>` key, reads it back, and returns it as JSON.
+
+The function keeps its connection between executions, so warm requests skip the connection setup. Use it as a starting point for caching or other key-value logic.
+
+# How to implement
+
+To implement the Redis Cloud integration, there are several steps you must complete:
+
+## Step 1: Create a Redis Cloud database
+
+Sign in to [Redis Cloud](https://redis.io/cloud/) and create a database. Open the database's connection details and save these values:
+
+| Value | Description |
+| --- | --- |
+| Host | The public endpoint without the port, for example `redis-13258.c35.eu-central-1-1.ec2.redns.redis-cloud.com` |
+| Port | The number after the colon in the public endpoint, for example `13258` |
+| Password | The password of the database's default user |
+
+## Step 2: Create the Appwrite Function
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) if you haven't already. In the Appwrite Console, go to **Functions**, open the **Templates** tab, search for **Query Redis Labs**, and click **Create from template**. Fill in the **Template variables**:
+
+| Variable | Value |
+| --- | --- |
+| `REDIS_HOST` | The host, without the port |
+| `REDIS_PASSWORD` | The password |
+| `REDIS_PORT` | The port. Redis Cloud gives each database its own port, so replace the prefilled `14714` with yours. |
+
+Choose **Connect your repository** to clone the template into a Git repository you can edit later, or **Connect later** to deploy it right away. Then click **Create and deploy**.
+
+## Step 3: Test the function
+
+Copy the function's domain from the **Domains** tab and send a request:
+
+```bash
+curl https://<FUNCTION_DOMAIN>
+```
+
+The response contains the warehouse the function just stored:
+
+```json
+{
+  "location": "Street 49, Earth",
+  "capacity": "10"
+}
+```
+
+Redis returns hash fields as strings, so `capacity` comes back as `"10"`. Requests with other methods return `404`.
+
+The template allows anyone to execute the function, so anyone who finds its domain can add warehouses to your database. Before you query your own data, replace `Any` in the function's [execute access](/docs/products/functions/functions#execution-access) with narrower [roles](/docs/advanced/security/permissions#permission-roles), such as `Users`, and call the function [with an Appwrite SDK](/docs/products/functions/execute#sdk) instead of its domain.
+
+# Read more about Redis and Appwrite Functions
+
+If you would like to learn more about Redis and Appwrite Functions, we have some resources that you should visit:
+
+- [Connect to a Redis Cloud database](https://redis.io/docs/latest/operate/rc/databases/connect/)
+- [Integrate SQL, NoSQL, vector, graph, or any database into your Appwrite project](/blog/post/integrate-sql-nosql-vector-graph-or-any-database-into-your-appwrite-project)
+- [Deploy Appwrite Functions from Git](/docs/products/functions/deploy-from-git)
+- [Query Redis Labs template source](https://github.com/appwrite/templates/tree/1.5.2/node/query-redis-labs)
