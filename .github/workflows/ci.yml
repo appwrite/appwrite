@@ -515,9 +515,17 @@ jobs:
         env:
           LIBRARY: ${{ runner.temp }}/utopia/libutopia.so
         run: |
+          # libheif decodes AVIF and HEIC only through its plugins, which image's tests read.
+          packages=""
           if ldd "$LIBRARY" | grep -q 'not found'; then
+            packages="libheif1"
+          fi
+          if [ "$PACKAGE" = image ]; then
+            packages="$packages libheif1 libheif-plugin-libde265 libheif-plugin-aomdec"
+          fi
+          if [ -n "$packages" ]; then
             sudo apt-get update
-            sudo apt-get install -y --no-install-recommends libheif1
+            sudo apt-get install -y --no-install-recommends $packages
           fi
           echo "extension=$LIBRARY" | sudo tee "$(php -r 'echo PHP_CONFIG_FILE_SCAN_DIR;')/99-utopia.ini"
           php --ri utopia > /dev/null
