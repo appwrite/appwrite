@@ -8,6 +8,14 @@ parameters:
     paths:
         - src
         - tests
+    ignoreErrors:
+        # Without the utopia extension, PHPStan declares the old Utopia\Validator name from the stub,
+        # as a subclass: compat.php aliases it only when the extension is loaded.
+        -
+            identifier: argument.type
+            message: '#^Parameter \#1 \$validator of class Utopia\\Validator\\Tests\\OldNamesConsumer constructor expects Utopia\\Validator, Utopia\\Validator\\Text given\.$#'
+            path: tests/CompatTest.php
+            reportUnmatched: false
 
 services:
     -

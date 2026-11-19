@@ -1,12 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Parameter \#1 \$validator of class Utopia\\Validator\\Tests\\OldNamesConsumer constructor expects Utopia\\Validator, Utopia\\Validator\\Text given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/CompatTest.php
-
-		-
 			message: '#^Cannot call method getType\(\) on Utopia\\Validator\\Assoc\|null\.$#'
 			identifier: method.nonObject
 			count: 1
