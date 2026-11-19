@@ -5759,7 +5759,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/videos/videos",
     "title": "Videos",
     "description": "Learn how an Appwrite video points at a Storage file, which metadata it holds, how its status is derived, and what deleting it removes.",
-    "excerpt": "A **video** is the root resource in Appwrite Videos. It points at a video or audio file in a Storage bucket and holds the media metadata probed from that file. Renditions, captions, and the timeline all belong to a video. Source file You create a video from a and a . The file must be a video or audio file, such as MP4, MOV, WebM, MKV, MP3, or M4A, and you must be able to read it. Other files, including…",
+    "excerpt": "A **video** is the root resource in Appwrite Videos. It points at a video or audio file in a Storage bucket and holds the media metadata probed from that file. Renditions, captions, and the timeline all belong to a video. Source file You create a video from a file in a Storage bucket, using the bucket ID and the file ID. The file must be a video or audio file, such as MP4, MOV, WebM, MKV, MP3, or M4A, and…",
     "breadcrumbs": [
       "products",
       "Videos",

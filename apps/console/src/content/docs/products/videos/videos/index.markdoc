@@ -8,7 +8,7 @@ A **video** is the root resource in Appwrite Videos. It points at a video or aud
 
 # Source file {% #source-file %}
 
-You create a video from a `bucketId` and a `fileId`. The file must be a video or audio file, such as MP4, MOV, WebM, MKV, MP3, or M4A, and you must be able to read it. Other files, including playlists such as `.m3u8`, return the `video_not_valid` error.
+You create a video from a file in a Storage bucket, using the bucket ID and the file ID. The file must be a video or audio file, such as MP4, MOV, WebM, MKV, MP3, or M4A, and you must be able to read it. Other files, including playlists such as `.m3u8`, return the `video_not_valid` error.
 
 The source stays in its bucket untouched. Each encoding or timeline job downloads its own copy and deletes the copy when it ends.
 
