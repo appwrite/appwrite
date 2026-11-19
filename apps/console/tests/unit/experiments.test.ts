@@ -49,15 +49,15 @@ describe('experiments catalog', () => {
     }
   })
 
-  test('usage alerts are off in every profile until the experiment turns them on', () => {
-    for (const profile of Object.values(CONSOLE_PROFILES)) {
-      expect(profile.features.alerts).toBe(false)
-    }
-  })
-
   test('Videos is off in every profile until the experiment turns it on', () => {
     for (const profile of Object.values(CONSOLE_PROFILES)) {
       expect(profile.features.videos).toBe(false)
+    }
+  })
+
+  test('usage alerts are off in every profile until the experiment turns them on', () => {
+    for (const profile of Object.values(CONSOLE_PROFILES)) {
+      expect(profile.features.alerts).toBe(false)
     }
   })
 })

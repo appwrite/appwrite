@@ -49,7 +49,7 @@ export const EXPERIMENTS: readonly Experiment[] = [
   {
     flag: 'videos',
     name: 'Appwrite Videos',
-    description: 'Stream Storage files over HLS and DASH, with docs.',
+    description: 'Transcode, stream, and caption videos.',
     introducedAt: '2026-11-19',
   },
 ]

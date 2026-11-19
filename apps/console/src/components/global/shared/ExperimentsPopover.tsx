@@ -27,9 +27,9 @@ import {
   type Experiment,
 } from '@/lib/experiments'
 import { useT } from '@/lib/i18n/translate'
-import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 import { useMarkExperimentsSeen } from '@/lib/react-query/hooks'
 import { parseExperimentsSeenAt, type UserPrefs } from '@/lib/user-prefs-keys'
+import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 
 const EXPERIMENT_ICONS = {
   alerts: Gauge,
