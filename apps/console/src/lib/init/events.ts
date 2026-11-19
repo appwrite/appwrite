@@ -206,7 +206,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     dateRangeLabel: 'NOVEMBER 30 - DECEMBER 4',
     headline: 'Init returns November 30 - December 4',
     description:
-      'Init returns November 30 - December 4. Five days of launches, live sessions, and giveaways, with a new announcement revealed each day.',
+      'Init is back, and this one is electric: five days, a new reveal every day, live streams, and giveaways. November 30 - December 4.',
     startDate: '2026-11-30',
     endDate: '2026-12-04',
     status: 'upcoming',
@@ -312,7 +312,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
         'Init November 30 - December 4 has ended. Browse the full recap below.',
       introTitle: 'Everything we shipped',
       introDescription:
-        'From Appwrite Videos and Analytics to TablesDB upgrades and Appwrite Distribution. Explore the full launch timeline.',
+        'From Appwrite Analytics and Videos to Appwrite Zero, the TablesDB upgrade, Monitors, and Beep. Explore the full launch timeline.',
       getInvolvedSectionTitle: 'Keep exploring',
       getInvolved: [
         {
