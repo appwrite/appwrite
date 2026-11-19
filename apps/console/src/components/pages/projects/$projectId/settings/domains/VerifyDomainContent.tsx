@@ -173,7 +173,7 @@ const SECTION_BADGE =
   'border border-border bg-transparent text-[10px] shrink-0 font-medium text-muted-foreground'
 
 const TABLE_HEAD =
-  'px-4 py-2.5 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
+  'px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
 
 /** The type of one record, on one line. The ALIAS type reads as a phrase. */
 function RecordType({ type }: { type: string }) {
@@ -319,7 +319,7 @@ function RecordSection({
       </div>
       <div className="overflow-hidden rounded-lg border border-border">
         <Table className="table-fixed">
-          <TableHeader className="bg-muted/40">
+          <TableHeader>
             <TableRow className="hover:bg-transparent border-b border-border">
               <TableHead className={`${typeWidth} ${TABLE_HEAD}`}>
                 {t('Type')}
@@ -382,7 +382,7 @@ function RecordSection({
                   </TableRow>
                   {found.length > 0 && (
                     <TableRow className="hover:bg-transparent">
-                      <TableCell colSpan={2} className="pt-0 pb-3" />
+                      <TableCell colSpan={2} className="px-4 pt-0 pb-3" />
                       <TableCell colSpan={3} className="px-4 pt-0 pb-3">
                         <FoundValues values={found} wrong={r.type !== 'CAA'} />
                       </TableCell>
