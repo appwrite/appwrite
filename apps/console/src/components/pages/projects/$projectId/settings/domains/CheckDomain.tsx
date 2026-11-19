@@ -78,7 +78,7 @@ export function CheckDomain({
         disabled={verifyDomainMutation.isPending}
         onClick={handleCheck}
       >
-        {verifyDomainMutation.isPending ? t('Checking...') : t('Check now')}
+        {t('Check now')}
       </Button>
     </>
   )
