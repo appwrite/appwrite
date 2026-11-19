@@ -1250,6 +1250,16 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
 
     $error = null;
     try {
+        // Abuse limit: 32 messages per minute per connection, checked before any database work.
+        // Connection ids are only unique within a container, so the key carries the container too.
+        $isRateLimited = $container->get('timelimit')('project:{project},container:{container},connection:{connection}', 32, 60, function (TimeLimit $timeLimit) use ($connection, $containerId, $projectId): bool {
+            return $timeLimit->withParams(['{project}' => (string) $projectId, '{connection}' => (string) $connection, '{container}' => (string) $containerId])->check()->limited && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled';
+        });
+
+        if ($isRateLimited) {
+            throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many messages.');
+        }
+
         $response = new Response(new SwooleResponse());
 
         // Build a fresh Authorization per message. The connection-scoped instance is shared
@@ -1307,20 +1317,6 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
 
         if ($project !== null) {
             checkForProjectUsage($project);
-        }
-
-        /*
-         * Abuse Check
-         *
-         * Abuse limits are sending 32 times per minute and connection.
-         */
-        // Connection ids are only unique within a container, so the key carries the container too.
-        $isRateLimited = $container->get('timelimit')('project:{project},container:{container},connection:{connection}', 32, 60, function (TimeLimit $timeLimit) use ($connection, $containerId, $projectId): bool {
-            return $timeLimit->withParams(['{project}' => (string) $projectId, '{connection}' => (string) $connection, '{container}' => (string) $containerId])->check()->limited && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled';
-        });
-
-        if ($isRateLimited) {
-            throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many messages.');
         }
 
         // Record realtime inbound bytes for this project
@@ -1435,7 +1431,8 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
         $server->send([$connection], $responsePayloadJson);
         $outboundBytes += \strlen($responsePayloadJson);
 
-        if ($th->getCode() === 1008) {
+        // A connection past the message limit is closed so it can't keep sending.
+        if (\in_array($th->getCode(), [1008, 1013], true)) {
             $server->close($connection, $th->getCode());
         }
     } finally {
