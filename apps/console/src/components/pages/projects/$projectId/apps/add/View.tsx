@@ -58,6 +58,7 @@ import {
   getWebStarterRepoName,
 } from '@/lib/add-app-wizard/platform-map'
 import {
+  buildNativeEnvBlock,
   buildNativePromptConfig,
   buildWebPromptConfig,
   generatePromptFromConfig,
@@ -279,9 +280,11 @@ export function View({ projectId, search }: ViewProps) {
       })
       return generatePromptFromConfig(cfg)
     }
-    const configCode = `APPWRITE_PROJECT_ID="${project.$id}"
-APPWRITE_PROJECT_NAME="${project.name ?? ''}"
-APPWRITE_ENDPOINT="${endpoint}"`
+    const configCode = buildNativeEnvBlock(resolvedVariant, {
+      projectId: project.$id,
+      projectName: project.name ?? '',
+      endpoint,
+    })
     const cfg = buildNativePromptConfig(
       resolvedVariant,
       configCode,
@@ -292,10 +295,12 @@ APPWRITE_ENDPOINT="${endpoint}"`
 
   const nativeEnvBlock = useMemo(
     () =>
-      `APPWRITE_PROJECT_ID="${project?.$id ?? ''}"
-APPWRITE_PROJECT_NAME="${project?.name ?? ''}"
-APPWRITE_ENDPOINT="${endpoint}"`,
-    [project, endpoint],
+      buildNativeEnvBlock(resolvedVariant, {
+        projectId: project?.$id ?? '',
+        projectName: project?.name ?? '',
+        endpoint,
+      }),
+    [resolvedVariant, project, endpoint],
   )
 
   const manualBlocks = useMemo(() => {
@@ -339,18 +344,23 @@ APPWRITE_ENDPOINT="${endpoint}"`
           ? 'dart'
           : native.configLanguage === 'typescript'
             ? 'typescript'
-            : 'plaintext'
+            : native.configLanguage === 'dotenv'
+              ? 'env'
+              : 'plaintext'
     const installRun = resolvedVariant.startsWith('flutter')
       ? 'flutter pub get && flutter run'
       : resolvedVariant === 'react-native-ios'
-        ? 'pnpm install && pnpm ios'
+        ? 'npm install && npm run ios'
         : resolvedVariant === 'react-native-android'
-          ? 'pnpm install && pnpm android'
+          ? 'npm install && npm run android'
           : 'Run from your IDE'
     return {
       clone: native.cloneCommand,
       cloneLang: 'bash' as const,
-      configLabel: `Update ${native.configFile}`,
+      configLabel:
+        native.configFile === '.env'
+          ? 'Copy .env.example to .env and set values'
+          : `Update ${native.configFile}`,
       config: nativeEnvBlock,
       configLang: lang,
       installRun,
