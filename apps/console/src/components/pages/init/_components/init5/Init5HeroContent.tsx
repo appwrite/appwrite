@@ -112,11 +112,7 @@ export function Init5HeroContent({
           reduceMotion={reduceMotion}
           className={cn(headerAddon && 'mt-4')}
         >
-          <p className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.32em] text-foreground/85 sm:text-[12px]">
-            <span
-              aria-hidden
-              className="h-px w-8 bg-gradient-to-r from-transparent to-[var(--brand-cta)] sm:w-10"
-            />
+          <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-foreground/85 sm:text-[12px]">
             {event.dateRangeLabel}
           </p>
         </Reveal>

@@ -140,11 +140,7 @@ export function InitEventsBrowse({ activeEventId }: { activeEventId: string }) {
                   <p className="font-aeonik-pro text-[22px] font-semibold leading-none tracking-tight text-foreground">
                     {item.editionLabel}
                   </p>
-                  <p className="mt-3 flex items-center gap-2.5 text-[11px] font-semibold uppercase tracking-[0.26em] text-muted-foreground">
-                    <span
-                      aria-hidden
-                      className="h-px w-6 bg-gradient-to-r from-transparent to-[var(--brand-cta)]"
-                    />
+                  <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.26em] text-muted-foreground">
                     {t(item.dateRangeLabel)}
                   </p>
                 </div>
