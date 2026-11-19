@@ -536,8 +536,8 @@ export const heVideosDictionary: Record<string, string> = {
     'השתמשו ב-HLS למכשירי Apple ולרוב נגני הווב, וב-DASH ל-Android ול-Shaka Player. CMAF מגיש את שניהם מאותה קבוצת קבצים.',
   'No ready renditions for this output yet':
     'אין עדיין גרסאות קידוד מוכנות לפלט הזה',
-  'Manifest, segment, and subtitle requests use the read permissions of the source file in Storage. Grant read access to Any for public playback, or to signed-in users for private videos.':
-    'בקשות למניפסטים, לסגמנטים ולכתוביות משתמשות בהרשאות הקריאה של קובץ המקור באחסון. תנו הרשאת קריאה ל-Any לניגון ציבורי, או למשתמשים מחוברים לסרטונים פרטיים.',
+  'Manifest, segment, and subtitle requests use the read permissions of the video. Turn on public playback in Settings to let anyone watch, or grant read access to signed-in users for private videos.':
+    'בקשות למניפסטים, לסגמנטים ולכתוביות משתמשות בהרשאות הקריאה של הסרטון. הפעילו ניגון ציבורי בהגדרות כדי לאפשר לכולם לצפות, או תנו הרשאת קריאה למשתמשים מחוברים לסרטונים פרטיים.',
   'Open bucket': 'פתיחת הבאקט',
   'Native HTML': 'HTML מובנה',
   'Install a player': 'התקנת נגן',
@@ -1200,4 +1200,24 @@ export const heVideosDictionary: Record<string, string> = {
     'ציר זמן נוצר כשסרטון נוצר. התמונות הממוזערות יופיעו כאן כשהוא יהיה מוכן.',
   'Scroll through the thumbnails and hover one to see its time range and sprite region.':
     'גללו בין התמונות הממוזערות ורחפו מעל אחת כדי לראות את טווח הזמן ואזור הגיליון שלה.',
+  'Public playback': 'ניגון ציבורי',
+  "The video's own permissions decide who can watch it: its stream, captions, thumbnails and timeline. Permissions on the source file don't apply. Project members and API keys always have full access.":
+    'ההרשאות של הסרטון עצמו קובעות מי יכול לצפות בו: בזרם, בכתוביות, בתמונות הממוזערות ובציר הזמן. הרשאות קובץ המקור לא חלות עליו. לחברי הפרויקט ולמפתחות API יש תמיד גישה מלאה.',
+  'Anyone can watch, including visitors on the player page and in embeds. Turning this on adds read access for Any.':
+    'כולם יכולים לצפות, כולל מבקרים בדף הנגן ובהטמעות. ההפעלה מוסיפה הרשאת קריאה ל-Any.',
+  'Visitors get an error on the player page and in embeds. Turning this on adds read access for Any.':
+    'מבקרים יקבלו שגיאה בדף הנגן ובהטמעות. ההפעלה מוסיפה הרשאת קריאה ל-Any.',
+  'Read lets a role watch the video. Users, teams and labels need a session for this project, so they can watch in your app but not on the player page. Update and delete let a role rename or delete the video with a client SDK.':
+    'קריאה מאפשרת לתפקיד לצפות בסרטון. משתמשים, צוותים ותוויות צריכים סשן בפרויקט הזה, ולכן יכולים לצפות באפליקציה שלכם אבל לא בדף הנגן. עדכון ומחיקה מאפשרים לתפקיד לשנות את שם הסרטון או למחוק אותו עם SDK לקוח.',
+  'Permissions updated': 'ההרשאות עודכנו',
+  'Only signed-in users with read access can watch it in your app. Visitors get an error on the player page and in embeds.':
+    'רק משתמשים מחוברים עם הרשאת קריאה יכולים לצפות בו באפליקציה שלכם. מבקרים יקבלו שגיאה בדף הנגן ובהטמעות.',
+  'Only project members and API keys can watch it. Visitors get an error on the player page and in embeds.':
+    'רק חברי הפרויקט ומפתחות API יכולים לצפות בו. מבקרים יקבלו שגיאה בדף הנגן ובהטמעות.',
+  'Video is now public': 'הסרטון ציבורי עכשיו',
+  'Video is now private': 'הסרטון פרטי עכשיו',
+  'Visitors get an error here. You can watch because you are a project member.':
+    'מבקרים יקבלו כאן שגיאה. אתם יכולים לצפות כי אתם חברי הפרויקט.',
+  'Open access settings': 'פתיחת הגדרות הגישה',
+  'Failed to download thumbnails': 'הורדת התמונות הממוזערות נכשלה',
 }
