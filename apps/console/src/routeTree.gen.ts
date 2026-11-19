@@ -6939,18 +6939,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketingForAgentsRouteImport
       parentRoute: typeof MarketingRoute
     }
-    '/_marketing/home1': {
-      id: '/_marketing/home1'
-      path: '/home1'
-      fullPath: '/home1'
-      preLoaderRoute: typeof MarketingHome1RouteImport
-      parentRoute: typeof MarketingRoute
-    }
     '/_marketing/home': {
       id: '/_marketing/home'
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof MarketingHomeRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/home1': {
+      id: '/_marketing/home1'
+      path: '/home1'
+      fullPath: '/home1'
+      preLoaderRoute: typeof MarketingHome1RouteImport
       parentRoute: typeof MarketingRoute
     }
     '/_marketing/innovation-teams': {

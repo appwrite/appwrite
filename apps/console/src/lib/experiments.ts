@@ -10,7 +10,7 @@ import {
 export const QUALITY_ACCOUNT_LABEL = 'quality'
 
 export type Experiment = {
-  flag: 'analytics' | 'projectEnvironments' | 'vcsOrigin'
+  flag: 'alerts' | 'analytics' | 'projectEnvironments' | 'vcsOrigin'
   name: string
   description: string
   /** Day the experiment reached the popover, as `YYYY-MM-DD`. */
@@ -39,6 +39,12 @@ export const EXPERIMENTS: readonly Experiment[] = [
     name: 'Origin Git provider',
     description: 'Deploy from Cursor Origin repositories.',
     introducedAt: '2026-11-13',
+  },
+  {
+    flag: 'alerts',
+    name: 'Monitors and alerts',
+    description: 'Get alerted when project usage crosses a threshold.',
+    introducedAt: '2026-11-19',
   },
 ]
 
