@@ -293,6 +293,15 @@ async function mockAppwriteApi(
         replyTo: '',
         subject: 'Verify your email',
       })
+    if (apiPath === '/messaging/messages')
+      return json(200, { total: 1, messages: [message] })
+    if (apiPath === '/project/keys')
+      return json(200, {
+        total: 1,
+        keys: [
+          { $id: 'demo', name: 'Demo server key', scopes: [], $createdAt: NOW },
+        ],
+      })
     if (apiPath === `/messaging/messages/${MESSAGE_ID}`)
       return json(200, message)
     if (apiPath === `/messaging/messages/${MESSAGE_ID}/targets`)
@@ -517,4 +526,61 @@ test.describe('email template preview (mocked API)', () => {
     await expect(project).toHaveCSS('font-weight', /^(bold|[6-9]00)$/)
     await expect(previewFrame(page).getByText('{{b}}')).toHaveCount(0)
   })
+})
+
+test.describe('project navigation with pending requests', () => {
+  for (const scenario of [
+    { screen: 'overview', pending: '/project/keys', content: RECIPIENT.name },
+    {
+      screen: 'messaging',
+      pending: '/messaging/providers',
+      content: 'Your Acme Docs files expire in two days',
+    },
+  ]) {
+    test(`opens ${scenario.screen} while ${scenario.pending} is pending`, async ({
+      page,
+    }) => {
+      await mockAppwriteApi(page, emailMessage('sent'))
+      await page.goto(`/organizations/${ORGANIZATION.$id}`)
+      const projectLink = page.getByRole('link', {
+        name: 'View project',
+        exact: true,
+      })
+      await expect(projectLink).toBeVisible()
+      await expect(page.locator('[data-fullscreen-loader]')).toHaveCount(0)
+      let release!: () => void
+      const pending = new Promise<void>((resolve) => {
+        release = resolve
+      })
+      await page.route(`**${scenario.pending}*`, async (route) => {
+        if (route.request().method() === 'GET') await pending
+        await route.fallback()
+      })
+      const requested = page.waitForRequest(
+        (request) =>
+          request.method() === 'GET' &&
+          new URL(request.url()).pathname.endsWith(scenario.pending),
+      )
+      try {
+        await projectLink.click()
+        if (scenario.screen === 'messaging') {
+          await page
+            .locator(`a[href="/projects/${PROJECT.$id}/messaging"]:visible`)
+            .first()
+            .click()
+        }
+        await requested
+        await expect(
+          page.getByText(scenario.content, { exact: true }).first(),
+        ).toBeVisible({ timeout: 3000 })
+      } finally {
+        release()
+      }
+      if (scenario.screen === 'overview') {
+        await expect(
+          page.getByText('Demo server key', { exact: true }),
+        ).toBeVisible()
+      }
+    })
+  }
 })
