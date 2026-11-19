@@ -30,7 +30,7 @@ export function UpdateEmailDomain({
   const update = useUpdateOrganizationEmailDomain(organizationId)
 
   useEffect(() => {
-    if (rule) setRoles(rule.roles)
+    if (rule) setRoles(rule.teamRoles)
   }, [rule])
 
   const handleSave = () => {

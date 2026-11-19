@@ -64,7 +64,7 @@ type Rule = {
   status: 'unverified' | 'verified'
   logs: string
   renewAt: string
-  roles: string[]
+  teamRoles: string[]
 }
 
 function rule(domain: string, roles: string[], status: Rule['status']): Rule {
@@ -84,7 +84,7 @@ function rule(domain: string, roles: string[], status: Rule['status']): Rule {
     status,
     logs: '',
     renewAt: '',
-    roles,
+    teamRoles: roles,
   }
 }
 
@@ -253,7 +253,7 @@ async function mockAppwriteApi(
       const roles = request.postDataJSON().roles
       mock.sent.updates.push({ ruleId: team[1], roles })
       const found = mock.rules.find((item) => item.$id === team[1])
-      if (found) found.roles = roles
+      if (found) found.teamRoles = roles
       return json(200, found)
     }
     const one = apiPath.match(/^\/proxy\/rules\/([^/]+)$/)

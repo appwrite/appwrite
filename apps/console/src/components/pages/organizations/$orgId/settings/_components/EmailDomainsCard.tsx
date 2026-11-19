@@ -131,7 +131,7 @@ export function EmailDomainsCard() {
                     </TableCell>
                     <TableCell className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
-                        {rule.roles.map((role) => {
+                        {rule.teamRoles.map((role) => {
                           const Icon = ROLE_OPTIONS.find(
                             (option) => option.value === role,
                           )?.icon
