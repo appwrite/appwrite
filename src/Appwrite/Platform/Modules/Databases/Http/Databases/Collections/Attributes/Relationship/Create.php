@@ -11,6 +11,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\RelationshipDeleteAction;
@@ -98,7 +99,6 @@ class Create extends Action
     public function action(string $databaseId, string $collectionId, string $relatedCollectionId, string $type, bool $twoWay, ?string $key, ?string $twoWayKey, string $onDelete, string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         $key ??= $relatedCollectionId;
-        $twoWayKeyWasProvided = $twoWayKey !== null;
         $twoWayKey ??= $collectionId;
 
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
@@ -112,47 +112,59 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_FEATURE_UNSUPPORTED, 'Relationships are not supported by this database.');
         }
 
-        $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
-        $collection = $dbForDatabases->findCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
-        if ($collection === null) {
+        $collectionDocument = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
+        $collection = $dbForDatabases->findCollection('database_' . $database->getSequence() . '_collection_' . $collectionDocument->getSequence());
+        if ($collectionDocument->isEmpty() || $collection === null) {
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
         $relatedCollectionDocument = $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId);
         $relatedCollection = $dbForDatabases->findCollection('database_' . $database->getSequence() . '_collection_' . $relatedCollectionDocument->getSequence());
-        if ($relatedCollection === null) {
+        if ($relatedCollectionDocument->isEmpty() || $relatedCollection === null) {
             throw new Exception($this->getParentNotFoundException(), params: [$relatedCollectionId]);
         }
 
-        $attributes = $collection->getAttribute('attributes', []);
-        foreach ($attributes as $attribute) {
+        foreach ($collection->getAttribute('attributes', []) as $attribute) {
             if ($attribute->getAttribute('type') !== ColumnType::Relationship->value) {
                 continue;
             }
 
-            if (\strtolower($attribute->getId()) === \strtolower($key)) {
-                throw new Exception($this->getDuplicateException(), params: [$key]);
-            }
-
-            if (
-                \strtolower($attribute->getAttribute('options')['twoWayKey']) === \strtolower($twoWayKey) &&
-                $attribute->getAttribute('options')['relatedCollection'] === $relatedCollection->getId()
-            ) {
-                // If user explicitly provided twoWayKey, report that.
-                // Otherwise report the key that they're trying to create.
-                $conflictingKey = $twoWayKeyWasProvided ? $twoWayKey : $key;
-                throw new Exception($this->getDuplicateException(), params: [$conflictingKey]);
-            }
-
-            if (
-                $type === RelationshipType::ManyToMany->value &&
-                $attribute->getAttribute('options')['relationType'] === RelationshipType::ManyToMany->value &&
-                $attribute->getAttribute('options')['relatedCollection'] === $relatedCollection->getId()
-            ) {
-                $parentType = $this->isCollectionsAPI() ? 'collection' : 'table';
-                throw new Exception($this->getDuplicateException(), "Creating more than one \"manyToMany\" relationship on the same $parentType is currently not permitted.");
-            }
+            $options = $attribute->getAttribute('options', []);
+            $this->assertRelationshipAvailable(
+                existingKey: $attribute->getId(),
+                existingTwoWayKey: $options['twoWayKey'] ?? '',
+                existingType: $options['relationType'] ?? '',
+                existingRelatedCollection: $options['relatedCollection'] ?? '',
+                key: $key,
+                twoWayKey: $twoWayKey,
+                type: $type,
+                relatedCollection: $relatedCollection->getId(),
+            );
         }
+
+        foreach ($collectionDocument->getAttribute('attributes', []) as $row) {
+            if (
+                $row->getAttribute('type') !== ColumnType::Relationship->value ||
+                $row->getAttribute('status') === 'failed'
+            ) {
+                continue;
+            }
+
+            $options = $row->getAttribute('options', []);
+            $this->assertRelationshipAvailable(
+                existingKey: $row->getAttribute('key', ''),
+                existingTwoWayKey: $options['twoWayKey'] ?? '',
+                existingType: $options['relationType'] ?? '',
+                existingRelatedCollection: $options['relatedCollection'] ?? '',
+                key: $key,
+                twoWayKey: $twoWayKey,
+                type: $type,
+                relatedCollection: $relatedCollectionDocument->getId(),
+            );
+        }
+
+        $this->assertTwoWayKeyDiffersFromKey($collectionDocument, $relatedCollectionDocument, $type, $key, $twoWayKey);
+        $this->assertTwoWayKeyAvailable($relatedCollectionDocument, $relatedCollection, $twoWayKey);
 
         $attribute = $this->createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -164,7 +176,7 @@ class Create extends Action
             'array' => false,
             'filters' => [],
             'options' => [
-                'relatedCollection' => $relatedCollectionId,
+                'relatedCollection' => $relatedCollectionDocument->getId(),
                 'relationType' => $type,
                 'twoWay' => $twoWay,
                 'twoWayKey' => $twoWayKey,
@@ -179,5 +191,71 @@ class Create extends Action
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)
             ->dynamic($attribute, $this->getResponseModel());
+    }
+
+    private function assertRelationshipAvailable(
+        string $existingKey,
+        string $existingTwoWayKey,
+        string $existingType,
+        string $existingRelatedCollection,
+        string $key,
+        string $twoWayKey,
+        string $type,
+        string $relatedCollection,
+    ): void {
+        if (\strtolower($existingKey) === \strtolower($key)) {
+            throw new Exception($this->getDuplicateException(), params: [$key]);
+        }
+
+        if (
+            \strtolower($existingTwoWayKey) === \strtolower($twoWayKey) &&
+            $existingRelatedCollection === $relatedCollection
+        ) {
+            throw $this->getTwoWayKeyTakenException($twoWayKey);
+        }
+
+        if (
+            $type === RelationshipType::ManyToMany->value &&
+            $existingType === RelationshipType::ManyToMany->value &&
+            $existingRelatedCollection === $relatedCollection
+        ) {
+            throw new Exception($this->getDuplicateException(), "Creating more than one \"manyToMany\" relationship on the same {$this->getParentContext()} is currently not permitted.");
+        }
+    }
+
+    private function assertTwoWayKeyDiffersFromKey(Document $collectionDocument, Document $relatedCollectionDocument, string $type, string $key, string $twoWayKey): void
+    {
+        $keysShareTable = $collectionDocument->getSequence() === $relatedCollectionDocument->getSequence()
+            || $type === RelationshipType::ManyToMany->value;
+
+        if ($keysShareTable && \strtolower($key) === \strtolower($twoWayKey)) {
+            throw new Exception($this->getDuplicateException(), "The requested twoWayKey \"{$twoWayKey}\" matches the {$this->getContext()} key. Pass a different twoWayKey.");
+        }
+    }
+
+    private function assertTwoWayKeyAvailable(Document $relatedCollectionDocument, Collection $relatedCollection, string $twoWayKey): void
+    {
+        $taken = [];
+
+        foreach ($relatedCollectionDocument->getAttribute('attributes', []) as $row) {
+            if ($row->getAttribute('status') !== 'failed') {
+                $taken[] = $row->getAttribute('key', '');
+            }
+        }
+
+        foreach ($relatedCollection->getAttribute('attributes', []) as $attribute) {
+            $taken[] = $attribute->getId();
+        }
+
+        if (\in_array(\strtolower($twoWayKey), \array_map(\strtolower(...), $taken), true)) {
+            throw $this->getTwoWayKeyTakenException($twoWayKey);
+        }
+    }
+
+    private function getTwoWayKeyTakenException(string $twoWayKey): Exception
+    {
+        $context = \ucfirst($this->getContext());
+
+        return new Exception($this->getDuplicateException(), "{$context} with the requested twoWayKey \"{$twoWayKey}\" already exists on the related {$this->getParentContext()}. Pass a different twoWayKey.");
     }
 }
