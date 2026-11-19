@@ -1264,10 +1264,7 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
             return;
         }
 
-        // Pings are the SDK heartbeat, so they skip the message limit and the project lookup.
-        $isPing = $type === 'ping';
-
-        if (!$isPing && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+        if ($messageDispatcher->isLimited($type) && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
             $isRateLimited = $container->get('timelimit')(
                 'project:{project},container:{container},connection:{connection}',
                 APP_LIMIT_REALTIME_MESSAGES,
@@ -1316,7 +1313,7 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
             $database->setMetadata('user', $impersonatedUserId);
         }
 
-        if (!$isPing && !empty($projectId) && $projectId !== 'console') {
+        if ($messageDispatcher->requiresProject($type) && !empty($projectId) && $projectId !== 'console') {
             // Negative-cache race: if any prior code path queried projects:$projectId
             // before this project existed (e.g. a router probe during connection
             // setup), the Database's shared cache may hold an empty result. Try the
@@ -1346,19 +1343,12 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
             checkForProjectUsage($project);
         }
 
-        // Pings have no project document, so their usage goes to the connection's project.
-        $usageProjectId = match (true) {
-            $project !== null && !$project->isEmpty() => $project->getId(),
-            $isPing && !empty($projectId) && $projectId !== 'console' => $projectId,
-            default => null,
-        };
-
         // Record realtime inbound bytes for this project
         // not making this a part of the dispatcher as we need to get the inbound bytes as well even if we dont enter the dispatcher
-        if ($usageProjectId !== null) {
+        if (!empty($projectId) && $projectId !== 'console') {
             $usage->add([
                 METRIC_REALTIME_INBOUND => $rawSize,
-            ], $usageProjectId);
+            ], $projectId);
         }
 
         if (is_null($message) || (!array_key_exists('type', $message) && !array_key_exists('data', $message))) {
@@ -1406,11 +1396,11 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
             $bytes = \strlen($responseJson);
             $outboundBytes += $bytes;
 
-            if ($usageProjectId !== null) {
+            if (!empty($projectId) && $projectId !== 'console') {
                 $usage->add([
                     METRIC_REALTIME_OUTBOUND => $bytes,
                     METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT => 1,
-                ], $usageProjectId);
+                ], $projectId);
             }
         }
 

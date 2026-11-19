@@ -11,6 +11,7 @@ class Dispatcher
     public const LABEL_MESSAGE_TYPE = 'messageType';
     public const LABEL_PAYLOAD_SHAPE = 'payloadShape';
     public const LABEL_REQUIRES_PROJECT = 'requiresProjectContext';
+    public const LABEL_LIMITED = 'limited';
 
     public const PAYLOAD_SHAPE_OBJECT = 'object';
     public const PAYLOAD_SHAPE_LIST = 'list';
@@ -30,6 +31,31 @@ class Dispatcher
 
         $this->handlers[$type] = $handler;
         return $this;
+    }
+
+    /**
+     * Whether a message of this type counts towards the connection's message limit. Unknown types do.
+     */
+    public function isLimited(mixed $type): bool
+    {
+        return $this->label($type, self::LABEL_LIMITED);
+    }
+
+    /**
+     * Whether a message of this type needs the connection's project. Unknown types do.
+     */
+    public function requiresProject(mixed $type): bool
+    {
+        return $this->label($type, self::LABEL_REQUIRES_PROJECT);
+    }
+
+    private function label(mixed $type, string $label): bool
+    {
+        if (!\is_string($type) || !isset($this->handlers[$type])) {
+            return true;
+        }
+
+        return $this->handlers[$type]->getLabels()[$label] ?? true;
     }
 
     /**
@@ -53,8 +79,7 @@ class Dispatcher
         $handler = $this->handlers[$type];
         $labels = $handler->getLabels();
 
-        $requiresProject = $labels[self::LABEL_REQUIRES_PROJECT] ?? true;
-        if ($requiresProject && empty($container->get('projectId'))) {
+        if ($this->requiresProject($type) && empty($container->get('projectId'))) {
             throw new Exception(
                 Exception::REALTIME_POLICY_VIOLATION,
                 'Missing project context. Reconnect to the project first.'
