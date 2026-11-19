@@ -16,6 +16,10 @@ This project follows semantic versioning.
 - `Destinations\Anywhere` (any address, any proxy), `Destinations\PublicInternet` (refuses private, reserved and special-use ranges, except the `IPRange`s it is given), and `Destinations\IPRange` (validated in its constructor).
 - `Utopia\Client\PHPStan\DisallowRawCurlExtension`, a PHPStan extension that reports `curl_init()` and `curl_multi_init()` outside the cURL adapter.
 
+### Fixed
+
+- The cURL adapter applies `CURLOPT_MAXFILESIZE` / `CURLOPT_MAXFILESIZE_LARGE` to the decoded body as well. cURL checks the cap against the bytes on the wire, so a small gzip or brotli response could expand far past it in memory; the transfer now aborts with a `NetworkException` (code `CURLE_FILESIZE_EXCEEDED`) once the decoded bytes pass the cap.
+
 ### Removed
 
 - Remove the `Utopia\Client` and `Utopia\Psr18\StreamingClientInterface` aliases that 0.5 kept for the old names. Use `Utopia\Client\Client` and `Utopia\Client\Psr18\StreamingClientInterface`.
