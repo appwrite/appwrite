@@ -1382,6 +1382,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 1
   },
   {
+    "slug": "products/auth/ldap",
+    "title": "LDAP login",
+    "description": "Let users sign in to your app with the username and password from your LDAP directory, such as Active Directory or OpenLDAP, with group restrictions and attribute mapping.",
+    "layout": "article",
+    "readingTimeMinutes": 11
+  },
+  {
     "slug": "products/auth/magic-url",
     "title": "Magic URL login",
     "description": "Add magic URL to your authentication in Appwrite. Explore the convenience of passwordless login and email-based authentication using magic links.",

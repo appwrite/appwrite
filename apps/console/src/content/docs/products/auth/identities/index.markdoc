@@ -12,6 +12,8 @@ An identity is another way to refer to a user account. A single user can have mu
 - Maintaining consistent access regardless of login method
 - Tracking which external providers are linked to an account
 
+Signing in with [LDAP](/docs/products/auth/ldap) also creates an identity, with the provider `ldap`, that links the account to the user's directory entry.
+
 # Use cases {% #use-cases %}
 
 Identities are primarily used in the following scenarios:
