@@ -1948,31 +1948,6 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('100', $body['progress']);
     }
 
-    /**
-     * Writes a ready HLS master URL + API key for the browser TTFF probe.
-     * Not part of the permanent suite.
-     */
-    public function testExportStreamForTtffProbe(): void
-    {
-        $project = $this->getProject();
-        $videoId = $this->createReadyVideo()['$id'];
-        $renditionId = $this->createReadyRendition($videoId, 'hls');
-        $masterUrl = 'http://appwrite.test/v1/videos/' . $videoId
-            . '/outputs/hls/master.m3u8?project=' . $project['$id'];
-
-        $payload = [
-            'projectId' => $project['$id'],
-            'apiKey' => $project['apiKey'],
-            'videoId' => $videoId,
-            'renditionId' => $renditionId,
-            'masterUrl' => $masterUrl,
-        ];
-        $path = '/usr/src/code/tmp-ttff-stream.json';
-        \file_put_contents($path, \json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-        \fwrite(STDERR, "\nWrote {$path}\n" . \json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
-        $this->assertFileExists($path);
-    }
-
     public function testListRenditions(): void
     {
         $videoId = $this->createReadyVideo()['$id'];
