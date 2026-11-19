@@ -106,14 +106,16 @@ export function InitEventsBrowse({ activeEventId }: { activeEventId: string }) {
                 className={cn(
                   'link-unstyled group relative flex h-full min-h-[136px] flex-col justify-between rounded-2xl p-5 transition-colors duration-300',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-                  // The page you're on gets the light trail (on an opaque face so
-                  // its halo only glows around the edge); the rest a hairline
-                  // that warms on hover.
+                  // The page you're on gets the light trail; the rest a
+                  // hairline that warms on hover.
                   isActive
                     ? 'init5-light-frame bg-card'
                     : 'border border-border bg-card/60 hover:border-[color-mix(in_oklch,var(--brand-cta)_35%,var(--border))]',
                 )}
               >
+                {isActive ? (
+                  <span aria-hidden className="init5-light-halo" />
+                ) : null}
                 {/* Clip the numeral without clipping the frame's halo. */}
                 <span
                   aria-hidden

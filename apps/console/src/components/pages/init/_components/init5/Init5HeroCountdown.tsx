@@ -19,7 +19,9 @@ function RollingDigits({
   reduceMotion: boolean
 }) {
   return (
-    <span className="inline-flex overflow-hidden py-0.5">
+    // Clip the roll vertically with a soft fade, and leave room around the
+    // digits so their glow is never cut into a box.
+    <span className="-mx-4 -my-3 inline-flex overflow-hidden px-4 py-3 [mask-image:linear-gradient(to_bottom,transparent,#000_12px,#000_calc(100%-12px),transparent)]">
       {value.split('').map((digit, index) => (
         <span
           key={`${value.length}-${index}`}
@@ -122,6 +124,7 @@ export function Init5HeroCountdown({
         }}
         className="init5-light-frame group/counter flex rounded-2xl bg-background/75 backdrop-blur-md transition-shadow duration-500 hover:[--init5-trail-glow:0.9] hover:shadow-[0_18px_50px_-24px_color-mix(in_oklch,var(--brand-cta)_70%,transparent)]"
       >
+        <span aria-hidden className="init5-light-halo" />
         <span
           aria-hidden
           className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[radial-gradient(150px_circle_at_var(--init5-spot-x,50%)_var(--init5-spot-y,50%),color-mix(in_oklch,var(--brand-cta)_16%,transparent),transparent_70%)] opacity-0 transition-opacity duration-300 group-hover/counter:opacity-100"
@@ -139,8 +142,8 @@ export function Init5HeroCountdown({
               <span
                 className={cn(
                   'font-mono text-[26px] font-light leading-none tabular-nums transition-[transform,text-shadow] duration-300 ease-out sm:text-[30px]',
-                  '[text-shadow:0_0_18px_color-mix(in_oklch,var(--brand-cta)_38%,transparent)]',
-                  'group-hover/cell:-translate-y-0.5 group-hover/cell:[text-shadow:0_0_22px_color-mix(in_oklch,var(--brand-cta)_80%,transparent)] motion-reduce:group-hover/cell:translate-y-0',
+                  '[text-shadow:0_0_12px_color-mix(in_oklch,var(--brand-cta)_40%,transparent)]',
+                  'group-hover/cell:-translate-y-0.5 group-hover/cell:[text-shadow:0_0_14px_color-mix(in_oklch,var(--brand-cta)_80%,transparent)] motion-reduce:group-hover/cell:translate-y-0',
                   segment.id === 'seconds'
                     ? 'text-[var(--brand-cta)]'
                     : 'text-foreground',

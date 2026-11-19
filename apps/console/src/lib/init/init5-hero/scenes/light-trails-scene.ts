@@ -324,11 +324,12 @@ void main() {
   vec2 m = p * vec2(0.85, 0.95);
   // Gathered around the 5: a tighter falloff keeps the fog off the edges.
   float mask = exp(-dot(m, m) * 3.2);
-  // A soft fog body with gentle ridged filaments for a little structure.
-  float body = smoothstep(0.3, 0.86, n);
+  // Defined fog body plus fine ridged filaments: crisp wisps, not a blur.
+  // Lightness comes from transparency (uIntensity), not from softer edges.
+  float body = smoothstep(0.34, 0.8, n);
   float r = fbm(p * 3.4 + q * 2.2 + vec2(-t * 0.8, t * 0.6) + 11.3);
-  float wisps = pow(1.0 - abs(r * 2.0 - 1.0), 4.0) * smoothstep(0.2, 0.7, n);
-  float density = body * 0.9 + wisps * 0.4;
+  float wisps = pow(1.0 - abs(r * 2.0 - 1.0), 7.0) * smoothstep(0.2, 0.7, n);
+  float density = body * 0.8 + wisps * 0.75;
   vec3 color = mix(uColorB, uColorA, smoothstep(0.3, 0.72, n));
   color = mix(color, uColorC, smoothstep(0.55, 0.9, q.x) * 0.55);
   color = mix(color, uColorC, wisps * 0.3);
@@ -763,7 +764,7 @@ export const createLightTrailsScene: Init5SceneFactory = (options) =>
         auroraUniforms.uTime.value = clock
         auroraUniforms.uPointerStrength.value = presence
         auroraUniforms.uIntensity.value =
-          (rt.palette.isDark ? 0.4 : 0.18) * clamp01((time - 0.4) / 2.6) * fade
+          (rt.palette.isDark ? 0.24 : 0.11) * clamp01((time - 0.4) / 2.6) * fade
       },
       onPalette: applyPalette,
       onResize: applySize,
