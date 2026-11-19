@@ -978,6 +978,8 @@ final class VideosCustomServerTest extends Scope
         // On an S3 device ffprobe reads a presigned URL, which is a credential.
         $this->assertStringNotContainsString('://', (string) $body['error']);
         $this->assertStringNotContainsString('X-Amz-', (string) $body['error']);
+        // An encrypted source is read from the API with a key, in a header.
+        $this->assertStringNotContainsString('X-Appwrite-Key', (string) $body['error']);
 
         $this->assertEventually(function () use ($videoId) {
             $this->assertSame([], $this->videoTmpJobs($videoId), 'Scratch directory survived a failed encode');
@@ -1004,6 +1006,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertStringNotContainsString('/storage', (string) $body['timelineError']);
         $this->assertStringNotContainsString('://', (string) $body['timelineError']);
         $this->assertStringNotContainsString('X-Amz-', (string) $body['timelineError']);
+        $this->assertStringNotContainsString('X-Appwrite-Key', (string) $body['timelineError']);
         $this->assertSame(0, (int) $body['duration']);
 
         $this->assertEventually(function () use ($videoId) {
@@ -1146,6 +1149,102 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
+     * A source in a bucket with encryption on, which is every bucket unless it
+     * says otherwise, is read through the Storage download endpoint: ffmpeg
+     * asks for ranges and the endpoint decrypts just those. The encode's
+     * scratch never holds a decrypted copy of it, and the rendition still
+     * plays.
+     */
+    public function testAnEncryptedSourceIsNeverCopiedIntoScratch(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => 'unique()',
+            'name' => 'Encrypted videos',
+            'fileSecurity' => false,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $uploaded = $this->uploadVideoTo($bucketId, name: 'large-file.mp4');
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $uploaded['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(200, $file['headers']['status-code']);
+        $this->assertTrue($file['body']['encryption'], 'the source was stored unencrypted');
+        $this->assertSame('none', $file['body']['compression']);
+
+        // The timeline job probes the source: a duration proves it was decrypted.
+        $video = $this->createReadyVideo(['$id' => $uploaded['$id'], 'bucketId' => $bucketId]);
+        $videoId = $video['$id'];
+        $this->assertGreaterThan(0, (int) $video['duration']);
+        $renditionId = $this->createRendition($videoId, 'hls');
+
+        // Folder checks need the Compose volume. On Kubernetes, scratch is an
+        // emptyDir on the videos pod and this process cannot see it.
+        $seesScratch = $this->sharesVideoScratch();
+
+        $observed = 0;
+        $copies = [];
+        $deadline = \time() + 300;
+        $status = 'pending';
+
+        while (\time() < $deadline && !\in_array($status, ['ready', 'error', 'aborted'], true)) {
+            foreach ($this->videoTmpJobs($videoId) as $job) {
+                if (!\str_ends_with($job, '-' . $renditionId) || !\is_dir($job . '/in')) {
+                    continue;
+                }
+                $observed++;
+                foreach (\scandir($job . '/in') ?: [] as $name) {
+                    if ($name[0] !== '.') {
+                        $copies[$name] = true;
+                    }
+                }
+            }
+
+            $rendition = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $renditionId, $this->headers());
+            $status = (string) ($rendition['body']['status'] ?? '');
+            \usleep(250000);
+        }
+
+        $this->assertSame('ready', $status);
+
+        $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', $this->headers());
+        $this->assertEquals(200, $master['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $this->assertHlsLadderPlayable((string) $master['body'])['variants']);
+
+        // The source is larger than one range, and ffmpeg ends cleanly on a
+        // source it stopped reading part way: only the length of what it wrote
+        // says every range was asked for.
+        $this->assertGreaterThan(1024 * 1024, (int) $uploaded['sizeOriginal']);
+        $seconds = 0.0;
+        foreach ($this->renditionPlaylists($videoId, $renditionId) as $playlist) {
+            $played = 0.0;
+            foreach (\explode("\n", $playlist) as $line) {
+                if (\str_starts_with($line, '#EXTINF:')) {
+                    $played += (float) \substr($line, \strlen('#EXTINF:'));
+                }
+            }
+            $seconds = \max($seconds, $played);
+        }
+        $this->assertEqualsWithDelta((int) $video['duration'] / 1000, $seconds, 1.0, 'the rendition is not as long as its source');
+
+        if ($seesScratch) {
+            $this->assertGreaterThan(0, $observed, 'the encode finished before its workspace could be inspected');
+            $this->assertSame([], \array_keys($copies), 'the source was decrypted into scratch');
+        }
+    }
+
+    /**
      * @return \Iterator<string, array{string}>
      */
     public static function encodedSources(): \Iterator
@@ -1156,10 +1255,12 @@ final class VideosCustomServerTest extends Scope
 
     /**
      * An encrypted (and optionally compressed) upload cannot be handed to ffmpeg
-     * as stored, in place or over a URL: the worker reads it from the device,
-     * decrypts and decompresses it into scratch, and encodes that. The upload is
-     * checked to really be encrypted first, or the test would prove nothing.
-     * The s3 lane runs it against an S3 device.
+     * as stored. One that is only encrypted is read through the Storage
+     * download endpoint, which decrypts the ranges ffmpeg asks for; a compressed
+     * one is decrypted and decompressed into scratch first. Either way it is
+     * encoded and nothing of it is left behind. The upload is checked to really
+     * be encrypted first, or the test would prove nothing. The s3 lane runs it
+     * against an S3 device.
      */
     #[DataProvider('encodedSources')]
     #[Group('s3')]

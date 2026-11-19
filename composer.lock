@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b4967f83c04633b08ba59c763605ba2c",
+    "content-hash": "53e9492560e375bf287b3341c15f3e6f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4849,16 +4849,16 @@
         },
         {
             "name": "utopia-php/video",
-            "version": "0.0.6",
+            "version": "dev-feat/input-options",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/video.git",
-                "reference": "ae53ec411d721d2f97e019df50618f80a9f9a276"
+                "reference": "1fdaa6f1cfff34c463711648478243988774951b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/video/zipball/ae53ec411d721d2f97e019df50618f80a9f9a276",
-                "reference": "ae53ec411d721d2f97e019df50618f80a9f9a276",
+                "url": "https://api.github.com/repos/utopia-php/video/zipball/1fdaa6f1cfff34c463711648478243988774951b",
+                "reference": "1fdaa6f1cfff34c463711648478243988774951b",
                 "shasum": ""
             },
             "require": {
@@ -4907,10 +4907,10 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/video/issues",
-                "source": "https://github.com/utopia-php/video/tree/0.0.6"
+                "source": "https://github.com/utopia-php/video/tree/feat/input-options"
             },
-            "time": "2026-11-17T17:29:58+00:00",
-            "published-time": "2026-11-17T17:30:11+00:00"
+            "time": "2026-11-19T16:41:41+00:00",
+            "published-time": "2026-11-19T16:41:49+00:00"
         },
         {
             "name": "web-auth/cose-lib",
@@ -8106,9 +8106,18 @@
             "published-time": "2026-09-25T13:20:14+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/video",
+            "version": "dev-feat/input-options",
+            "alias": "0.0.7",
+            "alias_normalized": "0.0.7.0"
+        }
+    ],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/video": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
