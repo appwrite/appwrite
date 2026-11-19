@@ -537,7 +537,21 @@ jobs:
         run: bin/monorepo check "$PACKAGE" $LINKED
 
       - name: Test package${{ matrix.linked && ' (linked)' || '' }}
+        if: env.PACKAGE != 'http' || !matrix.linked
         run: bin/monorepo test "$PACKAGE" $LINKED
+
+      # http's e2e servers run in its own test images (Dockerfile.swoole, Dockerfile.fpm), which
+      # copy vendor/ and have no utopia extension: linked, vendor/ holds packages/validators,
+      # whose classes only the extension provides. So its unit tier runs linked, on the
+      # extension, and its e2e tier registry-resolved, on the validators' last PHP release,
+      # until those images carry the extension.
+      - name: Test package (linked, unit)
+        if: env.PACKAGE == 'http' && matrix.linked
+        run: bin/monorepo test "$PACKAGE" --linked --tier=unit
+
+      - name: Test package (e2e)
+        if: env.PACKAGE == 'http' && matrix.linked
+        run: bin/monorepo test "$PACKAGE" --tier=e2e
 
   extension:
     name: Extension
