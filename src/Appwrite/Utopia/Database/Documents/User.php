@@ -380,6 +380,48 @@ class User extends Document
     }
 
     /**
+     * Take the user row lock for a sign-in about to link an identity or issue a session, and tell whether the
+     * account is still the one the request authenticated against. Call it first in the transaction that persists
+     * the sign-in, so the writes that follow are ordered against claim(), which takes the same lock.
+     *
+     * A claim proves an address that was unverified, so it always turns a verification flag on, and it deletes
+     * every session and identity the request may have resolved the account through. `$snapshot` is the account
+     * as the request read it and `$grounds` the documents it got in through, as collection => id. What the request
+     * read before a claim committed is stale, so nothing it decided on that copy may be written after the claim.
+     * The grounds are read for update too, so a database whose snapshot predates the lock still sees them gone.
+     *
+     * @param array<string, string> $grounds
+     */
+    public static function lockUnchanged(Database $dbForProject, Document $snapshot, array $grounds): bool
+    {
+        $locked = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('users', $snapshot->getId(), forUpdate: true));
+
+        if ($locked->isEmpty() || $locked->getAttribute('status') === false) {
+            return false;
+        }
+
+        foreach (['email', 'phone'] as $address) {
+            if (($locked->getAttribute($address) ?? '') !== ($snapshot->getAttribute($address) ?? '')) {
+                return false;
+            }
+        }
+
+        foreach (['emailVerification', 'phoneVerification'] as $verification) {
+            if ((bool) $locked->getAttribute($verification, false) !== (bool) $snapshot->getAttribute($verification, false)) {
+                return false;
+            }
+        }
+
+        foreach ($grounds as $collection => $id) {
+            if ($dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument($collection, $id, forUpdate: true))->isEmpty()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Revoke every way into the account other than the address just proven: password,
      * sessions, tokens, MFA factors, passkeys, identities, account keys, the other
      * address and every target not on the proven channel.
@@ -471,6 +513,10 @@ class User extends Document
      * foreign identity drops the row it just wrote. A dead heat refuses both links
      * rather than leaving the email with two owners.
      *
+     * Inside a transaction the second read cannot see a link another request has not
+     * committed yet, so a caller that links there runs confirmIdentity() once its own
+     * transaction has committed.
+     *
      * @return bool false when another user's identity holds the provider email, in
      *              which case nothing of this link was persisted
      * @throws Duplicate when (provider, providerUid) is already linked to a user
@@ -487,16 +533,26 @@ class User extends Document
 
         $created = $dbForProject->createDocument('identities', $identity);
 
-        if (self::identityEmailTaken($dbForProject, $providerEmail, $userInternalId)) {
-            // Authorization is skipped so a lost race always cleans up after itself
-            $dbForProject->getAuthorization()->skip(
-                fn () => $dbForProject->deleteDocument('identities', $created->getId())
-            );
+        return self::confirmIdentity($dbForProject, $created);
+    }
 
-            return false;
+    /**
+     * The read linkIdentity() makes after its write: false, with the identity deleted, when
+     * another user's identity holds its provider email. Called on its own for an identity
+     * linked inside a transaction, after that transaction has committed.
+     */
+    public static function confirmIdentity(Database $dbForProject, Document $identity): bool
+    {
+        if (!self::identityEmailTaken($dbForProject, (string) $identity->getAttribute('providerEmail', ''), $identity->getAttribute('userInternalId'))) {
+            return true;
         }
 
-        return true;
+        // Authorization is skipped so a lost race always cleans up after itself
+        $dbForProject->getAuthorization()->skip(
+            fn () => $dbForProject->deleteDocument('identities', $identity->getId())
+        );
+
+        return false;
     }
 
     /**

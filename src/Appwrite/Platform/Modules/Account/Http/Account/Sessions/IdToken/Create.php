@@ -227,6 +227,9 @@ class Create extends Base
 
         $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
 
+        // What the request got into the account through, which must still exist when the sign-in is persisted
+        $grounds = $current ? ['sessions' => $current] : [];
+
         if ($user->isEmpty()) {
             $session = $dbForProject->findOne('sessions', [ // Get user by provider id
                 Query::equal('provider', [$provider]),
@@ -234,13 +237,15 @@ class Create extends Base
             ]);
             if (!$session->isEmpty()) {
                 $user->setAttributes($dbForProject->getDocument('users', $session->getAttribute('userId'))->getArrayCopy());
+                $grounds = ['sessions' => $session->getId()];
             }
         }
 
         $newUser = null;
         $newTarget = null;
         if ($user->isEmpty()) {
-            [$newUser, $newTarget] = $this->resolveUser($user, $provider, $sub, $providerEmail, $isVerified, $name, $dbForProject, $project, $plan, $proofForPassword, $authorization, $mqtt, $queueForRealtime, $bus);
+            [$newUser, $newTarget, $ground] = $this->resolveUser($user, $provider, $sub, $providerEmail, $isVerified, $name, $dbForProject, $project, $plan, $proofForPassword, $authorization, $mqtt, $queueForRealtime, $bus);
+            $grounds = $ground === null ? [] : ['identities' => $ground->getId()];
         }
 
         $authorization->addRole(Role::user($user->getId())->toString());
@@ -249,6 +254,9 @@ class Create extends Base
         if (false === $user->getAttribute('status')) { // Account is blocked
             throw new Exception(Exception::USER_BLOCKED);
         }
+
+        // The account as the request authenticated against it, before this sign-in changes anything on it
+        $snapshot = new Document($user->getArrayCopy());
 
         // Only a user this sign-in created and an address it fills in turn verified from here, and both are
         // saved below; a claim already dispatched EmailVerified and left the account verified
@@ -268,27 +276,19 @@ class Create extends Base
 
         // The token is verified and required, so it always supersedes the stored
         // one: its claims would otherwise go stale, and it expires within the hour.
-        $changes = ['providerIdToken' => $idToken];
+        $refreshed = ['providerIdToken' => $idToken];
 
         // Native sign-in often carries no access token at all, so only overwrite
         // the stored credentials when the client actually supplied one.
         if (!empty($accessToken)) {
-            $changes['providerAccessToken'] = $accessToken;
-            $changes['providerAccessTokenExpiry'] = $accessTokenExpiresAt;
+            $refreshed['providerAccessToken'] = $accessToken;
+            $refreshed['providerAccessTokenExpiry'] = $accessTokenExpiresAt;
         }
 
         // Refresh the photo URL on every login so expired CDN links self-heal.
         if ($photo !== '') {
-            $changes['photo'] = $photo;
+            $refreshed['photo'] = $photo;
         }
-
-        $this->upsertIdentity($user, $provider, $sub, $providerEmail, [
-            'providerAccessToken' => $accessToken,
-            'providerRefreshToken' => null,
-            'providerAccessTokenExpiry' => $accessTokenExpiresAt,
-            'providerIdToken' => $idToken,
-            'photo' => $photo ?: null,
-        ], $changes, $dbForProject, $authorization, $newUser, $newTarget);
 
         // Only what this request changed: its copy predates any claim or password change that landed since
         $changes = ['status' => true];
@@ -303,12 +303,6 @@ class Create extends Base
         }
 
         $user->setAttribute('status', true);
-
-        $dbForProject->updateDocument('users', $user->getId(), new Document($changes));
-
-        if (!$wasVerified && $user->getAttribute('emailVerification', false)) {
-            $bus->dispatch(new EmailVerified(user: $user->getArrayCopy(), project: $project->getArrayCopy()));
-        }
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -356,11 +350,58 @@ class Create extends Base
             $detector->getDevice()
         ));
 
-        $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
-            Permission::read(Role::user($user->getId())),
-            Permission::update(Role::user($user->getId())),
-            Permission::delete(Role::user($user->getId())),
-        ]));
+        // Persist the sign-in under the user row lock, so it is ordered against a claim of the account: one that committed
+        // since the request read the account fails it, and one that comes later revokes what it wrote
+        $conflict = null;
+        $linked = null;
+        try {
+            $session = $dbForProject->withTransaction(function () use ($dbForProject, $snapshot, $grounds, $user, $provider, $sub, $providerEmail, $accessToken, $accessTokenExpiresAt, $idToken, $photo, $refreshed, $changes, $session, &$conflict, &$linked) {
+                $conflict = null; // A retried attempt starts over
+                $linked = null;
+
+                if (!User::lockUnchanged($dbForProject, $snapshot, $grounds)) {
+                    throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                }
+
+                $linked = $this->writeIdentity($user, $provider, $sub, $providerEmail, [
+                    'providerAccessToken' => $accessToken,
+                    'providerRefreshToken' => null,
+                    'providerAccessTokenExpiry' => $accessTokenExpiresAt,
+                    'providerIdToken' => $idToken,
+                    'photo' => $photo ?: null,
+                ], $refreshed, $dbForProject, $conflict);
+
+                if ($conflict !== null) {
+                    return;
+                }
+
+                $dbForProject->updateDocument('users', $user->getId(), new Document($changes));
+
+                return $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
+                    Permission::read(Role::user($user->getId())),
+                    Permission::update(Role::user($user->getId())),
+                    Permission::delete(Role::user($user->getId())),
+                ]));
+            });
+        } catch (Duplicate) {
+            // The (provider, providerUid) unique index guards the same identity being connected to two users
+            $conflict = Exception::USER_ALREADY_EXISTS;
+        }
+
+        // The link's email check could not see another user's link that had not committed, so it is made again now
+        if ($conflict === null && $linked !== null && !User::confirmIdentity($dbForProject, $linked)) {
+            $authorization->skip(fn () => $dbForProject->deleteDocument('sessions', $session->getId()));
+            $conflict = Exception::GENERAL_BAD_REQUEST;
+        }
+
+        if ($conflict !== null) {
+            $this->dropNewUser($dbForProject, $authorization, $newUser, $newTarget);
+            throw new Exception($conflict);
+        }
+
+        if (!$wasVerified && $user->getAttribute('emailVerification', false)) {
+            $bus->dispatch(new EmailVerified(user: $user->getArrayCopy(), project: $project->getArrayCopy()));
+        }
 
         if ($sessionUpgrade) {
             foreach ($user->getAttribute('targets', []) as $target) {

@@ -869,6 +869,63 @@ final class UserTest extends TestCase
         $this->assertEmpty($database->getDocument('users', $stale->getId())->getAttribute('password'));
     }
 
+    public function testConfirmIdentityKeepsALinkNobodyElseHolds(): void
+    {
+        $database = $this->identities();
+        $linked = $database->createDocument('identities', $this->identity('bob', '2', 'github', 'github-bob', 'shared@example.com'));
+
+        $this->assertTrue(User::confirmIdentity($database, $linked));
+        $this->assertSame(['bob'], $this->holders($database, 'shared@example.com'));
+    }
+
+    public function testConfirmIdentityDropsALinkCommittedAlongsideAnotherUsers(): void
+    {
+        // Bob's link went in inside a transaction whose own check could not see Alice's, still uncommitted
+        $database = $this->identities();
+        $linked = $database->createDocument('identities', $this->identity('bob', '2', 'github', 'github-bob', 'shared@example.com'));
+        $database->createDocument('identities', $this->identity('alice', '1', 'google', 'google-alice', 'shared@example.com'));
+
+        $this->assertFalse(User::confirmIdentity($database, $linked));
+        $this->assertSame(['alice'], $this->holders($database, 'shared@example.com'));
+    }
+
+    public function testLockUnchangedHoldsForAnAccountAsTheRequestFoundIt(): void
+    {
+        $database = $this->createProjectDatabase();
+        $registrant = $this->createRegistrant($database);
+        $snapshot = new Document($registrant->getArrayCopy());
+
+        $unchanged = $database->withTransaction(fn () => User::lockUnchanged($database, $snapshot, ['sessions' => 'registrant-session']));
+
+        $this->assertTrue($unchanged);
+    }
+
+    public function testLockUnchangedRefusesARequestThatReadTheAccountBeforeItWasClaimed(): void
+    {
+        $database = $this->createProjectDatabase();
+        $registrant = $this->createRegistrant($database);
+
+        // The registrant's sign-in read the account, and resolved it through their session, before the owner claimed it
+        $snapshot = new Document($registrant->getArrayCopy());
+        $this->assertTrue(User::claim($database, $registrant, new Document(['$id' => 'project'])));
+
+        $this->assertFalse($database->withTransaction(fn () => User::lockUnchanged($database, $snapshot, ['sessions' => 'registrant-session'])));
+
+        // The flipped verification alone gives the claim away, whatever the request got in through
+        $this->assertFalse($database->withTransaction(fn () => User::lockUnchanged($database, $snapshot, [])));
+    }
+
+    public function testLockUnchangedRefusesARequestWhoseWayInIsGone(): void
+    {
+        $database = $this->createProjectDatabase();
+        $registrant = $this->createRegistrant($database);
+        $snapshot = new Document($registrant->getArrayCopy());
+
+        $database->deleteDocument('sessions', 'registrant-session');
+
+        $this->assertFalse($database->withTransaction(fn () => User::lockUnchanged($database, $snapshot, ['sessions' => 'registrant-session'])));
+    }
+
     private function createProjectDatabase(): Database
     {
         $authorization = new Authorization();

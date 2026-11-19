@@ -359,28 +359,10 @@ class Get extends Base
             $sessionUpgrade = true;
         }
 
-        // The session flow replaces the caller's current session with the one
-        // created below, so the browser stays signed in. The token flow creates
-        // no session here; the app exchanges the returned token through
-        // createSession later. Deleting the current session in that flow would
-        // sign the caller out until the exchange, so it is left in place.
-        if (empty($state['token'])) {
-            $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
+        $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
 
-            if ($current) { // Replace the current session with the new one.
-                $currentDocument = $dbForProject->getDocument('sessions', $current);
-                if (!$currentDocument->isEmpty()) {
-                    $dbForProject->deleteDocument('sessions', $currentDocument->getId());
-                    $dbForProject->purgeCachedDocument('users', $user->getId());
-
-                    try {
-                        $mqtt->revoke($project->getId(), $user->getId());
-                    } catch (\Throwable $error) {
-                        Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
-                    }
-                }
-            }
-        }
+        // What the request got into the account through, which must still exist when the sign-in is persisted
+        $grounds = $current ? ['sessions' => $current] : [];
 
         if ($user->isEmpty()) {
             $session = $dbForProject->findOne('sessions', [ // Get user by provider id
@@ -389,6 +371,7 @@ class Get extends Base
             ]);
             if (!$session->isEmpty()) {
                 $user->setAttributes($dbForProject->getDocument('users', $session->getAttribute('userId'))->getArrayCopy());
+                $grounds = ['sessions' => $session->getId()];
             }
         }
 
@@ -405,6 +388,7 @@ class Get extends Base
 
             if (!$identity->isEmpty()) {
                 $user = $dbForProject->getDocument('users', $identity->getAttribute('userId'));
+                $grounds = ['identities' => $identity->getId()];
             }
 
             $emailMetadata = [
@@ -506,6 +490,7 @@ class Get extends Base
                         $failureRedirect(Exception::GENERAL_BAD_REQUEST);
                     }
                     $user->setAttributes($dbForProject->getDocument('users', $identityWithMatchingEmail->getAttribute('userId'))->getArrayCopy());
+                    $grounds = ['identities' => $identityWithMatchingEmail->getId()];
                 }
             }
 
@@ -600,6 +585,9 @@ class Get extends Base
         if (false === $user->getAttribute('status')) { // Account is blocked
             $failureRedirect(Exception::USER_BLOCKED); // User is in status blocked
         }
+
+        // The account as the request authenticated against it, before this sign-in changes anything on it
+        $snapshot = new Document($user->getArrayCopy());
 
         // Only a user this sign-in created and an address it fills in turn verified from here, and both are
         // saved below; a claim already dispatched EmailVerified and left the account verified
@@ -708,65 +696,6 @@ class Get extends Base
             }
         }
 
-        $identity = $dbForProject->findOne('identities', [
-            Query::equal('userInternalId', [$user->getSequence()]),
-            Query::equal('provider', [$provider]),
-            Query::equal('providerUid', [$oauth2ID]),
-        ]);
-        if ($identity->isEmpty()) {
-            $userId = $user->getId();
-            $conflict = null;
-
-            try {
-                $linked = User::linkIdentity($dbForProject, new Document([
-                    '$id' => Id::unique(),
-                    '$permissions' => [
-                        Permission::read(Role::any()),
-                        Permission::update(Role::user($userId)),
-                        Permission::delete(Role::user($userId)),
-                    ],
-                    'userInternalId' => $user->getSequence(),
-                    'userId' => $userId,
-                    'provider' => $provider,
-                    'providerUid' => $oauth2ID,
-                    'providerEmail' => $providerEmail,
-                    'providerAccessToken' => $accessToken,
-                    'providerRefreshToken' => $refreshToken,
-                    'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
-                    'photo' => $oauth2->getUserPhoto($accessToken),
-                ]));
-
-                if (!$linked) {
-                    /** Return a generic bad request to prevent exposing existing accounts */
-                    $conflict = Exception::GENERAL_BAD_REQUEST;
-                }
-            } catch (Duplicate) {
-                // The (provider, providerUid) unique index guards the same identity being connected to two users
-                $conflict = Exception::USER_ALREADY_EXISTS;
-            }
-
-            if ($conflict !== null) {
-                // A request whose link did not hold must not leave behind the user it just created
-                if ($newUser !== null) {
-                    $authorization->skip(function () use ($dbForProject, $newUser, $newTarget) {
-                        if ($newTarget !== null) {
-                            $dbForProject->deleteDocument('targets', $newTarget->getId());
-                        }
-                        $dbForProject->deleteDocument('users', $newUser->getId());
-                    });
-                }
-                $failureRedirect($conflict);
-            }
-        } else {
-            $identity = $dbForProject->updateDocument('identities', $identity->getId(), new Document([
-                'providerAccessToken' => $accessToken,
-                'providerRefreshToken' => $refreshToken,
-                'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
-                // Refresh the photo URL on every login so expired CDN links self-heal.
-                'photo' => $oauth2->getUserPhoto($accessToken),
-            ]));
-        }
-
         // Only what this request changed: its copy predates any claim or password change that landed since
         $changes = ['status' => true];
 
@@ -780,12 +709,6 @@ class Get extends Base
         }
 
         $user->setAttribute('status', true);
-
-        $dbForProject->updateDocument('users', $user->getId(), new Document($changes));
-
-        if (!$wasVerified && $user->getAttribute('emailVerification', false)) {
-            $bus->dispatch(new EmailVerified(user: $user->getArrayCopy(), project: $project->getArrayCopy()));
-        }
 
         $authorization->addRole(Role::user($user->getId())->toString());
 
@@ -802,6 +725,11 @@ class Get extends Base
             $secret = $proofForTokenOAuth2->generate();
             $token = new Document([
                 '$id' => Id::unique(),
+                '$permissions' => [
+                    Permission::read(Role::user($user->getId())),
+                    Permission::update(Role::user($user->getId())),
+                    Permission::delete(Role::user($user->getId())),
+                ],
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getSequence(),
                 'type' => TOKEN_TYPE_OAUTH2,
@@ -811,29 +739,6 @@ class Get extends Base
                 'ip' => $request->getIP(),
             ]);
 
-            $authorization->addRole(Role::user($user->getId())->toString());
-
-            $token = $dbForProject->createDocument('tokens', $token
-                ->setAttribute('$permissions', [
-                    Permission::read(Role::user($user->getId())),
-                    Permission::update(Role::user($user->getId())),
-                    Permission::delete(Role::user($user->getId())),
-                ]));
-
-            $queueForEvents
-                ->setEvent('users.[userId].tokens.[tokenId].create')
-                ->setParam('userId', $user->getId())
-                ->setParam('tokenId', $token->getId())
-            ;
-
-            // Wrap secret in a JWT that also carries the provider name
-            $jwtEncoder = new JWT(EncryptionKey::current(), 'HS256', 60, 0);
-            $query['secret'] = $jwtEncoder->encode([
-                'secret' => $secret,
-                'provider' => $provider,
-            ]);
-            $query['userId'] = $user->getId();
-
             // If the `token` param is not set, we persist the session in a cookie
         } else {
             $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -842,6 +747,11 @@ class Get extends Base
             $geoRecord = $geo->get($request->getIP());
             $session = new Document(array_merge([
                 '$id' => Id::unique(),
+                '$permissions' => [
+                    Permission::read(Role::user($user->getId())),
+                    Permission::update(Role::user($user->getId())),
+                    Permission::delete(Role::user($user->getId())),
+                ],
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getSequence(),
                 // The account switching device the session joins, when the browser holds one
@@ -871,12 +781,105 @@ class Get extends Base
                 'isp' => $geoRecord->getIsp(),
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
+        }
 
-            $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
-                Permission::read(Role::user($user->getId())),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ]));
+        // Stored with a new identity and refreshed on an existing one. The photo URL is refreshed on every login so
+        // expired CDN links self-heal
+        $credentials = [
+            'providerAccessToken' => $accessToken,
+            'providerRefreshToken' => $refreshToken,
+            'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
+            'photo' => $oauth2->getUserPhoto($accessToken),
+        ];
+
+        // Persist the sign-in under the user row lock, so it is ordered against a claim of the account: one that committed
+        // since the request read the account fails it, and one that comes later revokes what it wrote
+        $conflict = null;
+        $linked = null;
+        $replaced = false;
+        $created = null;
+        try {
+            $created = $dbForProject->withTransaction(function () use ($dbForProject, $failureRedirect, $snapshot, $grounds, $user, $provider, $oauth2ID, $providerEmail, $credentials, $changes, $state, $current, &$token, &$session, &$conflict, &$linked, &$replaced) {
+                $conflict = null; // A retried attempt starts over
+                $linked = null;
+                $replaced = false;
+
+                if (!User::lockUnchanged($dbForProject, $snapshot, $grounds)) {
+                    $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                }
+
+                $linked = $this->writeIdentity($user, $provider, $oauth2ID, $providerEmail, $credentials, $credentials, $dbForProject, $conflict);
+
+                if ($conflict !== null) {
+                    return;
+                }
+
+                $dbForProject->updateDocument('users', $user->getId(), new Document($changes));
+
+                if ($state['token']) {
+                    return $dbForProject->createDocument('tokens', $token);
+                }
+
+                // The session flow replaces the caller's current session with the one
+                // created here, so the browser stays signed in. The token flow creates
+                // no session here; the app exchanges the returned token through
+                // createSession later. Deleting the current session in that flow would
+                // sign the caller out until the exchange, so it is left in place.
+                if ($current) {
+                    $replaced = $dbForProject->deleteDocument('sessions', $current);
+                }
+
+                return $dbForProject->createDocument('sessions', $session);
+            });
+        } catch (Duplicate) {
+            // The (provider, providerUid) unique index guards the same identity being connected to two users
+            $conflict = Exception::USER_ALREADY_EXISTS;
+        }
+
+        // The link's email check could not see another user's link that had not committed, so it is made again now
+        if ($conflict === null && $linked !== null && !User::confirmIdentity($dbForProject, $linked)) {
+            $authorization->skip(fn () => $dbForProject->deleteDocument($state['token'] ? 'tokens' : 'sessions', $created->getId()));
+            $conflict = Exception::GENERAL_BAD_REQUEST;
+        }
+
+        if ($conflict !== null) {
+            // A request whose link did not hold must not leave behind the user it just created
+            $this->dropNewUser($dbForProject, $authorization, $newUser, $newTarget);
+            $failureRedirect($conflict);
+        }
+
+        if ($replaced) {
+            $dbForProject->purgeCachedDocument('users', $user->getId());
+
+            try {
+                $mqtt->revoke($project->getId(), $user->getId());
+            } catch (\Throwable $error) {
+                Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+            }
+        }
+
+        if (!$wasVerified && $user->getAttribute('emailVerification', false)) {
+            $bus->dispatch(new EmailVerified(user: $user->getArrayCopy(), project: $project->getArrayCopy()));
+        }
+
+        if ($state['token']) {
+            $token = $created;
+
+            $queueForEvents
+                ->setEvent('users.[userId].tokens.[tokenId].create')
+                ->setParam('userId', $user->getId())
+                ->setParam('tokenId', $token->getId())
+            ;
+
+            // Wrap secret in a JWT that also carries the provider name
+            $jwtEncoder = new JWT(EncryptionKey::current(), 'HS256', 60, 0);
+            $query['secret'] = $jwtEncoder->encode([
+                'secret' => $secret,
+                'provider' => $provider,
+            ]);
+            $query['userId'] = $user->getId();
+        } else {
+            $session = $created;
 
             $session
                 ->setAttribute('expire', $expire)
