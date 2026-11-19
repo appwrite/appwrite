@@ -51,7 +51,7 @@ class ScheduleExecutions extends Action
                 syncSeconds: self::UPDATE_TIMER,
                 telemetry: $telemetry,
                 onError: function (\Throwable $error, ?Row $row = null): void {
-                    Span::init('schedule.executions.reconcile');
+                    Span::init('schedule.executions.error');
                     if ($row?->data instanceof Document) {
                         Span::add('project.id', (string) $row->data->getAttribute('projectId'));
                         Span::add('resource.id', (string) $row->data->getAttribute('resourceId'));

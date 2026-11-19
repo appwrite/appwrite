@@ -53,7 +53,7 @@ class ScheduleFunctions extends Action
                 store: new ClaimStore($redis, self::getName() . ':' . System::getEnv('_APP_REGION', 'default')),
                 telemetry: $telemetry,
                 onError: function (\Throwable $error, ?Row $row = null): void {
-                    Span::init('schedule.functions.reconcile');
+                    Span::init('schedule.functions.error');
                     if ($row?->data instanceof Document) {
                         Span::add('project.id', (string) $row->data->getAttribute('projectId'));
                         Span::add('resource.id', (string) $row->data->getAttribute('resourceId'));

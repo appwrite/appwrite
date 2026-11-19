@@ -54,7 +54,7 @@ class ScheduleAlerts extends Action
                 syncSeconds: \min(30, $this->interval()),
                 telemetry: $telemetry,
                 onError: function (\Throwable $error): void {
-                    Span::init('schedule.alerts.reconcile');
+                    Span::init('schedule.alerts.error');
                     Span::current()?->finish(error: $error);
                 },
             );
