@@ -630,4 +630,8 @@ export const jaSitesDictionary: Record<string, string> = {
     '計測されたページビューとイベントはアナリティクスの使用量として課金されます。トラフィックの多いサイトでは料金がすぐに増えます。',
   'If your site sets a Content-Security-Policy, in a header or a <meta> tag, add these sources. Otherwise the browser blocks the tracker and no data is recorded.':
     'サイトでヘッダーまたは <meta> タグによって Content-Security-Policy を設定している場合は、以下のソースを追加してください。追加しないとブラウザーがトラッカーをブロックし、データは記録されません。',
+  'Enable analytics': 'アナリティクスを有効化',
+  'Production domains only. Preview deployments are not tracked.':
+    '本番ドメインのみが対象です。プレビューデプロイは計測されません。',
+  'Failed to enable analytics': 'アナリティクスを有効化できませんでした',
 }

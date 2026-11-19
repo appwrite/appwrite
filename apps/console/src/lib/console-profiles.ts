@@ -108,13 +108,6 @@ export type ConsoleProfileFeatures = {
   blogDrafts: boolean
   /** Product analytics: tracked properties, visitor stats, and per-event metrics */
   analytics: boolean
-  /**
-   * Clicking Humans / Bots in analytics filters the page. `trafficType` isn't
-   * a query attribute, so this filters on an empty vs non-empty
-   * `botCategory`, which depends on how the backend stores human events.
-   * Off until that's confirmed.
-   */
-  analyticsTrafficFilter: boolean
   /** Appwrite push messaging provider (create wizard and its QoS/expiry settings). */
   appwritePush: boolean
 }
@@ -160,7 +153,6 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   cookieBanner: 'Cookie banner',
   blogDrafts: 'Blog drafts',
   analytics: 'Analytics',
-  analyticsTrafficFilter: 'Analytics humans/bots filter',
   appwritePush: 'Appwrite push',
 }
 
@@ -218,7 +210,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       blogDrafts: false,
       // Off until launch; enable from Debug → Feature flags.
       analytics: false,
-      analyticsTrafficFilter: false,
       appwritePush: true,
     },
   },
@@ -263,7 +254,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       cookieBanner: false,
       blogDrafts: false,
       analytics: false,
-      analyticsTrafficFilter: false,
       appwritePush: true,
     },
   },
