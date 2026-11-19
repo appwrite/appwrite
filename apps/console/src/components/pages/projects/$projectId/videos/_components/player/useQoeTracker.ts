@@ -87,9 +87,12 @@ export function computeQoeMetrics(
   renderedHeight: number | null,
 ): QoeMetrics {
   const now = player.loadStartedAt ? Date.now() - player.loadStartedAt : 0
+  // From the stream request, not the mount: loading the player library is
+  // page cost, not video startup.
+  const requestedAt = player.requestedAt ?? player.loadStartedAt
   const startupMs =
-    player.firstFrameAt && player.loadStartedAt
-      ? player.firstFrameAt - player.loadStartedAt
+    player.firstFrameAt && requestedAt
+      ? player.firstFrameAt - requestedAt
       : null
   const stallMs = qoe.stalls.reduce((sum, s) => sum + stallDuration(s, now), 0)
   const rebufferRatio =

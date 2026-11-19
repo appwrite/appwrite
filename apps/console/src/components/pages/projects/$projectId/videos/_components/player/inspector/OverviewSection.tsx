@@ -135,8 +135,8 @@ export function OverviewSection({
           value={formatMs(metrics.startupMs)}
           tone={startupTone}
           hint={
-            player.manifestLoadedAt && player.loadStartedAt
-              ? `${t('Manifest')}: ${formatMs(player.manifestLoadedAt - player.loadStartedAt)}`
+            player.manifestLoadedAt && player.requestedAt
+              ? `${t('Manifest')}: ${formatMs(player.manifestLoadedAt - player.requestedAt)}`
               : undefined
           }
         />

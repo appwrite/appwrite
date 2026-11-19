@@ -110,6 +110,8 @@ export type HlsPlayerState = {
   /** HTTP status of the request that failed playback, when known. */
   fatalStatus: number | null
   loadStartedAt: number | null
+  /** When the stream itself was first requested, after the player library loaded. */
+  requestedAt: number | null
   manifestLoadedAt: number | null
   firstFrameAt: number | null
 }
@@ -129,6 +131,7 @@ const INITIAL_STATE: HlsPlayerState = {
   fatalError: null,
   fatalStatus: null,
   loadStartedAt: null,
+  requestedAt: null,
   manifestLoadedAt: null,
   firstFrameAt: null,
 }
@@ -284,7 +287,11 @@ export function useHlsPlayer(
 
     if (sourceType === 'file') {
       video.src = applyVideoStreamAccess(src, access)
-      setState((prev) => ({ ...prev, engine: 'native' }))
+      setState((prev) => ({
+        ...prev,
+        engine: 'native',
+        requestedAt: Date.now(),
+      }))
       pushEvent({ kind: 'info', name: 'LOAD_FILE', detail: src })
       return () => {
         video.removeEventListener('loadeddata', onFirstFrame)
@@ -300,7 +307,11 @@ export function useHlsPlayer(
         if (video.canPlayType('application/vnd.apple.mpegurl')) {
           video.addEventListener('error', onNativeError)
           video.src = manifestUrl
-          setState((prev) => ({ ...prev, engine: 'native' }))
+          setState((prev) => ({
+            ...prev,
+            engine: 'native',
+            requestedAt: Date.now(),
+          }))
           pushEvent({
             kind: 'warning',
             name: 'Native HLS',
@@ -431,6 +442,7 @@ export function useHlsPlayer(
       })
 
       hls.attachMedia(video)
+      setState((prev) => ({ ...prev, requestedAt: Date.now() }))
       hls.loadSource(applyVideoStreamAccess(src, access))
       pushEvent({ kind: 'info', name: 'LOAD_SOURCE', detail: src })
     })
