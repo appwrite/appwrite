@@ -1203,7 +1203,7 @@ final class AbuseTest extends Scope
          * Test for SUCCESS
          */
         $this->startCountingInOneWindow(60);
-        for ($i = 0; $i < 32; $i++) {
+        for ($i = 0; $i < APP_LIMIT_REALTIME_MESSAGES; $i++) {
             $client->send(\json_encode(['type' => 'ping']));
             $this->assertSame('pong', \json_decode($client->receive(), true)['type'] ?? null, 'Message ' . ($i + 1) . ' is within the limit');
         }

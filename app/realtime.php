@@ -1250,14 +1250,24 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
 
     $error = null;
     try {
-        // Abuse limit: 32 messages per minute per connection, checked before any database work.
-        // Connection ids are only unique within a container, so the key carries the container too.
-        $isRateLimited = $container->get('timelimit')('project:{project},container:{container},connection:{connection}', 32, 60, function (TimeLimit $timeLimit) use ($connection, $containerId, $projectId): bool {
-            return $timeLimit->withParams(['{project}' => (string) $projectId, '{connection}' => (string) $connection, '{container}' => (string) $containerId])->check()->limited && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled';
-        });
+        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+            $isRateLimited = $container->get('timelimit')(
+                'project:{project},container:{container},connection:{connection}',
+                APP_LIMIT_REALTIME_MESSAGES,
+                60,
+                fn (TimeLimit $timeLimit): bool => $timeLimit
+                    ->withParams([
+                        '{project}' => (string) $projectId,
+                        '{container}' => (string) $containerId,
+                        '{connection}' => (string) $connection,
+                    ])
+                    ->check()
+                    ->limited,
+            );
 
-        if ($isRateLimited) {
-            throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many messages.');
+            if ($isRateLimited) {
+                throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES);
+            }
         }
 
         $response = new Response(new SwooleResponse());
@@ -1431,7 +1441,6 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
         $server->send([$connection], $responsePayloadJson);
         $outboundBytes += \strlen($responsePayloadJson);
 
-        // A connection past the message limit is closed so it can't keep sending.
         if (\in_array($th->getCode(), [1008, 1013], true)) {
             $server->close($connection, $th->getCode());
         }
