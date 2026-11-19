@@ -38,8 +38,11 @@ class Action extends PlatformAction
 
     protected function createRule(Document $rule, Database $dbForPlatform, Authorization $authorization, Bus $bus): Document
     {
+        // The checks verifyRule() left on the rule are stored once the rule exists
+        $records = $rule->getAttribute('records', []);
+
         try {
-            return $this->created($authorization->skip(fn () => $dbForPlatform->createDocument('rules', $rule)), $bus);
+            return $this->created($authorization->skip(fn () => $dbForPlatform->createDocument('rules', $rule)), $records, $dbForPlatform, $authorization, $bus);
         } catch (Duplicate) {
             if (!$this->releaseDomain($rule, $dbForPlatform, $authorization, $bus)) {
                 throw new Exception(Exception::RULE_ALREADY_EXISTS);
@@ -47,17 +50,91 @@ class Action extends PlatformAction
         }
 
         try {
-            return $this->created($authorization->skip(fn () => $dbForPlatform->createDocument('rules', $rule)), $bus);
+            return $this->created($authorization->skip(fn () => $dbForPlatform->createDocument('rules', $rule)), $records, $dbForPlatform, $authorization, $bus);
         } catch (Duplicate) {
             throw new Exception(Exception::RULE_ALREADY_EXISTS);
         }
     }
 
-    private function created(Document $rule, Bus $bus): Document
+    /**
+     * @param array<array<string, mixed>> $records Checks from verifyRule(), stored with the new rule
+     */
+    private function created(Document $rule, array $records, Database $dbForPlatform, Authorization $authorization, Bus $bus): Document
     {
+        if (!empty($records)) {
+            $rule->setAttribute('records', $records);
+            $rule = $authorization->skip(fn () => $this->updateRecords($rule, $dbForPlatform));
+        }
+
         $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
 
         return $rule;
+    }
+
+    /**
+     * Store the DNS record checks verifyRule() left on a rule, one ruleRecords row per record type
+     *
+     * A row is updated in place, so its update time is the last check. Rows for record types
+     * no longer checked, such as a CAA target that was unset, are removed.
+     *
+     * @param Document $rule Stored rule carrying the checks from verifyRule()
+     * @return Document The rule read again, with the checks just stored
+     */
+    protected function updateRecords(Document $rule, Database $dbForPlatform): Document
+    {
+        $stale = [];
+        $existing = $dbForPlatform->find('ruleRecords', [
+            Query::equal('ruleInternalId', [$rule->getSequence()]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]);
+        foreach ($existing as $record) {
+            $stale[$record->getId()] = true;
+        }
+
+        // A check that finds DNS unchanged writes nothing, so the update time is set on every check
+        $checkedAt = DateTime::now();
+
+        foreach ($rule->getAttribute('records', []) as $record) {
+            $recordId = \md5($rule->getSequence() . ':' . $record['type']);
+            $check = [
+                '$updatedAt' => $checkedAt,
+                'name' => $record['name'],
+                'expected' => $record['expected'],
+                'current' => $record['current'],
+                'status' => $record['status'],
+                'message' => $record['message'],
+                'required' => $record['required'],
+            ];
+
+            if (isset($stale[$recordId])) {
+                unset($stale[$recordId]);
+                $dbForPlatform->updateDocument('ruleRecords', $recordId, new Document($check));
+                continue;
+            }
+
+            try {
+                $dbForPlatform->createDocument('ruleRecords', new Document([
+                    '$id' => $recordId,
+                    '$permissions' => [],
+                    'projectInternalId' => $rule->getAttribute('projectInternalId', ''),
+                    'ruleInternalId' => $rule->getSequence(),
+                    'ruleId' => $rule->getId(),
+                    'type' => $record['type'],
+                    ...$check,
+                ]));
+            } catch (Duplicate) {
+                // A concurrent check stored it first
+                $dbForPlatform->updateDocument('ruleRecords', $recordId, new Document($check));
+            }
+        }
+
+        foreach (\array_keys($stale) as $recordId) {
+            $dbForPlatform->deleteDocument('ruleRecords', $recordId);
+        }
+
+        $dbForPlatform->purgeCachedDocument('rules', $rule->getId());
+
+        return $dbForPlatform->getDocument('rules', $rule->getId());
     }
 
     /**
@@ -194,6 +271,9 @@ class Action extends PlatformAction
      */
     protected function verifyRule(Document $rule): void
     {
+        // A domain that cannot be checked keeps no record checks
+        $rule->setAttribute('records', []);
+
         $domain = new Domain($rule->getAttribute('domain', ''));
 
         if (empty($domain->get())) {
@@ -207,19 +287,16 @@ class Action extends PlatformAction
         $validationStart = \microtime(true);
         $records = $this->checkRecords($rule);
 
-        // Keep the latest checks on the rule before any failure, so the caller's write persists them.
-        // Found values and message are capped to keep the stored JSON within the attribute size.
-        // The check time is stored with them: the rule's own update time also moves on certificate writes.
-        $checkedAt = DateTime::now();
+        // Keep the latest checks on the rule before any failure, so updateRecords() persists them.
+        // Current values and message are capped to the ruleRecords attribute sizes.
         $rule->setAttribute('records', \array_map(fn (array $record) => [
             'type' => $record['type'],
             'name' => $record['name'],
-            'value' => $record['value'],
-            'found' => \array_map(fn (string $value) => \mb_strcut($value, 0, 255), \array_slice($record['found'], 0, 10)),
+            'expected' => $record['expected'],
+            'current' => \array_map(fn (string $value) => \mb_strcut($value, 0, 255), \array_slice($record['current'], 0, 10)),
             'status' => $record['status'],
             'message' => \mb_strcut($record['message'], 0, 1000),
             'required' => $record['required'],
-            'checkedAt' => $checkedAt,
         ], $records));
 
         // The targets checked below are identical for every project on the instance,
@@ -298,7 +375,7 @@ class Action extends PlatformAction
      * points to Appwrite when any one of them is verified.
      *
      * @param Document $rule Rule to check
-     * @return array<array{type: string, name: string, value: string, found: array<string>, status: string, message: string, required: bool, error: ?\Throwable}>
+     * @return array<array{type: string, name: string, expected: string, current: array<string>, status: string, message: string, required: bool, error: ?\Throwable}>
      */
     protected function checkRecords(Document $rule): array
     {
@@ -409,14 +486,14 @@ class Action extends PlatformAction
         }
 
         $records = [];
-        foreach ($checks as $key => [$type, $value, $validator, $required]) {
+        foreach ($checks as $key => [$type, $expected, $validator, $required]) {
             $error = $errors[$key] ?? null;
             $verified = $results[$key] ?? false;
 
             // A passing lookup across several resolvers keeps no records, yet it found the expected value
-            $found = $validator->records;
-            if ($verified && empty($found) && $type !== 'CAA') {
-                $found = [$value];
+            $current = $validator->records;
+            if ($verified && empty($current) && $type !== 'CAA') {
+                $current = [$expected];
             }
 
             $status = match (true) {
@@ -429,8 +506,8 @@ class Action extends PlatformAction
             $records[] = [
                 'type' => $type,
                 'name' => $domain->get(),
-                'value' => $value,
-                'found' => \array_values($found),
+                'expected' => $expected,
+                'current' => \array_values($current),
                 'status' => $status,
                 'message' => match (true) {
                     $verified => '',

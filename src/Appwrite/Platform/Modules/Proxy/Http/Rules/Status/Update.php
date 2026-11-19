@@ -120,13 +120,17 @@ class Update extends Action
         try {
             // Appwrite-owned subdomains ride a wildcard record, so the worker never checks their DNS either
             if ($rule->getAttribute('owner') !== 'Appwrite') {
-                $this->verifyRule($rule);
+                try {
+                    $this->verifyRule($rule);
+                } finally {
+                    // The checks are stored whether or not the domain passed
+                    $rule = $authorization->skip(fn () => $this->updateRecords($rule, $dbForPlatform));
+                }
             }
             // Reset logs and status for the rule. A renewal stays verified: its current certificate keeps serving.
             $rule = $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 'logs' => '',
                 'status' => $renewal ? RULE_STATUS_VERIFIED : RULE_STATUS_CERTIFICATE_GENERATING,
-                'records' => $rule->getAttribute('records', []),
             ])));
             $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
 
@@ -150,9 +154,8 @@ class Update extends Action
                 }
             }
         } catch (\Throwable $err) {
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+            $rule = $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 '$updatedAt' => DateTime::now(),
-                'records' => $rule->getAttribute('records', []),
             ])));
             $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
             throw $err;

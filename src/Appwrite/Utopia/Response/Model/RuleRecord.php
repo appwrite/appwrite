@@ -10,6 +10,24 @@ class RuleRecord extends Model
     public function __construct()
     {
         $this
+            ->addRule('$id', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Record check ID.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Record check creation date in ISO 8601 format. The date the record type was first checked for the rule.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('$updatedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Record check update date in ISO 8601 format. The date DNS was last checked for this record.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
                 'description' => 'DNS record type. Possible values are "CNAME", "A", "AAAA", or "CAA".',
@@ -22,15 +40,15 @@ class RuleRecord extends Model
                 'default' => '',
                 'example' => 'appwrite.company.com',
             ])
-            ->addRule('value', [
+            ->addRule('expected', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Value the record is expected to have.',
                 'default' => '',
                 'example' => 'appwrite.network',
             ])
-            ->addRule('found', [
+            ->addRule('current', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Values DNS returned for the record type. Empty when none were found.',
+                'description' => 'Values DNS returned for the record type when last checked, at most 10. Empty when none were found.',
                 'default' => [],
                 'example' => ['appwrite.network'],
                 'array' => true,
@@ -52,12 +70,6 @@ class RuleRecord extends Model
                 'description' => 'Whether the record must be verified on its own. Records that are not required are alternatives: the domain passes when any one of them is verified.',
                 'default' => false,
                 'example' => false,
-            ])
-            ->addRule('checkedAt', [
-                'type' => self::TYPE_DATETIME,
-                'description' => 'When DNS was checked for this record, in ISO 8601 format.',
-                'default' => '',
-                'example' => self::TYPE_DATETIME_EXAMPLE,
             ]);
     }
 
