@@ -349,9 +349,7 @@ class Client implements Adapter, ResponseStreamingClientInterface
         // cURL checks CURLOPT_MAXFILESIZE against the bytes on the wire, before content decoding,
         // so a small compressed body could still expand past it in memory. The same cap is applied
         // to the bytes handed to the sink, which are the decoded ones.
-        $limit = $this->maximumFileSize($this->options);
-
-        $received = 0;
+        $limit = DecodedSizeLimit::fromOptions($this->options);
 
         $options = [
             \CURLOPT_URL => (string) $request->getUri(),
@@ -426,29 +424,12 @@ class Client implements Adapter, ResponseStreamingClientInterface
         $merged[\CURLOPT_FORBID_REUSE] = !$this->reuseConnections;
         $merged[\CURLOPT_FOLLOWLOCATION] = $this->followRedirects;
 
-        // The decoded-size cap wraps whichever write callback is in effect, a caller-supplied one included,
-        // so a constructor option cannot drop it.
-        if ($limit !== null) {
-            $write = $merged[\CURLOPT_WRITEFUNCTION];
-            if (!\is_callable($write)) {
-                throw new InvalidArgumentException('CURLOPT_WRITEFUNCTION must be callable.');
-            }
-
-            $merged[\CURLOPT_WRITEFUNCTION] = static function (CurlHandle $handle, string $chunk) use ($write, $limit, &$received, &$exceeded): int {
-                $received += \strlen($chunk);
-
-                if ($received > $limit) {
-                    $exceeded = true;
-
-                    // Any count other than the chunk's length aborts the transfer.
-                    return 0;
-                }
-
-                $written = $write($handle, $chunk);
-
-                return \is_numeric($written) ? (int) $written : 0;
-            };
-        }
+        // The adapter owns the response body. PHP's cURL lets the last of these options win, so a caller's
+        // CURLOPT_WRITEFUNCTION or CURLOPT_FILE was overridden by CURLOPT_RETURNTRANSFER and sent the body to
+        // standard output, past the decoded-size cap. Set them last, and only the adapter's own.
+        unset($merged[\CURLOPT_RETURNTRANSFER], $merged[\CURLOPT_FILE], $merged[\CURLOPT_WRITEFUNCTION]);
+        $merged[\CURLOPT_RETURNTRANSFER] = false;
+        $merged[\CURLOPT_WRITEFUNCTION] = $limit instanceof DecodedSizeLimit ? $limit->wrap($options[\CURLOPT_WRITEFUNCTION], $exceeded) : $options[\CURLOPT_WRITEFUNCTION];
 
         // Checked once connected, before anything is sent, against the address curl
         // actually connected to: every connection and every redirect hop. Authoritative
@@ -612,26 +593,6 @@ class Client implements Adapter, ResponseStreamingClientInterface
         }
 
         return $uri->getHost() . ':' . $port;
-    }
-
-    /**
-     * The body size cap in bytes the caller configured, or null for none. cURL reads both options as integers the
-     * way PHP casts a scalar, so a numeric string such as '1048576' sets the same cap here as on the wire. When both
-     * are set, the smaller applies.
-     *
-     * @param array<int, mixed> $options
-     */
-    private function maximumFileSize(array $options): ?int
-    {
-        $limits = [];
-        foreach ([\CURLOPT_MAXFILESIZE_LARGE, \CURLOPT_MAXFILESIZE] as $option) {
-            $value = $options[$option] ?? null;
-            if (\is_scalar($value) && (int) $value > 0) {
-                $limits[] = (int) $value;
-            }
-        }
-
-        return $limits === [] ? null : \min($limits);
     }
 
     /**

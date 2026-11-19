@@ -18,7 +18,8 @@ This project follows semantic versioning.
 
 ### Fixed
 
-- The cURL adapter applies `CURLOPT_MAXFILESIZE` / `CURLOPT_MAXFILESIZE_LARGE` to the decoded body as well. Older libcurl checks the cap only against the bytes on the wire, so a small gzip or brotli response could expand far past it in memory; the transfer now aborts with a `NetworkException` (code `CURLE_FILESIZE_EXCEEDED`) once the decoded bytes pass the cap. The check wraps a write callback passed in the constructor options, reads a numeric-string limit the way cURL does, and takes the smaller limit when both options are set.
+- The cURL adapter applies `CURLOPT_MAXFILESIZE` / `CURLOPT_MAXFILESIZE_LARGE` to the decoded body as well. Older libcurl checks the cap only against the bytes on the wire, so a small gzip or brotli response could expand far past it in memory; the transfer now aborts with a `NetworkException` (code `CURLE_FILESIZE_EXCEEDED`) once the decoded bytes pass the cap. The check reads a numeric-string limit the way cURL does and takes the smaller limit when both options are set.
+- The cURL adapter owns the response body: a `CURLOPT_WRITEFUNCTION`, `CURLOPT_FILE` or `CURLOPT_RETURNTRANSFER` in the constructor options is ignored. Before, the adapter's own `CURLOPT_RETURNTRANSFER` overrode such an option, so the body went to standard output, the response came back empty, and the decoded-size cap did not apply.
 
 ### Removed
 
