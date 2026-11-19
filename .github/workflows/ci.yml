@@ -445,10 +445,18 @@ jobs:
           restore-keys: |
             package-extension-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}-
 
-      - name: Build the extension
+      - name: Install Rust
         run: |
+          # The package runners have no Rust; GitHub's ubuntu-24.04 has rustup.
+          if ! command -v rustup > /dev/null; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none
+            export PATH="$HOME/.cargo/bin:$PATH"
+            echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          fi
           rustup toolchain install 1.97.1 --profile minimal
-          cargo +1.97.1 build --release --locked -p utopia-extension
+
+      - name: Build the extension
+        run: cargo +1.97.1 build --release --locked -p utopia-extension
 
       - name: Upload the extension
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
