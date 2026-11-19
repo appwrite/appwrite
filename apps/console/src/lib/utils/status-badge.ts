@@ -5,7 +5,9 @@
  * All status badges should use these utilities for consistency.
  */
 
+import type { ProxyRuleRecord } from '@/lib/appwrite/proxy-rules'
 import type { CanonicalPlanId } from '@/lib/utils/plan-filter'
+import { getRecordName } from '@/lib/utils/proxy-domains'
 
 /**
  * Status types for general use cases
@@ -310,6 +312,35 @@ export function isWaitingForDns(
 }
 
 /**
+ * Whether the last DNS check of a domain found a record with the wrong value:
+ * a CAA record that blocks the certificate, or no pointing record verified
+ * while one points elsewhere. A subdomain points with its CNAME. An apex
+ * points with an ALIAS, which the A and AAAA checks verify, as they do for a
+ * domain with no CNAME check.
+ */
+export function hasWrongDnsRecord(
+  domain: string,
+  records: Pick<ProxyRuleRecord, 'type' | 'status'>[],
+): boolean {
+  if (records.some((r) => r.type === 'CAA' && r.status === 'mismatch'))
+    return true
+  const pointingTypes = ['CNAME', 'A', 'AAAA']
+  if (
+    records.some(
+      (r) => pointingTypes.includes(r.type) && r.status === 'verified',
+    )
+  )
+    return false
+  const cname =
+    getRecordName(domain) !== '@' && records.some((r) => r.type === 'CNAME')
+  return records.some(
+    (r) =>
+      (cname ? r.type === 'CNAME' : r.type === 'A' || r.type === 'AAAA') &&
+      r.status === 'mismatch',
+  )
+}
+
+/**
  * Domain status types
  */
 export type DomainStatus = 'verified' | 'verifying' | 'unverified' | 'created'
@@ -345,7 +376,7 @@ export function getDomainStatusBadgeConfig(status: string): {
 } {
   switch (status) {
     case 'verified':
-      return { variant: 'success', label: 'Verified' }
+      return { variant: 'success', label: 'Active' }
     case 'verifying':
       return { variant: 'processing', label: 'Generating certificate' }
     case 'created':
@@ -364,7 +395,7 @@ export function getDomainStatusBadgeConfig(status: string): {
  * failed verification once those checks stop. A verified rule shows its
  * certificate only when the developer has to act on it: the renewal failed,
  * is blocked on a DNS record, or the certificate expired. A healthy
- * certificate keeps the plain Verified badge, and so does a rule from a
+ * certificate keeps the plain Active badge, and so does a rule from a
  * server that reports no certificate state.
  */
 export function getRuleStatusBadgeConfig(
@@ -374,6 +405,9 @@ export function getRuleStatusBadgeConfig(
     certificateStatus?: string
     logs?: string
     $createdAt?: string
+    domain?: string
+    /** The stored DNS checks, see ProxyRuleRecord */
+    records?: Pick<ProxyRuleRecord, 'type' | 'status'>[]
   },
   now: Date = new Date(),
 ): {
@@ -407,6 +441,13 @@ export function getRuleStatusBadgeConfig(
   }
   // Not an error while Appwrite still checks the DNS on its own.
   if (isWaitingForDns(rule, now)) {
+    if (hasWrongDnsRecord(rule.domain ?? '', rule.records ?? [])) {
+      return {
+        variant: 'error',
+        label: 'Action needed',
+        hint: 'A DNS record has the wrong value. Open Records to see which one and what to change it to.',
+      }
+    }
     return {
       variant: 'warning',
       label: 'Waiting for DNS',
