@@ -1660,7 +1660,7 @@ class Messaging extends Action
             $critical,
             $priority,
             $channelId,
-            $mutableContent,
+            mutableContent: $mutableContent,
         );
     }
 

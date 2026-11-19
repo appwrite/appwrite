@@ -1133,8 +1133,11 @@ trait MessagingBase
             'title' => 'Match update',
             'body' => 'India needs 12 off 6',
             'data' => ['matchId' => '42'],
+            // Carried through the worker to the push, so delivery fails if the worker drops or misplaces it.
+            'mutableContent' => true,
         ]);
         $this->assertEquals(201, $push['headers']['status-code']);
+        $this->assertTrue($push['body']['data']['mutableContent']);
         $pushMessageId = $push['body']['$id'];
 
         // Test for SUCCESS: the worker fans the message into the broker and marks it sent.
