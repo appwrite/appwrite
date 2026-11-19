@@ -1,0 +1,148 @@
+---
+layout: post
+title: GPT-6.2 Astra and Sol launch with cheaper Astra pricing
+description: OpenAI launches GPT-6.2 Astra and Sol. Astra is 20% cheaper per token than GPT-6 Astra, Sol keeps GPT-6.1 Sol pricing, and both use fewer output tokens.
+date: 2026-11-19
+timeToRead: 6
+author: aishwari
+category: news
+featured: false
+unlisted: true
+cover: /images/blog/gpt-62-astra-and-sol-launch-with-cheaper-astra-pricing/cover.avif
+faqs:
+  - question: What are GPT-6.2 Astra and GPT-6.2 Sol?
+    answer: GPT-6.2 Astra is OpenAI's new frontier model for the hardest projects, and GPT-6.2 Sol is its efficient, versatile model for everyday work. OpenAI released both on November 17, 2026, and says both deliver better results on demanding tasks with fewer output tokens.
+  - question: How much do GPT-6.2 Astra and GPT-6.2 Sol cost in the API?
+    answer: "GPT-6.2 Astra costs $8 per million input tokens, $0.40 per million cached input tokens, and $40 per million output tokens. GPT-6.2 Sol costs $2 per million input tokens, $0.10 per million cached input tokens, and $10 per million output tokens, the same as GPT-6.1 Sol."
+  - question: Is GPT-6.2 Astra cheaper than GPT-6 Astra?
+    answer: Yes. GPT-6.2 Astra's input and output token prices are 20% lower than GPT-6 Astra's, and cached input is 60% cheaper. OpenAI also says it uses fewer output tokens, so the cost per task drops further. On Agents' Last Exam, it scores 5.2 points higher than GPT-6 Astra at less than a third of the cost.
+  - question: Where can I use GPT-6.2 Astra and Sol?
+    answer: Both models are available to Plus, Pro, Enterprise, and Edu users in ChatGPT Work and Codex, and to developers in the OpenAI API as gpt-6.2-astra and gpt-6.2-sol. Ultrafast is available for both models in the API and for Pro 500 subscribers, and Pro 200 subscribers get Ultrafast with GPT-6.2 Sol.
+  - question: Should I use GPT-6.2 Astra or GPT-6.2 Sol?
+    answer: Use GPT-6.2 Sol as the default for coding agents, multistep workflows, and everyday tasks, since it comes within 0.5 points of Astra on FrontierCode 2.0 at about one-fifth of the cost. Use GPT-6.2 Astra for the hardest work, such as scientific tasks, complex professional deliverables, and computer use in CAD and simulation tools.
+---
+GPT-6.2 Astra and GPT-6.2 Sol are OpenAI's newest models, released on November 17, 2026. Astra is the new frontier model for your hardest projects, and Sol is the efficient model for everyday work. OpenAI [introduced both models](https://openai.com/index/introducing-gpt-6-2-astra-sol/) with one shared pitch: better results on demanding tasks with fewer output tokens, so the same plan or API budget gets more done.
+
+For developers, the headline is cost. GPT-6.2 Astra is 20% cheaper per input and output token than GPT-6 Astra, with a 60% discount on cached input, and GPT-6.2 Sol keeps GPT-6.1 Sol's prices. In the API, you call them as `gpt-6.2-astra` and `gpt-6.2-sol`. This post covers the pricing, benchmarks, safety changes, availability, and how to pick between the two if you build agents on Appwrite.
+
+# What are GPT-6.2 Astra and GPT-6.2 Sol?
+
+**GPT-6.2 Astra is OpenAI's frontier model for complex professional work, and GPT-6.2 Sol is its go-to model for everyday work.** Both models finish demanding tasks with fewer output tokens than the models they replace.
+
+* **GPT-6.2 Astra** produces slides, spreadsheets, and documents that follow the templates you provide and the conventions of your field. It writes cleaner code, builds better-looking frontends for websites, games, and 3D design, and works with more precision in CAD and simulation tools. OpenAI says it believes Astra is the best model in the world for scientists.
+* **GPT-6.2 Sol** is smarter and more efficient than GPT-6.1 Sol, and lets you complete more tasks on the same paid plan. OpenAI says many of its own employees use Sol as their default model for both technical and non-technical work.
+
+If you want context on the previous release in this family, see our [GPT-6 Sol and Luna breakdown](/blog/post/gpt-6-sol-and-luna-launch-at-50-lower-api-prices).
+
+# GPT-6.2 Astra and Sol API pricing
+
+**GPT-6.2 Astra costs $8 per million input tokens, $0.40 per million cached input tokens, and $40 per million output tokens. GPT-6.2 Sol costs $2, $0.10, and $10.** Astra's input and output prices are 20% lower than GPT-6 Astra's, and cached input is 60% lower. Sol carries forward GPT-6.1 Sol's rates unchanged.
+
+| Model | Input | Cached input | Output | Change |
+| --- | --- | --- | --- | --- |
+| GPT-6 Astra → GPT-6.2 Astra | $10 → $8 | $1 → $0.40 | $50 → $40 | 20% cheaper, 60% cheaper cached input |
+| GPT-6.1 Sol → GPT-6.2 Sol | $2 | $0.10 | $10 | No change |
+
+Prices are per 1 million tokens at standard API rates.
+
+*Source: OpenAI's* [GPT-6.2 Astra and Sol announcement](https://openai.com/index/introducing-gpt-6-2-astra-sol/). *Full rates are on the* [OpenAI API pricing page](https://platform.openai.com/docs/pricing).
+
+The per-token price is only part of the saving. OpenAI says GPT-6.2 Astra costs significantly less **per task** than GPT-6 Astra because it also uses fewer tokens to finish the same work. On OpenAI's GDPval v2 benchmark, Astra used 22% fewer output tokens than GPT-6 Astra while scoring higher.
+
+To get the most out of the cached input discount, OpenAI recommends [keeping prompt prefixes unchanged and appending new instructions](https://developers.openai.com/api/docs/guides/preserved-reasoning) to the conversation. That improves cache reuse, lowers cost and latency, and preserves reasoning across turns.
+
+# GPT-6.2 Astra benchmarks
+
+OpenAI frames most results as score plus cost per task. These are OpenAI's reported numbers, so treat them as a starting point rather than a guarantee for your workload.
+
+| Benchmark | What it tests | GPT-6.2 Astra result |
+| --- | --- | --- |
+| Agents' Last Exam | Long-horizon, multistep professional work | New high: 5.2 points above GPT-6 Astra at less than a third of the cost, and 5.5 points above Claude Fable 5.2 at 5% of the cost |
+| Terminal-Bench-Science 0.1 | Scientific work in a terminal | New high: 9 percentage points above GPT-6 Astra at less than a third of the cost |
+| Vals Science Index | Interpreting real biological data and running experiments | New high |
+| Harvey LAB-AA v1.1 | Legal deliverables that meet every requirement | New state of the art: more than double Claude Fable 5.2's pass rate at about one-sixth of the cost |
+| GDPval v2 (internal) | Long-horizon workflows from real projects | Leads the tested models: up 6.2 points from GPT-6 Astra with 22% fewer output tokens |
+| AA-AnalystAgent | Finding and combining figures in real spreadsheets and reports | New high: 62.5% of questions correct on all five independent attempts |
+| AA-3D | Human preference between blinded interactive 3D builds | First at 1,318 Elo, ahead of Claude Fable 5.2 (1,271) and GPT-6.2 Sol (1,259) |
+
+**Note:** OpenAI says the Agents' Last Exam leaderboard results for Claude Fable 5.2 exclude nine tasks that used a fallback model.
+
+# GPT-6.2 Sol benchmarks for coding and everyday tasks
+
+GPT-6.2 Sol's results are about getting close to Astra for much less:
+
+* **FrontierCode 2.0:** Sol comes within **0.5 points** of GPT-6.2 Astra at about **one-fifth of the cost**, with both at max effort. Cognition's FrontierCode 2.0 checks whether changes to real codebases meet maintainers' standards for merging.
+* **LifeVal:** Sol outscores **GPT-6 Astra** at about **one-seventh of the cost**. LifeVal tests everyday tasks tailored to someone's needs, such as finding a home that fits a family's budget and commute.
+* **GDPval v2:** Sol improves **5.3 points** over GPT-6.1 Sol.
+
+For most coding agents, that FrontierCode result is the one to watch. A model that writes mergeable code at a fifth of the flagship's cost is a strong default for long agent loops.
+
+# Professional outputs, computer use, and code
+
+Beyond benchmarks, OpenAI highlights a few practical changes in GPT-6.2 Astra:
+
+* **Documents that follow your templates.** Astra can match a slide template's layout, colors, and typography down to the exact font size, from an original file or even a screenshot. Its writing is more direct, with fewer generic takeaways and less filler.
+* **More precise computer use.** Astra can work down to individual parts and connections in CAD and simulation tools, so engineers can check how components fit and test revisions before building a prototype.
+* **Better web and 3D design.** Astra chooses layouts and imagery that give each site a distinctive look. Both Astra and Sol can turn a written brief into an interactive browser experience.
+* **Cleaner code.** Astra is better at implementing and testing complex changes in existing codebases. Early testers reported cleaner code style and more focused tests, with fewer rounds of revision.
+* **Better tool judgment.** Astra matches its tools and effort to the workflow, including knowing when to use plugins and when to use computer use.
+
+# GPT-6.2 cybersecurity and safety changes
+
+**Both GPT-6.2 Astra and Sol meet the Critical threshold for cybersecurity under OpenAI's Preparedness Framework, like GPT-6 Astra.** They find and exploit vulnerabilities more effectively, but they also write more secure code and produce better patches. OpenAI made defensive capabilities a core focus, with new training signals to help developers prevent and repair flaws like those uncovered by [PHP2Shell](/blog/post/php2shell-appwrite-not-affected).
+
+Because of those capabilities, both models launch with tighter safeguards for higher-risk cybersecurity assistance. OpenAI notes that these protections also restrict some legitimate vulnerability research and security testing workflows. Defenders can use earlier GPT-6 models with reduced cyber refusals through [OpenAI Daybreak](https://openai.com/daybreak/), and OpenAI says it will work to bring GPT-6.2 models there.
+
+Other safety points from the announcement and the [GPT-6.2 system card](https://deploymentsafety.openai.com/gpt-6-2-astra-sol):
+
+* **Biology and chemistry:** Both models meet the High threshold for biological and chemical capabilities, with protections and added restrictions on dual-use requests.
+* **AI self-improvement:** GPT-6.2 Astra is OpenAI's first externally released model to meet the High threshold for AI self-improvement, which measures a model's ability to accelerate AI research.
+* **Oversight:** OpenAI built [Control Room](https://openai.com/index/control-room/), a system that tracks research workloads and can halt further model output when intervention is needed.
+* **Alignment:** Both models performed similarly to GPT-6 Astra on most alignment evaluations and took fewer improper actions in simulated workplace tasks. In two tests, though, they were more likely to omit obstacles that blocked their work, such as a missing file. OpenAI added instructions in Codex that substantially reduce these omissions and is still investigating.
+
+That last point matters if you run agents unattended. Make your agent report missing files, failed tool calls, and skipped steps explicitly, and check those reports before trusting a result.
+
+# Where GPT-6.2 Astra and Sol are available
+
+GPT-6.2 Astra and Sol are available to all Plus, Pro, Enterprise, and Edu users in ChatGPT Work and Codex, and to developers in the OpenAI API.
+
+| Surface | GPT-6.2 Astra | GPT-6.2 Sol |
+| --- | --- | --- |
+| ChatGPT Work and Codex (Plus, Pro, Enterprise, Edu) | Yes | Yes |
+| Ultrafast for Pro 500 subscribers | Yes | Yes |
+| Ultrafast for Pro 200 subscribers | No | Yes |
+| OpenAI API | `gpt-6.2-astra`, with Ultrafast | `gpt-6.2-sol`, with Ultrafast |
+
+This is the first time Pro 200 subscribers get Ultrafast, starting with GPT-6.2 Sol. Eligible Enterprise and Edu users get the same Ultrafast access once their workspace admin enables it.
+
+# Should you use GPT-6.2 Astra or GPT-6.2 Sol?
+
+**Use GPT-6.2 Sol as the default for coding agents and everyday work, and switch to GPT-6.2 Astra when the task needs the best possible result.** Sol lands within half a point of Astra on FrontierCode 2.0 at about a fifth of the cost, so defaulting everything to Astra is hard to justify.
+
+* **Choose GPT-6.2 Astra** for scientific work, complex professional deliverables like legal work, financial models, and slide decks built from templates, and precise computer use in CAD and simulation tools.
+* **Choose GPT-6.2 Sol** for coding agents, multistep agentic workflows, writing, and high-volume tasks where cost matters.
+* **Mix both in one workflow.** Let Astra plan and handle the hardest step, then hand well-scoped implementation work to Sol.
+* **Keep prompt prefixes stable.** The 60% cheaper cached input on Astra pays off most when your system prompt and tool definitions stay the same across turns.
+
+Run your own evaluation on a representative slice of real traffic before moving production workloads. Vendor benchmarks tell you where to start, not where you'll end up.
+
+# Build GPT-6.2 agents on Appwrite
+
+Cheaper Astra tokens and an efficient Sol make it more realistic to run agents in production. Those agents still need a backend to authenticate users, store state, keep files between steps, and run server-side logic.
+
+[Appwrite](/) is an open source backend that covers all of it in one project: [Auth](/docs/products/auth), [Databases](/docs/products/databases), [Storage](/docs/products/storage), [Functions](/docs/products/functions), [Messaging](/docs/products/messaging), and [Sites](/docs/products/sites) for deploying the frontend next to them. Run it on managed Cloud or self-host it. To call GPT-6.2 Sol or Astra from server-side code, see [AI in Appwrite Functions](/docs/tooling/ai/ai-in-functions).
+
+If you build with Codex, the [Appwrite plugin for Codex](/blog/post/appwrite-codex-plugin-hosted-mcp) bundles the hosted [Appwrite MCP server](/docs/tooling/ai/mcp-servers) and [Appwrite Skills](/docs/tooling/ai/skills). Install it, sign in with OAuth, and your GPT-6.2 agent writes real SDK calls against a backend that already exists instead of guessing at one.
+
+[Create a free Appwrite project](https://cloud.appwrite.io/), install the plugin, and ask Codex running GPT-6.2 Sol to build an authentication flow and database schema against it.
+
+# Resources
+
+* [OpenAI's GPT-6.2 Astra and Sol announcement](https://openai.com/index/introducing-gpt-6-2-astra-sol/)
+* [GPT-6.2 system card](https://deploymentsafety.openai.com/gpt-6-2-astra-sol)
+* [GPT-6 Sol and Luna breakdown](/blog/post/gpt-6-sol-and-luna-launch-at-50-lower-api-prices)
+* [Appwrite plugin for Codex](/blog/post/appwrite-codex-plugin-hosted-mcp)
+* [Codex integration docs](/docs/tooling/ai/agents/codex)
+* [AI in Appwrite Functions](/docs/tooling/ai/ai-in-functions)
+* [Create a free Appwrite project](https://cloud.appwrite.io/)
+* [Join the Appwrite Discord](/discord)
