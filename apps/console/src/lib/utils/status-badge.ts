@@ -376,7 +376,7 @@ export function getDomainStatusBadgeConfig(status: string): {
 } {
   switch (status) {
     case 'verified':
-      return { variant: 'success', label: 'Verified' }
+      return { variant: 'success', label: 'Active' }
     case 'verifying':
       return { variant: 'processing', label: 'Generating certificate' }
     case 'created':
@@ -395,7 +395,7 @@ export function getDomainStatusBadgeConfig(status: string): {
  * failed verification once those checks stop. A verified rule shows its
  * certificate only when the developer has to act on it: the renewal failed,
  * is blocked on a DNS record, or the certificate expired. A healthy
- * certificate keeps the plain Verified badge, and so does a rule from a
+ * certificate keeps the plain Active badge, and so does a rule from a
  * server that reports no certificate state.
  */
 export function getRuleStatusBadgeConfig(

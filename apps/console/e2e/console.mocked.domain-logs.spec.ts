@@ -214,9 +214,9 @@ async function expectDomainLogs(page: Page) {
   const owned = row(DOMAINS.owned)
   const pending = row(DOMAINS.pending)
 
-  await expect(warning).toContainText('Verified', { timeout: 30_000 })
-  await expect(healthy).toContainText('Verified')
-  await expect(owned).toContainText('Verified')
+  await expect(warning).toContainText('Active', { timeout: 30_000 })
+  await expect(healthy).toContainText('Active')
+  await expect(owned).toContainText('Active')
   await expect(pending).toContainText('Generating certificate')
 
   // Only a rule that is not verified links its logs inline
