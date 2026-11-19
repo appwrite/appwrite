@@ -1216,7 +1216,6 @@ export const heVideosDictionary: Record<string, string> = {
     'רק חברי הפרויקט ומפתחות API יכולים לצפות בו. מבקרים יקבלו שגיאה בדף הנגן ובהטמעות.',
   'Video is now public': 'הסרטון ציבורי עכשיו',
   'Video is now private': 'הסרטון פרטי עכשיו',
-  'Make public': 'הפיכה לציבורי',
   'Visitors get an error here. You can watch because you are a project member.':
     'מבקרים יקבלו כאן שגיאה. אתם יכולים לצפות כי אתם חברי הפרויקט.',
   'Open access settings': 'פתיחת הגדרות הגישה',

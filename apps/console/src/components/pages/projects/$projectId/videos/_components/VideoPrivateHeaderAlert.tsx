@@ -1,20 +1,12 @@
 import type { Models } from '@appwrite.io/console'
 import { Link } from '@tanstack/react-router'
-import { Loader2, Lock } from 'lucide-react'
-import { toast } from 'sonner'
+import { Lock } from 'lucide-react'
 import {
   HeaderAlertBar,
-  headerAlertGhostButtonClass,
   headerAlertOutlineButtonClass,
 } from '@/components/global/shared/HeaderAlertBar'
-import { useUpdateVideoPermissions } from '@/lib/react-query/hooks'
-import {
-  hasSignedInReaders,
-  isVideoPublic,
-  withPublicPlayback,
-} from '@/lib/videos/public-playback'
+import { hasSignedInReaders, isVideoPublic } from '@/lib/videos/public-playback'
 import { useT } from '@/lib/i18n/translate'
-import { getErrorMessage } from '@/lib/utils/error-formatting'
 
 /**
  * Warns on every video tab that visitors cannot play this video, since the
@@ -31,15 +23,7 @@ export function VideoPrivateHeaderAlert({
   linkToSettings?: boolean
 }) {
   const t = useT()
-  const mutation = useUpdateVideoPermissions(projectId, video)
   if (isVideoPublic(video)) return null
-
-  const makePublic = () =>
-    mutation.mutate(withPublicPlayback(video.$permissions, true), {
-      onSuccess: () => toast.success(t('Video is now public')),
-      onError: (error) =>
-        toast.error(getErrorMessage(error) || t('Failed to update video')),
-    })
 
   return (
     <HeaderAlertBar
@@ -47,29 +31,16 @@ export function VideoPrivateHeaderAlert({
       icon={Lock}
       className="min-h-12 shrink-0 py-2.5"
       action={
-        <div className="flex w-full gap-2 sm:w-auto">
-          {linkToSettings ? (
-            <Link
-              to="/projects/$projectId/videos/$videoId/settings"
-              params={{ projectId, videoId: video.$id }}
-              hash="access"
-              className={headerAlertGhostButtonClass('warning')}
-            >
-              {t('Permissions')}
-            </Link>
-          ) : null}
-          <button
-            type="button"
-            onClick={makePublic}
-            disabled={mutation.isPending}
+        linkToSettings ? (
+          <Link
+            to="/projects/$projectId/videos/$videoId/settings"
+            params={{ projectId, videoId: video.$id }}
+            hash="access"
             className={headerAlertOutlineButtonClass('warning')}
           >
-            {mutation.isPending ? (
-              <Loader2 className="size-3.5 animate-spin" aria-hidden />
-            ) : null}
-            {t('Make public')}
-          </button>
-        </div>
+            {t('Permissions')}
+          </Link>
+        ) : undefined
       }
     >
       <p className="min-w-0 leading-snug" data-video-private>

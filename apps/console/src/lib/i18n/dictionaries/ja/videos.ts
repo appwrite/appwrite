@@ -1247,7 +1247,6 @@ export const jaVideosDictionary: Record<string, string> = {
     'プロジェクトメンバーと API キーだけが視聴できます。訪問者にはプレーヤーページと埋め込みでエラーが表示されます。',
   'Video is now public': '動画を公開しました',
   'Video is now private': '動画を非公開にしました',
-  'Make public': '公開する',
   'Visitors get an error here. You can watch because you are a project member.':
     '訪問者にはここでエラーが表示されます。あなたはプロジェクトメンバーなので視聴できます。',
   'Open access settings': 'アクセス設定を開く',

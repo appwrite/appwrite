@@ -715,11 +715,9 @@ test.describe('videos (mocked API)', () => {
     })
   }
 
-  test('warns that a video is private and makes it public', async ({
-    page,
-  }) => {
+  test('warns that a video is private', async ({ page }) => {
     await enableVideos(page)
-    const calls = await mockAppwriteApi(page)
+    await mockAppwriteApi(page)
     const warning = page.getByText('This video is private', { exact: true })
 
     await open(page, `/${VIDEO_ID}`, () => warning)
@@ -728,13 +726,10 @@ test.describe('videos (mocked API)', () => {
         exact: false,
       }),
     ).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Make public' })).toHaveCount(
+      0,
+    )
     await screenshot(page, 'videos-private-warning.png')
-    await page.getByRole('button', { name: 'Make public' }).click()
-
-    await expect(warning).toHaveCount(0)
-    expect(calls.videoUpdates).toEqual([
-      { name: VIDEO.name, permissions: ['read("any")'] },
-    ])
   })
 
   test('opens the video permissions from the private warning', async ({
