@@ -252,9 +252,7 @@ class Screenshots extends Action
             // Nothing references a screenshot the deployment did not take, and a retry captures new ones.
             $this->deleteScreenshots($dbForPlatform, $deviceForFiles, $bucket, $files);
 
-            // Best-effort: a permanent failure, or the last attempt (NATS only), is acknowledged, not dead-lettered.
-            $unroutable = $th instanceof ScreenshotsException && \str_contains($th->getMessage(), 'is not publicly routable');
-            if ($th instanceof PermanentFailure || $unroutable || $message->isLastAttempt()) {
+            if ($this->isAbandoned($th, $message)) {
                 $this->abandon($project, $deployment->getId(), $th->getMessage());
 
                 return;
@@ -264,6 +262,20 @@ class Screenshots extends Action
         }
 
         $this->recordTelemetry($counter, 'success');
+    }
+
+    /**
+     * Best-effort: a permanent failure, or the last attempt (NATS only), is acknowledged, not dead-lettered.
+     */
+    protected function isAbandoned(\Throwable $error, Message $message): bool
+    {
+        return $this->isPermanent($error) || $message->isLastAttempt();
+    }
+
+    private function isPermanent(\Throwable $error): bool
+    {
+        return $error instanceof PermanentFailure
+            || ($error instanceof ScreenshotsException && $error->isPermanent());
     }
 
     /**
@@ -380,49 +392,46 @@ class Screenshots extends Action
     }
 
     /**
-     * Capture light and dark previews. In the Swoole worker both themes are
-     * requested together so a job stays within one HTTP timeout budget; outside
-     * a coroutine (unit tests) they run sequentially.
-     *
      * @param array<string, string> $headers
      * @return array<string, string> Keys `screenshotLight` and `screenshotDark`
      */
     protected function captureThemes(Client $screenshots, Histogram $duration, string $url, array $headers, int $sleep): array
     {
         $themes = ['screenshotLight' => 'light', 'screenshotDark' => 'dark'];
-
-        if (Coroutine::getCid() === -1) {
-            $captures = [];
-            foreach ($themes as $key => $theme) {
-                $captures[$key] = $this->capture($screenshots, $duration, $url, $theme, $headers, $sleep);
-            }
-
-            return $captures;
-        }
-
-        $channel = new Channel(\count($themes));
         $captures = [];
         $errors = [];
 
-        foreach ($themes as $key => $theme) {
-            \go(function () use ($key, $theme, $screenshots, $duration, $url, $headers, $sleep, $channel, &$captures, &$errors) {
+        if (Coroutine::getCid() === -1) {
+            foreach ($themes as $key => $theme) {
                 try {
                     $captures[$key] = $this->capture($screenshots, $duration, $url, $theme, $headers, $sleep);
                 } catch (\Throwable $throwable) {
                     $errors[$key] = $throwable;
-                } finally {
-                    $channel->push(true);
                 }
-            });
-        }
+            }
+        } else {
+            $channel = new Channel(\count($themes));
 
-        for ($i = 0, $count = \count($themes); $i < $count; $i++) {
-            $channel->pop();
+            foreach ($themes as $key => $theme) {
+                \go(function () use ($key, $theme, $screenshots, $duration, $url, $headers, $sleep, $channel, &$captures, &$errors) {
+                    try {
+                        $captures[$key] = $this->capture($screenshots, $duration, $url, $theme, $headers, $sleep);
+                    } catch (\Throwable $throwable) {
+                        $errors[$key] = $throwable;
+                    } finally {
+                        $channel->push(true);
+                    }
+                });
+            }
+
+            for ($i = 0, $count = \count($themes); $i < $count; $i++) {
+                $channel->pop();
+            }
+            $channel->close();
         }
-        $channel->close();
 
         if ($errors !== []) {
-            throw \reset($errors);
+            throw \array_find($errors, $this->isPermanent(...)) ?? \reset($errors);
         }
 
         return $captures;
