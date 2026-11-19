@@ -594,6 +594,7 @@ class Get extends Base
         $wasVerified = $newUser === null && $user->getAttribute('emailVerification', false);
 
         $backfilled = empty($user->getAttribute('email')) && !empty($providerEmail);
+        $backfillEmail = null;
         if ($backfilled) {
             $emailMetadata = [
                 'emailCanonical' => null,
@@ -672,28 +673,8 @@ class Get extends Base
             $user->setAttribute('emailIsDisposable', $emailMetadata['emailIsDisposable']);
             $user->setAttribute('emailIsFree', $emailMetadata['emailIsFree']);
 
-            try {
-                $dbForProject->createDocument('targets', new Document([
-                    '$permissions' => [
-                        Permission::read(Role::user($user->getId())),
-                        Permission::update(Role::user($user->getId())),
-                        Permission::delete(Role::user($user->getId())),
-                    ],
-                    'userId' => $user->getId(),
-                    'userInternalId' => $user->getSequence(),
-                    'providerType' => MESSAGE_TYPE_EMAIL,
-                    'identifier' => $email,
-                ]));
-            } catch (Duplicate) {
-                // The identifier unique index spans all users. Persisting the email while another
-                // user owns the target would leave this user unreachable by email messaging.
-                $existingTarget = $authorization->skip(fn () => $dbForProject->findOne('targets', [
-                    Query::equal('identifier', [$email]),
-                ]));
-                if ($existingTarget->isEmpty() || $existingTarget->getAttribute('userInternalId') !== $user->getSequence()) {
-                    $failureRedirect(Exception::USER_ALREADY_EXISTS);
-                }
-            }
+            // Its email target is reserved with the rest of the sign-in, once the account is locked and unchanged
+            $backfillEmail = $email;
         }
 
         // Only what this request changed: its copy predates any claim or password change that landed since
@@ -798,11 +779,13 @@ class Get extends Base
         $linked = null;
         $replaced = null;
         $created = null;
+        $target = null;
         try {
-            $created = $dbForProject->withTransaction(function () use ($dbForProject, $failureRedirect, $snapshot, $grounds, $user, $provider, $oauth2ID, $providerEmail, $credentials, $changes, $state, $current, &$token, &$session, &$conflict, &$linked, &$replaced) {
+            $created = $dbForProject->withTransaction(function () use ($dbForProject, $failureRedirect, $snapshot, $grounds, $user, $provider, $oauth2ID, $providerEmail, $credentials, $changes, $state, $current, $backfillEmail, &$token, &$session, &$conflict, &$linked, &$replaced, &$target) {
                 $conflict = null; // A retried attempt starts over
                 $linked = null;
                 $replaced = null;
+                $target = null;
 
                 if (!User::lockUnchanged($dbForProject, $snapshot, $grounds)) {
                     $failureRedirect(Exception::GENERAL_BAD_REQUEST);
@@ -812,6 +795,10 @@ class Get extends Base
 
                 if ($conflict !== null) {
                     return;
+                }
+
+                if ($backfillEmail !== null) {
+                    $target = User::reserveEmailTarget($dbForProject, $user, $backfillEmail);
                 }
 
                 $dbForProject->updateDocument('users', $user->getId(), new Document($changes));
@@ -837,9 +824,11 @@ class Get extends Base
                 return $dbForProject->createDocument('sessions', $session);
             });
         } catch (Duplicate) {
-            // The (provider, providerUid) unique index guards the same identity being connected to two users
+            // The (provider, providerUid) unique index guards the same identity being connected to two users, and
+            // the identifier index the same address being a target of two
             $conflict = Exception::USER_ALREADY_EXISTS;
             $replaced = null; // Rolled back with the rest
+            $target = null;
         }
 
         // The link's email check could not see another user's link that had not committed, so it is made again now
@@ -848,8 +837,9 @@ class Get extends Base
             $collection = $state['token'] ? 'tokens' : 'sessions';
             // Undo under the user row lock, so it is ordered against a claim: a claim that got here first deleted
             // the replacement along with every other session, and the caller's old one must not come back after it
-            $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $user, $collection, $created, $restore) {
-                $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+            $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $snapshot, $changes, $target, $collection, $created, $restore) {
+                // Locks the user, and puts back what the sign-in changed on the account and the address it reserved
+                User::revertSignIn($dbForProject, $snapshot, $changes, $target);
 
                 if (!$dbForProject->deleteDocument($collection, $created->getId())) {
                     return;

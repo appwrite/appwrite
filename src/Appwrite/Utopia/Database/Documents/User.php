@@ -13,6 +13,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Roles;
@@ -419,6 +420,80 @@ class User extends Document
         }
 
         return true;
+    }
+
+    /**
+     * Reserve the email target for an address a sign-in fills in on an account that had none. Call it inside the
+     * transaction that persists the sign-in, after lockUnchanged(), so a sign-in that is refused writes no target
+     * and the address stays free. Returns the target it created, or null when the account already holds one.
+     *
+     * @throws Duplicate when another user holds a target for the address
+     */
+    public static function reserveEmailTarget(Database $dbForProject, Document $user, string $email): ?Document
+    {
+        // The identifier unique index spans all users. Persisting the email while another
+        // user owns the target would leave this user unreachable by email messaging.
+        $existing = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->findOne('targets', [
+            Query::equal('identifier', [$email]),
+        ]));
+
+        if (!$existing->isEmpty()) {
+            if ($existing->getAttribute('userInternalId') !== $user->getSequence()) {
+                throw new Duplicate('The address is already a target of another user');
+            }
+
+            return null;
+        }
+
+        return $dbForProject->createDocument('targets', new Document([
+            '$permissions' => [
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
+            ],
+            'userId' => $user->getId(),
+            'userInternalId' => $user->getSequence(),
+            'providerType' => MESSAGE_TYPE_EMAIL,
+            'identifier' => $email,
+        ]));
+    }
+
+    /**
+     * Undo what a committed sign-in wrote to the account when its identity link is refused afterwards by
+     * confirmIdentity(): each attribute it changed goes back to the value in `$snapshot`, the account as the
+     * request read it, unless something else has changed it since, and the email target it reserved is released.
+     * Takes the user row lock; call it inside a transaction.
+     *
+     * @param array<string, mixed> $changes The attributes the sign-in wrote to the account
+     */
+    public static function revertSignIn(Database $dbForProject, Document $snapshot, array $changes, ?Document $target): void
+    {
+        $authorization = $dbForProject->getAuthorization();
+        $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $snapshot->getId(), forUpdate: true));
+
+        if ($locked->isEmpty()) {
+            return;
+        }
+
+        $revert = [];
+        foreach ($changes as $key => $value) {
+            $before = $snapshot->getAttribute($key);
+            if ($before !== $value && $locked->getAttribute($key) === $value) {
+                $revert[$key] = $before;
+            }
+        }
+
+        if ($revert !== []) {
+            $authorization->skip(fn () => $dbForProject->updateDocument('users', $locked->getId(), new Document($revert)));
+        }
+
+        if ($target !== null) {
+            $authorization->skip(function () use ($dbForProject, $target) {
+                if (!$dbForProject->getDocument('targets', $target->getId())->isEmpty()) {
+                    $dbForProject->deleteDocument('targets', $target->getId());
+                }
+            });
+        }
     }
 
     /**

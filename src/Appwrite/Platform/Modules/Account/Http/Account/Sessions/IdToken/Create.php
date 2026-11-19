@@ -263,9 +263,7 @@ class Create extends Base
         $wasVerified = $newUser === null && $user->getAttribute('emailVerification', false);
 
         $backfilled = empty($user->getAttribute('email')) && !empty($providerEmail);
-        if ($backfilled) {
-            $this->backfillEmail($user, $providerEmail, $isVerified, $dbForProject, $project, $plan, $authorization);
-        }
+        $backfillEmail = $backfilled ? $this->backfillEmail($user, $providerEmail, $isVerified, $dbForProject, $project, $plan) : null;
 
         // Mirrors the browser OAuth2 flow, which turns the provider's `expires_in`
         // into an absolute timestamp. Unknown expiry stays null rather than
@@ -354,10 +352,12 @@ class Create extends Base
         // since the request read the account fails it, and one that comes later revokes what it wrote
         $conflict = null;
         $linked = null;
+        $target = null;
         try {
-            $session = $dbForProject->withTransaction(function () use ($dbForProject, $snapshot, $grounds, $user, $provider, $sub, $providerEmail, $accessToken, $accessTokenExpiresAt, $idToken, $photo, $refreshed, $changes, $session, &$conflict, &$linked) {
+            $session = $dbForProject->withTransaction(function () use ($dbForProject, $snapshot, $grounds, $user, $provider, $sub, $providerEmail, $accessToken, $accessTokenExpiresAt, $idToken, $photo, $refreshed, $changes, $session, $backfillEmail, &$conflict, &$linked, &$target) {
                 $conflict = null; // A retried attempt starts over
                 $linked = null;
+                $target = null;
 
                 if (!User::lockUnchanged($dbForProject, $snapshot, $grounds)) {
                     throw new Exception(Exception::GENERAL_BAD_REQUEST);
@@ -375,6 +375,10 @@ class Create extends Base
                     return;
                 }
 
+                if ($backfillEmail !== null) {
+                    $target = User::reserveEmailTarget($dbForProject, $user, $backfillEmail);
+                }
+
                 $dbForProject->updateDocument('users', $user->getId(), new Document($changes));
 
                 return $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
@@ -384,13 +388,18 @@ class Create extends Base
                 ]));
             });
         } catch (Duplicate) {
-            // The (provider, providerUid) unique index guards the same identity being connected to two users
+            // The (provider, providerUid) unique index guards the same identity being connected to two users, and
+            // the identifier index the same address being a target of two
             $conflict = Exception::USER_ALREADY_EXISTS;
         }
 
         // The link's email check could not see another user's link that had not committed, so it is made again now
         if ($conflict === null && $linked !== null && !User::confirmIdentity($dbForProject, $linked)) {
-            $authorization->skip(fn () => $dbForProject->deleteDocument('sessions', $session->getId()));
+            // Under the user row lock: put back what the sign-in changed on the account and the address it reserved
+            $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $snapshot, $changes, $target, $session) {
+                User::revertSignIn($dbForProject, $snapshot, $changes, $target);
+                $dbForProject->deleteDocument('sessions', $session->getId());
+            }));
             $conflict = Exception::GENERAL_BAD_REQUEST;
         }
 
@@ -492,9 +501,10 @@ class Create extends Base
     /**
      * Attach the provider email to a user created without one (e.g. an
      * anonymous account being linked). Never downgrades an already-verified
-     * user. Mutates `$user` in place; persisted by the caller.
+     * user. Mutates `$user` in place and returns the address; the caller persists it and reserves its email
+     * target with the rest of the sign-in, under the user row lock.
      */
-    private function backfillEmail(User $user, string $providerEmail, bool $isVerified, Database $dbForProject, Document $project, array $plan, Authorization $authorization): void
+    private function backfillEmail(User $user, string $providerEmail, bool $isVerified, Database $dbForProject, Document $project, array $plan): string
     {
         [$email, $emails, $emailMetadata, $canonicalize] = $this->parseEmail($providerEmail, $isVerified, $project, $plan);
 
@@ -517,27 +527,6 @@ class Create extends Base
         $user->setAttribute('emailIsDisposable', $emailMetadata['emailIsDisposable']);
         $user->setAttribute('emailIsFree', $emailMetadata['emailIsFree']);
 
-        try {
-            $dbForProject->createDocument('targets', new Document([
-                '$permissions' => [
-                    Permission::read(Role::user($user->getId())),
-                    Permission::update(Role::user($user->getId())),
-                    Permission::delete(Role::user($user->getId())),
-                ],
-                'userId' => $user->getId(),
-                'userInternalId' => $user->getSequence(),
-                'providerType' => MESSAGE_TYPE_EMAIL,
-                'identifier' => $email,
-            ]));
-        } catch (Duplicate) {
-            // The identifier unique index spans all users. Persisting the email while another
-            // user owns the target would leave this user unreachable by email messaging.
-            $existingTarget = $authorization->skip(fn () => $dbForProject->findOne('targets', [
-                Query::equal('identifier', [$email]),
-            ]));
-            if ($existingTarget->isEmpty() || $existingTarget->getAttribute('userInternalId') !== $user->getSequence()) {
-                throw new Exception(Exception::USER_ALREADY_EXISTS);
-            }
-        }
+        return $email;
     }
 }

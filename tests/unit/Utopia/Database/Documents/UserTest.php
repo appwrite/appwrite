@@ -19,6 +19,7 @@ use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Id;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
@@ -926,6 +927,115 @@ final class UserTest extends TestCase
         $this->assertFalse($database->withTransaction(fn () => User::lockUnchanged($database, $snapshot, ['sessions' => 'registrant-session'])));
     }
 
+    public function testASignInRefusedUnderTheLockLeavesTheAddressFree(): void
+    {
+        $database = $this->createProjectDatabase();
+        $anonymous = $this->createAnonymous($database);
+        $snapshot = new Document($anonymous->getArrayCopy());
+
+        // The session the request resolved the account through is gone before the sign-in takes the lock
+        $database->deleteDocument('sessions', 'anonymous-session');
+
+        $database->withTransaction(function () use ($database, $snapshot, $anonymous) {
+            if (!User::lockUnchanged($database, $snapshot, ['sessions' => 'anonymous-session'])) {
+                return;
+            }
+
+            User::reserveEmailTarget($database, $anonymous, 'linked@example.com');
+        });
+
+        $this->assertTrue($database->findOne('targets', [Query::equal('identifier', ['linked@example.com'])])->isEmpty());
+    }
+
+    public function testReserveEmailTargetReservesAFreeAddressOnce(): void
+    {
+        $database = $this->createProjectDatabase();
+        $anonymous = $this->createAnonymous($database);
+
+        $target = User::reserveEmailTarget($database, $anonymous, 'linked@example.com');
+
+        $this->assertNotNull($target);
+        $this->assertSame($anonymous->getSequence(), $target->getAttribute('userInternalId'));
+        $this->assertSame(MESSAGE_TYPE_EMAIL, $target->getAttribute('providerType'));
+
+        // The account already holds it
+        $this->assertNull(User::reserveEmailTarget($database, $anonymous, 'linked@example.com'));
+        $this->assertCount(1, $database->find('targets', [Query::equal('identifier', ['linked@example.com'])]));
+    }
+
+    public function testReserveEmailTargetRollsBackASignInWhoseAddressAnotherUserHolds(): void
+    {
+        $database = $this->createProjectDatabase();
+        $registrant = $this->createRegistrant($database);
+        $database->createDocument('targets', new Document([
+            'userId' => $registrant->getId(),
+            'userInternalId' => $registrant->getSequence(),
+            'providerType' => MESSAGE_TYPE_EMAIL,
+            'identifier' => 'registrant@example.com',
+        ]));
+        $anonymous = $this->createAnonymous($database);
+
+        try {
+            $database->withTransaction(function () use ($database, $anonymous) {
+                $database->updateDocument('users', $anonymous->getId(), new Document(['email' => 'registrant@example.com']));
+                User::reserveEmailTarget($database, $anonymous, 'registrant@example.com');
+            });
+            $this->fail('An address another user holds was reserved.');
+        } catch (Duplicate) {
+        }
+
+        $this->assertEmpty($database->getDocument('users', $anonymous->getId())->getAttribute('email'));
+        $this->assertSame(['registrant'], \array_map(
+            fn (Document $target) => $target->getAttribute('userId'),
+            $database->find('targets', [Query::equal('identifier', ['registrant@example.com'])]),
+        ));
+    }
+
+    public function testRevertSignInRestoresTheProfileAndReleasesTheAddress(): void
+    {
+        $database = $this->createProjectDatabase();
+        $anonymous = $this->createAnonymous($database);
+        $snapshot = new Document($anonymous->getArrayCopy());
+
+        // A sign-in backfilled the provider's address, verified, then had its identity link refused after the commit
+        $changes = ['status' => true, 'name' => 'Linked', 'email' => 'linked@example.com', 'emailVerification' => true];
+        $target = $database->withTransaction(function () use ($database, $anonymous, $changes) {
+            $target = User::reserveEmailTarget($database, $anonymous, 'linked@example.com');
+            $database->updateDocument('users', $anonymous->getId(), new Document($changes));
+
+            return $target;
+        });
+
+        $database->withTransaction(fn () => User::revertSignIn($database, $snapshot, $changes, $target));
+
+        $reverted = $database->getDocument('users', $anonymous->getId());
+        $this->assertEmpty($reverted->getAttribute('email'));
+        $this->assertFalse($reverted->getAttribute('emailVerification'));
+        $this->assertEmpty($reverted->getAttribute('name'));
+        $this->assertTrue($reverted->getAttribute('status'));
+        $this->assertTrue($database->findOne('targets', [Query::equal('identifier', ['linked@example.com'])])->isEmpty());
+    }
+
+    public function testRevertSignInKeepsWhatChangedSince(): void
+    {
+        $database = $this->createProjectDatabase();
+        $anonymous = $this->createAnonymous($database);
+        $snapshot = new Document($anonymous->getArrayCopy());
+
+        $changes = ['name' => 'Linked', 'email' => 'linked@example.com', 'emailVerification' => true];
+        $database->updateDocument('users', $anonymous->getId(), new Document($changes));
+
+        // The owner renamed the account between the sign-in's commit and its undo
+        $database->updateDocument('users', $anonymous->getId(), new Document(['name' => 'Renamed']));
+
+        $database->withTransaction(fn () => User::revertSignIn($database, $snapshot, $changes, null));
+
+        $reverted = $database->getDocument('users', $anonymous->getId());
+        $this->assertSame('Renamed', $reverted->getAttribute('name'));
+        $this->assertEmpty($reverted->getAttribute('email'));
+        $this->assertFalse($reverted->getAttribute('emailVerification'));
+    }
+
     private function createProjectDatabase(): Database
     {
         $authorization = new Authorization();
@@ -981,6 +1091,30 @@ final class UserTest extends TestCase
             'userInternalId' => $user->getSequence(),
             'type' => TOKEN_TYPE_RECOVERY,
             'secret' => 'registrant-token-secret',
+            'expire' => DateTime::addSeconds(new \DateTime(), 60 * 60),
+        ]));
+
+        return new User($database->getDocument('users', $user->getId())->getArrayCopy());
+    }
+
+    /**
+     * An anonymous account with no email or name, holding a session.
+     */
+    private function createAnonymous(Database $database): User
+    {
+        $user = $database->createDocument('users', new Document([
+            '$id' => Id::custom('anonymous'),
+            'emailVerification' => false,
+            'status' => true,
+        ]));
+
+        $database->createDocument('sessions', new Document([
+            '$id' => Id::custom('anonymous-session'),
+            'userId' => $user->getId(),
+            'userInternalId' => $user->getSequence(),
+            'provider' => SESSION_PROVIDER_ANONYMOUS,
+            'providerUid' => '',
+            'secret' => 'anonymous-secret',
             'expire' => DateTime::addSeconds(new \DateTime(), 60 * 60),
         ]));
 
