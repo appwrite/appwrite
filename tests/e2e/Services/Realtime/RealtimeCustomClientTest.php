@@ -6,6 +6,7 @@ namespace Tests\E2E\Services\Realtime;
 
 use CURLFile;
 use Exception;
+use PHPUnit\Framework\Attributes\Group;
 use Swoole\Coroutine;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -8060,5 +8061,49 @@ final class RealtimeCustomClientTest extends Scope
         }
 
         $client->close();
+    }
+
+    #[Group('pubsubOutage')]
+    public function testEventsResumeAfterPubSubDrop(): void
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ];
+
+        $client = $this->getWebsocket(['account'], $headers);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+
+        $redis = new \Redis();
+        $redis->connect(System::getEnv('_APP_REDIS_HOST', 'redis'), (int) System::getEnv('_APP_REDIS_PORT', '6379'));
+        $subscribers = $redis->pubsub('numsub', ['realtime'])['realtime'] ?? 0;
+        $this->assertGreaterThan(0, $subscribers, 'realtime workers must be subscribed before the drop');
+
+        $this->assertGreaterThan(0, $redis->rawCommand('CLIENT', 'KILL', 'TYPE', 'pubsub'), 'the drop must disconnect the subscribers');
+
+        // Every worker must resubscribe well within the old ~7 second back-off.
+        $this->assertEventually(function () use ($redis, $subscribers): void {
+            $this->assertSame($subscribers, $redis->pubsub('numsub', ['realtime'])['realtime'] ?? 0);
+        }, 3_000, 100);
+
+        $name = 'Pub/sub ' . \uniqid();
+        $update = $this->client->call(Client::METHOD_PATCH, '/account/name', \array_merge($headers, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'name' => $name,
+        ]);
+        $this->assertSame(200, $update['headers']['status-code']);
+
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('event', $response['type']);
+        $this->assertSame($name, $response['data']['payload']['name']);
+
+        $client->close();
+        $redis->close();
     }
 }
