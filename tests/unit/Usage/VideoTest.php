@@ -18,9 +18,10 @@ final class VideoTest extends TestCase
      * Publishes one settled rendition and returns the metric key => value map
      * from the single message that reached the queue.
      *
+     * @param array{memory?: int, cpus?: int|float} $specification
      * @return array<string, int>
      */
-    private function publish(string $status, int $storageBytes = 0, int $computeMs = 0): array
+    private function publish(string $status, int $storageBytes = 0, int $computeMs = 0, array $specification = []): array
     {
         $publisher = new CapturingPublisher();
 
@@ -31,7 +32,8 @@ final class VideoTest extends TestCase
             new Document(['$id' => 'project', '$sequence' => 1, 'database' => 'db']),
             new UsagePublisher($publisher, new Queue('v1-usage')),
             $storageBytes,
-            $computeMs
+            $computeMs,
+            $specification
         );
 
         $this->assertCount(1, $publisher->published);
@@ -96,5 +98,38 @@ final class VideoTest extends TestCase
 
         $this->assertSame(0, $metrics[METRIC_VIDEOS_STORAGE] ?? null);
         $this->assertSame(0, $metrics[METRIC_RENDITIONS_COMPUTE] ?? null);
+        $this->assertSame(0, $metrics[METRIC_RENDITIONS_MB_SECONDS] ?? null);
+    }
+
+    public function testMbSecondsMultipliesMemoryDurationAndCpus(): void
+    {
+        $metrics = $this->publish('ready', 0, 1500, ['memory' => 4096, 'cpus' => 4]);
+
+        $this->assertSame(24576, $metrics[METRIC_RENDITIONS_MB_SECONDS] ?? null);
+        $this->assertSame(1500, $metrics[METRIC_RENDITIONS_COMPUTE] ?? null);
+    }
+
+    public function testMbSecondsKeepsFractionalCpus(): void
+    {
+        $metrics = $this->publish('ready', 0, 2000, ['memory' => 512, 'cpus' => 0.5]);
+
+        $this->assertSame(512, $metrics[METRIC_RENDITIONS_MB_SECONDS] ?? null);
+    }
+
+    public function testFailedEncodeStillBillsMbSeconds(): void
+    {
+        $metrics = $this->publish('error', 0, 1000, ['memory' => 4096, 'cpus' => 4]);
+
+        $this->assertSame(16384, $metrics[METRIC_RENDITIONS_MB_SECONDS] ?? null);
+    }
+
+    public function testMbSecondsDefaultsWithoutSpecification(): void
+    {
+        $metrics = $this->publish('ready', 0, 1000);
+
+        $this->assertSame(
+            (int) (APP_COMPUTE_MEMORY_DEFAULT * APP_COMPUTE_CPUS_DEFAULT),
+            $metrics[METRIC_RENDITIONS_MB_SECONDS] ?? null
+        );
     }
 }

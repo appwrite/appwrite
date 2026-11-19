@@ -25,8 +25,12 @@ final class Video
      * size, so a retry or a deletion replaces the total instead of stacking
      * bytes.
      *
+     * `renditions.mbSeconds` multiplies the encode duration by the worker's
+     * specification memory and CPUs, the same product as `executions.mbSeconds`.
+     *
      * @param int $storageBytes total bytes written to the videos device for this rendition
      * @param int $computeMs    wall-clock encode duration in milliseconds
+     * @param array{memory?: int, cpus?: int|float} $specification encode size from app/config/specifications.php
      */
     public static function publish(
         Context $usage,
@@ -36,7 +40,11 @@ final class Video
         UsagePublisher $publisherForUsage,
         int $storageBytes = 0,
         int $computeMs = 0,
+        array $specification = [],
     ): void {
+        $computeMs = \max(0, $computeMs);
+        $mbSeconds = (int) (($specification['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * ($computeMs / 1000) * ($specification['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT));
+
         $usage
             ->setResource('video')
             ->setResourceInternalId((string) $video->getSequence());
@@ -53,7 +61,8 @@ final class Video
         $usage
             ->addMetric(METRIC_RENDITIONS, 1)
             ->addMetric(METRIC_VIDEOS_STORAGE, \max(0, $storageBytes))
-            ->addMetric(METRIC_RENDITIONS_COMPUTE, \max(0, $computeMs));
+            ->addMetric(METRIC_RENDITIONS_COMPUTE, $computeMs)
+            ->addMetric(METRIC_RENDITIONS_MB_SECONDS, $mbSeconds);
 
         if (!$usage->isEmpty()) {
             $publisherForUsage->enqueue(new UsageMessage(
