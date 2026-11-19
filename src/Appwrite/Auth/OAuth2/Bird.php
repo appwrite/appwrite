@@ -9,7 +9,7 @@ use Utopia\Psr7\Request\Factory as RequestFactory;
 // Reference Material
 // https://bird.com/auth.md
 // https://platform.bird.com/.well-known/oauth-authorization-server
-// https://bird.com/docs/cli/reference/whoami
+// https://bird.com/docs/api/reference/get-current-workspace
 
 class Bird extends OAuth2
 {
@@ -26,7 +26,7 @@ class Bird extends OAuth2
     /**
      * @var array
      */
-    protected array $user = [];
+    protected array $workspace = [];
 
     /**
      * @var array
@@ -34,9 +34,9 @@ class Bird extends OAuth2
     protected array $tokens = [];
 
     /**
-     * Bird has no identity scope: any grant can read the signed-in user.
-     * `workspace:read` is the narrowest read-only scope, so the grant is valid
-     * even when no custom scopes are requested.
+     * `workspace:read` names the workspace the grant is for, which is the
+     * identity (see getUserID()). It is also Bird's narrowest read-only
+     * scope, so the grant is valid even when no custom scopes are requested.
      *
      * @var array
      */
@@ -126,31 +126,37 @@ class Bird extends OAuth2
     }
 
     /**
+     * A Bird grant authorizes an integration in one workspace, not a person:
+     * the consent screen says so, `/v1/auth/me` refuses integration tokens,
+     * and the token response names the workspace instead of a user. The
+     * workspace is therefore the identity, so within a project one Appwrite
+     * user can link a given Bird workspace.
+     *
      * @param string $accessToken
      *
      * @return string
      */
     public function getUserID(string $accessToken): string
     {
-        $user = $this->getUser($accessToken);
-
-        return $user['id'] ?? '';
+        return (string) ($this->tokens['workspace_id'] ?? $this->getWorkspace($accessToken)['id'] ?? '');
     }
 
     /**
+     * Integrations have no email address.
+     *
      * @param string $accessToken
      *
      * @return string
      */
     public function getUserEmail(string $accessToken): string
     {
-        $user = $this->getUser($accessToken);
-
-        return $user['email'] ?? '';
+        return '';
     }
 
     /**
      * Check if the OAuth email is verified
+     *
+     * Integrations have no email, so there is nothing to verify.
      *
      * @param string $accessToken
      *
@@ -158,51 +164,45 @@ class Bird extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {
-        $user = $this->getUser($accessToken);
-
-        return !empty($user['email_verified_at']);
+        return false;
     }
 
     /**
+     * The workspace name, such as "Production".
+     *
      * @param string $accessToken
      *
      * @return string
      */
     public function getUserName(string $accessToken): string
     {
-        $user = $this->getUser($accessToken);
-
-        return $user['full_name'] ?? '';
+        return (string) ($this->getWorkspace($accessToken)['name'] ?? '');
     }
 
     /**
-     * @param string $accessToken
+     * The workspace the grant is for. Empty when it cannot be read, for
+     * example when the user cleared `workspace:read` on the consent screen:
+     * the name is a nicety and must not fail the sign-in.
      *
-     * @return string
-     */
-    public function getUserPhoto(string $accessToken): string
-    {
-        $user = $this->getUser($accessToken);
-
-        return $user['avatar_url'] ?? '';
-    }
-
-    /**
      * @param string $accessToken
      *
      * @return array
      */
-    protected function getUser(string $accessToken): array
+    protected function getWorkspace(string $accessToken): array
     {
-        if (empty($this->user)) {
-            $this->user = \json_decode($this->request(
-                'GET',
-                $this->endpoint . 'auth/me',
-                ['Authorization: Bearer ' . \urlencode($accessToken)]
-            ), true) ?? [];
+        if (empty($this->workspace)) {
+            try {
+                $this->workspace = \json_decode($this->request(
+                    'GET',
+                    $this->endpoint . 'workspace',
+                    ['Authorization: Bearer ' . $accessToken]
+                ), true) ?? [];
+            } catch (Exception) {
+                $this->workspace = [];
+            }
         }
 
-        return $this->user;
+        return $this->workspace;
     }
 
     /**

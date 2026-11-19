@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Tests\Unit\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2\Bird;
-use PHPUnit\Framework\Attributes\DataProvider;
+use Appwrite\Auth\OAuth2\Exception;
 use PHPUnit\Framework\TestCase;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 
 final class BirdTest extends TestCase
 {
+    private const TOKEN_URL = 'https://platform.bird.com/v1/oauth/token';
+    private const WORKSPACE_URL = 'https://platform.bird.com/v1/workspace';
+
     protected function setUp(): void
     {
         // The PKCE verifier is encrypted before it is placed in the state.
@@ -41,23 +44,22 @@ final class BirdTest extends TestCase
 
     public function testTokenRequestSendsClientCredentials(): void
     {
-        $bird = new FakeBird(['access_token' => 'bt_us1_access-token']);
+        $bird = new FakeBird([self::TOKEN_URL => ['access_token' => 'bt_us1_access-token']]);
 
         $this->assertSame('bt_us1_access-token', $bird->getAccessToken('authorization-code'));
 
-        \parse_str($bird->payload, $params);
-        $this->assertSame('https://platform.bird.com/v1/oauth/token', $bird->url);
+        \parse_str($bird->payloads[self::TOKEN_URL], $params);
         $this->assertSame('client-id', $params['client_id'] ?? null);
         $this->assertSame('client-secret', $params['client_secret'] ?? null);
     }
 
     public function testRefreshKeepsTheRotatedToken(): void
     {
-        $bird = new FakeBird(['access_token' => 'bt_us1_new-access', 'refresh_token' => 'rotated-refresh']);
+        $bird = new FakeBird([self::TOKEN_URL => ['access_token' => 'bt_us1_new-access', 'refresh_token' => 'rotated-refresh']]);
 
         $tokens = $bird->refreshTokens('consumed-refresh');
 
-        \parse_str($bird->payload, $params);
+        \parse_str($bird->payloads[self::TOKEN_URL], $params);
         $this->assertSame('refresh_token', $params['grant_type'] ?? null);
         $this->assertSame('consumed-refresh', $params['refresh_token'] ?? null);
         $this->assertSame('client-secret', $params['client_secret'] ?? null);
@@ -68,76 +70,78 @@ final class BirdTest extends TestCase
 
     public function testRefreshKeepsTheCurrentTokenWhenNoneIsReturned(): void
     {
-        $bird = new FakeBird(['access_token' => 'bt_us1_new-access']);
+        $bird = new FakeBird([self::TOKEN_URL => ['access_token' => 'bt_us1_new-access']]);
 
         $tokens = $bird->refreshTokens('current-refresh');
 
         $this->assertSame('current-refresh', $tokens['refresh_token']);
     }
 
-    public function testUserIsReadFromAuthMe(): void
+    public function testIdentityIsTheWorkspaceTheGrantIsFor(): void
     {
         $bird = new FakeBird([
-            'id' => 'usr_01krdgeqcxet5s7t44vh8rt9mg',
-            'email' => 'aisha@example.com',
-            'full_name' => 'Aisha Khan',
-            'avatar_url' => 'https://example.com/avatar.png',
-            'email_verified_at' => '2026-01-01T00:00:00Z',
+            self::TOKEN_URL => [
+                'access_token' => 'bt_eu1_access-token',
+                'workspace_id' => 'ws_01m782jkzsegy9m4bsh89p4y6w',
+                'organization_id' => 'org_01m782jkzkek08388sm52ssmjm',
+                'region' => 'eu1',
+            ],
+            self::WORKSPACE_URL => ['id' => 'ws_01m782jkzsegy9m4bsh89p4y6w', 'name' => 'Production'],
         ]);
 
-        $this->assertSame('usr_01krdgeqcxet5s7t44vh8rt9mg', $bird->getUserID('bt_us1_access-token'));
-        $this->assertSame('aisha@example.com', $bird->getUserEmail('bt_us1_access-token'));
-        $this->assertSame('Aisha Khan', $bird->getUserName('bt_us1_access-token'));
-        $this->assertSame('https://example.com/avatar.png', $bird->getUserPhoto('bt_us1_access-token'));
-        $this->assertTrue($bird->isEmailVerified('bt_us1_access-token'));
-        $this->assertSame('https://platform.bird.com/v1/auth/me', $bird->url);
-        $this->assertSame(['Authorization: Bearer bt_us1_access-token'], $bird->headers);
+        $accessToken = $bird->getAccessToken('authorization-code');
+
+        $this->assertSame('ws_01m782jkzsegy9m4bsh89p4y6w', $bird->getUserID($accessToken));
+        $this->assertSame('Production', $bird->getUserName($accessToken));
+        $this->assertSame('', $bird->getUserEmail($accessToken));
+        $this->assertFalse($bird->isEmailVerified($accessToken));
+        $this->assertSame(['Authorization: Bearer bt_eu1_access-token'], $bird->headers[self::WORKSPACE_URL]);
     }
 
-    /**
-     * @return \Iterator<string, array{array<string, mixed>}>
-     */
-    public static function unverifiedUsers(): \Iterator
+    public function testIdentityFallsBackToTheWorkspaceEndpoint(): void
     {
-        yield 'never verified' => [['id' => 'usr_1', 'email' => 'aisha@example.com', 'email_verified_at' => null]];
-        yield 'field omitted' => [['id' => 'usr_1', 'email' => 'aisha@example.com']];
+        $bird = new FakeBird([self::WORKSPACE_URL => ['id' => 'ws_01m782jkzsegy9m4bsh89p4y6w', 'name' => 'Production']]);
+
+        $this->assertSame('ws_01m782jkzsegy9m4bsh89p4y6w', $bird->getUserID('bt_eu1_access-token'));
     }
 
-    /**
-     * @param array<string, mixed> $user
-     */
-    #[DataProvider('unverifiedUsers')]
-    public function testEmailIsUnverifiedWithoutVerificationTime(array $user): void
+    public function testAnUnreadableWorkspaceLeavesTheNameEmpty(): void
     {
-        $bird = new FakeBird($user);
+        // The user cleared workspace:read on the consent screen.
+        $bird = new FakeBird([self::TOKEN_URL => ['access_token' => 'bt_eu1_access-token', 'workspace_id' => 'ws_01m782jkzsegy9m4bsh89p4y6w']]);
 
-        $this->assertFalse($bird->isEmailVerified('bt_us1_access-token'));
+        $accessToken = $bird->getAccessToken('authorization-code');
+
+        $this->assertSame('', $bird->getUserName($accessToken));
+        $this->assertSame('ws_01m782jkzsegy9m4bsh89p4y6w', $bird->getUserID($accessToken));
     }
 }
 
 final class FakeBird extends Bird
 {
-    public string $url = '';
-
-    /** @var array<string> */
+    /** @var array<string, array<string>> */
     public array $headers = [];
 
-    public string $payload = '';
+    /** @var array<string, string> */
+    public array $payloads = [];
 
     /**
-     * @param array<string, mixed> $response
+     * @param array<string, array<string, mixed>> $responses JSON body per URL; any other URL answers 403
      */
-    public function __construct(private readonly array $response)
+    public function __construct(private readonly array $responses)
     {
         parent::__construct(new Client(new CurlAdapter()), 'client-id', 'client-secret', 'https://example.com/callback');
     }
 
     protected function request(string $method, string $url = '', array $headers = [], string $payload = ''): string
     {
-        $this->url = $url;
-        $this->headers = $headers;
-        $this->payload = $payload;
+        $this->headers[$url] = $headers;
+        $this->payloads[$url] = $payload;
 
-        return \json_encode($this->response, JSON_THROW_ON_ERROR);
+        if (!isset($this->responses[$url])) {
+            throw new Exception('{"error":{"type":"permission_error","message":"You do not have permission to perform this action."}}', 403);
+        }
+
+        return \json_encode($this->responses[$url], JSON_THROW_ON_ERROR);
     }
 }
