@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Utopia\Validator\Tests;
 
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Validator\HexColor;
 
+#[RequiresPhpExtension('utopia')]
 final class HexColorTest extends TestCase
 {
     public function testCanValidateHexColor(): void

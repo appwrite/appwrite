@@ -1,6 +1,5 @@
 //! The network leaf validators of `packages/validators`: `Hostname`, `Domain`, `Host`, `IP`,
-//! `URL` and `Phone`, over [`utopia_validators`], behind `validators-network` (and
-//! `validators`, whose base they extend).
+//! `URL` and `Phone`, over [`utopia_validators`], extending the base.
 //!
 //! Built by hand like the scalar and text batches: each PHP constructor's state lives in real
 //! typed protected properties, declared as `packages/validators` declares them, and every
@@ -798,7 +797,7 @@ extern "C" fn phone_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
 }
 
 /// Registers the batch's classes, each extending `Utopia\Validator\Validator`. Called from
-/// the module's startup (MINIT), with `validators-network` on.
+/// the module's startup (MINIT), after the base.
 pub fn register() -> ext_php_rs::error::Result<()> {
     let base = (super::base_class as fn() -> &'static ClassEntry, super::BASE);
     build("Utopia\\Validator\\Hostname", base, HOSTNAME_METHODS, hostname_register)?;

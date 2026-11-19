@@ -1,7 +1,6 @@
 //! `Utopia\Validator\Validator`, the abstract base of every validator: its type constants
-//! and the four methods a validator implements. It holds nothing, so a PHP subclass (each
-//! validator in `packages/validators` still in PHP, Appwrite's and utopia-php/database's)
-//! extends it as it would extend `Exception`, and works the same on either implementation.
+//! and the four methods a validator implements. It holds nothing, so a PHP subclass (Appwrite's
+//! and utopia-php/database's validators) extends it as it would extend `Exception`.
 //! The leaf validators are in [`scalar`], [`text`] and [`network`]; the validators that compose
 //! others, the JSON ones and `Globstar` are in [`compose`].
 //!
