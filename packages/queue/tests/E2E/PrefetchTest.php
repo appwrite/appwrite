@@ -8,16 +8,125 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\NATS\Connection as NatsConnection;
 use Utopia\NATS\ConnectionOptions;
+use Utopia\NATS\Exception\ConnectionException;
+use Utopia\NATS\Exception\ProtocolException;
 use Utopia\NATS\Transport\SwooleTransport;
 use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Broker\Nats;
 use Utopia\Queue\Broker\Redis;
 use Utopia\Queue\Connection\Locking;
 use Utopia\Queue\Connection\Redis as RedisConnection;
+use Utopia\Queue\Message;
 use Utopia\Queue\Queue;
 
 final class PrefetchTest extends TestCase
 {
+    public function testStreamingPullProgressesThroughBrokerBackpressure(): void
+    {
+        $received = $attempts = [];
+        $remaining = null;
+        \Swoole\Coroutine\run(static function () use (&$received, &$attempts, &$remaining): void {
+            $broker = new Nats(fn (): NatsConnection => NatsConnection::connect(new ConnectionOptions(
+                servers: 'nats://127.0.0.1:14225',
+                transportFactory: fn (): SwooleTransport => new SwooleTransport(),
+            )), ackWait: 0.2, maxAckPending: 2);
+            $queue = new Queue('streaming_' . bin2hex(random_bytes(6)));
+            $broker->publishMany($queue, array_map(static fn (int $id): array => ['id' => $id], range(1, 5)));
+
+            // The broker cannot deliver this whole pull before earlier messages are acked.
+            $broker->receiveEach($queue, 1, 5, static function (Message $message) use ($broker, $queue, &$received, &$attempts): void {
+                $received[] = $message->getPayload()['id'];
+                $attempts[] = $message->getAttempts();
+                $broker->commit($queue, $message);
+            });
+
+            $remaining = $broker->getQueueSize($queue);
+            $broker->close();
+        });
+        $this->assertSame(range(1, 5), $received);
+        $this->assertSame(array_fill(0, 5, 0), $attempts);
+        $this->assertSame(0, $remaining);
+    }
+
+    public function testSharedConnectionCallbackCanAcknowledge(): void
+    {
+        $received = [];
+        $remaining = null;
+        \Swoole\Coroutine\run(static function () use (&$received, &$remaining): void {
+            $broker = new Nats(NatsConnection::connect(new ConnectionOptions(
+                servers: 'nats://127.0.0.1:14225',
+                transportFactory: fn (): SwooleTransport => new SwooleTransport(),
+            )));
+            $queue = new Queue('shared_' . bin2hex(random_bytes(6)));
+            try {
+                $broker->publishMany($queue, [['id' => 1], ['id' => 2]]);
+                $broker->receiveEach($queue, 1, 2, static function (Message $message) use ($broker, $queue, &$received): void {
+                    $broker->commit($queue, $message);
+                    $received[] = $message->getPayload()['id'];
+                });
+                $remaining = $broker->getQueueSize($queue);
+            } finally {
+                $broker->close();
+            }
+        });
+        $this->assertSame([1, 2], $received);
+        $this->assertSame(0, $remaining);
+    }
+
+    /** @return \Iterator<string, array{bool, class-string<\RuntimeException>}> */
+    public static function callbackFailures(): \Iterator
+    {
+        foreach ([false, true] as $factory) {
+            foreach ([ConnectionException::class, ProtocolException::class, \RuntimeException::class] as $exception) {
+                yield ($factory ? 'factory ' : 'shared ') . $exception => [$factory, $exception];
+            }
+        }
+    }
+
+    /** @param class-string<\RuntimeException> $exception */
+    #[DataProvider('callbackFailures')]
+    public function testCallbackFailurePropagates(bool $factory, string $exception): void
+    {
+        $failure = new $exception('callback failed');
+        $caught = $next = null;
+        $calls = 0;
+        \Swoole\Coroutine\run(static function () use ($factory, $failure, &$caught, &$next, &$calls): void {
+            $connect = fn (): NatsConnection => NatsConnection::connect(new ConnectionOptions(
+                servers: 'nats://127.0.0.1:14225',
+                transportFactory: fn (): SwooleTransport => new SwooleTransport(),
+            ));
+            $broker = new Nats($factory ? $connect : $connect());
+            $queue = new Queue('callback_' . bin2hex(random_bytes(6)));
+            $received = null;
+            try {
+                $broker->publish($queue, ['id' => 1]);
+                try {
+                    $broker->receiveEach($queue, 1, 1, static function (Message $message) use ($failure, &$received, &$calls): never {
+                        $received = $message;
+                        $calls++;
+                        throw $failure;
+                    });
+                } catch (\Throwable $error) {
+                    $caught = $error;
+                }
+                if ($received !== null) {
+                    $broker->commit($queue, $received);
+                }
+                // Failure must release the receive lock and leave the connection usable.
+                $broker->publish($queue, ['id' => 2]);
+                foreach ($broker->receive($queue, 1) as $message) {
+                    $next = $message->getPayload()['id'];
+                    $broker->commit($queue, $message);
+                }
+            } finally {
+                $broker->close();
+            }
+        });
+        $this->assertSame($failure, $caught);
+        $this->assertSame(1, $calls);
+        $this->assertSame(2, $next);
+    }
+
     public static function brokers(): \Iterator
     {
         yield ['redis'];
