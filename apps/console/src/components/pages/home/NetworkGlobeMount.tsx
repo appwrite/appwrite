@@ -43,7 +43,9 @@ function NetworkGlobeLegend({ className }: { className?: string }) {
             style={{ backgroundColor: NETWORK_SEGMENT_CSS_VARS[segment] }}
             aria-hidden
           />
-          <span className="text-foreground">{t(NETWORK_SEGMENT_LABELS[segment])}</span>
+          <span className="text-foreground">
+            {t(NETWORK_SEGMENT_LABELS[segment])}
+          </span>
         </span>
       ))}
     </div>
@@ -75,23 +77,26 @@ export function NetworkGlobeMount({ className }: { className?: string }) {
 
     let cancelled = false
     let idleId: number | undefined
-    let timeoutId: number | undefined
 
     const prefetchGlobe = () => {
       if (cancelled) return
       void loadNetworkGlobe()
     }
 
-    if ('requestIdleCallback' in window) {
-      idleId = window.requestIdleCallback(prefetchGlobe, { timeout: 2000 })
-    } else {
-      timeoutId = window.setTimeout(prefetchGlobe, 400)
-    }
+    // Not while the page above is still starting (the home hero's factory
+    // builds then): fetching the globe also runs its setup code.
+    const timeoutId = window.setTimeout(() => {
+      if ('requestIdleCallback' in window) {
+        idleId = window.requestIdleCallback(prefetchGlobe, { timeout: 2000 })
+      } else {
+        prefetchGlobe()
+      }
+    }, 3000)
 
     return () => {
       cancelled = true
       if (idleId !== undefined) window.cancelIdleCallback(idleId)
-      if (timeoutId !== undefined) window.clearTimeout(timeoutId)
+      window.clearTimeout(timeoutId)
     }
   }, [mounted])
 
@@ -109,7 +114,10 @@ export function NetworkGlobeMount({ className }: { className?: string }) {
   return (
     <div ref={containerRef} className={className}>
       <div className={GLOBE_FRAME_CLASSNAME}>
-        <div className="absolute inset-x-0 top-0 aspect-square w-full" aria-hidden>
+        <div
+          className="absolute inset-x-0 top-0 aspect-square w-full"
+          aria-hidden
+        >
           <div className={GLOBE_BACKDROP_CLASSNAME} />
         </div>
 

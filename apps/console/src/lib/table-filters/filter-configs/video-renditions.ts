@@ -18,7 +18,6 @@ const RENDITION_STATUS_ELEMENTS = [
   { value: 'pending', label: 'Pending' },
   { value: 'started', label: 'Started' },
   { value: 'ended', label: 'Ended' },
-  { value: 'uploading', label: 'Uploading' },
   { value: 'ready', label: 'Ready' },
   { value: 'error', label: 'Failed' },
   { value: 'aborted', label: 'Aborted' },

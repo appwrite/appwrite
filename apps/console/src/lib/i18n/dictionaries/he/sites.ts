@@ -665,4 +665,8 @@ export const heSitesDictionary: Record<string, string> = {
     'בשלב הבא Appwrite יפיק את תעודת ה-SSL.',
   'Not detected yet': 'עדיין אין רשומה',
   'Not detected': 'אין רשומה',
+  'Tracked pageviews and events are billed as analytics usage, which adds up quickly on a high-traffic site.':
+    'צפיות בדפים ואירועים שנמדדים מחויבים כשימוש באנליטיקה, והעלות מצטברת מהר באתר עם תנועה גבוהה.',
+  'If your site sets a Content-Security-Policy, in a header or a <meta> tag, add these sources. Otherwise the browser blocks the tracker and no data is recorded.':
+    'אם האתר שלכם מגדיר Content-Security-Policy, בכותרת או בתגית <meta>, הוסיפו את המקורות האלה. אחרת הדפדפן חוסם את סקריפט המעקב ולא נאספים נתונים.',
 }

@@ -17,6 +17,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "announcing-git-automation",
+    "href": "/blog/post/announcing-git-automation",
+    "title": "Announcing Git automation: Choose what every push does",
+    "description": "Git automation for Appwrite Sites and Functions gives you separate switches for deploying on push, pull request build summaries, and reporting commit statuses.",
+    "date": "2026-11-18",
+    "lastUpdated": "2026-11-18",
+    "timeToRead": 6,
+    "author": "harsh-mahajan",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-git-automation/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-account-switching",
     "href": "/blog/post/announcing-account-switching",
     "title": "Announcing account switching: one browser, many accounts",

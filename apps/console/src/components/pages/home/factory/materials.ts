@@ -59,6 +59,8 @@ export function createFloorMaterial(shadow: Texture) {
           ),
         },
         uOcclusion: { value: 0.5 },
+        // How far the racks have rolled in, so their painted shadow comes with them.
+        uRacks: { value: 1 },
         uPool: { value: 0 },
         uPoolShape: { value: new Vector4(1, -0.2, 0.07, 0.26) },
         uReflection: { value: null },
@@ -83,6 +85,7 @@ export function createFloorMaterial(shadow: Texture) {
       uniform sampler2D uShadow;
       uniform vec4 uShadowBounds;
       uniform float uOcclusion;
+      uniform float uRacks;
       uniform float uPool;
       uniform vec4 uPoolShape;
       uniform sampler2D uReflection;
@@ -100,10 +103,14 @@ export function createFloorMaterial(shadow: Texture) {
         color += vec3(uPool) * exp(-dot(pool, pool));
 
         vec2 suv = (p - uShadowBounds.xy) / (uShadowBounds.zw - uShadowBounds.xy);
-        float shade = texture2D(uShadow, vec2(suv.x, 1.0 - suv.y)).r;
+        // The bed's shadow (red), and the racks' (green) as far as they have arrived.
+        vec2 shadows = texture2D(uShadow, vec2(suv.x, 1.0 - suv.y)).rg;
+        float shade = shadows.r + shadows.g * uRacks;
         color *= 1.0 - shade * uOcclusion;
 
         #ifdef USE_REFLECTION
+        // Skipped outright once the engine has faded the reflection out.
+        if (uReflectivity > 0.0) {
           // The mirrored camera sees every floor point at the same height and the opposite side.
           vec2 uv = gl_FragCoord.xy / uResolution;
           uv.x = 1.0 - uv.x;
@@ -123,6 +130,7 @@ export function createFloorMaterial(shadow: Texture) {
             + textureLod(uReflection, uv + vec2(-texel.x, texel.y), lod)) * 0.0625;
           float gloss = uReflectivity * exp(-away * 0.8);
           color = color * (1.0 - mirror.a * gloss) + mirror.rgb * gloss;
+        }
         #endif
 
         gl_FragColor = vec4(color, 1.0);
@@ -141,6 +149,10 @@ export type ScreenUniforms = {
   uCells: { value: Vector4[] }
   uStride: { value: number[] }
   uShape: { value: Vector4[] }
+  /** Per kind, a black cutout over the screen (center and half size, in glass depths); none when the size is zero. */
+  uCutout: { value: Vector4[] }
+  /** Per kind, 1 for a light bezel, 0 for a black one. */
+  uBezelTone: { value: number[] }
   uGlass: { value: Color }
   uBezel: { value: Color }
   uBrightness: { value: number }
@@ -171,6 +183,8 @@ export function createScreenMaterial() {
     uShape: {
       value: PRODUCT_KINDS.map(() => new Vector4(1, 0.05, 0.03, 0.03)),
     },
+    uCutout: { value: PRODUCT_KINDS.map(() => new Vector4()) },
+    uBezelTone: { value: PRODUCT_KINDS.map(() => 0) },
     uGlass: { value: new Color() },
     uBezel: { value: new Color() },
     uBrightness: { value: 1 },
@@ -193,6 +207,7 @@ export function createScreenMaterial() {
       varying vec4 vScreen;
       varying vec4 vFx;
       varying vec3 vWorld;
+      varying vec3 vFacing;
       void main() {
         vUv = uv;
         vScreen = aScreen;
@@ -200,10 +215,14 @@ export function createScreenMaterial() {
         #include <begin_vertex>
         #include <project_vertex>
         vec4 world = vec4(transformed, 1.0);
+        // The glass faces up unless the product holds it otherwise (an open lid, a front panel).
+        vec3 facing = vec3(0.0, 1.0, 0.0);
         #ifdef USE_INSTANCING
           world = instanceMatrix * world;
+          facing = mat3(instanceMatrix) * facing;
         #endif
         vWorld = (modelMatrix * world).xyz;
+        vFacing = normalize(mat3(modelMatrix) * facing);
         #include <fog_vertex>
       }
     `,
@@ -212,6 +231,8 @@ export function createScreenMaterial() {
       uniform vec4 uCells[${PRODUCT_KINDS.length}];
       uniform float uStride[${PRODUCT_KINDS.length}];
       uniform vec4 uShape[${PRODUCT_KINDS.length}];
+      uniform vec4 uCutout[${PRODUCT_KINDS.length}];
+      uniform float uBezelTone[${PRODUCT_KINDS.length}];
       uniform vec3 uGlass;
       uniform vec3 uBezel;
       uniform float uBrightness;
@@ -225,6 +246,7 @@ export function createScreenMaterial() {
       varying vec4 vScreen;
       varying vec4 vFx;
       varying vec3 vWorld;
+      varying vec3 vFacing;
       #include <common>
       #include <fog_pars_fragment>
 
@@ -301,7 +323,7 @@ export function createScreenMaterial() {
         color *= 1.0 + vFx.x;
 
         // Level bar: one segment fills at every station the app has been through.
-        if (stage > 1.5) {
+        if (stage > 1.5 && kind != ${PRODUCT_KINDS.indexOf('mini')}) {
           float inset = kind == ${PRODUCT_KINDS.indexOf('watch')} ? 0.22 : 0.08;
           vec2 low = vec2(inset, 0.035);
           vec2 high = vec2(1.0 - inset, 0.085);
@@ -317,12 +339,21 @@ export function createScreenMaterial() {
           }
         }
 
+        // The panel's own black cutout: the phone's island, the laptop's notch.
+        vec4 cutout = uCutout[kind];
+        if (cutout.z > 0.0) {
+          float hole = roundedBox(p - cutout.xy, cutout.zw, cutout.w);
+          float holeEdge = max(fwidth(hole), 0.0015);
+          color = mix(vec3(0.0), color, smoothstep(-holeEdge, holeEdge, hole));
+        }
+
         // The bezel is a pixel or two wide on screen: blend it over the pixel footprint.
         float edge = max(fwidth(inner), 0.0015);
-        color = mix(color, uBezel, smoothstep(-edge, edge, inner));
+        vec3 bezel = mix(uBezel, vec3(0.62), uBezelTone[kind]);
+        color = mix(color, bezel, smoothstep(-edge, edge, inner));
 
         // The studio's back softbox, mirrored in the cover glass.
-        vec3 bounce = reflect(normalize(vWorld - cameraPosition), vec3(0.0, 1.0, 0.0));
+        vec3 bounce = reflect(normalize(vWorld - cameraPosition), normalize(vFacing));
         float softbox = smoothstep(0.24, 0.44, bounce.y) * (1.0 - smoothstep(0.52, 0.74, bounce.y));
         color += vec3(uSheen) * softbox;
 

@@ -3,12 +3,12 @@
     <head>
         <meta charset="utf-8">
         <link rel="preconnect" href="https://assets.appwrite.io/" crossorigin>
-        <meta name="color-scheme" content="light dark">
-        <meta name="supported-color-schemes" content="light dark">
+        <meta name="color-scheme" content="light">
+        <meta name="supported-color-schemes" content="light">
         <style type="text/css">
             :root {
-                color-scheme: light dark;
-                supported-color-schemes: light dark;
+                color-scheme: light;
+                supported-color-schemes: light;
             }
         </style>
         <style>
@@ -29,10 +29,6 @@
             }
         </style>
         <style>
-            body {
-                margin: 0;
-                background-color: #ffffff;
-            }
             @media (max-width:500px) {
                 .mobile-full-width {
                     width: 100%;
@@ -141,40 +137,6 @@
                 padding-top: 32px;
                 border-top: 1px solid #e8e9f0;
             }
-            .dark-only {
-                display: none;
-                mso-hide: all;
-            }
-            @media (prefers-color-scheme: dark) {
-                body, .main {
-                    background-color: #19191c !important;
-                    color: #adadb0 !important;
-                }
-                h1 {
-                    color: #ededf0 !important;
-                }
-                h2, h3 {
-                    color: #d8d8db !important;
-                }
-                h4 {
-                    color: #c3c3c6 !important;
-                }
-                hr, .divider, p.security-phrase:not(:empty) {
-                    border-color: #2d2d31 !important;
-                }
-                .light-only {
-                    display: none !important;
-                }
-                .dark-only {
-                    display: block !important;
-                }
-            }
-            [data-ogsc] .light-only {
-                display: none !important;
-            }
-            [data-ogsc] .dark-only {
-                display: block !important;
-            }
         </style>
     </head>
 
@@ -189,20 +151,11 @@
                 <tr>
                     <td>
                         <img
-                            class="light-only"
                             height="26"
                             src="{{logoUrl}}"
                             alt="{{platform}} logo"
                             style="display: block; border: 0"
                         />
-                        <div class="dark-only" style="display: none; mso-hide: all">
-                            <img
-                                height="26"
-                                src="{{logoDarkUrl}}"
-                                alt="{{platform}} logo"
-                                style="border: 0"
-                            />
-                        </div>
                     </td>
                 </tr>
             </table>
@@ -224,7 +177,6 @@
             </table>
 
             <table
-                class="divider"
                 style="
                     padding-top: 32px;
                     margin-top: 32px;

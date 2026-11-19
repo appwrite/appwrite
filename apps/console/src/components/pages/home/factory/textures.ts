@@ -161,6 +161,11 @@ export type ShadowShape = {
   depth: number
   blur: number
   strength: number
+  /**
+   * Whose shadow it is: the bed's, there from the start (red), or the
+   * racks', which arrives with them (green; see the floor's `uRacks`).
+   */
+  layer: 'bed' | 'racks'
 }
 
 export const SHADOW_BOUNDS = {
@@ -187,7 +192,10 @@ export function createShadowTexture(shapes: ShadowShape[]): CanvasTexture {
   const toX = (x: number) => (x - SHADOW_BOUNDS.minX) * SHADOW_PX_PER_UNIT
   const toY = (z: number) => (z - SHADOW_BOUNDS.minZ) * SHADOW_PX_PER_UNIT
   for (const shape of shapes) {
-    context.shadowColor = `rgba(255,255,255,${shape.strength})`
+    context.shadowColor =
+      shape.layer === 'bed'
+        ? `rgba(255,0,0,${shape.strength})`
+        : `rgba(0,255,0,${shape.strength})`
     context.shadowBlur = shape.blur * SHADOW_PX_PER_UNIT
     context.shadowOffsetX = offset
     context.fillStyle = '#fff'
@@ -240,7 +248,7 @@ function loadImage(src: string): Promise<HTMLImageElement | null> {
 }
 
 /** The page's brand font stack (Inter for languages Aeonik does not cover). */
-function brandFontStack(): string {
+export function brandFontStack(): string {
   const value = getComputedStyle(document.documentElement)
     .getPropertyValue('--font-aeonik-pro')
     .trim()
@@ -504,7 +512,7 @@ export function createDescriptionAtlas(
       light(-width * 0.08, '253, 54, 110', 0.34)
       light(width * 1.08, '124, 103, 254', 0.3)
 
-      const pad = width * 0.085
+      const pad = Math.min(width * 0.085, height * 0.17)
       const startX = rtl ? width - pad : pad
       const measure = width - pad * 2
       context.direction = rtl ? 'rtl' : 'ltr'
@@ -537,16 +545,16 @@ export function createDescriptionAtlas(
 
       // Headline: what the product does, in the brand face, with the pink underscore.
       const description = descriptions[index] ?? ''
-      let size = Math.round(height * 0.118)
+      let size = Math.round(height * 0.13)
       let lines: string[] = []
       for (; size >= 28; size -= 2) {
         context.font = `400 ${size}px ${fonts}`
-        lines = wrap(context, description, measure * 0.9)
+        lines = wrap(context, description, measure)
         if (lines.length <= 3) break
       }
       // Balance the lines: the narrowest measure that keeps the same line count.
       let narrow = measure * 0.4
-      let wide = measure * 0.9
+      let wide = measure
       while (wide - narrow > 2) {
         const middle = (narrow + wide) / 2
         if (wrap(context, description, middle).length > lines.length)
@@ -622,8 +630,10 @@ type Brand = Pick<ScreenColors, 'accent' | 'accent2' | 'accent3'>
 const BRANDS: Record<ProductKind, Brand> = {
   phone: { accent: '#7c5cff', accent2: '#ff4f8b', accent3: '#ffb547' },
   tablet: { accent: '#ff6a3d', accent2: '#ffb547', accent3: '#20c4b4' },
+  laptop: { accent: '#30d158', accent2: '#0a84ff', accent3: '#ff9f0a' },
   desktop: { accent: '#3d8bff', accent2: '#22c7b8', accent3: '#a78bfa' },
   display: { accent: '#fd366e', accent2: '#7c67fe', accent3: '#fe9567' },
+  mini: { accent: '#ffffff', accent2: '#ffffff', accent3: '#ffffff' },
   watch: { accent: '#ff375f', accent2: '#a3e635', accent3: '#22d3ee' },
 }
 
@@ -655,16 +665,20 @@ const LIGHT_UI: Omit<ScreenColors, keyof Brand> = {
 const SCREEN_THEMES: Record<ProductKind, 'dark' | 'light'> = {
   phone: 'dark',
   tablet: 'light',
+  laptop: 'dark',
   desktop: 'dark',
   display: 'light',
+  mini: 'dark',
   watch: 'dark',
 }
 
 const SCREEN_SIZES: Record<ProductKind, { w: number; h: number }> = {
   phone: { w: 92, h: 190 },
   tablet: { w: 140, h: 186 },
+  laptop: { w: 208, h: 132 },
   desktop: { w: 208, h: 132 },
   display: { w: 208, h: 132 },
+  mini: { w: 4, h: 4 },
   watch: { w: 104, h: 120 },
 }
 
@@ -1229,11 +1243,19 @@ function drawWatch(
   if (stage >= 7) shieldChip(context, 86, 30, 11, colors)
 }
 
+/** The Mac mini's status light: white once the app is in. */
+function drawLight(context: Context, w: number, h: number) {
+  context.fillStyle = '#ffffff'
+  context.fillRect(0, 0, w, h)
+}
+
 const DRAWERS: Record<ProductKind, typeof drawPhone> = {
   phone: drawPhone,
   tablet: drawTablet,
+  laptop: drawDesktop,
   desktop: drawDesktop,
   display: drawDisplay,
+  mini: drawLight,
   watch: drawWatch,
 }
 

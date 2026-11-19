@@ -1,51 +1,123 @@
-import { useState } from 'react'
+import type { Models } from '@appwrite.io/console'
+import { useEffect, useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
-import { sdk } from '@/lib/appwrite/sdk'
-import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
+import {
+  canFetchVideoTimeline,
+  videoTimelineQueryOptions,
+  type VideoTimelineCue,
+} from '@/lib/react-query/hooks/videos'
+import { sampleTimelineCuesForPreview } from '@/lib/videos/timeline-cues'
 import { cn } from '@/lib/utils'
-import { formatVideoDuration } from '@/lib/utils/video-format'
-import type { Video } from '@/lib/appwrite/videos'
+import {
+  formatVideoDuration,
+  videoThumbAspectRatio,
+} from '@/lib/utils/video-format'
+import { TimelineSpriteThumb } from './player/TimelineSpriteThumb'
 
-/** Poster from the sprite timeline (`previewId`), or a neutral placeholder. */
+const HOVER_FRAME_INTERVAL_MS = 180
+
+/**
+ * Poster from the first timeline frame when a timeline exists, else a
+ * placeholder. Hover cycles timeline frames.
+ */
 export function VideoThumb({
   projectId,
   video,
-  width = 480,
   className,
   showDuration = false,
+  timelineCues: timelineCuesProp,
+  fetchTimeline = true,
+  uniformSize = false,
 }: {
   projectId: string
-  video: Pick<Video, '$id' | 'previewId' | 'name' | 'duration'>
-  width?: number
+  video: Pick<
+    Models.Video,
+    | '$id'
+    | 'timelineStatus'
+    | 'name'
+    | 'duration'
+    | 'width'
+    | 'height'
+    | 'aspectRatio'
+  >
   className?: string
   showDuration?: boolean
+  /** When set, skips fetching timeline data for this thumb. */
+  timelineCues?: VideoTimelineCue[] | null
+  fetchTimeline?: boolean
+  /** Fixed 16:9 box; media is letterboxed to its aspect ratio (videos list). */
+  uniformSize?: boolean
 }) {
-  const [failed, setFailed] = useState(false)
-  const src =
-    video.previewId && !failed
-      ? withAdminMode(
-          sdk.forProject(projectId).videos.getPreview({
-            videoId: video.$id,
-            previewId: video.previewId,
-            width,
-          }),
-        )
-      : null
+  const [hovering, setHovering] = useState(false)
+  const [hoverFrameIndex, setHoverFrameIndex] = useState(0)
+
+  const shouldFetchTimeline =
+    fetchTimeline &&
+    timelineCuesProp === undefined &&
+    !!projectId &&
+    !!video.$id &&
+    canFetchVideoTimeline(video)
+
+  const timelineQuery = useQuery({
+    ...videoTimelineQueryOptions(projectId, video.$id),
+    enabled: shouldFetchTimeline,
+  })
+
+  const cues = timelineCuesProp ?? timelineQuery.data?.cues ?? null
+  const hasTimelineCues = (cues?.length ?? 0) > 0
+
+  const hoverFrames = useMemo(
+    () => (cues ? sampleTimelineCuesForPreview(cues) : []),
+    [cues],
+  )
+
+  useEffect(() => {
+    if (!hovering) {
+      setHoverFrameIndex(0)
+      return
+    }
+    if (hoverFrames.length <= 1) return
+
+    const reducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches
+    if (reducedMotion) return
+
+    const id = window.setInterval(() => {
+      setHoverFrameIndex((index) => (index + 1) % hoverFrames.length)
+    }, HOVER_FRAME_INTERVAL_MS)
+    return () => window.clearInterval(id)
+  }, [hovering, hoverFrames.length])
+
+  const posterCue = hasTimelineCues ? cues![0] : null
+  const activeCue =
+    hasTimelineCues && hovering && hoverFrames.length > 1
+      ? hoverFrames[hoverFrameIndex]
+      : posterCue
+
+  const aspectRatio = useMemo(
+    () => videoThumbAspectRatio(video, posterCue),
+    [video, posterCue],
+  )
 
   return (
     <div
       className={cn(
         'relative flex items-center justify-center overflow-hidden bg-muted text-muted-foreground',
+        uniformSize && 'aspect-video',
         className,
       )}
+      style={uniformSize ? undefined : { aspectRatio }}
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
     >
-      {src ? (
-        <img
-          src={src}
-          alt=""
-          loading="lazy"
-          className="h-full w-full object-cover"
-          onError={() => setFailed(true)}
+      {activeCue ? (
+        <TimelineSpriteThumb
+          cue={activeCue}
+          fillParent
+          fit={uniformSize ? 'contain' : 'cover'}
+          className="absolute inset-0"
         />
       ) : (
         <VIDEOS_PRODUCT_ICON className="h-5 w-5" />

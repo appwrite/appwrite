@@ -6,11 +6,13 @@ import {
   useRef,
   useState,
   type KeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
   type ReactNode,
   type RefObject,
 } from 'react'
 import {
   Activity,
+  ALargeSmall,
   Captions,
   Film,
   Gauge,
@@ -64,6 +66,7 @@ import { cn } from '@/lib/utils'
 import {
   formatBitrate,
   formatPlaybackTime,
+  formatPlayerClock,
   formatQuality,
   formatResolution,
   getQualityTier,
@@ -71,6 +74,11 @@ import {
 import { useT } from '@/lib/i18n/translate'
 import type { StreamPlayerState } from './useStreamPlayer'
 import { TimelineSpriteThumb } from './TimelineSpriteThumb'
+import {
+  VIDEO_SUBTITLE_SIZES,
+  videoSubtitleSizeLabelKey,
+  type VideoSubtitleSize,
+} from '@/lib/videos/player-subtitle-display'
 
 const AUTO_LEVEL = '-1'
 const SUBTITLES_OFF = '-1'
@@ -109,7 +117,18 @@ function QualityLabel({
 /** True when the controls overlay the video (full screen). */
 const OverlayContext = createContext(false)
 
-/** Glass chip for controls drawn over the video in full screen. */
+/** Ghost icon control on the video overlay. */
+const OVERLAY_ICON_CLASS =
+  "h-14 w-14 shrink-0 border-0 bg-transparent text-white/90 shadow-none hover:bg-white/15 hover:text-white [&_svg:not([class*='text-'])]:text-white/90"
+
+const OVERLAY_GLYPH_CLASS = 'h-6 w-6'
+const OVERLAY_PLAY_GLYPH_CLASS = 'h-7 w-7'
+
+/** Bottom scrim; opaque at the edge, fades out toward the video. Safe-area padding sits on this layer so the shade reaches the player bottom. */
+const OVERLAY_SCRIM_CLASS =
+  'relative w-full shrink-0 bg-gradient-to-t from-black via-black/55 to-transparent pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-12 sm:pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pt-16'
+
+/** Glass chip for selects and menus on the video overlay. */
 const OVERLAY_CHIP_CLASS =
   "border-white/15 bg-black/30 text-white/90 shadow-sm backdrop-blur-md hover:bg-black/50 hover:text-white dark:border-white/15 dark:bg-black/30 dark:text-white/90 dark:hover:bg-black/50 dark:hover:text-white [&_svg:not([class*='text-'])]:text-white/70"
 
@@ -127,14 +146,19 @@ const OVERLAY_MENU_CLASS = cn(
 const OVERLAY_TOOLTIP_CLASS = cn(OVERLAY_SURFACE_CLASS, 'border')
 const OVERLAY_TOOLTIP_OFFSET = 8
 
+/** Submenus mount inside menu content; default overflow clips them. */
+const PLAYER_MORE_MENU_CONTENT_CLASS = 'max-h-none overflow-visible'
+
+/** Open toward the video when the ⋯ menu is anchored on the bottom-right. */
+const playerMoreSubMenuContentClass = (overlay: boolean) =>
+  cn('relative z-[160]', overlay && OVERLAY_MENU_CLASS)
+
 function ControlsSeparator() {
   const overlay = useContext(OverlayContext)
+  if (overlay) return null
   return (
     <div
-      className={cn(
-        'mx-1 hidden size-1 shrink-0 rounded-full sm:block',
-        overlay ? 'bg-white/40' : 'bg-muted-foreground/40',
-      )}
+      className="mx-1 hidden size-1 shrink-0 rounded-full bg-muted-foreground/40 sm:block"
       aria-hidden
     />
   )
@@ -147,9 +171,23 @@ function seekFractionFromClientX(clientX: number, trackRect: DOMRect): number {
   return Math.min(1, Math.max(0, (clientX - trackRect.left) / trackRect.width))
 }
 
-/** The playhead centers on the track ends at 0 and at the full duration. */
+/** Playhead center along the track (fraction 0–1). */
 function seekThumbCenterX(fraction: number, trackWidth: number): number {
   return fraction * trackWidth
+}
+
+const SEEK_THUMB_PX = 20
+
+/** Keep the scrub thumb inside the track (no half-dot hanging past the edges). */
+function clampSeekThumbCenterX(
+  fraction: number,
+  trackWidth: number,
+  thumbPx: number = SEEK_THUMB_PX,
+): number {
+  if (trackWidth <= 0) return 0
+  const half = thumbPx / 2
+  const raw = seekThumbCenterX(fraction, trackWidth)
+  return Math.min(trackWidth - half, Math.max(half, raw))
 }
 
 function clampScrubPopoverLeft(
@@ -171,7 +209,9 @@ type ScrubPreview = {
   cue: VideoTimelineCue
 }
 
-export type PlaybackOutput = 'hls' | 'dash' | 'cmaf' | 'source'
+import type { PlaybackOutput } from '@/lib/videos/playback-output'
+
+export type { PlaybackOutput }
 
 type OutputOption = {
   id: PlaybackOutput
@@ -187,15 +227,20 @@ type VideoStreamPlayerControlsProps = {
   playerState: StreamPlayerState
   onSelectLevel: (index: number) => void
   onSelectSubtitleTrack: (index: number) => void
+  subtitleSize: VideoSubtitleSize
+  onSelectSubtitleSize: (size: VideoSubtitleSize) => void
   onReload: () => void
   hasNewRenditions: boolean
   isLoading?: boolean
   scrubCues?: VideoTimelineCue[]
+  /** Browser fullscreen. The control chrome is always the on-video overlay. */
   fullscreen: boolean
   onToggleFullscreen: () => void
   onOpenInspector?: () => void
   /** Fullscreen element; overlays must portal into it to stay visible. */
   portalContainer?: HTMLElement
+  /** Embed player: stream format, quality, subtitles, and inspector live under ⋯ only. */
+  menuOnlyAdvanced?: boolean
   className?: string
 }
 
@@ -217,9 +262,11 @@ function IconControl({
       <TooltipTrigger asChild>
         <Button
           type="button"
-          variant="outline"
+          variant={overlay ? 'ghost' : 'outline'}
           size="icon"
-          className={cn('h-8 w-8 shrink-0', overlay && OVERLAY_CHIP_CLASS)}
+          className={cn(
+            overlay ? OVERLAY_ICON_CLASS : 'h-12 w-12 shrink-0',
+          )}
           onClick={onClick}
           aria-label={label}
         >
@@ -280,13 +327,13 @@ function VolumeControl({
           }
         }}
       >
-        <Icon className="h-3.5 w-3.5" />
+        <Icon className={OVERLAY_GLYPH_CLASS} />
       </IconControl>
       <Slider
         className={cn(
-          'hidden w-20 @lg:flex',
+          'hidden w-32 shrink-0 @sm:flex',
           overlay &&
-            '[&_[data-slot=slider-range]]:bg-white [&_[data-slot=slider-track]]:bg-white/25',
+            '[&_[data-slot=slider-range]]:bg-white [&_[data-slot=slider-thumb]]:size-[18px] [&_[data-slot=slider-thumb]]:border-white/40 [&_[data-slot=slider-track]]:h-2 [&_[data-slot=slider-track]]:bg-white/25',
         )}
         min={0}
         max={1}
@@ -331,7 +378,7 @@ function PlaybackFormatSelect({
       <SelectTrigger
         size="sm"
         className={cn(
-          'h-8 w-[9.5rem] text-[12px]',
+          'h-8 w-[9.5rem] shrink-0 text-[12px]',
           overlay && OVERLAY_CHIP_CLASS,
         )}
         aria-label={t('Stream format')}
@@ -372,6 +419,8 @@ export function VideoStreamPlayerControls({
   playerState,
   onSelectLevel,
   onSelectSubtitleTrack,
+  subtitleSize,
+  onSelectSubtitleSize,
   onReload,
   hasNewRenditions,
   isLoading = false,
@@ -380,9 +429,12 @@ export function VideoStreamPlayerControls({
   onToggleFullscreen,
   onOpenInspector,
   portalContainer,
+  menuOnlyAdvanced = false,
   className,
 }: VideoStreamPlayerControlsProps) {
   const t = useT()
+  // Same on-video chrome in the console and on the embed player page.
+  const overlay = true
   const seekTrackRef = useRef<HTMLDivElement | null>(null)
   const seekDraggingRef = useRef(false)
   const [trackWidth, setTrackWidth] = useState(0)
@@ -564,7 +616,9 @@ export function VideoStreamPlayerControls({
     duration > 0 ? Math.min(1, Math.max(0, displayPlayheadTime / duration)) : 0
 
   const playheadX =
-    trackWidth > 0 ? seekThumbCenterX(playedFraction, trackWidth) : 0
+    trackWidth > 0
+      ? clampSeekThumbCenterX(playedFraction, trackWidth)
+      : 0
 
   const scrubHoverActive =
     scrubPreview != null &&
@@ -604,24 +658,18 @@ export function VideoStreamPlayerControls({
     syncFromVideo()
   }
 
-  return (
-    <PortalContainerContext.Provider value={portalContainer}>
-      <OverlayContext.Provider value={fullscreen}>
-        <div
-          className={cn('@container relative shrink-0 pt-3', className)}
-          onPointerDownCapture={(event) => {
-            // Select and menu triggers cancel pointerdown, so focus would stay on the previous control.
-            const active = document.activeElement
-            if (
-              active instanceof HTMLElement &&
-              event.target instanceof Node &&
-              !active.contains(event.target)
-            ) {
-              active.blur()
-            }
-          }}
-        >
-          <div className="space-y-2.5">
+  const onControlsPointerDownCapture = (event: ReactPointerEvent) => {
+    const active = document.activeElement
+    if (
+      active instanceof HTMLElement &&
+      event.target instanceof Node &&
+      !active.contains(event.target)
+    ) {
+      active.blur()
+    }
+  }
+
+  const seekSlider = (
             <div
               ref={seekTrackRef}
               role="slider"
@@ -632,7 +680,7 @@ export function VideoStreamPlayerControls({
               aria-valuenow={displayPlayheadTime}
               aria-disabled={!(duration > 0)}
               className={cn(
-                'relative z-0 h-8 w-full touch-none select-none overflow-visible',
+                'group/seek relative z-0 h-8 w-full touch-none select-none overflow-visible sm:h-9',
                 duration > 0
                   ? 'cursor-pointer'
                   : 'cursor-not-allowed opacity-40',
@@ -669,15 +717,15 @@ export function VideoStreamPlayerControls({
               <div
                 aria-hidden
                 className={cn(
-                  'pointer-events-none absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full',
-                  fullscreen ? 'bg-white/25 backdrop-blur-md' : 'bg-border',
+                  'pointer-events-none absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full transition-[height] duration-150 group-hover/seek:h-2.5 group-focus-within/seek:h-2.5',
+                  overlay ? 'bg-white/30' : 'bg-border',
                 )}
               />
               <div
                 aria-hidden
                 className={cn(
-                  'pointer-events-none absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full',
-                  fullscreen ? 'bg-white' : 'bg-foreground/60',
+                  'pointer-events-none absolute left-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full transition-[height] duration-150 group-hover/seek:h-2.5 group-focus-within/seek:h-2.5',
+                  overlay ? 'bg-white' : 'bg-primary',
                 )}
                 style={{ width: `${playedFraction * 100}%` }}
               />
@@ -698,10 +746,10 @@ export function VideoStreamPlayerControls({
                 >
                   <div
                     className={cn(
-                      'size-3 rounded-full border shadow-sm',
-                      fullscreen
-                        ? 'border-white/40 bg-white'
-                        : 'border-border bg-foreground',
+                      'size-5 rounded-full border shadow-sm transition-transform duration-150 group-hover/seek:scale-110 group-focus-within/seek:scale-110',
+                      overlay
+                        ? 'border-white/50 bg-white shadow-black/40'
+                        : 'border-primary/30 bg-primary',
                     )}
                   />
                 </div>
@@ -719,7 +767,7 @@ export function VideoStreamPlayerControls({
                     <div
                       className={cn(
                         'overflow-hidden rounded-md border border-border bg-popover shadow-md',
-                        fullscreen &&
+                        overlay &&
                           `${OVERLAY_SURFACE_CLASS} [&_p]:text-white/80`,
                       )}
                     >
@@ -734,7 +782,7 @@ export function VideoStreamPlayerControls({
                     <div
                       className={cn(
                         'size-2 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-border bg-popover',
-                        fullscreen && 'hidden',
+                        overlay && 'hidden',
                       )}
                       style={{
                         marginLeft: Math.min(
@@ -752,18 +800,22 @@ export function VideoStreamPlayerControls({
                 </div>
               ) : null}
             </div>
+  )
 
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
+  const controlsBody = (
+    <div className="space-y-2">
+      {seekSlider}
+      <div className="flex h-14 flex-nowrap items-center gap-x-1 sm:gap-x-2">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     type="button"
-                    variant="secondary"
+                    variant={overlay ? 'ghost' : 'secondary'}
                     size="icon"
                     className={cn(
-                      'h-8 w-8 shrink-0',
-                      fullscreen &&
-                        'border-white/20 bg-white/20 text-white backdrop-blur-md hover:bg-white/30',
+                      overlay
+                        ? cn(OVERLAY_ICON_CLASS, 'hover:bg-white/20')
+                        : 'h-12 w-12 shrink-0',
                     )}
                     onClick={togglePlay}
                     aria-label={playing ? t('Pause') : t('Play')}
@@ -771,26 +823,26 @@ export function VideoStreamPlayerControls({
                     {isLoading ? (
                       <Loader2
                         className={cn(
-                          'h-4 w-4 animate-spin',
-                          fullscreen
+                          'h-6 w-6 animate-spin',
+                          overlay
                             ? 'text-white/70'
                             : 'text-muted-foreground',
                         )}
                       />
                     ) : playing ? (
-                      <Pause className="h-4 w-4" />
+                      <Pause className={OVERLAY_PLAY_GLYPH_CLASS} />
                     ) : (
-                      <Play className="h-4 w-4" />
+                      <Play className={cn(OVERLAY_PLAY_GLYPH_CLASS, 'fill-current')} />
                     )}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent
                   className={cn(
                     'text-[12px]',
-                    fullscreen && OVERLAY_TOOLTIP_CLASS,
+                    overlay && OVERLAY_TOOLTIP_CLASS,
                   )}
-                  arrow={!fullscreen}
-                  sideOffset={fullscreen ? OVERLAY_TOOLTIP_OFFSET : undefined}
+                  arrow={!overlay}
+                  sideOffset={overlay ? OVERLAY_TOOLTIP_OFFSET : undefined}
                   container={portalContainer}
                 >
                   {playing ? t('Pause') : t('Play')}
@@ -798,10 +850,10 @@ export function VideoStreamPlayerControls({
               </Tooltip>
 
               <IconControl label={t('Go to start')} onClick={goToStart}>
-                <SkipBack className="h-3.5 w-3.5" />
+                <SkipBack className={OVERLAY_GLYPH_CLASS} />
               </IconControl>
               <IconControl label={t('Go to end')} onClick={goToEnd}>
-                <SkipForward className="h-3.5 w-3.5" />
+                <SkipForward className={OVERLAY_GLYPH_CLASS} />
               </IconControl>
 
               <ControlsSeparator />
@@ -815,24 +867,35 @@ export function VideoStreamPlayerControls({
 
               <span
                 className={cn(
-                  'shrink-0 text-[12px] tabular-nums',
-                  fullscreen
-                    ? 'text-white [text-shadow:0_1px_3px_rgb(0_0_0/0.6)]'
-                    : 'text-muted-foreground',
+                  'w-[12rem] shrink-0 px-1.5 text-[16px] font-medium tabular-nums tracking-tight',
+                  overlay
+                    ? 'text-white/95 [text-shadow:0_1px_2px_rgb(0_0_0/0.5)]'
+                    : 'text-foreground',
                 )}
               >
-                {formatPlaybackTime(currentTime)}
+                {formatPlayerClock(displayPlayheadTime)}
                 <span
                   className={
-                    fullscreen ? 'text-white/60' : 'text-muted-foreground/60'
+                    overlay ? 'text-white/55' : 'text-muted-foreground'
                   }
                 >
                   {' / '}
                 </span>
-                {duration > 0 ? formatPlaybackTime(duration) : '--:--'}
+                <span
+                  className={
+                    overlay ? 'text-white/75' : 'text-muted-foreground'
+                  }
+                >
+                  {duration > 0 ? formatPlayerClock(duration) : '--:--'}
+                </span>
               </span>
 
-              <div className="hidden items-center gap-2 @5xl:flex">
+              <div
+                className={cn(
+                  'items-center gap-2',
+                  menuOnlyAdvanced ? 'hidden' : 'hidden @5xl:flex',
+                )}
+              >
                 <ControlsSeparator />
 
                 <PlaybackFormatSelect
@@ -842,17 +905,17 @@ export function VideoStreamPlayerControls({
                   {...menuState('format')}
                 />
 
-                {showQuality ? (
-                  <Select
-                    value={currentLevelValue}
+                <Select
+                    value={showQuality ? currentLevelValue : AUTO_LEVEL}
                     onValueChange={(value) => onSelectLevel(Number(value))}
+                    disabled={!showQuality}
                     {...menuState('quality')}
                   >
                     <SelectTrigger
                       size="sm"
                       className={cn(
-                        'h-8 w-[min(100%,11rem)] text-[12px]',
-                        fullscreen && OVERLAY_CHIP_CLASS,
+                        'h-8 w-44 shrink-0 overflow-hidden text-[12px]',
+                        overlay && OVERLAY_CHIP_CLASS,
                       )}
                       aria-label={t('Quality')}
                     >
@@ -877,7 +940,7 @@ export function VideoStreamPlayerControls({
                     </SelectTrigger>
                     <SelectContent
                       container={portalContainer}
-                      className={cn(fullscreen && OVERLAY_MENU_CLASS)}
+                      className={cn(overlay && OVERLAY_MENU_CLASS)}
                     >
                       <SelectItem value={AUTO_LEVEL} className="text-[12px]">
                         {t('Auto quality')}
@@ -903,21 +966,24 @@ export function VideoStreamPlayerControls({
                       ))}
                     </SelectContent>
                   </Select>
-                ) : null}
 
-                {playerState.subtitleTracks.length > 0 ? (
-                  <Select
-                    value={String(playerState.currentSubtitleTrack)}
+                <Select
+                    value={
+                      playerState.subtitleTracks.length > 0
+                        ? String(playerState.currentSubtitleTrack)
+                        : SUBTITLES_OFF
+                    }
                     onValueChange={(value) =>
                       onSelectSubtitleTrack(Number(value))
                     }
+                    disabled={playerState.subtitleTracks.length === 0}
                     {...menuState('subtitles')}
                   >
                     <SelectTrigger
                       size="sm"
                       className={cn(
-                        'h-8 w-[min(100%,10rem)] text-[12px]',
-                        fullscreen && OVERLAY_CHIP_CLASS,
+                        'h-8 w-40 shrink-0 overflow-hidden text-[12px]',
+                        overlay && OVERLAY_CHIP_CLASS,
                       )}
                       aria-label={t('Subtitles')}
                     >
@@ -925,7 +991,7 @@ export function VideoStreamPlayerControls({
                     </SelectTrigger>
                     <SelectContent
                       container={portalContainer}
-                      className={cn(fullscreen && OVERLAY_MENU_CLASS)}
+                      className={cn(overlay && OVERLAY_MENU_CLASS)}
                     >
                       <SelectItem value={SUBTITLES_OFF} className="text-[12px]">
                         {t('Subtitles off')}
@@ -942,7 +1008,6 @@ export function VideoStreamPlayerControls({
                       ))}
                     </SelectContent>
                   </Select>
-                ) : null}
 
                 {onOpenInspector ? (
                   <>
@@ -953,7 +1018,7 @@ export function VideoStreamPlayerControls({
                       size="sm"
                       className={cn(
                         'h-8 shrink-0 gap-1.5 text-[12px]',
-                        fullscreen && OVERLAY_CHIP_CLASS,
+                        overlay && OVERLAY_CHIP_CLASS,
                       )}
                       onClick={onOpenInspector}
                     >
@@ -963,24 +1028,17 @@ export function VideoStreamPlayerControls({
                     </Button>
                   </>
                 ) : null}
-
-                {hasNewRenditions ? (
-                  <span
-                    className={cn(
-                      'text-[12px]',
-                      fullscreen ? 'text-white/80' : 'text-muted-foreground',
-                    )}
-                  >
-                    {t('New renditions are ready.')}
-                  </span>
-                ) : null}
               </div>
 
-              <div className="ms-auto flex shrink-0 items-center gap-2">
+              <div className="ms-auto flex shrink-0 items-center gap-0.5 sm:gap-1">
                 <ControlsSeparator />
-                <div className="hidden @5xl:flex">
+                <div
+                  className={cn(
+                    menuOnlyAdvanced ? 'hidden' : 'hidden @5xl:flex',
+                  )}
+                >
                   <IconControl label={t('Reload stream')} onClick={onReload}>
-                    <RefreshCw className="h-3.5 w-3.5" />
+                    <RefreshCw className={OVERLAY_GLYPH_CLASS} />
                   </IconControl>
                 </div>
                 <DropdownMenu modal={false} {...menuState('more')}>
@@ -989,15 +1047,18 @@ export function VideoStreamPlayerControls({
                       <DropdownMenuTrigger asChild>
                         <Button
                           type="button"
-                          variant="outline"
+                          variant={overlay ? 'ghost' : 'outline'}
                           size="icon"
                           className={cn(
-                            'relative h-8 w-8 shrink-0 @5xl:hidden',
-                            fullscreen && OVERLAY_CHIP_CLASS,
+                            'relative shrink-0',
+                            menuOnlyAdvanced ? 'flex' : '@5xl:hidden',
+                            overlay
+                              ? OVERLAY_ICON_CLASS
+                              : 'h-12 w-12',
                           )}
                           aria-label={t('More options')}
                         >
-                          <MoreHorizontal className="h-3.5 w-3.5" />
+                          <MoreHorizontal className={OVERLAY_GLYPH_CLASS} />
                           {hasNewRenditions ? (
                             <span
                               aria-hidden
@@ -1010,11 +1071,11 @@ export function VideoStreamPlayerControls({
                     <TooltipContent
                       className={cn(
                         'text-[12px]',
-                        fullscreen && OVERLAY_TOOLTIP_CLASS,
+                        overlay && OVERLAY_TOOLTIP_CLASS,
                       )}
-                      arrow={!fullscreen}
+                      arrow={!overlay}
                       sideOffset={
-                        fullscreen ? OVERLAY_TOOLTIP_OFFSET : undefined
+                        overlay ? OVERLAY_TOOLTIP_OFFSET : undefined
                       }
                       container={portalContainer}
                     >
@@ -1026,8 +1087,9 @@ export function VideoStreamPlayerControls({
                     side="top"
                     container={portalContainer}
                     className={cn(
-                      'min-w-[13rem]',
-                      fullscreen && OVERLAY_MENU_CLASS,
+                      'relative z-[150] min-w-[13rem]',
+                      PLAYER_MORE_MENU_CONTENT_CLASS,
+                      overlay && OVERLAY_MENU_CLASS,
                     )}
                   >
                     <DropdownMenuSub>
@@ -1042,7 +1104,7 @@ export function VideoStreamPlayerControls({
                         </span>
                       </DropdownMenuSubTrigger>
                       <DropdownMenuSubContent
-                        className={cn(fullscreen && OVERLAY_MENU_CLASS)}
+                        className={playerMoreSubMenuContentClass(overlay)}
                       >
                         <DropdownMenuRadioGroup
                           value={output}
@@ -1088,7 +1150,7 @@ export function VideoStreamPlayerControls({
                           </span>
                         </DropdownMenuSubTrigger>
                         <DropdownMenuSubContent
-                          className={cn(fullscreen && OVERLAY_MENU_CLASS)}
+                          className={playerMoreSubMenuContentClass(overlay)}
                         >
                           <DropdownMenuRadioGroup
                             value={currentLevelValue}
@@ -1135,7 +1197,7 @@ export function VideoStreamPlayerControls({
                           </span>
                         </DropdownMenuSubTrigger>
                         <DropdownMenuSubContent
-                          className={cn(fullscreen && OVERLAY_MENU_CLASS)}
+                          className={playerMoreSubMenuContentClass(overlay)}
                         >
                           <DropdownMenuRadioGroup
                             value={String(playerState.currentSubtitleTrack)}
@@ -1163,6 +1225,38 @@ export function VideoStreamPlayerControls({
                         </DropdownMenuSubContent>
                       </DropdownMenuSub>
                     ) : null}
+
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger className="text-[13px]">
+                        <MenuItemIcon icon={ALargeSmall} />
+                        <span className="min-w-0 flex-1">
+                          {t('Subtitle size')}
+                        </span>
+                        <span className="text-[12px] text-muted-foreground">
+                          {t(videoSubtitleSizeLabelKey(subtitleSize))}
+                        </span>
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent
+                        className={playerMoreSubMenuContentClass(overlay)}
+                      >
+                        <DropdownMenuRadioGroup
+                          value={subtitleSize}
+                          onValueChange={(value) =>
+                            onSelectSubtitleSize(value as VideoSubtitleSize)
+                          }
+                        >
+                          {VIDEO_SUBTITLE_SIZES.map((size) => (
+                            <DropdownMenuRadioItem
+                              key={size}
+                              value={size}
+                              className="text-[13px]"
+                            >
+                              {t(videoSubtitleSizeLabelKey(size))}
+                            </DropdownMenuRadioItem>
+                          ))}
+                        </DropdownMenuRadioGroup>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
 
                     <DropdownMenuSeparator />
 
@@ -1198,15 +1292,42 @@ export function VideoStreamPlayerControls({
                   onClick={onToggleFullscreen}
                 >
                   {fullscreen ? (
-                    <Minimize className="h-3.5 w-3.5" />
+                    <Minimize className={OVERLAY_GLYPH_CLASS} />
                   ) : (
-                    <Maximize className="h-3.5 w-3.5" />
+                    <Maximize className={OVERLAY_GLYPH_CLASS} />
                   )}
                 </IconControl>
               </div>
             </div>
+    </div>
+  )
+
+  return (
+    <PortalContainerContext.Provider value={portalContainer}>
+      <OverlayContext.Provider value={overlay}>
+        {overlay ? (
+          <div className={OVERLAY_SCRIM_CLASS}>
+            <div
+              className={cn(
+                '@container group/controls relative mx-auto w-full max-w-7xl px-4 sm:px-6',
+                className,
+              )}
+              onPointerDownCapture={onControlsPointerDownCapture}
+            >
+              {controlsBody}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div
+            className={cn(
+              '@container group/controls relative w-full shrink-0 px-3 sm:px-4',
+              className,
+            )}
+            onPointerDownCapture={onControlsPointerDownCapture}
+          >
+            {controlsBody}
+          </div>
+        )}
       </OverlayContext.Provider>
     </PortalContainerContext.Provider>
   )
