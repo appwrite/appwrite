@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/overview/Overview'
 import {
+  apiKeysQueryOptions,
   platformsQueryOptions,
   bandwidthOverviewQueryOptions,
   requestsOverviewQueryOptions,
@@ -17,6 +18,7 @@ import {
   overviewUsersQueryOptions,
   overviewTopicsQueryOptions,
 } from '@/lib/react-query/hooks'
+import { DEFAULT_STALE_TIME } from '@/lib/react-query/hooks/constants'
 import { loadDebugOverrides } from '@/lib/debug-overrides'
 import { hasAccountMcpAgentConnected } from '@/lib/mcp-adoption'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
@@ -111,6 +113,12 @@ export const Route = createFileRoute('/_public/projects/$projectId/overview')({
     try {
       // Parent layout loader may still be resolving region; register before project-scoped prefetch.
       await ensureProjectRegion(queryClient, projectId)
+
+      // Share the in-flight key request with its card and reuse it on short return visits.
+      void queryClient.prefetchQuery({
+        ...apiKeysQueryOptions(projectId),
+        gcTime: DEFAULT_STALE_TIME,
+      })
 
       // Non-critical data: prefetch in the background so the page can render immediately.
       void queryClient

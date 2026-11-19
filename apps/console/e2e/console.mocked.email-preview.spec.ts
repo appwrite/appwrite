@@ -552,8 +552,12 @@ test.describe('project navigation with pending requests', () => {
       const pending = new Promise<void>((resolve) => {
         release = resolve
       })
+      let requests = 0
       await page.route(`**${scenario.pending}*`, async (route) => {
-        if (route.request().method() === 'GET') await pending
+        if (route.request().method() === 'GET') {
+          requests++
+          await pending
+        }
         await route.fallback()
       })
       const requested = page.waitForRequest(
@@ -577,9 +581,24 @@ test.describe('project navigation with pending requests', () => {
         release()
       }
       if (scenario.screen === 'overview') {
+        const key = page.getByText('Demo server key', { exact: true })
+        await expect(key).toBeVisible()
+        const project = `/projects/${PROJECT.$id}`
+        await page
+          .locator(`a[href="${project}/messaging"]:visible`)
+          .first()
+          .click()
         await expect(
-          page.getByText('Demo server key', { exact: true }),
+          page.getByText('Your Acme Docs files expire in two days', {
+            exact: true,
+          }),
         ).toBeVisible()
+        await page
+          .locator(`a[href="${project}/overview"]:visible`)
+          .first()
+          .click()
+        await expect(key).toBeVisible()
+        expect(requests).toBe(1)
       }
     })
   }
