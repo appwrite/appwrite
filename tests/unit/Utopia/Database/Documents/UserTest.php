@@ -954,7 +954,7 @@ final class UserTest extends TestCase
 
         $target = User::reserveEmailTarget($database, $anonymous, 'linked@example.com');
 
-        $this->assertNotNull($target);
+        $this->assertInstanceOf(\Utopia\Database\Document::class, $target);
         $this->assertSame($anonymous->getSequence(), $target->getAttribute('userInternalId'));
         $this->assertSame(MESSAGE_TYPE_EMAIL, $target->getAttribute('providerType'));
 
@@ -1059,6 +1059,7 @@ final class UserTest extends TestCase
         $kept = $database->getDocument('users', $anonymous->getId());
         $this->assertSame('linked@example.com', $kept->getAttribute('email'));
         $this->assertTrue($kept->getAttribute('emailVerification'));
+        $this->assertInstanceOf(\Utopia\Database\Document::class, $target);
         $this->assertFalse($database->getDocument('targets', $target->getId())->isEmpty());
         // What the claim did not touch is still undone
         $this->assertEmpty($kept->getAttribute('name'));
