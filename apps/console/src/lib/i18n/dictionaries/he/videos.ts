@@ -714,6 +714,8 @@ export const heVideosDictionary: Record<string, string> = {
   'Bandwidth below the lowest rendition': 'רוחב הפס נמוך מהגרסה הנמוכה ביותר',
   'Even the smallest rendition barely fits this connection. Add a lower bitrate rendition for slow networks.':
     'גם גרסת הקידוד הקטנה ביותר בקושי מתאימה לחיבור הזה. הוסיפו גרסה בקצב סיביות נמוך יותר לרשתות איטיות.',
+  'The player is larger than the rendition it receives, so the picture looks soft. Quality is locked; switch to Auto quality to play a larger rendition.':
+    'הנגן גדול מהרזולוציה שהוא מקבל, ולכן התמונה נראית רכה. האיכות נעולה; עברו לאיכות אוטומטית כדי לנגן רזולוציה גדולה יותר.',
   'Video is upscaled': 'הווידאו מוגדל',
   'The player is larger than the rendition it receives, so the picture looks soft. Add a higher resolution rendition.':
     'הנגן גדול מגרסת הקידוד שהוא מקבל, ולכן התמונה נראית רכה מדי. הוסיפו גרסה ברזולוציה גבוהה יותר.',

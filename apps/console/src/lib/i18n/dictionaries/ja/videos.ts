@@ -730,6 +730,8 @@ export const jaVideosDictionary: Record<string, string> = {
     '帯域幅が最低レンディションを下回っています',
   'Even the smallest rendition barely fits this connection. Add a lower bitrate rendition for slow networks.':
     '最小のレンディションでもこの接続にはぎりぎりです。低速ネットワーク向けに、より低いビットレートのレンディションを追加してください。',
+  'The player is larger than the rendition it receives, so the picture looks soft. Quality is locked; switch to Auto quality to play a larger rendition.':
+    'プレーヤーが受信するレンディションより大きいため、映像がぼやけて見えます。画質が固定されています。自動画質に切り替えると、より大きいレンディションを再生できます。',
   'Video is upscaled': '動画がアップスケールされています',
   'The player is larger than the rendition it receives, so the picture looks soft. Add a higher resolution rendition.':
     'プレーヤーが受信しているレンディションより大きいため、映像がぼやけて見えます。より高解像度のレンディションを追加してください。',

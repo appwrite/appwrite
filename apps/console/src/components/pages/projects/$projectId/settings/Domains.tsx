@@ -93,7 +93,7 @@ export function Domains({
     setCurrentPage(0)
   }
 
-  const { rules, total, isLoading, isFetching, isPlaceholderData, refetch } =
+  const { rules, total, isLoading, isFetching, isPlaceholderData } =
     useProjectDomains(projectId, region, currentPage, pageSize, search)
 
   // Deleting the last rule on the last page leaves an empty page; step back to the new last page.
@@ -338,8 +338,6 @@ export function Domains({
             open={viewLogsOpen}
             onOpenChange={setViewLogsOpen}
             rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
-            onRefresh={() => void refetch()}
-            isRefreshing={isFetching}
           />
 
           <DeleteDomainDialog

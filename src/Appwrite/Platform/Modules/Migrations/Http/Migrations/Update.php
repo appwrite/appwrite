@@ -80,10 +80,13 @@ class Update extends Action
         }
 
         // A retry runs with no more than the retrying caller holds; a session keeps the recorded grant.
-        // Only a key-created grant was checked against the resources, so others are checked here.
+        // A key must pass the migration's creation gate itself, even when the migration already records
+        // a grant: CSV and JSON transfers and same-project imports reach the database directly, where
+        // intersecting with the recorded grant constrains nothing.
         $options = $migration->getAttribute('options', []);
         $recorded = $options['scopes'] ?? null;
-        $grant = $this->authorize($request, \is_array($recorded) ? [] : $migration->getAttribute('resources', []));
+        [$resources, $required] = $this->retryRequirements($migration);
+        $grant = $this->authorize($request, $resources, $required);
 
         if ($grant !== null) {
             $options['scopes'] = \is_array($recorded) ? \array_values(\array_intersect($recorded, $grant)) : $grant;

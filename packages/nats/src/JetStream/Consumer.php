@@ -6,6 +6,7 @@ namespace Utopia\NATS\JetStream;
 
 use Utopia\NATS\Connection;
 use Utopia\NATS\Exception\TimeoutException;
+use Utopia\NATS\Message;
 use Utopia\NATS\Subscription;
 
 final class Consumer
@@ -43,6 +44,22 @@ final class Consumer
      */
     public function fetch(int $batch = 1, ?float $timeout = null, bool $noWait = false, ?int $maxBytes = null): MessageBatch
     {
+        $messages = new MessageBatch($this->conn);
+        $this->pull($batch, $timeout, $noWait, $maxBytes, $messages->addMessage(...));
+        return $messages;
+    }
+
+    /** @param callable(JetStreamMessage): void $onMessage */
+    public function fetchEach(int $batch, callable $onMessage, ?float $timeout = null, bool $noWait = false, ?int $maxBytes = null): void
+    {
+        $this->pull($batch, $timeout, $noWait, $maxBytes, function (Message $message) use ($onMessage): void {
+            $onMessage(new JetStreamMessage($this->conn, $message));
+        });
+    }
+
+    /** @param callable(Message): void $onMessage */
+    private function pull(int $batch, ?float $timeout, bool $noWait, ?int $maxBytes, callable $onMessage): void
+    {
         $timeout ??= 5.0;
         $requestSubject = "{$this->apiPrefix}.CONSUMER.MSG.NEXT.{$this->stream}.{$this->getName()}";
 
@@ -75,15 +92,13 @@ final class Consumer
         $inbox = $this->conn->newInbox();
         $sub = $this->conn->subscribe($inbox);
 
-        $messageBatch = new MessageBatch($this->conn);
-
         // Capture a throw from the pull itself so a failure tearing down the
         // inbox (dead socket → reconnect → ConnectionException) cannot replace
         // it: PHP replaces an in-flight exception with one raised from finally.
         $pending = null;
         try {
             $this->conn->publish($requestSubject, $payload, $inbox);
-            $this->collectBatch($sub, $messageBatch, $batch, $timeout, $ends ? self::FETCH_REPLY_WAIT : self::FETCH_DRAIN_WAIT);
+            $this->collectBatch($sub, $onMessage, $batch, $timeout, $ends ? self::FETCH_REPLY_WAIT : self::FETCH_DRAIN_WAIT);
         } catch (\Throwable $error) {
             $pending = $error;
         }
@@ -103,18 +118,18 @@ final class Consumer
         if ($pending instanceof \Throwable) {
             throw $pending;
         }
-
-        return $messageBatch;
     }
 
     /**
      * Gather up to $batch messages for a pull request, stopping on the server's
      * terminal status, or once the timeout has passed and no further frame comes
      * within $afterTimeout.
+     *
+     * @param callable(Message): void $onMessage
      */
     private function collectBatch(
         Subscription $sub,
-        MessageBatch $messageBatch,
+        callable $onMessage,
         int $batch,
         float $timeout,
         float $afterTimeout,
@@ -122,7 +137,8 @@ final class Consumer
         $deadline = microtime(true) + $timeout;
         $drained = false;
 
-        while (\count($messageBatch) < $batch) {
+        $received = 0;
+        while ($received < $batch) {
             // Past the timeout, still read what the server sent: it counted each
             // message as delivered, and one left unread is held until ackWait and
             // charged an attempt, however late it arrives or is read.
@@ -162,7 +178,8 @@ final class Consumer
                 }
             }
 
-            $messageBatch->addMessage($msg);
+            $onMessage($msg);
+            $received++;
         }
     }
 
