@@ -44,13 +44,14 @@ import {
   BED_BACK,
   BED_FRONT,
   CYCLE,
-  EXTENSION,
+  HOLOGRAM,
   MOVE,
   STATION_COUNT,
   TOWER_TOP,
   easeInOutCubic,
   easeOutCubic,
   getLineState,
+  hologramBottom,
   range,
   stationX,
 } from './layout'
@@ -71,7 +72,7 @@ import {
   createShadowTexture,
   createTrackTexture,
 } from './textures'
-import { FactoryWorld, getStaticShadowShapes } from './world'
+import { FactoryWorld, HOLOGRAM_LAYER, getStaticShadowShapes } from './world'
 
 export type FactoryEngineOptions = {
   canvas: HTMLCanvasElement
@@ -79,7 +80,7 @@ export type FactoryEngineOptions = {
   icons: string[]
   /** Translated product names, printed on each column, then the gate's sign. */
   names: string[]
-  /** Translated product taglines, shown when a station unfolds. */
+  /** Translated product taglines, shown in a station's hologram. */
   descriptions: string[]
   /** Translated label of the shipped counter. */
   counterLabel: string
@@ -202,27 +203,6 @@ const nextFrame = () =>
     else setTimeout(resolve, 16)
   })
 
-/** The convex outline around `points`, every one wound the same way (monotone chain). */
-function outline(points: Vector2[]): Vector2[] {
-  const sorted = [...points].sort((a, b) => a.x - b.x || a.y - b.y)
-  const chain = (from: Vector2[]) => {
-    const hull: Vector2[] = []
-    for (const point of from) {
-      while (hull.length >= 2) {
-        const a = hull[hull.length - 2]!
-        const b = hull[hull.length - 1]!
-        if ((b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x) > 0)
-          break
-        hull.pop()
-      }
-      hull.push(point)
-    }
-    hull.pop()
-    return hull
-  }
-  return [...chain(sorted), ...chain(sorted.reverse())]
-}
-
 export class FactoryEngine {
   private readonly renderer: WebGLRenderer
   private readonly scene = new Scene()
@@ -267,7 +247,7 @@ export class FactoryEngine {
   private frameState: FrameState | null = null
   /** Lines of page copy laid over the stage (see `setCopyLines`). */
   private copyLines: CopyArea[] = []
-  /** How far every display's mast rises (see `fitDisplays`). */
+  /** How high every hologram's screen floats, 0 → 1 (see `fitDisplays`). */
   private lift = 1
   private reflection: WebGLRenderTarget | null = null
   /** Whether the floor still mirrors the machine; off for good once frames run slow. */
@@ -310,12 +290,12 @@ export class FactoryEngine {
   private pointerTarget = new Vector2(0, 0)
   private readonly hoverPointer = new Vector2()
   private pointerInside = false
-  /** Whether the pointer may open a display, or (over the page copy) only keep one open. */
+  /** Whether the pointer may turn a hologram on, or (over the page copy) only keep one on. */
   private pointerOpens = true
   private hovered = -1
-  /** The layer over the page copy that open displays are drawn again on (see `setFront`). */
+  /** The layer over the page copy that holograms are drawn on (see `setFront`). */
   private front: CanvasRenderingContext2D | null = null
-  /** The front layer shows a display, so it needs clearing once none is open. */
+  /** The front layer shows a hologram, so it needs clearing once none is on. */
   private frontShown = false
   private needsHoverTest = false
   private mobile = false
@@ -456,20 +436,20 @@ export class FactoryEngine {
           new Vector3(x + 0.74, TOWER_TOP + 0.1, BED_FRONT),
         ),
       )
-      const reach = EXTENSION.leaf
-      const screenBottom = TOWER_TOP + EXTENSION.lift
+      const reach = HOLOGRAM.width / 2
+      const screenBottom = hologramBottom(1)
       this.displayBoxes.push([
-        // The mast, as wide as the column, then the screen, wings and all.
+        // The light fan, about as wide as the column, then the screen.
         new Box3(
-          new Vector3(x - 0.6, TOWER_TOP, EXTENSION.z - 0.3),
-          new Vector3(x + 0.6, screenBottom, EXTENSION.z + 0.3),
+          new Vector3(x - 0.6, TOWER_TOP, HOLOGRAM.z - 0.3),
+          new Vector3(x + 0.6, screenBottom, HOLOGRAM.z + 0.3),
         ),
         new Box3(
-          new Vector3(x - reach, screenBottom, EXTENSION.z - 0.3),
+          new Vector3(x - reach, screenBottom, HOLOGRAM.z - 0.3),
           new Vector3(
             x + reach,
-            screenBottom + EXTENSION.height + 0.1,
-            EXTENSION.z + 0.3,
+            screenBottom + HOLOGRAM.height + 0.1,
+            HOLOGRAM.z + 0.3,
           ),
         ),
       ])
@@ -519,7 +499,7 @@ export class FactoryEngine {
       this.scene.updateMatrixWorld()
       this.renderReflection()
       this.reflectionWarm = true
-      if (!this.isLooping() && this.assembly >= ASSEMBLED) {
+      if (!this.isLooping()) {
         this.reflectionFade = 1
         this.renderFrame(0)
       }
@@ -662,6 +642,8 @@ export class FactoryEngine {
 
   /** A half-resolution target the floor samples to mirror the machine. */
   private setupReflection() {
+    // The floor mirrors the holograms too.
+    this.mirror.layers.enable(HOLOGRAM_LAYER)
     this.reflection = new WebGLRenderTarget(2, 2, {
       colorSpace: SRGBColorSpace,
       generateMipmaps: true,
@@ -866,8 +848,8 @@ export class FactoryEngine {
 
   /**
    * The lines of page copy laid over the stage (CSS pixels), which the
-   * unfolded displays keep clear of; empty when nothing is laid over it.
-   * Lines, not the copy's box, so a display may rise beside a short line.
+   * holograms keep clear of; empty when nothing is laid over it. Lines, not
+   * the copy's box, so a hologram may float beside a short line.
    */
   setCopyLines(lines: CopyArea[]) {
     this.copyLines = lines
@@ -875,9 +857,9 @@ export class FactoryEngine {
   }
 
   /**
-   * Every display opens at the same size on the same mast height: as high
-   * as keeps every station's open display clear of the copy laid over the
-   * scene, down to resting on its column.
+   * Every hologram's screen floats at the same height: as high as keeps
+   * every station's clear of the copy laid over the scene, down to just
+   * over its column.
    */
   private fitDisplays() {
     const lines = this.copyLines
@@ -896,21 +878,21 @@ export class FactoryEngine {
       }
     }
     this.lift = lift
-    // Hovering keeps answering for the display where it actually opens.
-    const screenBottom = TOWER_TOP + lift * EXTENSION.lift
-    for (const [mast, screen] of this.displayBoxes) {
-      mast.max.y = screenBottom
+    // Hovering keeps answering for the screen where it actually shows.
+    const screenBottom = hologramBottom(lift)
+    for (const [light, screen] of this.displayBoxes) {
+      light.max.y = screenBottom
       screen.min.y = screenBottom
-      screen.max.y = screenBottom + EXTENSION.height + 0.1
+      screen.max.y = screenBottom + HOLOGRAM.height + 0.1
     }
   }
 
-  /** Whether station `index`'s open display, its mast raised by `lift`, stays off every one of `areas`. */
+  /** Whether station `index`'s hologram, floating at `lift`, stays off every one of `areas`. */
   private isClear(index: number, lift: number, areas: CopyArea[]) {
     const x = stationX(index)
-    const base = TOWER_TOP - 0.01 + lift * EXTENSION.lift
-    const top = base + EXTENSION.height
-    const reach = EXTENSION.leaf
+    const base = hologramBottom(lift)
+    const top = base + HOLOGRAM.height
+    const reach = HOLOGRAM.width / 2
     let left = Number.POSITIVE_INFINITY
     let right = Number.NEGATIVE_INFINITY
     let highest = Number.POSITIVE_INFINITY
@@ -920,7 +902,7 @@ export class FactoryEngine {
       [x - reach, base],
       [x + reach, base],
     ] as const) {
-      this.scratch.set(cornerX, cornerY, EXTENSION.z).project(this.camera)
+      this.scratch.set(cornerX, cornerY, HOLOGRAM.z).project(this.camera)
       const screenX = ((this.scratch.x + 1) / 2) * this.width
       left = Math.min(left, screenX)
       right = Math.max(right, screenX)
@@ -1144,7 +1126,7 @@ export class FactoryEngine {
     frame.assembly = this.assembly
     frame.line = getLineState(this.time)
     frame.palette = this.palette
-    // Displays unfold only from machines standing in place.
+    // Holograms come on only from machines standing in place.
     frame.highlight = this.assembly >= ASSEMBLED ? this.hovered : -1
     this.fitDisplays()
     frame.lift = this.lift
@@ -1163,12 +1145,9 @@ export class FactoryEngine {
     // Once per frame, not once per pass: the reflection and the view share it.
     this.scene.updateMatrixWorld()
     if (this.reflection) {
-      // Eases in over half a second once warm and the machine stands in
-      // place, and out when the GPU cannot keep up (see `trackPerformance`).
-      const target =
-        this.reflectionOn && this.reflectionWarm && this.assembly >= ASSEMBLED
-          ? 1
-          : 0
+      // Eases in over half a second once warm, as the factory assembles on
+      // it, and out when the GPU cannot keep up (see `trackPerformance`).
+      const target = this.reflectionOn && this.reflectionWarm ? 1 : 0
       this.reflectionFade = MathUtils.clamp(
         this.reflectionFade + Math.sign(target - this.reflectionFade) * dt * 2,
         0,
@@ -1178,16 +1157,20 @@ export class FactoryEngine {
         this.palette.reflectivity * this.reflectionFade
       if (this.reflectionFade > 0) this.renderReflection()
     }
+    // Where the front layer takes the holograms, they are drawn on their
+    // own first and left out of the scene's canvas (see `drawFront`).
+    const apart = this.drawFront()
+    this.camera.layers.set(0)
+    if (!apart) this.camera.layers.enable(HOLOGRAM_LAYER)
     this.renderer.render(this.scene, this.camera)
     this.rendered = true
-    this.drawFront()
     if (this.needsHoverTest) this.testHover()
   }
 
   /**
-   * A transparent canvas laid over the page copy, covering the stage: open
-   * displays are drawn again on it, so they stand in front of the copy
-   * instead of behind it. Null to stop.
+   * A transparent canvas laid over the page copy, covering the stage:
+   * holograms are drawn on it, so they stand in front of the copy instead
+   * of behind it. Null to stop.
    */
   setFront(canvas: HTMLCanvasElement | null) {
     if (this.front && this.frontShown) {
@@ -1200,69 +1183,72 @@ export class FactoryEngine {
   }
 
   /**
-   * Copies every open display, cut to its outline, from the frame just
-   * rendered onto the front layer, where it covers the copy it meets. Runs
-   * in the same task as the render, while the frame can still be read.
+   * Where the copy is laid over the scene: draws the holograms that are on
+   * by themselves (their layer alone, onto the cleared canvas) and copies
+   * them onto the front layer, where they stand in front of the copy, which
+   * shows through their glass. True when the front layer takes them, so the
+   * scene's own pass leaves them out.
    */
-  private drawFront() {
+  private drawFront(): boolean {
     const front = this.front
     const world = this.world
-    if (!front || !world) return
-    // Only where the copy is laid over the scene.
-    const boxes =
-      this.composition === 'overlay' && !this.mobile
-        ? world.getDisplayBoxes()
-        : []
-    if (!boxes.length && !this.frontShown) return
+    const active =
+      !!front && !!world && this.composition === 'overlay' && !this.mobile
+    const boxes = active ? world!.getDisplayBoxes() : []
+    if (!boxes.length) {
+      if (front && this.frontShown) {
+        front.clearRect(0, 0, front.canvas.width, front.canvas.height)
+        this.frontShown = false
+      }
+      return active
+    }
     const source = this.options.canvas
-    const layer = front.canvas
+    const layer = front!.canvas
     if (layer.width !== source.width || layer.height !== source.height) {
       layer.width = source.width
       layer.height = source.height
     } else {
-      front.clearRect(0, 0, layer.width, layer.height)
+      front!.clearRect(0, 0, layer.width, layer.height)
     }
-    this.frontShown = boxes.length > 0
-    if (!this.frontShown) return
 
+    // Everything outside the holograms is clear, so one rectangle around
+    // them all is copied.
     let left = layer.width
     let top = layer.height
     let right = 0
     let bottom = 0
-    front.save()
-    front.beginPath()
     for (const corners of boxes) {
-      const points = corners.map((corner) => {
+      for (const corner of corners) {
         corner.project(this.camera)
-        return new Vector2(
-          ((corner.x + 1) / 2) * layer.width,
-          ((1 - corner.y) / 2) * layer.height,
-        )
-      })
-      outline(points).forEach((point, index) => {
-        if (index) front.lineTo(point.x, point.y)
-        else front.moveTo(point.x, point.y)
-        left = Math.min(left, point.x)
-        top = Math.min(top, point.y)
-        right = Math.max(right, point.x)
-        bottom = Math.max(bottom, point.y)
-      })
-      front.closePath()
+        const x = ((corner.x + 1) / 2) * layer.width
+        const y = ((1 - corner.y) / 2) * layer.height
+        left = Math.min(left, x)
+        top = Math.min(top, y)
+        right = Math.max(right, x)
+        bottom = Math.max(bottom, y)
+      }
     }
-    front.clip()
     const x = Math.max(0, Math.floor(left))
     const y = Math.max(0, Math.floor(top))
     const width = Math.min(layer.width, Math.ceil(right)) - x
     const height = Math.min(layer.height, Math.ceil(bottom)) - y
-    if (width > 0 && height > 0)
-      front.drawImage(source, x, y, width, height, x, y, width, height)
-    front.restore()
+    this.frontShown = width > 0 && height > 0
+    if (!this.frontShown) return true
+
+    const { renderer } = this
+    this.camera.layers.set(HOLOGRAM_LAYER)
+    // The scene's pass right after draws this frame's shadows.
+    renderer.shadowMap.autoUpdate = false
+    renderer.render(this.scene, this.camera)
+    renderer.shadowMap.autoUpdate = true
+    front!.drawImage(source, x, y, width, height, x, y, width, height)
+    return true
   }
 
   /**
    * Pointer in CSS pixels relative to the canvas, or null when it leaves.
-   * Over the page copy (`opens` false) it only keeps the display it is on
-   * open, so the copy stays readable to point at everywhere else.
+   * Over the page copy (`opens` false) it only keeps on the hologram it is
+   * on, so the copy stays readable to point at everywhere else.
    */
   setPointer(x: number | null, y: number | null, opens = true) {
     if (x === null || y === null || this.options.reducedMotion) {
@@ -1305,7 +1291,7 @@ export class FactoryEngine {
       }
     }
     this.stationBoxes.forEach(test)
-    // An open station also answers for its unfolded display (only the display,
+    // A station that is on also answers for its hologram (only the hologram,
     // so the machines beside it stay reachable).
     if (this.hovered >= 0) {
       for (const box of this.displayBoxes[this.hovered]!)

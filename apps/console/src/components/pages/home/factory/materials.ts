@@ -479,6 +479,180 @@ export function createBeamMaterial(dark: boolean) {
 }
 
 /**
+ * The fan of light a station's hologram is projected through, from the lens
+ * (`position.y` 0) up to the screen (1; the mesh is scaled to the real
+ * height). `uWidths` is its width at either end, so the shader can tell
+ * across from along. It reaches up as far as `uReach` and shines at
+ * `uLevel`, brightest at the lens, with faint rays rising through it.
+ */
+export function createProjectionMaterial(dark: boolean) {
+  return new ShaderMaterial({
+    fog: true,
+    transparent: true,
+    depthWrite: false,
+    side: DoubleSide,
+    blending: glowBlending(dark),
+    uniforms: UniformsUtils.merge([
+      UniformsLib.fog,
+      {
+        uColor: { value: new Color() },
+        uLevel: { value: 0 },
+        uReach: { value: 0 },
+        uTime: { value: 0 },
+        uWidths: { value: new Vector2(1, 1) },
+        uLight: { value: dark ? 0 : 1 },
+      },
+    ]),
+    vertexShader: /* glsl */ `
+      ${FOG_VERTEX_PARS}
+      varying vec2 vLocal;
+      void main() {
+        vLocal = position.xy;
+        #include <begin_vertex>
+        #include <project_vertex>
+        #include <fog_vertex>
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform vec3 uColor;
+      uniform float uLevel;
+      uniform float uReach;
+      uniform float uTime;
+      uniform vec2 uWidths;
+      uniform float uLight;
+      varying vec2 vLocal;
+      #include <common>
+      #include <fog_pars_fragment>
+      void main() {
+        float along = vLocal.y;
+        if (along > uReach) discard;
+        float across = vLocal.x / mix(uWidths.x, uWidths.y, along) + 0.5;
+        float sides = smoothstep(0.0, 0.22, across) * smoothstep(1.0, 0.78, across);
+        float body = mix(1.0, 0.3, along);
+        // Rays fanning out from the lens, and light rising through them.
+        float rays = 0.72 + 0.28 * sin(across * 57.0 + sin(across * 11.0) * 3.0);
+        float rise = 0.85 + 0.15 * sin(along * 26.0 - uTime * 6.0);
+        // The front of the light as it shoots up.
+        float front = smoothstep(uReach, uReach - 0.1, along);
+        float alpha = clamp(sides * body * rays * rise * front * uLevel * 0.45, 0.0, 1.0);
+        #ifdef USE_FOG
+          alpha *= 1.0 - smoothstep(fogNear, fogFar, vFogDepth);
+        #endif
+        gl_FragColor = vec4(uColor, alpha * (uLight > 0.5 ? 0.85 : 1.0));
+        #include <colorspace_fragment>
+      }
+    `,
+  })
+}
+
+export type HologramUniforms = {
+  uAtlas: { value: Texture | null }
+  /** The station's cell in the atlas: u, v, du, dv. */
+  uCell: { value: Vector4 }
+  /** The screen's size (meters). */
+  uSize: { value: Vector2 }
+  /** 0 → 1 as the scan line draws the screen in from the bottom. */
+  uReveal: { value: number }
+  /** 1 while the image is still forming and unsteady, 0 once it holds. */
+  uFlicker: { value: number }
+  uTime: { value: number }
+  uRim: { value: Color }
+  /** How much the glass dims what is behind it. */
+  uPane: { value: number }
+}
+
+/**
+ * A station's hologram: its cell of the description atlas as light in a pane
+ * of smoked glass, drawn in from the bottom by a scan line, unsteady while it
+ * forms, with fine scan lines and a lit rim. Premultiplied, so one draw both
+ * dims what is behind the glass and adds the light on top: it reads on dark
+ * and light pages alike.
+ */
+export function createHologramMaterial() {
+  const uniforms: HologramUniforms = {
+    uAtlas: { value: null },
+    uCell: { value: new Vector4(0, 0, 1, 1) },
+    uSize: { value: new Vector2(1, 1) },
+    uReveal: { value: 0 },
+    uFlicker: { value: 0 },
+    uTime: { value: 0 },
+    uRim: { value: new Color() },
+    uPane: { value: 0.5 },
+  }
+  const material = new ShaderMaterial({
+    fog: true,
+    transparent: true,
+    depthWrite: false,
+    premultipliedAlpha: true,
+    uniforms: UniformsUtils.merge([UniformsLib.fog]),
+    vertexShader: /* glsl */ `
+      ${FOG_VERTEX_PARS}
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        #include <begin_vertex>
+        #include <project_vertex>
+        #include <fog_vertex>
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform sampler2D uAtlas;
+      uniform vec4 uCell;
+      uniform vec2 uSize;
+      uniform float uReveal;
+      uniform float uFlicker;
+      uniform float uTime;
+      uniform vec3 uRim;
+      uniform float uPane;
+      varying vec2 vUv;
+      #include <common>
+      #include <fog_pars_fragment>
+      float noise(float seed) {
+        return fract(sin(seed * 12.9898) * 43758.5453);
+      }
+      void main() {
+        // Distance to the rounded edge of the glass (meters, negative inside).
+        vec2 extent = uSize * 0.5 - 0.06;
+        vec2 q = abs((vUv - 0.5) * uSize) - extent;
+        float edge = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - 0.06;
+        if (edge > 0.0) discard;
+        // The scan line draws the screen in from the bottom, and out from the top.
+        float scan = mix(-0.04, 1.04, uReveal);
+        float drawn = smoothstep(scan + 0.004, scan - 0.02, vUv.y);
+        if (drawn <= 0.0) discard;
+        float line = exp(-abs(vUv.y - scan) * 160.0) * (1.0 - step(1.0, uReveal));
+
+        vec3 image = texture2D(uAtlas, uCell.xy + vUv * uCell.zw).rgb;
+        // Fine scan lines drifting up, and a faint band drifting down.
+        float rows = 0.88 + 0.12 * sin((vUv.y * uSize.y * 90.0 - uTime * 1.5) * 6.2832);
+        float band = smoothstep(0.08, 0.0, abs(fract(vUv.y + uTime * 0.06) - 0.5)) * 0.1;
+        // While it forms the image is unsteady: whole-frame dips and torn rows.
+        float frame = floor(uTime * 30.0);
+        float dip = step(0.55, noise(frame)) * 0.45;
+        float torn = step(0.9, noise(floor(vUv.y * 36.0) + frame * 7.0)) * 0.7;
+        float steady = 1.0 - uFlicker * max(dip, torn);
+
+        vec3 light = image * rows * steady * 1.2 + uRim * band * steady;
+        // A thin lit rim, and a soft glow just inside it.
+        light += uRim * (smoothstep(-0.016, -0.004, edge) * 0.8 + exp(edge * 40.0) * 0.16);
+        light += mix(uRim, vec3(1.0), 0.6) * line * 1.5;
+        light *= drawn;
+        float alpha = uPane * drawn;
+        #ifdef USE_FOG
+          float fade = 1.0 - smoothstep(fogNear, fogFar, vFogDepth);
+          light *= fade;
+          alpha *= fade;
+        #endif
+        gl_FragColor = vec4(light, alpha);
+        #include <colorspace_fragment>
+      }
+    `,
+  })
+  Object.assign(material.uniforms, uniforms)
+  return { material, uniforms }
+}
+
+/**
  * Service names printed on the glass fascias: one instanced quad per
  * station, one atlas row each, lit from behind so they read in the dark.
  * `aPlate` is the atlas row and the print's brightness (above 1 on hover).

@@ -82,25 +82,25 @@ export const FASCIA = {
 } as const
 
 /**
- * On hover a station unfolds a display like a foldable phone. Folded shut it
- * is stored upright inside the column, reaching down into the bed, so each
- * half is as wide as a slot in the column's top: it rises out of the slot, a
- * mast lifts it, and its front half swings open about the hinge while the
- * mast slides along the slot to bring the open screen to the column's centre.
+ * On hover a station projects a hologram: a fan of light rises from a lens
+ * in the column's top and draws a translucent screen in the air above it,
+ * wider than the column.
  */
-export const EXTENSION = {
-  /** Width of each half. */
-  leaf: 1.1,
-  /** Thickness of each half. */
-  thickness: 0.032,
+export const HOLOGRAM = {
+  width: 2.2,
   height: 1.4,
-  /** The hinge line. */
+  /** The plane the light fan and the screen stand in, through the lens. */
   z: TOWER.z + 0.04,
-  /** Border around the screen. */
-  border: 0.05,
-  /** How far a mast lifts the display above the column once it has risen. */
+  /** How high above the column the screen floats. */
   lift: 0.9,
+  /** The lens the light comes out of, set into the column's top. */
+  lens: { width: 0.62, depth: 0.05 },
 } as const
+
+/** Where a hologram's screen starts, its float above the column scaled by `lift` (0 → 1). */
+export function hologramBottom(lift: number) {
+  return TOWER_TOP + 0.03 + lift * HOLOGRAM.lift
+}
 
 /**
  * The arm rides the column's vertical rails and reaches over the track. It

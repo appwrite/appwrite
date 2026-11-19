@@ -116,8 +116,8 @@ function wire(engine: FactoryEngine, container: HTMLElement): () => void {
   const cleanups: (() => void)[] = []
   const overlay = window.matchMedia(OVERLAY_QUERY)
   // Where each line of the hero's title and description sits over the
-  // scene (`data-factory-copy`), so unfolding displays can keep clear of
-  // the words while rising beside a short line.
+  // scene (`data-factory-copy`), so the holograms can keep clear of the
+  // words while floating beside a short line.
   const syncCopyArea = () => {
     if (!overlay.matches) return engine.setCopyLines([])
     const stage = container.getBoundingClientRect()
@@ -163,8 +163,8 @@ function wire(engine: FactoryEngine, container: HTMLElement): () => void {
   })
 
   // The pointer, anywhere over the hero: over the scene it hovers the
-  // machines; over the copy laid on it, it only keeps open a display it is
-  // still on, which stands in front of the copy (`data-factory-front`).
+  // machines; over the copy laid on it, it only keeps on a hologram it is
+  // still over, which stands in front of the copy (`data-factory-front`).
   const hero = container.closest('section') ?? container
   const onPointerMove = (event: PointerEvent) => {
     if (event.pointerType === 'touch') return

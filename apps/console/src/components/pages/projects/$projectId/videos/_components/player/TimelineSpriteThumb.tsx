@@ -63,7 +63,9 @@ export function TimelineSpriteThumb({
     <div
       ref={containerRef}
       className={cn(
-        'relative shrink-0 overflow-hidden bg-muted',
+        'relative shrink-0 overflow-hidden',
+        // A contained frame leaves bars around it; black reads as letterbox.
+        fillParent && fit === 'contain' ? 'bg-black' : 'bg-muted',
         fluid && !fillParent && 'w-full',
         fillParent && 'h-full w-full',
         className,

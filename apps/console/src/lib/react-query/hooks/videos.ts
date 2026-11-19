@@ -566,6 +566,27 @@ export function useVideoCodecs(projectId: string | null | undefined) {
 // Mutations
 // ---------------------------------------------------------------------------
 
+/** Turns public playback (read for Any) on or off, keeping the other permissions. */
+/** Replaces the video's permissions; the backend stores the list as given. */
+export function useUpdateVideoPermissions(
+  projectId: string | null | undefined,
+  video: Models.Video,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (permissions: string[]) =>
+      sdk.forProject(projectId!).videos.update({
+        videoId: video.$id,
+        name: video.name,
+        permissions,
+      }),
+    onSuccess: async (updated) => {
+      queryClient.setQueryData(videoKeys.detail(projectId, video.$id), updated)
+      await queryClient.refetchQueries({ queryKey: Dependencies.VIDEOS })
+    },
+  })
+}
+
 export function useUpdateVideo(
   projectId: string | null | undefined,
   videoId: string | null | undefined,

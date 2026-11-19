@@ -15,6 +15,7 @@ import {
   createGlowMaterial,
   createNameplateMaterial,
   createPowerLineMaterial,
+  createProjectionMaterial,
   createScreenMaterial,
   glowBlending,
   type ScreenUniforms,
@@ -361,6 +362,13 @@ function createNetworkCable() {
 /** A light curtain material that follows the theme. */
 export function createKitBeam(kit: FactoryKit) {
   const material = createBeamMaterial(kit.palette.dark)
+  kit.beams.push(material)
+  return material
+}
+
+/** A hologram's light fan, which switches blending with the theme like the beams. */
+export function createKitProjection(kit: FactoryKit) {
+  const material = createProjectionMaterial(kit.palette.dark)
   kit.beams.push(material)
   return material
 }

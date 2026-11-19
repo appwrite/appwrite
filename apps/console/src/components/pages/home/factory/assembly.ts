@@ -14,7 +14,9 @@ import {
  * The factory assembling itself as the scene first shows, in real seconds
  * from the first frame, the way a real one is installed: every machine
  * comes in from out of view on what it stands on, and slows to a stop in
- * its place. The line glides in along its bed from past the left edge of
+ * its place. They are already on their way when the scene first shows
+ * (their arrivals start before 0), just out of view, so they come into it
+ * at once. The line glides in along its bed from past the left edge of
  * the frame, front first, every bay with what stands in it: the gate, the
  * shipped counter, each station (its arm and tool on it) with the carrier
  * under it, the framework installer, the queue. The server racks roll in
@@ -42,7 +44,7 @@ export type Arrival = {
  * on each other and settle one after another.
  */
 const LINE = {
-  start: 0.15,
+  start: -0.35,
   stagger: 0.05,
   duration: 1.6,
   distance: 22,
@@ -63,13 +65,13 @@ export function onLine(slot: number): Arrival {
 export const ARRIVALS = {
   /** Racks roll in from the back of the aisle, the Appwrite rack first. */
   rack: (index: number): Arrival => ({
-    start: index * 0.07,
+    start: index * 0.07 - 0.5,
     duration: 1.3,
     axis: 2,
     distance: -12,
   }),
   /** The Console screen rolls in from the right. */
-  wall: { start: 0.25, duration: 1.3, axis: 0, distance: 10 } as Arrival,
+  wall: { start: -0.35, duration: 1.3, axis: 0, distance: 10 } as Arrival,
   installer: onLine(INSTALL_SLOT),
   station: (index: number) => onLine(index),
   counter: onLine(DONE_SLOT),
@@ -102,16 +104,16 @@ export function arrive(
 }
 
 /** The power cables are pulled out from the Appwrite rack once the machines are in. */
-const CABLES = { start: 1.7, end: 2.4 } as const
+const CABLES = { start: 1.2, end: 1.9 } as const
 /** The network's cables run out of the gate once it is in, gathering speed (meters, seconds). */
-const NETWORK_RUN = { start: 1.8, speed: 4, gain: 20 } as const
+const NETWORK_RUN = { start: 1.3, speed: 4, gain: 20 } as const
 
 /** When the line starts powering up: it starts moving once the queue is in. */
-export const POWER_ON = 2.2
-/** Every machine stands in place: displays may unfold, the floor starts to mirror the machine. */
-export const ASSEMBLED = 2.4
+export const POWER_ON = 1.7
+/** Every machine stands in place: holograms may come on. */
+export const ASSEMBLED = 1.9
 /** Every cable has run out: nothing of the assembly moves after this. */
-export const SETTLED = 3.7
+export const SETTLED = 3.2
 
 /** How far the power cables have been pulled out, 0 → 1 along each. */
 export function cablesOut(assembly: number): number {

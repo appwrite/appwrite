@@ -19,6 +19,7 @@ import { analyticsAttrs } from '@/lib/analytics-actions'
 import { CreateRenditions } from './_components/CreateRenditions'
 import { CreateVideo } from './_components/CreateVideo'
 import { VideoRenditionsProgressHeaderAlert } from './_components/VideoRenditionsProgressHeaderAlert'
+import { VideoPrivateHeaderAlert } from './_components/VideoPrivateHeaderAlert'
 import { CreateSubtitle } from './_components/CreateSubtitle'
 import { VideoStatusBadge } from './_components/VideoStatusBadge'
 import { VideoThumb } from './_components/VideoThumb'
@@ -192,7 +193,12 @@ export function Layout() {
               "The video you're looking for doesn't exist or you don't have access to it.",
             )}
           </p>
-          <Button variant="outline" size="sm" className="mt-4 h-8 text-[13px]" asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-4 h-8 text-[13px]"
+            asChild
+          >
             <Link to="/projects/$projectId/videos" params={{ projectId }}>
               {t('Back to videos')}
             </Link>
@@ -216,13 +222,17 @@ export function Layout() {
   return (
     <VideoDetailActionsContext.Provider value={actions}>
       <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
-        {activeTab === 'overview' ? null : (
-          <VideoRenditionsProgressHeaderAlert
-            projectId={projectId}
-            videoId={videoId}
-            renditions={renditions}
-          />
-        )}
+        <VideoRenditionsProgressHeaderAlert
+          projectId={projectId}
+          videoId={videoId}
+          renditions={renditions}
+          linkToRenditions={activeTab !== 'renditions'}
+        />
+        <VideoPrivateHeaderAlert
+          projectId={projectId}
+          video={video}
+          linkToSettings={activeTab !== 'settings'}
+        />
         <div className="flex min-h-0 min-w-0 flex-1">
           <aside className="hidden w-[248px] shrink-0 flex-col border-e border-border bg-background lg:flex">
             <SubnavHeader
