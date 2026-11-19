@@ -13,7 +13,6 @@ class Ping extends Action
             ->desc('Reply to client heartbeat')
             ->label(Dispatcher::LABEL_MESSAGE_TYPE, 'ping')
             ->label(Dispatcher::LABEL_REQUIRES_PROJECT, false)
-            ->label(Dispatcher::LABEL_RATE_LIMITED, false)
             ->callback($this->action(...));
     }
 

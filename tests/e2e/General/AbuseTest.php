@@ -1203,21 +1203,15 @@ final class AbuseTest extends Scope
          * Test for SUCCESS
          */
         $this->startCountingInOneWindow(60);
-        for ($i = 0; $i < APP_LIMIT_REALTIME_MESSAGES * 2; $i++) {
-            $client->send(\json_encode(['type' => 'ping']));
-            $this->assertSame('pong', \json_decode($client->receive(), true)['type'] ?? null, 'Ping ' . ($i + 1) . ' does not count towards the limit');
-        }
-
         for ($i = 0; $i < APP_LIMIT_REALTIME_MESSAGES; $i++) {
-            $client->send(\json_encode(['type' => 'unknown']));
-            $response = \json_decode($client->receive(), true);
-            $this->assertSame(1003, $response['data']['code'] ?? null, 'Message ' . ($i + 1) . ' is within the limit');
+            $client->send(\json_encode(['type' => 'ping']));
+            $this->assertSame('pong', \json_decode($client->receive(), true)['type'] ?? null, 'Message ' . ($i + 1) . ' is within the limit');
         }
 
         /**
          * Test for FAILURE
          */
-        $client->send(\json_encode(['type' => 'unknown']));
+        $client->send(\json_encode(['type' => 'ping']));
         $response = \json_decode($client->receive(), true);
         $this->assertSame('error', $response['type'] ?? null);
         $this->assertSame(1013, $response['data']['code'] ?? null);

@@ -1250,22 +1250,8 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
 
     $error = null;
     try {
-        $message = \json_decode($message, true);
-        $type = \is_array($message) ? ($message['type'] ?? null) : null;
-
-        // Expiry fires no event, so it is checked on every message too, as the HTTP API
-        // checks every request. Only `authentication` goes through: it replaces the
-        // expired credentials with a session's.
-        if ($type !== 'authentication' && $realtime->isExpired($connection, \time())) {
-            $responseCode = $unauthorized->getCode();
-            $server->send([$connection], $unauthorizedPayloadJson);
-            $server->close($connection, $unauthorized->getCode());
-            $outboundBytes += \strlen($unauthorizedPayloadJson);
-            return;
-        }
-
-        if ($messageDispatcher->isRateLimited($type) && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
-            $isOverLimit = $container->get('timelimit')(
+        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+            $isRateLimited = $container->get('timelimit')(
                 'project:{project},container:{container},connection:{connection}',
                 APP_LIMIT_REALTIME_MESSAGES,
                 60,
@@ -1279,7 +1265,7 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
                     ->limited,
             );
 
-            if ($isOverLimit) {
+            if ($isRateLimited) {
                 throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES);
             }
         }
@@ -1313,7 +1299,7 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
             $database->setMetadata('user', $impersonatedUserId);
         }
 
-        if ($messageDispatcher->requiresProject($type) && !empty($projectId) && $projectId !== 'console') {
+        if (!empty($projectId) && $projectId !== 'console') {
             // Negative-cache race: if any prior code path queried projects:$projectId
             // before this project existed (e.g. a router probe during connection
             // setup), the Database's shared cache may hold an empty result. Try the
@@ -1345,11 +1331,13 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
 
         // Record realtime inbound bytes for this project
         // not making this a part of the dispatcher as we need to get the inbound bytes as well even if we dont enter the dispatcher
-        if (!empty($projectId) && $projectId !== 'console') {
+        if ($project !== null && !$project->isEmpty()) {
             $usage->add([
                 METRIC_REALTIME_INBOUND => $rawSize,
-            ], $projectId);
+            ], $project->getId());
         }
+
+        $message = json_decode($message, true);
 
         if (is_null($message) || (!array_key_exists('type', $message) && !array_key_exists('data', $message))) {
             throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Message format is not valid.');
@@ -1359,6 +1347,17 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
 
         if (!\is_scalar($messageType)) {
             throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Message type is not valid.');
+        }
+
+        // Expiry fires no event, so it is checked on every message too, as the HTTP API
+        // checks every request. Only `authentication` goes through: it replaces the
+        // expired credentials with a session's.
+        if ($messageType !== 'authentication' && $realtime->isExpired($connection, \time())) {
+            $responseCode = $unauthorized->getCode();
+            $server->send([$connection], $unauthorizedPayloadJson);
+            $server->close($connection, $unauthorized->getCode());
+            $outboundBytes += \strlen($unauthorizedPayloadJson);
+            return;
         }
 
         // Child of the global container: per-message values like $connection and $project
@@ -1396,11 +1395,11 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
             $bytes = \strlen($responseJson);
             $outboundBytes += $bytes;
 
-            if (!empty($projectId) && $projectId !== 'console') {
+            if ($project !== null && !$project->isEmpty()) {
                 $usage->add([
                     METRIC_REALTIME_OUTBOUND => $bytes,
                     METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT => 1,
-                ], $projectId);
+                ], $project->getId());
             }
         }
 
