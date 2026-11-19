@@ -1251,19 +1251,22 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
     $error = null;
     try {
         $message = \json_decode($message, true);
+        $type = \is_array($message) ? ($message['type'] ?? null) : null;
+
+        // Expiry fires no event, so it is checked on every message too, as the HTTP API
+        // checks every request. Only `authentication` goes through: it replaces the
+        // expired credentials with a session's.
+        if ($type !== 'authentication' && $realtime->isExpired($connection, \time())) {
+            $responseCode = $unauthorized->getCode();
+            $server->send([$connection], $unauthorizedPayloadJson);
+            $server->close($connection, $unauthorized->getCode());
+            $outboundBytes += \strlen($unauthorizedPayloadJson);
+            return;
+        }
 
         // Pings are the SDK heartbeat, so they skip the message limit and never wait on the database.
-        if (\is_array($message) && ($message['type'] ?? null) === 'ping') {
+        if ($type === 'ping') {
             $messageType = 'ping';
-
-            if ($realtime->isExpired($connection, \time())) {
-                $responseCode = $unauthorized->getCode();
-                $server->send([$connection], $unauthorizedPayloadJson);
-                $server->close($connection, $unauthorized->getCode());
-                $outboundBytes += \strlen($unauthorizedPayloadJson);
-                return;
-            }
-
             $responseJson = \json_encode($messageDispatcher->dispatch(new Container($container), $message));
             $server->send([$connection], $responseJson);
             $outboundBytes += \strlen($responseJson);
@@ -1375,17 +1378,6 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
 
         if (!\is_scalar($messageType)) {
             throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Message type is not valid.');
-        }
-
-        // Expiry fires no event, so it is checked on every message too, as the HTTP API
-        // checks every request. Only `authentication` goes through: it replaces the
-        // expired credentials with a session's.
-        if ($messageType !== 'authentication' && $realtime->isExpired($connection, \time())) {
-            $responseCode = $unauthorized->getCode();
-            $server->send([$connection], $unauthorizedPayloadJson);
-            $server->close($connection, $unauthorized->getCode());
-            $outboundBytes += \strlen($unauthorizedPayloadJson);
-            return;
         }
 
         // Child of the global container: per-message values like $connection and $project
