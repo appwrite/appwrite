@@ -104,7 +104,7 @@
     "@renoun/screenshot": "^0.3.3",
     "@sentry/bun": "10.55.0",
     "@sentry/tanstackstart-react": "^10.40.0",
-    "@stripe/stripe-js": "^4.8.0",
+    "@stripe/stripe-js": "^10.1.0",
     "@tailwindcss/vite": "^4.0.6",
     "@tanstack/react-query": "^5.90.2",
     "@tanstack/react-router": "1.170.41",
