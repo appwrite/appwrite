@@ -10,9 +10,10 @@ import {
   useDeleteVideo,
   useProjectVideo,
   useUpdateVideo,
-  useUpdateVideoPublicPlayback,
+  useUpdateVideoPermissions,
 } from '@/lib/react-query/hooks'
-import { isVideoPublic } from '@/lib/videos/public-playback'
+import { isVideoPublic, withPublicPlayback } from '@/lib/videos/public-playback'
+import { PermissionsEditor } from '../../../auth/PermissionsEditor'
 import { Switch } from '@/components/ui/switch'
 import { VideoPage, VideoSectionCard } from '../../_components/VideoPage'
 import { useT } from '@/lib/i18n/translate'
@@ -116,26 +117,53 @@ function AccessCard({
   video: Models.Video
 }) {
   const t = useT()
-  const mutation = useUpdateVideoPublicPlayback(projectId, video)
+  const mutation = useUpdateVideoPermissions(projectId, video)
   const isPublic = isVideoPublic(video)
+  const [draft, setDraft] = useState(video.$permissions)
+
+  useEffect(() => {
+    setDraft(video.$permissions)
+  }, [video.$permissions])
+
+  const changed =
+    draft.length !== video.$permissions.length ||
+    draft.some((permission) => !video.$permissions.includes(permission))
+
+  const save = (permissions: string[], success: string) =>
+    mutation.mutate(permissions, {
+      onSuccess: () => toast.success(success),
+      onError: (error) =>
+        toast.error(getErrorMessage(error) || t('Failed to update video')),
+    })
 
   return (
     <section
       id="access"
       className="scroll-mt-4 overflow-hidden rounded-xl border border-border bg-card/50"
     >
+      <div className="px-6 py-4">
+        <h3 className="text-[15px] font-semibold text-foreground">
+          {t('Access')}
+        </h3>
+        <p className="mt-2 text-[13px] text-muted-foreground">
+          {t(
+            "The video's own permissions decide who can watch it: its stream, captions, thumbnails and timeline. Permissions on the source file don't apply. Project members and API keys always have full access.",
+          )}
+        </p>
+      </div>
+      <div className="border-t border-border" />
       <div className="flex items-start justify-between gap-6 px-6 py-4">
         <div className="min-w-0">
-          <h3 className="text-[15px] font-semibold text-foreground">
+          <p className="text-[13px] font-medium text-foreground">
             {t('Public playback')}
-          </h3>
-          <p className="mt-2 text-[13px] text-muted-foreground">
+          </p>
+          <p className="mt-1 text-[13px] text-muted-foreground">
             {isPublic
               ? t(
-                  'Anyone with the link can watch this video on the player page and in embeds.',
+                  'Anyone can watch, including visitors on the player page and in embeds. Turning this on adds read access for Any.',
                 )
               : t(
-                  'Only project members can watch this video. Visitors get an error on the player page and in embeds.',
+                  'Visitors get an error on the player page and in embeds. Turning this on adds read access for Any.',
                 )}
           </p>
         </div>
@@ -144,20 +172,40 @@ function AccessCard({
           disabled={mutation.isPending}
           aria-label={t('Public playback')}
           onCheckedChange={(enabled) =>
-            mutation.mutate(enabled, {
-              onSuccess: () =>
-                toast.success(
-                  enabled
-                    ? t('Video is now public')
-                    : t('Video is now private'),
-                ),
-              onError: (error) =>
-                toast.error(
-                  getErrorMessage(error) || t('Failed to update video'),
-                ),
-            })
+            save(
+              withPublicPlayback(video.$permissions, enabled),
+              enabled ? t('Video is now public') : t('Video is now private'),
+            )
           }
         />
+      </div>
+      <div className="border-t border-border" />
+      <div className="px-6 py-4">
+        <p className="text-[13px] font-medium text-foreground">
+          {t('Permissions')}
+        </p>
+        <p className="mt-1 mb-4 text-[13px] text-muted-foreground">
+          {t(
+            'Read lets a role watch the video. Users, teams and labels need a session for this project, so they can watch in your app but not on the player page. Update and delete let a role rename or delete the video with a client SDK.',
+          )}
+        </p>
+        <PermissionsEditor
+          permissions={draft}
+          onPermissionsChange={setDraft}
+          withCreate={false}
+          projectId={projectId}
+        />
+      </div>
+      <div className="border-t border-border bg-muted/30 px-6 py-4">
+        <Button
+          type="button"
+          size="sm"
+          className="h-9 text-[13px]"
+          disabled={!changed || mutation.isPending}
+          onClick={() => save(draft, t('Permissions updated'))}
+        >
+          {t('Update')}
+        </Button>
       </div>
     </section>
   )

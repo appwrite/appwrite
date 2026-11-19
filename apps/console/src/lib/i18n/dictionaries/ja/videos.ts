@@ -1232,15 +1232,22 @@ export const jaVideosDictionary: Record<string, string> = {
   'Scroll through the thumbnails and hover one to see its time range and sprite region.':
     'サムネイルをスクロールし、カーソルを合わせると時間範囲とスプライト領域を確認できます。',
   'Public playback': '公開再生',
-  'Anyone with the link can watch this video on the player page and in embeds.':
-    'リンクを知っている人なら誰でも、プレーヤーページや埋め込みでこの動画を視聴できます。',
-  'Only project members can watch this video. Visitors get an error on the player page and in embeds.':
-    'この動画を視聴できるのはプロジェクトメンバーのみです。訪問者にはプレーヤーページや埋め込みでエラーが表示されます。',
+  "The video's own permissions decide who can watch it: its stream, captions, thumbnails and timeline. Permissions on the source file don't apply. Project members and API keys always have full access.":
+    '動画を視聴できるユーザー(ストリーム、字幕、サムネイル、タイムライン)は、動画自体の権限で決まります。ソースファイルの権限は適用されません。プロジェクトメンバーと API キーは常にフルアクセスできます。',
+  'Anyone can watch, including visitors on the player page and in embeds. Turning this on adds read access for Any.':
+    'プレーヤーページや埋め込みの訪問者を含め、誰でも視聴できます。オンにすると Any に読み取り権限が追加されます。',
+  'Visitors get an error on the player page and in embeds. Turning this on adds read access for Any.':
+    '訪問者にはプレーヤーページと埋め込みでエラーが表示されます。オンにすると Any に読み取り権限が追加されます。',
+  'Read lets a role watch the video. Users, teams and labels need a session for this project, so they can watch in your app but not on the player page. Update and delete let a role rename or delete the video with a client SDK.':
+    '読み取り権限があるロールは動画を視聴できます。ユーザー、チーム、ラベルにはこのプロジェクトのセッションが必要なため、アプリでは視聴できますが、プレーヤーページでは視聴できません。更新と削除の権限があるロールは、クライアント SDK で動画の名前変更や削除ができます。',
+  'Permissions updated': '権限を更新しました',
+  'Only signed-in users with read access can watch it in your app. Visitors get an error on the player page and in embeds.':
+    '読み取り権限のあるサインイン済みユーザーだけがアプリで視聴できます。訪問者にはプレーヤーページと埋め込みでエラーが表示されます。',
+  'Only project members and API keys can watch it. Visitors get an error on the player page and in embeds.':
+    'プロジェクトメンバーと API キーだけが視聴できます。訪問者にはプレーヤーページと埋め込みでエラーが表示されます。',
   'Video is now public': '動画を公開しました',
   'Video is now private': '動画を非公開にしました',
   'Make public': '公開する',
-  'Only project members can watch it. Visitors get an error on the player page and in embeds.':
-    '視聴できるのはプロジェクトメンバーのみです。訪問者にはプレーヤーページや埋め込みでエラーが表示されます。',
   'Visitors get an error here. You can watch because you are a project member.':
     '訪問者にはここでエラーが表示されます。あなたはプロジェクトメンバーなので視聴できます。',
   'Open access settings': 'アクセス設定を開く',

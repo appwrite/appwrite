@@ -23,7 +23,6 @@ import {
   type Models,
 } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { withPublicPlayback } from '@/lib/videos/public-playback'
 import { DEFAULT_STALE_TIME, GRID_DEFAULT_PAGE_SIZE } from './constants'
 import { Dependencies } from './dependencies'
 
@@ -568,17 +567,18 @@ export function useVideoCodecs(projectId: string | null | undefined) {
 // ---------------------------------------------------------------------------
 
 /** Turns public playback (read for Any) on or off, keeping the other permissions. */
-export function useUpdateVideoPublicPlayback(
+/** Replaces the video's permissions; the backend stores the list as given. */
+export function useUpdateVideoPermissions(
   projectId: string | null | undefined,
   video: Models.Video,
 ) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (enabled: boolean) =>
+    mutationFn: (permissions: string[]) =>
       sdk.forProject(projectId!).videos.update({
         videoId: video.$id,
         name: video.name,
-        permissions: withPublicPlayback(video.$permissions, enabled),
+        permissions,
       }),
     onSuccess: async (updated) => {
       queryClient.setQueryData(videoKeys.detail(projectId, video.$id), updated)

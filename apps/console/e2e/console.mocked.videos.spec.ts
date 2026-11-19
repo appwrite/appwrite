@@ -723,17 +723,51 @@ test.describe('videos (mocked API)', () => {
     const warning = page.getByText('This video is private', { exact: true })
 
     await open(page, `/${VIDEO_ID}`, () => warning)
+    await expect(
+      page.getByText('Only project members and API keys can watch it.', {
+        exact: false,
+      }),
+    ).toBeVisible()
     await screenshot(page, 'videos-private-warning.png')
-    await page.getByRole('link', { name: 'Make public' }).click()
+    await page.getByRole('button', { name: 'Make public' }).click()
+
+    await expect(warning).toHaveCount(0)
+    expect(calls.videoUpdates).toEqual([
+      { name: VIDEO.name, permissions: ['read("any")'] },
+    ])
+  })
+
+  test('opens the video permissions from the private warning', async ({
+    page,
+  }) => {
+    await enableVideos(page)
+    const calls = await mockAppwriteApi(page, {
+      ...VIDEO,
+      $permissions: ['read("users")', 'update("users")'],
+    })
+    const warning = page.getByText('This video is private', { exact: true })
+
+    await open(page, `/${VIDEO_ID}`, () => warning)
+    await expect(
+      page.getByText(
+        'Only signed-in users with read access can watch it in your app.',
+        { exact: false },
+      ),
+    ).toBeVisible()
+    await page.getByRole('link', { name: 'Permissions' }).click()
 
     const toggle = page.getByRole('switch', { name: 'Public playback' })
     await expect(toggle).not.toBeChecked()
+    await screenshot(page, 'videos-settings-access.png')
     await toggle.click()
 
     await expect(toggle).toBeChecked()
     await expect(warning).toHaveCount(0)
     expect(calls.videoUpdates).toEqual([
-      { name: VIDEO.name, permissions: ['read("any")'] },
+      {
+        name: VIDEO.name,
+        permissions: ['read("users")', 'update("users")', 'read("any")'],
+      },
     ])
   })
 
