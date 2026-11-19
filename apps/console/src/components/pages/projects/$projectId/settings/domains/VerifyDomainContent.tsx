@@ -69,7 +69,7 @@ const POINTING_METHODS: Record<string, VerificationMethod> = {
  * The check of an ALIAS record. DNS answers an ALIAS with the target's
  * addresses, so the server's A and AAAA checks are its check: verified when
  * either is, otherwise the one that asks the most of the developer. It keeps
- * no found values or message: they are the addresses the domain resolves to,
+ * no current values or message: they are the addresses the domain resolves to,
  * never the target the developer set.
  */
 function getAliasCheck(
@@ -87,8 +87,8 @@ function getAliasCheck(
   return {
     ...check,
     type: ALIAS_TYPE,
-    value,
-    found: [],
+    expected: value,
+    current: [],
     message: '',
   }
 }
@@ -342,7 +342,7 @@ function RecordSection({
             {records.map((r) => {
               const found =
                 r.check?.status === 'mismatch' && !r.notNeeded
-                  ? r.check.found
+                  ? r.check.current
                   : []
               return (
                 <Fragment key={`${r.type}-${r.value}`}>
@@ -498,20 +498,20 @@ function getDnsBanners(
           prefix: t('{type} record').replace('{type}', t('ALIAS or ANAME')),
           text: t(
             'Your domain points somewhere else. Set this record to {value}.',
-          ).replace('{value}', check.value),
+          ).replace('{value}', check.expected),
         })
         continue
       }
       const more =
-        check.found.length > 1
-          ? ` ${t('and {n} more').replace('{n}', String(check.found.length - 1))}`
+        check.current.length > 1
+          ? ` ${t('and {n} more').replace('{n}', String(check.current.length - 1))}`
           : ''
       banners.push({
         tone: 'error',
         prefix: t('{type} record').replace('{type}', check.type),
         text: t('It points to {found}. Change it to {value}.')
-          .replace('{found}', `${check.found[0] ?? ''}${more}`)
-          .replace('{value}', check.value),
+          .replace('{found}', `${check.current[0] ?? ''}${more}`)
+          .replace('{value}', check.expected),
       })
     }
   }
@@ -887,14 +887,14 @@ export function VerifyDomainContent({
     checks?.find(
       (check) =>
         check.type === type &&
-        (type === 'CAA' || normalize(check.value) === normalize(value)),
+        (type === 'CAA' || normalize(check.expected) === normalize(value)),
     )
 
   // A function domain accepts more than one CNAME target. When DNS points at
   // another accepted one, that target is the one shown, with its check.
   const verifiedCname = checks?.find(
     (check) => check.type === 'CNAME' && check.status === 'verified',
-  )?.value
+  )?.expected
 
   // Once one record points the domain at Appwrite, the others are not needed.
   const verifiedType = checks?.find(
@@ -994,9 +994,9 @@ export function VerifyDomainContent({
           name: '@',
           value: hasCaa
             ? caa!
-            : caaCheck!.value.includes(' ')
-              ? caaCheck!.value
-              : `0 issue "${caaCheck!.value}"`,
+            : caaCheck!.expected.includes(' ')
+              ? caaCheck!.expected
+              : `0 issue "${caaCheck!.expected}"`,
           ttl: 3600,
           badge: caaCheck?.required ? 'Required' : 'Recommended',
           check: caaCheck,
@@ -1059,12 +1059,16 @@ export function VerifyDomainContent({
       ? null
       : verificationError
 
+  // Each record's update time is its last check, so the newest is the domain's
+  const checkedAt =
+    checks?.reduce(
+      (last, check) => (check.$updatedAt > last ? check.$updatedAt : last),
+      '',
+    ) || rule.$updatedAt
+
   const checkedRecords = checks ? (
     <div className="space-y-6">
-      <DnsCheckMeta
-        rule={rule}
-        checkedAt={checks[0]?.checkedAt || rule.$updatedAt}
-      />
+      <DnsCheckMeta rule={rule} checkedAt={checkedAt} />
       {/* Only the banners are live: the times above tick. */}
       <div role="status" aria-live="polite" className="space-y-3">
         {banners.map((banner) => (
