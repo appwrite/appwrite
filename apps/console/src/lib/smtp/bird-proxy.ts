@@ -37,28 +37,43 @@ type BirdUpstream =
   | { method: 'GET'; path: string; forwardQuery?: boolean }
   | { method: 'POST'; path: string; body: string }
 
-async function proxyBirdRequest(
+type BirdCaller = { authorization: string; region: string }
+
+/**
+ * Shared guard rails, then the region the caller's token names. Runs before
+ * anything else, including reading the body, so a refused caller costs
+ * nothing.
+ */
+function admitBirdRequest(
   request: Request,
-  upstream: BirdUpstream,
-): Promise<Response> {
+): BirdCaller | { refusal: Response } {
   const guard = guardRelayRequest(request, 'Bird')
-  if ('refusal' in guard) return guard.refusal
+  if ('refusal' in guard) return guard
 
   const region = birdRegion(bearerToken(guard.authorization))
   if (!region) {
-    return jsonError(
-      401,
-      'invalid_access_token',
-      'The Bird access token does not name a region',
-    )
+    return {
+      refusal: jsonError(
+        401,
+        'invalid_access_token',
+        'The Bird access token does not name a region',
+      ),
+    }
   }
+  return { authorization: guard.authorization, region }
+}
 
-  const url = new URL(`${birdApiBaseUrl(region)}${upstream.path}`)
+async function forwardToBird(
+  request: Request,
+  caller: BirdCaller,
+  upstream: BirdUpstream,
+): Promise<Response> {
+  const url = new URL(`${birdApiBaseUrl(caller.region)}${upstream.path}`)
   if (upstream.method === 'GET' && upstream.forwardQuery) {
     forwardQuery(url, request.url, FORWARDED_QUERY_PARAMS)
   }
   return await forwardToProvider(
-    guard.authorization,
+    caller.authorization,
     {
       method: upstream.method,
       url,
@@ -72,7 +87,10 @@ async function proxyBirdRequest(
 export async function proxyListBirdDomains(
   request: Request,
 ): Promise<Response> {
-  return await proxyBirdRequest(request, {
+  const caller = admitBirdRequest(request)
+  if ('refusal' in caller) return caller.refusal
+
+  return await forwardToBird(request, caller, {
     method: 'GET',
     path: '/v1/email/domains',
     forwardQuery: true,
@@ -86,6 +104,9 @@ export async function proxyListBirdDomains(
 export async function proxyCreateBirdApiKey(
   request: Request,
 ): Promise<Response> {
+  const caller = admitBirdRequest(request)
+  if ('refusal' in caller) return caller.refusal
+
   const parsed = await readJsonBody(request)
   if ('refusal' in parsed) return parsed.refusal
 
@@ -98,7 +119,7 @@ export async function proxyCreateBirdApiKey(
     )
   }
 
-  return await proxyBirdRequest(request, {
+  return await forwardToBird(request, caller, {
     method: 'POST',
     path: '/v1/api-keys',
     body: JSON.stringify(body),
@@ -113,7 +134,10 @@ export async function proxyRevokeBirdApiKey(
   if (!isBirdApiKeyId(apiKeyId)) {
     return jsonError(400, 'validation_error', 'Invalid API key id')
   }
-  return await proxyBirdRequest(request, {
+  const caller = admitBirdRequest(request)
+  if ('refusal' in caller) return caller.refusal
+
+  return await forwardToBird(request, caller, {
     method: 'POST',
     path: `/v1/api-keys/${apiKeyId}/revoke`,
     body: '{}',

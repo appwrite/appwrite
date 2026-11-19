@@ -194,6 +194,15 @@ describe('minted credentials', () => {
     expect(revoked).toEqual(['key_1'])
   })
 
+  test('revokes a credential minted after the flow was released', () => {
+    // The wizard closed while the key was still being created.
+    const { minted, revoked } = tracked()
+    minted.release()
+
+    expect(minted.track(key1)).toBe(false)
+    expect(revoked).toEqual(['key_1'])
+  })
+
   test('keeps a credential once the save that stores it succeeds', async () => {
     const { minted, revoked } = tracked()
     minted.track(key1)
@@ -394,7 +403,11 @@ describe('Bird credentials', () => {
   })
 
   test('never yields a region that could change the host', () => {
+    expect(birdRegion('bk_us12_payload')).toBe('us12')
     expect(birdRegion('')).toBeNull()
+    expect(birdRegion('bk_eu_payload')).toBeNull()
+    expect(birdRegion('bk_123_payload')).toBeNull()
+    expect(birdRegion('bk_e1u_payload')).toBeNull()
     expect(birdRegion('bk_eu1')).toBeNull()
     expect(birdRegion('re_eu1_payload')).toBeNull()
     expect(birdRegion('bk_EU1_payload')).toBeNull()
@@ -406,6 +419,9 @@ describe('Bird credentials', () => {
     expect(isBirdApiKeyId('key_01hqz8kp3v9x2m4n5p6q7r8s9t')).toBe(true)
     expect(isBirdApiKeyId('key_01HQZ8KP3V9X2M4N5P6Q7R8S9T')).toBe(false)
     expect(isBirdApiKeyId('key_../../v1/workspace')).toBe(false)
+    expect(isBirdApiKeyId('key_01hqz8kp3v9x2m4n5p6q7r8s9')).toBe(false)
+    expect(isBirdApiKeyId('key_01hqz8kp3v9x2m4n5p6q7r8sil')).toBe(false)
+    expect(isBirdApiKeyId('dom_01hqz8kp3v9x2m4n5p6q7r8s9t')).toBe(false)
   })
 })
 
@@ -486,6 +502,42 @@ describe('Bird proxy guard rails', () => {
       name: 'Appwrite SMTP: demo',
       scopes: [{ scope: 'emails', level: 'write' }],
     })
+  })
+
+  test('refuses an oversized body without reading all of it', async () => {
+    const sent = captureUpstream()
+    let pulled = 0
+    const endless = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        pulled++
+        controller.enqueue(new Uint8Array(4096).fill(32))
+      },
+    })
+    const response = await proxyCreateBirdApiKey(
+      new Request('https://console.test/bird/api-keys', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer bt_us1_token' },
+        body: endless,
+        duplex: 'half',
+      } as RequestInit),
+    )
+
+    expect(response.status).toBe(413)
+    expect(pulled).toBeLessThan(5)
+    expect(sent.url).toBeUndefined()
+  })
+
+  test('refuses before reading the body', async () => {
+    const sent = captureUpstream()
+    const request = new Request('https://console.test/bird/api-keys', {
+      method: 'POST',
+      headers: { 'Sec-Fetch-Site': 'cross-site' },
+      body: JSON.stringify({ name: 'k' }),
+    })
+
+    expect((await proxyCreateBirdApiKey(request)).status).toBe(403)
+    expect(request.bodyUsed).toBe(false)
+    expect(sent.url).toBeUndefined()
   })
 
   test('revokes through the revoke endpoint and rejects foreign ids', async () => {

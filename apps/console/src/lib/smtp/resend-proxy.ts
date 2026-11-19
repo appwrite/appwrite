@@ -58,6 +58,10 @@ export async function proxyResendRequest(
 export async function proxyCreateResendApiKey(
   request: Request,
 ): Promise<Response> {
+  // Refuse before reading, so a refused caller is never buffered.
+  const guard = guardRelayRequest(request, 'Resend')
+  if ('refusal' in guard) return guard.refusal
+
   const parsed = await readJsonBody(request)
   if ('refusal' in parsed) return parsed.refusal
 

@@ -36,7 +36,7 @@ export function readBearerAuthorization(request: Request): string | null {
 
 /** The token from a header {@link readBearerAuthorization} accepted. */
 export function bearerToken(authorization: string): string {
-  return authorization.replace(/^Bearer\s+/i, '')
+  return authorization.slice('Bearer'.length).trim()
 }
 
 /**
@@ -80,14 +80,51 @@ export function guardRelayRequest(
 }
 
 /**
+ * Request body as text, or `null` once it passes `limit` bytes. The body is
+ * read chunk by chunk and abandoned at the limit, so an oversized request is
+ * never buffered in full.
+ */
+async function readBoundedText(
+  request: Request,
+  limit: number,
+): Promise<string | null> {
+  const declared = Number(request.headers.get('content-length'))
+  if (Number.isFinite(declared) && declared > limit) return null
+  if (!request.body) return ''
+
+  const reader = request.body.getReader()
+  const chunks: Uint8Array[] = []
+  let size = 0
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    size += value.byteLength
+    if (size > limit) {
+      await reader.cancel().catch(() => {})
+      return null
+    }
+    chunks.push(value)
+  }
+
+  const bytes = new Uint8Array(size)
+  let offset = 0
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return new TextDecoder().decode(bytes)
+}
+
+/**
  * JSON body of the incoming request, capped so the relay never buffers more
- * than a key name needs. Returns the parsed value, or the refusal.
+ * than a key name needs. Returns the parsed value, or the refusal. Run the
+ * {@link guardRelayRequest} checks first, so refused callers are not read.
  */
 export async function readJsonBody(
   request: Request,
 ): Promise<{ body: unknown } | { refusal: Response }> {
-  const raw = await request.text()
-  if (raw.length > MAX_REQUEST_BODY_BYTES) {
+  const raw = await readBoundedText(request, MAX_REQUEST_BODY_BYTES)
+  if (raw === null) {
     return {
       refusal: jsonError(413, 'payload_too_large', 'Request body is too large'),
     }

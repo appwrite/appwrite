@@ -221,8 +221,9 @@ export const OneClickSetup = forwardRef<
         }),
       )
       // Generating again replaces the key in the form, so the previous one
-      // (if any) is revoked here as well.
-      minted.track(credential)
+      // (if any) is revoked here as well. A key that arrives after the wizard
+      // left this step is revoked instead and never reaches the form.
+      if (!minted.track(credential)) return
 
       const currentEmail =
         typeof values.fromEmail === 'string' ? values.fromEmail.trim() : ''

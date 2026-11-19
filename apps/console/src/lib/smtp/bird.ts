@@ -34,8 +34,27 @@ export const BIRD_CREDENTIAL_NAME_MAX_LENGTH = 64
 export function birdRegion(credential: string): string | null {
   const [kind, region, rest] = credential.trim().split('_', 3)
   if (kind !== 'bk' && kind !== 'bt') return null
-  if (!region || !rest || !/^[a-z]+[0-9]+$/.test(region)) return null
+  if (!region || !rest || !isRegionCode(region)) return null
   return region
+}
+
+const LOWERCASE = 'abcdefghijklmnopqrstuvwxyz'
+const DIGITS = '0123456789'
+/** Crockford base32, the alphabet of Bird's ULID ids (no i, l, o or u). */
+const CROCKFORD = '0123456789abcdefghjkmnpqrstvwxyz'
+
+/** Lowercase letters then digits, such as `eu1`: nothing a host could misread. */
+function isRegionCode(value: string): boolean {
+  let letters = 0
+  while (letters < value.length && LOWERCASE.includes(value[letters]!)) {
+    letters++
+  }
+  const digits = value.slice(letters)
+  return (
+    letters > 0 &&
+    digits.length > 0 &&
+    [...digits].every((c) => DIGITS.includes(c))
+  )
 }
 
 export function birdApiBaseUrl(region: string): string {
@@ -48,7 +67,12 @@ export function birdSmtpHost(region: string): string {
 
 /** Bird ids are a prefix plus a 26 character Crockford base32 ULID. */
 export function isBirdApiKeyId(value: string): boolean {
-  return /^key_[0-9a-hjkmnp-tv-z]{26}$/.test(value)
+  const ulid = value.slice('key_'.length)
+  return (
+    value.startsWith('key_') &&
+    ulid.length === 26 &&
+    [...ulid].every((c) => CROCKFORD.includes(c))
+  )
 }
 
 /**

@@ -207,8 +207,12 @@ export function providerInterestFeatureId(providerId: string): string {
 export interface MintedCredentialTracker<
   T extends { id: string; secret: string },
 > {
-  /** Start tracking a fresh credential; the previous unused one is revoked. */
-  track(credential: T): void
+  /**
+   * Start tracking a fresh credential; the previous unused one is revoked.
+   * A credential that arrives after {@link release} has no flow left to use
+   * it, so it is revoked straight away and `false` tells the caller to drop it.
+   */
+  track(credential: T): boolean
   /**
    * A save that stores `secret` on success is in flight. The matching
    * credential is off limits until it settles: on success it is in use for
@@ -248,9 +252,14 @@ export function createMintedCredentialTracker<
   }
   return {
     track(credential) {
+      if (released) {
+        revokeQuietly(credential)
+        return false
+      }
       const previous = minted
       minted = credential
       if (previous) revokeQuietly(previous)
+      return true
     },
     settle(secret, save) {
       if (!minted || minted.secret !== secret) return
