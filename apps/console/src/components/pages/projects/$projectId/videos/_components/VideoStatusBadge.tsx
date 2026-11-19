@@ -44,6 +44,7 @@ const CAPTION_STATUS: Record<
   started: { label: 'Processing', variant: 'processing' },
   ready: { label: 'Ready', variant: 'success' },
   error: { label: 'Failed', variant: 'error' },
+  aborted: { label: 'Aborted', variant: 'warning' },
 }
 
 const STATUS_MAPS = {

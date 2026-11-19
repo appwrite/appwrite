@@ -278,7 +278,7 @@ function LadderPlayground() {
         </div>
 
         <p className="mt-6 border-t border-border pt-4 text-[12px] leading-5 text-muted-foreground">
-          {t('Bitrates are an example. Every project starts with a default ladder, and each profile sets its own resolution, video and audio bitrate, and codec.')}
+          {t('Bitrates are an example. Each profile sets its own resolution, video and audio bitrate, and codec.')}
         </p>
       </div>
 
@@ -336,7 +336,7 @@ const VIDEO_FEATURES: { title: string; description: string; icon: LucideIcon }[]
   },
   {
     title: 'Scrubbing thumbnails',
-    description: 'Sprite sheets with a WebVTT index show a frame while viewers scrub, and give every video a poster.',
+    description: 'Sprite sheets with a WebVTT index show a frame while viewers scrub.',
     icon: GalleryHorizontal,
   },
   {
