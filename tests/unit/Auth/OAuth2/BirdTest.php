@@ -51,6 +51,30 @@ final class BirdTest extends TestCase
         $this->assertSame('client-secret', $params['client_secret'] ?? null);
     }
 
+    public function testRefreshKeepsTheRotatedToken(): void
+    {
+        $bird = new FakeBird(['access_token' => 'bt_us1_new-access', 'refresh_token' => 'rotated-refresh']);
+
+        $tokens = $bird->refreshTokens('consumed-refresh');
+
+        \parse_str($bird->payload, $params);
+        $this->assertSame('refresh_token', $params['grant_type'] ?? null);
+        $this->assertSame('consumed-refresh', $params['refresh_token'] ?? null);
+        $this->assertSame('client-secret', $params['client_secret'] ?? null);
+        // Bird revokes the grant when a rotated refresh token is reused.
+        $this->assertSame('rotated-refresh', $tokens['refresh_token']);
+        $this->assertSame('bt_us1_new-access', $tokens['access_token']);
+    }
+
+    public function testRefreshKeepsTheCurrentTokenWhenNoneIsReturned(): void
+    {
+        $bird = new FakeBird(['access_token' => 'bt_us1_new-access']);
+
+        $tokens = $bird->refreshTokens('current-refresh');
+
+        $this->assertSame('current-refresh', $tokens['refresh_token']);
+    }
+
     public function testUserIsReadFromAuthMe(): void
     {
         $bird = new FakeBird([
