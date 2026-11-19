@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Event\Message\Alert as AlertMessage;
 use Appwrite\Event\Publisher\Alert as AlertPublisher;
 use Appwrite\Schedule\Source;
+use Appwrite\Schedule\Supervisor;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -53,9 +54,16 @@ class ScheduleAlerts extends Action
         );
 
         // A Redis failure ends the loop that holds the connection and the pool
-        // drops it; supervise() takes a fresh connection after a short pause
+        // drops it; the supervisor takes a fresh connection after a short pause
         // instead of letting the exception end the process.
-        $this->supervise(fn () => $pools->get('lock')->use(function (\Redis $redis) use ($source, $telemetry, $publisherForAlerts): void {
+        $supervisor = new Supervisor(self::BACKOFF, function (\Throwable $error): void {
+            Span::init('schedule.alerts.error');
+            Span::current()?->finish(error: $error);
+
+            Console::error('schedule alerts: ' . $error->getMessage());
+        });
+
+        $supervisor->run(fn () => $pools->get('lock')->use(function (\Redis $redis) use ($source, $telemetry, $publisherForAlerts): void {
             $scheduler = new Scheduler(
                 source: $source,
                 store: new ClaimStore($redis, self::getName() . ':' . System::getEnv('_APP_REGION', 'default')),
@@ -72,35 +80,6 @@ class ScheduleAlerts extends Action
 
         Span::init('schedule.alerts.stopped');
         Span::current()?->finish(error: new \RuntimeException('Scheduler loop returned'));
-    }
-
-    /**
-     * Run the scheduler until it returns on its own. A failure, such as a
-     * dropped Redis connection, is recorded and retried after a pause, as
-     * the maintenance scheduler does, so one bad connection costs a few
-     * seconds instead of a restart of the whole task.
-     *
-     * @param callable(): mixed $attempt
-     * @param (callable(int): void)|null $sleep
-     */
-    protected function supervise(callable $attempt, ?callable $sleep = null): void
-    {
-        $sleep ??= \sleep(...);
-
-        while (true) {
-            try {
-                $attempt();
-
-                return;
-            } catch (\Throwable $error) {
-                Span::init('schedule.alerts.error');
-                Span::current()?->finish(error: $error);
-
-                Console::error('schedule alerts: ' . $error->getMessage());
-            }
-
-            $sleep(self::BACKOFF);
-        }
     }
 
     /**
