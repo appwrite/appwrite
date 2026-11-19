@@ -18,7 +18,7 @@
 //! | `Identifier::isValid()`, `getDescription()` | [`identifier`], [`identifier_description`] |
 //! | `WhiteList::__construct()`, `getDescription()` | [`ascii_lower`], [`white_list_description`] |
 //! | `Contains::isValid()`, `getDescription()` | [`lower`], [`contains`], [`contains_description`] |
-//! | `Label::isValid()`, `getDescription()` | [`label`], [`label_description`] |
+//! | `Label::isValid()`, `getDescription()` | [`label`], [`LABEL_DESCRIPTION`] |
 //! | `Hostname::isValid()` | [`hostname`], [`hostname_allowed`] |
 //! | `Domain::isValid()` | [`domain`], [`explode_count`] |
 //! | `IP::isValid()` | [`ip`] |
@@ -51,9 +51,9 @@ pub use compose::{
     json_length, json_object_description, non_empty, pem_private_key, preg_quote, trim, wildcard,
 };
 pub use network::{
-    DOMAIN_DESCRIPTION, HOSTNAME_DESCRIPTION, IP_DESCRIPTION, IpType, LOOPBACK_HOSTS, PHONE_DESCRIPTION, domain,
-    explode_count, host_description, hostname, hostname_allowed, ip, ip_str, phone, phone_normalize,
-    private_use_scheme, url, url_ascii, url_component, url_description, url_str,
+    DOMAIN_DESCRIPTION, HOST_DESCRIPTION_PREFIX, HOSTNAME_DESCRIPTION, IP_DESCRIPTION, IpType, LOOPBACK_HOSTS,
+    PHONE_DESCRIPTION, domain, explode_count, host_description, hostname, hostname_allowed, ip, ip_str, phone,
+    phone_normalize, private_use_scheme, url, url_ascii, url_component, url_description, url_str,
 };
 pub use php_std::filter::Value as FilterValue;
 pub use php_std::url::Component as UrlComponent;
@@ -63,9 +63,29 @@ pub use scalar::{
     range_description, range_number,
 };
 pub use text::{
-    LABEL_MAX_LENGTH, ascii_lower, chars, contains, contains_description, identifier, identifier_description, is_blank,
-    label, label_description, lower, text_description, text_length, white_list_description,
+    LABEL_DESCRIPTION, LABEL_MAX_LENGTH, WHITE_LIST_DESCRIPTION, ascii_lower, chars, contains, contains_description,
+    identifier, identifier_description, is_blank, label, lower, text_description, text_length, white_list_description,
 };
+
+/// `$int` as PHP interpolates it into a string, appended to `out` without going through
+/// `format!`: what every description that names a length or a size does.
+pub(crate) fn decimal(int: i64, out: &mut Vec<u8>) {
+    if int < 0 {
+        out.push(b'-');
+    }
+    let mut digits = [0u8; 20];
+    let mut n = int.unsigned_abs();
+    let mut start = digits.len();
+    loop {
+        start -= 1;
+        digits[start] = b'0' + (n % 10) as u8;
+        n /= 10;
+        if n == 0 {
+            break;
+        }
+    }
+    out.extend_from_slice(&digits[start..]);
+}
 
 /// A PHP value as the validators look at it: scalars by value, strings as bytes, and
 /// everything else (arrays, objects, resources) as [`Input::Other`], which no check here

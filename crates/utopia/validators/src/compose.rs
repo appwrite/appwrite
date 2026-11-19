@@ -4,6 +4,8 @@
 //! observable (`json_decode()` and `json_last_error()`, `preg_match()` and its warnings,
 //! `filter_var()`), is left to the PHP engine.
 
+use crate::decimal;
+
 /// `Assoc::getDescription()`.
 pub const ASSOC_DESCRIPTION: &str = "Value must be a valid object.";
 
@@ -19,34 +21,38 @@ pub const FCM_DESCRIPTION: &str = "Value must be valid Google service account JS
 
 /// `ArrayList::getDescription()`: `item` is the wrapped validator's description, `None` when
 /// it is `''` or `'0'` (which PHP leaves out).
-pub fn array_list_description(length: i64, item: Option<&[u8]>) -> Vec<u8> {
-    let mut message = b"Value must a valid array".to_vec();
+///
+/// Appended to `message`.
+pub fn array_list_description(length: i64, item: Option<&[u8]>, message: &mut Vec<u8>) {
+    message.extend_from_slice(b"Value must a valid array");
     if length > 0 {
-        message.extend_from_slice(format!(" no longer than {length} items").as_bytes());
+        message.extend_from_slice(b" no longer than ");
+        decimal(length, message);
+        message.extend_from_slice(b" items");
     }
     if let Some(item) = item {
         message.extend_from_slice(b" and ");
         message.extend_from_slice(item);
     }
-    message
 }
 
-/// `JSON\ArrayValidator::getDescription()`.
-pub fn json_array_description(length: i64) -> Vec<u8> {
-    json_description("Value must be a valid JSON array", length)
+/// `JSON\ArrayValidator::getDescription()`, appended to `message`.
+pub fn json_array_description(length: i64, message: &mut Vec<u8>) {
+    json_description("Value must be a valid JSON array", length, message);
 }
 
-/// `JSON\ObjectValidator::getDescription()`.
-pub fn json_object_description(length: i64) -> Vec<u8> {
-    json_description("Value must be a valid JSON object", length)
+/// `JSON\ObjectValidator::getDescription()`, appended to `message`.
+pub fn json_object_description(length: i64, message: &mut Vec<u8>) {
+    json_description("Value must be a valid JSON object", length, message);
 }
 
-fn json_description(message: &str, length: i64) -> Vec<u8> {
-    let mut message = message.as_bytes().to_vec();
+fn json_description(prefix: &str, length: i64, message: &mut Vec<u8>) {
+    message.extend_from_slice(prefix.as_bytes());
     if length > 0 {
-        message.extend_from_slice(format!(" no longer than {length} characters when encoded").as_bytes());
+        message.extend_from_slice(b" no longer than ");
+        decimal(length, message);
+        message.extend_from_slice(b" characters when encoded");
     }
-    message
 }
 
 /// `hasValidLength()` of the JSON validators: `encoded` is `None` for `false`.
@@ -270,7 +276,14 @@ mod tests {
         assert!(!json_length(3, None));
         assert!(json_length(3, Some(b"[1]")));
         assert!(!json_length(2, Some(b"[1]")));
-        assert_eq!(array_list_description(0, None), b"Value must a valid array");
-        assert_eq!(array_list_description(2, Some(b"x")), b"Value must a valid array no longer than 2 items and x");
+        let mut out = Vec::new();
+        array_list_description(0, None, &mut out);
+        assert_eq!(out, b"Value must a valid array");
+        out.clear();
+        array_list_description(2, Some(b"x"), &mut out);
+        assert_eq!(out, b"Value must a valid array no longer than 2 items and x");
+        out.clear();
+        json_object_description(1024, &mut out);
+        assert_eq!(out, b"Value must be a valid JSON object no longer than 1024 characters when encoded");
     }
 }
