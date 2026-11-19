@@ -137,6 +137,8 @@ final class APNSTest extends TestCase
             to: ['token'],
             title: 'Title',
             image: 'https://example.com/cover.jpg',
+            // An image needs the extension to show at all, so it keeps mutable-content even when told not to.
+            mutableContent: false,
         ));
         $this->assertSame('https://example.com/cover.jpg', $image->capturedBodies[0]['image']);
         $this->assertSame(1, $image->capturedBodies[0]['aps']['mutable-content']);
