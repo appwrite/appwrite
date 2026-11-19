@@ -880,7 +880,8 @@ const GC_STRING: u32 = IS_STRING | (1 << 4);
 /// `$prefix . implode(', ', $list) . $suffix` into `retval` in one allocation of the exact
 /// size, as PHP's concatenation makes it, when every item of the array `list` is a string
 /// (nothing to convert, so nothing PHP could observe); `false`, with nothing written,
-/// otherwise.
+/// otherwise. Inlined, so the prefix and the suffix copy as constants.
+#[inline(always)]
 pub fn implode_between(retval: &mut Zval, prefix: &[u8], list: &Zval, suffix: &[u8]) -> bool {
     let Some(array) = list.array() else { return false };
     let mut length = prefix.len() + suffix.len();
@@ -904,8 +905,10 @@ pub fn implode_between(retval: &mut Zval, prefix: &[u8], list: &Zval, suffix: &[
         (*string).len = length;
         let mut at = std::ptr::addr_of_mut!((*string).val).cast::<u8>();
         let mut put = |bytes: &[u8]| {
-            std::ptr::copy_nonoverlapping(bytes.as_ptr(), at, bytes.len());
-            at = at.add(bytes.len());
+            if !bytes.is_empty() {
+                std::ptr::copy_nonoverlapping(bytes.as_ptr(), at, bytes.len());
+                at = at.add(bytes.len());
+            }
         };
         put(prefix);
         for (i, value) in values(array).enumerate() {
