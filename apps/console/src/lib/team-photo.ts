@@ -11,18 +11,40 @@ export function getTeamPhotoVersion(): number {
   return teamPhotoVersion
 }
 
-export function bumpTeamPhotoVersion(): void {
+export function bumpTeamPhotoVersion(): number {
   teamPhotoVersion += 1
   if (typeof window !== 'undefined') {
-    window.dispatchEvent(new Event(TEAM_PHOTO_VERSION_EVENT))
+    try {
+      window.dispatchEvent(
+        new CustomEvent(TEAM_PHOTO_VERSION_EVENT, {
+          detail: { version: teamPhotoVersion },
+        }),
+      )
+    } catch {
+      // CustomEvent unavailable
+    }
+  }
+  return teamPhotoVersion
+}
+
+export function subscribeTeamPhotoVersion(
+  listener: (version: number) => void,
+): () => void {
+  if (typeof window === 'undefined') return () => {}
+
+  const onChange = (event: Event) => {
+    const detail = (event as CustomEvent<{ version: number }>).detail
+    listener(detail?.version ?? teamPhotoVersion)
+  }
+
+  window.addEventListener(TEAM_PHOTO_VERSION_EVENT, onChange)
+  return () => {
+    window.removeEventListener(TEAM_PHOTO_VERSION_EVENT, onChange)
   }
 }
 
-export function subscribeTeamPhotoVersion(listener: () => void): () => void {
-  if (typeof window === 'undefined') return () => {}
-
-  window.addEventListener(TEAM_PHOTO_VERSION_EVENT, listener)
-  return () => {
-    window.removeEventListener(TEAM_PHOTO_VERSION_EVENT, listener)
-  }
+/** Append the photo version to a `getPhoto` URL so the image reloads after a change. */
+export function withTeamPhotoVersion(src: string, version: number): string {
+  if (version <= 0) return src
+  return `${src}${src.includes('?') ? '&' : '?'}v=${version}`
 }
