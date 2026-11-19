@@ -623,4 +623,8 @@ export const heSitesDictionary: Record<string, string> = {
     'צפיות בדפים ואירועים שנמדדים מחויבים כשימוש באנליטיקה, והעלות מצטברת מהר באתר עם תנועה גבוהה.',
   'If your site sets a Content-Security-Policy, in a header or a <meta> tag, add these sources. Otherwise the browser blocks the tracker and no data is recorded.':
     'אם האתר שלכם מגדיר Content-Security-Policy, בכותרת או בתגית <meta>, הוסיפו את המקורות האלה. אחרת הדפדפן חוסם את סקריפט המעקב ולא נאספים נתונים.',
+  'Enable analytics': 'הפעלת אנליטיקה',
+  'Production domains only. Preview deployments are not tracked.':
+    'דומיינים של סביבת הייצור בלבד. פריסות תצוגה מקדימה אינן נמדדות.',
+  'Failed to enable analytics': 'הפעלת האנליטיקה נכשלה',
 }
