@@ -3221,7 +3221,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   avatars: 'アバター',
   Organizations: '組織',
   Install: 'インストール',
-  // SMTP quick setup (universal card: Resend and Bird today, Mailgun and SendGrid next)
+  // SMTP quick setup (universal card: Resend and Bird today, Mailgun next)
   'Connect an email provider and Appwrite fills in your SMTP settings automatically.':
     'メールプロバイダーを接続すると、Appwrite が SMTP 設定を自動で入力します。',
   'Set up': 'セットアップ',
@@ -3231,8 +3231,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'メール送信のみ行える API キーを作成します。',
   'Creates a domain sending key for a verified domain.':
     '検証済みドメイン用のドメイン送信キーを作成します。',
-  'Creates a restricted API key with mail send access.':
-    'メール送信権限を持つ制限付き API キーを作成します。',
   'Failed to connect the email provider':
     'メールプロバイダーへの接続に失敗しました',
   'The provider was authorized for a different Appwrite account. Try again while signed in to this account.':
@@ -3281,12 +3279,10 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Disconnect Resend': 'Resend を切断',
   'Disconnect Bird': 'Bird を切断',
   'Disconnect Mailgun': 'Mailgun を切断',
-  'Disconnect SendGrid': 'SendGrid を切断',
   'Provider actions': 'プロバイダーの操作',
   'Set up SMTP with Resend': 'Resend で SMTP をセットアップ',
   'Set up SMTP with Bird': 'Bird で SMTP をセットアップ',
   'Set up SMTP with Mailgun': 'Mailgun で SMTP をセットアップ',
-  'Set up SMTP with SendGrid': 'SendGrid で SMTP をセットアップ',
   'Creating credential and saving SMTP settings…':
     '認証情報を作成して SMTP 設定を保存中…',
   'Custom SMTP is enabled and your project now sends emails through this provider.':
@@ -3294,7 +3290,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Connect with Resend': 'Resend に接続',
   'Connect with Bird': 'Bird に接続',
   'Connect with Mailgun': 'Mailgun に接続',
-  'Connect with SendGrid': 'SendGrid に接続',
   'Appwrite will no longer be able to create sending credentials for this provider. Credentials already saved in your SMTP settings keep working.':
     'Appwrite はこのプロバイダーの送信用認証情報を作成できなくなります。SMTP 設定に保存済みの認証情報は引き続き動作します。',
   'Provider disconnected': 'プロバイダーを切断しました',

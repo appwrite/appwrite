@@ -2,7 +2,7 @@
  * Provider-agnostic pieces of the SMTP quick setup.
  *
  * Every email provider we can set up in one click (Resend and Bird today,
- * Mailgun and SendGrid next) follows the same shape: authorize through a console OAuth2
+ * Mailgun next) follows the same shape: authorize through a console OAuth2
  * provider, list the sending domains, mint a sending-only credential, then
  * write it into the project's custom SMTP settings. This module holds the
  * parts of that flow that do not depend on which provider is used.
@@ -138,8 +138,7 @@ export function stripQuickSetupReturn(prev: unknown): Record<string, unknown> {
 /**
  * A sending domain, normalized across providers. Each adapter maps its own
  * shape onto this (Resend `status: 'verified'`, Bird
- * `capabilities.sending.status`, Mailgun `state: 'active'`, SendGrid
- * `valid: true`).
+ * `capabilities.sending.status`, Mailgun `state: 'active'`).
  */
 export interface QuickSetupDomain {
   id: string

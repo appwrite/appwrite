@@ -41,11 +41,7 @@ import {
 } from './bird-api'
 import type { QuickSetupDomain } from './quick-setup'
 
-export type SmtpQuickSetupProviderId =
-  | 'resend'
-  | 'bird'
-  | 'mailgun'
-  | 'sendgrid'
+export type SmtpQuickSetupProviderId = 'resend' | 'bird' | 'mailgun'
 
 /** A sending credential minted at the provider; `secret` becomes the SMTP password. */
 export interface SmtpQuickSetupCredential {
@@ -181,27 +177,6 @@ export const SMTP_QUICK_SETUP_PROVIDERS: readonly SmtpQuickSetupProvider[] = [
     credentialNameMaxLength: 64,
     analyticsAction: 'smtp-quick-setup-mailgun',
     // No console OAuth2 provider for Mailgun yet, so this stays "Coming soon".
-  },
-  {
-    id: 'sendgrid',
-    name: 'SendGrid',
-    iconPath: '/icons/sendgrid.svg',
-    tagline: 'Creates a restricted API key with mail send access.',
-    connectLabel: 'Connect with SendGrid',
-    setupTitle: 'Set up SMTP with SendGrid',
-    disconnectTitle: 'Disconnect SendGrid',
-    credentialDescription:
-      'The credential can only send email. It is not tied to a domain, so pick the one your sender address uses.',
-    smtp: {
-      host: () => 'smtp.sendgrid.net',
-      port: 587,
-      secure: 'tls',
-      username: () => 'apikey',
-    },
-    domainsUrl: 'https://app.sendgrid.com/settings/sender_auth',
-    credentialNameMaxLength: 100,
-    analyticsAction: 'smtp-quick-setup-sendgrid',
-    // No console OAuth2 provider for SendGrid yet, so this stays "Coming soon".
   },
 ]
 

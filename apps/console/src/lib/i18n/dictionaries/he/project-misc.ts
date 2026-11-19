@@ -3143,7 +3143,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'אין לכם הרשאה ליצור מיגרציות.',
   "You don't have permission to create webhooks.":
     'אין לכם הרשאה ליצור webhooks.',
-  // SMTP quick setup (universal card: Resend and Bird today, Mailgun and SendGrid next)
+  // SMTP quick setup (universal card: Resend and Bird today, Mailgun next)
   'Connect an email provider and Appwrite fills in your SMTP settings automatically.':
     'חברו ספק אימייל ו-Appwrite תמלא עבורכם את הגדרות ה-SMTP באופן אוטומטי.',
   'Set up': 'הגדרה',
@@ -3153,8 +3153,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'יוצר מפתח API שיכול לשלוח אימייל בלבד.',
   'Creates a domain sending key for a verified domain.':
     'יוצר מפתח שליחה לדומיין עבור דומיין מאומת.',
-  'Creates a restricted API key with mail send access.':
-    'יוצר מפתח API מוגבל עם הרשאת שליחת אימייל.',
   'Failed to connect the email provider': 'החיבור לספק האימייל נכשל',
   'The provider was authorized for a different Appwrite account. Try again while signed in to this account.':
     'ההרשאה לספק ניתנה לחשבון Appwrite אחר. נסו שוב כשאתם מחוברים לחשבון הזה.',
@@ -3202,12 +3200,10 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Disconnect Resend': 'ניתוק Resend',
   'Disconnect Bird': 'ניתוק Bird',
   'Disconnect Mailgun': 'ניתוק Mailgun',
-  'Disconnect SendGrid': 'ניתוק SendGrid',
   'Provider actions': 'פעולות ספק',
   'Set up SMTP with Resend': 'הגדרת SMTP עם Resend',
   'Set up SMTP with Bird': 'הגדרת SMTP עם Bird',
   'Set up SMTP with Mailgun': 'הגדרת SMTP עם Mailgun',
-  'Set up SMTP with SendGrid': 'הגדרת SMTP עם SendGrid',
   'Creating credential and saving SMTP settings…':
     'יוצר פרטי גישה ושומר את הגדרות ה-SMTP…',
   'Custom SMTP is enabled and your project now sends emails through this provider.':
@@ -3215,7 +3211,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Connect with Resend': 'התחברות עם Resend',
   'Connect with Bird': 'התחברות עם Bird',
   'Connect with Mailgun': 'התחברות עם Mailgun',
-  'Connect with SendGrid': 'התחברות עם SendGrid',
   'Appwrite will no longer be able to create sending credentials for this provider. Credentials already saved in your SMTP settings keep working.':
     'Appwrite לא תוכל עוד ליצור פרטי גישה לשליחה עבור הספק הזה. פרטי גישה ששמורים כבר בהגדרות ה-SMTP שלכם ימשיכו לפעול.',
   'Provider disconnected': 'הספק נותק',
