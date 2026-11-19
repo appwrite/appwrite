@@ -3,9 +3,12 @@ import { isRedirect } from '@tanstack/react-router'
 import {
   CONSOLE_PROFILES,
   getDebugProfileFeatureOverrides,
-  setDebugProfileFeatureOverride,
 } from '@/lib/console-profiles'
-import { EXPERIMENTS, hasQualityLabel } from '@/lib/experiments'
+import {
+  EXPERIMENTS,
+  hasQualityLabel,
+  setExperimentEnabled,
+} from '@/lib/experiments'
 import { Route as IdentityServersRoute } from '@/routes/_public/projects.$projectId.settings.identity-servers'
 import { Route as MonitorsRoute } from '@/routes/_public/projects.$projectId.monitors'
 import { Route as UsageAlertsRoute } from '@/routes/_public/projects.$projectId.usage.alerts'
@@ -145,10 +148,10 @@ describe('usage alerts flag', () => {
   })
 
   test('the pages open once the experiment turns the flag on', () => {
-    setDebugProfileFeatureOverride('alerts', true)
+    setExperimentEnabled('alerts', true)
     expect(enter(MonitorsRoute)).toBeNull()
 
-    setDebugProfileFeatureOverride('alerts', false)
+    setExperimentEnabled('alerts', false)
     expect(isRedirect(enter(MonitorsRoute))).toBe(true)
   })
 })
