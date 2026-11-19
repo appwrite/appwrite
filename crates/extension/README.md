@@ -92,7 +92,10 @@ PHP's warnings apply. A file is read when it is registered, as in PHP, but a JSO
 once per distinct file: Appwrite registers 131 codes at boot and a process reads a few, so this
 keeps about 4.5 MB per process out of memory. Anything else is decoded at registration, so its
 errors are raised at the same point as before. `getTranslations()` builds a language's array once and returns it by
-refcount afterwards, as PHP returns `self::$language[$name]`.
+refcount afterwards, as PHP returns `self::$language[$name]`. The class is built by hand like the
+validators (`src/classes/`): `$default` and `$fallback` are real public properties, and its methods
+skip ext-php-rs's per-call argument parsing and `zend_try`, which made `#[php_class]` slower than
+PHP's class.
 
 Known differences from the PHP class it replaced:
 
@@ -104,7 +107,7 @@ Known differences from the PHP class it replaced:
   keeps the exact bytes.
 - Reading an unregistered default language raises the same `TypeError` without PHP's
   `Undefined array key` warning before it.
-- `serialize()` refuses the object, as it does every class with Rust state.
+- `serialize()` refuses the object, as it did when the class held Rust state.
 
 A warning PHP raises inside the class (`file_get_contents()` of a missing file) names the caller's
 file and line, since the class has no PHP source.

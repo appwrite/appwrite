@@ -2578,7 +2578,6 @@ name = "utopia-extension"
 version = "0.1.0"
 dependencies = [
  "ext-php-rs",
- "foldhash",
  "php-std",
  "utopia-auth",
  "utopia-domains",

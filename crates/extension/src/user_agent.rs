@@ -14,8 +14,8 @@ use ext_php_rs::types::{ZendHashTable, ZendStr, Zval};
 use ext_php_rs::zend::{ClassEntry, ce};
 use utopia_user_agent::{Text, detection};
 
-use crate::locale::Value;
 use crate::string::PhpString;
+use crate::string::Value;
 
 /// `Utopia\UserAgent\UserAgent`: the string and each category once detected. Its
 /// private properties are the PHP class's, so `==`, `var_dump()` and `(array)` match.

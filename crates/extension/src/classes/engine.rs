@@ -167,6 +167,22 @@ fn declare_as(class: &mut ClassEntry, property: &Property, mask: u32, default: O
     declare_typed(class, property, zend_type { ptr: std::ptr::null_mut(), type_mask: mask }, flags, default);
 }
 
+/// Declares `property` as a public untyped property of `class` with the default `null`
+/// (`public $name;` and `public $name = null;` alike).
+pub fn declare_public(class: &mut ClassEntry, property: &Property) {
+    let flags = PropertyFlags::Public.bits().try_into().expect("property flags fit an int");
+    declare_typed(class, property, zend_type { ptr: std::ptr::null_mut(), type_mask: 0 }, flags, None);
+}
+
+/// Declares the public untyped static property `name` of `class` with `default` (a value that
+/// is not reference counted).
+pub fn declare_public_static(class: &mut ClassEntry, name: &'static str, default: Zval) {
+    let flags: i32 =
+        (PropertyFlags::Public | PropertyFlags::Static).bits().try_into().expect("property flags fit an int");
+    let property = Property::new(name);
+    declare_typed(class, &property, zend_type { ptr: std::ptr::null_mut(), type_mask: 0 }, flags, Some(default));
+}
+
 /// What a property declared with [`declare_property`] is: its visibility and modifiers.
 #[derive(Clone, Copy)]
 pub struct Declared {
