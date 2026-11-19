@@ -3403,6 +3403,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Bird": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Bitbucket": [
             "key",
             "secret",
@@ -7864,6 +7869,11 @@
             "enabled"
         ],
         "project.updateOAuth2Autodesk": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Bird": [
             "clientId",
             "clientSecret",
             "enabled"
