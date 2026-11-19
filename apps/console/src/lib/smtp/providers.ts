@@ -24,9 +24,28 @@ import {
   isResendUnauthorizedError,
   listResendDomains,
 } from './resend-api'
+import {
+  BIRD_CREDENTIAL_NAME_MAX_LENGTH,
+  BIRD_DOMAINS_URL,
+  BIRD_OAUTH_SCOPES,
+  BIRD_SMTP_PORT,
+  BIRD_SMTP_SECURE,
+  BIRD_SMTP_USERNAME,
+  birdSmtpHost,
+} from './bird'
+import {
+  createBirdCredential,
+  deleteBirdCredential,
+  isBirdUnauthorizedError,
+  listBirdDomains,
+} from './bird-api'
 import type { QuickSetupDomain } from './quick-setup'
 
-export type SmtpQuickSetupProviderId = 'resend' | 'mailgun' | 'sendgrid'
+export type SmtpQuickSetupProviderId =
+  | 'resend'
+  | 'bird'
+  | 'mailgun'
+  | 'sendgrid'
 
 /** A sending credential minted at the provider; `secret` becomes the SMTP password. */
 export interface SmtpQuickSetupCredential {
@@ -62,12 +81,16 @@ export interface SmtpQuickSetupProvider {
   connectLabel: string
   setupTitle: string
   disconnectTitle: string
+  /** What the minted credential can do, shown next to the domain picker. */
+  credentialDescription: string
+  /** Relay settings, resolved for the selected sending domain. */
   smtp: {
-    host: string
+    /** Bird runs one relay per region, and each domain lives in one. */
+    host: (domain: QuickSetupDomain) => string
     port: number
     secure: 'tls' | 'ssl'
-    /** Mailgun uses `postmaster@<domain>`, so this resolves per selected domain. */
-    username: (domainName: string) => string
+    /** Mailgun uses `postmaster@<domain>`. */
+    username: (domain: QuickSetupDomain) => string
   }
   /** Where the user manages sending domains at the provider. */
   domainsUrl: string
@@ -91,8 +114,10 @@ export const SMTP_QUICK_SETUP_PROVIDERS: readonly SmtpQuickSetupProvider[] = [
     connectLabel: 'Connect with Resend',
     setupTitle: 'Set up SMTP with Resend',
     disconnectTitle: 'Disconnect Resend',
+    credentialDescription:
+      'The credential is restricted to this domain and can only send email.',
     smtp: {
-      host: RESEND_SMTP_HOST,
+      host: () => RESEND_SMTP_HOST,
       port: RESEND_SMTP_PORT,
       secure: RESEND_SMTP_SECURE,
       username: () => RESEND_SMTP_USERNAME,
@@ -109,6 +134,34 @@ export const SMTP_QUICK_SETUP_PROVIDERS: readonly SmtpQuickSetupProvider[] = [
     },
   },
   {
+    id: 'bird',
+    name: 'Bird',
+    iconPath: '/icons/bird.svg',
+    tagline: 'Creates an API key that can only send email.',
+    connectLabel: 'Connect with Bird',
+    setupTitle: 'Set up SMTP with Bird',
+    disconnectTitle: 'Disconnect Bird',
+    credentialDescription:
+      'The credential can only send email. It is not tied to a domain, so pick the one your sender address uses.',
+    smtp: {
+      // Domains are listed with the access token, whose prefix names the region.
+      host: (domain) => (domain.region ? birdSmtpHost(domain.region) : ''),
+      port: BIRD_SMTP_PORT,
+      secure: BIRD_SMTP_SECURE,
+      username: () => BIRD_SMTP_USERNAME,
+    },
+    domainsUrl: BIRD_DOMAINS_URL,
+    credentialNameMaxLength: BIRD_CREDENTIAL_NAME_MAX_LENGTH,
+    analyticsAction: 'smtp-quick-setup-bird',
+    oauth: { provider: OAuthProvider.Bird, scopes: BIRD_OAUTH_SCOPES },
+    api: {
+      listDomains: listBirdDomains,
+      createCredential: createBirdCredential,
+      deleteCredential: deleteBirdCredential,
+      isUnauthorizedError: isBirdUnauthorizedError,
+    },
+  },
+  {
     id: 'mailgun',
     name: 'Mailgun',
     iconPath: '/icons/mailgun.svg',
@@ -116,11 +169,13 @@ export const SMTP_QUICK_SETUP_PROVIDERS: readonly SmtpQuickSetupProvider[] = [
     connectLabel: 'Connect with Mailgun',
     setupTitle: 'Set up SMTP with Mailgun',
     disconnectTitle: 'Disconnect Mailgun',
+    credentialDescription:
+      'The credential is restricted to this domain and can only send email.',
     smtp: {
-      host: 'smtp.mailgun.org',
+      host: () => 'smtp.mailgun.org',
       port: 587,
       secure: 'tls',
-      username: (domainName) => `postmaster@${domainName}`,
+      username: (domain) => `postmaster@${domain.name}`,
     },
     domainsUrl: 'https://app.mailgun.com/mg/sending/domains',
     credentialNameMaxLength: 64,
@@ -135,8 +190,10 @@ export const SMTP_QUICK_SETUP_PROVIDERS: readonly SmtpQuickSetupProvider[] = [
     connectLabel: 'Connect with SendGrid',
     setupTitle: 'Set up SMTP with SendGrid',
     disconnectTitle: 'Disconnect SendGrid',
+    credentialDescription:
+      'The credential can only send email. It is not tied to a domain, so pick the one your sender address uses.',
     smtp: {
-      host: 'smtp.sendgrid.net',
+      host: () => 'smtp.sendgrid.net',
       port: 587,
       secure: 'tls',
       username: () => 'apikey',

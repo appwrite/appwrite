@@ -2546,6 +2546,12 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'Mailgun 経由でトランザクションメールを送信します。',
   'Send transactional email through Resend.':
     'Resend 経由でトランザクションメールを送信します。',
+  'Send email through the Bird SMTP relay.':
+    'Bird の SMTP リレー経由でメールを送信します。',
+  'A Bird API key with the emails:write scope.':
+    'emails:write スコープを持つ Bird の API キー。',
+  'Bird API keys start with bk_ and their region, for example bk_eu1_.':
+    'Bird の API キーは bk_ とリージョンで始まります（例: bk_eu1_）。',
   'Send transactional email through SendGrid.':
     'SendGrid 経由でトランザクションメールを送信します。',
   Sender: '送信元',
@@ -3215,12 +3221,14 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   avatars: 'アバター',
   Organizations: '組織',
   Install: 'インストール',
-  // SMTP quick setup (universal card: Resend today, Mailgun and SendGrid next)
+  // SMTP quick setup (universal card: Resend and Bird today, Mailgun and SendGrid next)
   'Connect an email provider and Appwrite fills in your SMTP settings automatically.':
     'メールプロバイダーを接続すると、Appwrite が SMTP 設定を自動で入力します。',
   'Set up': 'セットアップ',
   'Creates a sending-only API key for a verified domain.':
     '検証済みドメイン用の送信専用 API キーを作成します。',
+  'Creates an API key that can only send email.':
+    'メール送信のみ行える API キーを作成します。',
   'Creates a domain sending key for a verified domain.':
     '検証済みドメイン用のドメイン送信キーを作成します。',
   'Creates a restricted API key with mail send access.':
@@ -3239,6 +3247,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Check again': '再確認',
   'The credential is restricted to this domain and can only send email.':
     'この認証情報はこのドメインに制限され、メール送信のみ行えます。',
+  'The credential can only send email. It is not tied to a domain, so pick the one your sender address uses.':
+    'この認証情報はメール送信のみ行えます。特定のドメインには紐づかないため、送信者アドレスのドメインを選択してください。',
   'Must use the selected domain.': '選択したドメインを使用する必要があります。',
   'Enter a sender name.': '送信者名を入力してください。',
   'Enter a sender email on the selected domain.':
@@ -3252,6 +3262,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'Appwrite が検証済みドメイン用の API キーを作成し、これらの項目を入力します。',
   'Generate API key': 'API キーを生成',
   'One-click Resend sender': 'ワンクリック Resend 送信者',
+  'One-click Bird sender': 'ワンクリック Bird 送信者',
   'Creating the sending credential…': '送信用の認証情報を作成中…',
   'Failed to create the API key with the email provider':
     'メールプロバイダーでの API キーの作成に失敗しました',
@@ -3268,10 +3279,12 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Sending domain': '送信ドメイン',
   Sender: '送信者',
   'Disconnect Resend': 'Resend を切断',
+  'Disconnect Bird': 'Bird を切断',
   'Disconnect Mailgun': 'Mailgun を切断',
   'Disconnect SendGrid': 'SendGrid を切断',
   'Provider actions': 'プロバイダーの操作',
   'Set up SMTP with Resend': 'Resend で SMTP をセットアップ',
+  'Set up SMTP with Bird': 'Bird で SMTP をセットアップ',
   'Set up SMTP with Mailgun': 'Mailgun で SMTP をセットアップ',
   'Set up SMTP with SendGrid': 'SendGrid で SMTP をセットアップ',
   'Creating credential and saving SMTP settings…':
@@ -3279,6 +3292,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Custom SMTP is enabled and your project now sends emails through this provider.':
     'カスタム SMTP が有効になり、プロジェクトはこのプロバイダー経由でメールを送信するようになりました。',
   'Connect with Resend': 'Resend に接続',
+  'Connect with Bird': 'Bird に接続',
   'Connect with Mailgun': 'Mailgun に接続',
   'Connect with SendGrid': 'SendGrid に接続',
   'Appwrite will no longer be able to create sending credentials for this provider. Credentials already saved in your SMTP settings keep working.':

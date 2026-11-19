@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test'
+import { afterEach, describe, expect, test } from 'bun:test'
 import {
   buildCredentialName,
   buildQuickSetupOAuthUrls,
@@ -19,10 +19,18 @@ import {
   isProviderAvailable,
 } from '@/lib/smtp/providers'
 import { sanitizeCreateApiKeyBody } from '@/lib/smtp/resend'
+import { isAllowedFetchSite, readBearerAuthorization } from '@/lib/smtp/relay'
 import {
-  isAllowedFetchSite,
-  readBearerAuthorization,
-} from '@/lib/smtp/resend-proxy'
+  birdRegion,
+  birdSmtpHost,
+  isBirdApiKeyId,
+  sanitizeCreateBirdApiKeyBody,
+} from '@/lib/smtp/bird'
+import {
+  proxyCreateBirdApiKey,
+  proxyListBirdDomains,
+  proxyRevokeBirdApiKey,
+} from '@/lib/smtp/bird-proxy'
 
 describe('isProviderTokenExpired', () => {
   const now = Date.parse('2026-09-08T12:00:00.000Z')
@@ -276,9 +284,10 @@ describe('minted credentials', () => {
 })
 
 describe('provider registry', () => {
-  test('resolves the shipped provider and rejects unknown ids', () => {
+  test('resolves the shipped providers and rejects unknown ids', () => {
     expect(getSmtpQuickSetupProvider('resend')?.id).toBe('resend')
     expect(getAvailableSmtpQuickSetupProvider('resend')?.id).toBe('resend')
+    expect(getAvailableSmtpQuickSetupProvider('bird')?.id).toBe('bird')
     expect(getSmtpQuickSetupProvider('nope')).toBeUndefined()
     expect(getSmtpQuickSetupProvider(undefined)).toBeUndefined()
     expect(getAvailableSmtpQuickSetupProvider(null)).toBeUndefined()
@@ -291,6 +300,21 @@ describe('provider registry', () => {
     expect(isProviderAvailable({ ...comingSoon, api })).toBe(false)
     expect(isProviderAvailable({ ...comingSoon, oauth })).toBe(false)
     expect(isProviderAvailable(comingSoon)).toBe(false)
+  })
+
+  test('resolves relay settings for the selected domain', () => {
+    const resend = getAvailableSmtpQuickSetupProvider('resend')!
+    const bird = getAvailableSmtpQuickSetupProvider('bird')!
+    const domain = { id: 'dom_1', name: 'mail.acme.com', verified: true }
+
+    expect(resend.smtp.host(domain)).toBe('smtp.resend.com')
+    expect(bird.smtp.host({ ...domain, region: 'eu1' })).toBe(
+      'eu1.smtp.bird.com',
+    )
+    expect(bird.smtp.username(domain)).toBe('bird')
+    expect(getSmtpQuickSetupProvider('mailgun')!.smtp.username(domain)).toBe(
+      'postmaster@mail.acme.com',
+    )
   })
 
   test('interest feature ids stay distinct and safe for the comma-separated pref', () => {
@@ -359,5 +383,128 @@ describe('Resend proxy guard rails', () => {
     expect(
       isAllowedFetchSite(new Request('https://console.test/resend/domains')),
     ).toBe(true)
+  })
+})
+
+describe('Bird credentials', () => {
+  test('reads the region from API keys and access tokens', () => {
+    expect(birdRegion('bk_eu1_Ab3xKq9mPayload')).toBe('eu1')
+    expect(birdRegion('bt_us1_Ab3xKq9mPayload')).toBe('us1')
+    expect(birdSmtpHost('us1')).toBe('us1.smtp.bird.com')
+  })
+
+  test('never yields a region that could change the host', () => {
+    expect(birdRegion('')).toBeNull()
+    expect(birdRegion('bk_eu1')).toBeNull()
+    expect(birdRegion('re_eu1_payload')).toBeNull()
+    expect(birdRegion('bk_EU1_payload')).toBeNull()
+    expect(birdRegion('bk_evil.com/x_payload')).toBeNull()
+    expect(birdRegion('bt_eu1@evil.com_payload')).toBeNull()
+  })
+
+  test('accepts only Bird API key ids', () => {
+    expect(isBirdApiKeyId('key_01hqz8kp3v9x2m4n5p6q7r8s9t')).toBe(true)
+    expect(isBirdApiKeyId('key_01HQZ8KP3V9X2M4N5P6Q7R8S9T')).toBe(false)
+    expect(isBirdApiKeyId('key_../../v1/workspace')).toBe(false)
+  })
+})
+
+describe('Bird proxy guard rails', () => {
+  const originalFetch = globalThis.fetch
+  afterEach(() => {
+    globalThis.fetch = originalFetch
+  })
+
+  /** Records what the relay sends upstream instead of reaching Bird. */
+  function captureUpstream(): { url?: string; init?: RequestInit } {
+    const sent: { url?: string; init?: RequestInit } = {}
+    globalThis.fetch = (async (url: URL, init?: RequestInit) => {
+      sent.url = String(url)
+      sent.init = init
+      return Response.json({ data: [] })
+    }) as unknown as typeof fetch
+    return sent
+  }
+
+  test('rebuilds the create-key payload as email-only', () => {
+    expect(
+      sanitizeCreateBirdApiKeyBody({
+        name: ' Appwrite SMTP: demo ',
+        scopes: [{ scope: 'api_keys', level: 'write' }],
+        cidrs: ['0.0.0.0/0'],
+      }),
+    ).toEqual({
+      name: 'Appwrite SMTP: demo',
+      scopes: [{ scope: 'emails', level: 'write' }],
+    })
+    expect(sanitizeCreateBirdApiKeyBody(null)).toBeNull()
+    expect(sanitizeCreateBirdApiKeyBody({ name: 'x'.repeat(65) })).toBeNull()
+  })
+
+  test("calls the region named by the token's prefix", async () => {
+    const sent = captureUpstream()
+    const response = await proxyListBirdDomains(
+      new Request(
+        'https://console.test/bird/domains?limit=100&starting_after=dom_1&order=asc',
+        { headers: { Authorization: 'Bearer bt_eu1_token' } },
+      ),
+    )
+
+    expect(response.status).toBe(200)
+    expect(sent.url).toBe(
+      'https://eu1.platform.bird.com/v1/email/domains?limit=100&starting_after=dom_1',
+    )
+  })
+
+  test('refuses a token without a region before calling Bird', async () => {
+    const sent = captureUpstream()
+    const response = await proxyListBirdDomains(
+      new Request('https://console.test/bird/domains', {
+        headers: { Authorization: 'Bearer bt_evil.com/x_token' },
+      }),
+    )
+
+    expect(response.status).toBe(401)
+    expect(sent.url).toBeUndefined()
+  })
+
+  test('mints only email keys, whatever the caller sends', async () => {
+    const sent = captureUpstream()
+    await proxyCreateBirdApiKey(
+      new Request('https://console.test/bird/api-keys', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer bt_us1_token' },
+        body: JSON.stringify({
+          name: 'Appwrite SMTP: demo',
+          scopes: [{ scope: 'api_keys', level: 'write' }],
+        }),
+      }),
+    )
+
+    expect(sent.url).toBe('https://us1.platform.bird.com/v1/api-keys')
+    expect(JSON.parse(String(sent.init?.body))).toEqual({
+      name: 'Appwrite SMTP: demo',
+      scopes: [{ scope: 'emails', level: 'write' }],
+    })
+  })
+
+  test('revokes through the revoke endpoint and rejects foreign ids', async () => {
+    const sent = captureUpstream()
+    const request = () =>
+      new Request('https://console.test/bird/api-keys/x', {
+        method: 'DELETE',
+        headers: { Authorization: 'Bearer bt_us1_token' },
+      })
+
+    expect(
+      (await proxyRevokeBirdApiKey(request(), 'key_../workspace')).status,
+    ).toBe(400)
+    expect(sent.url).toBeUndefined()
+
+    await proxyRevokeBirdApiKey(request(), 'key_01hqz8kp3v9x2m4n5p6q7r8s9t')
+    expect(sent.url).toBe(
+      'https://us1.platform.bird.com/v1/api-keys/key_01hqz8kp3v9x2m4n5p6q7r8s9t/revoke',
+    )
+    expect(sent.init?.method).toBe('POST')
   })
 })

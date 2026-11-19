@@ -21,7 +21,7 @@ import {
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { accountIdentitiesQueryOptions } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
-import { analyticsAttrs } from '@/lib/analytics-actions'
+import { analyticsAttrs, type AnalyticsActionId } from '@/lib/analytics-actions'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import {
@@ -33,9 +33,9 @@ import {
   sortQuickSetupDomains,
   type QuickSetupDomain,
 } from '@/lib/smtp/quick-setup'
-import {
-  getAvailableSmtpQuickSetupProvider,
-  type SmtpQuickSetupCredential,
+import type {
+  AvailableSmtpQuickSetupProvider,
+  SmtpQuickSetupCredential,
 } from '@/lib/smtp/providers'
 import {
   QuickSetupReauthorizeRequiredError,
@@ -53,7 +53,12 @@ type Phase =
   | 'reauthorize'
   | 'error'
 
-interface ResendOneClickSetupProps {
+interface OneClickSetupProps {
+  /** Email provider that mints the API key the wizard sends with. */
+  provider: AvailableSmtpQuickSetupProvider
+  analyticsAction: AnalyticsActionId
+  /** Provider name filled in when the user left it empty. */
+  defaultName: string
   projectName: string
   /** Current wizard values, so filling does not clobber what the user typed. */
   values: Record<string, unknown>
@@ -68,7 +73,7 @@ interface ResendOneClickSetupProps {
   autoStart?: boolean
 }
 
-export interface ResendOneClickSetupHandle {
+export interface OneClickSetupHandle {
   /**
    * The wizard is creating the provider with `apiKey`, and `request` is that
    * call. From here on a key minted here is decided by the request alone:
@@ -81,48 +86,53 @@ export interface ResendOneClickSetupHandle {
 }
 
 /**
- * One-click setup for the messaging Resend provider: authorize Resend once,
- * then let Appwrite mint a sending-only API key for a verified domain and fill
- * the wizard's API key and sender fields.
+ * One-click setup for a messaging email provider (Resend, Bird): authorize
+ * the provider once, then let Appwrite mint a sending-only API key for a
+ * verified domain and fill the wizard's API key and sender fields.
  *
  * Same credentials and reconnect rules as the project SMTP one-click setup;
- * the difference is what gets filled, since this provider sends through
- * Resend's API rather than the SMTP relay.
+ * only the fields differ. The wizard decides how the key is used: Resend
+ * sends through its API, Bird through its SMTP relay.
  *
- * The key exists at Resend from the moment it is minted, but nothing depends
- * on it until the provider is created. Until the wizard hands that request
- * over through {@link ResendOneClickSetupHandle.settleCredential}, this panel
- * owns the key and revokes it when the user leaves without creating the
- * provider.
+ * The key exists at the provider from the moment it is minted, but nothing
+ * depends on it until the messaging provider is created. Until the wizard
+ * hands that request over through
+ * {@link OneClickSetupHandle.settleCredential}, this panel owns the key and
+ * revokes it when the user leaves without creating the provider.
  */
-export const ResendOneClickSetup = forwardRef<
-  ResendOneClickSetupHandle,
-  ResendOneClickSetupProps
->(function ResendOneClickSetup(
-  { projectName, values, onFill, autoStart = false },
+export const OneClickSetup = forwardRef<
+  OneClickSetupHandle,
+  OneClickSetupProps
+>(function OneClickSetup(
+  {
+    provider,
+    analyticsAction,
+    defaultName,
+    projectName,
+    values,
+    onFill,
+    autoStart = false,
+  },
   ref,
 ) {
   const t = useT()
   const { account } = useAuth()
   const accountId =
     (account as { $id?: string } | null | undefined)?.$id ?? null
-  const provider = getAvailableSmtpQuickSetupProvider('resend')
 
   const { data: identitiesData, isPending: identitiesPending } = useQuery(
     accountIdentitiesQueryOptions(),
   )
   const connected = (identitiesData?.identities ?? []).some(
-    (identity) => identity.provider === 'resend',
+    (identity) => identity.provider === provider.id,
   )
 
   const { callWith } = useProviderTokens()
   const [minted] = useState(() =>
     createMintedCredentialTracker<SmtpQuickSetupCredential>((credentialId) =>
-      provider
-        ? callWith(provider, (accessToken) =>
-            provider.api.deleteCredential(accessToken, credentialId),
-          )
-        : Promise.resolve(),
+      callWith(provider, (accessToken) =>
+        provider.api.deleteCredential(accessToken, credentialId),
+      ),
     ),
   )
   const [phase, setPhase] = useState<Phase>('idle')
@@ -143,7 +153,6 @@ export const ResendOneClickSetup = forwardRef<
   }, [])
 
   const loadDomains = useCallback(async () => {
-    if (!provider) return
     setPhase('loading')
     setErrorMessage('')
     try {
@@ -177,7 +186,7 @@ export const ResendOneClickSetup = forwardRef<
 
   // Leaving the wizard without creating the provider (back, close, browser
   // navigation) abandons the minted key. Revoke it rather than leave a live,
-  // unused sending key in the Resend account.
+  // unused sending key in the provider account.
   useEffect(() => () => minted.release(), [minted])
 
   useImperativeHandle(
@@ -187,8 +196,6 @@ export const ResendOneClickSetup = forwardRef<
     }),
     [minted],
   )
-
-  if (!provider) return null
 
   const authorize = () => {
     if (!accountId) return
@@ -227,7 +234,7 @@ export const ResendOneClickSetup = forwardRef<
         apiKey: credential.secret,
         // The name is required to create the provider; give the one-click
         // path a default so the user is not blocked on it.
-        name: currentProviderName ? undefined : t('One-click Resend sender'),
+        name: currentProviderName ? undefined : t(defaultName),
         // Keep what the user typed when it already fits the chosen domain.
         fromEmail: emailBelongsToDomain(currentEmail, selectedDomain.name)
           ? undefined
@@ -262,8 +269,8 @@ export const ResendOneClickSetup = forwardRef<
           </p>
         </div>
         {phase === 'idle' ? (
-          // Same label whether or not Resend is already connected; only the
-          // action differs, and that is not known until the identities load.
+          // Same label whether or not the provider is already connected; only
+          // the action differs, and that is not known until the identities load.
           <Button
             type="button"
             variant="outline"
@@ -271,7 +278,7 @@ export const ResendOneClickSetup = forwardRef<
             className="h-8 shrink-0 text-[12px]"
             disabled={!accountId || identitiesPending}
             onClick={connected ? () => void loadDomains() : authorize}
-            {...analyticsAttrs('messaging-quick-setup-resend')}
+            {...analyticsAttrs(analyticsAction)}
           >
             {t(provider.connectLabel)}
           </Button>
@@ -295,14 +302,14 @@ export const ResendOneClickSetup = forwardRef<
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                 <div className="min-w-0 flex-1 space-y-2">
                   <Label
-                    htmlFor="resend-one-click-domain"
+                    htmlFor="one-click-domain"
                     className="text-[12px] font-medium"
                   >
                     {t('Domain')}
                   </Label>
                   <Select value={domainId} onValueChange={setDomainId}>
                     <SelectTrigger
-                      id="resend-one-click-domain"
+                      id="one-click-domain"
                       className="h-9 text-[13px]"
                     >
                       <SelectValue />

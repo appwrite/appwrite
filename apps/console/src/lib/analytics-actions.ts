@@ -255,11 +255,13 @@ export const ANALYTICS_ACTIONS = {
 
   // Project settings
   'smtp-quick-setup-resend': 'SMTP One-Click Setup Resend Clicked',
+  'smtp-quick-setup-bird': 'SMTP One-Click Setup Bird Clicked',
   'smtp-quick-setup-mailgun': 'SMTP One-Click Setup Mailgun Clicked',
   'smtp-quick-setup-sendgrid': 'SMTP One-Click Setup SendGrid Clicked',
 
   // Messaging
   'messaging-quick-setup-resend': 'Messaging One-Click Setup Resend Clicked',
+  'messaging-quick-setup-bird': 'Messaging One-Click Setup Bird Clicked',
 
   // Resource creation
   'create-project': 'Create Project Clicked',

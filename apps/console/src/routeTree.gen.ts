@@ -91,6 +91,8 @@ import { Route as IconsSpriteDotsvgRouteImport } from './routes/icons.sprite[.]s
 import { Route as LlmsFullTxtRouteImport } from './routes/llms-full.txt'
 import { Route as LlmsTxtRouteImport } from './routes/llms.txt'
 import { Route as PlayerVideoIdRouteImport } from './routes/player.$videoId'
+import { Route as ApiBirdApiKeysRouteImport } from './routes/_api/bird/api-keys'
+import { Route as ApiBirdDomainsRouteImport } from './routes/_api/bird/domains'
 import { Route as ApiBlogRssDotxmlRouteImport } from './routes/_api/blog/rss[.]xml'
 import { Route as ApiChangelogRssDotxmlRouteImport } from './routes/_api/changelog/rss[.]xml'
 import { Route as ApiDebugIpRouteImport } from './routes/_api/debug.ip'
@@ -163,6 +165,7 @@ import { Route as PublicProjectsProjectIdRouteImport } from './routes/_public/pr
 import { Route as DocsPartnersIndexRouteImport } from './routes/docs/partners.index'
 import { Route as GeneratorDiagramsIndexRouteImport } from './routes/generator/diagrams/index'
 import { Route as GeneratorDiagramsGenerationIdRouteImport } from './routes/generator/diagrams/$generationId'
+import { Route as ApiBirdApiKeysApiKeyIdRouteImport } from './routes/_api/bird/api-keys.$apiKeyId'
 import { Route as ApiGeneratorCoverEncodeRouteImport } from './routes/_api/generator/cover.encode'
 import { Route as ApiInitTicketIdOgDotpngRouteImport } from './routes/_api/init/$ticketId/og[.]png'
 import { Route as ApiInitCalendarEventSlugRouteImport } from './routes/_api/init/calendar/$eventSlug'
@@ -922,6 +925,16 @@ const PlayerVideoIdRoute = PlayerVideoIdRouteImport.update({
   path: '/player/$videoId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiBirdApiKeysRoute = ApiBirdApiKeysRouteImport.update({
+  id: '/_api/bird/api-keys',
+  path: '/bird/api-keys',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBirdDomainsRoute = ApiBirdDomainsRouteImport.update({
+  id: '/_api/bird/domains',
+  path: '/bird/domains',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiBlogRssDotxmlRoute = ApiBlogRssDotxmlRouteImport.update({
   id: '/_api/blog/rss.xml',
   path: '/blog/rss.xml',
@@ -1312,6 +1325,11 @@ const GeneratorDiagramsGenerationIdRoute =
     path: '/diagrams/$generationId',
     getParentRoute: () => GeneratorRoute,
   } as any)
+const ApiBirdApiKeysApiKeyIdRoute = ApiBirdApiKeysApiKeyIdRouteImport.update({
+  id: '/$apiKeyId',
+  path: '/$apiKeyId',
+  getParentRoute: () => ApiBirdApiKeysRoute,
+} as any)
 const ApiGeneratorCoverEncodeRoute = ApiGeneratorCoverEncodeRouteImport.update({
   id: '/encode',
   path: '/encode',
@@ -3715,6 +3733,8 @@ export interface FileRoutesByFullPath {
   '/player/$videoId': typeof PlayerVideoIdRoute
   '/docs/': typeof DocsIndexRoute
   '/generator/': typeof GeneratorIndexRoute
+  '/bird/api-keys': typeof ApiBirdApiKeysRouteWithChildren
+  '/bird/domains': typeof ApiBirdDomainsRoute
   '/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
   '/changelog/rss.xml': typeof ApiChangelogRssDotxmlRoute
   '/debug/ip': typeof ApiDebugIpRoute
@@ -3787,6 +3807,7 @@ export interface FileRoutesByFullPath {
   '/impersonate/': typeof PublicImpersonateIndexRoute
   '/docs/partners/': typeof DocsPartnersIndexRoute
   '/generator/diagrams/': typeof GeneratorDiagramsIndexRoute
+  '/bird/api-keys/$apiKeyId': typeof ApiBirdApiKeysApiKeyIdRoute
   '/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
   '/init/$ticketId/og.png': typeof ApiInitTicketIdOgDotpngRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
@@ -4213,6 +4234,8 @@ export interface FileRoutesByTo {
   '/player/$videoId': typeof PlayerVideoIdRoute
   '/docs': typeof DocsIndexRoute
   '/generator': typeof GeneratorIndexRoute
+  '/bird/api-keys': typeof ApiBirdApiKeysRouteWithChildren
+  '/bird/domains': typeof ApiBirdDomainsRoute
   '/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
   '/changelog/rss.xml': typeof ApiChangelogRssDotxmlRoute
   '/debug/ip': typeof ApiDebugIpRoute
@@ -4281,6 +4304,7 @@ export interface FileRoutesByTo {
   '/impersonate': typeof PublicImpersonateIndexRoute
   '/docs/partners': typeof DocsPartnersIndexRoute
   '/generator/diagrams': typeof GeneratorDiagramsIndexRoute
+  '/bird/api-keys/$apiKeyId': typeof ApiBirdApiKeysApiKeyIdRoute
   '/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
   '/init/$ticketId/og.png': typeof ApiInitTicketIdOgDotpngRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
@@ -4669,6 +4693,8 @@ export interface FileRoutesById {
   '/_marketing/': typeof MarketingIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/generator/': typeof GeneratorIndexRoute
+  '/_api/bird/api-keys': typeof ApiBirdApiKeysRouteWithChildren
+  '/_api/bird/domains': typeof ApiBirdDomainsRoute
   '/_api/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
   '/_api/changelog/rss.xml': typeof ApiChangelogRssDotxmlRoute
   '/_api/debug/ip': typeof ApiDebugIpRoute
@@ -4741,6 +4767,7 @@ export interface FileRoutesById {
   '/_public/impersonate/': typeof PublicImpersonateIndexRoute
   '/docs/partners/': typeof DocsPartnersIndexRoute
   '/generator/diagrams/': typeof GeneratorDiagramsIndexRoute
+  '/_api/bird/api-keys/$apiKeyId': typeof ApiBirdApiKeysApiKeyIdRoute
   '/_api/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
   '/_api/init/$ticketId/og.png': typeof ApiInitTicketIdOgDotpngRoute
   '/_api/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
@@ -5173,6 +5200,8 @@ export interface FileRouteTypes {
     | '/player/$videoId'
     | '/docs/'
     | '/generator/'
+    | '/bird/api-keys'
+    | '/bird/domains'
     | '/blog/rss.xml'
     | '/changelog/rss.xml'
     | '/debug/ip'
@@ -5245,6 +5274,7 @@ export interface FileRouteTypes {
     | '/impersonate/'
     | '/docs/partners/'
     | '/generator/diagrams/'
+    | '/bird/api-keys/$apiKeyId'
     | '/generator/cover/encode'
     | '/init/$ticketId/og.png'
     | '/init/calendar/$eventSlug'
@@ -5671,6 +5701,8 @@ export interface FileRouteTypes {
     | '/player/$videoId'
     | '/docs'
     | '/generator'
+    | '/bird/api-keys'
+    | '/bird/domains'
     | '/blog/rss.xml'
     | '/changelog/rss.xml'
     | '/debug/ip'
@@ -5739,6 +5771,7 @@ export interface FileRouteTypes {
     | '/impersonate'
     | '/docs/partners'
     | '/generator/diagrams'
+    | '/bird/api-keys/$apiKeyId'
     | '/generator/cover/encode'
     | '/init/$ticketId/og.png'
     | '/init/calendar/$eventSlug'
@@ -6126,6 +6159,8 @@ export interface FileRouteTypes {
     | '/_marketing/'
     | '/docs/'
     | '/generator/'
+    | '/_api/bird/api-keys'
+    | '/_api/bird/domains'
     | '/_api/blog/rss.xml'
     | '/_api/changelog/rss.xml'
     | '/_api/debug/ip'
@@ -6198,6 +6233,7 @@ export interface FileRouteTypes {
     | '/_public/impersonate/'
     | '/docs/partners/'
     | '/generator/diagrams/'
+    | '/_api/bird/api-keys/$apiKeyId'
     | '/_api/generator/cover/encode'
     | '/_api/init/$ticketId/og.png'
     | '/_api/init/calendar/$eventSlug'
@@ -6588,6 +6624,8 @@ export interface RootRouteChildren {
   LlmsFullTxtRoute: typeof LlmsFullTxtRoute
   LlmsTxtRoute: typeof LlmsTxtRoute
   PlayerVideoIdRoute: typeof PlayerVideoIdRoute
+  ApiBirdApiKeysRoute: typeof ApiBirdApiKeysRouteWithChildren
+  ApiBirdDomainsRoute: typeof ApiBirdDomainsRoute
   ApiBlogRssDotxmlRoute: typeof ApiBlogRssDotxmlRoute
   ApiChangelogRssDotxmlRoute: typeof ApiChangelogRssDotxmlRoute
   ApiDebugIpRoute: typeof ApiDebugIpRoute
@@ -7184,6 +7222,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlayerVideoIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_api/bird/api-keys': {
+      id: '/_api/bird/api-keys'
+      path: '/bird/api-keys'
+      fullPath: '/bird/api-keys'
+      preLoaderRoute: typeof ApiBirdApiKeysRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/bird/domains': {
+      id: '/_api/bird/domains'
+      path: '/bird/domains'
+      fullPath: '/bird/domains'
+      preLoaderRoute: typeof ApiBirdDomainsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_api/blog/rss.xml': {
       id: '/_api/blog/rss.xml'
       path: '/blog/rss.xml'
@@ -7687,6 +7739,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/generator/diagrams/$generationId'
       preLoaderRoute: typeof GeneratorDiagramsGenerationIdRouteImport
       parentRoute: typeof GeneratorRoute
+    }
+    '/_api/bird/api-keys/$apiKeyId': {
+      id: '/_api/bird/api-keys/$apiKeyId'
+      path: '/$apiKeyId'
+      fullPath: '/bird/api-keys/$apiKeyId'
+      preLoaderRoute: typeof ApiBirdApiKeysApiKeyIdRouteImport
+      parentRoute: typeof ApiBirdApiKeysRoute
     }
     '/_api/generator/cover/encode': {
       id: '/_api/generator/cover/encode'
@@ -12227,6 +12286,18 @@ const GeneratorRouteWithChildren = GeneratorRoute._addFileChildren(
   GeneratorRouteChildren,
 )
 
+interface ApiBirdApiKeysRouteChildren {
+  ApiBirdApiKeysApiKeyIdRoute: typeof ApiBirdApiKeysApiKeyIdRoute
+}
+
+const ApiBirdApiKeysRouteChildren: ApiBirdApiKeysRouteChildren = {
+  ApiBirdApiKeysApiKeyIdRoute: ApiBirdApiKeysApiKeyIdRoute,
+}
+
+const ApiBirdApiKeysRouteWithChildren = ApiBirdApiKeysRoute._addFileChildren(
+  ApiBirdApiKeysRouteChildren,
+)
+
 interface ApiGeneratorCoverRouteChildren {
   ApiGeneratorCoverEncodeRoute: typeof ApiGeneratorCoverEncodeRoute
 }
@@ -12287,6 +12358,8 @@ const rootRouteChildren: RootRouteChildren = {
   LlmsFullTxtRoute: LlmsFullTxtRoute,
   LlmsTxtRoute: LlmsTxtRoute,
   PlayerVideoIdRoute: PlayerVideoIdRoute,
+  ApiBirdApiKeysRoute: ApiBirdApiKeysRouteWithChildren,
+  ApiBirdDomainsRoute: ApiBirdDomainsRoute,
   ApiBlogRssDotxmlRoute: ApiBlogRssDotxmlRoute,
   ApiChangelogRssDotxmlRoute: ApiChangelogRssDotxmlRoute,
   ApiDebugIpRoute: ApiDebugIpRoute,
