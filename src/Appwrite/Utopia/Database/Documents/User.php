@@ -462,6 +462,8 @@ class User extends Document
      * Undo what a committed sign-in wrote to the account when its identity link is refused afterwards by
      * confirmIdentity(): each attribute it changed goes back to the value in `$snapshot`, the account as the
      * request read it, unless something else has changed it since, and the email target it reserved is released.
+     * The address it filled in and its verification and metadata are reverted as one, with the target, and only when
+     * none of them has changed since.
      * Takes the user row lock; call it inside a transaction.
      *
      * @param array<string, mixed> $changes The attributes the sign-in wrote to the account
@@ -475,10 +477,20 @@ class User extends Document
             return;
         }
 
+        $unchanged = fn (string $key): bool => $locked->getAttribute($key) === $changes[$key];
+
+        // The address and what was recorded about it go back together, or not at all: a claim of the address since
+        // the commit verified it, and the account keeps it, the verification and its target
+        $address = \array_intersect_key($changes, \array_flip(['email', 'emailVerification', 'emailCanonical', 'emailIsCanonical', 'emailIsCorporate', 'emailIsDisposable', 'emailIsFree']));
+        $releaseAddress = $address !== [] && \array_all(\array_keys($address), $unchanged);
+
         $revert = [];
-        foreach ($changes as $key => $value) {
+        foreach (\array_keys($changes) as $key) {
             $before = $snapshot->getAttribute($key);
-            if ($before !== $value && $locked->getAttribute($key) === $value) {
+            if ($before === $changes[$key]) {
+                continue;
+            }
+            if (\array_key_exists($key, $address) ? $releaseAddress : $unchanged($key)) {
                 $revert[$key] = $before;
             }
         }
@@ -487,7 +499,7 @@ class User extends Document
             $authorization->skip(fn () => $dbForProject->updateDocument('users', $locked->getId(), new Document($revert)));
         }
 
-        if ($target !== null) {
+        if ($target !== null && ($address === [] || $releaseAddress)) {
             $authorization->skip(function () use ($dbForProject, $target) {
                 if (!$dbForProject->getDocument('targets', $target->getId())->isEmpty()) {
                     $dbForProject->deleteDocument('targets', $target->getId());

@@ -1036,6 +1036,34 @@ final class UserTest extends TestCase
         $this->assertFalse($reverted->getAttribute('emailVerification'));
     }
 
+    public function testRevertSignInKeepsAnAddressClaimedSince(): void
+    {
+        $database = $this->createProjectDatabase();
+        $anonymous = $this->createAnonymous($database);
+        $snapshot = new Document($anonymous->getArrayCopy());
+
+        // An unverified backfill committed with its target
+        $changes = ['name' => 'Linked', 'email' => 'linked@example.com', 'emailVerification' => false];
+        $target = $database->withTransaction(function () use ($database, $anonymous, $changes) {
+            $target = User::reserveEmailTarget($database, $anonymous, 'linked@example.com');
+            $database->updateDocument('users', $anonymous->getId(), new Document($changes));
+
+            return $target;
+        });
+
+        // The owner of the address verified it before the refused link was undone
+        $database->updateDocument('users', $anonymous->getId(), new Document(['emailVerification' => true]));
+
+        $database->withTransaction(fn () => User::revertSignIn($database, $snapshot, $changes, $target));
+
+        $kept = $database->getDocument('users', $anonymous->getId());
+        $this->assertSame('linked@example.com', $kept->getAttribute('email'));
+        $this->assertTrue($kept->getAttribute('emailVerification'));
+        $this->assertFalse($database->getDocument('targets', $target->getId())->isEmpty());
+        // What the claim did not touch is still undone
+        $this->assertEmpty($kept->getAttribute('name'));
+    }
+
     private function createProjectDatabase(): Database
     {
         $authorization = new Authorization();
