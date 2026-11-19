@@ -1,20 +1,26 @@
 import {
   Box3,
+  type Color,
   DirectionalLight,
   Fog,
   HemisphereLight,
+  type InstancedMesh,
   LinearMipmapLinearFilter,
+  type Material,
   MathUtils,
   Mesh,
+  MeshDepthMaterial,
   MeshStandardMaterial,
   type Object3D,
   NeutralToneMapping,
   PCFShadowMap,
   PerspectiveCamera,
   PlaneGeometry,
+  type Points,
   Raycaster,
   SRGBColorSpace,
   Scene,
+  type ShaderMaterial,
   ShadowMaterial,
   Vector2,
   Vector3,
@@ -22,10 +28,18 @@ import {
   WebGLRenderer,
   type Texture,
 } from 'three'
+import { ASSEMBLED, POWER_ON, SETTLED } from './assembly'
 import { GlowLayer, ShadowLayer } from './effects'
 import { createFrameworkAtlas, loadFrameworkIcons } from './frameworks'
-import type { DisplayFit, FrameState } from './frame'
-import { applyKitPalette, createKit, disposeKit, type FactoryKit } from './kit'
+import { releaseShapes } from './geometry'
+import type { FrameState } from './frame'
+import {
+  applyKitPalette,
+  createKit,
+  createArrivingDepthMaterial,
+  disposeKit,
+  type FactoryKit,
+} from './kit'
 import {
   BED_BACK,
   BED_FRONT,
@@ -46,6 +60,7 @@ import {
   type FactoryPalette,
 } from './palette'
 import { ProductLine } from './products'
+import { DroneFleet } from './drones'
 import { StationLine } from './stations'
 import { createStudioEnvironment } from './studio'
 import {
@@ -68,12 +83,13 @@ export type FactoryEngineOptions = {
   descriptions: string[]
   /** Translated label of the shipped counter. */
   counterLabel: string
+  /** Translated label on the cards the drones carry. */
+  promptLabel: string
   /** Right-to-left page: nameplates put the icon on the right. */
   rtl: boolean
   dark: boolean
   reducedMotion: boolean
   onReady?: () => void
-  onHover?: (station: number) => void
   /** WebGL failed or the context was lost for good. */
   onError?: () => void
 }
@@ -141,14 +157,43 @@ const FRAMINGS: Record<'overlay' | 'band' | 'narrow', Framing> = {
   },
 }
 
-/** Factory clock when the scene boots: a line already full of products. */
+/** Factory clock when the line starts: full of products. */
 const START_TIME = 30 * CYCLE + MOVE + 0.02
 /** Still frame for reduced motion: several machines mid-action. */
 const STILL_TIME = 30 * CYCLE + MOVE + 0.5
-/** Seconds the line takes to power up before it starts moving. */
+/** The line's power-up once it has assembled, in its own seconds: lights come on, then it starts moving. */
 const INTRO_END = 2.4
+/** The power-up plays this many times faster than it is written, so the line is up and moving within a second. */
+const INTRO_SPEED = 3
 const FOV = 30
 const FRAME_INTERVAL = 1000 / 60
+/** The lowest resolution scale the adaptive quality drops to. */
+const MIN_QUALITY = 0.5
+
+/** A material's stand-in for the reflection pass (see `setupTwins`). */
+type Twin = { material: Material; version: number }
+
+/** Makes `twin` match `source`, sharing what changes in place (colors, textures, uniforms). */
+function share(twin: Material, source: Material) {
+  twin.copy(source)
+  const fields = twin as unknown as Record<string, unknown>
+  for (const [key, value] of Object.entries(source)) {
+    if (
+      (value as Color | null)?.isColor ||
+      (value as Texture | null)?.isTexture
+    )
+      fields[key] = value
+  }
+  if ((source as ShaderMaterial).isShaderMaterial)
+    (twin as ShaderMaterial).uniforms = (source as ShaderMaterial).uniforms
+  twin.onBeforeCompile = source.onBeforeCompile
+  twin.customProgramCacheKey = source.customProgramCacheKey
+  twin.userData = source.userData
+  twin.needsUpdate = true
+}
+
+/** Work (ms) building may do before it yields a frame to the page (see `step`). */
+const STEP_BUDGET = 24
 
 const nextFrame = () =>
   new Promise<void>((resolve) => {
@@ -156,6 +201,27 @@ const nextFrame = () =>
       requestAnimationFrame(() => resolve())
     else setTimeout(resolve, 16)
   })
+
+/** The convex outline around `points`, every one wound the same way (monotone chain). */
+function outline(points: Vector2[]): Vector2[] {
+  const sorted = [...points].sort((a, b) => a.x - b.x || a.y - b.y)
+  const chain = (from: Vector2[]) => {
+    const hull: Vector2[] = []
+    for (const point of from) {
+      while (hull.length >= 2) {
+        const a = hull[hull.length - 2]!
+        const b = hull[hull.length - 1]!
+        if ((b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x) > 0)
+          break
+        hull.pop()
+      }
+      hull.push(point)
+    }
+    hull.pop()
+    return hull
+  }
+  return [...chain(sorted), ...chain(sorted.reverse())]
+}
 
 export class FactoryEngine {
   private readonly renderer: WebGLRenderer
@@ -177,6 +243,7 @@ export class FactoryEngine {
   private world: FactoryWorld | null = null
   private stations: StationLine | null = null
   private products: ProductLine | null = null
+  private drones: DroneFleet | null = null
   private glows: GlowLayer | null = null
   private shadows: ShadowLayer | null = null
   private textures: Texture[] = []
@@ -186,14 +253,35 @@ export class FactoryEngine {
   private frameworkAtlas: Texture | null = null
   /** Objects the floor should not mirror (things lying on it). */
   private readonly unreflected: Object3D[] = []
+  /** Shadow casters' depth materials, one per kind of caster (see `setupShadows`). */
+  private readonly depthMaterials: MeshDepthMaterial[] = []
+  /** Per material drawn in the reflection, its twin there. */
+  private readonly twins = new Map<Material, Twin>()
+  /** Everything the reflection draws with a twin. */
+  private readonly mirrored: {
+    object: Mesh | Points
+    source: Material
+    twin: Twin
+  }[] = []
   private readonly environments = new Map<boolean, Texture>()
   private frameState: FrameState | null = null
-  private copyArea: CopyArea | null = null
-  private readonly fits: DisplayFit[] = Array.from(
-    { length: STATION_COUNT },
-    () => ({ lift: 1, covers: false }),
-  )
+  /** Lines of page copy laid over the stage (see `setCopyLines`). */
+  private copyLines: CopyArea[] = []
+  /** How far every display's mast rises (see `fitDisplays`). */
+  private lift = 1
   private reflection: WebGLRenderTarget | null = null
+  /** Whether the floor still mirrors the machine; off for good once frames run slow. */
+  private reflectionOn = true
+  /**
+   * 1 while the floor mirrors the machine. It starts at 0 and fades in once
+   * the reflection has been warmed up after the first frame, and eases back
+   * to 0 when the reflection is dropped.
+   */
+  private reflectionFade = 0
+  /** The reflection pass has run once, off the first frame's path. */
+  private reflectionWarm = false
+  /** When building last yielded a frame (see `step`). */
+  private lastYield = 0
   private floor: Mesh | null = null
   private shadowCatcher: Mesh | null = null
 
@@ -210,16 +298,25 @@ export class FactoryEngine {
   private lastNow = 0
   private lastRender = 0
   private time = START_TIME
+  /** Real seconds of the factory assembling itself (see `assembly.ts`). */
+  private assembly = 0
   private introTime = 0
   private slowWindows = 0
   private fastWindows = 0
   private sampleCount = 0
-  private readonly samples = new Float32Array(60)
+  private readonly samples = new Float32Array(30)
+  private readonly sorted = new Float32Array(30)
   private pointer = new Vector2(0, 0)
   private pointerTarget = new Vector2(0, 0)
   private readonly hoverPointer = new Vector2()
   private pointerInside = false
+  /** Whether the pointer may open a display, or (over the page copy) only keep one open. */
+  private pointerOpens = true
   private hovered = -1
+  /** The layer over the page copy that open displays are drawn again on (see `setFront`). */
+  private front: CanvasRenderingContext2D | null = null
+  /** The front layer shows a display, so it needs clearing once none is open. */
+  private frontShown = false
   private needsHoverTest = false
   private mobile = false
   private composition: FactoryComposition = 'band'
@@ -238,6 +335,8 @@ export class FactoryEngine {
       powerPreference: 'default',
     })
     this.renderer.setClearColor(0x000000, 0)
+    // `renderFrame` updates matrices once for all of a frame's passes.
+    this.scene.matrixWorldAutoUpdate = false
     this.renderer.outputColorSpace = SRGBColorSpace
     this.renderer.toneMapping = NeutralToneMapping
     this.renderer.toneMappingExposure = 1
@@ -258,6 +357,7 @@ export class FactoryEngine {
     )
     options.canvas.addEventListener('webglcontextlost', this.handleContextLost)
     if (options.reducedMotion) {
+      this.assembly = SETTLED
       this.introTime = INTRO_END + 2
       this.time = STILL_TIME
     }
@@ -269,22 +369,29 @@ export class FactoryEngine {
     this.options.onError?.()
   }
 
-  /** Builds the scene in small steps so no single task blocks input. */
+  /**
+   * Builds the scene in small steps so no single task blocks input: the
+   * machine one part per frame, then every shader compiled in parallel and
+   * every large texture uploaded on a frame of its own, so the first frame
+   * the visitor sees is an ordinary one.
+   */
   async init() {
+    this.lastYield = performance.now()
     const palette = this.palette
-    const shadow = createShadowTexture(getStaticShadowShapes())
-    const blob = createBlobTexture()
-    const track = this.crisp(createTrackTexture(palette))
-    this.textures.push(shadow, blob)
-    await nextFrame()
-    if (this.disposed) return
-
-    const kit = createKit(palette, { shadow, blob, track })
-    this.kit = kit
+    // Icons download, and the printed atlases finish drawing, while the machine is built.
+    const icons = loadFrameworkIcons()
     const plates = this.createNameplates()
     this.nameplateAtlas = this.crisp(plates.texture)
     const descriptions = this.createDescriptions()
     this.descriptionAtlas = this.crisp(descriptions.texture)
+    const shadow = createShadowTexture(getStaticShadowShapes())
+    const blob = createBlobTexture()
+    const track = this.crisp(createTrackTexture(palette))
+    this.textures.push(shadow, blob)
+    if (!(await this.step())) return
+
+    const kit = createKit(palette, { shadow, blob, track })
+    this.kit = kit
     this.world = new FactoryWorld(
       kit,
       plates.texture,
@@ -293,34 +400,33 @@ export class FactoryEngine {
     )
     this.floor = this.world.group.getObjectByName('floor') as Mesh
     this.scene.add(this.world.group)
-    await nextFrame()
-    if (this.disposed) return
+    if (!(await this.step())) return
 
     this.stations = new StationLine(kit)
     this.scene.add(this.stations.group)
-    await nextFrame()
-    if (this.disposed) return
+    if (!(await this.step())) return
 
     this.products = new ProductLine(kit)
     const atlas = createScreenAtlas(this.atlasScale)
     this.screenAtlas = this.crisp(atlas.texture)
     this.products.setScreenAtlas(atlas.texture, atlas.cells)
     this.scene.add(this.products.group)
+    this.drones = new DroneFleet(
+      kit,
+      this.options.promptLabel,
+      this.options.rtl,
+      this.options.reducedMotion ? Number.NEGATIVE_INFINITY : START_TIME,
+    )
+    this.scene.add(this.drones.group)
+    // The machine is built; the shapes it was built from can go.
+    releaseShapes()
     this.glows = new GlowLayer(kit.glow)
     this.shadows = new ShadowLayer(kit.blob)
     this.scene.add(this.glows.points, this.shadows.mesh)
-    void loadFrameworkIcons().then((icons) => {
-      if (this.disposed || !this.world || !this.products) return
-      this.world.setFrameworkIcons(icons)
-      this.frameworkAtlas = this.crisp(createFrameworkAtlas(icons))
-      this.products.setFrameworkAtlas(this.frameworkAtlas)
-      if (this.ready && !this.isLooping()) this.renderFrame(0)
-    })
     this.scene.traverse((object) => {
       if (object.userData.noReflection) this.unreflected.push(object)
     })
-    await nextFrame()
-    if (this.disposed) return
+    if (!(await this.step())) return
 
     // Key from the camera's side and above; rim from behind to edge the tops.
     this.key.position.set(-5, 13, 8)
@@ -338,7 +444,9 @@ export class FactoryEngine {
       this.setupShadows()
       this.setupReflection()
     }
-    this.applyLighting()
+    for (const object of [this.floor, this.shadowCatcher, this.shadows?.mesh])
+      if (object) this.unreflected.push(object)
+    if (this.reflection) this.setupTwins()
 
     for (let index = 0; index < STATION_COUNT; index++) {
       const x = stationX(index)
@@ -367,20 +475,121 @@ export class FactoryEngine {
       ])
     }
 
+    if (!(await this.step())) return
+
+    // The studio's reflections: baked once per theme.
+    this.applyLighting()
     this.applyResolution()
     this.frameCamera()
     this.updateCamera(0)
-    try {
-      await this.renderer.compileAsync(this.scene, this.camera)
-    } catch {
-      // Older drivers without parallel compile still compile on first render.
-    }
-    await Promise.all([plates.ready, descriptions.ready])
+    if (!(await this.step())) return
+
+    // The first frame waits only for what it shows: the printed atlases
+    // (fonts, icons) and the reflection follow it (see `finish`).
+    await this.compile('view')
     if (this.disposed) return
+    for (const texture of [this.screenAtlas, track, shadow]) {
+      this.renderer.initTexture(texture)
+      if (!(await this.step())) return
+    }
+
     this.ready = true
     this.renderFrame(0)
     this.options.onReady?.()
     if (this.active && !this.options.reducedMotion) this.start()
+    void this.finish(plates.ready, descriptions.ready, icons)
+  }
+
+  /**
+   * After the first frame, a step at a time: the floor's reflection (warmed
+   * up, then faded in), the nameplates (dark until their station powers up),
+   * the descriptions (shown only on hover), the models' marks on the drones'
+   * cards, then the framework marks.
+   */
+  private async finish(
+    plates: Promise<unknown>,
+    descriptions: Promise<unknown>,
+    icons: Promise<readonly (HTMLImageElement | null)[]>,
+  ) {
+    if (!(await this.step(true))) return
+    if (this.reflection) {
+      await this.compile('reflection')
+      if (this.disposed) return
+      this.renderer.initRenderTarget(this.reflection)
+      this.scene.updateMatrixWorld()
+      this.renderReflection()
+      this.reflectionWarm = true
+      if (!this.isLooping() && this.assembly >= ASSEMBLED) {
+        this.reflectionFade = 1
+        this.renderFrame(0)
+      }
+    }
+    await plates
+    if (!(await this.step(true))) return
+    if (this.nameplateAtlas) this.renderer.initTexture(this.nameplateAtlas)
+    if (!this.isLooping()) this.renderFrame(0)
+    await descriptions
+    if (!(await this.step(true))) return
+    if (this.descriptionAtlas) this.renderer.initTexture(this.descriptionAtlas)
+    await this.drones?.showMarks()
+    await this.showFrameworks(await icons)
+  }
+
+  /**
+   * Yields a frame to the page once building has worked for `STEP_BUDGET`
+   * since the last one (or always, when `force`), so it never blocks the
+   * page for long without idling between small steps; false once the
+   * engine is gone.
+   */
+  private async step(force = false) {
+    if (force || performance.now() - this.lastYield > STEP_BUDGET) {
+      await nextFrame()
+      this.lastYield = performance.now()
+    }
+    return !this.disposed
+  }
+
+  /**
+   * Compiles every program a pass draws with, in parallel where the driver
+   * allows, before that pass first runs: the view's before the first frame,
+   * the reflection twins' (a target is drawn in linear color without tone
+   * mapping, so they need variants of their own) before the reflection
+   * warms up after it.
+   */
+  private async compile(pass: 'view' | 'reflection') {
+    const { renderer } = this
+    try {
+      if (pass === 'view') {
+        await renderer.compileAsync(this.scene, this.camera)
+      } else if (this.reflection) {
+        this.useTwins(true)
+        renderer.setRenderTarget(this.reflection)
+        const pending = renderer.compileAsync(this.scene, this.mirror)
+        renderer.setRenderTarget(null)
+        this.useTwins(false)
+        await pending
+      }
+    } catch {
+      // Older drivers without parallel compile still compile on first render.
+    }
+  }
+
+  /**
+   * Hands the installer its icons and the product screens their framework
+   * marks, drawing and uploading the atlas on frames of their own so the
+   * running line never waits on them.
+   */
+  private async showFrameworks(icons: readonly (HTMLImageElement | null)[]) {
+    if (this.disposed || !this.world || !this.products) return
+    this.world.setFrameworkIcons(icons)
+    if (!(await this.step())) return
+    const atlas = this.crisp(createFrameworkAtlas(icons))
+    this.frameworkAtlas = atlas
+    if (!(await this.step())) return
+    this.renderer.initTexture(atlas)
+    if (!(await this.step())) return
+    this.products?.setFrameworkAtlas(atlas)
+    if (this.ready && !this.isLooping()) this.renderFrame(0)
   }
 
   /**
@@ -410,15 +619,36 @@ export class FactoryEngine {
     camera.near = 8
     camera.far = 27
     camera.updateProjectionMatrix()
+    // three.js draws every caster with one depth material, whose program
+    // follows the caster (instanced or not, mapped or not, its side), so a
+    // mixed list would switch programs over and over each frame. Each kind of
+    // caster gets a depth material of its own, and each instanced one too.
+    const depths = new Map<string, MeshDepthMaterial>()
     this.scene.traverse((object) => {
       if (!(object instanceof Mesh)) return
-      if (
-        object.material instanceof MeshStandardMaterial &&
-        !object.material.transparent
-      ) {
-        object.castShadow = !object.userData.castsNoShadow
-        object.receiveShadow = !object.userData.receivesNoShadow
+      const material = object.material
+      if (!(material instanceof MeshStandardMaterial) || material.transparent)
+        return
+      object.castShadow = !object.userData.castsNoShadow
+      object.receiveShadow = !object.userData.receivesNoShadow
+      if (!object.castShadow) return
+      // Hardware in the shared finish comes into place, and its shadow with it.
+      const arrives = material === this.kit?.finish
+      const key = (object as InstancedMesh).isInstancedMesh
+        ? object.uuid
+        : arrives
+          ? 'finish'
+          : `${!!material.map}|${material.side}|${material.shadowSide}`
+      let depth = depths.get(key)
+      if (!depth) {
+        depth =
+          arrives && this.kit
+            ? createArrivingDepthMaterial(this.kit)
+            : new MeshDepthMaterial()
+        depths.set(key, depth)
+        this.depthMaterials.push(depth)
       }
+      object.customDepthMaterial = depth
     })
     this.shadowCatcher = new Mesh(
       new PlaneGeometry(70, 30).rotateX(-Math.PI / 2),
@@ -445,6 +675,55 @@ export class FactoryEngine {
   }
 
   /**
+   * The reflection renders into a target, which three.js draws in linear
+   * color without tone mapping. It keeps one program per material, so every
+   * material drawn in both passes would switch programs twice a frame and
+   * rebuild its program parameters each time: half the frame's CPU. The
+   * reflection draws with twins instead, each sharing its source's colors,
+   * textures and uniforms and keeping a program of its own.
+   */
+  private setupTwins() {
+    const skipped = new Set<Object3D>(this.unreflected)
+    const visit = (object: Object3D) => {
+      if (skipped.has(object)) return
+      if ((object as Mesh).isMesh || (object as Points).isPoints) {
+        const drawn = object as Mesh | Points
+        const source = drawn.material
+        if (!Array.isArray(source)) {
+          let twin = this.twins.get(source)
+          if (!twin) {
+            twin = { material: source.clone(), version: -1 }
+            this.twins.set(source, twin)
+          }
+          this.mirrored.push({ object: drawn, source, twin })
+        }
+      }
+      for (const child of object.children) visit(child)
+    }
+    visit(this.scene)
+  }
+
+  /** Puts the twins on (bringing them up to date) or takes them off. */
+  private useTwins(on: boolean) {
+    if (on) {
+      for (const [source, twin] of this.twins) {
+        if (twin.version !== source.version) {
+          share(twin.material, source)
+          twin.version = source.version
+        }
+        // The scalars the line animates.
+        twin.material.opacity = source.opacity
+        if ((source as MeshStandardMaterial).isMeshStandardMaterial)
+          (twin.material as MeshStandardMaterial).emissiveIntensity = (
+            source as MeshStandardMaterial
+          ).emissiveIntensity
+      }
+    }
+    for (const { object, source, twin } of this.mirrored)
+      object.material = on ? twin.material : source
+  }
+
+  /**
    * Renders the scene from the camera's mirror image under the floor. Points
    * on the floor project to the same height and the opposite side in both
    * views, which is all the floor shader needs to look the reflection up.
@@ -467,13 +746,10 @@ export class FactoryEngine {
     mirror.projectionMatrix.elements[8]! *= -1
     mirror.projectionMatrixInverse.copy(mirror.projectionMatrix).invert()
 
-    const hidden = [
-      floor,
-      this.shadowCatcher,
-      this.shadows?.mesh,
-      ...this.unreflected,
-    ]
-    for (const object of hidden) if (object) object.visible = false
+    // The floor itself, its shadows and what lies on it are not mirrored.
+    const hidden = this.unreflected
+    for (const object of hidden) object.visible = false
+    this.useTwins(true)
     // Shadows were drawn for the last frame; one frame of lag is invisible here.
     renderer.shadowMap.autoUpdate = !this.rendered
     renderer.setRenderTarget(reflection)
@@ -481,7 +757,8 @@ export class FactoryEngine {
     renderer.render(this.scene, mirror)
     renderer.setRenderTarget(null)
     renderer.shadowMap.autoUpdate = true
-    for (const object of hidden) if (object) object.visible = true
+    this.useTwins(false)
+    for (const object of hidden) object.visible = true
   }
 
   /** Reprints the nameplates (language or direction changed). */
@@ -496,6 +773,7 @@ export class FactoryEngine {
     this.options.names = names
     this.options.descriptions = descriptions
     this.options.rtl = rtl
+    this.drones?.setLabel(this.options.promptLabel, rtl)
     if (this.kit) this.printNameplates()
   }
 
@@ -503,6 +781,13 @@ export class FactoryEngine {
   setCounterLabel(label: string) {
     this.options.counterLabel = label
     this.world?.setCounterLabel(label)
+    if (this.ready && !this.isLooping()) this.renderFrame(0)
+  }
+
+  /** Relabels the cards the drones carry (language changed). */
+  setPromptLabel(label: string) {
+    this.options.promptLabel = label
+    this.drones?.setLabel(label, this.options.rtl)
     if (this.ready && !this.isLooping()) this.renderFrame(0)
   }
 
@@ -580,49 +865,48 @@ export class FactoryEngine {
   }
 
   /**
-   * The part of the stage (CSS pixels) covered by page copy, which the
-   * unfolded displays must stay clear of; null when nothing is laid over it.
+   * The lines of page copy laid over the stage (CSS pixels), which the
+   * unfolded displays keep clear of; empty when nothing is laid over it.
+   * Lines, not the copy's box, so a display may rise beside a short line.
    */
-  setCopyArea(area: CopyArea | null) {
-    this.copyArea = area
+  setCopyLines(lines: CopyArea[]) {
+    this.copyLines = lines
     if (this.ready && !this.isLooping()) this.renderFrame(0)
   }
 
   /**
-   * Every display opens at the same size. Where the copy is laid over the
-   * scene, a display's mast rises only as far as keeps it clear of the copy;
-   * a display that covers the copy even with its mast down opens at full
-   * height, and the copy steps back while it is open (see `coversCopy`).
+   * Every display opens at the same size on the same mast height: as high
+   * as keeps every station's open display clear of the copy laid over the
+   * scene, down to resting on its column.
    */
   private fitDisplays() {
-    const area = this.copyArea
-    for (let index = 0; index < STATION_COUNT; index++) {
-      const fit = this.fits[index]!
-      fit.lift = 1
-      fit.covers = false
-      if (!area || this.isClear(index, 1, area)) continue
-      if (!this.isClear(index, 0, area)) {
-        fit.covers = true
-        continue
+    const lines = this.copyLines
+    let lift = 1
+    if (lines.length) {
+      for (let index = 0; index < STATION_COUNT; index++) {
+        if (this.isClear(index, lift, lines)) continue
+        let low = 0
+        let high = lift
+        for (let step = 0; step < 8; step++) {
+          const middle = (low + high) / 2
+          if (this.isClear(index, middle, lines)) low = middle
+          else high = middle
+        }
+        lift = low
       }
-      let low = 0
-      let high = 1
-      for (let step = 0; step < 8; step++) {
-        const middle = (low + high) / 2
-        if (this.isClear(index, middle, area)) low = middle
-        else high = middle
-      }
-      fit.lift = low
+    }
+    this.lift = lift
+    // Hovering keeps answering for the display where it actually opens.
+    const screenBottom = TOWER_TOP + lift * EXTENSION.lift
+    for (const [mast, screen] of this.displayBoxes) {
+      mast.max.y = screenBottom
+      screen.min.y = screenBottom
+      screen.max.y = screenBottom + EXTENSION.height + 0.1
     }
   }
 
-  /** Whether station `index`'s open display covers the page copy, which should then step back. */
-  coversCopy(index: number): boolean {
-    return this.fits[index]?.covers ?? false
-  }
-
-  /** Whether station `index`'s open display, its mast raised by `lift`, stays off the copy. */
-  private isClear(index: number, lift: number, area: CopyArea) {
+  /** Whether station `index`'s open display, its mast raised by `lift`, stays off every one of `areas`. */
+  private isClear(index: number, lift: number, areas: CopyArea[]) {
     const x = stationX(index)
     const base = TOWER_TOP - 0.01 + lift * EXTENSION.lift
     const top = base + EXTENSION.height
@@ -642,11 +926,12 @@ export class FactoryEngine {
       right = Math.max(right, screenX)
       highest = Math.min(highest, ((1 - this.scratch.y) / 2) * this.height)
     }
-    const margin = 16
-    return (
-      right < area.left - margin ||
-      left > area.right + margin ||
-      highest > area.bottom + margin
+    const margin = 12
+    return areas.every(
+      (area) =>
+        right < area.left - margin ||
+        left > area.right + margin ||
+        highest > area.bottom + margin,
     )
   }
 
@@ -708,8 +993,8 @@ export class FactoryEngine {
     const ease = Math.min(1, dt * 2.6)
     this.pointer.x += (this.pointerTarget.x - this.pointer.x) * ease
     this.pointer.y += (this.pointerTarget.y - this.pointer.y) * ease
-    // A slow push-in while the line powers up, then a barely moving camera.
-    const settle = 1 - easeOutCubic(range(this.introTime, 0, INTRO_END + 0.6))
+    // A slow push-in while the factory assembles, then a barely moving camera.
+    const settle = 1 - easeOutCubic(range(this.assembly, 0, ASSEMBLED + 0.6))
     const framing = this.framing
     const drift = this.options.reducedMotion
       ? 0
@@ -718,12 +1003,12 @@ export class FactoryEngine {
       framing.azimuth +
       this.pointer.x * MathUtils.degToRad(2.4) +
       drift +
-      settle * MathUtils.degToRad(-4)
+      settle * MathUtils.degToRad(-5)
     const elevation =
       framing.elevation +
       this.pointer.y * MathUtils.degToRad(1.4) +
-      settle * MathUtils.degToRad(2)
-    const distance = this.distance * (1 + settle * 0.07)
+      settle * MathUtils.degToRad(3)
+    const distance = this.distance * (1 + settle * 0.09)
 
     const [targetX, targetY, targetZ] = framing.target
     this.target.set(targetX, targetY, targetZ)
@@ -766,7 +1051,8 @@ export class FactoryEngine {
     this.rafId = requestAnimationFrame(this.tick)
     // Cap at 60 fps: high refresh screens get the same scene for half the work.
     if (this.lastRender && now - this.lastRender < FRAME_INTERVAL - 2.5) return
-    const dt = Math.min((now - this.lastNow) / 1000, 0.05)
+    // The first tick's timestamp can fall just before `start` read the clock.
+    const dt = MathUtils.clamp((now - this.lastNow) / 1000, 0, 0.05)
     this.trackPerformance(now - (this.lastRender || now))
     this.lastNow = now
     this.lastRender = now
@@ -774,11 +1060,15 @@ export class FactoryEngine {
   }
 
   /**
-   * Lowers resolution only after sustained slow frames (three windows of 60
-   * frames whose median runs below ~38 fps) and restores it when frames run
-   * clean again. Hitches, background tabs and unfocused windows never count.
+   * After a second of slow frames (two windows of 30 frames whose median
+   * runs below ~48 fps) the floor's reflection fades out first: it is the
+   * subtlest effect and costs a whole extra pass. If frames are still slow,
+   * resolution drops by as much as they are slow, and comes back gradually
+   * once they run clean for a while. Single hitches, background tabs and
+   * unfocused windows never count.
    */
   private trackPerformance(interval: number) {
+    // Judged once the power-up is over: the frames around the first carry one-off work.
     if (this.introTime < INTRO_END || interval <= 0 || interval > 120) return
     if (
       typeof document !== 'undefined' &&
@@ -788,22 +1078,31 @@ export class FactoryEngine {
     this.samples[this.sampleCount++] = interval
     if (this.sampleCount < this.samples.length) return
     this.sampleCount = 0
-    const median = [...this.samples].sort((a, b) => a - b)[
-      this.samples.length >> 1
-    ]!
-    if (median > 26) {
+    this.sorted.set(this.samples)
+    this.sorted.sort()
+    const median = this.sorted[this.sorted.length >> 1]!
+    if (median > 21) {
       this.slowWindows++
       this.fastWindows = 0
-      if (this.slowWindows >= 3 && this.quality > 0.6) {
-        this.quality = Math.max(0.6, this.quality * 0.85)
-        this.slowWindows = 0
+      if (this.slowWindows < 2) return
+      this.slowWindows = 0
+      if (this.reflection && this.reflectionOn) {
+        this.reflectionOn = false
+      } else if (this.quality > MIN_QUALITY) {
+        // Pixel cost goes with the square of the scale.
+        const step = MathUtils.clamp(
+          Math.sqrt(FRAME_INTERVAL / median),
+          0.7,
+          0.9,
+        )
+        this.quality = Math.max(MIN_QUALITY, this.quality * step)
         this.applyResolution()
       }
-    } else if (median < 18) {
+    } else if (median < 17.5) {
       this.fastWindows++
       this.slowWindows = 0
-      if (this.fastWindows >= 3 && this.quality < 1) {
-        this.quality = Math.min(1, this.quality * 1.12)
+      if (this.fastWindows >= 8 && this.quality < 1) {
+        this.quality = Math.min(1, this.quality * 1.1)
         this.fastWindows = 0
         this.applyResolution()
       }
@@ -815,16 +1114,20 @@ export class FactoryEngine {
     if (!kit || !world || !stations || !products || !glows || !shadows) return
 
     if (!this.options.reducedMotion) {
-      this.introTime += dt
-      // The line holds still while it powers up, then eases into its rhythm.
+      this.assembly += dt
+      // Assembled, the line powers up; it holds still until it has, then
+      // eases into its rhythm.
+      this.introTime = Math.max(0, this.assembly - POWER_ON) * INTRO_SPEED
       const speed = easeInOutCubic(range(this.introTime, 1.5, INTRO_END))
       this.time += dt * speed
     }
+    kit.assembly.value = this.assembly
 
     const frame: FrameState = this.frameState ?? {
       time: this.time,
       dt,
       introTime: this.introTime,
+      assembly: this.assembly,
       line: getLineState(this.time),
       palette: this.palette,
       glows,
@@ -832,41 +1135,144 @@ export class FactoryEngine {
       highlight: -1,
       levels: new Array(STATION_COUNT).fill(0),
       realShadows: this.studio,
-      fits: this.fits,
+      lift: 1,
     }
     this.frameState = frame
     frame.time = this.time
     frame.dt = dt
     frame.introTime = this.introTime
+    frame.assembly = this.assembly
     frame.line = getLineState(this.time)
     frame.palette = this.palette
-    frame.highlight = this.hovered
+    // Displays unfold only from machines standing in place.
+    frame.highlight = this.assembly >= ASSEMBLED ? this.hovered : -1
     this.fitDisplays()
+    frame.lift = this.lift
 
     glows.begin()
     shadows.begin()
     stations.update(frame)
     world.update(frame)
     products.update(frame)
+    this.drones?.update(frame)
     glows.end()
     shadows.end()
+    world.upload(this.renderer)
 
     this.updateCamera(dt)
-    this.renderReflection()
+    // Once per frame, not once per pass: the reflection and the view share it.
+    this.scene.updateMatrixWorld()
+    if (this.reflection) {
+      // Eases in over half a second once warm and the machine stands in
+      // place, and out when the GPU cannot keep up (see `trackPerformance`).
+      const target =
+        this.reflectionOn && this.reflectionWarm && this.assembly >= ASSEMBLED
+          ? 1
+          : 0
+      this.reflectionFade = MathUtils.clamp(
+        this.reflectionFade + Math.sign(target - this.reflectionFade) * dt * 2,
+        0,
+        1,
+      )
+      kit.floor.uniforms.uReflectivity!.value =
+        this.palette.reflectivity * this.reflectionFade
+      if (this.reflectionFade > 0) this.renderReflection()
+    }
     this.renderer.render(this.scene, this.camera)
     this.rendered = true
+    this.drawFront()
     if (this.needsHoverTest) this.testHover()
   }
 
-  /** Pointer in CSS pixels relative to the canvas, or null when it leaves. */
-  setPointer(x: number | null, y: number | null) {
+  /**
+   * A transparent canvas laid over the page copy, covering the stage: open
+   * displays are drawn again on it, so they stand in front of the copy
+   * instead of behind it. Null to stop.
+   */
+  setFront(canvas: HTMLCanvasElement | null) {
+    if (this.front && this.frontShown) {
+      const { width, height } = this.front.canvas
+      this.front.clearRect(0, 0, width, height)
+    }
+    this.front = canvas?.getContext('2d') ?? null
+    this.frontShown = false
+    if (this.ready && !this.isLooping()) this.renderFrame(0)
+  }
+
+  /**
+   * Copies every open display, cut to its outline, from the frame just
+   * rendered onto the front layer, where it covers the copy it meets. Runs
+   * in the same task as the render, while the frame can still be read.
+   */
+  private drawFront() {
+    const front = this.front
+    const world = this.world
+    if (!front || !world) return
+    // Only where the copy is laid over the scene.
+    const boxes =
+      this.composition === 'overlay' && !this.mobile
+        ? world.getDisplayBoxes()
+        : []
+    if (!boxes.length && !this.frontShown) return
+    const source = this.options.canvas
+    const layer = front.canvas
+    if (layer.width !== source.width || layer.height !== source.height) {
+      layer.width = source.width
+      layer.height = source.height
+    } else {
+      front.clearRect(0, 0, layer.width, layer.height)
+    }
+    this.frontShown = boxes.length > 0
+    if (!this.frontShown) return
+
+    let left = layer.width
+    let top = layer.height
+    let right = 0
+    let bottom = 0
+    front.save()
+    front.beginPath()
+    for (const corners of boxes) {
+      const points = corners.map((corner) => {
+        corner.project(this.camera)
+        return new Vector2(
+          ((corner.x + 1) / 2) * layer.width,
+          ((1 - corner.y) / 2) * layer.height,
+        )
+      })
+      outline(points).forEach((point, index) => {
+        if (index) front.lineTo(point.x, point.y)
+        else front.moveTo(point.x, point.y)
+        left = Math.min(left, point.x)
+        top = Math.min(top, point.y)
+        right = Math.max(right, point.x)
+        bottom = Math.max(bottom, point.y)
+      })
+      front.closePath()
+    }
+    front.clip()
+    const x = Math.max(0, Math.floor(left))
+    const y = Math.max(0, Math.floor(top))
+    const width = Math.min(layer.width, Math.ceil(right)) - x
+    const height = Math.min(layer.height, Math.ceil(bottom)) - y
+    if (width > 0 && height > 0)
+      front.drawImage(source, x, y, width, height, x, y, width, height)
+    front.restore()
+  }
+
+  /**
+   * Pointer in CSS pixels relative to the canvas, or null when it leaves.
+   * Over the page copy (`opens` false) it only keeps the display it is on
+   * open, so the copy stays readable to point at everywhere else.
+   */
+  setPointer(x: number | null, y: number | null, opens = true) {
     if (x === null || y === null || this.options.reducedMotion) {
       this.pointerInside = false
       this.pointerTarget.set(0, 0)
-      if (this.hovered !== -1) this.setHovered(-1)
+      this.hovered = -1
       return
     }
     this.pointerInside = true
+    this.pointerOpens = opens
     const nx = (x / this.width) * 2 - 1
     const ny = -(y / this.height) * 2 + 1
     this.pointerTarget.set(nx, ny)
@@ -879,6 +1285,14 @@ export class FactoryEngine {
     this.needsHoverTest = false
     if (!this.pointerInside) return
     this.raycaster.setFromCamera(this.hoverPointer, this.camera)
+    if (!this.pointerOpens) {
+      const held = this.hovered
+      this.hovered = -1
+      if (held < 0) return
+      for (const box of [this.stationBoxes[held]!, ...this.displayBoxes[held]!])
+        if (this.raycaster.ray.intersectsBox(box)) this.hovered = held
+      return
+    }
     let best = -1
     let bestDistance = Number.POSITIVE_INFINITY
     const test = (box: Box3, index: number) => {
@@ -897,19 +1311,7 @@ export class FactoryEngine {
       for (const box of this.displayBoxes[this.hovered]!)
         test(box, this.hovered)
     }
-    if (best !== this.hovered) this.setHovered(best)
-  }
-
-  private setHovered(index: number) {
-    this.hovered = index
-    this.options.onHover?.(index)
-  }
-
-  /** Highlight from outside (a focused or hovered label). */
-  setHighlight(index: number) {
-    if (index === this.hovered) return
-    this.hovered = index
-    if (this.ready && !this.isLooping()) this.renderFrame(0)
+    this.hovered = best
   }
 
   setTheme(dark: boolean) {
@@ -943,6 +1345,7 @@ export class FactoryEngine {
     this.world?.dispose()
     this.stations?.dispose()
     this.products?.dispose()
+    this.drones?.dispose()
     this.glows?.points.geometry.dispose()
     this.shadows?.mesh.geometry.dispose()
     if (this.kit) {
@@ -956,6 +1359,8 @@ export class FactoryEngine {
     this.frameworkAtlas?.dispose()
     for (const environment of this.environments.values()) environment.dispose()
     this.reflection?.dispose()
+    for (const twin of this.twins.values()) twin.material.dispose()
+    for (const depth of this.depthMaterials) depth.dispose()
     if (this.shadowCatcher) {
       this.shadowCatcher.geometry.dispose()
       ;(this.shadowCatcher.material as ShadowMaterial).dispose()

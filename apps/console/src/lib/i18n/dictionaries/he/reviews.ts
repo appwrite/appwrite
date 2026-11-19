@@ -259,4 +259,16 @@ export const heReviewsDictionary: Record<string, string> = {
     'כאן מוצג איך מחברי בקשות המשיכה שלכם מצליחים בסקירה, לאחר שהסקירות מושלמות. נסו טווח ארוך יותר או מאגר אחר.',
   'Counts completed reviews in the range. Approval and confidence go by each pull request’s latest review; fixed counts findings resolved by a later commit.':
     'נספרות סקירות שהושלמו בטווח. אישור וביטחון נקבעים לפי הסקירה האחרונה של כל בקשת משיכה; תוקנו סופר ממצאים שנפתרו בקומיט מאוחר יותר.',
+
+  // Finding outcomes
+  'Useful findings': 'ממצאים מועילים',
+  '{resolved} fixed, {dismissed} dismissed':
+    '{resolved} תוקנו, {dismissed} נדחו',
+  Useful: 'מועילים',
+  Dismissed: 'נדחו',
+  'Findings by category': 'ממצאים לפי קטגוריה',
+  'Categories that are often dismissed are candidates for a learning that tells the reviewer to flag them less.':
+    'קטגוריות שנדחות לעיתים קרובות הן מועמדות ללמידה שתורה לסוקר לסמן אותן פחות.',
+  'Useful findings is the share of settled findings that were fixed rather than dismissed; findings still open count for neither.':
+    'ממצאים מועילים הם החלק מהממצאים שהוכרעו שתוקנו ולא נדחו; ממצאים שעדיין פתוחים אינם נספרים לאף צד.',
 }

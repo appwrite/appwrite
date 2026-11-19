@@ -91,6 +91,16 @@ final class RuleOwnershipTest extends TestCase
         $this->assertSame('shop', $rule->getAttribute('projectId'));
     }
 
+    public function testClaimingADomainDeletesTheReleasedRulesCertificate(): void
+    {
+        RuleOwnershipTestDNS::$zone[self::PROOF] = [Record::TYPE_TXT => ['shop']];
+
+        $deleted = [];
+        $this->action()->exposeCreateRule($this->rule('shop'), $this->heldDomain($deleted, certificateId: 'squatterCertificate'), new Authorization(), $this->createStub(Bus::class));
+
+        $this->assertSame(['squatterRule', 'squatterCertificate'], $deleted);
+    }
+
     public function testDomainHeldByALiveProjectStaysWithoutOwnershipProof(): void
     {
         $deleted = [];
@@ -172,14 +182,16 @@ final class RuleOwnershipTest extends TestCase
      *
      * @param array<string> $deleted Collects the IDs of released rules
      * @param string $holder Project holding the domain
+     * @param string $certificateId Certificate issued for the held rule
      */
-    private function heldDomain(array &$deleted, string $holder = 'squatter'): Database
+    private function heldDomain(array &$deleted, string $holder = 'squatter', string $certificateId = ''): Database
     {
         $held = new Document([
             '$id' => $holder . 'Rule',
             'domain' => self::DOMAIN,
             'projectId' => $holder,
             'projectInternalId' => '9',
+            'certificateId' => $certificateId,
         ]);
 
         $dbForPlatform = $this->createStub(Database::class);

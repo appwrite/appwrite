@@ -9,8 +9,15 @@ import {
 } from 'three'
 import { DEVICE_SIZES } from './devices'
 import { FRAMEWORKS, getProductFramework } from './frameworks'
-import { box, cylinder, merge, prism, slab } from './geometry'
-import { createKitBeam, createKitLamp, setLamp, type FactoryKit } from './kit'
+import { box, cylinder, mergeFinishes, prism, slab } from './geometry'
+import {
+  FINISHES,
+  createKitBeam,
+  createKitLamp,
+  setLamp,
+  type FactoryKit,
+  type Finish,
+} from './kit'
 import {
   ARM,
   ARM_REST,
@@ -37,6 +44,7 @@ import {
   stationX,
   travel,
 } from './layout'
+import { ARRIVALS, arrive } from './assembly'
 import { installPower, stationPower, type FrameState } from './frame'
 
 /**
@@ -52,16 +60,12 @@ const REST = ARM_REST - HEAD_GAP
 const ARM_LENGTH = ARM.front - ARM.back
 
 type Track = <T extends BufferGeometry>(geometry: T) => T
-type PartKey = 'aluminum' | 'steel' | 'graphite' | 'matte' | 'accent'
-const PART_KEYS: readonly PartKey[] = [
-  'aluminum',
-  'steel',
-  'graphite',
-  'matte',
-  'accent',
-]
+type PartKey = Extract<
+  Finish,
+  'aluminum' | 'steel' | 'graphite' | 'matte' | 'accent'
+>
 
-/** Collects parts by material and merges each material into one mesh. */
+/** Collects parts by finish and merges them all into one mesh (one draw). */
 class Assembly {
   private readonly parts: Partial<Record<PartKey, BufferGeometry[]>> = {}
 
@@ -71,10 +75,7 @@ class Assembly {
   }
 
   build(kit: FactoryKit, track: Track, group = new Group()) {
-    for (const key of PART_KEYS) {
-      const list = this.parts[key]
-      if (list?.length) group.add(new Mesh(track(merge(list)), kit[key]))
-    }
+    group.add(new Mesh(track(mergeFinishes(this.parts, FINISHES)), kit.finish))
     return group
   }
 }
@@ -384,7 +385,8 @@ const storage: Builder = (shop) => {
 
   const hit = STATION_HIT.storage
   const feed = feedZ - TRACK_Z
-  const cruise = REST - 0.05
+  // High enough to carry the tile over an open laptop's lid.
+  const cruise = REST - 0.01
 
   return {
     group: axis.group,
@@ -869,7 +871,26 @@ export class StationLine {
   }
 
   update(frame: FrameState) {
-    const { line } = frame
+    const { line, assembly } = frame
+    // Every rig glides in on the bed with its column (see `assembly.ts`).
+    arrive(
+      this.installer.group.position,
+      slotX(INSTALL_SLOT),
+      0,
+      0,
+      assembly,
+      ARRIVALS.installer,
+    )
+    this.rigs.forEach((rig, index) => {
+      arrive(
+        rig.group.position,
+        stationX(index),
+        0,
+        0,
+        assembly,
+        ARRIVALS.station(index),
+      )
+    })
     const installing = line.cycle - INSTALL_SLOT
     const kind = getProductKind(installing)
     const size = DEVICE_SIZES[kind]

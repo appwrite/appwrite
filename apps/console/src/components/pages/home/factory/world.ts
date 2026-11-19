@@ -16,6 +16,7 @@ import {
   TubeGeometry,
   Vector3,
   type Texture,
+  type WebGLRenderer,
 } from 'three'
 import { SVGLoader } from 'three/addons/loaders/SVGLoader.js'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
@@ -24,12 +25,27 @@ import {
   InstallerDisplay,
   getProductFramework,
 } from './frameworks'
-import { box, cylinder, ground, merge, panel, roundedPlane } from './geometry'
+import {
+  box,
+  cylinder,
+  ground,
+  merge,
+  mergeFinishes,
+  panel,
+  roundedPlane,
+} from './geometry'
 import { ConsoleDisplay } from './console'
-import { createKitBeam, createKitDisplay, type FactoryKit } from './kit'
+import {
+  FINISHES,
+  createKitBeam,
+  createKitDisplay,
+  type FactoryKit,
+  type Finish,
+} from './kit'
 import { createChevronMaterial } from './materials'
 import type { FactoryPalette } from './palette'
 import {
+  DOCK,
   BED_BACK,
   BED_FRONT,
   BED_TOP,
@@ -71,6 +87,16 @@ import {
   slotX,
   stationX,
 } from './layout'
+import {
+  ARRIVALS,
+  SETTLED,
+  type Arrival,
+  arrive,
+  arriving,
+  away,
+  cablesOut,
+  networkOut,
+} from './assembly'
 import { installPower, introStep, stationPower, type FrameState } from './frame'
 import {
   APPWRITE_MARK,
@@ -100,6 +126,8 @@ const RACK_BASE = 0.06
 const RACK_TOP = RACK_BASE + RACKS.height
 const LOGO_Y = RACK_BASE + RACKS.height * 0.8
 const LOGO_WIDTH = 0.62
+const WALL_CENTER = WALL.y + WALL.height / 2
+const COUNTER_CENTER = COUNTER.y + COUNTER.height / 2
 const BLADE = { pitch: 0.09, height: 0.072, leds: 4 }
 
 /** The gate's tunnel: what the carriers ride into. */
@@ -108,6 +136,8 @@ const GATE_BACK = TUNNEL.back - 0.16
 const GATE_FRONT = BED_FRONT - 0.02
 const GATE_CENTER = GATE.start + GATE.length / 2
 const GATE_SIGN_Y = BED_TOP + GATE.height - 0.2
+/** The chevron strip across the gate's front. */
+const CHEVRON_Y = BED_TOP + 0.34
 
 /** Power cables: one from the Appwrite rack to every column, the installer last. */
 const FEEDS = STATION_COUNT + 1
@@ -115,6 +145,7 @@ const CABLE_RADIUS = 0.016
 
 const matrix = new Matrix4()
 const color = new Color()
+const spot = new Vector3()
 
 /** Static occlusion painted once into the floor. */
 export function getStaticShadowShapes(): ShadowShape[] {
@@ -128,6 +159,7 @@ export function getStaticShadowShapes(): ShadowShape[] {
       depth: BED_DEPTH + 2.6,
       blur: 1.5,
       strength: 0.2,
+      layer: 'bed',
     },
     {
       x: BED_CENTER,
@@ -136,6 +168,7 @@ export function getStaticShadowShapes(): ShadowShape[] {
       depth: BED_DEPTH + 0.16,
       blur: 0.26,
       strength: 0.75,
+      layer: 'bed',
     },
     {
       x: RACKS.x,
@@ -144,6 +177,7 @@ export function getStaticShadowShapes(): ShadowShape[] {
       depth: rowFront - rowBack + 1.6,
       blur: 1.2,
       strength: 0.22,
+      layer: 'racks',
     },
     {
       x: RACKS.x,
@@ -152,6 +186,7 @@ export function getStaticShadowShapes(): ShadowShape[] {
       depth: rowFront - rowBack + 0.08,
       blur: 0.22,
       strength: 0.8,
+      layer: 'racks',
     },
   ]
 }
@@ -358,7 +393,10 @@ function createNetworkCables(): BufferGeometry {
   return merged
 }
 
-type PartKey = 'bed' | 'matte' | 'steel' | 'aluminum' | 'enclosure' | 'glass'
+type PartKey = Extract<
+  Finish,
+  'bed' | 'matte' | 'steel' | 'aluminum' | 'enclosure' | 'glass'
+>
 
 const PART_KEYS: readonly PartKey[] = [
   'bed',
@@ -393,6 +431,20 @@ const MAST = { width: 0.1, depth: 0.1, length: EXTENSION.lift + 0.2 } as const
 const MAST_OFFSET = 0.07
 /** Where the front half's hinge axis sits, just in front of the screens so the folded halves close with a hair between them. */
 const HINGE_Z = 0.006
+
+/** The eight corners of the box from `min` to `max` in `matrix`'s space, in world space. */
+function corners(
+  matrix: Matrix4,
+  min: readonly [number, number, number],
+  max: readonly [number, number, number],
+): Vector3[] {
+  const points: Vector3[] = []
+  for (const x of [min[0], max[0]])
+    for (const y of [min[1], max[1]])
+      for (const z of [min[2], max[2]])
+        points.push(new Vector3(x, y, z).applyMatrix4(matrix))
+  return points
+}
 
 /** A screen panel showing the part of a station's description cell between `from` and `to` (meters across the open screen). */
 function describedPanel(
@@ -440,8 +492,18 @@ export class FactoryWorld {
   private readonly counter: CounterDisplay
   private readonly console: ConsoleDisplay
   private readonly wallScreen: Mesh<BufferGeometry, MeshBasicMaterial>
+  private readonly installerScreen: Mesh
+  private readonly counterScreen: Mesh
   private readonly chevrons = createChevronMaterial()
+  private readonly chevronStrip: Mesh
   private readonly curtain: ReturnType<typeof createKitBeam>
+  private readonly curtainSheet: Mesh
+  private readonly feedCables: Mesh
+  private readonly networkCables: Mesh
+  /** Every server LED's place, and the rack it is in. */
+  private readonly leds: { y: number; z: number; rack: number }[] = []
+  /** Every machine is in place and every cable run out (see `assemble`). */
+  private settled = false
   private readonly feeds: Feed[] = []
   private readonly extensions: Extension[] = []
   /** Per station, 0 folded → 1 open; moves at a constant rate toward its target. */
@@ -464,6 +526,9 @@ export class FactoryWorld {
     const parts = Object.fromEntries(
       PART_KEYS.map((key) => [key, [] as BufferGeometry[]]),
     ) as Record<PartKey, BufferGeometry[]>
+    // The machine being built and how it comes into place as the factory
+    // assembles (see `assembly.ts`); the bed and the track are there from the start.
+    let machine: Arrival | null = null
     const add = (
       key: PartKey,
       geometry: BufferGeometry,
@@ -471,7 +536,9 @@ export class FactoryWorld {
       y: number,
       z: number,
     ) => {
-      parts[key].push(geometry.translate(x, y, z))
+      geometry.translate(x, y, z)
+      if (machine) arriving(geometry, machine)
+      parts[key].push(geometry)
       return geometry
     }
     const plain = (width: number, height: number, depth: number) =>
@@ -604,6 +671,7 @@ export class FactoryWorld {
     }
     for (let index = 0; index < STATION_COUNT; index++) {
       const x = stationX(index)
+      machine = ARRIVALS.station(index)
       column(x)
       // Bezel of the station's display.
       add(
@@ -709,6 +777,7 @@ export class FactoryWorld {
       this.group.add(group)
       this.extensions.push({ group, riser, post, left, screen })
       // The slot in the column's top the display and its mast come out of.
+      machine = ARRIVALS.station(index)
       add(
         'matte',
         plain(leaf + 0.03, 0.004, 0.14),
@@ -720,7 +789,10 @@ export class FactoryWorld {
 
     // The framework installer: a column like the others, with a display where the nameplate goes.
     const installX = slotX(INSTALL_SLOT)
+    machine = ARRIVALS.installer
     column(installX)
+    // The dock the drones plug the models' instruction cards into.
+    add('matte', plain(DOCK.width, 0.004, 0.05), DOCK.x, DOCK.y + 0.001, DOCK.z)
     add(
       'matte',
       panel(FASCIA.width, FASCIA.height, 0.012, 0.05),
@@ -729,17 +801,18 @@ export class FactoryWorld {
       TOWER_FRONT - 0.002,
     )
     this.installer = new InstallerDisplay(kit.palette)
-    const lcd = new Mesh(
+    this.installerScreen = new Mesh(
       track(roundedPlane(FASCIA.width - 0.05, FASCIA.height - 0.05, 0.035)),
       createKitDisplay(kit, this.installer.texture),
     )
-    lcd.position.set(installX, FASCIA.y, TOWER_FRONT + 0.0105)
-    this.group.add(lcd)
+    this.installerScreen.position.set(installX, FASCIA.y, TOWER_FRONT + 0.0105)
+    this.group.add(this.installerScreen)
 
     // The server aisle: racks one after another, doors (glass, servers behind) facing the camera's side.
-    const blades: { y: number; z: number }[] = []
+    const blades: { y: number; z: number; rack: number }[] = []
     for (let rack = 0; rack < RACKS.count; rack++) {
       const z = rackZ(rack)
+      machine = ARRIVALS.rack(rack)
       ground(
         add(
           'enclosure',
@@ -788,10 +861,11 @@ export class FactoryWorld {
           y,
           z,
         )
-        blades.push({ y, z })
+        blades.push({ y, z, rack })
       }
     }
     // The Appwrite rack's end panel, facing the line: black glass, the logo set into it.
+    machine = ARRIVALS.rack(0)
     add(
       'glass',
       box(RACKS.depth - 0.08, RACKS.height - 0.08, 0.014, 0.008, 1),
@@ -804,7 +878,8 @@ export class FactoryWorld {
     this.console = new ConsoleDisplay(kit.palette)
     const frameWidth = WALL.width + 2 * WALL.frame
     const frameHeight = WALL.height + 2 * WALL.frame
-    const wallCenter = WALL.y + WALL.height / 2
+    const wallCenter = WALL_CENTER
+    machine = ARRIVALS.wall
     ground(
       add(
         'enclosure',
@@ -840,6 +915,7 @@ export class FactoryWorld {
     this.group.add(this.wallScreen)
 
     // The shipped counter: a column on the line, after Sites, with a display for a front.
+    machine = ARRIVALS.counter
     column(COUNTER.x, false)
     add(
       'matte',
@@ -849,16 +925,16 @@ export class FactoryWorld {
       COUNTER.z - 0.002,
     )
     this.counter = new CounterDisplay(kit.palette, counterLabel)
-    const screen = new Mesh(
+    this.counterScreen = new Mesh(
       track(roundedPlane(COUNTER.width, COUNTER.height, 0.04)),
       createKitDisplay(kit, this.counter.texture),
     )
-    screen.position.set(
+    this.counterScreen.position.set(
       COUNTER.x,
-      COUNTER.y + COUNTER.height / 2,
+      COUNTER_CENTER,
       COUNTER.z + 0.0105,
     )
-    this.group.add(screen)
+    this.group.add(this.counterScreen)
 
     // Pink power cables on the floor: out of the Appwrite rack, along the aisle
     // in one bundle, peeling off to each machine behind the line. Every
@@ -893,13 +969,14 @@ export class FactoryWorld {
         tubes.push(new TubeGeometry(curve, 160, r, 8, false))
       }
     }
-    const feeds = new Mesh(track(merge(tubes)), kit.cable)
-    feeds.userData.noReflection = true
-    this.group.add(feeds)
+    this.feedCables = new Mesh(track(merge(tubes)), kit.cable)
+    this.feedCables.userData.noReflection = true
+    this.group.add(this.feedCables)
 
     // The network gate: a housing with a tunnel the carriers ride into.
     const gateTop = BED_TOP + GATE.height
     const tunnelTop = BED_TOP + TUNNEL.top
+    machine = ARRIVALS.gate
     ground(
       add(
         'enclosure',
@@ -966,7 +1043,8 @@ export class FactoryWorld {
         z,
       )
     }
-    // Gland plate low on the base's end, where the network cables leave.
+    // Gland plate low on the base's end, where the network cables leave: part of the bed.
+    machine = null
     add(
       'aluminum',
       box(0.03, 0.15, 1.32, 0.008, 1),
@@ -975,6 +1053,7 @@ export class FactoryWorld {
       TRACK_Z,
     )
     // Display on the gate's front, and the chevron strip under it.
+    machine = ARRIVALS.gate
     add(
       'matte',
       panel(FASCIA.width, FASCIA.height, 0.012, 0.05),
@@ -986,18 +1065,19 @@ export class FactoryWorld {
       'matte',
       panel(GATE.length - 0.2, 0.07, 0.008, 0.03),
       GATE_CENTER,
-      BED_TOP + 0.34,
+      CHEVRON_Y,
       GATE_FRONT - 0.001,
     )
-    const chevrons = new Mesh(
+    machine = null
+    this.chevronStrip = new Mesh(
       track(new PlaneGeometry(GATE.length - 0.24, 0.05)),
       this.chevrons,
     )
-    chevrons.position.set(GATE_CENTER, BED_TOP + 0.34, GATE_FRONT + 0.0075)
-    this.group.add(chevrons)
+    this.chevronStrip.position.set(GATE_CENTER, CHEVRON_Y, GATE_FRONT + 0.0075)
+    this.group.add(this.chevronStrip)
 
     this.curtain = createKitBeam(kit)
-    const curtain = new Mesh(
+    this.curtainSheet = new Mesh(
       track(
         new PlaneGeometry(TUNNEL.front - TUNNEL.back, TUNNEL.top).rotateY(
           Math.PI / 2,
@@ -1005,26 +1085,23 @@ export class FactoryWorld {
       ),
       this.curtain,
     )
-    curtain.position.set(GATE.start + 0.03, BED_TOP + TUNNEL.top / 2, TRACK_Z)
-    curtain.renderOrder = 8
-    this.group.add(curtain)
+    this.curtainSheet.position.set(
+      GATE.start + 0.03,
+      BED_TOP + TUNNEL.top / 2,
+      TRACK_Z,
+    )
+    this.curtainSheet.renderOrder = 8
+    this.group.add(this.curtainSheet)
 
-    const network = new Mesh(track(createNetworkCables()), kit.networkCable)
-    network.userData.noReflection = true
-    this.group.add(network)
+    this.networkCables = new Mesh(
+      track(createNetworkCables()),
+      kit.networkCable,
+    )
+    this.networkCables.userData.noReflection = true
+    this.group.add(this.networkCables)
 
-    const materials: Record<PartKey, Mesh['material']> = {
-      bed: kit.bed,
-      matte: kit.matte,
-      steel: kit.steel,
-      aluminum: kit.aluminum,
-      enclosure: kit.enclosure,
-      glass: kit.glass,
-    }
-    for (const key of PART_KEYS) {
-      if (parts[key].length)
-        this.group.add(new Mesh(track(merge(parts[key])), materials[key]))
-    }
+    // Every static machined part, in all its finishes, is one draw.
+    this.group.add(new Mesh(track(mergeFinishes(parts, FINISHES)), kit.finish))
 
     this.logo = new Mesh(track(createLogoGeometry()), kit.logo)
     this.logo.position.set(CORE.x, LOGO_Y, RACKS.front + 0.014)
@@ -1040,14 +1117,12 @@ export class FactoryWorld {
     blades.forEach((blade, index) => {
       for (let led = 0; led < BLADE.leds; led++) {
         const slot = index * BLADE.leds + led
-        this.bladeLeds.setMatrixAt(
-          slot,
-          matrix.makeTranslation(
-            RACKS_DOOR - 0.0165,
-            blade.y,
-            blade.z + 0.2 - led * 0.045,
-          ),
-        )
+        // Placed with their rack as it rolls in (see `assemble`).
+        this.leds.push({
+          y: blade.y,
+          z: blade.z + 0.2 - led * 0.045,
+          rack: blade.rack,
+        })
         this.bladeLeds.setColorAt(slot, color.set(0x000000))
         this.bladeSeeds.push(hash01(slot * 1.37 + 0.5))
       }
@@ -1067,19 +1142,9 @@ export class FactoryWorld {
     this.nameplates = new InstancedMesh(plate, kit.nameplate, STATION_COUNT + 1)
     this.nameplates.renderOrder = 3
 
-    for (let index = 0; index < STATION_COUNT; index++) {
-      const x = stationX(index)
+    // Each row of the atlas; placed with their machines as they arrive (see `assemble`).
+    for (let index = 0; index <= STATION_COUNT; index++)
       this.plates.setXY(index, index, 0)
-      this.nameplates.setMatrixAt(
-        index,
-        matrix.makeTranslation(x, FASCIA.y, TOWER_FRONT + 0.0105),
-      )
-    }
-    this.plates.setXY(STATION_COUNT, STATION_COUNT, 0)
-    this.nameplates.setMatrixAt(
-      STATION_COUNT,
-      matrix.makeTranslation(GATE_CENTER, GATE_SIGN_Y, GATE_FRONT + 0.0105),
-    )
     for (const mesh of [this.nameplates, this.bladeLeds]) {
       mesh.frustumCulled = false
       this.group.add(mesh)
@@ -1103,13 +1168,116 @@ export class FactoryWorld {
     this.counter.setLabel(label)
   }
 
+  /**
+   * Every display out of its column, as boxes of eight world corners (as of
+   * the last frame's matrices): its two halves, as much as has come out of
+   * the slot, and the mast above the column. The engine draws them again in
+   * front of the page copy.
+   */
+  getDisplayBoxes(): Vector3[][] {
+    const boxes: Vector3[][] = []
+    const { leaf, height } = EXTENSION
+    for (const { group, riser, post, left } of this.extensions) {
+      if (!group.visible) continue
+      const bottom = riser.position.y
+      const out = Math.max(0, -bottom)
+      if (out < height) {
+        boxes.push(
+          corners(riser.matrixWorld, [-0.04, out, -0.06], [leaf, height, 0.01]),
+          corners(left.matrixWorld, [-leaf, out, -0.06], [0.04, height, 0.01]),
+        )
+      }
+      if (bottom > 0) {
+        const x = post.position.x
+        boxes.push(
+          corners(
+            group.matrixWorld,
+            [x - MAST.width / 2, 0, -MAST.depth / 2],
+            [x + MAST.width / 2, bottom, MAST.depth / 2],
+          ),
+        )
+      }
+    }
+    return boxes
+  }
+
   setPalette(palette: FactoryPalette) {
     this.console.setPalette(palette)
     this.installer.setPalette(palette)
     this.counter.setPalette(palette)
   }
 
+  /**
+   * While the factory assembles (see `assembly.ts`): moves everything that
+   * is not part of the merged hardware (which the finish shader moves
+   * itself) with the machine it belongs to, and pulls the cables out.
+   */
+  private assemble(assembly: number) {
+    const at = (x: number, y: number, z: number, arrival: Arrival) =>
+      arrive(spot, x, y, z, assembly, arrival)
+    at(CORE.x, LOGO_Y, RACKS.front + 0.014, ARRIVALS.rack(0))
+    this.logo.position.copy(spot)
+    at(WALL.x, WALL_CENTER, WALL.z + 0.0055, ARRIVALS.wall)
+    this.wallScreen.position.copy(spot)
+    at(slotX(INSTALL_SLOT), FASCIA.y, TOWER_FRONT + 0.0105, ARRIVALS.installer)
+    this.installerScreen.position.copy(spot)
+    at(COUNTER.x, COUNTER_CENTER, COUNTER.z + 0.0105, ARRIVALS.counter)
+    this.counterScreen.position.copy(spot)
+    at(GATE_CENTER, CHEVRON_Y, GATE_FRONT + 0.0075, ARRIVALS.gate)
+    this.chevronStrip.position.copy(spot)
+    at(GATE.start + 0.03, BED_TOP + TUNNEL.top / 2, TRACK_Z, ARRIVALS.gate)
+    this.curtainSheet.position.copy(spot)
+
+    for (let index = 0; index < STATION_COUNT; index++) {
+      at(
+        stationX(index),
+        FASCIA.y,
+        TOWER_FRONT + 0.0105,
+        ARRIVALS.station(index),
+      )
+      this.nameplates.setMatrixAt(
+        index,
+        matrix.makeTranslation(spot.x, spot.y, spot.z),
+      )
+    }
+    at(GATE_CENTER, GATE_SIGN_Y, GATE_FRONT + 0.0105, ARRIVALS.gate)
+    this.nameplates.setMatrixAt(
+      STATION_COUNT,
+      matrix.makeTranslation(spot.x, spot.y, spot.z),
+    )
+    this.nameplates.instanceMatrix.needsUpdate = true
+
+    // The servers' LEDs roll in with their racks, and the racks' painted
+    // shadow on the floor arrives as they do.
+    let racks = 0
+    for (let rack = 0; rack < RACKS.count; rack++) {
+      const arrival = ARRIVALS.rack(rack)
+      racks += (1 - away(assembly, arrival) / arrival.distance) ** 4
+    }
+    this.kit.floor.uniforms.uRacks!.value = racks / RACKS.count
+    this.leds.forEach((led, index) => {
+      at(RACKS_DOOR - 0.0165, led.y, led.z, ARRIVALS.rack(led.rack))
+      this.bladeLeds.setMatrixAt(
+        index,
+        matrix.makeTranslation(spot.x, spot.y, spot.z),
+      )
+    })
+    this.bladeLeds.instanceMatrix.needsUpdate = true
+
+    // Cables cast their shadows once they lie in full.
+    const feeds = cablesOut(assembly)
+    const reach = networkOut(assembly)
+    this.kit.cableUniforms.uReveal.value = feeds
+    this.kit.networkUniforms.uReach.value = reach
+    this.feedCables.castShadow = feeds >= 1
+    this.settled = assembly >= SETTLED
+    this.networkCables.castShadow = this.settled
+    if (this.settled)
+      this.kit.networkUniforms.uReach.value = Number.POSITIVE_INFINITY
+  }
+
   update(frame: FrameState) {
+    if (!this.settled) this.assemble(frame.assembly)
     const { time, line, glows, levels, introTime, palette, highlight } = frame
     const kit = this.kit
     const power = easeOutCubic(introStep(introTime, 0.1, 0.9))
@@ -1239,7 +1407,9 @@ export class FactoryWorld {
     // The hovered station unfolds: its display slides up out of the slot in
     // the column's top, folded; the mast lifts it; the front half swings open
     // about the hinge while the mast slides along the slot to centre the
-    // screen, and the screen comes on. An open display reaches over the next
+    // screen, and the screen comes on. Every mast rises to the same height:
+    // where the page copy is laid over the scene, only as far as keeps every
+    // open display clear of it. An open display reaches over the next
     // column, so a display stays in its column until the one beside it has
     // closed; folding runs twice as fast as unfolding, so the neighbour is
     // back inside before this one opens.
@@ -1264,11 +1434,10 @@ export class FactoryWorld {
       const rise = easeInOutCubic(range(unfold, 0, 0.3))
       const lift = easeInOutCubic(range(unfold, 0.26, OPEN_START))
       const open = easeInOutCubic(range(unfold, OPEN_START, 0.86))
-      const fit = frame.fits[index]!
       // Stored, the display's top sits just under the slot.
       const bottom =
         -(1 - rise) * (EXTENSION.height + 0.03) +
-        lift * EXTENSION.lift * fit.lift
+        lift * EXTENSION.lift * frame.lift
       // Folded, the hinge is at the stack's left edge, centring it over the slot.
       const hinge = -(1 - open) * (EXTENSION.leaf / 2)
       extension.riser.position.set(hinge, bottom, 0)
@@ -1334,6 +1503,11 @@ export class FactoryWorld {
         0.05 * installOn,
       )
     }
+  }
+
+  /** Sends this frame's screen changes to the GPU (after `update`, before rendering). */
+  upload(renderer: WebGLRenderer) {
+    this.console.upload(renderer)
   }
 
   dispose() {

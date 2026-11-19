@@ -930,6 +930,96 @@ final class ReviewsConsoleClientTest extends Scope
         $this->client->call(Client::METHOD_DELETE, '/reviews/repositories/' . $repositoryId, $this->projectHeaders());
     }
 
+    public function testListCategories(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $installationId = $this->setupInstallation();
+
+        $repository = $this->client->call(Client::METHOD_POST, '/reviews/repositories', $this->projectHeaders(), [
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->providerRepositoryId,
+        ]);
+        $this->assertSame(201, $repository['headers']['status-code']);
+        $repositoryId = $repository['body']['$id'];
+
+        $pull = \random_int(1000, 9_999_999);
+        $other = $pull + 1;
+
+        $this->sendPullRequestEvent('opened', $pull, \str_repeat('a', 40));
+        $reviewId = $this->listReviews($pull)['body']['reviews'][0]['$id'];
+        $this->completeReview($projectId, $reviewId, 'request_changes', 'C', [
+            ['severity' => 'major', 'status' => 'posted', 'category' => 'bug'],
+            ['severity' => 'minor', 'status' => 'posted', 'category' => 'style'],
+            ['severity' => 'minor', 'status' => 'posted', 'category' => 'style'],
+            ['severity' => 'info', 'status' => 'posted', 'category' => 'docs'],
+            ['severity' => 'minor', 'status' => 'dropped', 'category' => 'style'],
+            ['severity' => 'major', 'status' => 'posted', 'category' => 'security'],
+        ]);
+
+        $this->sendPullRequestEvent('opened', $other, \str_repeat('c', 40));
+        $otherReviewId = $this->listReviews($other)['body']['reviews'][0]['$id'];
+        $this->completeReview($projectId, $otherReviewId, 'approve', 'A', [
+            ['severity' => 'minor', 'status' => 'posted', 'category' => 'style'],
+        ]);
+
+        $findingsPath = '/reviews/repositories/' . $repositoryId . '/pulls/' . $pull . '/findings';
+        $ids = \array_column($this->callService(Client::METHOD_GET, $findingsPath, ['projectId' => $projectId])['body']['findings'], 'id');
+
+        $settle = fn (string $id, string $status) => $this->callService(Client::METHOD_PATCH, $findingsPath . '/status', [
+            'projectId' => $projectId,
+            'findingIds' => [$id],
+            'status' => $status,
+            'reason' => 'Settled.',
+            'from' => 'posted',
+        ]);
+        $this->assertSame(204, $settle($ids[0], 'resolved')['headers']['status-code']);
+        $this->assertSame(204, $settle($ids[1], 'dismissed')['headers']['status-code']);
+        $this->assertSame(204, $settle($ids[5], 'dismissed')['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+
+        // Dropped findings were never posted, so they are not counted.
+        $categories = $this->client->call(Client::METHOD_GET, '/reviews/categories', $this->projectHeaders(), [
+            'repositoryId' => $repositoryId,
+        ]);
+        $this->assertSame(200, $categories['headers']['status-code']);
+        $this->assertSame(4, $categories['body']['total']);
+        // Most dismissed first, then most findings
+        $this->assertSame(['style', 'security'], \array_slice(\array_column($categories['body']['categories'], 'category'), 0, 2));
+        $byCategory = \array_column($categories['body']['categories'], null, 'category');
+        $this->assertSame(['category' => 'style', 'findings' => 3, 'resolved' => 0, 'dismissed' => 1], $byCategory['style']);
+        $this->assertSame(['category' => 'bug', 'findings' => 1, 'resolved' => 1, 'dismissed' => 0], $byCategory['bug']);
+        $this->assertSame(['category' => 'security', 'findings' => 1, 'resolved' => 0, 'dismissed' => 1], $byCategory['security']);
+        $this->assertSame(['category' => 'docs', 'findings' => 1, 'resolved' => 0, 'dismissed' => 0], $byCategory['docs']);
+
+        $week = $this->client->call(Client::METHOD_GET, '/reviews/categories', $this->projectHeaders(), [
+            'repositoryId' => $repositoryId,
+            'range' => '7d',
+        ]);
+        $this->assertSame(200, $week['headers']['status-code']);
+        $this->assertSame(4, $week['body']['total']);
+
+        /**
+         * Test for FAILURE
+         */
+
+        $invalidRange = $this->client->call(Client::METHOD_GET, '/reviews/categories', $this->projectHeaders(), [
+            'range' => '1y',
+        ]);
+        $this->assertSame(400, $invalidRange['headers']['status-code']);
+
+        // Another project sees none of them
+        $categories = $this->client->call(Client::METHOD_GET, '/reviews/categories', $this->projectHeaders($this->getProject(true)['$id']), [
+            'repositoryId' => $repositoryId,
+        ]);
+        $this->assertSame(200, $categories['headers']['status-code']);
+        $this->assertSame(0, $categories['body']['total']);
+
+        $this->client->call(Client::METHOD_DELETE, '/reviews/repositories/' . $repositoryId, $this->projectHeaders());
+    }
+
     public function testServiceNeedsTheSecret(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -1032,7 +1122,7 @@ final class ReviewsConsoleClientTest extends Scope
     /**
      * Starts and completes a review the way the review service does.
      *
-     * @param array<array{severity: string, status: string}> $findings
+     * @param array<array{severity: string, status: string, category?: string}> $findings
      */
     private function completeReview(string $projectId, string $reviewId, string $verdict, string $tier, array $findings = []): void
     {
@@ -1054,7 +1144,7 @@ final class ReviewsConsoleClientTest extends Scope
                 'startLine' => $index + 1,
                 'endLine' => $index + 1,
                 'severity' => $finding['severity'],
-                'category' => 'bug',
+                'category' => $finding['category'] ?? 'bug',
                 'title' => 'Finding ' . $index,
                 'body' => 'Something is off.',
                 'suggestion' => null,

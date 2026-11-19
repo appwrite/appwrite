@@ -3400,6 +3400,26 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'environments per project.': 'סביבות לכל פרויקט.',
   'Delete an environment to create another.':
     'מחקו סביבה כדי ליצור סביבה אחרת.',
+  // Environments for a plan without them: examples in the switcher and the upgrade they open
+  'Add an environment': 'הוספת סביבה',
+  'Test before you release': 'בדקו לפני השחרור',
+  'Share work in progress': 'שתפו עבודה בתהליך',
+  'Break things freely': 'שברו דברים בלי חשש',
+  'Try changes before your users do': 'נסו שינויים לפני המשתמשים שלכם',
+  'An environment is a separate copy of your project, with its own resources and users.':
+    'סביבה היא עותק נפרד של הפרויקט שלכם, עם משאבים ומשתמשים משלה.',
+  '{plan} includes up to {limit} environments per project.':
+    'תוכנית {plan} כוללת עד {limit} סביבות לכל פרויקט.',
+  'Start from a copy of production': 'התחילו מעותק של פרודקשן',
+  'Copy databases, functions and settings. Bringing data is optional.':
+    'העתיקו מסדי נתונים, פונקציות והגדרות. העתקת הנתונים היא אופציונלית.',
+  'Keep production untouched': 'השאירו את פרודקשן ללא שינוי',
+  'Each environment has its own data, files and users.':
+    'לכל סביבה יש נתונים, קבצים ומשתמשים משלה.',
+  'Switch with one line': 'מעבר בשורת קוד אחת',
+  'Same project ID and endpoint. Set the environment ID in your SDK.':
+    'אותו מזהה פרויקט ואותה נקודת קצה. הגדירו את מזהה הסביבה ב-SDK שלכם.',
+  'Upgrade to {plan}': 'שדרוג ל-{plan}',
   // Settings of an environment: its name, its ID, and deleting it
   'Environment name has been updated': 'שם הסביבה עודכן',
   'Failed to update environment name': 'עדכון שם הסביבה נכשל',

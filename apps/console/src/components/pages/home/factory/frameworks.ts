@@ -33,8 +33,10 @@ const BY_KIND: Record<ProductKind, readonly FrameworkId[]> = {
   phone: ['flutter', 'react-native', 'swift', 'kotlin'],
   watch: ['swift', 'flutter'],
   tablet: ['flutter', 'react-native', 'swift'],
+  laptop: ['nextjs', 'svelte', 'react', 'vue', 'swift'],
   desktop: ['nextjs', 'svelte', 'nuxt', 'angular', 'vue', 'react'],
   display: ['nextjs', 'astro', 'nuxt', 'svelte', 'vue'],
+  mini: ['nextjs', 'nuxt', 'svelte', 'astro'],
 }
 
 /** Index into `FRAMEWORKS` for product `index` of kind `kind`. */
@@ -56,35 +58,39 @@ function finish(texture: CanvasTexture) {
 /** Size framework marks are rasterized at, so they stay sharp on the displays. */
 const ICON_RASTER = 512
 
+/** Loads one mark the Console ships in `/icons`, rasterized large; null when missing. */
+export async function loadIcon(file: string): Promise<HTMLImageElement | null> {
+  try {
+    const response = await fetch(`/icons/${file}`)
+    if (!response.ok) return null
+    const svg = new DOMParser().parseFromString(
+      await response.text(),
+      'image/svg+xml',
+    ).documentElement
+    svg.setAttribute('width', String(ICON_RASTER))
+    svg.setAttribute('height', String(ICON_RASTER))
+    const source = new XMLSerializer().serializeToString(svg)
+    return await new Promise<HTMLImageElement | null>((resolve) => {
+      const image = new Image()
+      image.decoding = 'async'
+      image.onload = () => resolve(image)
+      image.onerror = () => resolve(null)
+      image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(source)}`
+    })
+  } catch {
+    return null
+  }
+}
+
 /**
- * Loads every framework mark the Console uses (`/icons`, via the shared
- * framework icon map), rasterized large. Missing icons resolve to null.
+ * Loads every framework mark the Console uses (via the shared framework
+ * icon map). Missing icons resolve to null.
  */
 export function loadFrameworkIcons(): Promise<(HTMLImageElement | null)[]> {
   return Promise.all(
-    FRAMEWORKS.map(async (framework) => {
+    FRAMEWORKS.map((framework) => {
       const file = getFrameworkIconFile(framework.id)
-      if (!file) return null
-      try {
-        const response = await fetch(`/icons/${file}`)
-        if (!response.ok) return null
-        const svg = new DOMParser().parseFromString(
-          await response.text(),
-          'image/svg+xml',
-        ).documentElement
-        svg.setAttribute('width', String(ICON_RASTER))
-        svg.setAttribute('height', String(ICON_RASTER))
-        const source = new XMLSerializer().serializeToString(svg)
-        return await new Promise<HTMLImageElement | null>((resolve) => {
-          const image = new Image()
-          image.decoding = 'async'
-          image.onload = () => resolve(image)
-          image.onerror = () => resolve(null)
-          image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(source)}`
-        })
-      } catch {
-        return null
-      }
+      return file ? loadIcon(file) : Promise.resolve(null)
     }),
   )
 }

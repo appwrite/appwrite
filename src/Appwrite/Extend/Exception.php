@@ -52,6 +52,7 @@ class Exception extends \Exception
     public const string GENERAL_PWNED_PASSWORDS_UNAVAILABLE = 'general_pwned_passwords_unavailable';
     public const string GENERAL_CACHE_UNAVAILABLE = 'general_cache_unavailable';
     public const string GENERAL_EMBEDDING_UNAVAILABLE = 'general_embedding_unavailable';
+    public const string GENERAL_EMBEDDING_TEXT_TOO_LONG = 'general_embedding_text_too_long';
     public const string GENERAL_ARGUMENT_INVALID = 'general_argument_invalid';
     public const string GENERAL_COLUMN_QUERY_LIMIT_EXCEEDED = 'general_column_query_limit_exceeded';
     public const string GENERAL_ATTRIBUTE_QUERY_LIMIT_EXCEEDED = 'general_attribute_query_limit_exceeded';

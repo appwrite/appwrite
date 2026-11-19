@@ -581,4 +581,8 @@ export const jaSitesDictionary: Record<string, string> = {
     '数クリックで動作するサイトをデプロイし、自由にカスタマイズできます。',
   "This site's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
     'このサイトの Git インストールからリポジトリにアクセスできなくなったため、プッシュはデプロイされません。リポジトリの接続を解除してから、現在そのリポジトリがあるインストールで接続し直してください。',
+  'Tracked pageviews and events are billed as analytics usage, which adds up quickly on a high-traffic site.':
+    '計測されたページビューとイベントはアナリティクスの使用量として課金されます。トラフィックの多いサイトでは料金がすぐに増えます。',
+  'If your site sets a Content-Security-Policy, in a header or a <meta> tag, add these sources. Otherwise the browser blocks the tracker and no data is recorded.':
+    'サイトでヘッダーまたは <meta> タグによって Content-Security-Policy を設定している場合は、以下のソースを追加してください。追加しないとブラウザーがトラッカーをブロックし、データは記録されません。',
 }

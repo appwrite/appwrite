@@ -107,7 +107,7 @@ async function getProductOverview(
     product: entry.id,
     name: entry.name,
     tagline: entry.tagline,
-    docsUrl: toUrl(entry.docsPath),
+    docsUrl: entry.docsPath ? toUrl(entry.docsPath) : undefined,
     ...page,
   }
 }
