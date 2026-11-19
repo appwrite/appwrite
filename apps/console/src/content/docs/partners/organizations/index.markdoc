@@ -41,8 +41,10 @@ let organization = Organization::new(&client);
 | Organization | `get`, `update`, `delete` | `organization.read`, `organization.write` |
 | Projects | `listProjects`, `createProject`, `getProject`, `updateProject`, `deleteProject` | `projects.read`, `projects.write` |
 | Members | `listMemberships`, `createMembership`, `getMembership`, `updateMembership`, `deleteMembership` | `organization.memberships.read`, `organization.memberships.write` |
-| Keys | `listKeys`, `createKey`, `getKey`, `updateKey`, `deleteKey` | `organization.keys.read`, `organization.keys.write` |
+| Project keys | `listProjectKeys`, `createProjectKey`, `createEphemeralProjectKey`, `getProjectKey`, `updateProjectKey`, `deleteProjectKey` | `organization.projects.keys.read`, `organization.projects.keys.write` |
 | Installations | `listInstallations`, `createInstallation`, `getInstallation`, `updateInstallation`, `deleteInstallation` | `organization.installations.read`, `organization.installations.write` |
+
+`listKeys`, `createKey`, `getKey`, `updateKey`, and `deleteKey` manage the organization's own API keys and are left out of the table on purpose. They need `organization.keys.read` or `organization.keys.write`, which a Partners key cannot hold, so the Console and OAuth tokens are their only callers.
 
 Billing, plans, and invoices are not part of this API and a Partners key cannot reach them.
 

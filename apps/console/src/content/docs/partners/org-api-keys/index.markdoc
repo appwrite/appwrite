@@ -58,7 +58,7 @@ If the organization ID does not match the key, Appwrite rejects the request.
 
 # What a Partners key reaches {% #what-a-partners-key-reaches %}
 
-A Partners key creates, renames, and deletes projects, and it cannot read or write anything inside one. Databases, storage, users, functions, and proxy rules all need a project API key with the matching project scopes.
+A Partners key creates, renames, and deletes projects, and it cannot read or write anything inside one. Databases, storage, users, functions, and proxy rules all need a project API key with the matching project scopes. The key issues those project API keys, so a platform that provisions a project can give itself access to it without anyone opening the Console.
 
 The key also has no billing scopes, so plans, invoices, credits, and payment methods stay in the Console.
 
@@ -93,8 +93,6 @@ A Partners key holds a fixed set of scopes, chosen when the key is created. The 
 | `organization.write` | Update and delete the organization |
 | `organization.memberships.read` | Read organization memberships |
 | `organization.memberships.write` | Create, update, and delete organization memberships |
-| `organization.keys.read` | Read organization keys |
-| `organization.keys.write` | Create, update, and delete organization keys |
 | `organization.installations.read` | Read organization app installations |
 | `organization.installations.write` | Create, update, and delete organization app installations |
 | `domains.read` | Read the organization's domains |
@@ -104,10 +102,14 @@ A Partners key holds a fixed set of scopes, chosen when the key is created. The 
 | ------------- | ------ |
 | `projects.read` | Read the organization's projects |
 | `projects.write` | Create, update, and delete the organization's projects |
+| `organization.projects.keys.read` | Read the API keys of the organization's projects |
+| `organization.projects.keys.write` | Create, update, and delete the API keys of the organization's projects, including ephemeral keys |
 
-The two project scopes cover each project's existence, name, and region. They do not reach the services inside a project.
+`projects.read` and `projects.write` cover each project's existence, name, and region, and they do not reach the services inside a project. The two key scopes issue and revoke a project's API keys, which is how a platform reaches a project it just created.
 
-`keys.read` and `keys.write` still appear in the Console and are deprecated. Use `organization.keys.read` and `organization.keys.write` instead.
+`keys.read` and `keys.write` still appear in the Console and are deprecated. They grant the same access to project API keys, so use `organization.projects.keys.read` and `organization.projects.keys.write` instead.
+
+A Partners key cannot create, read, or delete the organization's own API keys. Reading a key returns its secret, so a key that could create another would grant itself every scope above. Those endpoints stay in the Console.
 
 # Next steps {% #next-steps %}
 
