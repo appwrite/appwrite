@@ -48,4 +48,28 @@ final class ProviderTest extends TestCase
 
         $this->assertEquals(new \stdClass(), $provider->getAttribute('credentials'));
     }
+
+    public function testSmtpSecretsAreRedactedWhileOAuthIdentifiersStayReadable(): void
+    {
+        $provider = (new Provider())->filter(new Document([
+            'provider' => 'smtp',
+            'credentials' => [
+                'host' => 'smtp.office365.com',
+                'port' => 587,
+                'username' => 'user@contoso.com',
+                'password' => 'smtp-password',
+                'clientId' => 'entra-client-id',
+                'clientSecret' => 'entra-client-secret',
+                'tenantId' => 'entra-tenant-id',
+            ],
+        ]));
+
+        $this->assertSame([
+            'host' => 'smtp.office365.com',
+            'port' => 587,
+            'username' => 'user@contoso.com',
+            'clientId' => 'entra-client-id',
+            'tenantId' => 'entra-tenant-id',
+        ], $provider->getAttribute('credentials'));
+    }
 }

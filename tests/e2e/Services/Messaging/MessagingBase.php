@@ -1489,6 +1489,113 @@ trait MessagingBase
         $this->assertSame('smtp.appwrite.io', $stored['body']['credentials']['host']);
     }
 
+    public function testCreateSMTPProviderOAuth(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $providerId = Id::unique();
+
+        try {
+            $partialCases = [
+                ['clientId' => 'my-client-id'],
+                ['clientId' => 'my-client-id', 'clientSecret' => 'my-client-secret', 'tenantId' => 'my-tenant-id'],
+                ['username' => 'user@contoso.com', 'clientId' => 'my-client-id', 'tenantId' => 'my-tenant-id'],
+            ];
+
+            foreach ($partialCases as $partial) {
+                $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/smtp', $headers, \array_merge([
+                    'providerId' => Id::unique(),
+                    'name' => 'Incomplete OAuth SMTP',
+                    'host' => 'smtp.appwrite.io',
+                    'port' => 587,
+                    'fromEmail' => 'tester@appwrite.io',
+                ], $partial));
+
+                $this->assertSame(400, $response['headers']['status-code']);
+                $this->assertSame('general_argument_invalid', $response['body']['type']);
+                $this->assertStringContainsString('OAuth 2.0', $response['body']['message']);
+            }
+
+            $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/smtp', $headers, [
+                'providerId' => $providerId,
+                'name' => 'OAuth SMTP',
+                'host' => 'smtp.appwrite.io',
+                'port' => 587,
+                'username' => 'user@contoso.com',
+                'clientId' => 'my-client-id',
+                'clientSecret' => 'my-client-secret',
+                'tenantId' => 'my-tenant-id',
+                'encryption' => 'tls',
+                'fromEmail' => 'tester@appwrite.io',
+            ]);
+
+            $this->assertSame(201, $response['headers']['status-code']);
+            $this->assertSame('user@contoso.com', $response['body']['credentials']['username']);
+            $this->assertSame('my-client-id', $response['body']['credentials']['clientId']);
+            $this->assertSame('my-tenant-id', $response['body']['credentials']['tenantId']);
+            $this->assertArrayNotHasKey('clientSecret', $response['body']['credentials']);
+        } finally {
+            $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $providerId, $headers);
+        }
+    }
+
+    public function testUpdateSMTPProviderOAuth(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $providerId = Id::unique();
+
+        try {
+            $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/smtp', $headers, [
+                'providerId' => $providerId,
+                'name' => 'SMTP Basic',
+                'host' => 'smtp.appwrite.io',
+                'port' => 587,
+                'username' => 'user@contoso.com',
+                'password' => 'basic-password',
+                'fromEmail' => 'tester@appwrite.io',
+            ]);
+            $this->assertSame(201, $provider['headers']['status-code']);
+
+            // Partial OAuth update on a Basic Auth provider must be rejected
+            $partial = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/smtp/' . $providerId, $headers, [
+                'clientId' => 'my-client-id',
+            ]);
+            $this->assertSame(400, $partial['headers']['status-code']);
+            $this->assertSame('general_argument_invalid', $partial['body']['type']);
+
+            // Complete OAuth update succeeds and keeps clientSecret redacted
+            $updated = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/smtp/' . $providerId, $headers, [
+                'clientId' => 'my-client-id',
+                'clientSecret' => 'my-client-secret',
+                'tenantId' => 'my-tenant-id',
+            ]);
+            $this->assertSame(200, $updated['headers']['status-code']);
+            $this->assertSame('my-client-id', $updated['body']['credentials']['clientId']);
+            $this->assertSame('my-tenant-id', $updated['body']['credentials']['tenantId']);
+            $this->assertArrayNotHasKey('clientSecret', $updated['body']['credentials']);
+
+            // Clearing OAuth credentials switches back to Basic Auth cleanly
+            $cleared = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/smtp/' . $providerId, $headers, [
+                'clientId' => '',
+                'clientSecret' => '',
+                'tenantId' => '',
+            ]);
+            $this->assertSame(200, $cleared['headers']['status-code']);
+            $this->assertSame('', $cleared['body']['credentials']['clientId']);
+            $this->assertSame('', $cleared['body']['credentials']['tenantId']);
+            $this->assertArrayNotHasKey('clientSecret', $cleared['body']['credentials']);
+        } finally {
+            $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $providerId, $headers);
+        }
+    }
+
     public function testCreateTwilioProviderAlphanumericSender(): void
     {
         $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/twilio', [
