@@ -74,12 +74,12 @@ function ScaleStatCard({
 }) {
   const t = useT()
   return (
-    <div className="flex h-full min-w-0 flex-col justify-center rounded-xl border border-border/80 bg-card/45 px-3 py-3 transition-colors duration-300 hover:bg-accent/15 sm:px-3.5 sm:py-3.5">
-      <p className="font-aeonik-pro text-[20px] leading-none tabular-nums tracking-tight text-foreground sm:text-[22px] lg:text-[24px]">
+    <div className="home-stat">
+      <p className="home-stat-value font-aeonik-pro">
         {value}
         <span className="text-muted-foreground">{suffix}</span>
       </p>
-      <p className="mt-1.5 text-[10px] leading-snug text-muted-foreground sm:text-[11px]">
+      <p className="home-stat-label">
         {t(label)}
       </p>
     </div>

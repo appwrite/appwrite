@@ -83,11 +83,55 @@ export const jaSitesDictionary: Record<string, string> = {
   'Redirect to': 'リダイレクト先',
   'Deployed from': 'デプロイ元',
   'View logs': 'ログを表示',
+  'Update domain': 'ドメインを更新',
+  'Its DNS records and certificate stay the same.': 'DNS レコードと証明書は変更されません。',
+  'Domain has been updated': 'ドメインを更新しました',
+  'Failed to update domain': 'ドメインの更新に失敗しました',
+  'A domain cannot switch between serving a deployment and redirecting. Delete it and add it again.': 'ドメインをデプロイの配信とリダイレクトの間で切り替えることはできません。削除してから追加し直してください。',
   'Domain has been deleted': 'ドメインを削除しました',
   'Loading domains...': 'ドメインを読み込み中...',
   'Generating certificate': '証明書を発行中',
   'Verification failed': '検証に失敗しました',
   'Certificate generation failed': '証明書の発行に失敗しました',
+  'A DNS record has the wrong value. Open Records to see which one and what to change it to.':
+    'DNS レコードの値が正しくありません。「レコード」を開いて、どのレコードを何に変更するかを確認してください。',
+  'Waiting for DNS': 'DNS を待機中',
+  'Appwrite checks the DNS records every few minutes for 3 days after the domain is added. Use Check now to look again right away.':
+    'Appwrite はドメインの追加後 3 日間、数分ごとに DNS レコードを確認します。すぐに確認するには「今すぐ確認」を使用してください。',
+  'Appwrite stopped checking 3 days after the domain was added. Fix the DNS records, then Retry.':
+    'Appwrite はドメインの追加から 3 日後に確認を停止しました。DNS レコードを修正してから、再試行してください。',
+  'Last check:': '最終確認:',
+  'Check now': '今すぐ確認',
+  'Not verified yet. Appwrite keeps checking.':
+    'まだ検証されていません。Appwrite は確認を続けます。',
+  'Not needed. Your {type} record is set.':
+    '不要です。{type} レコードは設定済みです。',
+  'Called CNAME flattening on Cloudflare (set it to DNS only) and Alias on Route 53. Some providers name it ANAME.':
+    'Cloudflare では CNAME flattening（DNS only に設定）、Route 53 では Alias と呼ばれます。ANAME と呼ぶプロバイダーもあります。',
+  'It points to {found}. Change it to {value}.':
+    '現在は {found} を指しています。{value} に変更してください。',
+  'Your domain points somewhere else. Set this record to {value}.':
+    'ドメインは別の宛先を指しています。このレコードを {value} に設定してください。',
+  'and {n} more': 'ほか {n} 件',
+  'DNS is set up': 'DNS の設定が完了しました',
+  'Certificate expired': '証明書の期限切れ',
+  'Renewal failed': '証明書の更新に失敗しました',
+  'Certificate blocked': '証明書の発行が保留中',
+  'The certificate is waiting on a DNS record. Add the record shown in View logs, then Retry.':
+    '証明書は DNS レコードを待っています。ログに表示されたレコードを追加してから、再試行してください。',
+  'The certificate is waiting on a DNS record. Add the record shown in View logs.':
+    '証明書は DNS レコードを待っています。ログに表示されたレコードを追加してください。',
+  'The SSL certificate could not be issued. Check View logs, then Retry.':
+    'SSL 証明書を発行できませんでした。ログを確認してから、再試行してください。',
+  'Renewal blocked': '証明書の更新が保留中',
+  'Certificate renewal started': '証明書の更新を開始しました',
+  'Certificate expires on {date}.': '証明書の有効期限は{date}です。',
+  "This certificate has expired. Check that the domain's DNS still points to Appwrite.":
+    'この証明書は期限切れです。ドメインの DNS が引き続き Appwrite を指しているか確認してください。',
+  "View logs for details. Check that the domain's DNS still points to Appwrite.":
+    '詳細はログを確認してください。ドメインの DNS が引き続き Appwrite を指しているか確認してください。',
+  'Renewal is waiting on a DNS record. View logs to see which record to add.':
+    '証明書の更新は DNS レコードの追加を待っています。追加するレコードはログで確認できます。',
   'Back to sites': 'サイト一覧に戻る',
   'Your site is currently being deployed.': 'サイトは現在デプロイ中です。',
   'Filters coming soon': 'フィルターは近日公開',
@@ -105,7 +149,8 @@ export const jaSitesDictionary: Record<string, string> = {
   'Site is disabled': 'サイトは無効です',
   'This site is disabled and not accessible to visitors. Console actions remain available.':
     'このサイトは無効になっており、訪問者がアクセスすることはできません。コンソールからの操作は引き続き利用できます。',
-  'Enable this site in the Settings tab': '設定タブでこのサイトを有効にしてください',
+  'Enable this site in the Settings tab':
+    '設定タブでこのサイトを有効にしてください',
   'to make it available to visitors.': '訪問者が利用できるようにしてください。',
   // Settings: danger zone
   'Delete site': 'サイトの削除',
@@ -178,7 +223,8 @@ export const jaSitesDictionary: Record<string, string> = {
   'Failed to update triggers': 'トリガーの更新に失敗しました',
   // Settings: silent mode card
   'Silent mode': 'サイレントモード',
-  'Disable automated commit comments': '自動コミットコメントを無効化',
+  'Skip pull request comments, checks and deployment reports':
+    'プルリクエストへのコメント、チェック、デプロイの報告をスキップ',
   // Settings: variables card
   'Environment variables': '環境変数',
   // Overview extras
@@ -205,6 +251,13 @@ export const jaSitesDictionary: Record<string, string> = {
   'Failed to remove domain': 'ドメインの削除に失敗しました',
   'Failed to add domain': 'ドメインの追加に失敗しました',
   'Failed to register domain': 'ドメインの登録に失敗しました',
+  'Verify domain ownership': 'ドメイン所有権の検証',
+  'This domain already points to Appwrite. Add this TXT record to prove it is yours, then verify.':
+    'このドメインはすでに Appwrite を指しています。所有者であることを証明するため、この TXT レコードを追加してから検証してください。',
+  'This domain is used by another project. Add this TXT record to prove it is yours, then verify to move it here.':
+    'このドメインは別のプロジェクトで使用されています。所有者であることを証明するため、この TXT レコードを追加してから検証し、このプロジェクトに移動してください。',
+  "This domain's DNS is managed by another organization. Add this TXT record to that domain's DNS, or ask that organization's owners to add it, then verify. The domain stays in that organization.":
+    'このドメインの DNS は別の組織が管理しています。そのドメインの DNS にこの TXT レコードを追加するか、その組織のオーナーに追加を依頼してから検証してください。ドメインはその組織に残ります。',
   'Invalid URL': '無効な URL',
   'Enter URL': 'URL を入力',
   'Select branch': 'Branch を選択',
@@ -226,6 +279,7 @@ export const jaSitesDictionary: Record<string, string> = {
   'Connect GitHub': 'GitHub の接続',
   'Connect GitLab': 'GitLab の接続',
   'Connect Bitbucket': 'Bitbucket の接続',
+  'Connect Gitea': 'Gitea の接続',
   'Connect Origin': 'Origin の接続',
   'Select organization': 'Organization を選択',
   'Add account': 'アカウントの追加',
@@ -378,8 +432,8 @@ export const jaSitesDictionary: Record<string, string> = {
     '有効: サイトからのログとエラーが記録されます。',
   'Disabled - lighter request records; responses may be slightly faster.':
     '無効: 軽量なリクエスト記録。応答がわずかに速くなる場合があります。',
-  'Control whether Appwrite posts automated comments on commits in your connected GitHub repository (for example deployment notes on pull requests). Deployments, checks, and builds are unchanged-only optional commit comments are skipped when silent mode is on.':
-    '接続した GitHub リポジトリのコミットに Appwrite が自動コメントを投稿するかを制御します (例: プルリクエストへのデプロイメモ)。デプロイ、チェック、ビルドは変わりません。サイレントモードがオンのときは任意のコミットコメントのみスキップされます。',
+  "When on, Appwrite doesn't comment on pull requests or report checks and deployments to your Git provider. Builds and deployments run as usual.":
+    'オンにすると、Appwrite はプルリクエストにコメントせず、チェックやデプロイを Git プロバイダーに報告しません。ビルドとデプロイは通常どおり実行されます。',
   'Configure environment variables for your site deployments. Site-specific variables override global project variables. Set the environment variables or secret keys that will be passed to this site during deployment.':
     'サイトデプロイの環境変数を構成します。サイト固有の変数はプロジェクト全体の変数を上書きします。デプロイ時にこのサイトへ渡す環境変数またはシークレットキーを設定してください。',
   'Shell command that starts your SSR app after deploy (for example, npm run start). If left empty, your framework default is used. This field is optional.':
@@ -414,8 +468,6 @@ export const jaSitesDictionary: Record<string, string> = {
     'サイトにリンクされたリポジトリの本番 Branch。ここからのデプロイ成功時は自動的に有効化されます。',
   'Path to site code in the linked repo. Use the repository root (./) or a subdirectory that contains your app (e.g. ./apps/web).':
     'リンクされたリポジトリ内のサイトコードへのパス。リポジトリルート (./) またはアプリを含むサブディレクトリ (例: ./apps/web) を使用してください。',
-  'Disable automated comments on repository commits':
-    'リポジトリのコミットへの自動コメントを無効化',
   'Clone this template into a new Git repository or link it to an existing one.':
     'このテンプレートを新しい Git リポジトリにクローンするか、既存のリポジトリにリンク',
   'Deploy now and connect your version control later via CLI or Git integration in your settings.':
@@ -424,6 +476,8 @@ export const jaSitesDictionary: Record<string, string> = {
     '接続された Git リポジトリでサイトを作成してデプロイ',
   'Configure the environment variables for this template':
     'このテンプレートの環境変数を構成',
+  'This template grants these scopes to the ephemeral key generated for every site build and SSR execution. You can change them in the site settings.':
+    'このテンプレートは、サイトのビルドと SSR の実行ごとに生成される一時的なキーにこれらのスコープを付与します。スコープはサイトの設定で変更できます。',
   'Screenshot may take a few moments after build completes':
     'ビルド完了後、スクリーンショットの生成に少し時間がかかることがあります',
   'Configure your site or share it with others':
@@ -535,13 +589,49 @@ export const jaSitesDictionary: Record<string, string> = {
   'Create your first site': '最初のサイトを作成',
   'Deploy web apps from Git or a template. Every push gets a build, a preview URL, and fast global delivery.':
     'Git またはテンプレートから Web アプリをデプロイします。プッシュごとにビルド、プレビュー URL、高速なグローバル配信が提供されます。',
-  'Connect a repository': 'リポジトリを接続',
-  'Deploy on every push to your production branch, with a preview URL for every other branch.':
-    '本番ブランチへのプッシュごとにデプロイし、その他のブランチにはそれぞれプレビュー URL が付きます。',
-  'Pick a framework': 'フレームワークを選択',
-  'Appwrite detects TanStack Start, Next.js, Nuxt, SvelteKit, and more, and sets up the build for you.':
-    'Appwrite は TanStack Start、Next.js、Nuxt、SvelteKit などを検出し、ビルドを自動で設定します。',
-  'Go live': '公開する',
-  'Get an appwrite.network URL right away, then add your own domain.':
-    'すぐに appwrite.network の URL が発行されます。その後、独自ドメインを追加できます。',
+  'Connect a Git provider to deploy on every push.':
+    'Git プロバイダーを接続すると、プッシュのたびにデプロイされます。',
+  'Deploy a working site in a few clicks, then make it yours.':
+    '数クリックで動作するサイトをデプロイし、自由にカスタマイズできます。',
+  "This site's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
+    'このサイトの Git インストールからリポジトリにアクセスできなくなったため、プッシュはデプロイされません。リポジトリの接続を解除してから、現在そのリポジトリがあるインストールで接続し直してください。',
+  'Action needed': '対応が必要',
+  'Found:': '検出値:',
+  'Wrong value': '値が正しくありません',
+  'Blocks certificate': '証明書の発行を妨げる',
+  "Couldn't check": '確認できません',
+  Alternative: '代替手段',
+  'CAA record': 'CAA レコード',
+  '{type} record': '{type} レコード',
+  'ALIAS or ANAME': 'ALIAS または ANAME',
+  'DNS lookup': 'DNS の確認',
+  'Domain verification': 'ドメインの検証',
+  'Point your domain': 'ドメインの向き先',
+  'Allow the SSL certificate': 'SSL 証明書の許可',
+  'Required · any one': '必須 · いずれか 1 つ',
+  "We couldn't check DNS. This is on our side; Appwrite will try again.":
+    'DNS を確認できませんでした。Appwrite 側の問題のため、Appwrite が再試行します。',
+  'A CAA record on your domain blocks the certificate. Add the CAA record below next to it (recommended), or delete your existing CAA records.':
+    'ドメインの CAA レコードが証明書の発行を妨げています。下記の CAA レコードを追加する（推奨）か、既存の CAA レコードを削除してください。',
+  'Add the records below at your DNS provider. Appwrite checks again automatically for 3 days.':
+    'DNS プロバイダーで下記のレコードを追加してください。Appwrite が 3 日間、自動的に再確認します。',
+  'Automatic checks have stopped. Fix the records below, then verify again.':
+    '自動確認は停止しました。下記のレコードを修正してから、もう一度検証してください。',
+  "We couldn't check the CAA record. This is on our side; Appwrite will try again.":
+    'CAA レコードを確認できませんでした。Appwrite 側の問題のため、Appwrite が再試行します。',
+  'Your {type} record is set. Add the CAA record below to finish.':
+    '{type} レコードは設定済みです。下記の CAA レコードを追加して完了してください。',
+  'All records are verified.': 'すべてのレコードが検証されました。',
+  'Appwrite will issue the SSL certificate next.':
+    '次に Appwrite が SSL 証明書を発行します。',
+  'Not detected yet': 'まだ検出されていません',
+  'Not detected': '検出されません',
+  'Tracked pageviews and events are billed as analytics usage, which adds up quickly on a high-traffic site.':
+    '計測されたページビューとイベントはアナリティクスの使用量として課金されます。トラフィックの多いサイトでは料金がすぐに増えます。',
+  'If your site sets a Content-Security-Policy, in a header or a <meta> tag, add these sources. Otherwise the browser blocks the tracker and no data is recorded.':
+    'サイトでヘッダーまたは <meta> タグによって Content-Security-Policy を設定している場合は、以下のソースを追加してください。追加しないとブラウザーがトラッカーをブロックし、データは記録されません。',
+  'Enable analytics': 'アナリティクスを有効化',
+  'Production domains only. Preview deployments are not tracked.':
+    '本番ドメインのみが対象です。プレビューデプロイは計測されません。',
+  'Failed to enable analytics': 'アナリティクスを有効化できませんでした',
 }

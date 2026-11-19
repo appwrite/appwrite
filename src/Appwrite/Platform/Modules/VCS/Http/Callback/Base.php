@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Callback;
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\OAuth2;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -89,13 +90,7 @@ abstract class Base extends Action
         // Authorize action put in state, anyone with their own valid
         // authorization code could pass an arbitrary projectId here and
         // attach their VCS account as an installation on another project.
-        $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
-
-        if (empty($signingKey)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
-        }
-
-        $state = State::verify($state, $signingKey);
+        $state = State::verify($state, ...EncryptionKey::accepted());
 
         if ($state === null) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');

@@ -12,6 +12,7 @@ use Tests\Unit\Mqtt\Fakes\Accounts;
 use Tests\Unit\Mqtt\Fakes\NullPubSub;
 use Tests\Unit\Mqtt\Fakes\RecordingAdapter;
 use Tests\Unit\Mqtt\Fakes\RecordingRedis;
+use Utopia\Abuse\Adapter\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\DI\Container;
 use Utopia\Mqtt\Connection;
 use Utopia\Mqtt\Packet;
@@ -62,9 +63,10 @@ final class RevokeTest extends TestCase
         $this->redis = new RecordingRedis();
 
         $container = new Container();
-        $container->set('getRedis', fn (): \Closure => fn (): \Redis => $this->redis);
+        $container->set('timelimit', fn (): \Closure => fn (string $key, int $limit, int $seconds, callable $callback): mixed => $callback(new TimeLimitRedis($key, $limit, $seconds, $this->redis)));
         $container->set('authenticator', fn (): \Closure => $this->accounts->authenticate(...));
         $container->set('authorizer', fn (): \Closure => $this->accounts->authorize(...));
+        $container->set('getPlan', fn (): \Closure => fn (string $projectId): array => []);
 
         $this->mqtt = new Mqtt(new NoTelemetry(), new NullPubSub());
         $this->handler = new Handler(
@@ -313,6 +315,40 @@ final class RevokeTest extends TestCase
         $this->connect(3, 'racing');
 
         $this->assertSame(1, $this->accounts->authorizations, 'a CONNECT was checked again for a revoke that landed before it began');
+    }
+
+    public function testExpelDisconnectsWithoutVerification(): void
+    {
+        $this->connect(1, 'stuck');
+        $this->connect(2, 'stuck');
+        $this->connect(3, 'other');
+
+        $disconnected = $this->handler->expel(self::PROJECT, 'stuck');
+
+        $this->assertSame(2, $disconnected);
+        $this->assertSame(0, $this->accounts->authorizations, 'an expel verified against the database');
+        foreach ([1, 2] as $fd) {
+            $disconnects = $this->network->disconnects($fd);
+            $this->assertCount(1, $disconnects, "fd {$fd} was not sent a DISCONNECT");
+            $this->assertSame(Disconnect::NOT_AUTHORIZED, $disconnects[0]->reasonCode);
+        }
+        $this->assertSame([1, 2], $this->network->closed);
+        $this->assertSame([], $this->network->disconnects(3), 'another user was expelled');
+        $this->assertSame(0, $this->handler->expel(self::PROJECT, 'stuck'), 'an expelled connection stayed in the index');
+    }
+
+    public function testRevokeSkipsConnectionsExpelledDuringItsCheck(): void
+    {
+        $this->connect(1, 'stuck');
+        $this->accounts->blocked['stuck'] = true;
+        // The verification outlived its timeout: expel() closed the connection while it ran.
+        $this->accounts->whileAuthorizing = function (): void {
+            $this->handler->expel(self::PROJECT, 'stuck');
+        };
+
+        $this->assertSame(0, $this->handler->revoke(self::PROJECT, 'stuck'));
+        $this->assertCount(1, $this->network->disconnects(1), 'the connection was disconnected twice');
+        $this->assertSame([1], $this->network->closed);
     }
 
     public function testSubscribeIsRefusedForUserWhoseRevokeWasMissed(): void

@@ -1,5 +1,5 @@
-import { Link } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
+import { Link } from '@tanstack/react-router'
 import { AlertCircle, Loader2 } from 'lucide-react'
 import {
   HeaderAlertBar,
@@ -16,12 +16,15 @@ type VideoRenditionsProgressHeaderAlertProps = {
   projectId: string
   videoId: string
   renditions: Models.VideoRendition[]
+  /** Off on the renditions tab, where the link would point at itself. */
+  linkToRenditions?: boolean
 }
 
 export function VideoRenditionsProgressHeaderAlert({
   projectId,
   videoId,
   renditions,
+  linkToRenditions = true,
 }: VideoRenditionsProgressHeaderAlertProps) {
   const t = useT()
 
@@ -75,13 +78,15 @@ export function VideoRenditionsProgressHeaderAlert({
           : 'shrink-0 min-h-12 py-2.5'
       }
       action={
-        <Link
-          to="/projects/$projectId/videos/$videoId/renditions"
-          params={{ projectId, videoId }}
-          className={headerAlertGhostButtonClass(variant)}
-        >
-          {t('View renditions')}
-        </Link>
+        linkToRenditions ? (
+          <Link
+            to="/projects/$projectId/videos/$videoId/renditions"
+            params={{ projectId, videoId }}
+            className={headerAlertGhostButtonClass(variant)}
+          >
+            {t('View renditions')}
+          </Link>
+        ) : undefined
       }
     >
       <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">

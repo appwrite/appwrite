@@ -1,0 +1,184 @@
+---
+layout: post
+title: "Announcing Vipps MobilePay login for Appwrite Auth"
+description: Appwrite Auth now supports Vipps MobilePay as an OAuth2 provider, so users in Norway, Denmark, Finland, and Sweden can sign in with the app they pay with.
+date: 2026-11-11
+cover: /images/blog/announcing-vipps-mobilepay-login/cover.avif
+timeToRead: 6
+author: aditya-oberai
+category: announcements
+featured: false
+faqs:
+  - question: "How do I add Vipps MobilePay login to an Appwrite app?"
+    answer: "Set up Login on a sales unit in the Vipps MobilePay business portal and copy its `client_id` and `client_secret`. In the Appwrite Console, go to **Auth** > **Social providers**, open **Vipps MobilePay**, paste the keys, and add the redirect URI Appwrite shows to your sales unit's Login settings. Then call `createOAuth2Session` or `createOAuth2Token` with `OAuthProvider.Vipps`. The [integration guide](/integrations/oauth-vipps-mobilepay) covers each step."
+  - question: "What is the difference between the Vipps MobilePay and Vipps MobilePay Sandbox providers?"
+    answer: "`vipps` signs users in through the Vipps MobilePay production environment with your production sales unit keys. `vippsSandbox` uses the test environment at `apitest.vipps.no` with your test sales unit keys, so you can sign in with test users from the Vipps MobilePay test app. Each provider has its own redirect URI and its own `OAuthProvider` value."
+  - question: "Does Vipps MobilePay login work for MobilePay users in Denmark and Finland?"
+    answer: "Yes. It's one Login API for both brands. Users in Norway and Sweden sign in with the Vipps app, and users in Denmark and Finland sign in with MobilePay. Vipps MobilePay opens the right app for each user, so you only enable one provider in Appwrite."
+  - question: "What user data does Appwrite get from Vipps MobilePay?"
+    answer: "Appwrite requests the `openid`, `name`, and `email` scopes and stores the user's name and email. The email is marked as verified only when Vipps MobilePay reports it as verified. For a phone number, address, or birth date, add scopes such as `phoneNumber`, `address`, or `birthDate` and read them from the Vipps MobilePay userinfo endpoint with the session's `providerAccessToken`."
+  - question: "Why can't I refresh the Vipps MobilePay access token?"
+    answer: "Vipps MobilePay Login doesn't issue refresh tokens, so `updateSession` can't renew the provider access token. The Appwrite session itself isn't affected. If you call Vipps MobilePay APIs with the `providerAccessToken`, send the user through sign-in again after `providerAccessTokenExpiry` passes."
+  - question: "Why does Vipps MobilePay reject my redirect URI?"
+    answer: "Vipps MobilePay only accepts a redirect URI that exactly matches one registered on the sales unit, including capitalization and trailing slashes. Copy the URI from the provider dialog in the Appwrite Console and paste it unchanged into the Login settings of the matching sales unit. The `vippsSandbox` URI belongs on your test sales unit, and the `vipps` URI on your production sales unit."
+  - question: "Is Vipps MobilePay login available on self-hosted Appwrite?"
+    answer: "Vipps MobilePay and Vipps MobilePay Sandbox are live on Appwrite Cloud and ship in the next self-hosted Appwrite release. Follow the [upgrade guide](/docs/advanced/self-hosting/production/updates) to update your instance when it's out."
+---
+
+If your users live in the Nordics, the account they're most likely to have isn't a Google or Apple account. It's Vipps or MobilePay. Vipps MobilePay had about [12.4 million users at the end of 2025](https://www.sttinfo.fi/files/69821730/72035243/382370/fi), with the Vipps app in Norway and the MobilePay app in Denmark and Finland. People use it to pay online, to pay in stores, and to send money to each other.
+
+Offering Vipps MobilePay sign-in on Appwrite used to mean building the Login API integration yourself. That's the OpenID Connect redirect, a code exchange with HTTP Basic client authentication, a call to the userinfo endpoint, mapping the profile onto an Appwrite user, and a second configuration for the test environment.
+
+Today, we are announcing **Vipps MobilePay** as an OAuth2 login provider in Appwrite Auth.
+
+# What Vipps MobilePay login gives you
+
+- **One provider for four markets.** Users in Norway and Sweden sign in with Vipps, and users in Denmark and Finland with MobilePay. Vipps MobilePay opens the right app, so your code doesn't branch by country.
+- **A sandbox provider.** Vipps MobilePay Sandbox signs users in through the Vipps MobilePay test environment. Test keys usually arrive minutes after you create a test sales unit, while production keys can take a few days, so you can build the whole flow before you go live.
+- **Name and email on the user.** Appwrite requests the `openid`, `name`, and `email` scopes and marks the email as verified only when Vipps MobilePay reports it as verified.
+- **The same API as every other provider.** Use `createOAuth2Session` in the browser or `createOAuth2Token` on the server with `OAuthProvider.Vipps` or `OAuthProvider.VippsSandbox`.
+- **Linked accounts.** A user who signs in with Vipps MobilePay can link Google, Apple, or GitHub to the same account through [Identities](/docs/products/auth/identities).
+- **Live on Appwrite Cloud.** Both providers are available on [Appwrite Cloud](/sign-up) today and ship in the next self-hosted Appwrite release.
+
+# Set up Vipps MobilePay login
+
+The [Vipps MobilePay integration guide](/integrations/oauth-vipps-mobilepay) walks through each step. In short:
+
+1. In the [Vipps MobilePay business portal](https://portal.vippsmobilepay.com), select **Set up login** on your sales unit and activate Login.
+2. Under **For developers**, select **Show keys** for the sales unit and copy the `client_id` and `client_secret`.
+3. In the Appwrite Console, go to **Auth** > **Social providers**, open **Vipps MobilePay** or **Vipps MobilePay Sandbox**, paste the keys, and copy the redirect URI.
+4. Add that redirect URI to your sales unit's Login settings. Vipps MobilePay matches it exactly, trailing slash included.
+
+Use your test sales unit with the sandbox provider and your production sales unit with the production provider. Each provider has its own redirect URI, so register each one on the matching sales unit.
+
+# Add Vipps MobilePay sign-in to your app
+
+Before you start, add your app's domain as a web platform in your Appwrite project, so Appwrite accepts your `success` and `failure` URLs.
+
+## Sign in from the browser
+
+In a client-rendered web app, call `createOAuth2Session`. Appwrite sends the user to Vipps MobilePay, creates the session when they come back, and redirects them to your `success` URL.
+
+```client-web
+import { Client, Account, OAuthProvider } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+account.createOAuth2Session({
+    provider: OAuthProvider.Vipps,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failure',
+});
+```
+
+The Flutter, Apple, Android, and React Native SDKs take the same `OAuthProvider` value. [OAuth 2 login](/docs/products/auth/oauth2#init) covers the platform setup each one needs.
+
+## Sign in from a server-side app
+
+Server-side rendered apps start sign-in on the server and keep the session in a cookie. The first route calls `createOAuth2Token` and redirects the user to Vipps MobilePay. The second receives the user back from Appwrite, checks that this browser started the sign-in, and exchanges the `userId` and `secret` URL parameters for a session.
+
+The example below uses Express with `node-appwrite` and an API key that has the `sessions.write` scope. It stores a random `state` value in a cookie, and Appwrite returns that value unchanged on your `success` URL.
+
+```server-nodejs
+import crypto from 'node:crypto';
+import express from 'express';
+import cookieParser from 'cookie-parser';
+import { Client, Account, OAuthProvider } from 'node-appwrite';
+
+const app = express();
+app.use(cookieParser());
+
+const adminClient = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>'); // Needs the sessions.write scope
+
+app.get('/oauth/vipps', async (req, res) => {
+    const state = crypto.randomBytes(32).toString('hex');
+    res.cookie('oauth_state', state, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        maxAge: 10 * 60 * 1000,
+        path: '/',
+    });
+
+    const account = new Account(adminClient);
+    const redirectUrl = await account.createOAuth2Token({
+        provider: OAuthProvider.Vipps,
+        success: 'https://example.com/oauth/success',
+        failure: 'https://example.com/oauth/failure',
+        state,
+    });
+
+    res.redirect(redirectUrl);
+});
+
+app.get('/oauth/success', async (req, res) => {
+    const { userId, secret, state } = req.query;
+
+    // Only accept a sign-in this browser started
+    const expected = req.cookies.oauth_state;
+    if (!expected || state !== expected) {
+        return res.redirect('/login?error=oauth');
+    }
+    res.clearCookie('oauth_state', { path: '/' });
+
+    try {
+        const account = new Account(adminClient);
+        const session = await account.createSession({ userId, secret });
+
+        res.cookie('a_session_<PROJECT_ID>', session.secret, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'lax',
+            expires: new Date(session.expire),
+            path: '/',
+        });
+
+        res.redirect('/');
+    } catch (error) {
+        res.redirect('/login?error=oauth');
+    }
+});
+```
+
+Without the `state` check, an attacker could send a user a success link for the attacker's account and sign the user into it. The [server-side rendering docs](/docs/products/auth/server-side-rendering#oauth2) show the same flow in more languages.
+
+## Test with the sandbox, then go live
+
+Enable **Vipps MobilePay Sandbox** with your test keys and sign in with a test user in the Vipps MobilePay test app. The [Vipps MobilePay test environment guide](https://developer.vippsmobilepay.com/docs/knowledge-base/test-environment/) explains how to get both.
+
+When the flow works, enable **Vipps MobilePay** with your production keys. Picking the provider from your environment keeps the switch to one line:
+
+```server-nodejs
+const provider = process.env.NODE_ENV === 'production'
+    ? OAuthProvider.Vipps
+    : OAuthProvider.VippsSandbox;
+```
+
+# What to know before you ship
+
+- **There are no refresh tokens.** Vipps MobilePay Login doesn't issue them, so [`updateSession`](/docs/products/auth/oauth2#refresh-tokens) can't renew the provider access token. The Appwrite session lasts as long as your project's session length either way. If you call Vipps MobilePay APIs with the `providerAccessToken`, sign the user in again after `providerAccessTokenExpiry`.
+- **Extra profile fields need extra scopes.** Pass scopes such as `phoneNumber`, `address`, or `birthDate` in the `scopes` parameter, and Appwrite adds them to the defaults. Appwrite stores only the name and email on the user, so read the other fields from the Vipps MobilePay userinfo endpoint with the `providerAccessToken`.
+- **Unverified emails don't take over accounts.** If Vipps MobilePay doesn't report the email as verified and another user already has that address, Appwrite redirects to your failure URL. To connect the two, have the user sign in first and then start `createOAuth2Session` from the browser, which links Vipps MobilePay as a new identity.
+- **Users must be 15 or older.** Vipps MobilePay doesn't let younger users use Login.
+
+# When Vipps MobilePay login fits
+
+Add Vipps MobilePay when a large share of your users are in Norway, Denmark, or Finland. Marketplaces, ticketing, local services, and membership apps are good candidates, because their users already pay with Vipps or MobilePay and expect to see it on the sign-in screen.
+
+It fits best in apps that also take Vipps or MobilePay payments. One ecom sales unit can handle both Login and payments, so the account a user signs in with is the account they pay with. For a global audience, offer Vipps MobilePay next to Google or Apple rather than instead of them, and users outside the Nordics can keep using the providers they know.
+
+# Getting started with Vipps MobilePay login in Appwrite
+
+Vipps MobilePay and Vipps MobilePay Sandbox are live on Appwrite Cloud now. Create a test sales unit, enable the sandbox provider, and you can sign in with a Vipps or MobilePay test user before your production keys arrive.
+
+- [OAuth with Vipps MobilePay integration guide](/integrations/oauth-vipps-mobilepay)
+- [OAuth 2 login](/docs/products/auth/oauth2)
+- [Server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2)
+- [Sign up for Appwrite Cloud](/sign-up)

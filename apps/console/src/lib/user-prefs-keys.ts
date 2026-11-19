@@ -6,6 +6,10 @@
  */
 
 import {
+  parseVideoSubtitleSize,
+  type VideoSubtitleSize,
+} from '@/lib/videos/player-subtitle-display'
+import {
   clampRightPaneWidthPx,
   RIGHT_PANE_DEFAULT_WIDTH_PX,
   RIGHT_PANE_MAX_WIDTH_PX,
@@ -131,6 +135,69 @@ export function clearDismissedBannerPrefs(
 }
 
 /**
+ * Distinct console visit days (local `YYYY-MM-DD` keys) feeding the GitHub
+ * star wizard trigger. Pruned to its rolling window and capped at the visit
+ * threshold on every write; removed once the wizard is dismissed.
+ * Value: comma-separated day keys.
+ */
+export const USER_PREFS_KEY_GITHUB_STAR_VISIT_DAYS =
+  'console.githubStarVisitDays'
+
+export function parseGithubStarVisitDayPrefs(
+  prefs: UserPrefs | null | undefined,
+): string[] {
+  const raw = prefs?.[USER_PREFS_KEY_GITHUB_STAR_VISIT_DAYS]
+  if (typeof raw === 'string') {
+    return raw ? raw.split(',').filter(Boolean) : []
+  }
+  return []
+}
+
+export function mergeGithubStarVisitDaysIntoPrefs(
+  prefs: UserPrefs | null | undefined,
+  days: readonly string[],
+): UserPrefs {
+  return {
+    ...(prefs ?? {}),
+    [USER_PREFS_KEY_GITHUB_STAR_VISIT_DAYS]: days.join(','),
+  }
+}
+
+/** Drop the visit-day key (once dismissed it never feeds a decision again). */
+export function clearGithubStarVisitDaysFromPrefs(
+  prefs: UserPrefs | null | undefined,
+): UserPrefs {
+  const next = { ...(prefs ?? {}) } as UserPrefs
+  delete next[USER_PREFS_KEY_GITHUB_STAR_VISIT_DAYS]
+  return next
+}
+
+/**
+ * When the user last opened the previews popover. Previews introduced
+ * after it count as unseen. Value: ISO 8601 timestamp string.
+ */
+export const USER_PREFS_KEY_EXPERIMENTS_SEEN_AT = 'console.previews.seenAt'
+
+export function parseExperimentsSeenAt(
+  prefs: UserPrefs | null | undefined,
+): Date | null {
+  const raw = prefs?.[USER_PREFS_KEY_EXPERIMENTS_SEEN_AT]
+  if (typeof raw !== 'string' || !raw) return null
+  const date = new Date(raw)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+export function mergeExperimentsSeenAtPrefs(
+  prefs: UserPrefs | null | undefined,
+  seenAt: Date,
+): UserPrefs {
+  return {
+    ...(prefs ?? {}),
+    [USER_PREFS_KEY_EXPERIMENTS_SEEN_AT]: seenAt.toISOString(),
+  }
+}
+
+/**
  * Project IDs where the user dismissed the Agents landing so project root
  * goes to Overview. Value: JSON string of project ID strings.
  */
@@ -193,49 +260,6 @@ export function mergeAgentsDismissedProjectIdsPrefs(
   return {
     ...(prefs ?? {}),
     [USER_PREFS_KEY_AGENTS_DISMISSED_PROJECT_IDS]: JSON.stringify(next),
-  }
-}
-
-/**
- * Project IDs where the Premium Geo DB overview promo was dismissed.
- * Value: JSON string of project ID strings.
- */
-export const USER_PREFS_KEY_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS =
-  'console.premiumGeoOverview.dismissedProjectIds'
-
-const MAX_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS = 200
-
-export function parsePremiumGeoOverviewDismissedProjectIds(
-  prefs: UserPrefs | null | undefined,
-): string[] {
-  return parseProjectIdList(
-    prefs?.[USER_PREFS_KEY_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS],
-  ).slice(0, MAX_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS)
-}
-
-export function isPremiumGeoOverviewPromoDismissed(
-  prefs: UserPrefs | null | undefined,
-  projectId: string,
-): boolean {
-  if (!projectId) return false
-  return parsePremiumGeoOverviewDismissedProjectIds(prefs).includes(projectId)
-}
-
-export function mergePremiumGeoOverviewDismissedProjectIdsPrefs(
-  prefs: UserPrefs | null | undefined,
-  projectId: string,
-): UserPrefs {
-  const current = parsePremiumGeoOverviewDismissedProjectIds(prefs)
-  const next = current.includes(projectId)
-    ? current
-    : [...current, projectId].slice(
-        0,
-        MAX_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS,
-      )
-  return {
-    ...(prefs ?? {}),
-    [USER_PREFS_KEY_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS]:
-      JSON.stringify(next),
   }
 }
 
@@ -1743,6 +1767,8 @@ export type VideoPlayerPrefs = {
   quality: number | null
   /** Subtitle language (or track name when untagged); `'off'` disables; `null` keeps the player default. */
   subtitles: string | null
+  /** Native cue text scale in the stream player. */
+  subtitleSize: VideoSubtitleSize | null
 }
 
 export const VIDEO_PLAYER_PREFS_DEFAULT: VideoPlayerPrefs = {
@@ -1751,6 +1777,7 @@ export const VIDEO_PLAYER_PREFS_DEFAULT: VideoPlayerPrefs = {
   output: null,
   quality: null,
   subtitles: null,
+  subtitleSize: null,
 }
 
 const VIDEO_PLAYER_OUTPUTS: readonly VideoPlayerOutputPref[] = [
@@ -1791,6 +1818,7 @@ export function parseVideoPlayerPrefs(
       typeof parsed.subtitles === 'string' && parsed.subtitles
         ? parsed.subtitles.slice(0, 64)
         : null,
+    subtitleSize: parseVideoSubtitleSize(parsed.subtitleSize),
   }
 }
 
@@ -1806,6 +1834,7 @@ export function mergeVideoPlayerPrefsIntoPrefs(
       output: value.output,
       quality: value.quality,
       subtitles: value.subtitles,
+      subtitleSize: value.subtitleSize,
     }),
   }
 }
@@ -1815,6 +1844,52 @@ export function buildVideosSidebarWidthPrefs(widthPx: number): UserPrefs {
     [USER_PREFS_KEY_VIDEOS_SIDEBAR_WIDTH]: String(
       clampTableViewSidebarWidthPx(widthPx, VIDEOS_SIDEBAR_BOUNDS),
     ),
+  }
+}
+
+/**
+ * Full key: `console.videos.createSource` - last source tab in the create
+ * video wizard. Account-wide, not per project. Value: `upload` | `storage` | `demo`.
+ */
+export const USER_PREFS_KEY_VIDEOS_CREATE_SOURCE = 'console.videos.createSource'
+
+export type VideoCreateSourcePref = 'upload' | 'storage' | 'demo'
+
+export const VIDEO_CREATE_SOURCE_DEFAULT: VideoCreateSourcePref = 'upload'
+
+const VIDEO_CREATE_SOURCES: readonly VideoCreateSourcePref[] = [
+  'upload',
+  'storage',
+  'demo',
+]
+
+/** Explicit saved tab, or null when the account has no valid value. */
+export function readVideoCreateSourcePref(
+  prefs: UserPrefs | null | undefined,
+): VideoCreateSourcePref | null {
+  const raw = prefs?.[USER_PREFS_KEY_VIDEOS_CREATE_SOURCE]
+  if (
+    typeof raw === 'string' &&
+    VIDEO_CREATE_SOURCES.includes(raw as VideoCreateSourcePref)
+  ) {
+    return raw as VideoCreateSourcePref
+  }
+  return null
+}
+
+export function parseVideoCreateSourcePref(
+  prefs: UserPrefs | null | undefined,
+): VideoCreateSourcePref {
+  return readVideoCreateSourcePref(prefs) ?? VIDEO_CREATE_SOURCE_DEFAULT
+}
+
+export function mergeVideoCreateSourcePrefIntoPrefs(
+  prefs: UserPrefs,
+  value: VideoCreateSourcePref,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_VIDEOS_CREATE_SOURCE]: value,
   }
 }
 
@@ -4022,6 +4097,35 @@ export function mergeServiceListViewModeIntoPrefs(
   return {
     ...prefs,
     [getServiceListViewModeKey(scope)]: mode,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Playground mode (account prefs, shared across all projects)
+// ---------------------------------------------------------------------------
+
+export type PlaygroundMode = 'rest' | 'realtime'
+
+export const PLAYGROUND_MODE_DEFAULT: PlaygroundMode = 'rest'
+
+/** Full key: `console.playground.mode` - `"rest"` or `"realtime"`. */
+export const USER_PREFS_KEY_PLAYGROUND_MODE = 'console.playground.mode'
+
+export function parsePlaygroundMode(
+  prefs: UserPrefs | null | undefined,
+): PlaygroundMode {
+  const raw = prefs?.[USER_PREFS_KEY_PLAYGROUND_MODE]
+  if (raw === 'rest' || raw === 'realtime') return raw
+  return PLAYGROUND_MODE_DEFAULT
+}
+
+export function mergePlaygroundModeIntoPrefs(
+  prefs: UserPrefs,
+  mode: PlaygroundMode,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_PLAYGROUND_MODE]: mode,
   }
 }
 

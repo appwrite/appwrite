@@ -6,6 +6,7 @@ namespace Utopia\NATS\Tests\E2E;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\NATS\Connection;
+use Utopia\NATS\Exception\JetStreamException;
 use Utopia\NATS\Exception\ObjectStoreException;
 use Utopia\NATS\JetStream\JetStream;
 use Utopia\NATS\ObjectStore\ObjectMeta;
@@ -38,6 +39,43 @@ final class ObjectStoreExtraTest extends TestCase
             // ignore
         }
         $this->conn->close();
+    }
+
+    public function testPutRejectedByTheBucketLimitStrandsNoChunks(): void
+    {
+        $bucket = 'objlimit_' . uniqid();
+        $store = ObjectStore::createOrUpdate($this->conn, $this->js, new ObjectStoreConfig(
+            bucket: $bucket,
+            maxBytes: 200 * 1024,
+        ));
+
+        try {
+            // Objects are written in 128 KiB chunks: the first fits, the second
+            // would push the bucket past max_bytes and an object-store stream
+            // discards New, so the server rejects that publish instead of
+            // evicting anything.
+            try {
+                $store->put('big.bin', str_repeat('a', 384 * 1024));
+                $this->fail('Expected the bucket limit to reject the put');
+            } catch (JetStreamException $e) {
+                $this->assertStringContainsString('maximum bytes exceeded', $e->getMessage());
+            }
+
+            // The chunk that did land carries a NUID no meta record names, so if
+            // the failed put leaves it behind nothing can ever reclaim it: the
+            // bucket stays full and every later put fails the same way.
+            $this->assertSame(0, $this->js->getStreamInfo("OBJ_{$bucket}")->state->messages);
+
+            $data = str_repeat('b', 128 * 1024);
+            $store->put('small.bin', $data);
+            $this->assertSame($data, $store->get('small.bin'));
+        } finally {
+            try {
+                $this->js->deleteStream("OBJ_{$bucket}");
+            } catch (\Throwable) {
+                // ignore
+            }
+        }
     }
 
     public function testWatchFiresOnPutAndDelete(): void

@@ -33,7 +33,7 @@ use Utopia\System\System;
 try {
     EncryptionKey::assertProduction(
         System::getEnv('_APP_ENV', 'production'),
-        System::getEnv('_APP_OPENSSL_KEY_V1')
+        EncryptionKey::current()
     );
 } catch (\RuntimeException $exception) {
     Console::error($exception->getMessage());
@@ -407,6 +407,35 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
         }
 
         Span::current()?->finish();
+
+        /** @var \Appwrite\Logs\Logs $logs */
+        $logs = $container->get('logs');
+
+        Span::init('logs.setup');
+
+        $max = 15;
+        $sleep = 2;
+        $attempts = 0;
+
+        while (true) {
+            try {
+                $attempts++;
+                $logs->getAdapter()->setup();
+                Console::success('[Setup] - Log schema is ready');
+                break;
+            } catch (\Throwable $e) {
+                if ($attempts >= $max) {
+                    Span::add('logs.ready', false);
+                    Console::warning('[Setup] - Skip: log schema is not ready: ' . $e->getMessage());
+                    break;
+                }
+
+                Console::warning("  └── Log schema setup failed. Retrying ({$attempts})...");
+                sleep($sleep);
+            }
+        }
+
+        Span::current()?->finish();
     });
 
     Span::init('http.server.start');
@@ -430,6 +459,7 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
     $response = new Response($utopiaResponse->getSwooleResponse());
 
     Span::add('http.method', $request->getMethod());
+    Span::add('http.uri', $request->getURI());
 
     if ($files->isFileLoaded($request->getURI())) {
         $time = (60 * 60 * 24 * 45); // 45 days cache
@@ -481,7 +511,14 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
             // All good, user is optional information
         }
         Span::add('http.hostname', $request->getHostname());
-        Span::add('http.locale', (string)$request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', '')));
+        $locale = (string) $request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', ''));
+        $localeCodes = \array_map(
+            fn ($entry) => $entry['code'],
+            Config::getParam('locale-codes', []),
+        );
+        if (\in_array($locale, $localeCodes, true)) {
+            Span::add('http.locale', $locale);
+        }
 
         $sdk = $route?->getLabel("sdk", false);
         if (!empty($sdk)) {

@@ -157,6 +157,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "advanced/billing/project-transfers",
+    "title": "Project transfers",
+    "description": "Move an Appwrite Cloud project to another organization, directly or with a single-use transfer link that an owner of the other organization claims.",
+    "excerpt": "A project transfer changes which organization owns a project. The project keeps its ID, region, data, and endpoints. Only the organization that owns it changes, and with it the plan, the members, and the bill that apply to the project. There are two ways to transfer a project from the **Transfer project** card in the project's **Settings**: - **Move to another organization.** Moves the project right away into another organization you are a member of. - **Hand off with a…",
+    "breadcrumbs": [
+      "Billing",
+      "Getting started",
+      "Project transfers"
+    ]
+  },
+  {
     "slug": "advanced/billing/refund-policy",
     "title": "Refund policy",
     "description": "Learn about Appwrite's refund policy for services, including eligibility criteria and the request process.",
@@ -325,7 +336,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/security/encryption",
     "title": "Encryption",
     "description": "Learn about Appwrite's use of encryption across Appwrite's databases and storage buckets to protect user data.",
-    "excerpt": "Other than applying encryption in authentication, enforcing HTTPS, and generating TLS certificate for domains, Appwrite also uses encryption for Storage, and Databases to come. Encryption helps secure your files and data in storage. In the event that an attack happens and a malicious actor gains access to files or data, encrypted files and data cannot be deciphered, adding a further layer of protection. Storage For storage, buckets can have its files encrypted. If enabled, files uploaded to the bucket that…",
+    "excerpt": "Other than applying encryption in authentication, enforcing HTTPS, and generating TLS certificate for domains, Appwrite also uses encryption for Storage, and Databases to come. Encryption helps secure your files and data in storage. In the event that an attack happens and a malicious actor gains access to files or data, encrypted files and data cannot be deciphered, adding a further layer of protection. Storage For storage, buckets can have their files encrypted. If enabled, every file uploaded to the bucket…",
     "breadcrumbs": [
       "Security",
       "Measures",
@@ -930,7 +941,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "apis/rest",
     "title": "REST",
     "description": "Discover the Appwrite REST API for building robust and scalable applications. Access detailed documentation on REST endpoints, authentication, and data management.",
-    "excerpt": "Appwrite supports multiple protocols for accessing the server, including REST, GraphQL, and Realtime. The REST API allows you to access your Appwrite server through HTTP requests without needing an SDK. Each endpoint in the API represents a specific operation on a specific resource. Headers Appwrite's REST APIs expect certain headers to be included with each request: - Header - - Description --- - X-Appwrite-Project: [PROJECT-ID] - required - The ID of your Appwrite project --- - Content-Type: application/json - required…",
+    "excerpt": "Appwrite supports multiple protocols for accessing the server, including REST, GraphQL, and Realtime. The REST API allows you to access your Appwrite server through HTTP requests without needing an SDK. Each endpoint in the API represents a specific operation on a specific resource. Headers Appwrite's REST APIs expect certain headers to be included with each request: - Header - - Description --- - X-Appwrite-Project: [PROJECT-ID] - required - The ID of your Appwrite project --- - X-Appwrite-Environment: [ENVIRONMENT-ID] - optional…",
     "breadcrumbs": [
       "APIs",
       "Protocols",
@@ -1791,6 +1802,225 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/analytics",
+    "title": "Analytics",
+    "description": "See who visits your websites and apps with Appwrite Analytics. Track pageviews and custom events without cookies, and see where visitors come from, what they view, and how much of your traffic comes from bots and AI.",
+    "excerpt": "Appwrite **Analytics** shows how people find and use your websites and apps. Add tracking with the Web or Flutter SDK, or send events over REST. Each property's dashboard then shows your visitors, where they came from, the pages they viewed, where they are, and the devices they use, next to the events you define, such as signups and purchases. Analytics works without cookies or identifiers stored on the visitor's device, and labels traffic from search crawlers, AI crawlers, AI assistants,…",
+    "breadcrumbs": [
+      "products",
+      "Analytics"
+    ]
+  },
+  {
+    "slug": "products/analytics/bots",
+    "title": "Bots and AI traffic",
+    "description": "How Appwrite Analytics recognizes bots, AI crawlers, and AI assistants from their user agent, where they appear on the dashboard, and how they count toward your plan.",
+    "excerpt": "Not every visit comes from a person. Search engines index your pages, AI companies crawl them for training and answers, social sites fetch link previews, and monitors check that your site is up. Appwrite recognizes these clients from their user agent and labels their events, so you can see how much of your traffic is automated and who sends it. How bots are recognized Appwrite checks the user agent of every event: the browser's header, or the your server or…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Bots and AI traffic"
+    ]
+  },
+  {
+    "slug": "products/analytics/custom-events",
+    "title": "Track custom events",
+    "description": "Record the actions that matter to your product in Appwrite Analytics, such as signups and purchases, with event names and props from the browser, Flutter, or your server.",
+    "excerpt": "Pageviews show where people go. Custom events show what they do there: a signup, a purchase, an invite sent, a plan upgraded. Each custom event has a name and optional props, and appears in the **Custom events** card on the property's dashboard. Send an event Send a custom event with the tracking helper on the client, or with from your server. These examples continue from the setup in Track a website, Track a Flutter app, and Track events from your…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Track custom events"
+    ]
+  },
+  {
+    "slug": "products/analytics/dashboard",
+    "title": "Dashboard",
+    "description": "A tour of the Appwrite Analytics dashboard, from the metrics and chart to date ranges, live visitors, and the cards that break traffic down by source, page, location, technology, bots, and custom events.",
+    "excerpt": "Each property has a dashboard on its **Analytics** tab. It shows the property's traffic for the date range you pick: the headline metrics, a chart over time, and cards that break visits down by where they came from, what they viewed, and who sent them. Metrics and chart The top of the dashboard has a tab for each metric: **Unique visitors**, **Visits**, **Pageviews**, **Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time**. Each tab shows the total for the…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Dashboard"
+    ]
+  },
+  {
+    "slug": "products/analytics/events",
+    "title": "Events",
+    "description": "Events are the records every Appwrite Analytics metric is built from. Learn which events the tracking helpers send, how custom events differ, and what Appwrite adds to each event.",
+    "excerpt": "An event is one thing that happened in your app: a page was viewed, a link was clicked, a purchase completed. Every figure on an analytics dashboard, from visitors to bounce rate, is calculated from the events a property receives. Each event has a name and the URL it happened on. It can also carry a referrer, the viewport width, scroll depth, engagement time, and custom props. Automatic events The tracking helpers in the Web and Flutter SDKs send these…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Events"
+    ]
+  },
+  {
+    "slug": "products/analytics/export",
+    "title": "Export a report",
+    "description": "Download Appwrite Analytics data as a PDF report to share, or as CSV files to analyze in a spreadsheet, using the dashboard's date range, filters, and comparison.",
+    "excerpt": "Export a property's analytics to share them with people who don't use Appwrite, or to work with the numbers in a spreadsheet. An export contains what the dashboard shows: the same date range, filters, and comparison period. Export from the dashboard 1. Open the property's dashboard. 2. Set the date range, filters, and comparison you want in the export. See Filter and compare traffic. 3. Click **Export** and select **PDF report** or **CSV data**. The file downloads with a name…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Export a report"
+    ]
+  },
+  {
+    "slug": "products/analytics/filters",
+    "title": "Filter and compare traffic",
+    "description": "Narrow the Appwrite Analytics dashboard to the traffic you care about with filters, save filters for later, and compare a date range with an earlier period.",
+    "excerpt": "Filters narrow the whole dashboard to traffic that matches, such as visitors from search engines or visits to one page. Comparisons show how a date range differs from an earlier one. You can use both together, for example to see whether search traffic grew compared with last month. Filter from a card The quickest way to filter is from a card. Click a row, such as on the **Channels** tab of **Traffic sources**, and every metric, the chart, and the…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Filter and compare traffic"
+    ]
+  },
+  {
+    "slug": "products/analytics/firewall",
+    "title": "Block traffic with Firewall",
+    "description": "Turn what Appwrite Analytics shows into Firewall rules for a site. Block a country, serve only one country, or deny a bot or a page, starting from the dashboard.",
+    "excerpt": "Analytics shows who visits your site, and Firewall decides who reaches it. When a property tracks a site hosted on Appwrite Sites, you can start a Firewall rule for that site from a country, region, city, hostname, page, or bot on the dashboard. Before you start - The property must be linked to the site: its domain has to be one of the site's domains. See Properties. - You need permission to create Firewall rules in the project. Start a…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Block traffic with Firewall"
+    ]
+  },
+  {
+    "slug": "products/analytics/flutter",
+    "title": "Track a Flutter app",
+    "description": "Add Appwrite Analytics to a Flutter app. Track screen views with a navigator observer, app lifecycle and engagement time, and your own events on iOS, Android, web, and desktop.",
+    "excerpt": "The Appwrite Flutter SDK includes a helper and a . Together they record screen views as your users move through the app, when the app goes to the background and comes back, and how long it stays in the foreground. The same code runs on iOS, Android, web, and desktop. Before you start You need an analytics property and its property ID, which the Console shows next to the property name. Your app also needs to be registered in the…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Track a Flutter app"
+    ]
+  },
+  {
+    "slug": "products/analytics/limits",
+    "title": "Limits and retention",
+    "description": "Appwrite Analytics plan limits for events, properties, and data retention, and the size limits for events, properties, and metric queries.",
+    "excerpt": "This page lists how many events Appwrite Analytics accepts on each plan and how far back you can see them, and the size limits that apply to every event and request. Plan limits | | Free | Pro | Enterprise | | --- | --- | --- | --- | | Events | 50K per month | 100K per month | Custom | | Additional events | Not available | $3 per 100K events | Custom | | Properties |…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Limits and retention"
+    ]
+  },
+  {
+    "slug": "products/analytics/metrics",
+    "title": "Metrics",
+    "description": "How Appwrite Analytics calculates visitors, visits, pageviews, bounce rate, visit duration, and engagement time, which breakdowns it offers, and how to read metrics from your own code.",
+    "excerpt": "Every figure on an analytics dashboard comes from the events your property receives. This page defines each metric and breakdown, and shows how to read the same numbers from your own code. Dashboard metrics The row of metrics at the top of the dashboard covers the selected date range. - **Unique visitors**: distinct visitors in the range. Someone who returns several times counts once. - **Visits**: visits that started in the range. A visit that started earlier doesn't count, even…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Metrics"
+    ]
+  },
+  {
+    "slug": "products/analytics/own-domain",
+    "title": "Serve tracking from your domain",
+    "description": "Send Appwrite Analytics events through a domain you own, with a custom API domain or a small proxy on your site, so tracking requests stay first-party.",
+    "excerpt": "The tracking helpers send events to your project's Appwrite endpoint, such as . Ad blockers and privacy extensions decide what to block from filter lists, which name tracking hosts and URL patterns. When your events go to a domain you own, list entries written for third-party hosts don't apply to them. The **Ad blockers** card in a property's **Settings** tab offers two ways to do this. | | Custom domain | Proxy | | --- | --- | --- |…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Serve tracking from your domain"
+    ]
+  },
+  {
+    "slug": "products/analytics/privacy",
+    "title": "Privacy",
+    "description": "What Appwrite Analytics collects and stores for each event, how visitor IDs work without cookies, and the controls you have over tracking and data.",
+    "excerpt": "Appwrite Analytics works without cookies and doesn't store IP addresses. This page lists what it collects, what it keeps, and the controls you have, so you can describe your analytics accurately to your users. No cookies or device storage Appwrite doesn't set cookies for analytics, and the tracking helpers in the Web and Flutter SDKs don't keep identifiers on the device. In the browser, the Web helper doesn't write to , , or any other storage. Each event is a…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Privacy"
+    ]
+  },
+  {
+    "slug": "products/analytics/properties",
+    "title": "Properties",
+    "description": "A property collects Appwrite Analytics events for one website or app. Create properties, control which origins can send events, link a property to a site, and turn off or delete a property.",
+    "excerpt": "A property is one website or app you track. Every event belongs to a property, and each property has its own dashboard, settings, and property ID. A project can hold several properties, for example one for your marketing site and one for your mobile app. Your tracking code and the Analytics API identify a property by its property ID. The Console shows it next to the property name, with a button to copy it. Properties in a project Open **Analytics**…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Properties"
+    ]
+  },
+  {
+    "slug": "products/analytics/quick-start",
+    "title": "Start with Analytics",
+    "description": "Track your first website visit with Appwrite Analytics. Create a property, add the Web SDK's tracking helper to your site, and see the visit on the dashboard.",
+    "excerpt": "In this quick start you create an analytics property, add tracking to a website with the Appwrite Web SDK, and see your first visit on the dashboard. Add your site to the project Appwrite accepts events from a browser only when the site's hostname belongs to one of the project's apps. If your site isn't one yet, add it. 1. Sign in to Appwrite Cloud and open a project. 2. Open **Apps** in the sidebar and click **Add app**. 3.…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Start with Analytics"
+    ]
+  },
+  {
+    "slug": "products/analytics/rest",
+    "title": "Send events over REST",
+    "description": "Send Appwrite Analytics events with a plain HTTP request from any platform, including native iOS and Android apps, games, and command-line tools.",
+    "excerpt": "Any client that can make an HTTP request can send analytics events. Use REST when your platform has no tracking helper, such as a native iOS or Android app, a game engine, a smart TV app, or a command-line tool. Each event is one request to your property. Client-side events need no API key. Send an event Send the event name and the URL it happened on. Appwrite responds with . An event named or counts as a pageview. Any…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Send events over REST"
+    ]
+  },
+  {
+    "slug": "products/analytics/server-side",
+    "title": "Track events from your server",
+    "description": "Send Appwrite Analytics events from your backend with an API key, and attach server-side actions such as purchases to the visitor who made them.",
+    "excerpt": "Some of the events you care about happen on your server: an order that completes, a subscription that renews, a job that finishes. Send these from your backend with an API key. When you pass the visitor's IP address and user agent, the event joins that visitor's visit, next to the pageviews their browser sent. Create an API key Server-side events use an API key with the scope. 1. In your project, open **API Keys** and click **Create API key**.…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Track events from your server"
+    ]
+  },
+  {
+    "slug": "products/analytics/sources",
+    "title": "Traffic sources",
+    "description": "How Appwrite Analytics works out where visitors come from, with channels, referring sources, and UTM campaign parameters.",
+    "excerpt": "The **Traffic sources** card on the dashboard shows where visitors came from in three ways: the type of source as a **channel**, the referring site as a **source**, and the UTM tags on the link they followed as a **campaign**. Appwrite works these out from two fields of each event: the referrer, which is the page a visitor came from, and the event URL. The Web helper sends the browser's referrer with every pageview. In a single-page app, the browser…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Traffic sources"
+    ]
+  },
+  {
+    "slug": "products/analytics/visitors",
+    "title": "Visitors and sessions",
+    "description": "How Appwrite Analytics identifies visitors without cookies, groups their events into visits, and works out bounces, entry and exit pages, visit duration, and live visitors.",
+    "excerpt": "Appwrite Analytics counts people and their visits without cookies or anything else stored on their device. It works out who sent each event from the request itself, then groups each visitor's events into visits. Visitors Appwrite gives every event a visitor ID: a one-way hash of three values from the request. - The IP address the event came from. - The header of the browser or app. - The hostname of the event's URL. Events with the same three values…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Visitors and sessions"
+    ]
+  },
+  {
+    "slug": "products/analytics/web",
+    "title": "Track a website",
+    "description": "Add Appwrite Analytics to a website or web app with the Web SDK. Track pageviews, outbound links, scroll depth, engagement time, and file downloads from the browser.",
+    "excerpt": "The Appwrite Web SDK includes a helper that records visits from the browser. A call to tracks pageviews, outbound link clicks, scroll depth, and engagement time. File downloads and your own events each take one more line. Before you start You need an analytics property and its property ID, which the Console shows next to the property name. Your site also needs a Web app in the same project. Browsers send an header with every event, and Appwrite accepts events…",
+    "breadcrumbs": [
+      "products",
+      "Analytics",
+      "Track a website"
+    ]
+  },
+  {
     "slug": "products/auth",
     "title": "Authentication",
     "description": "Explore Appwrite's powerful authentication solutions. Learn how to implement secure user authentication, manage user identities, and enhance your application's security.\"",
@@ -1799,6 +2029,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Auth",
       "Getting started",
       "Overview"
+    ]
+  },
+  {
+    "slug": "products/auth/account-switching",
+    "title": "Account switching",
+    "description": "Let users stay signed in to several accounts in one browser or app and switch between them with Appwrite Auth devices, without signing out and back in.",
+    "excerpt": "Account switching lets one browser or app install stay signed in to several accounts at once and switch which one is active. A user can keep a personal and a work account signed in side by side and move between them without signing out and back in. Account switching is different from identities. Identities link several sign-in methods to one account. Account switching keeps separate accounts, each with its own session. How account switching works Account switching is built on…",
+    "breadcrumbs": [
+      "Auth",
+      "Guides",
+      "Account switching"
     ]
   },
   {
@@ -4506,6 +4747,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/functions/email",
+    "title": "Email triggers",
+    "description": "Execute an Appwrite Function when an email arrives at its address. Use the built-in address of the function or connect a custom domain.",
+    "excerpt": "An email trigger executes your function when an email arrives at one of the function's addresses. Each function has a built-in address, and you can also connect a custom domain. Appwrite receives the email and executes your function with the email and its attachments in the request body. Your function can save the email to a table, reply to the sender, or send the content to another service. Email triggers are available on Appwrite Cloud, and they only receive email.…",
+    "breadcrumbs": [
+      "Functions",
+      "Guides",
+      "Email triggers"
+    ]
+  },
+  {
     "slug": "products/functions/environment-variables",
     "title": "Environment variables",
     "description": "Set environment variables for your Appwrite Functions to pass constants and secrets at build and runtime.",
@@ -4530,7 +4782,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/functions/execute",
     "title": "Execution",
     "description": "Understand serverless function execution in Appwrite. Explore how triggers, events, and data flow enable dynamic execution of your code.",
-    "excerpt": "Appwrite Functions can be executed in several ways. Executions can be invoked through the Appwrite SDK and visiting its REST endpoint. Functions can also be triggered by events and scheduled executions. Here are all the different ways to consume your Appwrite Functions. Execution modes Appwrite Functions support two execution modes: **synchronous** and **asynchronous**. Synchronous executions Synchronous executions are those where Appwrite makes the request to the function runtime synchronously and waits for the response. The client making the request will…",
+    "excerpt": "Appwrite Functions can be executed in several ways. Executions can be invoked through the Appwrite SDK and visiting its REST endpoint. Functions can also be triggered by events, schedules, and incoming email. Here are all the different ways to consume your Appwrite Functions. Execution modes Appwrite Functions support two execution modes: **synchronous** and **asynchronous**. Synchronous executions Synchronous executions are those where Appwrite makes the request to the function runtime synchronously and waits for the response. The client making the request…",
     "breadcrumbs": [
       "Functions",
       "Guides",
@@ -4607,11 +4859,22 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/messaging/apns",
     "title": "Apple Push Notification service",
     "description": "Send push notifications to apps on Apple devices through Apple Push Notification service (APNs) using Appwrite Messaging.",
-    "excerpt": "Apple Push Notification service (APNs) lets you send push notifications to Apple devices like macOS, iOS, tvOS, iPadOS, and watchOS devices. APNs is a best-effort service, and will attempt to deliver you messages to your device when it's online and available again. APNs will save the last message for 30 days or less and attempt delivery as soon as it's online. To add APNs as a provider, navigate to **Messaging** > **Providers** > **Create provider** > **Push notification**. Give your…",
+    "excerpt": "Apple Push Notification service (APNs) lets you send push notifications to Apple devices like macOS, iOS, tvOS, iPadOS, and watchOS devices. APNs is a best-effort service, and will attempt to deliver you messages to your device when it's online and available again. APNs will save the last message for 30 days or less and attempt delivery as soon as it's online. One-click setup with the CLI The Appwrite CLI sets up APNs for an iOS app in one command. Run…",
     "breadcrumbs": [
       "Messaging",
       "Providers",
       "Push with APNs"
+    ]
+  },
+  {
+    "slug": "products/messaging/appwrite-push",
+    "title": "Appwrite Push",
+    "description": "Deliver push notifications from Appwrite to apps built with the Web, Flutter, React Native, Android, and Apple SDKs, without Firebase or device tokens.",
+    "excerpt": "Appwrite Push is Appwrite's own push provider. With the Appwrite SDK, your app connects to Appwrite's push broker, an MQTT server that relays messages to connected devices. Messages you send with Appwrite Messaging arrive over that connection, so you can reach a signed-in user without setting up Firebase or collecting device tokens. Appwrite Push works with the Web, Flutter, React Native, Android, and Apple SDKs. On Android, it keeps delivering after your users leave the app. On iOS, apps built…",
+    "breadcrumbs": [
+      "Messaging",
+      "Providers",
+      "Push with Appwrite"
     ]
   },
   {
@@ -4662,7 +4925,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/messaging/providers",
     "title": "Providers",
     "description": "Learn the different providers that you can use to send messages with Appwrite.",
-    "excerpt": "Appwrite allows you to connect to a variety of third-party messaging providers to deliver push notifications, emails, and SMS messages to your users. Before you can deliver messages, you must connect to a messaging provider. Push notifications Send push notifications, which are little notification messages that appear on a user's browser or device to alert them of events or updates. Configure one of the following providers to send push notifications. Send push notifications to apps on Apple devices through Apple…",
+    "excerpt": "Appwrite allows you to connect to a variety of third-party messaging providers to deliver push notifications, emails, and SMS messages to your users. Before you can deliver messages, you must connect to a messaging provider. Push notifications Send push notifications, which are little notification messages that appear on a user's browser or device to alert them of events or updates. Configure one of the following providers to send push notifications. Deliver push notifications from Appwrite to apps built with the…",
     "breadcrumbs": [
       "Messaging",
       "Concepts",
@@ -4695,7 +4958,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/messaging/send-push-notifications",
     "title": "Send push notification",
     "description": "Send push notification to your users using Appwrite Messaging.",
-    "excerpt": "You can send, schedule, and manage push notifications to your apps using Appwrite Messaging. Push notifications can be used to deliver new message notifications, app updates, promotional offers, and other messages straight to your user's devices. Push notifications must be sent through third-party providers, like Apple Push Notification service and Firebase Cloud Messaging. The push notification APIs for Apple and Android devices can only be accessed through these services. You must configure these services before you can send your first…",
+    "excerpt": "You can send, schedule, and manage push notifications to your apps using Appwrite Messaging. Push notifications can be used to deliver new message notifications, app updates, promotional offers, and other messages straight to your user's devices. You send push notifications through a provider, the service that delivers them to devices. Appwrite Push delivers messages straight from Appwrite to apps built with the Appwrite SDKs, with no credentials to configure. Apple Push Notification service (APNs) and Firebase Cloud Messaging (FCM) are…",
     "breadcrumbs": [
       "Messaging",
       "Guides",
@@ -5384,127 +5647,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
-    "slug": "products/videos",
-    "title": "Videos",
-    "description": "Stream video and audio with Appwrite Videos. Turn files in Storage into adaptive HLS, DASH, and CMAF streams with encoding profiles, captions, and scrubbing thumbnails.",
-    "excerpt": "Appwrite **Videos** turns video and audio files in Storage into adaptive streams. You create a video from a file that is already in a bucket, encode it into a ladder of renditions, and hand the master manifest URL to any HLS or DASH player. The source file stays in its bucket, untouched. Each video has its own permissions, so who can watch a stream is separate from who can download the file. You manage videos under **Videos** in your project,…",
-    "breadcrumbs": [
-      "Videos",
-      "Getting started",
-      "Overview"
-    ]
-  },
-  {
-    "slug": "products/videos/captions",
-    "title": "Captions",
-    "description": "Add WebVTT or SubRip captions to an Appwrite video, use subtitle tracks embedded in the source, and set a default language for players.",
-    "excerpt": "**Captions** are text tracks attached to a video. Players pick them up from the master manifest and let viewers switch languages. A caption comes from a file in Storage, from the caption editor in the Console, or from the source file itself. Appwrite does not transcribe speech, so to caption a video that has no track yet, upload the output of a transcription service or write the track in the caption editor. Captions make a video usable with the sound…",
-    "breadcrumbs": [
-      "Videos",
-      "Concepts",
-      "Captions"
-    ]
-  },
-  {
-    "slug": "products/videos/inspector",
-    "title": "Inspect playback",
-    "description": "Use the Appwrite Videos inspector to watch a playback session's experience score, buffer, bitrate, network requests, and manifests.",
-    "excerpt": "The **inspector** shows what the player in the Console is doing while it plays a video. Use it to check how fast a stream starts, whether it rebuffers, which renditions it picks, and what the player actually requested. Open the inspector 1. Open **Videos** in your project and select a video with at least one ready rendition. 2. Select **Inspector** under **Playback** in the video menu. It opens in its own window next to the video, so you can watch…",
-    "breadcrumbs": [
-      "Videos",
-      "Guides",
-      "Inspect playback"
-    ]
-  },
-  {
-    "slug": "products/videos/outputs",
-    "title": "Outputs",
-    "description": "Learn the difference between HLS, DASH, and CMAF outputs in Appwrite Videos, where to find each master manifest, and which players support them.",
-    "excerpt": "An **output** is the streaming format a rendition is packaged in. Appwrite Videos packages renditions as **HLS**, **DASH**, or **CMAF**. Each output has a **master manifest**: the playlist a player loads first, which lists every rendition and caption track so the player can pick the best one. What a manifest looks like A manifest is a small text file. You rarely read one, but seeing it makes the rest of this page easier to follow. A simplified HLS master manifest…",
-    "breadcrumbs": [
-      "Videos",
-      "Concepts",
-      "Outputs"
-    ]
-  },
-  {
-    "slug": "products/videos/permissions",
-    "title": "Permissions",
-    "description": "Learn how Appwrite Videos controls who can watch a stream with per-video permissions, and which scopes manage videos and encoding profiles.",
-    "excerpt": "Appwrite Videos has two kinds of access: who can **watch** a stream, and who can **manage** videos, renditions, captions, and profiles. Playback Each video has its own permissions. Manifest, segment, caption, timeline, and thumbnail requests check the video's **read** permission. The source file's permissions in Storage are checked only when the video is created: whoever creates it must be able to read the file. After that, playback never looks at the file, so the source can stay private while its…",
-    "breadcrumbs": [
-      "Videos",
-      "Concepts",
-      "Permissions"
-    ]
-  },
-  {
-    "slug": "products/videos/play",
-    "title": "Play a video in your app",
-    "description": "Play Appwrite Videos streams on the web, Apple platforms, Android, Flutter, and React Native by loading the master manifest in a standard player.",
-    "excerpt": "Appwrite Videos streams work with standard HLS and DASH players. You give the player the master manifest URL, and it handles adaptive bitrate and captions on its own. There is no Appwrite SDK to add for playback. Open a video and select **Install**. Pick a platform, player, framework, and format to get install steps and code with your stream URL already filled in. **Copy prompt** copies the same setup as instructions for an AI coding agent. Before you start 1.…",
-    "breadcrumbs": [
-      "Videos",
-      "Guides",
-      "Play a video in your app"
-    ]
-  },
-  {
-    "slug": "products/videos/profiles",
-    "title": "Encoding profiles",
-    "description": "Learn how Appwrite Videos encoding profiles set the resolution, bitrate, and codec of each rendition, and how profile changes apply.",
-    "excerpt": "An **encoding profile** is a reusable encoding target. It sets the resolution, video bitrate, audio bitrate, and codec for every rendition encoded from it. Profiles belong to a project and are shared by all its videos. Together, the profiles you encode a video with form its **bitrate ladder**: a set of renditions from low to high quality that players switch between as bandwidth changes. Resolution and bitrate Two numbers decide how a rendition looks and how much data it needs:…",
-    "breadcrumbs": [
-      "Videos",
-      "Concepts",
-      "Encoding profiles"
-    ]
-  },
-  {
-    "slug": "products/videos/quick-start",
-    "title": "Start with Videos",
-    "description": "Create your first Appwrite video from a Storage file, encode an adaptive ladder, and play the stream in a browser.",
-    "excerpt": "In this quick start you create a video from a file, encode it into a few renditions, and play the stream with a web player. Create encoding profiles New projects have no encoding profiles, so create a small ladder first. You only do this once per project. 1. Sign in to Appwrite Cloud and open a project. 2. Open **Videos** in the sidebar and select **Encoding profiles**. 3. Click **Create profile**, choose the **360p** preset, and click **Create**. 4. Repeat…",
-    "breadcrumbs": [
-      "Videos",
-      "Getting started",
-      "Quick start"
-    ]
-  },
-  {
-    "slug": "products/videos/renditions",
-    "title": "Renditions",
-    "description": "Learn how Appwrite Videos encodes a rendition per profile and output, how rendition status and progress work, and how to retry a failed encode.",
-    "excerpt": "A **rendition** is one encoded copy of a video at the resolution and bitrate of one profile, packaged for one output. The renditions of a video make up the ladder that adaptive players switch between. Why several renditions Viewers watch on very different connections. If you only had a 1080p copy, someone on a slow mobile network would wait for it to buffer. With a ladder of renditions, the player starts on one it can fetch quickly, then moves up…",
-    "breadcrumbs": [
-      "Videos",
-      "Concepts",
-      "Renditions"
-    ]
-  },
-  {
-    "slug": "products/videos/timeline",
-    "title": "Timeline",
-    "description": "Learn how Appwrite Videos generates sprite sheets and a WebVTT index for scrubbing thumbnails, and how to load them in your player.",
-    "excerpt": "The **timeline** gives a video scrubbing thumbnails: viewers see a preview frame while they drag across the progress bar. It is made of **sprite sheets**, images that pack many thumbnails into a grid, plus a **WebVTT index** that maps each time range to a thumbnail inside a sprite. Why sprite sheets A one-hour video could need hundreds of thumbnails. Loading each as its own image would mean hundreds of requests the moment a viewer starts scrubbing. A sprite sheet packs…",
-    "breadcrumbs": [
-      "Videos",
-      "Concepts",
-      "Timeline"
-    ]
-  },
-  {
-    "slug": "products/videos/videos",
-    "title": "Videos",
-    "description": "Learn how an Appwrite video points at a Storage file, which metadata it holds, how its status is derived, and what deleting it removes.",
-    "excerpt": "A **video** is the root resource in Appwrite Videos. It points at a video or audio file in a Storage bucket and holds the media metadata probed from that file. Renditions, captions, and the timeline all belong to a video. Source file You create a video from a and a . The file must be a video or audio file, such as MP4, MOV, WebM, MKV, MP3, or M4A, and you must be able to read it. The source stays…",
-    "breadcrumbs": [
-      "Videos",
-      "Concepts",
-      "Videos"
-    ]
-  },
-  {
     "slug": "quick-starts/android",
     "title": "Start with Android (Kotlin)",
     "description": "Get started with Appwrite on Android and learn how to build secure and scalable apps using our powerful backend.",
@@ -5987,7 +6129,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tooling/ai/ai-in-functions",
     "title": "AI in Functions",
     "description": "Learn how to integrate AI capabilities into your Appwrite Functions using the Vercel AI SDK.",
-    "excerpt": "Appwrite Functions let you run AI workloads on the server side, keeping API keys secure and giving you full control over how your application interacts with AI providers. Using the Vercel AI SDK, you can integrate with providers like OpenAI, Anthropic, Google, and others through a unified interface. This guide shows how to build an Appwrite Function that generates text using the Vercel AI SDK with OpenAI. Appwrite Functions do not currently support streaming responses. Support for streaming is coming…",
+    "excerpt": "Appwrite Functions let you run AI workloads on the server side, keeping API keys secure and giving you full control over how your application interacts with AI providers. Using the Vercel AI SDK, you can integrate with providers like OpenAI, Anthropic, Google, and others through a unified interface. This guide shows how to build an Appwrite Function that generates text using the Vercel AI SDK with OpenAI, and how to stream the text to the client as the model writes…",
     "breadcrumbs": [
       "Tooling",
       "Guides",
@@ -6582,6 +6724,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Tooling",
       "Deployments",
       "Teams"
+    ]
+  },
+  {
+    "slug": "tooling/command-line/terminal",
+    "title": "Terminal",
+    "description": "Browse, query, and manage your Appwrite projects in an interactive, keyboard-driven interface with the terminal command in the Appwrite CLI.",
+    "excerpt": "The command opens your Appwrite projects in an interactive, keyboard-driven interface inside your terminal. Browse databases, functions, sites, storage, users, teams, and messaging, query rows, execute functions, and watch your project's usage, without leaving the command line. It works with Appwrite Cloud and self-hosted instances. is available in Appwrite CLI version 28.13.3 and later. Update your CLI to the latest version before you start. Open the terminal interface Sign in with the CLI, then run the command: uses the credentials…",
+    "breadcrumbs": [
+      "Tooling",
+      "Guides",
+      "Terminal"
     ]
   },
   {
@@ -7567,7 +7720,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/subscriptions-with-stripe/step-1",
     "title": "Add app subscriptions with Stripe",
     "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
-    "excerpt": "As you app grows, you may start offering paid services or features. This is an important part of growing your idea into a business. This tutorial will show you how to accept payments and provide subscribers with premium features using **Stripe**, a popular payment platform. Prerequisites 1. A GitHub account and working knowledge with GitHub 1. A Stripe account. 1. An Appwrite Cloud account. 1. Experience with Appwrite Functions.",
+    "excerpt": "As your app grows, you may start offering paid services or features. This is an important part of growing your idea into a business. This tutorial will show you how to accept payments and provide subscribers with premium features using **Stripe**, a popular payment platform. Prerequisites 1. A Stripe account. 1. An Appwrite Cloud account. 1. Experience with Appwrite Functions.",
     "breadcrumbs": [
       "Stripe",
       "Steps",
@@ -7576,9 +7729,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   },
   {
     "slug": "tutorials/subscriptions-with-stripe/step-2",
-    "title": "Setup Stripe",
+    "title": "Set up Stripe",
     "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
-    "excerpt": "Start by visiting Stripe and creating an account. When successful, you will see Stripe Dashboard. This quick start will use test mode, but the same steps will also work for live mode. API key In the header, you can switch to the **Developers** page, where you can head to the **API Keys** section. On this page, reveal and copy the **Secret key**. Note it down, as you will need it later when setting the environment variable. Webhooks Go to the…",
+    "excerpt": "Start by visiting Stripe and creating an account. When successful, you will see the Stripe Dashboard. This tutorial uses a sandbox, Stripe's isolated test environment, so no real money moves. To switch to one, open the account picker in the Dashboard and select **Sandboxes**. The same steps also work in live mode when you're ready to accept real payments. API key Open the API keys page while viewing your sandbox. Under **Standard keys**, reveal and copy the **Secret key**, which…",
     "breadcrumbs": [
       "Stripe",
       "Steps",
@@ -7589,7 +7742,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/subscriptions-with-stripe/step-3",
     "title": "Create function",
     "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
-    "excerpt": "Head to the Appwrite Console and create a new project if you haven't already. If this is your first time using Appwrite, you will be asked to sign up first. Create a new function Once inside your project overview, switch to the **Functions** page from the left sidebar. Under the **Templates** section, use the search bar and look for . You will find the **Subscriptions with Stripe** template, which you can use by clicking the **Create function** button. Create a…",
+    "excerpt": "Head to the Appwrite Console and create a new project if you haven't already. If this is your first time using Appwrite, you will be asked to sign up first. Find the template Once inside your project, switch to the **Functions** page from the left sidebar and open the **Templates** tab. Use the search bar to look for , and you will find the **Subscriptions with Stripe** template. Click the template card, then click **Create from template**. Configure function Under…",
     "breadcrumbs": [
       "Stripe",
       "Steps",
@@ -7600,7 +7753,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/subscriptions-with-stripe/step-4",
     "title": "Configure web platform",
     "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
-    "excerpt": "Add platform To showcase the functionality, the template ships with a demo frontend that you can use. To allow this demo, you must add Function's domain as a trusted web platform. Head to your project's **Overview** page in Apwrite Console, and scroll down to the **Integrations** section. Click the **Add platform** button and select **Web App** from the dropdown. Set **Name** to and **Hostname** to your Function's domain. You can find your function's domain under the **Domains** tab. Click the…",
+    "excerpt": "Add platform To showcase the functionality, the template ships with a demo frontend that you can use. To allow this demo, you must add the function's domain as a trusted web app. You can find your function's domain under the function's **Domains** tab. Head to your project's **Overview** page in the Appwrite Console, and click **Add app** in the **Apps** section. Select **Web** as the platform and **No framework** as the web framework, then click **Continue**. Set **Name** to and…",
     "breadcrumbs": [
       "Stripe",
       "Steps",
@@ -7611,7 +7764,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/subscriptions-with-stripe/step-5",
     "title": "All set",
     "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
-    "excerpt": "You are now ready to use the Appwrite Function in your front end. You can initialize the payment process by redirecting your user to the endpoint on the Function's domain. Visit demo You can visit our Function's domain in the browser to see the demo application. In the demo app, click the **Register as anonymous** button to create a guest session. This will create a new user in your Appwrite Project. After registering, the demo app will show that you…",
+    "excerpt": "You are now ready to use the Appwrite Function in your front end. You can initialize the payment process by redirecting your user to the endpoint on the Function's domain. Visit demo You can visit your function's domain in the browser to see the demo application. In the demo app, click the **Register as anonymous** button to create a guest session. This will create a new user in your Appwrite Project. After registering, the demo app will show that you…",
     "breadcrumbs": [
       "Stripe",
       "Steps",

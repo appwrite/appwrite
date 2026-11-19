@@ -3,6 +3,8 @@
 namespace Appwrite\Deployment;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\EncryptionKey;
+use Appwrite\Auth\Key;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
@@ -22,6 +24,7 @@ use OpenRuntimes\Orchestrator\Model\Artifact\UnarchiveArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\UploadArtifact;
 use OpenRuntimes\Orchestrator\Model\Callback;
 use OpenRuntimes\Orchestrator\Model\Volume;
+use Psr\Http\Message\StreamInterface;
 use Utopia\Config\Config;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
@@ -344,6 +347,10 @@ readonly class Deployments
         $queued = $this->dbForProject->updateDocuments('deployments', new Document([
             'status' => 'waiting',
             'buildPath' => static::buildPath($this->project->getId(), $deployment->getId()),
+            // These results belong to this build, including when duplicating a deployment.
+            'buildDuration' => null,
+            'buildEndedAt' => null,
+            'adapter' => '',
         ]), [
             Query::equal('$id', [$deployment->getId()]),
             Query::notEqual('status', 'canceled'),
@@ -578,7 +585,7 @@ readonly class Deployments
             $base = "{$endpoint}/v1/{$resource->getCollection()}/{$resource->getId()}/deployments/{$deploymentId}";
             $sourceUrl = "{$base}/download?" . \http_build_query([
                 'type' => Token::TYPE_SOURCE,
-                'project' => $projectId,
+                ...static::query($project),
                 'token' => Token::sign($deploymentId, Token::TYPE_SOURCE, $ttl),
             ]);
             $sourceArtifacts = [
@@ -667,6 +674,19 @@ readonly class Deployments
     }
 
     /**
+     * The query parameters that name the project in a link the build requests, such as the
+     * one it downloads its uploaded source from. A platform whose projects are not all
+     * reached by their own ID overrides this: storage paths and job ids keep the project's
+     * own ID, but a link has to name the project the way a request reaches it.
+     *
+     * @return array<string, string>
+     */
+    protected static function query(Document $project): array
+    {
+        return ['project' => $project->getId()];
+    }
+
+    /**
      * The jobs-service job id for a deployment build (used to submit and cancel).
      */
     public static function id(string $projectId, string $deploymentId): string
@@ -707,6 +727,8 @@ readonly class Deployments
      * Whether $path holds a deployment file that is safe to read: on the local
      * device a regular file inside the device root, reached without symbolic
      * links, since builds can write the builds volume.
+     *
+     * @phpstan-impure
      */
     public static function isArtifact(Device $device, string $path): bool
     {
@@ -722,6 +744,39 @@ readonly class Deployments
             && !\is_link($path)
             && \is_file($path)
             && \realpath($path) === $path;
+    }
+
+    /**
+     * Opens a local deployment file that isArtifact() accepts, or null. The handle is kept only when it is still
+     * the file at $path, so a build swapping in a link after the check cannot redirect reads made through it.
+     */
+    public static function openArtifact(Device $device, string $path): ?StreamInterface
+    {
+        if ($device->getType() !== DeviceType::Local || !static::isArtifact($device, $path)) {
+            return null;
+        }
+
+        $handle = \fopen($path, 'rb');
+        if ($handle === false) {
+            return null;
+        }
+
+        $opened = \fstat($handle);
+        $current = \lstat($path);
+
+        if (
+            $opened === false
+            || $current === false
+            || $opened['ino'] !== $current['ino']
+            || $opened['dev'] !== $current['dev']
+            || !static::isArtifact($device, $path)
+        ) {
+            \fclose($handle);
+
+            return null;
+        }
+
+        return Stream::fromResource($handle);
     }
 
     /**
@@ -741,6 +796,28 @@ readonly class Deployments
     public static function stagedSourcePath(Device $deviceForBuilds, string $deploymentId): string
     {
         return $deviceForBuilds->getPath("{$deploymentId}/source.tar.gz");
+    }
+
+    /**
+     * Removes the deployment's directory on the builds device: the artifact,
+     * the staged source and anything else the build left there. On the local
+     * device the build can write the directory, so it is removed only when it
+     * is not reached through a symbolic link. True once nothing is left there.
+     */
+    public static function deleteBuildDirectory(Device $deviceForBuilds, string $deploymentId): bool
+    {
+        $directory = $deviceForBuilds->getPath($deploymentId);
+        if ($deviceForBuilds->getType() === DeviceType::Local) {
+            if (!\file_exists($directory) && !\is_link($directory)) {
+                return true;
+            }
+
+            if (\realpath($directory) !== $directory) {
+                return false;
+            }
+        }
+
+        return $deviceForBuilds->deletePath($deploymentId);
     }
 
     /**
@@ -971,7 +1048,8 @@ readonly class Deployments
             }
         }
 
-        $apiKey = (new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $timeout, 0))->encode([
+        $apiKey = (new JWT(EncryptionKey::current(), 'HS256', $timeout, 0))->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectId' => $project->getId(),
             'projectSequence' => $project->getSequence(),
             'scopes' => static::scopes($resource),

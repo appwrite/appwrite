@@ -72,7 +72,6 @@ import {
   syncConsoleAccountAfterMutation,
   updateAccountPrefs,
   mapProjectToListItem,
-  useProjectListPlatforms,
   useProjectListRequestsUsage,
   formatProjectNameForDisplay} from '@/lib/react-query/hooks'
 import {
@@ -146,6 +145,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger} from '@/components/ui/tooltip'
+import { ClaimToUnlock } from '@/components/global/shared/ClaimToUnlock'
 import {
   useState,
   useEffect,
@@ -165,7 +165,8 @@ import { ConsoleNoOrganizationsScreen } from '@/components/global/auth/ConsoleNo
 import { toast } from 'sonner'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
-import { InitialsAvatar, PhotoAvatar } from '@/components/global/shared/Avatar'
+import { PhotoAvatar, TeamAvatar } from '@/components/global/shared/Avatar'
+import { OrganizationPhoto } from './_components/OrganizationPhoto'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { isPaymentAuthentication } from '@/lib/billing/addons'
@@ -178,11 +179,13 @@ import {
   getPlanDisplayName,
 } from '@/lib/utils/plan-badge'
 import {
+  isSelfServiceProPlan,
   resolveOrganizationCanonicalPlan,
   resolveOrganizationPlanDisplayLabel,
-  type CanonicalPlanId} from '@/lib/utils/plan-filter'
+} from '@/lib/utils/plan-filter'
 import { BillingTab } from '../billing/BillingTab'
 import { ComplianceTab } from '../settings/ComplianceTab'
+import { EnterpriseCard } from '../settings/EnterpriseCard'
 import { View as DomainsView } from '../domains/View'
 import { useOrganizationDomainsPlanLimit } from '../domains/_components/useOrganizationDomainsPlanLimit'
 import { View as MarketplaceView } from '../marketplace/View'
@@ -233,10 +236,13 @@ import {
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
+import { EnterpriseBadge } from '@/components/global/shared/EnterpriseBadge'
 import { GripVertical } from 'lucide-react'
 import { useServiceListViewMode } from '@/hooks/use-service-list-view-mode'
 import { ServiceListViewToggle } from '@/components/pages/projects/$projectId/shared/ServiceListViewToggle'
 import { useT } from '@/lib/i18n/translate'
+import { useIsZeroAccount } from '@/hooks/use-zero-account'
 
 /** Organization routes the overview navigates between; keeps `navigate` and `Link` typed. */
 type OrgRoutePath =
@@ -251,6 +257,9 @@ type OrgRoutePath =
   | '/organizations/$orgId/settings/partners'
 import { analyticsAttrs, getOrgTabAnalyticsAction } from '@/lib/analytics-actions'
 
+/** Pro orgs with at least this many members see the Enterprise access line. */
+const ENTERPRISE_NOTE_MIN_MEMBERS = 5
+
 function DomainsPlanLimitAlert({ orgId }: { orgId: string | undefined }) {
   const { currentCount, limit, plan, planName } =
     useOrganizationDomainsPlanLimit(orgId)
@@ -263,6 +272,7 @@ function DomainsPlanLimitAlert({ orgId }: { orgId: string | undefined }) {
       limit={limit}
       planName={planName}
       resourceName="domains"
+      resourceNameSingular="domain"
       orgId={orgId}
       fullWidth={false}
     />
@@ -423,6 +433,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   )
   const supportsMultiTenancy = features.multiTenancy
   const { access, isLoading: orgScopesLoading } = useOrganizationScopes(orgId)
+  const zeroAccount = useIsZeroAccount()
+  const canCreateOrganization = supportsMultiTenancy && !zeroAccount
   const { viewMode: projectsViewMode, setViewMode: setProjectsViewMode } =
     useServiceListViewMode('projects')
 
@@ -877,14 +889,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       ...(canShowOrgComplianceNav(access, features)
         ? { 'g c': () => handleOrgNavigate('settings/compliance') }
         : {}),
-      ...(canCreateProject(access, features)
+      ...(canCreateProject(access, features) && !zeroAccount
         ? {
             'c p': () => {
               handleOrgNavigate('projects')
               setCreateProjectDialogOpen(true)
             }}
         : {}),
-      ...(supportsMultiTenancy
+      ...(canCreateOrganization
         ? { 'c t': () => handleOpenCreateOrganization() }
         : {}),
       ...(canInviteOrgMember(access, features)
@@ -1900,11 +1912,39 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     !showProjectsLoading &&
     pinnedProjects.length === 0 &&
     displayedProjectsByTeam.length === 0
+  const isFirstProject = activeProjectsTotalData?.total === 0
+
+  // Signup no longer creates a project, so an organization without one opens
+  // the create dialog, where the region closest to the visitor is preselected.
+  // Once per organization per visit: dismissing it leaves the empty state.
+  const firstProjectPromptedOrgsRef = useRef(new Set<string>())
+  useEffect(() => {
+    if (
+      !orgId ||
+      activeTab !== 'projects' ||
+      !isFirstProject ||
+      !showsFirstRunProjectsEmptyState ||
+      !canManageProjects ||
+      zeroAccount ||
+      firstProjectPromptedOrgsRef.current.has(orgId)
+    ) {
+      return
+    }
+    firstProjectPromptedOrgsRef.current.add(orgId)
+    setCreateProjectDialogOpen(true)
+  }, [
+    activeTab,
+    canManageProjects,
+    isFirstProject,
+    orgId,
+    showsFirstRunProjectsEmptyState,
+    zeroAccount,
+  ])
 
   const showProjectUsageCharts =
     features.usageStats ||
     (isSelfHosted && !isUsageStatsCapabilityResolved())
-  // Budget-locked projects cannot load platform/usage APIs (402). Skip those
+  // Budget-locked projects cannot load usage APIs (402). Skip those
   // fetches and show N/A on the cards instead.
   const skipProjectCardExtras = showProjectsLockedAlert
 
@@ -1929,23 +1969,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     visibleProjectIds,
     features.usageStats && !skipProjectCardExtras,
     organizationPlan,
-  )
-
-  const projectListPlatformIds = useMemo(() => {
-    if (skipProjectCardExtras) return []
-    return [
-      ...new Set([
-        ...pinnedProjects.map((project) => project.$id),
-        ...displayedProjectsByTeam.flatMap(({ projects }) =>
-          projects.map((project) => project.$id),
-        ),
-      ]),
-    ]
-  }, [skipProjectCardExtras, pinnedProjects, displayedProjectsByTeam])
-
-  const fetchedProjectPlatformsById = useProjectListPlatforms(
-    projectListPlatformIds,
-    projectListPlatformIds.length > 0,
   )
 
   const lockedProjectCardIds = useMemo(() => {
@@ -1975,24 +1998,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   }, [
     skipProjectCardExtras,
     fetchedProjectRequestsUsageById,
-    lockedProjectCardIds,
-  ])
-
-  const projectPlatformsById = useMemo(() => {
-    if (!skipProjectCardExtras) return fetchedProjectPlatformsById
-    const map = new Map(fetchedProjectPlatformsById)
-    for (const projectId of lockedProjectCardIds) {
-      map.set(projectId, {
-        isLoading: false,
-        isError: false,
-        platforms: [],
-        unavailable: true,
-      })
-    }
-    return map
-  }, [
-    skipProjectCardExtras,
-    fetchedProjectPlatformsById,
     lockedProjectCardIds,
   ])
 
@@ -2152,7 +2157,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   }
 
   if (showNoOrganizationsEmptyState) {
-    const showCreateOrganization = supportsMultiTenancy
+    const showCreateOrganization = canCreateOrganization
     return (
       <>
         <ConsoleLayout
@@ -2227,7 +2232,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       <ConsoleLayout
         header={{
           onCommandCenterOpen: openOrgCommandCenter,
-          onCreateOrganization: supportsMultiTenancy
+          onCreateOrganization: canCreateOrganization
             ? handleOpenCreateOrganization
             : undefined}}
         headerBanner={
@@ -2256,7 +2261,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         {...analyticsAttrs('organization-switcher')}
                         className="group flex h-8 max-h-8 min-h-8 min-w-0 max-w-full cursor-pointer items-center gap-2 rounded-lg px-2 -ms-2 transition-colors hover:bg-accent"
                       >
-                        <InitialsAvatar name={selectedOrg.name} size="sm" />
+                        <TeamAvatar teamId={selectedOrg.$id} name={selectedOrg.name} size="sm" />
                         <h1 className="m-0 min-w-0 max-w-[10rem] truncate text-[13px] font-semibold leading-tight text-foreground sm:max-w-[14rem] md:max-w-[20rem] lg:max-w-[28rem]">
                           {selectedOrg.name}
                         </h1>
@@ -2301,7 +2306,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               selectedOrg.$id === org.$id && 'bg-accent',
                             )}
                           >
-                            <InitialsAvatar name={org.name} size="md" />
+                            <TeamAvatar teamId={org.$id} name={org.name} size="md" />
                             <div className="flex-1 min-w-0">
                               <p className="truncate text-[13px] font-medium text-foreground">
                                 {org.name}
@@ -2340,7 +2345,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           </button>
                         ))}
                       </div>
-                      {supportsMultiTenancy && (
+                      {canCreateOrganization && (
                         <div className="border-t border-border p-2">
                           <button
                             type="button"
@@ -2360,7 +2365,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   </Popover>
                 ) : (
                   <div className="flex h-8 max-h-8 min-h-8 min-w-0 max-w-full items-center gap-2 px-2 -ms-2">
-                    <InitialsAvatar name={selectedOrg.name} size="sm" />
+                    <TeamAvatar teamId={selectedOrg.$id} name={selectedOrg.name} size="sm" />
                     <h1 className="m-0 min-w-0 max-w-[10rem] truncate text-[13px] font-semibold leading-tight text-foreground sm:max-w-[14rem] md:max-w-[20rem] lg:max-w-[28rem]">
                       {selectedOrg.name}
                     </h1>
@@ -2381,25 +2386,44 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   )}
                 </div>
               ) : null}
-              {supportsMultiTenancy && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
+              {supportsMultiTenancy &&
+                (zeroAccount ? (
+                  <ClaimToUnlock
+                    locked
+                    reason={t('Claim this project to create organizations')}
+                    className="inline-flex"
+                  >
                     <Button
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 shrink-0 p-0 rounded-lg hover:bg-accent"
                       aria-label={t('Create organization')}
                       onClick={handleOpenCreateOrganization}
+                      disabled
                       {...analyticsAttrs('create-organization')}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{t('Create organization')}</p>
-                  </TooltipContent>
-                </Tooltip>
-              )}
+                  </ClaimToUnlock>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 shrink-0 p-0 rounded-lg hover:bg-accent"
+                        aria-label={t('Create organization')}
+                        onClick={handleOpenCreateOrganization}
+                        {...analyticsAttrs('create-organization')}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{t('Create organization')}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
             </div>
 
             {/* Right: same fixed h-8 band as left; hide members + invite on small screens */}
@@ -2814,7 +2838,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             />
                           )}
                           {(() => {
-                            if (!canCreateProject(access, features)) {
+                            if (
+                              !canCreateProject(access, features) ||
+                              zeroAccount
+                            ) {
                               return (
                                 <TooltipProvider delayDuration={0}>
                                   <Tooltip>
@@ -2833,9 +2860,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     </TooltipTrigger>
                                     <TooltipContent>
                                       <p>
-                                        {t(
-                                          "You don't have permission to create projects.",
-                                        )}
+                                        {zeroAccount
+                                          ? t(
+                                              'Claim this project to create more projects',
+                                            )
+                                          : t(
+                                              "You don't have permission to create projects.",
+                                            )}
                                       </p>
                                     </TooltipContent>
                                   </Tooltip>
@@ -2941,9 +2972,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       showUsageCharts={showProjectUsageCharts}
                                       projectRequestsUsageById={
                                         projectRequestsUsageById
-                                      }
-                                      projectPlatformsById={
-                                        projectPlatformsById
                                       }
                                       canPinProjects={canPinProjectsResult}
                                       pinnedIds={pinnedIds}
@@ -3069,9 +3097,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                               project={project}
                                               showSettingsTab={
                                                 showProjectSettingsTab
-                                              }
-                                              platformsByProjectId={
-                                                projectPlatformsById
                                               }
                                             />
                                             {(canReorderPinned ||
@@ -3209,9 +3234,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         projectRequestsUsageById={
                                           projectRequestsUsageById
                                         }
-                                        projectPlatformsById={
-                                          projectPlatformsById
-                                        }
                                         canPinProjects={canPinProjectsResult}
                                         pinnedIds={pinnedIds}
                                         onPinProject={handlePinProject}
@@ -3299,9 +3321,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                 project={project}
                                                 showSettingsTab={
                                                   showProjectSettingsTab
-                                                }
-                                                platformsByProjectId={
-                                                  projectPlatformsById
                                                 }
                                               />
                                               {canPin && canPinProjectsResult && (
@@ -3450,6 +3469,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         : item,
                     )}
                     activeSectionId={settingsSubTab}
+                    navFooter={
+                      isSelfServiceProPlan(organizationPlan) ? (
+                        <EnterpriseCard orgId={orgId} />
+                      ) : undefined
+                    }
                     cardIndex={orgSettingsCardIndex}
                     searchQuery={settingsNavSearch}
                     onSearchQueryChange={setSettingsNavSearch}
@@ -3983,6 +4007,25 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     itemLabel={t('members')}
                                   />
                                 )}
+                                {isSelfServiceProPlan(organizationPlan) &&
+                                  (selectedOrg?.members ?? 0) >=
+                                    ENTERPRISE_NOTE_MIN_MEMBERS && (
+                                    <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5">
+                                      <p className="text-[12px] text-muted-foreground">
+                                        <EnterpriseBadge />
+                                        {t(
+                                          'Need SSO or custom organization roles?',
+                                        )}{' '}
+                                        <ContactSalesLink
+                                          source="members"
+                                          orgId={orgId}
+                                          className="font-medium text-foreground underline hover:no-underline"
+                                        >
+                                          {t('Contact sales')}
+                                        </ContactSalesLink>
+                                      </p>
+                                    </div>
+                                  )}
                               </>
                             ) : (
                               <EmptyState
@@ -4041,6 +4084,22 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         />
                                       </div>
                                     </div>
+                                  )} satisfies SettingsCardItem,
+                              ]
+                            : []),
+                          ...(selectedOrg
+                            ? [
+                                {
+                                  id: 'org-photo',
+                                  search: {
+                                    title: 'Organization photo',
+                                    keywords: ['avatar', 'logo', 'image']},
+                                  node: (
+                                    <OrganizationPhoto
+                                      teamId={selectedOrg.$id}
+                                      name={selectedOrg.name}
+                                      canUpdate={canInviteMembers}
+                                    />
                                   )} satisfies SettingsCardItem,
                               ]
                             : []),
@@ -4126,7 +4185,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
                                         {selectedOrg && (
                                           <div className="flex items-center gap-3 mt-4">
-                                            <InitialsAvatar
+                                            <TeamAvatar
+                                              teamId={selectedOrg.$id}
                                               name={selectedOrg.name}
                                               size="md"
                                             />
@@ -4241,7 +4301,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                               <div className="rounded-lg border border-border bg-muted/50 p-3 mb-4 mt-2">
                                                 {selectedOrg && (
                                                   <div className="flex items-center gap-3">
-                                                    <InitialsAvatar
+                                                    <TeamAvatar
+                                                      teamId={selectedOrg.$id}
                                                       name={selectedOrg.name}
                                                       size="sm"
                                                     />
@@ -4401,7 +4462,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             : undefined
         }
         onOrgCreateProject={
-          canCreateProject(access, features)
+          canCreateProject(access, features) && !zeroAccount
             ? () => {
                 handleOrgNavigate('projects')
                 setCreateProjectDialogOpen(true)
@@ -4857,6 +4918,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         teamId={orgTeamId}
         organizationPlan={organizationPlan}
         currentProjectsCount={totalProjectsCount}
+        firstProject={isFirstProject}
       />
     </>
   )

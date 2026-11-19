@@ -1,5 +1,5 @@
 /**
- * Central catalog of console preference keys (account + team).
+ * Central catalog of console preference keys (account, team and project).
  *
  * All managed prefs should be registered here so the debug menu can show a
  * structured known/unknown view. Key constants stay in their domain modules;
@@ -15,6 +15,7 @@ import { USER_PREFS_KEY_DIAGRAM_GENERATIONS } from '@/lib/diagram-generator/gene
 import { USER_PREFS_KEY_API_REFERENCE_UI } from '@/lib/docs/references/api-reference-ui-prefs'
 import { INIT_PRESENCE_PREFS_KEY_PREFIX } from '@/lib/init/init-presence-prefs'
 import { INIT_TICKET_PREFS_KEY_PREFIX } from '@/lib/init/ticket-prefs'
+import { PROJECT_PREFS_KEY_ENVIRONMENTS_ORDER } from '@/lib/project-prefs-keys'
 import { USER_PREFS_KEY_REALTIME_DEBUGGER_PREFIX } from '@/lib/realtime/debugger-prefs'
 import { TEAM_PREFS_KEY_PINNED_PROJECT_IDS } from '@/lib/team-prefs-keys'
 import {
@@ -44,14 +45,15 @@ import {
   USER_PREFS_KEY_DIAGRAM_GENERATOR_PROPERTIES_SPLIT_LAYOUT,
   USER_PREFS_KEY_FEATURE_NOTIFICATIONS,
   USER_PREFS_KEY_DISMISSED_BANNERS,
+  USER_PREFS_KEY_EXPERIMENTS_SEEN_AT,
   USER_PREFS_KEY_AGENTS_DISMISSED_PROJECT_IDS,
-  USER_PREFS_KEY_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS,
   USER_PREFS_KEY_FIREWALL_TRAFFIC_LIVE,
   USER_PREFS_KEY_FUNCTIONS_LIST_VIEW_MODE,
   USER_PREFS_KEY_GENERATOR_PANEL_VISIBILITY,
   USER_PREFS_KEY_IMAGE_TRANSFORM_PRESETS,
   USER_PREFS_KEY_ORG_PROJECTS_LIST_VIEW_MODE,
   USER_PREFS_KEY_ORGANIZATION,
+  USER_PREFS_KEY_PLAYGROUND_MODE,
   USER_PREFS_KEY_POSTGRES_QUERY_HISTORY_PREFIX,
   USER_PREFS_KEY_POSTGRES_SAVED_QUERIES_PREFIX,
   USER_PREFS_KEY_POSTGRES_SAVED_QUERIES_SCOPE_PREFIX,
@@ -83,10 +85,11 @@ import {
   USER_PREFS_KEY_VIDEOS_LIST_VIEW_MODE,
   USER_PREFS_KEY_VIDEOS_SIDEBAR_WIDTH,
   USER_PREFS_KEY_VIDEOS_PLAYER,
+  USER_PREFS_KEY_VIDEOS_CREATE_SOURCE,
   USER_PREFS_KEY_USAGE_CHART_INTERVAL,
 } from '@/lib/user-prefs-keys'
 
-export type PrefsCatalogScope = 'account' | 'team' | 'both'
+export type PrefsCatalogScope = 'account' | 'team' | 'both' | 'project'
 
 export type PrefsCatalogEntry = {
   /** Stable id for React keys / docs. */
@@ -136,6 +139,13 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     category: 'Account',
   },
   {
+    id: 'experimentsSeenAt',
+    scope: 'account',
+    key: USER_PREFS_KEY_EXPERIMENTS_SEEN_AT,
+    description: 'Last time the previews popover was opened (ISO timestamp).',
+    category: 'Account',
+  },
+  {
     id: 'agentsDismissedProjectIds',
     scope: 'account',
     key: USER_PREFS_KEY_AGENTS_DISMISSED_PROJECT_IDS,
@@ -146,10 +156,11 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
   {
     id: 'premiumGeoOverviewDismissedProjectIds',
     scope: 'account',
-    key: USER_PREFS_KEY_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS,
+    key: 'console.premiumGeoOverview.dismissedProjectIds',
     description:
-      'Project IDs where the Premium Geo DB overview promo was dismissed (JSON string array).',
+      'Project IDs where the removed Premium Geo DB overview promo was dismissed (JSON string array).',
     category: 'Account',
+    legacy: true,
   },
   // Layout / chrome
   {
@@ -334,6 +345,14 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     key: USER_PREFS_KEY_VIDEOS_PLAYER,
     description:
       'Video player settings (JSON): volume, mute, playback format, quality height, subtitle language.',
+    category: 'Videos',
+  },
+  {
+    id: 'videosCreateSource',
+    scope: 'account',
+    key: USER_PREFS_KEY_VIDEOS_CREATE_SOURCE,
+    description:
+      'Last source tab in the create video wizard: upload, storage, or demo. Not per project.',
     category: 'Videos',
   },
   {
@@ -578,6 +597,13 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     category: 'Generators',
   },
   {
+    id: 'playgroundMode',
+    scope: 'account',
+    key: USER_PREFS_KEY_PLAYGROUND_MODE,
+    description: 'Project Playground mode (rest or realtime).',
+    category: 'API Explorer',
+  },
+  {
     id: 'apiExplorerColumnsLayout',
     scope: 'account',
     key: USER_PREFS_KEY_API_EXPLORER_COLUMNS_LAYOUT,
@@ -663,6 +689,14 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     key: TEAM_PREFS_KEY_PINNED_PROJECT_IDS,
     description: 'Pinned project IDs for the organization (JSON string[]).',
     category: 'Organization',
+  },
+  {
+    id: 'environmentsOrder',
+    scope: 'project',
+    key: PROJECT_PREFS_KEY_ENVIRONMENTS_ORDER,
+    description:
+      'Order of the environments in the project switcher, saved on the production project (JSON string[]).',
+    category: 'Project',
   },
 ] as const
 

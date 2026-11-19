@@ -124,7 +124,7 @@ Under **Git settings** you can configure the Git repository and branch that your
 
 Build commands and entrypoint are executed relative to the configured **Root directory** of your Git respository.
 
-By default, Appwrite will create comments in PRs to your connected branch. You can use **Silent mode** to suppress these comments.
+By default, every push to the connected repository creates a deployment, Appwrite comments on pull requests with the build status, and each commit shows whether its build passed. Use [Git automation](/docs/products/functions/deploy-from-git#git-automation) to turn any of these off.
 
 ## Execution logs {% #execution-logs %}
 You can enable and disable execution logs for your functions by navigating to your function > **Settings** > **Execution logs**

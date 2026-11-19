@@ -52,7 +52,7 @@ The SDK requires Xcode 16.3 or later and supports iOS 15, macOS 12, tvOS 15 and 
 
 In the **Package URL** search box, enter https://github.com/appwrite/sdk-for-apple. 
 
-Once the SDK is found, use `21.0.0` as version, select **Up to Next Major Version** as your **Dependency Rule** and click **Add Package**.
+Once the SDK is found, use `21.1.1` as version, select **Up to Next Major Version** as your **Dependency Rule** and click **Add Package**.
 
 When dependency resolution is complete, click **Add Package** again to add the SDK package to your target.
 

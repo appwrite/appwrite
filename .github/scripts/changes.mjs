@@ -94,6 +94,8 @@ const from = everything ? null : base();
 let server = everything || event === "push";
 let frontend = everything;
 let all = everything || event === "push";
+// The utopia PHP extension (crates/) and what it is tested against.
+let extension = everything || event === "push";
 let databasePackagesChanged = false;
 const selected = new Set();
 
@@ -107,8 +109,11 @@ if (!everything) {
     databaseLibraries.some((name) => file.startsWith(`packages/${name}/`)),
   );
   for (const file of files) {
+    if (claims(file, config.paths.extension)) {
+      extension = true;
+    }
     if (claims(file, config.paths.all)) {
-      server = frontend = all = true;
+      server = frontend = all = extension = true;
     } else if (claims(file, config.paths.console)) {
       frontend = true;
     } else if (claims(file, config.paths.checks)) {
@@ -151,6 +156,7 @@ const full =
 const outputs = {
   server,
   console: frontend,
+  extension,
   services: JSON.stringify(services),
   groups: JSON.stringify(groups),
   databases: JSON.stringify(

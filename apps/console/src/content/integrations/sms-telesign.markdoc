@@ -1,0 +1,65 @@
+---
+layout: integration
+title: SMS with Telesign
+description: Send customized SMS messages to your users through Telesign
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/sms-telesign/cover.avif
+category: messaging
+product:
+    vendor: Telesign
+    description: "Telesign is a digital identity and communications platform that provides SMS, voice, and phone verification APIs."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+[Telesign](https://www.telesign.com) is a digital identity and communications platform. Its APIs send SMS and voice messages and verify phone numbers, and its portal manages your customer ID, API keys, and sender numbers.
+
+# How does the integration work?
+
+You can use the Telesign provider in Appwrite Messaging to send customized SMS messages to your users, such as reminders, promotions, announcements, and custom authentication flows. Messages can be sent immediately or scheduled, to [topics](/docs/products/messaging/topics), users, or individual [targets](/docs/products/messaging/targets).
+
+Appwrite authenticates with Telesign using your customer ID and API key, and sends your messages through Telesign's API.
+
+# How to implement
+
+To implement the Telesign provider in Appwrite Messaging, there are several steps you must complete:
+
+## Step 1: Set up Telesign
+
+First, sign up for a Telesign account and open the [Telesign portal](https://portal.telesign.com). Save the following information for later use:
+
+| Field name | |
+| --- | --- |
+| Customer ID | Head to **Telesign portal** > **Profile** > **Customer ID**. |
+| API key | Head to **Telesign portal** > **Profile** > **API Keys**. |
+| Sender number | The phone number your SMS messages are sent from. You may need to purchase a number from Telesign first. |
+
+Telesign's guide to [finding your customer ID and API key](https://support.telesign.com/s/article/Find-Customer-ID-and-API-Key) walks through the portal.
+
+## Step 2: Add the Telesign provider to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, head to **Messaging** > **Providers**, click **Add provider**, and choose **SMS**. Give your provider a name, choose **Telesign**, and click **Save and continue**.
+
+In the **Configure** step, add the **Customer ID** and **API key** you saved from the Telesign portal. Enter the **Sender number** with a leading `+` and the country code, such as `+14155550123`. Click **Save and continue** to enable the provider.
+
+## Step 3: Test the Telesign provider
+
+Before you proceed, you must already have at least one [topic](/docs/products/messaging/topics) or [target](/docs/products/messaging/targets) set up.
+
+Go to **Messaging** > **Messages**, click **Create message**, and choose **SMS**. Write a test message, select one of your test targets, set the schedule to **Now**, and click **Send**. Check that the SMS arrives on your phone. If it doesn't, check the logs in the Appwrite Console and in the Telesign portal.
+
+To send SMS messages from your backend instead, follow the [Send SMS messages](/docs/products/messaging/send-sms-messages) guide with an [Appwrite Server SDK](/docs/sdks#server).
+
+# Read more about Telesign and Appwrite Messaging
+
+If you would like to learn more about Telesign and Appwrite Messaging, we have some resources that you should visit:
+
+- [Get started with the Telesign SMS API](https://developer.telesign.com/enterprise/docs/sms-api-get-started)
+- [Set up the Telesign provider in Appwrite Messaging](/docs/products/messaging/telesign)
+- [Send SMS messages through Appwrite Messaging](/docs/products/messaging/send-sms-messages)
+- [Phone auth with Telesign on self-hosted Appwrite](/integrations/phone-auth-telesign)
+- [Appwrite Messaging API reference](/docs/references/cloud/server-nodejs/messaging)

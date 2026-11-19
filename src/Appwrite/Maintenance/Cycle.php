@@ -11,9 +11,9 @@ use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 /**
- * How a period is split into slices: every inactive project is maintained once per period, one slice per interval.
+ * How a period is split into slices: every project of a cohort is maintained once per period, one slice per interval.
  *
- * Periods under two intervals give a single slot, so each run reaches every inactive project.
+ * Periods under two intervals give a single slot, so each run reaches every project of the cohort.
  */
 final readonly class Cycle
 {

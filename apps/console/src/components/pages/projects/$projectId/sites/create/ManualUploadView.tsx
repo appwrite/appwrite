@@ -37,6 +37,8 @@ import { BuildSettings } from './BuildSettings'
 import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { AnalyticsToggle } from './AnalyticsToggle'
 import { validateVariables } from '@/lib/variables'
 import {
   DEPLOYMENT_ARCHIVE_ACCEPT,
@@ -45,6 +47,8 @@ import {
 
 export function ManualUploadView() {
   const t = useT()
+  const { features } = useConsoleProfile()
+  const [analytics, setAnalytics] = useState(true)
   const { projectId } = useParams({ strict: false })
   const { data: project } = useQuery(projectQueryOptions(projectId as string))
   const { computeSizeLimit } = useConsoleVariables(project?.region)
@@ -92,6 +96,8 @@ export function ManualUploadView() {
   const [fallbackFile, setFallbackFile] = useState(formData.fallbackFile || '')
   const [variables, setVariables] = useState(formData.variables || [])
   const [domain, setDomain] = useState(formData.domain || '')
+  // Domain follows the site name until the user edits it
+  const domainEditedRef = useRef(!!formData.domain)
   const [domainValid, setDomainValid] = useState(formData.domainValid || false)
   const [uploadFile, setUploadFile] = useState<File | null>(
     formData.uploadFile || null,
@@ -113,7 +119,7 @@ export function ManualUploadView() {
 
   // Generate domain when site name changes
   useEffect(() => {
-    if (siteName && !domain) {
+    if (siteName && !domainEditedRef.current) {
       setDomain(generateDomain(siteName))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -207,6 +213,7 @@ export function ManualUploadView() {
         adapter: defaults.adapter || undefined,
         fallbackFile:
           defaults.adapter === 'static' ? fallbackFile || undefined : undefined,
+        analytics: features.analytics && analytics,
       })
       createdSiteId = site.$id
 
@@ -477,6 +484,13 @@ export function ManualUploadView() {
             />
           </div>
 
+          {features.analytics && (
+            <AnalyticsToggle
+              checked={analytics}
+              onCheckedChange={setAnalytics}
+            />
+          )}
+
           {/* Framework selector */}
           <div className="space-y-2">
             <Label htmlFor="framework" className="text-[13px]">
@@ -547,6 +561,9 @@ export function ManualUploadView() {
             value={domain}
             onChange={setDomain}
             onValidChange={setDomainValid}
+            onEdit={() => {
+              domainEditedRef.current = true
+            }}
           />
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/20">

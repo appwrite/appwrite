@@ -1158,6 +1158,62 @@ trait MessagingBase
         $this->assertCount(0, $message['body']['deliveryErrors']);
     }
 
+    public function testSendPushViaAppwriteProviderToNumericUserId(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/appwrite', $headers, [
+            'providerId' => Id::unique(),
+            'name' => 'Appwrite-numeric-user',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        // PHP turns an all-digit string array key into an int.
+        $userId = (string) \random_int(100000000000000000, 999999999999999999);
+        $user = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => $userId,
+            'email' => 'appwrite-push-numeric-' . Id::unique() . '@mail.org',
+            'password' => 'password',
+            'name' => 'Numeric Push User',
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+        $this->assertSame($userId, $user['body']['$id']);
+
+        $target = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/targets', $headers, [
+            'targetId' => Id::unique(),
+            'providerType' => 'push',
+            'providerId' => $provider['body']['$id'],
+            'identifier' => Id::unique(),
+        ]);
+        $this->assertEquals(201, $target['headers']['status-code']);
+
+        $push = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', $headers, [
+            'messageId' => Id::unique(),
+            'users' => [$userId],
+            'title' => 'Order shipped',
+            'body' => 'Your order is on the way',
+        ]);
+        $this->assertEquals(201, $push['headers']['status-code']);
+        $pushMessageId = $push['body']['$id'];
+
+        // Test for SUCCESS
+        $this->assertEventually(function () use ($pushMessageId, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $pushMessageId, $headers);
+            $this->assertContains($response['body']['status'], [MessageStatus::SENT, MessageStatus::FAILED]);
+        }, 30000, 500);
+
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $pushMessageId, $headers);
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SENT, $message['body']['status']);
+        $this->assertEquals(1, $message['body']['deliveredTotal']);
+        $this->assertCount(0, $message['body']['deliveryErrors']);
+    }
+
     public function testUpdateProviders(): void
     {
         $providers = $this->setupCreatedProviders();
@@ -2156,6 +2212,55 @@ trait MessagingBase
 
         $this->assertEquals(200, $topic['headers']['status-code']);
         $this->assertEquals('android-app', $topic['body']['name']);
+
+        // A subscriber whose target was deleted: the deletes worker removes it on its own, so
+        // reads right after the delete may find it with no target or already gone, never fail.
+        $orphanTarget = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/targets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'targetId' => Id::unique(),
+            'providerType' => 'email',
+            'providerId' => $provider['body']['$id'],
+            'identifier' => 'random-email-orphan@mail.org',
+        ]);
+        $this->assertEquals(201, $orphanTarget['headers']['status-code']);
+
+        $orphan = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topics['public']['$id'] . '/subscribers', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'subscriberId' => Id::unique(),
+            'targetId' => $orphanTarget['body']['$id'],
+        ]);
+        $this->assertEquals(201, $orphan['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId . '/targets/' . $orphanTarget['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topics['public']['$id'] . '/subscribers/' . $orphan['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertContains($response['headers']['status-code'], [200, 404]);
+        if ($response['headers']['status-code'] === 200) {
+            $this->assertSame('', $response['body']['userName']);
+        }
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topics['public']['$id'] . '/subscribers', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => [Query::equal('targetId', [$orphanTarget['body']['$id']])->toString()],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
     }
 
     public function testDeleteTopic(): void
@@ -2577,6 +2682,40 @@ trait MessagingBase
 
         $fileId = $file['body']['$id'];
 
+        // The image mints a signed download URL for a project file, so a messages.write key that
+        // cannot read files must be refused rather than have its scope widened to Storage reads.
+        $withoutFilesRead = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['messages.write']),
+        ], [
+            'messageId' => Id::unique(),
+            'targets' => [$targetId],
+            'title' => 'New blog post',
+            'body' => 'Check out the new blog post at http://localhost',
+            'image' => "{$bucketId}:{$fileId}",
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(401, $withoutFilesRead['headers']['status-code']);
+        $this->assertEquals('general_unauthorized_scope', $withoutFilesRead['body']['type']);
+
+        // Holding files.read opens the gate.
+        $withFilesRead = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['messages.write', 'files.read']),
+        ], [
+            'messageId' => Id::unique(),
+            'targets' => [$targetId],
+            'title' => 'New blog post',
+            'body' => 'Check out the new blog post at http://localhost',
+            'image' => "{$bucketId}:{$fileId}",
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(201, $withFilesRead['headers']['status-code']);
+
         // Create Push
         $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', [
             'content-type' => 'application/json',
@@ -2598,6 +2737,40 @@ trait MessagingBase
         $this->assertEquals(MessageStatus::DRAFT, $message['status']);
 
         $imageUrl = $message['data']['image']['url'];
+
+        // The URL redeems without credentials, so a key without files.read must not be handed it by any
+        // route that returns the message. The identifiers stay, and the stored message keeps its URL.
+        $headers = ['content-type' => 'application/json', 'x-appwrite-project' => $this->getProject()['$id']];
+        $readKey = ['x-appwrite-key' => $this->getNewKey(['messages.read'])];
+        $writeKey = ['x-appwrite-key' => $this->getNewKey(['messages.write'])];
+        $listQueries = ['queries' => [Query::equal('$id', [$message['$id']])->toString()]];
+
+        $read = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['$id'], $headers + $readKey);
+        $this->assertSame(200, $read['headers']['status-code']);
+        $this->assertSame($bucketId, $read['body']['data']['image']['bucketId']);
+        $this->assertSame($fileId, $read['body']['data']['image']['fileId']);
+        $this->assertArrayNotHasKey('url', $read['body']['data']['image']);
+
+        $list = $this->client->call(Client::METHOD_GET, '/messaging/messages', $headers + $readKey, $listQueries);
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertSame($fileId, $list['body']['messages'][0]['data']['image']['fileId']);
+        $this->assertArrayNotHasKey('url', $list['body']['messages'][0]['data']['image']);
+
+        // The email and SMS update routes must not reach a push message at all: they would carry its
+        // stored image forward without the files.read its own route demands.
+        foreach (['email', 'sms'] as $type) {
+            $patched = $this->client->call(Client::METHOD_PATCH, "/messaging/messages/{$type}/" . $message['$id'], $headers + $writeKey, ['draft' => true]);
+            $this->assertSame(404, $patched['headers']['status-code']);
+            $this->assertSame('message_not_found', $patched['body']['type']);
+        }
+
+        $fileReader = ['x-appwrite-key' => $this->getNewKey(['messages.read', 'files.read'])];
+
+        $read = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['$id'], $headers + $fileReader);
+        $this->assertSame($imageUrl, $read['body']['data']['image']['url']);
+
+        $list = $this->client->call(Client::METHOD_GET, '/messaging/messages', $headers + $fileReader, $listQueries);
+        $this->assertSame($imageUrl, $list['body']['messages'][0]['data']['image']['url']);
 
         $client = new Client();
         $client->setEndpoint('');
@@ -2632,6 +2805,44 @@ trait MessagingBase
         $this->assertEqualsWithDelta(\time() + APP_PUSH_IMAGE_TOKEN_DURATION, $claims['exp'], 60);
 
         $scheduledAt = \time() + 60 * 60 * 24 * 2;
+
+        // The update path mints the same signed URL, so it enforces files.read too.
+        $updateWithoutFilesRead = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $message['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['messages.write']),
+        ], [
+            'image' => "{$bucketId}:{$fileId}",
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(401, $updateWithoutFilesRead['headers']['status-code']);
+        $this->assertEquals('general_unauthorized_scope', $updateWithoutFilesRead['body']['type']);
+
+        // The stored image is re-minted on any update, so a PATCH that omits image but changes
+        // another field on a message that already has one is refused the same way, and the refusal
+        // happens before the schedule is touched so nothing is left half-applied.
+        $updateStoredImage = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $message['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['messages.write']),
+        ], [
+            'body' => 'Updated body without resending the image',
+            'scheduledAt' => \date(\DateTime::ATOM, \time() + 60 * 60 * 24 * 2),
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(401, $updateStoredImage['headers']['status-code']);
+        $this->assertEquals('general_unauthorized_scope', $updateStoredImage['body']['type']);
+
+        // The rejected PATCH must not have scheduled the message.
+        $afterReject = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(200, $afterReject['headers']['status-code']);
+        $this->assertNull($afterReject['body']['scheduledAt']);
 
         $updated = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $message['$id'], [
             'content-type' => 'application/json',
@@ -2914,6 +3125,84 @@ trait MessagingBase
         }, 10000, 500);
     }
 
+    public function testScheduledToDraftSms(): void
+    {
+        // Create user
+        $response = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => Id::unique(),
+            'phone' => '+1' . \random_int(2000000000, 9999999999),
+            'name' => 'Messaging User 1',
+        ]);
+
+        $targetId = $response['body']['targets'][0]['$id'];
+
+        // Create scheduled message far enough in the future that the scheduler
+        // will not process it before we convert it to draft, and near enough to wait past it
+        $scheduledAt = DateTime::addSeconds(new \DateTime(), 20);
+
+        $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/sms', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => Id::unique(),
+            'targets' => [$targetId],
+            'content' => 'Check out the new blog post at http://localhost',
+            'scheduledAt' => $scheduledAt,
+        ]);
+
+        $this->assertEquals(201, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
+        $this->assertSame(
+            (new \DateTime($scheduledAt))->getTimestamp(),
+            (new \DateTime($message['body']['scheduledAt']))->getTimestamp()
+        );
+
+        $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/sms/' . $message['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::DRAFT, $message['body']['status']);
+
+        // Verify the message remains in DRAFT status after its original scheduled time
+        $draftMessageId = $message['body']['$id'];
+        $this->assertEventually(function () use ($draftMessageId, $scheduledAt) {
+            $this->assertGreaterThan((new \DateTime($scheduledAt))->getTimestamp() + 10, \time());
+
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $draftMessageId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals(MessageStatus::DRAFT, $response['body']['status']);
+        }, 60000, 1000);
+
+        // A draft past its original time can still be scheduled again
+        $rescheduledAt = DateTime::addSeconds(new \DateTime(), 600);
+
+        $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/sms/' . $draftMessageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'draft' => false,
+            'scheduledAt' => $rescheduledAt,
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
+    }
+
     public function testDraftToScheduledMessage(): void
     {
         // Create user
@@ -2963,6 +3252,218 @@ trait MessagingBase
         $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
         $this->assertSame(
             (new \DateTime($scheduledAt))->getTimestamp(),
+            (new \DateTime($message['body']['scheduledAt']))->getTimestamp()
+        );
+    }
+
+    public function testDraftWithScheduledAtToScheduledEmail(): void
+    {
+        // Create user
+        $response = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => Id::unique(),
+            'email' => uniqid() . "@example.com",
+            'password' => 'password',
+            'name' => 'Messaging User 1',
+        ]);
+
+        $targetId = $response['body']['targets'][0]['$id'];
+
+        // Create draft message with a scheduledAt, which stores scheduledAt without a schedule
+        $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => Id::unique(),
+            'targets' => [$targetId],
+            'subject' => 'New blog post',
+            'content' => 'Check out the new blog post at http://localhost',
+            'draft' => true,
+            'scheduledAt' => DateTime::addSeconds(new \DateTime(), 300),
+        ]);
+
+        $this->assertEquals(201, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::DRAFT, $message['body']['status']);
+
+        $messageId = $message['body']['$id'];
+        $scheduledAt = DateTime::addSeconds(new \DateTime(), 600);
+
+        // Convert draft to scheduled message, creating the missing schedule
+        $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'draft' => false,
+            'scheduledAt' => $scheduledAt,
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
+        $this->assertSame(
+            (new \DateTime($scheduledAt))->getTimestamp(),
+            (new \DateTime($message['body']['scheduledAt']))->getTimestamp()
+        );
+
+        // Reschedule to verify the schedule was created and linked to the message
+        $rescheduledAt = DateTime::addSeconds(new \DateTime(), 900);
+
+        $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'scheduledAt' => $rescheduledAt,
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
+        $this->assertSame(
+            (new \DateTime($rescheduledAt))->getTimestamp(),
+            (new \DateTime($message['body']['scheduledAt']))->getTimestamp()
+        );
+    }
+
+    public function testDraftWithScheduledAtToScheduledSms(): void
+    {
+        // Create user
+        $response = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => Id::unique(),
+            'phone' => '+1' . \random_int(2000000000, 9999999999),
+            'name' => 'Messaging User 1',
+        ]);
+
+        $targetId = $response['body']['targets'][0]['$id'];
+
+        // Create draft message with a scheduledAt, which stores scheduledAt without a schedule
+        $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/sms', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => Id::unique(),
+            'targets' => [$targetId],
+            'content' => 'Check out the new blog post at http://localhost',
+            'draft' => true,
+            'scheduledAt' => DateTime::addSeconds(new \DateTime(), 300),
+        ]);
+
+        $this->assertEquals(201, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::DRAFT, $message['body']['status']);
+
+        $messageId = $message['body']['$id'];
+        $scheduledAt = DateTime::addSeconds(new \DateTime(), 600);
+
+        // Convert draft to scheduled message, creating the missing schedule
+        $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/sms/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'draft' => false,
+            'scheduledAt' => $scheduledAt,
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
+        $this->assertSame(
+            (new \DateTime($scheduledAt))->getTimestamp(),
+            (new \DateTime($message['body']['scheduledAt']))->getTimestamp()
+        );
+
+        // Reschedule to verify the schedule was created and linked to the message
+        $rescheduledAt = DateTime::addSeconds(new \DateTime(), 900);
+
+        $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/sms/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'scheduledAt' => $rescheduledAt,
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
+        $this->assertSame(
+            (new \DateTime($rescheduledAt))->getTimestamp(),
+            (new \DateTime($message['body']['scheduledAt']))->getTimestamp()
+        );
+    }
+
+    public function testDraftWithScheduledAtToScheduledPush(): void
+    {
+        // Create topic
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'topicId' => Id::unique(),
+            'name' => 'topic-scheduled-draft-push',
+        ]);
+
+        $this->assertEquals(201, $topic['headers']['status-code']);
+
+        // Create draft message with a scheduledAt, which stores scheduledAt without a schedule
+        $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => Id::unique(),
+            'topics' => [$topic['body']['$id']],
+            'title' => 'Test-Notification',
+            'body' => 'Test-Notification-Body',
+            'draft' => true,
+            'scheduledAt' => DateTime::addSeconds(new \DateTime(), 300),
+        ]);
+
+        $this->assertEquals(201, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::DRAFT, $message['body']['status']);
+
+        $messageId = $message['body']['$id'];
+        $scheduledAt = DateTime::addSeconds(new \DateTime(), 600);
+
+        // Convert draft to scheduled message, creating the missing schedule
+        $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'draft' => false,
+            'scheduledAt' => $scheduledAt,
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
+        $this->assertSame(
+            (new \DateTime($scheduledAt))->getTimestamp(),
+            (new \DateTime($message['body']['scheduledAt']))->getTimestamp()
+        );
+
+        // Reschedule to verify the schedule was created and linked to the message
+        $rescheduledAt = DateTime::addSeconds(new \DateTime(), 900);
+
+        $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'scheduledAt' => $rescheduledAt,
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
+        $this->assertSame(
+            (new \DateTime($rescheduledAt))->getTimestamp(),
             (new \DateTime($message['body']['scheduledAt']))->getTimestamp()
         );
     }

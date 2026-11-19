@@ -12,6 +12,7 @@ export type ProductId =
   | 'storage'
   | 'functions'
   | 'messaging'
+  | 'videos'
   | 'realtime'
   | 'sites'
   | 'analytics'
@@ -40,7 +41,8 @@ export type ProductRegistryItem = {
   path: `/products/${ProductId}`
   icon: ProductIcon
   tagline: string
-  docsPath: string
+  /** Omitted until the product has published docs. */
+  docsPath?: string
 }
 
 export type ProductPageContent = {

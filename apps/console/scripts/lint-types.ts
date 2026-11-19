@@ -32,8 +32,8 @@ type Diagnostic = {
 
 // tsc prints union members in the order their types were first created, so a
 // new literal anywhere can reorder a long union and change every message that
-// quotes it. Sort the top-level members of each quoted type so a message only
-// depends on what the union holds.
+// quotes it. Sort the members of every union in a quoted type, at any depth, so
+// a message only depends on what the union holds.
 export function canonical(message: string): string {
   const quotes: number[] = []
   for (let i = 0; i < message.length; i++) {
@@ -66,37 +66,93 @@ function isWord(char: string | undefined): boolean {
 }
 
 function sortUnion(type: string): string {
-  const members: string[] = []
-  let depth = 0
-  let quoted = false
-  let start = 0
-  for (let i = 0; i < type.length; i++) {
-    const char = type[i]
-    if (quoted) {
-      if (char === '\\') i++
-      else if (char === '"') quoted = false
-    } else if (char === '"') {
-      quoted = true
-    } else if ('<({['.includes(char)) {
-      depth++
-    } else if ('>)}]'.includes(char) && type[i - 1] !== '=') {
-      // `=>` closes nothing.
-      depth--
-    } else if (depth === 0 && type.startsWith(' | ', i)) {
-      members.push(type.slice(start, i))
-      start = i + 3
-      i += 2
-    }
+  // tsc parenthesizes a function inside a union, so a bare ` | ` after `=>` is the return type's.
+  const { parts: signature } = split(type, [' => '])
+  if (signature.length > 1) {
+    return signature.map(sortUnion).join(' => ')
   }
-  if (members.length === 0) {
-    return type
+  const { parts: members } = split(type, [' | '])
+  if (members.length === 1) {
+    return sortBrackets(type)
   }
-  members.push(type.slice(start))
-  const others = members.filter((member) => !isPath(member))
+  const others = members
+    .filter((member) => !isPath(member))
+    .map(sortBrackets)
   if (others.length < members.length) {
     others.push(PATHS)
   }
   return others.sort().join(' | ')
+}
+
+// Sort the unions inside brackets: object members, parameters, type arguments.
+function sortBrackets(type: string): string {
+  let result = ''
+  let last = 0
+  let depth = 0
+  scan(type, (i) => {
+    if (isOpening(type, i) && depth++ === 0) {
+      result += type.slice(last, i + 1)
+      last = i + 1
+    } else if (isClosing(type, i) && --depth === 0) {
+      const { parts, separators } = split(type.slice(last, i), LIST_SEPARATORS)
+      result += parts
+        .map((part, index) => sortUnion(part) + (separators[index] ?? ''))
+        .join('')
+      last = i
+    }
+  })
+  return result + type.slice(last)
+}
+
+const LIST_SEPARATORS = ['; ', ', ', ': ']
+
+// Split on separators outside any bracket or string.
+function split(
+  type: string,
+  candidates: string[],
+): { parts: string[]; separators: string[] } {
+  const parts: string[] = []
+  const separators: string[] = []
+  let depth = 0
+  let start = 0
+  scan(type, (i) => {
+    if (isOpening(type, i)) {
+      depth++
+    } else if (isClosing(type, i)) {
+      depth--
+    } else if (depth === 0 && i >= start) {
+      const separator = candidates.find((value) => type.startsWith(value, i))
+      if (separator) {
+        parts.push(type.slice(start, i))
+        separators.push(separator)
+        start = i + separator.length
+      }
+    }
+  })
+  parts.push(type.slice(start))
+  return { parts, separators }
+}
+
+const isOpening = (type: string, i: number): boolean =>
+  '<({['.includes(type[i])
+
+// `=>` closes nothing.
+const isClosing = (type: string, i: number): boolean =>
+  '>)}]'.includes(type[i]) && type[i - 1] !== '='
+
+// Visit each character outside a string literal.
+function scan(type: string, visit: (index: number) => void): void {
+  let quoted = false
+  for (let i = 0; i < type.length; i++) {
+    if (quoted) {
+      if (type[i] === '\\') i++
+      else if (type[i] === '"') quoted = false
+    } else if (type[i] === '"') {
+      quoted = true
+    } else {
+      visit(i)
+    }
+  }
 }
 
 // Route path unions list every route, so adding one would change every

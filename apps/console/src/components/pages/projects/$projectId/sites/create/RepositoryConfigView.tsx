@@ -5,7 +5,7 @@
  * Handles site details, branch selection, build settings, and domain configuration.
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -63,6 +63,8 @@ import { BuildSettings } from './BuildSettings'
 import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { AnalyticsToggle } from './AnalyticsToggle'
 import { getVcsProvider } from '@/lib/vcs/providers'
 import { getVcsInstallationErrorKind } from '@/lib/utils/error-formatting'
 import { useVcsInstallationReconnect } from '@/lib/vcs/use-installation-reconnect'
@@ -79,6 +81,8 @@ export function RepositoryConfigView({
   providerRepositoryId: providerRepositoryIdFromUrl,
 }: RepositoryConfigViewProps) {
   const t = useT()
+  const { features } = useConsoleProfile()
+  const [analytics, setAnalytics] = useState(true)
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -127,6 +131,8 @@ export function RepositoryConfigView({
   const [fallbackFile, setFallbackFile] = useState(formData.fallbackFile || '')
   const [variables, setVariables] = useState(formData.variables || [])
   const [domain, setDomain] = useState(formData.domain || '')
+  // Domain follows the site name until the user edits it
+  const domainEditedRef = useRef(!!formData.domain)
   const [domainValid, setDomainValid] = useState(formData.domainValid || false)
   const [isDeploying, setIsDeploying] = useState(false)
 
@@ -279,7 +285,7 @@ export function RepositoryConfigView({
 
   // Generate domain when site name changes
   useEffect(() => {
-    if (siteName && !domain) {
+    if (siteName && !domainEditedRef.current) {
       setDomain(generateDomain(siteName))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -333,6 +339,7 @@ export function RepositoryConfigView({
         providerBranch: branch,
         providerSilentMode: silentMode,
         providerRootDirectory: rootDirectory || undefined,
+        analytics: features.analytics && analytics,
       })
       createdSiteId = site.$id
 
@@ -684,6 +691,13 @@ export function RepositoryConfigView({
             />
           </div>
 
+          {features.analytics && (
+            <AnalyticsToggle
+              checked={analytics}
+              onCheckedChange={setAnalytics}
+            />
+          )}
+
           {/* Framework selector */}
           <div className="space-y-2">
             <Label htmlFor="framework" className="text-[13px]">
@@ -757,6 +771,9 @@ export function RepositoryConfigView({
             value={domain}
             onChange={setDomain}
             onValidChange={setDomainValid}
+            onEdit={() => {
+              domainEditedRef.current = true
+            }}
           />
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/20">
@@ -825,7 +842,9 @@ export function RepositoryConfigView({
                     {t('Silent mode')}
                   </Label>
                   <p className="text-[11px] text-muted-foreground">
-                    {t('Disable automated comments on repository commits')}
+                    {t(
+                      'Skip pull request comments, checks and deployment reports',
+                    )}
                   </p>
                 </div>
                 <Switch

@@ -58,6 +58,31 @@ final class V25Test extends TestCase
         $this->assertNull($result->getAttribute('parentResourceInternalId'));
     }
 
+    /**
+     * Monitors and alerts from 2.7 get the severity column with null in it, not its default.
+     */
+    public function testGivesMonitorsAndAlertsWithoutASeverityWarning(): void
+    {
+        $migration = new class () extends V25 {
+            public function __construct()
+            {
+            }
+
+            public function migrate(Document $document): Document
+            {
+                return $this->migrateDocument($document);
+            }
+        };
+
+        foreach (['monitors', 'monitorAlerts'] as $collection) {
+            $missing = $migration->migrate(new Document(['$id' => 'old', '$collection' => $collection, 'severity' => null]));
+            $this->assertSame('warning', $missing->getAttribute('severity'), $collection);
+
+            $critical = $migration->migrate(new Document(['$id' => 'set', '$collection' => $collection, 'severity' => 'critical']));
+            $this->assertSame('critical', $critical->getAttribute('severity'), $collection);
+        }
+    }
+
     public function testRerunResolvesMissingInternalIdsIdempotently(): void
     {
         $migration = new class () extends V25 {
@@ -172,6 +197,89 @@ final class V25Test extends TestCase
         foreach ($added as $attribute) {
             $this->assertContains($attribute, $topics);
         }
+    }
+
+    public function testAddsSessionGeoAndFileFolderToProjectFromPreviousRelease(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // A project created on 1.9.x stores no GeoIP record on sessions and no folder on files.
+        $geo = [
+            'continentCode',
+            'latitude',
+            'longitude',
+            'timeZone',
+            'weatherCode',
+            'postalCode',
+            'autonomousSystemNumber',
+            'autonomousSystemOrganization',
+            'connectionType',
+            'connectionUsageType',
+            'connectionOrganization',
+            'isp',
+        ];
+        $collections = Config::getParam('collections', []);
+        foreach ($collections['projects'] as $id => $collection) {
+            if (($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $attributes = $id === 'sessions'
+                ? \array_filter($collection['attributes'], static fn (Attribute $attribute): bool => !\in_array($attribute->key, $geo, true))
+                : $collection['attributes'];
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($attributes),
+                indexes: \array_values($collection['indexes']),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+
+        $bucket = $authorization->skip(fn () => $database->createDocument('buckets', new Document([
+            '$id' => 'bucket',
+            'name' => 'Bucket',
+            'enabled' => true,
+            'maximumFileSize' => 0,
+            'allowedFileExtensions' => [],
+            'compression' => 'none',
+            'encryption' => false,
+            'antivirus' => false,
+        ])));
+        $files = $collections['buckets']['files'];
+        $table = 'bucket_' . $bucket->getSequence();
+        $database->createCollection(Collection::create(
+            id: $table,
+            attributes: \array_values(\array_filter($files['attributes'], static fn (Attribute $attribute): bool => $attribute->key !== 'folder')),
+            indexes: \array_values(\array_filter($files['indexes'], static fn (Index $index): bool => $index->key !== '_key_folder')),
+        ));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $migration->execute();
+
+        $sessions = \array_map(
+            fn (Document $attribute) => $attribute->getId(),
+            $database->getCollection('sessions')->getAttribute('attributes', [])
+        );
+        foreach ($geo as $attribute) {
+            $this->assertContains($attribute, $sessions);
+        }
+
+        $files = $database->getCollection($table);
+        $this->assertContains('folder', \array_map(
+            fn (Document $attribute) => $attribute->getId(),
+            $files->getAttribute('attributes', [])
+        ));
+        $this->assertContains('_key_folder', \array_map(
+            fn (Document $index) => $index->getId(),
+            $files->getAttribute('indexes', [])
+        ));
     }
 
     public function testCreatesVideoCollectionsForProjectFromPreviousRelease(): void
@@ -473,5 +581,67 @@ final class V25Test extends TestCase
             fn (Attribute $attribute): string => $attribute->key,
             $database->getCollection('projects')->attributes()
         ));
+    }
+
+    public function testReadsTheExpiryOfCertificatesIssuedBeforeTheRelease(): void
+    {
+        if (!\is_dir(APP_STORAGE_CERTIFICATES) || !\is_writable(APP_STORAGE_CERTIFICATES)) {
+            $this->markTestSkipped(APP_STORAGE_CERTIFICATES . ' is not writable.');
+        }
+
+        $authorization = new Authorization();
+        $authorization->disable();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // A certificates collection from the previous release: no expireDate and no status.
+        $certificates = Config::getParam('collections', [])['console']['certificates'];
+        $database->createCollection(Collection::create(
+            id: 'certificates',
+            attributes: \array_values(\array_filter(
+                $certificates['attributes'],
+                static fn (Attribute $attribute): bool => !\in_array($attribute->key, ['expireDate', 'status'], true)
+            )),
+            indexes: \array_values($certificates['indexes']),
+        ));
+
+        // One certificate is still in storage, the other one is gone.
+        $served = \uniqid() . '.v25.test';
+        $gone = \uniqid() . '.v25.test';
+        $key = \openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
+        \openssl_x509_export(\openssl_csr_sign(\openssl_csr_new(['commonName' => $served], $key), null, $key, 20), $pem);
+        \mkdir(APP_STORAGE_CERTIFICATES . '/' . $served, 0755, true);
+        \file_put_contents(APP_STORAGE_CERTIFICATES . '/' . $served . '/cert.pem', $pem);
+        foreach ([$served, $gone] as $domain) {
+            $database->createDocument('certificates', new Document(['$id' => \md5($domain), 'domain' => $domain, 'attempts' => 5, 'logs' => '']));
+        }
+
+        $migration = new class ($database, $certificates) extends V25 {
+            public function __construct(Database $database, array $certificates)
+            {
+                $this->dbForProject = $database;
+                $this->project = new Document(['$id' => 'console', '$sequence' => 'console']);
+                $this->collections = ['console' => ['certificates' => $certificates]];
+            }
+        };
+
+        \ob_start();
+        try {
+            $migration->execute();
+            $migration->execute();
+        } finally {
+            \ob_end_clean();
+            \unlink(APP_STORAGE_CERTIFICATES . '/' . $served . '/cert.pem');
+            \rmdir(APP_STORAGE_CERTIFICATES . '/' . $served);
+        }
+
+        $expiry = $database->getDocument('certificates', \md5($served))->getAttribute('expireDate');
+        $this->assertNotEmpty($expiry);
+        $this->assertEqualsWithDelta(\time() + 20 * 24 * 60 * 60, \strtotime($expiry), 120);
+        $this->assertEmpty($database->getDocument('certificates', \md5($gone))->getAttribute('expireDate'));
     }
 }

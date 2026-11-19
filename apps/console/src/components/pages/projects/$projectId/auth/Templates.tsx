@@ -12,8 +12,7 @@ import {
   useUpdateEmailTemplate,
   useDeleteEmailTemplate,
   useLocaleCodes,
-  fetchEmailTemplate,
-  useProjectSmtpEnabled,
+  emailTemplateQueryOptions,
 } from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -76,6 +75,7 @@ function GitHubIcon({ className }: { className?: string }) {
 }
 
 interface TemplatesProps {
+  isSmtpEnabled: boolean
   projectId: string
 }
 
@@ -166,9 +166,8 @@ const EMAIL_TEMPLATE_TYPES = [
   },
 ] as const
 
-export function Templates({ projectId }: TemplatesProps) {
+export function Templates({ projectId, isSmtpEnabled }: TemplatesProps) {
   const t = useT()
-  const { isSmtpEnabled } = useProjectSmtpEnabled(projectId)
   const { data: localeData } = useLocaleCodes()
   const queryClient = useQueryClient()
 
@@ -187,32 +186,12 @@ export function Templates({ projectId }: TemplatesProps) {
   useEffect(() => {
     if (!projectId) return
 
-    // Prefetch all English templates in parallel (don't await - let them fetch in background)
-    // This ensures all templates are in cache when user switches between them
-    const prefetchPromises = EMAIL_TEMPLATE_TYPES.map((templateConfig) =>
-      queryClient.prefetchQuery({
-        queryKey: [
-          'emailTemplate',
-          projectId,
-          templateConfig.type,
-          ProjectEmailTemplateLocale.En,
-        ],
-        queryFn: () =>
-          fetchEmailTemplate(
-            projectId,
-            templateConfig.type,
-            ProjectEmailTemplateLocale.En,
-          ),
-        staleTime: 30 * 1000, // 30 seconds
-      }),
-    )
-
-    // Start all prefetches but don't block rendering
-    Promise.all(prefetchPromises).catch((error) => {
-      console.error('Failed to prefetch some templates:', error)
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId]) // queryClient is stable, no need to include in deps
+    for (const { type } of EMAIL_TEMPLATE_TYPES) {
+      void queryClient.prefetchQuery(
+        emailTemplateQueryOptions(projectId, type, ProjectEmailTemplateLocale.En),
+      )
+    }
+  }, [projectId, queryClient])
 
   // Fetch template when type or locale changes
   const { data: template, isLoading: isTemplateLoading } = useEmailTemplate(
@@ -464,7 +443,7 @@ export function Templates({ projectId }: TemplatesProps) {
               isLoading={showLoading}
               formData={formData}
               onFieldChange={handleFieldChange}
-              hasChanges={hasChanges}
+              hasChanges={!!template && hasChanges}
               isSmtpEnabled={isSmtpEnabled}
               onUpdate={handleUpdate}
               onReset={() => handleResetClick(selectedType, selectedLocale)}

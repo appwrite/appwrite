@@ -163,7 +163,7 @@ class Comment
 
                     if ($site['action']['type'] === 'logs') {
                         $logsUrl = ($this->platform['consoleUrl'] ?? '') . "/projects/{$projectId}/sites/{$siteId}/deployments/{$site['deploymentId']}";
-                        $action = "[View Logs]({$logsUrl})";
+                        $action = $site['deploymentId'] === '' ? '' : "[View Logs]({$logsUrl})";
                     } else {
                         $action = '[Authorize](' . $site['action']['url'] . ')';
                     }
@@ -214,7 +214,7 @@ class Comment
 
                     if ($function['action']['type'] === 'logs') {
                         $logsUrl = ($this->platform['consoleUrl'] ?? '') . "/projects/{$projectId}/functions/{$functionId}/deployments/{$function['deploymentId']}";
-                        $action = "[View Logs]({$logsUrl})";
+                        $action = $function['deploymentId'] === '' ? '' : "[View Logs]({$logsUrl})";
                     } else {
                         $action = '[Authorize](' . $function['action']['url'] . ')';
                     }
@@ -228,8 +228,6 @@ class Comment
 
                 $text .= "</details>\n\n";
             }
-
-            $text .= "</details>\n\n";
 
             $isLast = $i === \count($projects) - 1;
 
@@ -258,7 +256,8 @@ class Comment
         $imageLight = $protocol . '://' . $hostname . $pathLight;
         $imageDark = $protocol . '://' . $hostname . $pathDark;
 
-        $imageUrl = '<picture><source media="(prefers-color-scheme: dark)" srcset="' . $imageDark . '"><img alt="' . $alt . '" width="' . $width . '" align="center" src="' . $imageLight . '"></picture>';
+        // absmiddle is vertical-align: middle; "center" puts the image's middle on the text baseline, so the label beside it rode high.
+        $imageUrl = '<picture><source media="(prefers-color-scheme: dark)" srcset="' . $imageDark . '"><img alt="' . $alt . '" width="' . $width . '" align="absmiddle" src="' . $imageLight . '"></picture>';
 
         return $imageUrl;
     }

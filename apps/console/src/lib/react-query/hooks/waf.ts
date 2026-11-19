@@ -10,16 +10,14 @@ import {
   useQueryClient,
   queryOptions,
   keepPreviousData,
+  type QueryClient,
 } from '@tanstack/react-query'
 import { ID, Query, WafRuleAction, type Models } from '@appwrite.io/console'
 import type { FirewallRule } from '@/lib/firewall/types'
+import type { FirewallSchedulePayload } from '@/lib/firewall/schedule'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Dependencies } from './dependencies'
-import {
-  DEFAULT_PAGE_SIZE,
-  DEFAULT_STALE_TIME,
-  LONG_STALE_TIME,
-} from './constants'
+import { DEFAULT_PAGE_SIZE, DEFAULT_STALE_TIME } from './constants'
 import {
   CHALLENGE_DIFFICULTY_DEFAULT,
   CHALLENGE_TTL_DEFAULT,
@@ -48,9 +46,11 @@ import {
 import type {
   FirewallConditionAttribute,
   FirewallConditionDraft,
+  FirewallResourceSelection,
   FirewallResourceType,
 } from '@/lib/firewall/conditions'
 import {
+  firewallTrafficOverviewQueryOptions,
   requestsBreakdownQueryOptions,
   PREMIUM_GEO_REQUEST_DIMENSIONS,
 } from './usage-events'
@@ -64,9 +64,17 @@ import type {
 } from '@/lib/usage/usage-events-common'
 import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 import type { DateRange } from 'react-day-picker'
-import type { UsageChartInterval } from '@/lib/usage/chart-interval'
-import { fetchProjectFunctionsByIds, functionsQueryOptions } from './functions'
-import { fetchProjectSitesByIds, sitesQueryOptions } from './sites'
+import {
+  DEFAULT_USAGE_CHART_INTERVAL,
+  resolveUsageChartIntervalForRange,
+  type UsageChartInterval,
+} from '@/lib/usage/chart-interval'
+import { getStableUsageChartDateRange } from '@/lib/usage/usage-date-range'
+import { getUsageLogRetentionHoursFromPlan } from '@/lib/usage/usage-log-retention'
+import { fetchProjectFunctionsByIds } from './functions'
+import { fetchProjectSitesByIds } from './sites'
+import { fetchProject } from './projects'
+import { organizationPlanQueryOptions } from './organizations'
 
 export type CreateFirewallRuleInput = {
   ruleId?: string
@@ -92,6 +100,8 @@ export type CreateFirewallRuleInput = {
   challengeType?: string
   difficulty?: number
   ttl?: number
+  /** When the rule is active. Leave out for always active. */
+  schedule?: FirewallSchedulePayload
 }
 
 export type UpdateFirewallRuleInput = {
@@ -117,6 +127,8 @@ export type UpdateFirewallRuleInput = {
   challengeType?: string
   difficulty?: number
   ttl?: number
+  /** Leave out to keep the stored schedule; an empty object removes it. */
+  schedule?: FirewallSchedulePayload | Record<string, never>
 }
 
 function conditionsPayload(conditions?: string[]) {
@@ -360,6 +372,7 @@ async function createFirewallRule(
     priority: input.priority,
     enabled: input.enabled ?? true,
     conditions: conditionsPayload(input.conditions),
+    schedule: input.schedule,
   }
 
   switch (input.action) {
@@ -411,6 +424,7 @@ async function updateFirewallRule(
     priority: input.priority,
     enabled: input.enabled,
     conditions: conditionsPayload(input.conditions),
+    schedule: input.schedule,
   }
 
   switch (input.action) {
@@ -945,56 +959,76 @@ export function useFirewallConditionBreakdowns(
   )
 }
 
-/** Page size for the firewall resource scope picker (API / sites / functions). */
-export const FIREWALL_RESOURCE_PICKER_LIMIT = 25
-
 /**
- * Isolated query keys for the firewall resource picker so project realtime
- * invalidations on `['functions'|'sites', 'project', …]` do not refetch the
- * open dropdown on every deployment or execution event.
+ * Prefetch a Firewall tab: the rules for its scope, the unfiltered total the
+ * plan limit counts, the attack mode rule, and (in the background) traffic.
+ * Call from the function, site and project settings Firewall tab loaders.
  */
-export function firewallResourcePickerFunctionsQueryOptions(
-  projectId: string | null | undefined,
-  search?: string,
+export async function prefetchFirewallTabData(
+  queryClient: QueryClient,
+  projectId: string,
+  selection: FirewallResourceSelection,
 ) {
-  const base = functionsQueryOptions(
-    projectId,
-    0,
-    FIREWALL_RESOURCE_PICKER_LIMIT,
-    search,
-  )
-  return queryOptions({
-    ...base,
-    queryKey: [
-      'firewall',
-      'resource-picker',
-      'functions',
-      projectId,
-      search ?? null,
-    ],
-    staleTime: LONG_STALE_TIME,
+  const project = await queryClient.ensureQueryData({
+    queryKey: ['project', projectId],
+    queryFn: () => fetchProject(projectId),
+    staleTime: 5 * 60 * 1000,
   })
-}
 
-export function firewallResourcePickerSitesQueryOptions(
-  projectId: string | null | undefined,
-  search?: string,
-) {
-  const base = sitesQueryOptions(
-    projectId,
-    0,
-    FIREWALL_RESOURCE_PICKER_LIMIT,
-    search,
+  const plan = project?.teamId
+    ? await queryClient
+        .ensureQueryData(organizationPlanQueryOptions(project.teamId))
+        .catch(() => undefined)
+    : undefined
+
+  const dateRange = getStableUsageChartDateRange()
+  const chartInterval = resolveUsageChartIntervalForRange(
+    DEFAULT_USAGE_CHART_INTERVAL,
+    dateRange,
+    plan,
   )
-  return queryOptions({
-    ...base,
-    queryKey: [
-      'firewall',
-      'resource-picker',
-      'sites',
-      projectId,
-      search ?? null,
-    ],
-    staleTime: LONG_STALE_TIME,
-  })
+  const logRetentionHours = getUsageLogRetentionHoursFromPlan(plan)
+
+  await Promise.all([
+    queryClient.ensureQueryData(
+      firewallRulesQueryOptions(
+        projectId,
+        0,
+        DEFAULT_PAGE_SIZE,
+        undefined,
+        selection.resourceType,
+        selection.resourceId,
+      ),
+    ),
+    // Unfiltered total for plan limit checks.
+    queryClient.ensureQueryData(
+      firewallRulesQueryOptions(projectId, 0, DEFAULT_PAGE_SIZE, undefined),
+    ),
+    ...(isAttackModeScope(selection.resourceType, selection.resourceId)
+      ? [
+          queryClient.ensureQueryData(
+            attackModeRuleQueryOptions(
+              projectId,
+              selection.resourceType,
+              selection.resourceId,
+            ),
+          ),
+        ]
+      : []),
+  ])
+
+  // Usage is non-critical: prefetch in background so a slow usage API does not
+  // block the rules list or navigation.
+  void queryClient
+    .prefetchQuery(
+      firewallTrafficOverviewQueryOptions(
+        projectId,
+        dateRange,
+        chartInterval,
+        logRetentionHours,
+        selection.resourceType,
+        selection.resourceId,
+      ),
+    )
+    .catch(() => undefined)
 }

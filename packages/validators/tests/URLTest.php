@@ -16,9 +16,11 @@ declare(strict_types=1);
 
 namespace Utopia\Validator\Tests;
 
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Validator\URL;
 
+#[RequiresPhpExtension('utopia')]
 final class URLTest extends TestCase
 {
     protected ?URL $url;
@@ -46,6 +48,15 @@ final class URLTest extends TestCase
         $this->assertTrue($this->url->isValid('http://www.example.com/foo%2\u00c2\u00a9zbar'));
         $this->assertTrue($this->url->isValid('http://www.example.com/?q=%3Casdf%3E'));
         $this->assertTrue($this->url->isValid('https://example.com/callback#fragment'));
+    }
+
+    public function testIsValidNonAscii(): void
+    {
+        $url = new URL();
+        $this->assertTrue($url->isValid('https://example.com/čšž'));
+        $this->assertTrue($url->isValid('https://example.com/?q=日本'));
+        $this->assertFalse($url->isValid('https://example.com/č š'));
+        $this->assertFalse($url->isValid('example.com/čšž'));
     }
 
     public function testIsValidAllowedSchemes(): void

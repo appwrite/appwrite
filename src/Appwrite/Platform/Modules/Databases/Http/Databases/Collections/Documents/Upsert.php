@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -62,9 +63,7 @@ class Upsert extends Action
             ->label('audits.event', 'document.upsert')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
             ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT * 2, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', [
                 new Method(
                     namespace: $this->getSDKNamespace(),
@@ -261,15 +260,7 @@ class Upsert extends Action
                 'data' => $data,
             ]);
 
-            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
-                $dbForProject->createDocument('transactionLogs', $staged);
-                $dbForProject->increaseDocumentAttribute(
-                    'transactions',
-                    $transactionId,
-                    'operations',
-                    1
-                );
-            });
+            $this->stage($dbForProject, $transactionId, [$staged], $maxBatch);
 
             $queueForEvents->reset();
 
@@ -291,24 +282,32 @@ class Upsert extends Action
 
         $upserted = [];
         try {
-            $dbForDatabases->withPreserveDates(true, function () use (&$upserted, $dbForDatabases, $collection, $collectionTableId, $newDocument) {
-                return $this->withRelationshipTransaction(
-                    $dbForDatabases,
-                    $collection,
-                    [$newDocument],
-                    function (array $documents) use (&$upserted, $dbForDatabases, $collectionTableId) {
-                        $upserted = [];
+            $this->withPermissionPurge(
+                $dbForProject,
+                $database,
+                $collection,
+                $callerProvidedPermissions,
+                function () use (&$upserted, $dbForDatabases, $collection, $collectionTableId, $newDocument) {
+                    return $dbForDatabases->withPreserveDates(true, function () use (&$upserted, $dbForDatabases, $collection, $collectionTableId, $newDocument) {
+                        return $this->withRelationshipTransaction(
+                            $dbForDatabases,
+                            $collection,
+                            [$newDocument],
+                            function (array $documents) use (&$upserted, $dbForDatabases, $collectionTableId) {
+                                $upserted = [];
 
-                        return $dbForDatabases->upsertDocuments(
-                            $collectionTableId,
-                            $documents,
-                            onNext: function (Document $document) use (&$upserted) {
-                                $upserted[] = $document;
-                            },
+                                return $dbForDatabases->upsertDocuments(
+                                    $collectionTableId,
+                                    $documents,
+                                    onNext: function (Document $document) use (&$upserted) {
+                                        $upserted[] = $document;
+                                    },
+                                );
+                            }
                         );
-                    }
-                );
-            });
+                    });
+                },
+            );
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (UniqueException $e) {

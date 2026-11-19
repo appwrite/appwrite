@@ -10,6 +10,7 @@ use Appwrite\Platform\Modules\Health\Http\Health\Geo\Get as GetGeo;
 use Appwrite\Platform\Modules\Health\Http\Health\Get as GetHealth;
 use Appwrite\Platform\Modules\Health\Http\Health\PubSub\Get as GetPubSub;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Failed\Get as GetFailedJobs;
+use Appwrite\Platform\Modules\Health\Http\Health\Queue\Videos\Get as GetQueueVideos;
 use Appwrite\Platform\Modules\Health\Http\Health\Stats\Get as GetStats;
 use Appwrite\Platform\Modules\Health\Http\Health\Storage\Get as GetStorage;
 use Appwrite\Platform\Modules\Health\Http\Health\Storage\Local\Get as GetStorageLocal;
@@ -24,21 +25,22 @@ class Http extends Service
     {
         $this->type = Service::TYPE_HTTP;
 
-        $this->addAction(GetHealth::getName(), new GetHealth());
-        $this->addAction(GetHealthVersion::getName(), new GetHealthVersion());
-        $this->addAction(GetDB::getName(), new GetDB());
-        $this->addAction(GetCache::getName(), new GetCache());
-        $this->addAction(GetPubSub::getName(), new GetPubSub());
-        $this->addAction(GetTime::getName(), new GetTime());
-        $this->addAction(GetCertificate::getName(), new GetCertificate());
-        $this->addAction(GetStorageLocal::getName(), new GetStorageLocal());
-        $this->addAction(GetStorage::getName(), new GetStorage());
-        $this->addAction(GetAntivirus::getName(), new GetAntivirus());
-        $this->addAction(GetGeo::getName(), new GetGeo());
-        $this->addAction(GetUsage::getName(), new GetUsage());
+        $this->addAction('get', GetHealth::class);
+        $this->addAction('getVersion', GetHealthVersion::class);
+        $this->addAction('getDB', GetDB::class);
+        $this->addAction('getCache', GetCache::class);
+        $this->addAction('getPubSub', GetPubSub::class);
+        $this->addAction('getTime', GetTime::class);
+        $this->addAction('getCertificate', GetCertificate::class);
+        $this->addAction('getStorageLocal', GetStorageLocal::class);
+        $this->addAction('getStorage', GetStorage::class);
+        $this->addAction('getAntivirus', GetAntivirus::class);
+        $this->addAction('getGeo', GetGeo::class);
+        $this->addAction('getUsage', GetUsage::class);
 
-        $this->addAction(GetFailedJobs::getName(), new GetFailedJobs());
+        $this->addAction(GetQueueVideos::getName(), GetQueueVideos::class);
+        $this->addAction(GetFailedJobs::getName(), GetFailedJobs::class);
 
-        $this->addAction(GetStats::getName(), new GetStats());
+        $this->addAction('getStats', GetStats::class);
     }
 }

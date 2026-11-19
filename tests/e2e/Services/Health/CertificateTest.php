@@ -15,12 +15,22 @@ final class CertificateTest extends HealthBase
         $this->assertEquals(200, $response['headers']['status-code']);
 
         $this->assertCertificateFailure('localhost', 400);
-        $this->assertCertificateFailure('doesnotexist.com', 404);
+        $this->assertCertificateFailure('doesnotexist.com', 400);
         $this->assertCertificateFailure('www.google.com/usr/src/local', 400);
         $this->assertCertificateFailure('', 400);
 
         $response = $this->callGet('/health/certificate');
         $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testCertificateRefusesHostThatDoesNotResolve(): void
+    {
+        $response = $this->callGet('/health/certificate', ['domain' => 'doesnotexist.com']);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+        $this->assertStringContainsString('does not resolve', (string) $response['body']['message']);
+        $this->assertStringNotContainsString('php_network', (string) $response['body']['message']);
     }
 
     private function assertCertificate(string $domain, string $expectedName, string $expectedSN): void

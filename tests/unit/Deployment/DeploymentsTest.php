@@ -6,8 +6,11 @@ namespace Tests\Unit\Deployment;
 
 use Appwrite\Deployment\Deployments;
 use Appwrite\Extend\Exception;
+use OpenRuntimes\Orchestrator\Model\Artifact\Artifact;
+use OpenRuntimes\Orchestrator\Model\Artifact\DownloadArtifact;
 use OpenRuntimes\Orchestrator\Model\Volume;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\StreamInterface;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Storage\Device\Local;
@@ -183,6 +186,60 @@ final class DeploymentsTest extends TestCase
         $this->assertSame('v2', $payload['environment']['MY_VAR']);
     }
 
+    public function testUploadedSourceIsDownloadedFromTheProject(): void
+    {
+        $query = $this->sourceQuery($this->buildPayload([], 'project1'));
+
+        $this->assertSame('project1', $query['project']);
+        $this->assertSame('source', $query['type']);
+        $this->assertNotEmpty($query['token']);
+    }
+
+    public function testUploadedSourceIsDownloadedFromWhereTheProjectIsReached(): void
+    {
+        // A project that requests cannot name by its own ID, such as one reached through
+        // another project, is named in the link the way a request reaches it. Its own ID
+        // in the link would be refused, and the build would never get its source.
+        \putenv('_APP_OPENSSL_KEY_V1=unit-test-key');
+
+        $payload = ReachedThroughDeployments::submitPayload(
+            new Document(['$id' => 'internal1', 'region' => 'default']),
+            new Document([
+                '$id' => 'function1',
+                '$collection' => 'functions',
+                'runtime' => \array_key_first(Config::getParam('runtimes-v2')),
+            ]),
+            new Document(['$id' => 'deployment1']),
+            ['apiHostname' => 'localhost'],
+        );
+
+        $query = $this->sourceQuery($payload);
+
+        $this->assertSame('project1', $query['project']);
+        $this->assertSame('staging', $query['environment']);
+        $this->assertSame('source', $query['type']);
+        $this->assertNotEmpty($query['token']);
+
+        // Storage is still the project's own: only the link changes
+        $this->assertSame('internal1', $payload['meta']['projectId']);
+    }
+
+    /**
+     * The query of the link the build downloads its uploaded source from.
+     *
+     * @return array<string, string>
+     */
+    private function sourceQuery(array $payload): array
+    {
+        $source = \array_find($payload['artifacts'], fn (Artifact $artifact): bool => $artifact instanceof DownloadArtifact && $artifact->id === 'source');
+        $this->assertInstanceOf(DownloadArtifact::class, $source);
+        $this->assertSame('/v1/functions/function1/deployments/deployment1/download', \parse_url($source->in, PHP_URL_PATH));
+
+        \parse_str((string) \parse_url($source->in, PHP_URL_QUERY), $query);
+
+        return $query;
+    }
+
     public function testLocalBuildMountsOnlyItsOutputAndCache(): void
     {
         $payload = $this->withLocalBuilds(fn () => $this->buildPayload([]));
@@ -283,6 +340,72 @@ final class DeploymentsTest extends TestCase
         }
     }
 
+    public function testOpenArtifactKeepsReadingTheCheckedFile(): void
+    {
+        $base = \realpath(\sys_get_temp_dir()) . '/open-artifact-' . \bin2hex(\random_bytes(6));
+        $root = $base . '/app-project1';
+        \mkdir($root . '/deployment1', 0o777, true);
+        \file_put_contents($root . '/deployment1/code.tar.gz', 'artifact');
+        \file_put_contents($base . '/secret', 'secret');
+        \symlink($base . '/secret', $root . '/deployment1/link.tar.gz');
+        $device = new Local($root);
+
+        try {
+            $this->assertNull(Deployments::openArtifact($device, $root . '/deployment1/link.tar.gz'));
+            $this->assertNull(Deployments::openArtifact($device, $root . '/deployment1/missing.tar.gz'));
+            $this->assertNull(Deployments::openArtifact($device, $base . '/secret'));
+
+            $artifact = Deployments::openArtifact($device, $root . '/deployment1/code.tar.gz');
+            $this->assertInstanceOf(StreamInterface::class, $artifact);
+            $this->assertSame(8, $artifact->getSize());
+
+            // The build swaps the checked file for a link once the download started
+            \unlink($root . '/deployment1/code.tar.gz');
+            \symlink($base . '/secret', $root . '/deployment1/code.tar.gz');
+
+            $this->assertSame('artifact', $artifact->getContents());
+            $artifact->close();
+        } finally {
+            \unlink($root . '/deployment1/code.tar.gz');
+            \unlink($root . '/deployment1/link.tar.gz');
+            \unlink($base . '/secret');
+            \rmdir($root . '/deployment1');
+            \rmdir($root);
+            \rmdir($base);
+        }
+    }
+
+    public function testDeleteBuildDirectoryReportsWhetherAnythingIsLeft(): void
+    {
+        $base = \realpath(\sys_get_temp_dir()) . '/build-directory-' . \bin2hex(\random_bytes(6));
+        $root = $base . '/app-project1';
+        \mkdir($root . '/deployment1/output', 0o777, true);
+        \mkdir($base . '/outside');
+        \file_put_contents($root . '/deployment1/code.tar.gz', 'artifact');
+        \file_put_contents($root . '/deployment1/output/extra', 'extra');
+        \file_put_contents($base . '/outside/kept', 'kept');
+        \symlink($base . '/outside', $root . '/linked');
+        $device = new Local($root);
+
+        try {
+            $this->assertTrue(Deployments::deleteBuildDirectory($device, 'deployment1'));
+            $this->assertFileDoesNotExist($root . '/deployment1');
+
+            // Nothing left counts as deleted, so a retried cleanup succeeds.
+            $this->assertTrue(Deployments::deleteBuildDirectory($device, 'deployment1'));
+
+            // A directory reached through a symbolic link is refused, not followed.
+            $this->assertFalse(Deployments::deleteBuildDirectory($device, 'linked'));
+            $this->assertSame('kept', \file_get_contents($base . '/outside/kept'));
+        } finally {
+            \unlink($root . '/linked');
+            \unlink($base . '/outside/kept');
+            \rmdir($base . '/outside');
+            \rmdir($root);
+            \rmdir($base);
+        }
+    }
+
     /**
      * @template T
      * @param callable(): T $test
@@ -323,5 +446,18 @@ final readonly class ExposedDeployments extends Deployments
     public static function submitPayload(Document $project, Document $resource, Document $deployment, array $platform): array
     {
         return static::payload($project, $resource, $deployment, $platform, 137);
+    }
+}
+
+final readonly class ReachedThroughDeployments extends Deployments
+{
+    public static function submitPayload(Document $project, Document $resource, Document $deployment, array $platform): array
+    {
+        return static::payload($project, $resource, $deployment, $platform, 137);
+    }
+
+    protected static function query(Document $project): array
+    {
+        return ['project' => 'project1', 'environment' => 'staging'];
     }
 }

@@ -16,7 +16,58 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:2.2.7 AS base
+FROM appwrite/base:2.4.0@sha256:c117eef278ec2ce20d6f8c62e3918e1abb1191c1fc4d93a6a636eeeae5428964 AS ffmpeg
+
+# Same pin as utopia-php/video (docs/design.md, Dockerfile ARG FFMPEG_VERSION).
+# Alpine's apk ffmpeg is an older line and is not what the library CI tests against.
+# GnuTLS gives ffmpeg its https protocol: the videos worker reads S3 sources over
+# a presigned URL, and without a TLS library ffmpeg has no https at all.
+# Cloned from the GitHub mirror at the release tag, like every other pinned source
+# the utopia libraries build; ffmpeg.org drops connections from CI runners.
+ARG FFMPEG_VERSION=8.1.2
+
+RUN apk add --no-cache \
+        build-base nasm pkgconf git \
+        x264-dev x265-dev libvpx-dev opus-dev lame-dev zlib-dev \
+        libtheora-dev libvorbis-dev gnutls-dev \
+    && git clone --depth 1 --branch "n${FFMPEG_VERSION}" https://github.com/FFmpeg/FFmpeg.git /tmp/ffmpeg \
+    && cd /tmp/ffmpeg \
+    && ./configure \
+        --prefix=/opt/ffmpeg \
+        --enable-gpl \
+        --enable-libx264 \
+        --enable-libx265 \
+        --enable-libvpx \
+        --enable-libopus \
+        --enable-libmp3lame \
+        --enable-libtheora \
+        --enable-libvorbis \
+        --enable-gnutls \
+        --disable-debug \
+        --disable-doc \
+        --disable-ffplay \
+    && make -j"$(nproc)" \
+    && make install \
+    && rm -rf /tmp/ffmpeg
+
+# The utopia extension, built against the base image's own PHP headers and
+# libheif so the ABI matches. Alpine's Rust is older than the workspace needs.
+FROM appwrite/base:2.4.0@sha256:c117eef278ec2ce20d6f8c62e3918e1abb1191c1fc4d93a6a636eeeae5428964 AS extension-build
+
+RUN apk add --no-cache rustup clang-dev libheif-dev build-base && \
+    rustup-init -y --profile minimal --default-toolchain 1.97.1
+
+WORKDIR /usr/local/src
+
+COPY Cargo.toml Cargo.lock rustfmt.toml ./
+COPY .cargo ./.cargo
+COPY crates ./crates
+
+RUN . "$HOME/.cargo/env" && \
+    cargo build --release --locked -p utopia-extension && \
+    strip target/release/libutopia.so
+
+FROM appwrite/base:2.4.0@sha256:c117eef278ec2ce20d6f8c62e3918e1abb1191c1fc4d93a6a636eeeae5428964 AS base
 
 LABEL maintainer="team@appwrite.io"
 
@@ -30,6 +81,24 @@ ENV _APP_VERSION=$VERSION \
 RUN if [ "$DEBUG" == "true" ]; then \
     apk add boost boost-dev; \
     fi
+
+# Runtime libs for the source-built ffmpeg 8.1.2; mediainfo is unused by the
+# worker today (probe is ffprobe) but kept until that Dockerfile comment is retired.
+RUN apk add --no-cache \
+        mediainfo \
+        x264-libs \
+        x265-libs \
+        libvpx \
+        opus \
+        lame-libs \
+        libtheora \
+        libvorbis \
+        gnutls \
+        libstdc++ \
+    && rm -rf /var/cache/apk/*
+
+COPY --from=ffmpeg /opt/ffmpeg/bin/ffmpeg /usr/local/bin/ffmpeg
+COPY --from=ffmpeg /opt/ffmpeg/bin/ffprobe /usr/local/bin/ffprobe
 
 WORKDIR /usr/src/code
 
@@ -64,6 +133,8 @@ RUN mkdir -p /storage/uploads && \
     mkdir -p /storage/config && \
     mkdir -p /storage/certificates && \
     mkdir -p /storage/functions && \
+    mkdir -p /storage/videos && \
+    mkdir -p /storage/videos-tmp && \
     mkdir -p /storage/debug && \
     chown -Rf www-data:www-data /storage/uploads && chmod -Rf 0755 /storage/uploads && \
     chown -Rf www-data:www-data /storage/imports && chmod -Rf 0755 /storage/imports && \
@@ -71,10 +142,13 @@ RUN mkdir -p /storage/uploads && \
     chown -Rf www-data:www-data /storage/config && chmod -Rf 0755 /storage/config && \
     chown -Rf www-data:www-data /storage/certificates && chmod -Rf 0755 /storage/certificates && \
     chown -Rf www-data:www-data /storage/functions && chmod -Rf 0755 /storage/functions && \
+    chown -Rf www-data:www-data /storage/videos && chmod -Rf 0755 /storage/videos && \
+    chown -Rf www-data:www-data /storage/videos-tmp && chmod -Rf 0755 /storage/videos-tmp && \
     chown -Rf www-data:www-data /storage/debug && chmod -Rf 0755 /storage/debug
 
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
+    chmod +x /usr/local/bin/encryption && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/interval && \
     chmod +x /usr/local/bin/maintenance &&  \
@@ -83,6 +157,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/realtime && \
     chmod +x /usr/local/bin/mqtt && \
     chmod +x /usr/local/bin/schedule && \
+    chmod +x /usr/local/bin/schedule-alerts && \
     chmod +x /usr/local/bin/schedule-functions && \
     chmod +x /usr/local/bin/schedule-executions && \
     chmod +x /usr/local/bin/schedule-messages && \
@@ -101,6 +176,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/queue-count-processing && \
     chmod +x /usr/local/bin/queue-count-success && \
     chmod +x /usr/local/bin/worker && \
+    chmod +x /usr/local/bin/worker-alerts && \
     chmod +x /usr/local/bin/worker-builds && \
     chmod +x /usr/local/bin/worker-jobs && \
     chmod +x /usr/local/bin/worker-screenshots && \
@@ -114,11 +190,16 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-notifications && \
     chmod +x /usr/local/bin/worker-migrations && \
+    chmod +x /usr/local/bin/worker-videos && \
     chmod +x /usr/local/bin/worker-stats-resources && \
     chmod +x /usr/local/bin/worker-stats-usage && \
     chmod +x /usr/local/bin/worker-webhooks
 
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
+
+# Registers Utopia\Image\Canvas; see crates/extension/README.md.
+COPY --from=extension-build /usr/local/src/target/release/libutopia.so /usr/local/lib/php/utopia.so
+RUN echo 'extension=/usr/local/lib/php/utopia.so' > /usr/local/etc/php/conf.d/utopia.ini
 
 FROM base AS production
 
@@ -131,7 +212,7 @@ EXPOSE 80
 
 CMD [ "php", "app/http.php" ]
 
-FROM appwrite/base:2.2.7-xdebug AS xdebug
+FROM appwrite/base:2.4.0-xdebug@sha256:3cb097a442faa681a86196417984f93738856d4cf05dca9e36e75d1fecf4ec40 AS xdebug
 
 FROM base AS development
 
@@ -141,7 +222,7 @@ RUN printf 'opcache.validate_timestamps=1\nopcache.revalidate_freq=0\n' > /usr/l
 COPY ./docs /usr/src/code/docs
 COPY ./dev /usr/src/code/dev
 
-# appwrite/base:2.2.7 ships without XDebug, so it cannot reach production or
+# appwrite/base ships without XDebug, so it cannot reach production or
 # Cloud. The -xdebug tag is the same build with the extension; mounting it
 # rather than copying keeps xdebug.so out of every layer unless DEBUG asked
 # for it, and guarantees an ABI match because both tags are one base build.

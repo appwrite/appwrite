@@ -4,7 +4,6 @@ import { createDomainTransferOut } from '@/lib/react-query/hooks/domains'
 import { cn } from '@/lib/utils'
 import {
   Globe,
-  CheckCircle2,
   AlertCircle,
   RefreshCw,
   Download,
@@ -20,6 +19,7 @@ import {
   Eye,
   EyeOff,
   ArrowLeftRight,
+  Info,
 } from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
@@ -106,6 +106,11 @@ import { CreateRecordDialog } from './CreateRecord'
 import { UpdateRecordDialog } from './UpdateRecord'
 import { DeleteRecordDialog } from './DeleteRecord'
 import { ImportZoneDialog } from './ImportZone'
+import {
+  AddPresetDialog,
+  DNS_PRESET_OPTIONS,
+  type DnsPresetId,
+} from './AddPresetDialog'
 import { RetryVerification } from '../RetryVerification'
 import { DnsRecordContextMenu } from '../_components/DnsRecordContextMenu'
 import type { Models } from '@appwrite.io/console'
@@ -115,7 +120,6 @@ import {
   useDeleteDnsRecord,
   deleteDnsRecord,
   useUpdateDomainZone,
-  usePresetRecords,
   useUpdateDomainTeam,
   useDeleteOrganizationDomain,
   useOrganizations,
@@ -137,9 +141,10 @@ import {
 import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 
+// The loaders leave both undefined when the domain is not found
 export type DomainDetailInitialData = {
-  domain: Models.Domain
-  records: { dnsRecords: Models.DnsRecord[]; total: number }
+  domain?: Models.Domain
+  records?: { dnsRecords: Models.DnsRecord[]; total: number }
 }
 
 type ViewProps = {
@@ -161,19 +166,12 @@ export function View({ initialData }: ViewProps = {}) {
   const [updateRecordDialogOpen, setUpdateRecordDialogOpen] = useState(false)
   const [deleteRecordDialogOpen, setDeleteRecordDialogOpen] = useState(false)
   const [importZoneDialogOpen, setImportZoneDialogOpen] = useState(false)
+  const [addPresetDialogOpen, setAddPresetDialogOpen] = useState(false)
+  const [selectedPreset, setSelectedPreset] = useState<DnsPresetId | null>(null)
   const [retryDialogOpen, setRetryDialogOpen] = useState(false)
   const [selectedRecord, setSelectedRecord] = useState<Models.DnsRecord | null>(
     null,
   )
-  const [selectedPreset, setSelectedPreset] = useState<
-    | 'zoho'
-    | 'mailgun'
-    | 'outlook'
-    | 'protonmail'
-    | 'icloud'
-    | 'google-workspace'
-    | null
-  >(null)
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [selectedOrgId, setSelectedOrgId] = useState('')
   const [transferDialogOpen, setTransferDialogOpen] = useState(false)
@@ -254,26 +252,33 @@ export function View({ initialData }: ViewProps = {}) {
       ? getDomainTransferStatusBadgeConfig(effectiveTransferStatus)
       : null
 
-  // Fetch DNS records (use initialData only when no filters so we don't show unfiltered data when filtered)
+  // Fetch DNS records. The loader snapshot fills in only before this query
+  // resolves, and never when filters are on (that snapshot is unfiltered).
+  // A resolved empty page, including after delete, must not bring it back.
   const hasRecordFilters = (filterQueries?.length ?? 0) > 0
-  const { dnsRecords: recordsFromHook, total: recordsTotalFromHook } =
-    useDomainRecords(
-      domainId,
-      pageIndexed,
-      pageSize,
-      filterQueries,
-      recordsSortBy,
-      recordsSortOrder,
-    )
+  const {
+    dnsRecords: recordsFromHook,
+    total: recordsTotalFromHook,
+    isSuccess: recordsLoaded,
+  } = useDomainRecords(
+    domainId,
+    pageIndexed,
+    pageSize,
+    filterQueries,
+    recordsSortBy,
+    recordsSortOrder,
+  )
   const isFirstPage = currentPage === 1
   const canUseInitialRecords =
     isFirstPage &&
     initialData?.records &&
     !hasRecordFilters &&
+    !recordsLoaded &&
     !recordsFromHook?.length
-  const rawRecords = canUseInitialRecords
-    ? initialData!.records.dnsRecords
-    : (recordsFromHook ?? [])
+  const rawRecords =
+    canUseInitialRecords && initialData?.records
+      ? initialData.records.dnsRecords
+      : (recordsFromHook ?? [])
   const dnsRecords = useMemo(() => {
     if (rawRecords.length === 0) return rawRecords
 
@@ -297,18 +302,27 @@ export function View({ initialData }: ViewProps = {}) {
     return [...lockedRecords, ...unlockedRecords]
   }, [rawRecords])
   const recordsTotal =
-    isFirstPage && initialData?.records && !hasRecordFilters
-      ? (recordsTotalFromHook ?? initialData.records.total)
+    canUseInitialRecords && initialData?.records
+      ? initialData.records.total
       : (recordsTotalFromHook ?? 0)
 
-  // Get verification status
+  // Deleting the last rows of a later page leaves that page empty while
+  // earlier pages still have records. Step back so the list and the count
+  // stay on the same page.
+  useEffect(() => {
+    if (!recordsLoaded || currentPage <= 1) return
+    if ((recordsFromHook?.length ?? 0) > 0) return
+    if ((recordsTotalFromHook ?? 0) === 0) return
+    setCurrentPage(1)
+  }, [recordsLoaded, currentPage, recordsFromHook, recordsTotalFromHook])
+
+  // Nameserver delegation of the zone, not a project domain's verification;
+  // short enough for one metadata column
   const verificationStatus = useMemo(() => {
     if (!domain) return null
     const isVerified = domain.nameservers?.toLowerCase() === 'appwrite'
     return {
       isVerified,
-      icon: isVerified ? CheckCircle2 : AlertCircle,
-      label: isVerified ? 'Verified' : 'Unverified',
       className: isVerified
         ? 'text-green-600 dark:text-green-500'
         : 'text-yellow-600 dark:text-yellow-500',
@@ -365,9 +379,6 @@ export function View({ initialData }: ViewProps = {}) {
   // Create record mutation
   const createRecordMutation = useCreateDnsRecord(domainId)
 
-  // Preset records
-  usePresetRecords(domainId, selectedPreset)
-
   const handleCreateRecord = (data: {
     type: string
     name: string
@@ -378,7 +389,7 @@ export function View({ initialData }: ViewProps = {}) {
     port?: number
     comment?: string
   }) => {
-    createRecordMutation.mutate(
+    return createRecordMutation.mutateAsync(
       {
         type: data.type,
         data: {
@@ -419,7 +430,7 @@ export function View({ initialData }: ViewProps = {}) {
       comment?: string
     },
   ) => {
-    updateRecordMutation.mutate(
+    return updateRecordMutation.mutateAsync(
       {
         recordId,
         type: data.type,
@@ -538,81 +549,9 @@ export function View({ initialData }: ViewProps = {}) {
     })
   }
 
-  // Handle preset selection
-  const handlePresetSelect = async (
-    preset:
-      | 'zoho'
-      | 'mailgun'
-      | 'outlook'
-      | 'protonmail'
-      | 'icloud'
-      | 'google-workspace',
-  ) => {
+  const openPresetDialog = (preset: DnsPresetId) => {
     setSelectedPreset(preset)
-
-    // Fetch preset records and create them
-    try {
-      const { fetchPresetRecords } = await import('@/lib/react-query/hooks')
-      const data = await fetchPresetRecords(domainId!, preset)
-
-      if (data?.dnsRecords) {
-        await handleCreatePresetRecords(data.dnsRecords, preset)
-      }
-    } catch (error) {
-      toast.error(getErrorMessage(error))
-      setSelectedPreset(null)
-    }
-  }
-
-  const handleCreatePresetRecords = async (
-    records: Models.DnsRecord[],
-    preset:
-      | 'zoho'
-      | 'mailgun'
-      | 'outlook'
-      | 'protonmail'
-      | 'icloud'
-      | 'google-workspace',
-  ) => {
-    const presetLabels: Record<string, string> = {
-      'google-workspace': 'Google Workspace',
-      outlook: 'Outlook',
-      mailgun: 'Mailgun',
-      zoho: 'Zoho',
-      protonmail: 'ProtonMail',
-      icloud: 'iCloud',
-    }
-
-    try {
-      // Create all records from the preset
-      await Promise.all(
-        records.map((record) =>
-          createRecordMutation.mutateAsync({
-            type: record.type,
-            data: {
-              name: record.name || '@',
-              value: record.value,
-              ttl: record.ttl,
-              priority: record.priority,
-              weight: record.weight,
-              port: record.port,
-              comment: record.comment,
-            },
-          }),
-        ),
-      )
-
-      toast.success(
-        `${t('Successfully added')} ${records.length} ${t('DNS records from')} ${presetLabels[preset]}`,
-      )
-      queryClient.invalidateQueries({
-        queryKey: ['dns-records', 'domain', domainId],
-      })
-      setSelectedPreset(null)
-    } catch (error) {
-      toast.error(getErrorMessage(error))
-      setSelectedPreset(null)
-    }
+    openDialogAfterOverlayCloses(() => setAddPresetDialogOpen(true))
   }
 
   // Export zone file
@@ -659,13 +598,19 @@ export function View({ initialData }: ViewProps = {}) {
   const recordsRouteTo = '/organizations/$orgId/domains/$domainId' as const
   const recordsSearchWithSort =
     (queryParam: string | undefined, sortParam: string | undefined) =>
-    (prev: Record<string, unknown>) => ({
-      ...(typeof prev === 'object' && prev !== null ? prev : {}),
-      ...buildListSearchParams({
-        query: queryParam ?? undefined,
-        sort: sortParam ?? undefined,
-      }),
-    })
+    (prev: Record<string, unknown>) => {
+      const next: Record<string, unknown> = {
+        ...(typeof prev === 'object' && prev !== null ? prev : {}),
+        ...buildListSearchParams({
+          query: queryParam ?? undefined,
+          sort: sortParam ?? undefined,
+        }),
+      }
+      // Drop the old query and sort so clearing them removes them from the URL.
+      if (!queryParam) delete next.query
+      if (!sortParam) delete next.sort
+      return next
+    }
   const handleDnsSortChange = (sortBy: string, sortOrder: 'asc' | 'desc') => {
     setCurrentPage(1)
     setSelectedRecords(new Set())
@@ -989,7 +934,7 @@ export function View({ initialData }: ViewProps = {}) {
                     <div className="flex flex-1 items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                          {t('Domain not verified')}
+                          {t('Nameservers not pointed to Appwrite')}
                         </AlertTitle>
                         <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
                           <span className="inline">
@@ -1023,47 +968,22 @@ export function View({ initialData }: ViewProps = {}) {
               {domain && (
                 <div className="mb-4 rounded-lg border border-border bg-card/50">
                   <div className="grid grid-cols-2 gap-x-6 gap-y-3 px-4 py-3 sm:grid-cols-3 lg:grid-cols-6">
-                    {/* Status */}
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
-                        {t('Status')}
-                      </p>
-                      <div className="min-h-[1.25rem] flex items-center gap-1.5">
-                        {transferInProgress && transferStatusBadge ? (
+                    {/* Status: only while something is in progress */}
+                    {transferInProgress && transferStatusBadge && (
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
+                          {t('Status')}
+                        </p>
+                        <div className="min-h-[1.25rem] flex items-center gap-1.5">
                           <Badge
                             variant={transferStatusBadge.variant}
                             className="text-[10px] shrink-0"
                           >
                             {t(transferStatusBadge.label)}
                           </Badge>
-                        ) : (
-                          verificationStatus && (
-                            <>
-                              <code
-                                className={cn(
-                                  'text-[12px] font-mono font-medium',
-                                  verificationStatus.isVerified
-                                    ? 'text-green-600 dark:text-green-500'
-                                    : 'text-yellow-600 dark:text-yellow-500',
-                                )}
-                              >
-                                {t(verificationStatus.label)}
-                              </code>
-                              {!verificationStatus.isVerified && (
-                                <Button
-                                  variant="link"
-                                  size="sm"
-                                  onClick={() => setRetryDialogOpen(true)}
-                                  className={metadataActionClassName}
-                                >
-                                  {t('Verify')}
-                                </Button>
-                              )}
-                            </>
-                          )
-                        )}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Registrar */}
                     <div className="min-w-0">
@@ -1084,8 +1004,14 @@ export function View({ initialData }: ViewProps = {}) {
                       <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
                         {t('Nameservers')}
                       </p>
+                      {/* The banner above offers Retry Verification */}
                       <div className="min-h-[1.25rem] flex items-center min-w-0">
-                        <code className="text-[12px] font-mono text-foreground truncate">
+                        <code
+                          className={cn(
+                            'text-[12px] font-mono font-medium truncate',
+                            verificationStatus?.className,
+                          )}
+                        >
                           {domain.nameservers || t('3rd party')}
                         </code>
                       </div>
@@ -1245,42 +1171,14 @@ export function View({ initialData }: ViewProps = {}) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
-                      <DropdownMenuItem
-                        onClick={() => handlePresetSelect('google-workspace')}
-                        disabled={createRecordMutation.isPending}
-                      >
-                        Google Workspace
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handlePresetSelect('outlook')}
-                        disabled={createRecordMutation.isPending}
-                      >
-                        Outlook
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handlePresetSelect('mailgun')}
-                        disabled={createRecordMutation.isPending}
-                      >
-                        Mailgun
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handlePresetSelect('zoho')}
-                        disabled={createRecordMutation.isPending}
-                      >
-                        Zoho
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handlePresetSelect('protonmail')}
-                        disabled={createRecordMutation.isPending}
-                      >
-                        ProtonMail
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handlePresetSelect('icloud')}
-                        disabled={createRecordMutation.isPending}
-                      >
-                        iCloud
-                      </DropdownMenuItem>
+                      {DNS_PRESET_OPTIONS.map((preset) => (
+                        <DropdownMenuItem
+                          key={preset.id}
+                          onSelect={() => openPresetDialog(preset.id)}
+                        >
+                          {preset.label}
+                        </DropdownMenuItem>
+                      ))}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -1314,42 +1212,14 @@ export function View({ initialData }: ViewProps = {}) {
                         {t('Preset')}
                       </DropdownMenuSubTrigger>
                       <DropdownMenuSubContent className="w-52">
-                        <DropdownMenuItem
-                          onClick={() => handlePresetSelect('google-workspace')}
-                          disabled={createRecordMutation.isPending}
-                        >
-                          Google Workspace
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handlePresetSelect('outlook')}
-                          disabled={createRecordMutation.isPending}
-                        >
-                          Outlook
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handlePresetSelect('mailgun')}
-                          disabled={createRecordMutation.isPending}
-                        >
-                          Mailgun
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handlePresetSelect('zoho')}
-                          disabled={createRecordMutation.isPending}
-                        >
-                          Zoho
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handlePresetSelect('protonmail')}
-                          disabled={createRecordMutation.isPending}
-                        >
-                          ProtonMail
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handlePresetSelect('icloud')}
-                          disabled={createRecordMutation.isPending}
-                        >
-                          iCloud
-                        </DropdownMenuItem>
+                        {DNS_PRESET_OPTIONS.map((preset) => (
+                          <DropdownMenuItem
+                            key={preset.id}
+                            onSelect={() => openPresetDialog(preset.id)}
+                          >
+                            {preset.label}
+                          </DropdownMenuItem>
+                        ))}
                       </DropdownMenuSubContent>
                     </DropdownMenuSub>
                   </DropdownMenuContent>
@@ -1420,7 +1290,8 @@ export function View({ initialData }: ViewProps = {}) {
                           const isAppwriteManaged =
                             value === 'a.a.a.a' ||
                             value === 'b:b::b:b:b' ||
-                            (value?.startsWith('0 issue "') &&
+                            (!!record.lock &&
+                              value?.startsWith('0 issue "') &&
                               value?.includes('"'))
                           const showPriority =
                             record.type === 'MX' || record.type === 'SRV'
@@ -1781,6 +1652,25 @@ export function View({ initialData }: ViewProps = {}) {
                     </p>
                   </div>
                   <div className="border-t border-border" />
+                  {!canManageAutoRenewal && (
+                    <div className="border-b border-border bg-blue-500/5 px-6 py-3">
+                      <Alert
+                        variant="default"
+                        className="border-blue-500/30 bg-transparent"
+                      >
+                        <Info className="h-4 w-4 shrink-0 text-blue-500" />
+                        <AlertTitle className="text-[13px] font-medium text-blue-600 dark:text-blue-400">
+                          {t('Registered with another registrar')}
+                        </AlertTitle>
+                        <AlertDescription className="text-[12px] leading-snug text-blue-600/80 dark:text-blue-400/80">
+                          {t(
+                            'Auto renewal is available for domains registered with Appwrite.', // pragma: allowlist secret
+                          )}{' '}
+                          {t('Renew this domain with its current registrar.')}
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  )}
                   <div className="px-6 py-4">
                     <div className="flex items-start justify-between gap-4">
                       <div className="space-y-1">
@@ -1821,13 +1711,6 @@ export function View({ initialData }: ViewProps = {}) {
                           : '-'}
                       </p>
                     </div>
-                    {!canManageAutoRenewal && (
-                      <p className="mt-3 text-[12px] text-muted-foreground">
-                        {t(
-                          'Auto renewal is available for domains registered with Appwrite.', // pragma: allowlist secret
-                        )}
-                      </p>
-                    )}
                   </div>
                   <div className="px-6 py-4 border-t border-border bg-muted/30">
                     <Button
@@ -2137,8 +2020,8 @@ export function View({ initialData }: ViewProps = {}) {
                         </p>
                         <p className="text-[12px] text-muted-foreground">
                           {domain.nameservers?.toLowerCase() === 'appwrite'
-                            ? t('Verified')
-                            : t('Unverified')}
+                            ? t('Appwrite nameservers')
+                            : t('External nameservers')}
                         </p>
                       </div>
                     </div>
@@ -2187,8 +2070,8 @@ export function View({ initialData }: ViewProps = {}) {
                                   <p className="text-[11px] text-muted-foreground">
                                     {domain.nameservers?.toLowerCase() ===
                                     'appwrite'
-                                      ? t('Verified')
-                                      : t('Unverified')}
+                                      ? t('Appwrite nameservers')
+                                      : t('External nameservers')}
                                   </p>
                                 </div>
                               </div>
@@ -2277,6 +2160,13 @@ export function View({ initialData }: ViewProps = {}) {
           isLoading={deleteRecordMutation.isPending}
         />
       )}
+
+      <AddPresetDialog
+        open={addPresetDialogOpen}
+        onOpenChange={setAddPresetDialogOpen}
+        domainId={domainId}
+        preset={selectedPreset}
+      />
 
       {/* Import Zone Dialog */}
       <ImportZoneDialog

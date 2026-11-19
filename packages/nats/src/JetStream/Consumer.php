@@ -6,6 +6,7 @@ namespace Utopia\NATS\JetStream;
 
 use Utopia\NATS\Connection;
 use Utopia\NATS\Exception\TimeoutException;
+use Utopia\NATS\Message;
 use Utopia\NATS\Subscription;
 
 final class Consumer
@@ -16,6 +17,19 @@ final class Consumer
      * still leaves the server most of the window.
      */
     private const FETCH_EXPIRY_MARGIN = 0.1;
+
+    /**
+     * Seconds a fetch waits past its timeout for each further frame of a reply
+     * the server is bound to end (no_wait, or a pull with an expiry): time for
+     * the rest of it to arrive, since none of it can be new work.
+     */
+    private const FETCH_REPLY_WAIT = 1.0;
+
+    /**
+     * The same for a pull the server may hold open (no expiry): enough to read
+     * frames already on the socket, too short to wait for new work.
+     */
+    private const FETCH_DRAIN_WAIT = 0.05;
 
     public function __construct(
         private readonly Connection $conn,
@@ -30,10 +44,27 @@ final class Consumer
      */
     public function fetch(int $batch = 1, ?float $timeout = null, bool $noWait = false, ?int $maxBytes = null): MessageBatch
     {
+        $messages = new MessageBatch($this->conn);
+        $this->pull($batch, $timeout, $noWait, $maxBytes, $messages->addMessage(...));
+        return $messages;
+    }
+
+    /** @param callable(JetStreamMessage): void $onMessage */
+    public function fetchEach(int $batch, callable $onMessage, ?float $timeout = null, bool $noWait = false, ?int $maxBytes = null): void
+    {
+        $this->pull($batch, $timeout, $noWait, $maxBytes, function (Message $message) use ($onMessage): void {
+            $onMessage(new JetStreamMessage($this->conn, $message));
+        });
+    }
+
+    /** @param callable(Message): void $onMessage */
+    private function pull(int $batch, ?float $timeout, bool $noWait, ?int $maxBytes, callable $onMessage): void
+    {
         $timeout ??= 5.0;
         $requestSubject = "{$this->apiPrefix}.CONSUMER.MSG.NEXT.{$this->stream}.{$this->getName()}";
 
         $request = ['batch' => $batch];
+        $ends = true;
         if ($noWait) {
             // No 'expires' alongside it. A pull request that carries an expiry
             // waits the whole window and then answers 408 Request Timeout, so
@@ -43,13 +74,13 @@ final class Consumer
             // per call -- 0.25s of poll is a ceiling of four calls a second.
             $request['no_wait'] = true;
         } else {
-            // Expire the server's pull request just before the client stops
-            // waiting. On an identical deadline a message the server dispatches
-            // at the boundary is dropped here while the server has already
-            // counted the delivery, burning an attempt against maxDeliver for
-            // nothing.
+            // Expire the server's pull request just before the timeout, so its
+            // 408 ends a waiting fetch on time.
             $serverExpiry = $timeout - min(self::FETCH_EXPIRY_MARGIN, $timeout * 0.1);
-            $request['expires'] = StreamConfig::secondsToNanos($serverExpiry);
+            $expires = StreamConfig::secondsToNanos($serverExpiry);
+            $request['expires'] = $expires;
+            // An expiry of zero is none: the server holds the request open.
+            $ends = $expires > 0;
         }
         if ($maxBytes !== null) {
             $request['max_bytes'] = $maxBytes;
@@ -57,10 +88,9 @@ final class Consumer
 
         $payload = json_encode($request, JSON_THROW_ON_ERROR);
 
+        $this->conn->settle(min($timeout, Connection::SETTLE_TIMEOUT));
         $inbox = $this->conn->newInbox();
         $sub = $this->conn->subscribe($inbox);
-
-        $messageBatch = new MessageBatch($this->conn);
 
         // Capture a throw from the pull itself so a failure tearing down the
         // inbox (dead socket → reconnect → ConnectionException) cannot replace
@@ -68,7 +98,7 @@ final class Consumer
         $pending = null;
         try {
             $this->conn->publish($requestSubject, $payload, $inbox);
-            $this->collectBatch($sub, $messageBatch, $batch, $timeout);
+            $this->collectBatch($sub, $onMessage, $batch, $timeout, $ends ? self::FETCH_REPLY_WAIT : self::FETCH_DRAIN_WAIT);
         } catch (\Throwable $error) {
             $pending = $error;
         }
@@ -88,30 +118,38 @@ final class Consumer
         if ($pending instanceof \Throwable) {
             throw $pending;
         }
-
-        return $messageBatch;
     }
 
     /**
      * Gather up to $batch messages for a pull request, stopping on the server's
-     * terminal status messages or when the client deadline passes.
+     * terminal status, or once the timeout has passed and no further frame comes
+     * within $afterTimeout.
+     *
+     * @param callable(Message): void $onMessage
      */
     private function collectBatch(
         Subscription $sub,
-        MessageBatch $messageBatch,
+        callable $onMessage,
         int $batch,
         float $timeout,
+        float $afterTimeout,
     ): void {
         $deadline = microtime(true) + $timeout;
+        $drained = false;
 
-        while (\count($messageBatch) < $batch) {
+        $received = 0;
+        while ($received < $batch) {
+            // Past the timeout, still read what the server sent: it counted each
+            // message as delivered, and one left unread is held until ackWait and
+            // charged an attempt, however late it arrives or is read.
             $remaining = $deadline - microtime(true);
-            if ($remaining <= 0) {
-                break;
-            }
-
-            $msg = $sub->nextMessage($remaining);
+            $msg = $sub->nextMessage($remaining > 0 ? $remaining : $afterTimeout);
             if (!$msg instanceof \Utopia\NATS\Message) {
+                // A wait that ran into the timeout looks once more before giving up.
+                if ($remaining > 0 && !$drained) {
+                    $drained = true;
+                    continue;
+                }
                 break;
             }
 
@@ -140,7 +178,8 @@ final class Consumer
                 }
             }
 
-            $messageBatch->addMessage($msg);
+            $onMessage($msg);
+            $received++;
         }
     }
 

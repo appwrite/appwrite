@@ -20,6 +20,7 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
+      - appwrite-videos-tmp:/storage/videos-tmp:rw
     depends_on:
       - dns
     ports:
@@ -174,6 +175,19 @@ services:
       - ./src:/usr/src/code/src
       - ./packages:/usr/src/code/packages
   appwrite-worker-screenshots:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
+  appwrite-worker-videos:
     build:
       context: .
       target: development
@@ -376,6 +390,19 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./packages:/usr/src/code/packages
+  appwrite-task-scheduler-alerts:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-task-stats-resources:
     build:
       context: .
@@ -470,6 +497,67 @@ services:
       - 9507:5000
     networks:
       - appwrite
+  # LDAP directory the Project suite signs in against (seeded by openldap-seed).
+  # Run dev/openldap/certs.sh first so it serves the certificates the TLS tests trust.
+  openldap:
+    profiles:
+      - openldap
+    image: osixia/openldap:1.5.0
+    container_name: appwrite-openldap
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    networks:
+      - appwrite
+    ports:
+      - 3389:389
+      - 3636:636
+    volumes:
+      - ./dev/openldap/certs:/certs:ro
+    environment:
+      - LDAP_ORGANISATION=Appwrite Test
+      - LDAP_DOMAIN=appwrite.test
+      - LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD:-adminpassword}
+      - LDAP_TLS=true
+      - LDAP_TLS_VERIFY_CLIENT=never
+      - LDAP_SEED_INTERNAL_LDAP_TLS_CRT_FILE=/certs/ldap.crt
+      - LDAP_SEED_INTERNAL_LDAP_TLS_KEY_FILE=/certs/ldap.key
+      - LDAP_SEED_INTERNAL_LDAP_TLS_CA_CRT_FILE=/certs/ca.crt
+
+  # One-shot loader of dev/openldap/seed.ldif, on its own profile so that
+  # `up --wait` never waits on it: run it with `run --rm openldap-seed`.
+  openldap-seed:
+    profiles:
+      - openldap-seed
+    image: osixia/openldap:1.5.0
+    container_name: appwrite-openldap-seed
+    networks:
+      - appwrite
+    volumes:
+      - ./dev/openldap/seed.ldif:/seed.ldif:ro
+    entrypoint:
+      - sh
+      - -c
+      - |
+        # The image answers from a first-boot slapd and then restarts it, so an add can
+        # land while it is down. Retry until the seed's last entry reads back.
+        for attempt in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30; do
+          ldapadd -c -x -H ldap://openldap -D cn=admin,dc=appwrite,dc=test \
+            -w $${LDAP_ADMIN_PASSWORD} -f /seed.ldif >/dev/null 2>&1
+          if ldapsearch -x -H ldap://openldap -s base -b cn=appwrite-posix,ou=groups,dc=appwrite,dc=test \
+            -D cn=admin,dc=appwrite,dc=test -w $${LDAP_ADMIN_PASSWORD} >/dev/null 2>&1; then
+            echo "LDAP fixtures loaded."
+            exit 0
+          fi
+          sleep 2
+        done
+        echo "LDAP fixtures did not load." >&2
+        exit 1
+    environment:
+      - LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD:-adminpassword}
+
   gitea:
     profiles:
       - gitea

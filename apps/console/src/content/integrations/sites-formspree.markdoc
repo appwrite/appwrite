@@ -1,0 +1,76 @@
+---
+layout: integration
+title: Job applications with Formspree
+description: Collect job applications with a React form that submits to Formspree, deployed on Appwrite Sites
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/sites-formspree/cover.avif
+category: sites
+product:
+    vendor: Formspree
+    description: "Formspree is a form backend that receives submissions from HTML and JavaScript forms, so you can collect them without running your own server."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+images:
+    - /images/integrations/sites-formspree/cover.avif
+    - /images/sites/templates/job-applications-formspree-dark.png
+    - /images/sites/templates/job-applications-formspree-light.png
+---
+
+[Formspree](https://formspree.io) is a form backend. You point a form at a Formspree form, and Formspree receives and stores the submissions, so a static site can collect data without a server of its own. Its React library, `@formspree/react`, submits a form from a React component and reports the submission state.
+
+# How does the integration work?
+
+[Appwrite Sites](/docs/products/sites) has a **Job applications form with Formspree** template: a React, Vite, and Tailwind CSS job application form that sends every submission to Formspree. The form calls `useForm` from `@formspree/react` with the form ID in the `VITE_FORMSPREE_FORM_ID` environment variable, disables the submit button while sending, and shows a confirmation message when Formspree accepts the submission.
+
+Appwrite builds the template from the [appwrite/templates-for-sites](https://github.com/appwrite/templates-for-sites/tree/main/react/formspree) repository and serves it as a static site:
+
+| Setting | Value |
+| --- | --- |
+| Framework | React |
+| Install command | `npm install` |
+| Build command | `npm run build` |
+| Output directory | `./dist` |
+| Rendering | Static, with `index.html` as the fallback file |
+
+{% info title="Self-hosted Appwrite" %}
+The template builds on the `node-22` runtime, which `_APP_SITES_RUNTIMES` enables by default. To create a repository from the template, configure [version control](/docs/advanced/self-hosting/configuration/version-control) for your instance first. **Connect later** deploys the template straight from its public GitHub source.
+{% /info %}
+
+# How to implement
+
+To collect job applications with Formspree and Appwrite Sites, there are several steps you must complete:
+
+## Step 1: Create a form on Formspree
+
+[Sign up for Formspree](https://formspree.io) and create a new form in the dashboard. Open the form's **Integration** tab and copy the hashid at the end of the URL shown under **Your form's endpoint is**. This is the form ID the template needs, for example `xrgkpqld`.
+
+## Step 2: Create a site from the template
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, go to **Sites** and click **Create site**. Search the templates for **Job applications form with Formspree** and select it.
+
+Enter a **Site name** and a **Site ID**, then choose **Connect your repository** if you want to edit the form later, or **Connect later** to deploy it as it is. Under the template's variables, set `VITE_FORMSPREE_FORM_ID` to the form ID you copied. The variable is required, and Vite reads it at build time, so the deployed form already points at your Formspree form.
+
+Pick a subdomain under **Domain** and click **Deploy**.
+
+## Step 3: Test the form
+
+Open the deployed site, fill in the application, and click **Submit Application**. After Formspree accepts it, the page shows a thank-you message, and the submission appears in your form on the Formspree dashboard.
+
+If you change the form ID later, update `VITE_FORMSPREE_FORM_ID` in the site's **Settings** > **Environment variables** and redeploy the site, because variable changes only apply to new deployments.
+
+## Step 4: Customize the fields
+
+The form lives in `src/App.jsx`. Each input's `name` attribute, such as `email`, `previous-company`, or `start-date`, becomes a field in the Formspree submission. Add, remove, or rename inputs there, and edit the options of the `position` select to list your open roles. Push the change to the production branch to redeploy.
+
+# Read more about Formspree and Appwrite Sites
+
+If you would like to learn more about Formspree and Appwrite Sites, we have some resources that you should visit:
+
+- [Appwrite Sites templates](/docs/products/sites/templates)
+- [Environment variables in Appwrite Sites](/docs/products/sites/environment-variables)
+- [Find your Formspree form's hashid](https://help.formspree.io/articles/the-forms-api/getting-your-form-s-hashid)
+- [Formspree React library](https://help.formspree.io/articles/working-with-react/the-formspree-react-library/)

@@ -6,6 +6,7 @@ namespace Utopia\Cache\Tests;
 
 use Override;
 use Utopia\Cache\Adapter\Filesystem;
+use Utopia\Cache\Adapter\Memory;
 use Utopia\Cache\Adapter\Pool;
 use Utopia\Cache\Cache;
 use Utopia\Pools\Adapter\Stack;
@@ -24,6 +25,32 @@ final class PoolTest extends Base
         self::$cache = new Cache(new Pool($pool));
     }
 
+    /** This pool holds Filesystem adapters, which store strings, so an empty array is refused like an empty string. */
+    #[Override]
+    public function testEmptyArrayIsStored(): void
+    {
+        $this->assertFalse(self::$cache->save('empty-array', []));
+        $this->assertFalse(self::$cache->load('empty-array', 60));
+    }
+
+    #[Override]
+    public function testEmptyArrayIsKeptByTouch(): void
+    {
+        $this->assertFalse(self::$cache->save('empty-array-touch', []));
+        $this->assertFalse(self::$cache->touch('empty-array-touch'));
+    }
+
+    public function testEmptyArrayIsStoredThroughAPoolOfMemory(): void
+    {
+        $pool = new UtopiaPool(new Stack(), 'memory', 1, fn (): Memory => new Memory(), timeout: 0.0);
+        $cache = new Cache(new Pool($pool));
+
+        $this->assertSame([], $cache->save('empty-array', []));
+        $this->assertSame([], $cache->load('empty-array', 60));
+        $this->assertSame([], $cache->saveWithLease('empty-array-lease', [], '', $cache->getLease('empty-array-lease')));
+        $this->assertSame([], $cache->load('empty-array-lease', 60));
+    }
+
     public function testGetSize(): void
     {
         self::$cache->save('test', 'test');
@@ -40,13 +67,11 @@ final class PoolTest extends Base
         parent::testCaseSensitivity();
     }
 
-    public function testLeaseFallbackForNonLeasableAdapter(): void
+    public function testUnsupportedAdaptersCannotPerformConditionalFills(): void
     {
-        // The pool holds Filesystem adapters, which are not Leasable. The Pool
-        // adapter must degrade gracefully (no "Call to undefined method" fatal):
-        // getGeneration() returns '0' and saveWithLease() falls back to save().
-        $this->assertSame('0', self::$cache->getGeneration('lease:fallback'));
-        $this->assertNotFalse(self::$cache->saveWithLease('lease:fallback', 'value', 'lease:fallback', '0'));
-        $this->assertSame('value', self::$cache->load('lease:fallback', 60, 'lease:fallback'));
+        $this->assertFalse(self::$cache->supportsVersioning());
+        $this->assertSame('', self::$cache->getLease('lease:fallback'));
+        $this->assertFalse(self::$cache->saveWithLease('lease:fallback', 'value', '', ''));
+        $this->assertFalse(self::$cache->load('lease:fallback', 60));
     }
 }

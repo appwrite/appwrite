@@ -2,6 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments;
 
+use Appwrite\Deployment\Deployments;
+use Appwrite\Deployment\GitAction;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -11,10 +13,12 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -65,6 +69,12 @@ class Delete extends Action
             ->inject('publisherForDeletes')
             ->inject('queueForEvents')
             ->inject('deviceForSites')
+            ->inject('deployments')
+            ->inject('project')
+            ->inject('dbForPlatform')
+            ->inject('vcsFactory')
+            ->inject('platform')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -75,7 +85,13 @@ class Delete extends Action
         Database $dbForProject,
         DeletePublisher $publisherForDeletes,
         Event $queueForEvents,
-        Device $deviceForSites
+        Device $deviceForSites,
+        Deployments $deployments,
+        Document $project,
+        Database $dbForPlatform,
+        VcsFactory $vcsFactory,
+        array $platform,
+        Authorization $authorization,
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
         if ($site->isEmpty()) {
@@ -132,6 +148,14 @@ class Delete extends Action
             }
         }
 
+        // A build still running would write its output after the deletes worker has cleared it.
+        if (!\in_array($deployment->getAttribute('status'), ['ready', 'failed', 'canceled'], true)) {
+            try {
+                $deployments->cancel($deployment->getId());
+            } catch (\Throwable) {
+            }
+        }
+
         if ($site->getAttribute('latestDeploymentId') === $deployment->getId()) {
             $latestDeployment = $dbForProject->findOne('deployments', [
                 Query::equal('resourceType', ['sites']),
@@ -159,6 +183,9 @@ class Delete extends Action
                 'deploymentCreatedAt' => '',
             ])));
         }
+
+        // The provider stops offering the deployed resource's links
+        $authorization->skip(fn () => GitAction::report('deleted', $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform));
 
         $queueForEvents
             ->setParam('siteId', $site->getId())

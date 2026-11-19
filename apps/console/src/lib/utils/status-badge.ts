@@ -5,7 +5,9 @@
  * All status badges should use these utilities for consistency.
  */
 
+import type { ProxyRuleRecord } from '@/lib/appwrite/proxy-rules'
 import type { CanonicalPlanId } from '@/lib/utils/plan-filter'
+import { getRecordName } from '@/lib/utils/proxy-domains'
 
 /**
  * Status types for general use cases
@@ -274,6 +276,71 @@ export function getMigrationStatusVariant(
 }
 
 /**
+ * How long after a domain is added Appwrite keeps checking its DNS on its own.
+ */
+const DOMAIN_VERIFICATION_WINDOW_MS = 3 * 24 * 60 * 60 * 1000
+
+/**
+ * Whether a rule's DNS check has not passed yet. The API reports it as
+ * 'unverified' with no certificate, and realtime keeps the stored 'created'.
+ * An older server omits certificateStatus, so only an empty string counts.
+ */
+export function isDnsUnverified(rule: {
+  status: string
+  certificateStatus?: string
+}): boolean {
+  return (
+    rule.status === 'created' ||
+    (rule.status === 'unverified' && rule.certificateStatus === '')
+  )
+}
+
+/**
+ * Whether Appwrite is still checking a rule's DNS on its own: the check has not
+ * passed and the domain was added less than 3 days ago.
+ */
+export function isWaitingForDns(
+  rule: { status: string; certificateStatus?: string; $createdAt?: string },
+  now: Date = new Date(),
+): boolean {
+  if (!isDnsUnverified(rule) || !rule.$createdAt) return false
+  const createdAt = new Date(rule.$createdAt).getTime()
+  return (
+    !Number.isNaN(createdAt) &&
+    now.getTime() - createdAt < DOMAIN_VERIFICATION_WINDOW_MS
+  )
+}
+
+/**
+ * Whether the last DNS check of a domain found a record with the wrong value:
+ * a CAA record that blocks the certificate, or no pointing record verified
+ * while one points elsewhere. A subdomain points with its CNAME. An apex
+ * points with an ALIAS, which the A and AAAA checks verify, as they do for a
+ * domain with no CNAME check.
+ */
+export function hasWrongDnsRecord(
+  domain: string,
+  records: Pick<ProxyRuleRecord, 'type' | 'status'>[],
+): boolean {
+  if (records.some((r) => r.type === 'CAA' && r.status === 'mismatch'))
+    return true
+  const pointingTypes = ['CNAME', 'A', 'AAAA']
+  if (
+    records.some(
+      (r) => pointingTypes.includes(r.type) && r.status === 'verified',
+    )
+  )
+    return false
+  const cname =
+    getRecordName(domain) !== '@' && records.some((r) => r.type === 'CNAME')
+  return records.some(
+    (r) =>
+      (cname ? r.type === 'CNAME' : r.type === 'A' || r.type === 'AAAA') &&
+      r.status === 'mismatch',
+  )
+}
+
+/**
  * Domain status types
  */
 export type DomainStatus = 'verified' | 'verifying' | 'unverified' | 'created'
@@ -309,7 +376,7 @@ export function getDomainStatusBadgeConfig(status: string): {
 } {
   switch (status) {
     case 'verified':
-      return { variant: 'success', label: 'Verified' }
+      return { variant: 'success', label: 'Active' }
     case 'verifying':
       return { variant: 'processing', label: 'Generating certificate' }
     case 'created':
@@ -319,4 +386,110 @@ export function getDomainStatusBadgeConfig(status: string): {
     default:
       return { variant: 'processing', label: status }
   }
+}
+
+/**
+ * Get proxy rule status badge config for rendering. A certificate that failed
+ * because it waits on a DNS record shows as blocked. A rule whose DNS check has
+ * not passed waits for DNS while Appwrite keeps checking it, and shows as a
+ * failed verification once those checks stop. A verified rule shows its
+ * certificate only when the developer has to act on it: the renewal failed,
+ * is blocked on a DNS record, or the certificate expired. A healthy
+ * certificate keeps the plain Active badge, and so does a rule from a
+ * server that reports no certificate state.
+ */
+export function getRuleStatusBadgeConfig(
+  rule: {
+    status: string
+    expireAt?: string
+    certificateStatus?: string
+    logs?: string
+    $createdAt?: string
+    domain?: string
+    /** The stored DNS checks, see ProxyRuleRecord */
+    records?: Pick<ProxyRuleRecord, 'type' | 'status'>[]
+  },
+  now: Date = new Date(),
+): {
+  variant: DomainStatusBadgeVariant | 'success' | 'warning'
+  label: string
+  /** What to do about the certificate, for the badge tooltip */
+  hint?: string
+  /** When a certificate whose renewal is stuck expires */
+  expireAt?: Date
+} {
+  const config = getDomainStatusBadgeConfig(rule.status)
+  if (rule.status === 'unverified' && rule.certificateStatus === 'blocked') {
+    return {
+      variant: 'warning',
+      label: 'Certificate blocked',
+      hint: 'The certificate is waiting on a DNS record. Add the record shown in View logs, then Retry.',
+    }
+  }
+  // Retry is not offered while the rule is still verifying. A retry clears
+  // the logs but not the certificate status, so only logs mean blocked now.
+  if (
+    rule.status === 'verifying' &&
+    rule.certificateStatus === 'blocked' &&
+    !!rule.logs?.length
+  ) {
+    return {
+      variant: 'warning',
+      label: 'Certificate blocked',
+      hint: 'The certificate is waiting on a DNS record. Add the record shown in View logs.',
+    }
+  }
+  // Not an error while Appwrite still checks the DNS on its own.
+  if (isWaitingForDns(rule, now)) {
+    if (hasWrongDnsRecord(rule.domain ?? '', rule.records ?? [])) {
+      return {
+        variant: 'error',
+        label: 'Action needed',
+        hint: 'A DNS record has the wrong value. Open Records to see which one and what to change it to.',
+      }
+    }
+    return {
+      variant: 'warning',
+      label: 'Waiting for DNS',
+      hint: 'Appwrite checks the DNS records every few minutes for 3 days after the domain is added. Use Check now to look again right away.',
+    }
+  }
+  if (isDnsUnverified(rule)) {
+    return {
+      variant: 'error',
+      label: 'Verification failed',
+      hint: 'Appwrite stopped checking 3 days after the domain was added. Fix the DNS records, then Retry.',
+    }
+  }
+  if (rule.status !== 'verified') return config
+
+  const parsed = rule.expireAt ? new Date(rule.expireAt) : undefined
+  const expireAt =
+    parsed && !Number.isNaN(parsed.getTime()) ? parsed : undefined
+
+  if (expireAt && expireAt.getTime() < now.getTime()) {
+    return {
+      variant: 'error',
+      label: 'Certificate expired',
+      hint: "This certificate has expired. Check that the domain's DNS still points to Appwrite.",
+    }
+  }
+  if (rule.certificateStatus === 'failed') {
+    return {
+      variant: 'error',
+      label: 'Renewal failed',
+      hint: "View logs for details. Check that the domain's DNS still points to Appwrite.",
+      ...(expireAt && { expireAt }),
+    }
+  }
+  if (rule.certificateStatus === 'blocked') {
+    return {
+      variant: 'warning',
+      label: 'Renewal blocked',
+      hint: 'Renewal is waiting on a DNS record. View logs to see which record to add.',
+      ...(expireAt && { expireAt }),
+    }
+  }
+
+  return config
 }

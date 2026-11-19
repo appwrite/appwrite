@@ -118,7 +118,7 @@ class Filesystem implements Adapter
 
     public function flush(): bool
     {
-        return $this->deleteDirectory($this->path);
+        return $this->deleteDirectory($this->path, true);
     }
 
     public function ping(): bool
@@ -169,7 +169,7 @@ class Filesystem implements Adapter
      *
      * @throws Exception
      */
-    protected function deleteDirectory(string $path): bool
+    protected function deleteDirectory(string $path, bool $isRoot = false): bool
     {
         if (! is_dir($path)) {
             throw new Exception("$path must be a directory");
@@ -179,21 +179,25 @@ class Filesystem implements Adapter
             $path .= '/';
         }
 
-        $files = glob($path . '*', GLOB_MARK);
+        $entries = scandir($path);
 
-        if (! $files) {
-            throw new Exception('Error happened during glob');
+        if ($entries === false) {
+            throw new Exception('Error happened during scandir');
         }
 
-        foreach ($files as $file) {
-            if (is_dir($file)) {
-                self::deleteDirectory($file);
+        $success = true;
+
+        foreach (array_diff($entries, ['.', '..']) as $entry) {
+            $file = $path . $entry;
+
+            if (is_dir($file) && ! is_link($file)) {
+                $success = $this->deleteDirectory($file) && $success;
             } else {
-                unlink($file);
+                $success = unlink($file) && $success;
             }
         }
 
-        return rmdir($path);
+        return $isRoot ? $success : ($success && rmdir($path));
     }
 
     public function getName(?string $key = null): string

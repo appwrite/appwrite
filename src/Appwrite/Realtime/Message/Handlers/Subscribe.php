@@ -9,6 +9,7 @@ use Appwrite\Realtime\Message\Dispatcher;
 use Appwrite\Realtime\Message\Validators\SubscribePayload as SubscribePayloadValidator;
 use Appwrite\Utopia\Database\RuntimeQuery;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Id;
 use Utopia\Database\PermissionType;
@@ -32,6 +33,7 @@ class Subscribe extends Action
             ->inject('projectId')
             ->inject('eventTailRegistry')
             ->inject('dbForConsole')
+            ->inject('project')
             ->callback($this->action(...));
     }
 
@@ -47,8 +49,14 @@ class Subscribe extends Action
         ?string $projectId,
         EventTailRegistry $eventTailRegistry,
         Database $dbForConsole,
+        ?Document $project,
     ): array {
         $roles = $realtime->connections[$connectionId]['roles'] ?? [Role::guests()->toString()];
+
+        // A guest may still sign in over this connection, so it is not closed.
+        if (\in_array(Role::guests()->toString(), $roles, true) && ($project?->getAttribute('auths', [])['realtimeGuests'] ?? false)) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'This project does not allow guests to subscribe. Sign in first.');
+        }
         $userId = $realtime->connections[$connectionId]['userId'] ?? '';
 
         $parsedPayloads = [];
@@ -131,6 +139,50 @@ class Subscribe extends Action
                 // Carry the authorizing roles so the tail is revoked when the viewer's roles change.
                 $pendingTails[] = [$parsedPayload['subscriptionId'], $targetProjectId, $compiled, $readRoles];
             }
+        }
+
+        // Checked on fresh state just before the tree changes, as the tail lookups above can yield.
+        // Subscribing again with an existing id adds its channels and replaces its queries.
+        $maxSubscriptions = $realtime->connections[$connectionId]['limits']['subscriptions'] ?? APP_LIMIT_REALTIME_SUBSCRIPTIONS;
+        $maxChannels = $realtime->connections[$connectionId]['limits']['channels'] ?? APP_LIMIT_REALTIME_CHANNELS;
+        $maxQueries = $realtime->connections[$connectionId]['limits']['queries'] ?? APP_LIMIT_REALTIME_QUERIES;
+        $channels = [];
+        $queries = [];
+        foreach ($realtime->getSubscriptionMetadata($connectionId) as $subscriptionId => $subscription) {
+            $channels[$subscriptionId] = \array_flip($subscription['channels']);
+            $queries[$subscriptionId] = $subscription['count'];
+        }
+        foreach ($parsedPayloads as $parsedPayload) {
+            $subscriptionId = $parsedPayload['subscriptionId'];
+            $channels[$subscriptionId] = ($channels[$subscriptionId] ?? []) + \array_flip($parsedPayload['convertedChannels']);
+            $queries[$subscriptionId] = Realtime::countQueries($parsedPayload['queries']);
+            if (\count($channels[$subscriptionId]) > APP_LIMIT_ARRAY_PARAMS_SIZE) {
+                throw new Exception(
+                    Exception::REALTIME_MESSAGE_FORMAT_INVALID,
+                    'Subscription "' . $subscriptionId . '" must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' channels.'
+                );
+            }
+        }
+        // A subscription without channels is never stored, so it counts towards nothing.
+        $channels = \array_filter($channels);
+        $queries = \array_intersect_key($queries, $channels);
+        if (\count($channels) > $maxSubscriptions) {
+            throw new Exception(
+                Exception::REALTIME_MESSAGE_FORMAT_INVALID,
+                'Connection must have at most ' . $maxSubscriptions . ' subscriptions. Unsubscribe from some before subscribing to more.'
+            );
+        }
+        if (\array_sum(\array_map(\count(...), $channels)) > $maxChannels) {
+            throw new Exception(
+                Exception::REALTIME_MESSAGE_FORMAT_INVALID,
+                'Connection must have at most ' . $maxChannels . ' channels across its subscriptions. Unsubscribe from some before subscribing to more.'
+            );
+        }
+        if (\array_sum($queries) > $maxQueries) {
+            throw new Exception(
+                Exception::REALTIME_MESSAGE_FORMAT_INVALID,
+                'Connection must have at most ' . $maxQueries . ' queries across its subscriptions. Unsubscribe from some before subscribing to more.'
+            );
         }
 
         foreach ($parsedPayloads as $parsedPayload) {

@@ -261,10 +261,11 @@ class Client implements Adapter, ResponseStreamingClientInterface
             $notified = true;
             $onResponse($builder->build($parsed['status'], $parsed['reason'], $parsed['headers'], '', $parsed['protocol']));
         };
+        $exceeded = false;
         $options = $this->options($request, $headers, $refused, static function (string $chunk) use ($sink, $notify): void {
             $notify();
             $sink($chunk);
-        }, $decompress);
+        }, $decompress, $exceeded);
 
         try {
             if (curl_setopt_array($handle, $options) === false) {
@@ -282,6 +283,10 @@ class Client implements Adapter, ResponseStreamingClientInterface
 
             if ($refused !== null) {
                 throw new DestinationException($request, "Connection to {$refused} refused: not an allowed destination.", $code);
+            }
+
+            if ($exceeded) {
+                throw $this->networkException($request, 'Response body exceeds the maximum file size.', \CURLE_FILESIZE_EXCEEDED);
             }
 
             throw $this->networkException($request, $message === '' ? 'Curl request failed.' : $message, $code);
@@ -339,8 +344,16 @@ class Client implements Adapter, ResponseStreamingClientInterface
      *
      * @return array<int, mixed>
      */
-    private function options(RequestInterface $request, string &$headers, ?string &$refused, callable $sink, bool $decompress): array
+    private function options(RequestInterface $request, string &$headers, ?string &$refused, callable $sink, bool $decompress, bool &$exceeded): array
     {
+        // cURL checks CURLOPT_MAXFILESIZE against the bytes on the wire, before content decoding,
+        // so a small compressed body could still expand past it in memory. The same cap is applied
+        // to the bytes handed to the sink, which are the decoded ones.
+        $limit = $this->options[\CURLOPT_MAXFILESIZE_LARGE] ?? $this->options[\CURLOPT_MAXFILESIZE] ?? null;
+        $limit = \is_int($limit) && $limit > 0 ? $limit : null;
+
+        $received = 0;
+
         $options = [
             \CURLOPT_URL => (string) $request->getUri(),
             \CURLOPT_CUSTOMREQUEST => $request->getMethod(),
@@ -355,8 +368,17 @@ class Client implements Adapter, ResponseStreamingClientInterface
                 return \strlen($line);
             },
             \CURLOPT_RETURNTRANSFER => false,
-            \CURLOPT_WRITEFUNCTION => static function (CurlHandle $handle, string $chunk) use ($sink): int {
+            \CURLOPT_WRITEFUNCTION => static function (CurlHandle $handle, string $chunk) use ($sink, $limit, &$received, &$exceeded): int {
                 unset($handle);
+                $received += \strlen($chunk);
+
+                if ($limit !== null && $received > $limit) {
+                    $exceeded = true;
+
+                    // Any count other than the chunk's length aborts the transfer.
+                    return 0;
+                }
+
                 $sink($chunk);
 
                 return \strlen($chunk);

@@ -18,6 +18,11 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { FiltersPopoverContent } from './FiltersPopoverContent'
 import { ToolbarCountBadge } from './ToolbarCountBadge'
 import {
@@ -60,6 +65,8 @@ export interface FiltersPopoverProps {
   triggerClassName?: string
   /** Joined to the Filters split button (e.g. activity Via MCP / Via CLI). */
   afterTrigger?: ReactNode
+  /** Compact ghost icon for sidebar search bars; default is toolbar outline button. */
+  triggerVariant?: 'toolbar' | 'icon'
 }
 
 export function FiltersPopover({
@@ -81,86 +88,121 @@ export function FiltersPopover({
   onReset,
   triggerClassName,
   afterTrigger,
+  triggerVariant = 'toolbar',
 }: FiltersPopoverProps) {
   const t = useT()
   const hasFilters = filterMap.size > 0
   const hasAfterTrigger = afterTrigger != null
+  const filtersLabel = t('Filters')
+  const popoverContent = (
+    <PopoverContent
+      className="max-h-[calc(100dvh-4rem)] w-[380px] overflow-hidden rounded-xl border-border p-0 shadow-lg"
+      align="start"
+      side="bottom"
+      sideOffset={8}
+    >
+      {open ? (
+        <FiltersPopoverContent
+          columns={columns}
+          filterMap={filterMap}
+          onRemoveFilter={onRemoveFilter}
+          onClearAll={onClearAll}
+          onApplyFilter={onApplyFilter}
+          onClose={() => onOpenChange(false)}
+          resourceLabel={resourceLabel}
+          filterScope={filterScope}
+          onApplyQuery={onApplyQuery}
+          teamId={teamId ?? undefined}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={onSortChange}
+          defaultSortParam={defaultSortParam}
+          onReset={onReset}
+        />
+      ) : null}
+    </PopoverContent>
+  )
+
+  if (triggerVariant === 'icon') {
+    return (
+      <Popover open={open} onOpenChange={onOpenChange}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className={cn('relative h-6 w-6 text-muted-foreground', triggerClassName)}
+                aria-label={filtersLabel}
+              >
+                <Filter className="h-3 w-3" />
+                {filterMap.size > 0 ? (
+                  <ToolbarCountBadge count={filterMap.size} placement="corner" />
+                ) : null}
+              </Button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs">
+            {filtersLabel}
+          </TooltipContent>
+        </Tooltip>
+        {popoverContent}
+      </Popover>
+    )
+  }
+
   return (
     // Split button while filters are active: [ Filters 2 | × ]. The clear
     // control sits beside the trigger (not inside it) because buttons can't
     // be nested. `afterTrigger` continues the same control (quick filters).
     <div className="inline-flex shrink-0 items-stretch">
-    <Popover open={open} onOpenChange={onOpenChange}>
-      <PopoverTrigger asChild>
+      <Popover open={open} onOpenChange={onOpenChange}>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className={cn(
+              'border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground',
+              serviceHeaderFiltersButton,
+              (hasFilters || hasAfterTrigger) && 'rounded-e-none',
+              triggerClassName,
+            )}
+          >
+            <Filter className="h-3.5 w-3.5 shrink-0" />
+            <span className={serviceHeaderFiltersLabel}>{filtersLabel}</span>
+            {filterMap.size > 0 ? (
+              <ToolbarCountBadge
+                count={filterMap.size}
+                placement="inline"
+                inlineTone="emphasis"
+              />
+            ) : null}
+          </Button>
+        </PopoverTrigger>
+        {popoverContent}
+      </Popover>
+      {hasFilters ? (
         <Button
           type="button"
           variant="outline"
           size="sm"
+          onClick={() => {
+            onClearAll()
+            onOpenChange(false)
+          }}
+          aria-label={t('Clear filters')}
+          title={t('Clear filters')}
           className={cn(
-            'border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground',
-            serviceHeaderFiltersButton,
-            (hasFilters || hasAfterTrigger) && 'rounded-e-none',
-            triggerClassName,
+            'h-auto w-9 shrink-0 rounded-s-none border-s-0 border-border bg-transparent p-0 text-muted-foreground hover:bg-accent hover:text-foreground',
+            hasAfterTrigger && 'rounded-e-none',
           )}
         >
-          <Filter className="h-3.5 w-3.5 shrink-0" />
-          <span className={serviceHeaderFiltersLabel}>{t('Filters')}</span>
-          {filterMap.size > 0 ? (
-            <ToolbarCountBadge
-              count={filterMap.size}
-              placement="inline"
-              inlineTone="emphasis"
-            />
-          ) : null}
+          <X className="h-3.5 w-3.5" />
         </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        className="max-h-[calc(100dvh-4rem)] w-[380px] overflow-hidden rounded-xl border-border p-0 shadow-lg"
-        align="start"
-        side="bottom"
-        sideOffset={8}
-      >
-        {open ? (
-          <FiltersPopoverContent
-            columns={columns}
-            filterMap={filterMap}
-            onRemoveFilter={onRemoveFilter}
-            onClearAll={onClearAll}
-            onApplyFilter={onApplyFilter}
-            onClose={() => onOpenChange(false)}
-            resourceLabel={resourceLabel}
-            filterScope={filterScope}
-            onApplyQuery={onApplyQuery}
-            teamId={teamId ?? undefined}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            onSortChange={onSortChange}
-            defaultSortParam={defaultSortParam}
-            onReset={onReset}
-          />
-        ) : null}
-      </PopoverContent>
-    </Popover>
-    {hasFilters ? (
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={() => {
-          onClearAll()
-          onOpenChange(false)
-        }}
-        aria-label={t('Clear filters')}
-        title={t('Clear filters')}
-        className={cn(
-          'h-auto w-9 shrink-0 rounded-s-none border-s-0 border-border bg-transparent p-0 text-muted-foreground hover:bg-accent hover:text-foreground',
-          hasAfterTrigger && 'rounded-e-none',
-        )}
-      >
-        <X className="h-3.5 w-3.5" />
-      </Button>
-    ) : null}
-    {afterTrigger}
+      ) : null}
+      {afterTrigger}
     </div>
   )
 }

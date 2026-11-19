@@ -15,6 +15,8 @@ use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\System\System;
+use WebSocket\Client as WebSocketClient;
+use WebSocket\ConnectionException;
 
 final class AbuseTest extends Scope
 {
@@ -425,6 +427,51 @@ final class AbuseTest extends Scope
         }
     }
 
+    #[Group('abuseEnabled')]
+    public function testAbuseGetFilePreview(): void
+    {
+        $bucketId = $this->createBucket()['bucketId'];
+        $max = 60;
+
+        $fileIds = [];
+        for ($i = 0; $i < 2; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'fileId' => Id::unique(),
+                'file' => new CURLFile(realpath(__DIR__ . '/../../resources/logo.png'), 'image/png', 'preview.png'),
+                'permissions' => [
+                    Permission::read(Role::any()),
+                ],
+            ]);
+            $this->assertSame(201, $response['headers']['status-code']);
+            $fileIds[] = $response['body']['$id'];
+        }
+
+        $headers = [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-for' => '198.51.100.' . \random_int(1, 254),
+        ];
+
+        // Each width is a distinct transform, so none of these are answered from the preview cache.
+        $this->startCountingInOneWindow(60);
+        for ($i = 0; $i < $max; $i++) {
+            $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileIds[0] . '/preview', $headers, ['width' => $i + 1]);
+            $this->assertSame(200, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileIds[0] . '/preview', $headers, ['width' => $max + 1]);
+        $this->assertSame(429, $response['headers']['status-code'], 'A guest previewing past the limit is throttled');
+
+        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileIds[0] . '/preview', $headers, ['width' => $max + 2, 'fileId' => $fileIds[1]]);
+        $this->assertSame(429, $response['headers']['status-code'], 'A query param cannot replace the file ID in the limit key');
+
+        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileIds[1] . '/preview', $headers, ['width' => 1]);
+        $this->assertSame(200, $response['headers']['status-code'], 'Another file has its own limit');
+    }
+
     private function assertQueryLimited(string $path): void
     {
         $max = 120;
@@ -599,6 +646,310 @@ final class AbuseTest extends Scope
             'secret' => 'wrong-secret',
         ]);
         $this->assertSame(429, $response['headers']['status-code'], 'Changing the user ID must not reset the limit on secret guesses');
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseRecoveryOtpGuesses(): void
+    {
+        // A recovery OTP is six digits and nothing records a failed attempt on the token, so this limit is the
+        // only cap on guessing it. A key is trusted with throughput, not with the inbox the code was sent to.
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => Id::unique(),
+            'email' => 'recovery.' . \bin2hex(\random_bytes(8)) . '@example.com',
+            'password' => 'password-' . \bin2hex(\random_bytes(4)),
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+
+        $guess = [
+            'userId' => $user['body']['$id'],
+            'secret' => '000000',
+            'password' => 'password-' . \bin2hex(\random_bytes(4)),
+        ];
+
+        $this->startCountingInOneWindow(3600);
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->client->call(Client::METHOD_PUT, '/account/recovery/otp', $server, $guess);
+            $this->assertSame(401, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery/otp', $server, $guess);
+        $this->assertSame(429, $response['headers']['status-code'], 'A key past the limit is throttled');
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseTokenSessionGuesses(): void
+    {
+        // The same six digit code logs the account in through this route, and a wrong guess costs the caller
+        // nothing, so its per account failure limits must count the key too.
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => Id::unique(),
+            'email' => 'token.' . \bin2hex(\random_bytes(8)) . '@example.com',
+            'password' => 'password-' . \bin2hex(\random_bytes(4)),
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+
+        $guess = [
+            'userId' => $user['body']['$id'],
+            'secret' => '000000',
+        ];
+
+        $this->startCountingInOneWindow(3600);
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', $server, $guess);
+            $this->assertSame(401, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', $server, $guess);
+        $this->assertSame(429, $response['headers']['status-code'], 'A key past the limit is throttled');
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseEmailSessionLimitPerProjectAccount(): void
+    {
+        $email = 'login.' . \bin2hex(\random_bytes(8)) . '@example.com';
+        $password = 'password-' . \bin2hex(\random_bytes(4));
+        $projects = [$this->getProject(), $this->getProject(true)];
+
+        foreach ($projects as $project) {
+            $user = $this->client->call(Client::METHOD_POST, '/users', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $project['$id'],
+                'x-appwrite-key' => $project['apiKey'],
+            ], [
+                'userId' => Id::unique(),
+                'email' => $email,
+                'password' => $password,
+            ]);
+            $this->assertSame(201, $user['headers']['status-code']);
+        }
+
+        $headers = fn (array $project): array => [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-forwarded-for' => '2001:db8::' . \dechex(\random_int(1, 0xffff)) . ':' . \dechex(\random_int(1, 0xffff)),
+        ];
+
+        $this->startCountingInOneWindow(3600);
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($projects[0]), [
+                'email' => $email,
+                'password' => 'wrong-password',
+            ]);
+            $this->assertSame(401, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($projects[0]), [
+            'email' => \strtoupper($email),
+            'password' => 'wrong-password',
+        ]);
+        $this->assertSame(429, $response['headers']['status-code'], 'Changing the email case must not reset the limit');
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($projects[1]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $response['headers']['status-code'], 'Another project keeps its own limit');
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($projects[0]), [
+            'email' => $email,
+            'password' => 'wrong-password',
+        ]);
+        $this->assertSame(429, $response['headers']['status-code'], 'A sign in on another project must not reset the limit');
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseRecoveryLimitPerProjectAddress(): void
+    {
+        // An address repeats across projects, so a guest on one project must not spend another project's quota.
+        $email = 'recovery.' . \bin2hex(\random_bytes(8)) . '@example.com';
+        $projects = [$this->getProject(), $this->getProject(true)];
+
+        // Only the first project holds the account; recovery answers 201 either way, so no account is needed
+        // to spend a count.
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projects[0]['$id'],
+            'x-appwrite-key' => $projects[0]['apiKey'],
+        ], [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => 'password-' . \bin2hex(\random_bytes(4)),
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+
+        // A new IP every request, so the per-IP limit of the route never applies.
+        $headers = fn (array $project): array => [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-forwarded-for' => '2001:db8::' . \dechex(\random_int(1, 0xffff)) . ':' . \dechex(\random_int(1, 0xffff)),
+        ];
+
+        $this->startCountingInOneWindow(3600);
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/recovery', $headers($projects[1]), [
+                'email' => $email,
+                'url' => 'http://localhost/recovery',
+            ]);
+            $this->assertSame(201, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', $headers($projects[1]), [
+            'email' => \strtoupper($email),
+            'url' => 'http://localhost/recovery',
+        ]);
+        $this->assertSame(429, $response['headers']['status-code'], 'Changing the email case must not reset the limit');
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', $headers($projects[0]), [
+            'email' => $email,
+            'url' => 'http://localhost/recovery',
+        ]);
+        $this->assertSame(201, $response['headers']['status-code'], 'Another project keeps its own limit');
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseMfaChallengeLimitPerProjectAccount(): void
+    {
+        // A user ID is project local and chosen by the caller, so the same one can exist in two projects.
+        $userId = 'abuse' . \bin2hex(\random_bytes(8));
+        $projects = [$this->getProject(), $this->getProject(true)];
+        $sessions = [];
+
+        foreach ($projects as $project) {
+            $server = [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $project['$id'],
+                'x-appwrite-key' => $project['apiKey'],
+            ];
+
+            $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
+                'userId' => $userId,
+                'email' => 'mfa.' . \bin2hex(\random_bytes(8)) . '@example.com',
+                'password' => 'password-' . \bin2hex(\random_bytes(4)),
+            ]);
+            $this->assertSame(201, $user['headers']['status-code']);
+
+            $session = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/sessions', $server);
+            $this->assertSame(201, $session['headers']['status-code']);
+            $sessions[$project['$id']] = $session['body']['secret'];
+        }
+
+        $headers = fn (array $project): array => [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-session' => $sessions[$project['$id']],
+            'x-forwarded-for' => '2001:db8::' . \dechex(\random_int(1, 0xffff)) . ':' . \dechex(\random_int(1, 0xffff)),
+        ];
+
+        $this->startCountingInOneWindow(3600);
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $headers($projects[1]), [
+                'factor' => 'totp',
+            ]);
+            $this->assertSame(201, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $headers($projects[1]), [
+            'factor' => 'totp',
+        ]);
+        $this->assertSame(429, $response['headers']['status-code'], 'An account past the limit is throttled');
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $headers($projects[0]), [
+            'factor' => 'totp',
+        ]);
+        $this->assertSame(201, $response['headers']['status-code'], 'The same user ID in another project keeps its own limit');
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseEmailSessionFailuresPerIp(): void
+    {
+        $email = 'login.' . \bin2hex(\random_bytes(8)) . '@example.com';
+        $password = 'password-' . \bin2hex(\random_bytes(4));
+        $project = $this->getProject();
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ], [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+
+        $headers = fn (string $ip): array => [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-forwarded-for' => $ip,
+        ];
+        $ip = '2001:db8::' . \dechex(\random_int(1, 0xffff)) . ':' . \dechex(\random_int(1, 0xffff));
+
+        $spray = function (int $from, int $to) use ($headers, $ip): void {
+            // A new email every attempt, so the per-email limit never applies.
+            for ($i = $from; $i < $to; $i++) {
+                $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($ip), [
+                    'email' => 'spray.' . \bin2hex(\random_bytes(8)) . '@example.com',
+                    'password' => 'wrong-password',
+                ]);
+                $this->assertSame(401, $response['headers']['status-code'], 'Failure ' . ($i + 1) . ' is within the limit');
+            }
+        };
+
+        $this->startCountingInOneWindow(3600);
+        $spray(0, 50);
+
+        // Logging in to an account of one's own between guesses must not buy more guesses.
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($ip), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+
+        $spray(50, 100);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($ip), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(429, $response['headers']['status-code'], 'An IP over its failures is refused, even with the right password');
+
+        // Refused requests are not failed attempts: an IP over its cap must not spend another account's quota.
+        $victim = 'victim.' . \bin2hex(\random_bytes(8)) . '@example.com';
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($ip), [
+                'email' => $victim,
+                'password' => 'wrong-password',
+            ]);
+            $this->assertSame(429, $response['headers']['status-code']);
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers('2001:db8::' . \dechex(\random_int(1, 0xffff)) . ':2'), [
+            'email' => $victim,
+            'password' => 'wrong-password',
+        ]);
+        $this->assertSame(401, $response['headers']['status-code'], 'The refused attempts left the account its own quota');
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers('2001:db8::' . \dechex(\random_int(1, 0xffff)) . ':1'), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $response['headers']['status-code'], 'Another IP keeps its own count');
     }
 
     #[Group('abuseEnabled')]
@@ -834,6 +1185,43 @@ final class AbuseTest extends Scope
             $this->assertStringContainsString('Max query complexity', (string) $response['body']['errors'][0]['message']);
             $this->assertArrayNotHasKey('data', $response['body']);
         }
+    }
+
+    #[Group('abuseEnabled')]
+    public function testRealtimeMessageLimitClosesConnection(): void
+    {
+        $client = new WebSocketClient('ws://appwrite.test/v1/realtime?' . \http_build_query([
+            'project' => $this->getProject()['$id'],
+            'channels' => ['documents'],
+        ]), [
+            'headers' => ['origin' => 'http://localhost'],
+            'timeout' => 2,
+        ]);
+        $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+
+        /**
+         * Test for SUCCESS
+         */
+        $this->startCountingInOneWindow(60);
+        for ($i = 0; $i < APP_LIMIT_REALTIME_MESSAGES; $i++) {
+            $client->send(\json_encode(['type' => 'ping']));
+            $this->assertSame('pong', \json_decode($client->receive(), true)['type'] ?? null, 'Message ' . ($i + 1) . ' is within the limit');
+        }
+
+        /**
+         * Test for FAILURE
+         */
+        $client->send(\json_encode(['type' => 'ping']));
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('error', $response['type'] ?? null);
+        $this->assertSame(1013, $response['data']['code'] ?? null);
+        $this->assertSame('Too many messages.', $response['data']['message'] ?? null);
+
+        try {
+            $client->receive();
+        } catch (ConnectionException) {
+        }
+        $this->assertFalse($client->isConnected(), 'A connection past the message limit is closed');
     }
 
     /**

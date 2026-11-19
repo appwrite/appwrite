@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Maintenance;
 
 use Appwrite\Event\Publisher\Maintenance as MaintenancePublisher;
+use Appwrite\Maintenance\Cohort;
 use Appwrite\Maintenance\Cycle;
 use Appwrite\Maintenance\Dispatcher;
 use PHPUnit\Framework\TestCase;
@@ -42,7 +43,7 @@ final class DispatcherTest extends TestCase
 
         $expected = [];
         for ($due = $this->start->getTimestamp(); $due <= $end; $due += Cycle::INTERVAL) {
-            $expected[] = ['slot' => \intdiv($due, 300) % 2016, 'slots' => 2016, 'due' => $due, 'period' => self::PERIOD, 'region' => self::REGION, 'pass' => 0, 'cursor' => ''];
+            $expected[] = ['slot' => \intdiv($due, 300) % 2016, 'slots' => 2016, 'due' => $due, 'period' => self::PERIOD, 'region' => self::REGION, 'pass' => 0, 'cursor' => '', 'cohort' => 'inactive'];
         }
 
         $this->assertCount(13, $expected);
@@ -106,9 +107,22 @@ final class DispatcherTest extends TestCase
         $this->assertSame($expected, $dues);
     }
 
-    private function dispatcher(QueuePublisher $queue): Dispatcher
+    public function testEachMomentCarriesTheDispatchersCohort(): void
     {
-        return new Dispatcher(new MaintenancePublisher($queue, new Queue(self::QUEUE)), $this->cycle, self::REGION);
+        $this->cycle = new Cycle(3600);
+        $publisher = new QueuePublisher($this->clock, 0);
+
+        $this->dispatch(new MemoryStore(), $this->dispatcher($publisher, Cohort::Active), $this->start->getTimestamp() + 3600);
+
+        $payloads = $publisher->payloads(self::QUEUE);
+        $this->assertCount(13, $payloads);
+        $this->assertSame(['active'], \array_values(\array_unique(\array_column($payloads, 'cohort'))));
+        $this->assertSame([12, 3600], [$payloads[0]['slots'], $payloads[0]['period']]);
+    }
+
+    private function dispatcher(QueuePublisher $queue, Cohort $cohort = Cohort::Inactive): Dispatcher
+    {
+        return new Dispatcher(new MaintenancePublisher($queue, new Queue(self::QUEUE)), $this->cycle, self::REGION, $cohort);
     }
 
     /**

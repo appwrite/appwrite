@@ -229,7 +229,7 @@ export function FirewallPromoBanner() {
                     className="h-8 text-[13px]"
                   >
                     <Link
-                      to="/projects/$projectId/firewall"
+                      to="/projects/$projectId/settings/firewall"
                       params={{ projectId }}
                       {...analyticsAttrs('firewall-promo-banner-open-firewall')}
                       onClick={dismiss}

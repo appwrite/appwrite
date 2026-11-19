@@ -55,7 +55,6 @@ class Init extends Action
             'Content-Range',
             'ETag',
             'Last-Modified',
-            'x-amz-server-side-encryption',
         ])));
         foreach ($corsHeaders as $name => $value) {
             $response

@@ -15,6 +15,7 @@ use Appwrite\Enums\Runtime;
 use Appwrite\Enums\SmtpEncryption;
 use Appwrite\Enums\StatusCode;
 use Appwrite\InputFile;
+use Appwrite\Models\Specification;
 use Appwrite\Query as AppwriteQuery;
 use Appwrite\Services\Functions;
 use Appwrite\Services\Messaging;
@@ -79,6 +80,7 @@ use Utopia\Migration\Resources\Messaging\Subscriber;
 use Utopia\Migration\Resources\Messaging\Topic;
 use Utopia\Migration\Resources\Settings\Environment;
 use Utopia\Migration\Resources\Settings\Labels;
+use Utopia\Migration\Resources\Settings\Preferences;
 use Utopia\Migration\Resources\Settings\ProjectVariable;
 use Utopia\Migration\Resources\Settings\Protocols;
 use Utopia\Migration\Resources\Settings\Services as ServicesResource;
@@ -114,6 +116,11 @@ class Appwrite extends Destination
     private const VECTORSDB_EMBEDDINGS_KEY = 'embeddings';
 
     private const ERROR_BILLING_FEATURE_UNSUPPORTED = 'billing_feature_unsupported';
+
+    private const ERROR_ARGUMENT_INVALID = 'general_argument_invalid';
+
+    private const SPECIFICATIONS_BUILDS = 'builds';
+    private const SPECIFICATIONS_RUNTIMES = 'runtimes';
 
     /**
      * Variable keys become environment variable names at build and runtime, so
@@ -155,14 +162,22 @@ class Appwrite extends Destination
 
     protected string $key;
 
-    private Functions $functions;
+    protected Functions $functions;
     private Messaging $messaging;
     private Project $project;
     private Proxy $proxy;
-    private Sites $sites;
-    private Storage $storage;
+    protected Sites $sites;
+    protected Storage $storage;
     private Teams $teams;
     private Users $users;
+
+    /**
+     * Specifications the destination offers, by service and type, listed once per run. Null
+     * where they could not be listed.
+     *
+     * @var array<string, list<string>|null>
+     */
+    private array $specifications = [];
 
     /**
      * @var callable(UtopiaDocument $database): UtopiaDatabase
@@ -231,6 +246,7 @@ class Appwrite extends Destination
      * @param OnDuplicate $onDuplicate Behavior when a row with an existing $id is encountered.
      * @param (callable(Database $resource): string)|null $getDatabaseDSN Resolver for the destination's `_databases.database` value. Pass when the destination project's DSN differs from the source's, so the destination row carries its own DSN instead of inheriting the source's.
      * @param array<string, CollectionStructure> $collectionStructures Per-database-type metadata collection structures (e.g. `['vectorsdb' => ...]`), used instead of $collectionStructure when the imported database's type has an entry. Types with an entry also get type-specific metadata written (e.g. vectorsdb collection `dimension`).
+     * @param array<string>|null $scopes Scopes the migration was granted; imported API keys may hold no others. Null grants every scope.
      */
     public function __construct(
         string $project,
@@ -244,6 +260,7 @@ class Appwrite extends Destination
         protected OnDuplicate $onDuplicate = OnDuplicate::Fail,
         ?callable $getDatabaseDSN = null,
         protected array $collectionStructures = [],
+        protected ?array $scopes = null,
     ) {
         $this->projectId = $project;
         $this->endpoint = $endpoint;
@@ -425,6 +442,7 @@ class Appwrite extends Destination
             Resource::TYPE_PROJECT_VARIABLE,
             Resource::TYPE_PROJECT_PROTOCOLS,
             Resource::TYPE_PROJECT_LABELS,
+            Resource::TYPE_PROJECT_PREFERENCES,
             Resource::TYPE_PROJECT_SERVICES,
             Resource::TYPE_PROJECT_EMAIL_TEMPLATE,
             Resource::TYPE_PROJECT_ENVIRONMENT,
@@ -2412,21 +2430,31 @@ class Appwrite extends Destination
                     default => throw new \Exception('Invalid Compression: ' . $resource->getCompression(), Exception::CODE_VALIDATION),
                 };
 
-                $response = $this->storage->createBucket(
-                    $resource->getId(),
-                    $resource->getBucketName(),
-                    $resource->getPermissions(),
-                    $resource->getFileSecurity(),
-                    $resource->getEnabled(),
-                    $resource->getMaxFileSize(),
-                    $resource->getAllowedFileExtensions(),
-                    $compression,
-                    $resource->getEncryption(),
-                    $resource->getAntiVirus(),
-                    $resource->getTransformations(),
-                    description: $resource->getDescription(),
-                    stripMetadata: $resource->getStripMetadata(),
-                );
+                try {
+                    $response = $this->createBucket($resource, $compression, $resource->getMaxFileSize());
+                } catch (AppwriteException $e) {
+                    if ($resource->getMaxFileSize() === null || $e->getType() !== self::ERROR_ARGUMENT_INVALID) {
+                        throw $e;
+                    }
+
+                    // The size is the one argument held to a limit of the destination, which a
+                    // bucket can outlive: its project moved to a plan that allows less, or the
+                    // destination is an instance configured for less. Created without one, the
+                    // bucket takes the destination's limit. A bucket refused for anything else
+                    // is refused again, and reported as it first was.
+                    try {
+                        $response = $this->createBucket($resource, $compression, null);
+                    } catch (AppwriteException) {
+                        throw $e;
+                    }
+
+                    $this->addWarning(new Warning(
+                        Resource::TYPE_BUCKET,
+                        Transfer::GROUP_STORAGE,
+                        'Bucket "' . $resource->getId() . '" allowed files of up to ' . $resource->getMaxFileSize() . ' bytes, more than this project allows, so it was imported with the limit of ' . $response->maximumFileSize . ' bytes.',
+                        $resource->getId(),
+                    ));
+                }
 
                 $resource->setId($response->id);
         }
@@ -2434,6 +2462,28 @@ class Appwrite extends Destination
         $resource->setStatus(Resource::STATUS_SUCCESS);
 
         return $resource;
+    }
+
+    /**
+     * @throws AppwriteException
+     */
+    private function createBucket(Bucket $resource, Compression $compression, ?int $maximumFileSize): \Appwrite\Models\Bucket
+    {
+        return $this->storage->createBucket(
+            $resource->getId(),
+            $resource->getBucketName(),
+            $resource->getPermissions(),
+            $resource->getFileSecurity(),
+            $resource->getEnabled(),
+            $maximumFileSize,
+            $resource->getAllowedFileExtensions(),
+            $compression,
+            $resource->getEncryption(),
+            $resource->getAntiVirus(),
+            $resource->getTransformations(),
+            description: $resource->getDescription(),
+            stripMetadata: $resource->getStripMetadata(),
+        );
     }
 
     /**
@@ -2697,14 +2747,19 @@ class Appwrite extends Destination
                     throw new \Exception('Invalid Runtime: ' . $resource->getRuntime(), Exception::CODE_VALIDATION, $e);
                 }
 
+                // Resolved once: the create below can run twice, and each specification the
+                // destination does not offer is warned about as it is resolved.
+                $buildSpecification = $this->specification($this->functions, self::SPECIFICATIONS_BUILDS, $resource, $resource->getBuildSpecification());
+                $runtimeSpecification = $this->specification($this->functions, self::SPECIFICATIONS_RUNTIMES, $resource, $resource->getRuntimeSpecification());
+
                 try {
-                    $this->createFunction($resource, $runtime, $resource->getInterval() ?: null);
+                    $this->createFunction($resource, $runtime, $resource->getInterval() ?: null, $buildSpecification, $runtimeSpecification);
                 } catch (AppwriteException $e) {
                     if ($resource->getInterval() === 0 || $e->getType() !== self::ERROR_BILLING_FEATURE_UNSUPPORTED) {
                         throw $e;
                     }
 
-                    $this->createFunction($resource, $runtime, null);
+                    $this->createFunction($resource, $runtime, null, $buildSpecification, $runtimeSpecification);
                     $this->addWarning(new Warning(
                         Resource::TYPE_FUNCTION,
                         Transfer::GROUP_FUNCTIONS,
@@ -2737,7 +2792,7 @@ class Appwrite extends Destination
     /**
      * @throws AppwriteException
      */
-    private function createFunction(Func $resource, Runtime $runtime, ?int $interval): void
+    private function createFunction(Func $resource, Runtime $runtime, ?int $interval, ?string $buildSpecification, ?string $runtimeSpecification): void
     {
         $this->functions->create(
             functionId: $resource->getId(),
@@ -2752,12 +2807,62 @@ class Appwrite extends Destination
             entrypoint: $resource->getEntrypoint(),
             commands: $resource->getCommands(),
             scopes: $resource->getScopes(),
-            buildSpecification: $resource->getBuildSpecification() ?: null,
-            runtimeSpecification: $resource->getRuntimeSpecification() ?: null,
+            buildSpecification: $buildSpecification,
+            runtimeSpecification: $runtimeSpecification,
             deploymentRetention: $resource->getDeploymentRetention(),
             interval: $interval,
             description: $resource->getDescription(),
         );
+    }
+
+    /**
+     * The specification to create a function or site with: the one it had, or none, which
+     * takes the destination's default, when the destination does not offer it.
+     *
+     * A function or site keeps its specification when the plan of its project changes, and
+     * one without a build specification builds on its runtime's, so a copy can carry one its
+     * destination refuses. That failed the function or site, and with it every variable and
+     * deployment it has. The destination names what it offers, so nothing is guessed from a
+     * refusal: a specification is left out only when the list was read and does not have it.
+     */
+    private function specification(Functions|Sites $service, string $type, Func|Site $resource, string $specification): ?string
+    {
+        if ($specification === '') {
+            return null;
+        }
+
+        $key = $service::class . ':' . $type;
+
+        if (!\array_key_exists($key, $this->specifications)) {
+            try {
+                $offered = [];
+                foreach ($service->listSpecifications($type)->specifications as $listed) {
+                    // The list also names what a higher plan unlocks, flagged disabled
+                    if ($listed instanceof Specification && $listed->enabled) {
+                        $offered[] = $listed->slug;
+                    }
+                }
+                $this->specifications[$key] = $offered;
+            } catch (AppwriteException) {
+                // Not listed for this key, or by this destination: the create answers for it
+                $this->specifications[$key] = null;
+            }
+        }
+
+        $offered = $this->specifications[$key];
+
+        if ($offered === null || \in_array($specification, $offered, true)) {
+            return $specification;
+        }
+
+        $this->addWarning(new Warning(
+            $resource->getName(),
+            $resource->getGroup(),
+            \ucfirst($resource->getName()) . ' "' . $resource->getId() . '" used the ' . ($type === self::SPECIFICATIONS_BUILDS ? 'build' : 'runtime') . ' specification "' . $specification . '", which this project\'s plan does not offer, so it was imported with the default.',
+            $resource->getId(),
+        ));
+
+        return null;
     }
 
     public function importBackupResource(Resource $resource): Resource
@@ -2927,8 +3032,8 @@ class Appwrite extends Destination
                     adapter: $adapter,
                     startCommand: $resource->getStartCommand() ?: null,
                     fallbackFile: $resource->getFallbackFile(),
-                    buildSpecification: $resource->getBuildSpecification() ?: null,
-                    runtimeSpecification: $resource->getRuntimeSpecification() ?: null,
+                    buildSpecification: $this->specification($this->sites, self::SPECIFICATIONS_BUILDS, $resource, $resource->getBuildSpecification()),
+                    runtimeSpecification: $this->specification($this->sites, self::SPECIFICATIONS_RUNTIMES, $resource, $resource->getRuntimeSpecification()),
                     deploymentRetention: $resource->getDeploymentRetention(),
                     scopes: $resource->getScopes(),
                     description: $resource->getDescription(),
@@ -3473,6 +3578,10 @@ class Appwrite extends Destination
                 /** @var Labels $resource */
                 $this->createLabels($resource);
                 break;
+            case Resource::TYPE_PROJECT_PREFERENCES:
+                /** @var Preferences $resource */
+                $this->createPreferences($resource);
+                break;
             case Resource::TYPE_PROJECT_SERVICES:
                 /** @var ServicesResource $resource */
                 $this->createServices($resource);
@@ -3623,6 +3732,19 @@ class Appwrite extends Destination
             'projects',
             $this->projectId,
             new UtopiaDocument(['labels' => $labels]),
+        ));
+
+        $this->dbForPlatform->purgeCachedDocument('projects', $this->projectId);
+
+        return true;
+    }
+
+    protected function createPreferences(Preferences $resource): bool
+    {
+        $this->dbForPlatform->getAuthorization()->skip(fn () => $this->dbForPlatform->updateDocument(
+            'projects',
+            $this->projectId,
+            new UtopiaDocument(['prefs' => $resource->getPreferences()]),
         ));
 
         $this->dbForPlatform->purgeCachedDocument('projects', $this->projectId);
@@ -4001,6 +4123,8 @@ class Appwrite extends Destination
             'corporateEmails' => $resource->getDenyCorporateEmail(),
             'passwordPwned' => $resource->getPasswordPwned(),
             'passwordRotation' => $resource->getPasswordRotation(),
+            'realtimeGuests' => $resource->getDenyRealtimeGuests(),
+            'accountDevices' => $resource->getAccountDevices(),
             'passkeyRpId' => $this->resolvePasskeyRpId($resource->getPasskeyRpId(), \is_array($auths) ? $this->optionalString($auths, 'passkeyRpId') ?? '' : ''),
         ];
         foreach ($reported as $key => $value) {
@@ -4049,6 +4173,17 @@ class Appwrite extends Destination
 
     protected function createApiKey(ApiKey $resource): bool
     {
+        // An imported key holds no scope the migration was not granted
+        if ($this->scopes !== null && !empty(\array_diff($resource->getScopes(), $this->scopes))) {
+            throw new Exception(
+                resourceName: $resource->getName(),
+                resourceGroup: $resource->getGroup(),
+                resourceId: $resource->getId(),
+                message: 'API key has scopes this migration was not granted',
+                code: Exception::CODE_UNAUTHORIZED,
+            );
+        }
+
         $existing = $this->dbForPlatform->findOne('keys', [
             Query::equal('resourceType', ['projects']),
             Query::equal('resourceInternalId', [$this->projectInternalId]),

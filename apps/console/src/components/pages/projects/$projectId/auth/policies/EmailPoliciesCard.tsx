@@ -13,10 +13,9 @@ import {
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
 
-const EMAIL_POLICIES_DOCS_URL =
-  '/docs/products/auth/email-policies'
+const EMAIL_POLICIES_DOCS_URL = '/docs/products/auth/email-policies'
 
-type EmailPolicyCardProps = {
+type PolicySwitchCardProps = {
   currentEnabled: boolean
   title: string
   description: ReactNode
@@ -27,7 +26,7 @@ type EmailPolicyCardProps = {
   errorMessage: string
 }
 
-function EmailPolicyCard({
+export function PolicySwitchCard({
   currentEnabled,
   title,
   description,
@@ -36,7 +35,7 @@ function EmailPolicyCard({
   mutation,
   successMessage,
   errorMessage,
-}: EmailPolicyCardProps) {
+}: PolicySwitchCardProps) {
   const t = useT()
   const [enabled, setEnabled] = useState(currentEnabled)
   const lastSubmittedValue = useRef<boolean | null>(null)
@@ -121,7 +120,7 @@ export function DenyFreeEmailCard({
   const mutation = useUpdateDenyFreeEmailPolicy(projectId)
 
   return (
-    <EmailPolicyCard
+    <PolicySwitchCard
       currentEnabled={currentEnabled}
       title={t('Free emails')}
       description={
@@ -129,7 +128,10 @@ export function DenyFreeEmailCard({
           {t(
             'Reject sign-ups and email updates from free providers such as Gmail, Yahoo, and Outlook. Useful when seats should tie to a work organization. Applies at sign-up and email change only - not to existing sessions.',
           )}{' '}
-          <DocsRouteLink className="link-neutral" href={EMAIL_POLICIES_DOCS_URL}>
+          <DocsRouteLink
+            className="link-neutral"
+            href={EMAIL_POLICIES_DOCS_URL}
+          >
             {t('Learn more')}
           </DocsRouteLink>
           .
@@ -155,7 +157,7 @@ export function DenyAliasedEmailCard({
   const mutation = useUpdateDenyAliasedEmailPolicy(projectId)
 
   return (
-    <EmailPolicyCard
+    <PolicySwitchCard
       currentEnabled={currentEnabled}
       title={t('Aliased emails')}
       description={t(
@@ -181,7 +183,7 @@ export function DenyDisposableEmailCard({
   const mutation = useUpdateDenyDisposableEmailPolicy(projectId)
 
   return (
-    <EmailPolicyCard
+    <PolicySwitchCard
       currentEnabled={currentEnabled}
       title={t('Disposable emails')}
       description={t(
@@ -207,7 +209,7 @@ export function DenyCorporateEmailCard({
   const mutation = useUpdateDenyCorporateEmailPolicy(projectId)
 
   return (
-    <EmailPolicyCard
+    <PolicySwitchCard
       currentEnabled={currentEnabled}
       title={t('Corporate emails')}
       description={t(
