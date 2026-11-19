@@ -10,7 +10,7 @@ import {
 export const QUALITY_ACCOUNT_LABEL = 'quality'
 
 export type Experiment = {
-  flag: 'analytics' | 'projectEnvironments' | 'vcsOrigin' | 'sso'
+  flag: 'alerts' | 'analytics' | 'projectEnvironments' | 'sso' | 'vcsOrigin'
   name: string
   description: string
   /** Day the experiment reached the popover, as `YYYY-MM-DD`. */
@@ -45,6 +45,12 @@ export const EXPERIMENTS: readonly Experiment[] = [
     name: 'Single sign-on',
     description: 'Verify your company domain so teammates join on sign-up.',
     introducedAt: '2026-11-18',
+  },
+  {
+    flag: 'alerts',
+    name: 'Monitors and alerts',
+    description: 'Get alerted when project usage crosses a threshold.',
+    introducedAt: '2026-11-19',
   },
 ]
 

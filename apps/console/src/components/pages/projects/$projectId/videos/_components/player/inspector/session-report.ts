@@ -32,6 +32,7 @@ export function buildSessionReport(
     },
     timing: {
       loadStartedAt: player.loadStartedAt,
+      requestedAt: player.requestedAt,
       manifestLoadedAt: player.manifestLoadedAt,
       firstFrameAt: player.firstFrameAt,
     },

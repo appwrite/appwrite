@@ -1591,11 +1591,12 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Email, SMS, and push with topics and targets.': 'トピックとターゲットで、メール、SMS、プッシュ通知を配信。',
   'Project rules to deny, rate limit, and redirect traffic.': 'トラフィックを拒否、レート制限、リダイレクトするプロジェクトルール。',
   'Projects shipped': 'リリースされたプロジェクト',
+  Prompt: 'プロンプト',
   // Home factory: the display each machine unfolds.
   'Sign users in with email, OAuth, or passkeys, plus MFA, teams, and roles':
     'メール、OAuth、パスキーでサインイン。MFA、チーム、ロールにも対応',
-  'Postgres, MySQL, tables, documents, and vectors, managed in one project':
-    'Postgres、MySQL、テーブル、ドキュメント、ベクトルを 1 つのプロジェクトで管理',
+  'Five databases in one project: Postgres, MySQL, TablesDB, DocumentsDB, and VectorsDB':
+    '1 つのプロジェクトに 5 つのデータベース：Postgres、MySQL、TablesDB、DocumentsDB、VectorsDB',
   'Upload files, resize images on the fly, and deliver them over a global CDN':
     'ファイルをアップロードし、画像をその場でリサイズして、グローバル CDN で配信',
   'Run Node, Python, Go, and more on requests, schedules, or events':

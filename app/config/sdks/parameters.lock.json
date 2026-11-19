@@ -989,13 +989,15 @@
             "total"
         ],
         "videos.listCaptions": [
-            "videoId"
+            "videoId",
+            "queries",
+            "total"
         ],
         "videos.listCodecs": [],
         "videos.listRenditions": [
             "videoId",
-            "output",
-            "status"
+            "queries",
+            "total"
         ],
         "videos.update": [
             "videoId",
@@ -5494,13 +5496,15 @@
             "total"
         ],
         "videos.listCaptions": [
-            "videoId"
+            "videoId",
+            "queries",
+            "total"
         ],
         "videos.listCodecs": [],
         "videos.listRenditions": [
             "videoId",
-            "output",
-            "status"
+            "queries",
+            "total"
         ],
         "videos.update": [
             "videoId",
@@ -9835,13 +9839,15 @@
             "total"
         ],
         "videos.listCaptions": [
-            "videoId"
+            "videoId",
+            "queries",
+            "total"
         ],
         "videos.listCodecs": [],
         "videos.listRenditions": [
             "videoId",
-            "output",
-            "status"
+            "queries",
+            "total"
         ],
         "videos.update": [
             "videoId",

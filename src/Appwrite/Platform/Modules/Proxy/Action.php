@@ -12,6 +12,7 @@ use Swoole\Coroutine;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\Bus\Bus;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
@@ -37,8 +38,11 @@ class Action extends PlatformAction
 
     protected function createRule(Document $rule, Database $dbForPlatform, Authorization $authorization, Bus $bus): Document
     {
+        // The checks verifyRule() left on the rule are stored once the rule exists
+        $records = $rule->getAttribute('records', []);
+
         try {
-            return $this->created($authorization->skip(fn () => $dbForPlatform->createDocument('rules', $rule)), $bus);
+            return $this->created($authorization->skip(fn () => $dbForPlatform->createDocument('rules', $rule)), $records, $dbForPlatform, $authorization, $bus);
         } catch (Duplicate) {
             if (!$this->releaseDomain($rule, $dbForPlatform, $authorization, $bus)) {
                 throw new Exception(Exception::RULE_ALREADY_EXISTS);
@@ -46,17 +50,91 @@ class Action extends PlatformAction
         }
 
         try {
-            return $this->created($authorization->skip(fn () => $dbForPlatform->createDocument('rules', $rule)), $bus);
+            return $this->created($authorization->skip(fn () => $dbForPlatform->createDocument('rules', $rule)), $records, $dbForPlatform, $authorization, $bus);
         } catch (Duplicate) {
             throw new Exception(Exception::RULE_ALREADY_EXISTS);
         }
     }
 
-    private function created(Document $rule, Bus $bus): Document
+    /**
+     * @param array<array<string, mixed>> $records Checks from verifyRule(), stored with the new rule
+     */
+    private function created(Document $rule, array $records, Database $dbForPlatform, Authorization $authorization, Bus $bus): Document
     {
+        if (!empty($records)) {
+            $rule->setAttribute('records', $records);
+            $rule = $authorization->skip(fn () => $this->updateRecords($rule, $dbForPlatform));
+        }
+
         $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
 
         return $rule;
+    }
+
+    /**
+     * Store the DNS record checks verifyRule() left on a rule, one ruleRecords row per record type
+     *
+     * A row is updated in place, so its update time is the last check. Rows for record types
+     * no longer checked, such as a CAA target that was unset, are removed.
+     *
+     * @param Document $rule Stored rule carrying the checks from verifyRule()
+     * @return Document The rule read again, with the checks just stored
+     */
+    protected function updateRecords(Document $rule, Database $dbForPlatform): Document
+    {
+        $stale = [];
+        $existing = $dbForPlatform->find('ruleRecords', [
+            Query::equal('ruleInternalId', [$rule->getSequence()]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]);
+        foreach ($existing as $record) {
+            $stale[$record->getId()] = true;
+        }
+
+        // A check that finds DNS unchanged writes nothing, so the update time is set on every check
+        $checkedAt = DateTime::now();
+
+        foreach ($rule->getAttribute('records', []) as $record) {
+            $recordId = \md5($rule->getSequence() . ':' . $record['type']);
+            $check = [
+                '$updatedAt' => $checkedAt,
+                'name' => $record['name'],
+                'expected' => $record['expected'],
+                'current' => $record['current'],
+                'status' => $record['status'],
+                'message' => $record['message'],
+                'required' => $record['required'],
+            ];
+
+            if (isset($stale[$recordId])) {
+                unset($stale[$recordId]);
+                $dbForPlatform->updateDocument('ruleRecords', $recordId, new Document($check));
+                continue;
+            }
+
+            try {
+                $dbForPlatform->createDocument('ruleRecords', new Document([
+                    '$id' => $recordId,
+                    '$permissions' => [],
+                    'projectInternalId' => $rule->getAttribute('projectInternalId', ''),
+                    'ruleInternalId' => $rule->getSequence(),
+                    'ruleId' => $rule->getId(),
+                    'type' => $record['type'],
+                    ...$check,
+                ]));
+            } catch (Duplicate) {
+                // A concurrent check stored it first
+                $dbForPlatform->updateDocument('ruleRecords', $recordId, new Document($check));
+            }
+        }
+
+        foreach (\array_keys($stale) as $recordId) {
+            $dbForPlatform->deleteDocument('ruleRecords', $recordId);
+        }
+
+        $dbForPlatform->purgeCachedDocument('rules', $rule->getId());
+
+        return $dbForPlatform->getDocument('rules', $rule->getId());
     }
 
     /**
@@ -106,6 +184,18 @@ class Action extends PlatformAction
         }
 
         $authorization->skip(fn () => $dbForPlatform->deleteDocument('rules', $existingRule->getId()));
+
+        // No deletes job runs for this rule, so its record checks go here
+        $authorization->skip(fn () => $dbForPlatform->deleteDocuments('ruleRecords', [
+            Query::equal('ruleInternalId', [$existingRule->getSequence()]),
+        ]));
+
+        // The claiming rule gets a certificate of its own
+        $certificateId = $existingRule->getAttribute('certificateId', '');
+        if ($certificateId !== '') {
+            $authorization->skip(fn () => $dbForPlatform->deleteDocument('certificates', $certificateId));
+        }
+
         $bus->dispatch(new RuleDeleted($existingRule->getArrayCopy()));
 
         return true;
@@ -186,8 +276,8 @@ class Action extends PlatformAction
      */
     protected function verifyRule(Document $rule): void
     {
-        $dnsValidatorClass = $this->dnsValidatorClass;
-        $dnsServers = $this->dnsServers();
+        // A domain that cannot be checked keeps no record checks
+        $rule->setAttribute('records', []);
 
         $domain = new Domain($rule->getAttribute('domain', ''));
 
@@ -199,6 +289,21 @@ class Action extends PlatformAction
             throw new Exception(Exception::RULE_VERIFICATION_FAILED, 'DNS verification failed as domain ' . $domain->get() . ' does not resolve to a known public apex domain.');
         }
 
+        $validationStart = \microtime(true);
+        $records = $this->checkRecords($rule);
+
+        // Keep the latest checks on the rule before any failure, so updateRecords() persists them.
+        // Current values and message are capped to the ruleRecords attribute sizes.
+        $rule->setAttribute('records', \array_map(fn (array $record) => [
+            'type' => $record['type'],
+            'name' => $record['name'],
+            'expected' => $record['expected'],
+            'current' => \array_map(fn (string $value) => \mb_strcut($value, 0, 255), \array_slice($record['current'], 0, 10)),
+            'status' => $record['status'],
+            'message' => \mb_strcut($record['message'], 0, 1000),
+            'required' => $record['required'],
+        ], $records));
+
         // The targets checked below are identical for every project on the instance,
         // so they only prove the domain reaches Appwrite, never whose domain it is.
         // Only its owner can say that, with the ownership proof resolved here.
@@ -207,11 +312,82 @@ class Action extends PlatformAction
         }
 
         // Ensure CAA won't block certificate issuance
-        $caaValidator = null;
-        $caaTarget = System::getEnv('_APP_DOMAIN_TARGET_CAA', '');
-        if (!empty($caaTarget)) {
-            $caaValidator = new $dnsValidatorClass($caaTarget, Record::TYPE_CAA, $dnsServers);
+        $targets = [];
+        foreach ($records as $record) {
+            if (!$record['required']) {
+                $targets[] = $record;
+                continue;
+            }
+
+            if (!\is_null($record['error'])) {
+                throw $record['error'];
+            }
+
+            if ($record['status'] !== 'verified') {
+                Span::add('dns.timing_caa', \microtime(true) - $validationStart);
+                Span::add('dns.domain', $domain->get());
+                throw new Exception(Exception::RULE_VERIFICATION_FAILED, $record['message']);
+            }
         }
+
+        if (empty($targets)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'At least one of domain targets environment variable must be configured.');
+        }
+
+        if (\in_array('verified', \array_column($targets, 'status'), true)) {
+            return;
+        }
+
+        // A target that threw only decides the outcome when no other target passed
+        foreach ($targets as $target) {
+            if (!\is_null($target['error'])) {
+                throw $target['error'];
+            }
+        }
+
+        Span::add('dns.timing', \microtime(true) - $validationStart);
+        Span::add('dns.domain', $domain->get());
+
+        // A failure reports the last CNAME target, else the first A, else the AAAA
+        $main = null;
+        $apex = null; // First A, else AAAA check, to explain an apex
+        foreach ($targets as $target) {
+            if ($target['type'] === 'CNAME') {
+                $main = $target;
+                continue;
+            }
+            $apex ??= $target;
+        }
+        $main ??= $apex;
+
+        // Explain the record the domain has, such as an A record with the wrong address, rather than
+        // a CNAME it was never meant to have. An apex cannot hold a CNAME, so it is told about A or AAAA.
+        $explained = $domain->get() === $domain->getApex() ? ($apex ?? $main) : $main;
+        foreach ($targets as $target) {
+            if ($target['status'] !== 'missing') {
+                $explained = $target;
+                break;
+            }
+        }
+
+        throw new Exception(Exception::RULE_VERIFICATION_FAILED, $explained['message']);
+    }
+
+    /**
+     * Look up every DNS record a rule's domain is checked against, without failing on any of them
+     *
+     * The CAA record is required. CNAME, A and AAAA records are alternatives: the domain
+     * points to Appwrite when any one of them is verified.
+     *
+     * @param Document $rule Rule to check
+     * @return array<array{type: string, name: string, expected: string, current: array<string>, status: string, message: string, required: bool, error: ?\Throwable}>
+     */
+    protected function checkRecords(Document $rule): array
+    {
+        $dnsValidatorClass = $this->dnsValidatorClass;
+        $dnsServers = $this->dnsServers();
+
+        $domain = new Domain($rule->getAttribute('domain', ''));
 
         $targetCNAMEs = [];
         $ruleType = $rule->getAttribute('type', '');
@@ -250,66 +426,45 @@ class Action extends PlatformAction
             }
         }
 
-        $validators = [];
-        $mainValidator = null; // Validator to use for error description
-        $checks = []; // Every record check, to explain the one the domain actually has
-        $checkApex = null; // First A, else AAAA check, to explain an apex
+        // Each check: record type, expected value, validator, and whether it must pass on its own
+        $checks = [];
 
-        foreach ($targetCNAMEs as $targetCNAME) {
-            $validator = new $dnsValidatorClass($targetCNAME->get(), Record::TYPE_CNAME, $dnsServers);
-            $validators[] = $validator;
-            $checks[] = $validator;
-
-            // A failure reports the last CNAME target
-            $mainValidator = $validator;
+        // Ensure CAA won't block certificate issuance
+        $caaTarget = System::getEnv('_APP_DOMAIN_TARGET_CAA', '');
+        if (!empty($caaTarget)) {
+            $checks[] = ['CAA', $caaTarget, new $dnsValidatorClass($caaTarget, Record::TYPE_CAA, $dnsServers), true];
         }
 
         // Ensure at least one of CNAME/A/AAAA record points to our servers properly
+        foreach ($targetCNAMEs as $targetCNAME) {
+            $checks[] = ['CNAME', $targetCNAME->get(), new $dnsValidatorClass($targetCNAME->get(), Record::TYPE_CNAME, $dnsServers), false];
+        }
+
         foreach (\explode(',', System::getEnv('_APP_DOMAIN_TARGET_A', '')) as $targetA) {
             if (empty($targetA)) {
                 continue;
             }
             if ((new IP(IP::V4))->isValid($targetA)) {
-                $validator = new $dnsValidatorClass($targetA, Record::TYPE_A, $dnsServers);
-                $validators[] = $validator;
-                $checks[] = $validator;
-                $checkApex ??= $validator;
-
-                if (\is_null($mainValidator)) {
-                    $mainValidator = $validator;
-                }
+                $checks[] = ['A', $targetA, new $dnsValidatorClass($targetA, Record::TYPE_A, $dnsServers), false];
             }
         }
 
         $targetAAAA = System::getEnv('_APP_DOMAIN_TARGET_AAAA', '');
         if ((new IP(IP::V6))->isValid($targetAAAA)) {
-            $validator = new $dnsValidatorClass($targetAAAA, Record::TYPE_AAAA, $dnsServers);
-            $validators[] = $validator;
-            $checks[] = $validator;
-            $checkApex ??= $validator;
-
-            if (\is_null($mainValidator)) {
-                $mainValidator = $validator;
-            }
+            $checks[] = ['AAAA', $targetAAAA, new $dnsValidatorClass($targetAAAA, Record::TYPE_AAAA, $dnsServers), false];
         }
 
         // Query CAA and every target at once, so slow resolvers wait in parallel rather than add up
-        $queries = $validators;
-        if (!\is_null($caaValidator)) {
-            $queries['caa'] = $caaValidator;
-        }
-
-        $validationStart = \microtime(true);
         $wg = new WaitGroup();
         $results = [];
         $errors = [];
         // Outside a coroutine (CLI, tests) go() would leave a reactor running, so check in turn
         $parallel = Coroutine::getCid() > 0;
 
-        foreach ($queries as $key => $query) {
-            $check = function () use ($query, $key, $domain, &$results, &$errors): void {
+        foreach ($checks as $key => [, , $validator]) {
+            $check = function () use ($validator, $key, $domain, &$results, &$errors): void {
                 try {
-                    $results[$key] = $query->isValid($domain->get());
+                    $results[$key] = $validator->isValid($domain->get());
                 } catch (\Throwable $error) {
                     // Uncaught in a coroutine it would end the process, so the caller handles it instead
                     $errors[$key] = $error;
@@ -335,42 +490,43 @@ class Action extends PlatformAction
             $wg->wait();
         }
 
-        if (isset($errors['caa'])) {
-            throw $errors['caa'];
-        }
+        $records = [];
+        foreach ($checks as $key => [$type, $expected, $validator, $required]) {
+            $error = $errors[$key] ?? null;
+            $verified = $results[$key] ?? false;
 
-        if (!\is_null($caaValidator) && !$results['caa']) {
-            Span::add('dns.timing_caa', \microtime(true) - $validationStart);
-            Span::add('dns.domain', $domain->get());
-            throw new Exception(Exception::RULE_VERIFICATION_FAILED, $caaValidator->getDescription());
-        }
-        unset($results['caa']);
-
-        if (empty($validators)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'At least one of domain targets environment variable must be configured.');
-        }
-
-        if (!\in_array(true, $results, true)) {
-            // A target that threw only decides the outcome when no other target passed
-            if ($errors !== []) {
-                throw \reset($errors);
+            // A passing lookup across several resolvers keeps no records, yet it found the expected value
+            $current = $validator->records;
+            if ($verified && empty($current) && $type !== 'CAA') {
+                $current = [$expected];
             }
 
-            Span::add('dns.timing', \microtime(true) - $validationStart);
-            Span::add('dns.domain', $domain->get());
+            $status = match (true) {
+                $verified => 'verified',
+                !\is_null($error), $validator->reason !== '' => 'failed',
+                $validator->count === 0 => 'missing',
+                default => 'mismatch',
+            };
 
-            // Explain the record the domain has, such as an A record with the wrong address, rather than
-            // a CNAME it was never meant to have. An apex cannot hold a CNAME, so it is told about A or AAAA.
-            $explained = $domain->get() === $domain->getApex() ? ($checkApex ?? $mainValidator) : $mainValidator;
-            foreach ($checks as $check) {
-                if ($check->count > 0 || $check->reason !== '') {
-                    $explained = $check;
-                    break;
-                }
-            }
-
-            throw new Exception(Exception::RULE_VERIFICATION_FAILED, $explained->getDescription());
+            $records[] = [
+                'type' => $type,
+                'name' => $domain->get(),
+                'expected' => $expected,
+                'current' => \array_values($current),
+                'status' => $status,
+                'message' => match (true) {
+                    $verified => '',
+                    // Only an Appwrite exception's text is meant for the caller
+                    $error instanceof Exception => $error->getMessage(),
+                    !\is_null($error) => 'DNS ' . $type . ' lookup failed.',
+                    default => $validator->getDescription(),
+                },
+                'required' => $required,
+                'error' => $error,
+            ];
         }
+
+        return $records;
     }
 
     /**

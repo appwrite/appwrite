@@ -1,5 +1,6 @@
 import {
   FlaskConical,
+  Gauge,
   GitBranch,
   Layers,
   LockKeyhole,
@@ -31,6 +32,7 @@ import { useMarkExperimentsSeen } from '@/lib/react-query/hooks'
 import { parseExperimentsSeenAt, type UserPrefs } from '@/lib/user-prefs-keys'
 
 const EXPERIMENT_ICONS = {
+  alerts: Gauge,
   analytics: ANALYTICS_PRODUCT_ICON,
   projectEnvironments: Layers,
   vcsOrigin: GitBranch,

@@ -722,7 +722,7 @@ class Deletes extends Action
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
-        $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '86400');
+        $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '43200');
         $reason = 'Aborted: no progress for ' . ($retention >= 3600
             ? \max(1, (int) \round($retention / 3600)) . ' hours'
             : \max(1, (int) \round($retention / 60)) . ' minutes');
@@ -833,7 +833,7 @@ class Deletes extends Action
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
-        $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '86400');
+        $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '43200');
         $reason = 'Aborted: no progress for ' . ($retention >= 3600
             ? \max(1, (int) \round($retention / 3600)) . ' hours'
             : \max(1, (int) \round($retention / 60)) . ' minutes');
@@ -1283,6 +1283,16 @@ class Deletes extends Action
             });
         } catch (Throwable $th) {
             Console::error('Failed to delete rules: ' . $th->getMessage());
+        }
+
+        // Delete rule records
+        try {
+            $this->deleteByGroup('ruleRecords', [
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete rule records: ' . $th->getMessage());
         }
 
         // Delete Keys
@@ -2421,6 +2431,11 @@ class Deletes extends Action
         if (isset($document['certificateId'])) {
             $dbForPlatform->deleteDocument('certificates', $document['certificateId']);
         }
+
+        // Record checks belong to this rule alone, even when its domain was recreated
+        $dbForPlatform->deleteDocuments('ruleRecords', [
+            Query::equal('ruleInternalId', [$document->getSequence()]),
+        ]);
     }
 
     /**

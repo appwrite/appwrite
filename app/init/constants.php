@@ -19,7 +19,6 @@ const APP_CE_CONFIG_DIR = __DIR__ . '/../config';
 const APP_EMAIL_TEAM = 'team@localhost.test'; // Default email address
 const APP_EMAIL_SECURITY = ''; // Default security email address
 const APP_EMAIL_LOGO_URL = 'https://cloud.appwrite.io/images/mails/logo.png';
-const APP_EMAIL_LOGO_DARK_URL = 'https://cloud.appwrite.io/images/mails/logo-dark.png';
 const APP_EMAIL_ACCENT_COLOR = '#fd366e';
 const APP_EMAIL_TERMS_URL = 'https://appwrite.io/terms';
 const APP_EMAIL_PRIVACY_URL = 'https://appwrite.io/privacy';
@@ -50,6 +49,7 @@ const APP_LIMIT_REVIEW_FINDINGS = 1000; // Findings of one pull request the revi
 const APP_LIMIT_REVIEW_AUTHORS = 5000; // Completed reviews, newest first, the author performance of a project is computed from
 const APP_LIMIT_REVIEW_LEARNINGS = 100; // Learnings of a repository a review is given, oldest first
 const APP_LIMIT_REALTIME_CONNECTIONS = 32; // Maximum open realtime connections per project user on one worker
+const APP_LIMIT_REALTIME_MESSAGES = 32; // Maximum messages per minute on one realtime connection
 const APP_LIMIT_REALTIME_GUEST_CONNECTIONS = 128; // Maximum open realtime guest connections per IP, or IPv6 /64, per project on one worker
 const APP_LIMIT_MQTT_KEEP_ALIVE = 1200; // MQTT keep-alive in seconds for a client that disables it, and the longest an MQTT 5.0 client is granted
 

@@ -15,7 +15,7 @@ export function ProgressBarRow({ value, className }: ProgressBarRowProps) {
   return (
     <div className={cn('flex items-center gap-2 mb-2', className)}>
       <Progress value={value} className="h-1.5 flex-1" />
-      <span className="text-[11px] text-muted-foreground shrink-0">
+      <span className="w-9 shrink-0 text-right text-[11px] tabular-nums text-muted-foreground">
         {Math.round(value)}%
       </span>
     </div>

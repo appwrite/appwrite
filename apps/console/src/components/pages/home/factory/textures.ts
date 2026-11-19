@@ -7,7 +7,7 @@ import {
   SRGBColorSpace,
 } from 'three'
 import type { FactoryPalette } from './palette'
-import { EXTENSION, FASCIA, PRODUCT_KINDS, type ProductKind } from './layout'
+import { FASCIA, HOLOGRAM, PRODUCT_KINDS, type ProductKind } from './layout'
 
 type Context = CanvasRenderingContext2D
 
@@ -161,6 +161,11 @@ export type ShadowShape = {
   depth: number
   blur: number
   strength: number
+  /**
+   * Whose shadow it is: the bed's, there from the start (red), or the
+   * racks', which arrives with them (green; see the floor's `uRacks`).
+   */
+  layer: 'bed' | 'racks'
 }
 
 export const SHADOW_BOUNDS = {
@@ -187,7 +192,10 @@ export function createShadowTexture(shapes: ShadowShape[]): CanvasTexture {
   const toX = (x: number) => (x - SHADOW_BOUNDS.minX) * SHADOW_PX_PER_UNIT
   const toY = (z: number) => (z - SHADOW_BOUNDS.minZ) * SHADOW_PX_PER_UNIT
   for (const shape of shapes) {
-    context.shadowColor = `rgba(255,255,255,${shape.strength})`
+    context.shadowColor =
+      shape.layer === 'bed'
+        ? `rgba(255,0,0,${shape.strength})`
+        : `rgba(0,255,0,${shape.strength})`
     context.shadowBlur = shape.blur * SHADOW_PX_PER_UNIT
     context.shadowOffsetX = offset
     context.fillStyle = '#fff'
@@ -240,7 +248,7 @@ function loadImage(src: string): Promise<HTMLImageElement | null> {
 }
 
 /** The page's brand font stack (Inter for languages Aeonik does not cover). */
-function brandFontStack(): string {
+export function brandFontStack(): string {
   const value = getComputedStyle(document.documentElement)
     .getPropertyValue('--font-aeonik-pro')
     .trim()
@@ -336,20 +344,10 @@ export const APPWRITE_MARK = [
   'M24.4429 9.46094V14.9383H14.4492C15.4906 13.94 16.1401 12.5248 16.1401 10.9548C16.1401 10.4369 16.0696 9.93598 15.9373 9.46094H24.4429Z',
 ]
 
-/** The unfolded screen: one half on each side of the hinge. */
-export const DESCRIPTION_SCREEN = {
-  /** Screen width on each half. */
-  leaf: EXTENSION.leaf - EXTENSION.border - 0.002,
-  /** Half the crease at the hinge: a hairline, so text runs across it. */
-  crease: 0.002,
-  height: EXTENSION.height - 2 * EXTENSION.border,
-} as const
-/** Edge to edge, unfolded: both halves' screens and the crease between them. */
-export const DESCRIPTION_WIDTH =
-  2 * (DESCRIPTION_SCREEN.crease + DESCRIPTION_SCREEN.leaf)
+/** One station's hologram, edge to edge, in pixels. */
 const DESCRIPTION_CELL = {
   width: 1024,
-  height: Math.round((1024 * DESCRIPTION_SCREEN.height) / DESCRIPTION_WIDTH),
+  height: Math.round((1024 * HOLOGRAM.height) / HOLOGRAM.width),
 }
 /** Two columns of cells keep the atlas within every GPU's size limit. */
 const DESCRIPTION_COLUMNS = 2
@@ -447,8 +445,9 @@ function wrap(context: Context, text: string, width: number): string[] {
 }
 
 /**
- * What each station's unfolded screen says: the product icon and name, then
- * what the product does, centered on a backlit LCD like the nameplates.
+ * What each station's hologram says: the product icon and name, then what
+ * the product does. The hologram shows it as light, so the dark base reads
+ * as clear glass and the brand lights in its corners as coloured haze.
  */
 export function createDescriptionAtlas(
   icons: readonly string[],
@@ -504,7 +503,7 @@ export function createDescriptionAtlas(
       light(-width * 0.08, '253, 54, 110', 0.34)
       light(width * 1.08, '124, 103, 254', 0.3)
 
-      const pad = width * 0.085
+      const pad = Math.min(width * 0.085, height * 0.17)
       const startX = rtl ? width - pad : pad
       const measure = width - pad * 2
       context.direction = rtl ? 'rtl' : 'ltr'
@@ -537,16 +536,16 @@ export function createDescriptionAtlas(
 
       // Headline: what the product does, in the brand face, with the pink underscore.
       const description = descriptions[index] ?? ''
-      let size = Math.round(height * 0.118)
+      let size = Math.round(height * 0.13)
       let lines: string[] = []
       for (; size >= 28; size -= 2) {
         context.font = `400 ${size}px ${fonts}`
-        lines = wrap(context, description, measure * 0.9)
+        lines = wrap(context, description, measure)
         if (lines.length <= 3) break
       }
       // Balance the lines: the narrowest measure that keeps the same line count.
       let narrow = measure * 0.4
-      let wide = measure * 0.9
+      let wide = measure
       while (wide - narrow > 2) {
         const middle = (narrow + wide) / 2
         if (wrap(context, description, middle).length > lines.length)
@@ -622,8 +621,10 @@ type Brand = Pick<ScreenColors, 'accent' | 'accent2' | 'accent3'>
 const BRANDS: Record<ProductKind, Brand> = {
   phone: { accent: '#7c5cff', accent2: '#ff4f8b', accent3: '#ffb547' },
   tablet: { accent: '#ff6a3d', accent2: '#ffb547', accent3: '#20c4b4' },
+  laptop: { accent: '#30d158', accent2: '#0a84ff', accent3: '#ff9f0a' },
   desktop: { accent: '#3d8bff', accent2: '#22c7b8', accent3: '#a78bfa' },
   display: { accent: '#fd366e', accent2: '#7c67fe', accent3: '#fe9567' },
+  mini: { accent: '#ffffff', accent2: '#ffffff', accent3: '#ffffff' },
   watch: { accent: '#ff375f', accent2: '#a3e635', accent3: '#22d3ee' },
 }
 
@@ -655,16 +656,20 @@ const LIGHT_UI: Omit<ScreenColors, keyof Brand> = {
 const SCREEN_THEMES: Record<ProductKind, 'dark' | 'light'> = {
   phone: 'dark',
   tablet: 'light',
+  laptop: 'dark',
   desktop: 'dark',
   display: 'light',
+  mini: 'dark',
   watch: 'dark',
 }
 
 const SCREEN_SIZES: Record<ProductKind, { w: number; h: number }> = {
   phone: { w: 92, h: 190 },
   tablet: { w: 140, h: 186 },
+  laptop: { w: 208, h: 132 },
   desktop: { w: 208, h: 132 },
   display: { w: 208, h: 132 },
+  mini: { w: 4, h: 4 },
   watch: { w: 104, h: 120 },
 }
 
@@ -1229,11 +1234,19 @@ function drawWatch(
   if (stage >= 7) shieldChip(context, 86, 30, 11, colors)
 }
 
+/** The Mac mini's status light: white once the app is in. */
+function drawLight(context: Context, w: number, h: number) {
+  context.fillStyle = '#ffffff'
+  context.fillRect(0, 0, w, h)
+}
+
 const DRAWERS: Record<ProductKind, typeof drawPhone> = {
   phone: drawPhone,
   tablet: drawTablet,
+  laptop: drawDesktop,
   desktop: drawDesktop,
   display: drawDisplay,
+  mini: drawLight,
   watch: drawWatch,
 }
 

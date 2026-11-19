@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.2" baseProfile="tiny-ps" viewBox="0 0 400 400">
+    <title>Appwrite</title>
+    <defs>
+        <linearGradient id="bg" x1="200" y1="-176" x2="200" y2="400" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#232325" />
+            <stop offset="1" stop-color="#19191C" />
+        </linearGradient>
+        <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
+            gradientTransform="translate(110 199) scale(240)">
+            <stop stop-color="#FD366E" stop-opacity="0.55" />
+            <stop offset="0.55" stop-color="#FE6C6A" stop-opacity="0.25" />
+            <stop offset="1" stop-color="#FE6C6A" stop-opacity="0" />
+        </radialGradient>
+        <linearGradient id="mark" x1="200.173" y1="91.9541" x2="776.092" y2="91.9541"
+            gradientUnits="userSpaceOnUse">
+            <stop stop-color="#FD366E" />
+            <stop offset="1" stop-color="#FE9567" />
+        </linearGradient>
+        <linearGradient id="markTail" x1="270.67" y1="184.472" x2="524.597" y2="227.126"
+            gradientUnits="userSpaceOnUse">
+            <stop stop-color="#FD366E" />
+            <stop offset="1" stop-color="#FE9567" />
+        </linearGradient>
+    </defs>
+    <rect width="400" height="400" fill="url(#bg)" />
+    <rect width="400" height="400" fill="url(#glow)" />
+    <path
+        d="M319.427 252.644V306.207H185.834C146.913 306.207 112.929 284.665 94.7473 252.644C92.1041 247.989 89.7907 243.105 87.8501 238.036C84.0407 228.102 81.6461 217.443 80.9196 206.321V191.84C81.0773 189.361 81.3258 186.902 81.6509 184.472C82.3152 179.486 83.319 174.607 84.6382 169.864C97.118 124.9 137.698 91.9541 185.834 91.9541C233.971 91.9541 274.546 124.9 287.025 169.864H229.903C220.525 155.207 204.293 145.517 185.834 145.517C167.375 145.517 151.143 155.207 141.765 169.864C138.907 174.32 136.689 179.233 135.236 184.472C133.946 189.118 133.257 194.016 133.257 199.081C133.257 214.434 139.595 228.272 149.757 238.036C159.173 247.098 171.868 252.644 185.834 252.644H319.427Z"
+        fill="url(#mark)" />
+    <path
+        d="M319.427 184.472V238.036H221.912C232.074 228.273 238.411 214.434 238.411 199.081C238.411 194.016 237.723 189.118 236.433 184.472H319.427Z"
+        fill="url(#markTail)" />
+</svg>

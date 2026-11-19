@@ -35,7 +35,9 @@ _APP_EXTENSION_LIBRARIES=<package>,<package>   # those packages' classes from th
 A package ported in batches has one switch per batch, `<package>-<batch>`, which needs the
 package's own: `validators,validators-scalar` registers the validators' base and the scalar leaf
 validators, `validators,validators-text` the base and the text ones, `validators,validators-network`
-the base and the network ones, `validators` alone only the base.
+the base and the network ones, `validators,validators-compose` the base and the composing ones,
+`validators` alone only the base. `auth` registers the password hashes of `packages/auth`
+(`Utopia\Auth\Hash` and `Utopia\Auth\Hashes\*`).
 
 The extension reads it once, when PHP loads the module, so changing it takes a restart and no
 deploy. Each library is canaried on Cloud this way before it becomes the default.
@@ -46,6 +48,12 @@ each. For every one it runs `packages/<name>/tests` on the extension and diffs t
 implementations, first one library at a time (a batch with its package's switch, running the
 package's tests), then with all of them on. A new library needs only
 its `enabled()` call, its corpus and its package tests; there is no CI step to add.
+
+`tests/opcache.php` then declares a PHP subclass of every class the extension registers and runs
+with opcache on, with no switch and with all of them: opcache copies a cached subclass, with the
+defaults and constants it inherits, into shared memory and frees what it copied from as PHP's
+allocator's memory. A default or constant built outside that allocator (an initialized empty array
+rather than `engine::empty_array()`) corrupts the heap there, and the script crashes.
 
 Once a library has run on the extension everywhere, its PHP class is removed and the class is
 registered unconditionally. Its corpus goes with it, since there is nothing left to compare
@@ -83,7 +91,11 @@ class's static state, so they live once per process and are cleared when the req
 PHP clears static properties. `Locale::$exceptions` is still a PHP static property:
 `Locale::$exceptions = false` works unchanged, and every call reads it. Translation files are read
 through PHP's `file_exists()` and `file_get_contents()`, so Swoole's hooks, stream wrappers and
-PHP's warnings apply. `getTranslations()` builds a language's array once and returns it by
+PHP's warnings apply. A file is read when it is registered, as in PHP, but a JSON object of strings
+(every Appwrite translation file) is kept as its text and decoded on the language's first lookup,
+once per distinct file: Appwrite registers 131 codes at boot and a process reads a few, so this
+keeps about 4.5 MB per process out of memory. Anything else is decoded at registration, so its
+errors are raised at the same point as before. `getTranslations()` builds a language's array once and returns it by
 refcount afterwards, as PHP returns `self::$language[$name]`.
 
 Known differences from the PHP class it replaced:
@@ -203,7 +215,7 @@ Methods read the properties on every call, in PHP's order (an uninitialized one 
 `Error`), straight from the object's slot on an object of the class itself and through the engine
 otherwise. Arguments go through the engine's own conversions, and a rejected one throws the
 `TypeError` or `ArgumentCountError` of a userland function, `called in` file and line included.
-`src/validators/engine.rs` holds the engine calls ext-php-rs does not wrap, which are worth
+`src/classes/engine.rs` holds the engine calls ext-php-rs does not wrap, which are worth
 proposing upstream: typed property declarations, union and untyped argument types (the engine
 copies a typed method's argument info at registration, so they are patched in its copy after the
 inheritance checks), and `FunctionHandler`, which is not exported.
@@ -231,7 +243,7 @@ protected `$length` and call `parent::__construct()`, `parent::getDescription()`
 `parent::isValid()`, and work unchanged on either implementation.
 
 `src/validators/text.rs` builds them by hand like the scalar batch (shared helpers in
-`src/validators/leaf.rs`), with their state in real typed protected properties, read in PHP's
+`src/classes/leaf.rs`), with their state in real typed protected properties, read in PHP's
 order. `Text`'s `NUMBERS`, `ALPHABET_UPPER` and `ALPHABET_LOWER` are persistent immutable arrays, and
 `Label::MAX_LENGTH` is a typed (`int`) constant; each class's own constants come before the ones it
 inherits, as PHP orders them. Comparisons with the PHP values a validator holds go through the
@@ -303,6 +315,115 @@ difference:
 
 - `Phone` runs its regular expressions without PHP's `preg_*` functions, so `isValid()` and
   `normalize()` leave `preg_last_error()` as it was.
+
+## Utopia\Validator's composing validators
+
+`_APP_EXTENSION_LIBRARIES=validators,validators-compose` also registers `Nullable`, `ArrayList`,
+`AllOf`, `AnyOf`, `NoneOf`, `Multiple`, `Assoc`, `JSON`, `JSON\ArrayValidator`,
+`JSON\ObjectValidator`, `JSON\FCM` and `Globstar`. Nothing outside the package extends them. The
+validators they wrap are whatever they are given: PHP (Appwrite's, utopia-php/database's, a leaf
+whose batch is off) or the extension's.
+
+`src/validators/compose.rs` builds them by hand like the leaf batches, with their state in real
+typed properties declared as `packages/validators` declares them: `$validator` typed `Validator`,
+`AllOf`'s `?Validator $failedRule` in the class body, `Multiple`'s untyped `$rules`, `Globstar`'s
+`private readonly array $patterns`, `FCM`'s `private ?string $error` and private typed array
+constants, and the private methods (`hasValidLength()`, `isNonEmptyString()`, `isHttpsUrl()`,
+`match()`, `matchGlobstar()`). A wrapped validator is called as PHP calls it, through its object's
+`get_method` handler from the calling class's scope (a subclass's override, `__call()`, PHP's
+`Error` for a private or missing method) and `zend_call_known_function`: same order, same number of
+calls, same short-circuits, and its exceptions pass through untouched. Its results are checked as
+the PHP method's return type checks them (`Nullable` and `ArrayList` come from `strict_types` files,
+so a non-bool `isValid()` there is a `TypeError`; elsewhere it converts, `NAN` with its warning);
+`AllOf`, `AnyOf` and `NoneOf` take anything with an `isValid()`, as PHP's `foreach` does, and
+record it in `$failedRule` with the property's type check. `Multiple`'s constructor calls
+`$this->addRule()`, so a subclass's override runs, and `addRule()` appends as `$this->rules[] =`
+does to whatever a subclass left there (`ArrayAccess::offsetSet()`, the `false` deprecation, the
+errors). `getDescription()`'s numbering is the engine's `++$key`. `json_decode()`, `json_encode()`,
+`json_last_error()`, `filter_var()`, `parse_url()`, `get_object_vars()` and `preg_match()` are
+PHP's own, called through the engine, so `json_last_error()` and `preg_last_error()` after a call,
+and `preg_match()`'s warnings for a broken character class, are PHP's. `Globstar` builds its regular
+expression in `crates/utopia/validators` (a port of `matchGlobstar()` and of `preg_quote()`), and
+casts each pattern as often as PHP does (a `Stringable` pattern counts them).
+
+`crates/extension/tests/validators-compose.php` prints a corpus that must be identical on both
+implementations (6,513 lines). The validators it wraps are probes that log every call, so the order,
+number and arguments of the calls and the short-circuits are compared, not only the results. It
+holds each class's reflection (constants, private ones included, properties, methods and their order,
+parameters); 47 validators (over probes that pass, fail, answer by value, throw or return
+non-bools, and over the leaves of the other batches) over 62 values (scalars, `NAN`, `INF`, lists
+and keyed arrays, a 600-deep array, 1,000-item lists, objects, `Stringable`, an enum, JSON text of
+every shape: nesting at depth 512 and 513, big integers, duplicate keys, a BOM, bytes that are not
+UTF-8, lone surrogates); the same validator over a sequence of values (what `$failedRule` and
+`$error` keep); members that are not validators (`__call()`, a private `isValid()`, strings,
+closures, `null`) in `AllOf`, `AnyOf` and `NoneOf`, plain and keyed; `Multiple`'s `addRule()` over
+every kind of `$rules`; every constructor over arguments of every kind PHP converts or rejects,
+strict types (in a child process) and `newInstanceWithoutConstructor()`; `json_last_error()` after
+every JSON check; 143 FCM service accounts (every field missing, blank, of the wrong type, not
+HTTPS), each as an array, JSON, pretty JSON and an object; 48 `Globstar` pattern lists (classes,
+negations, unclosed and POSIX classes, escapes, `**`, exclusions and their order, non-string
+patterns) over 35 paths, with `preg_last_error()`; the private methods through reflection; dumps,
+copies, comparisons and serialization; 19 PHP subclasses reading and writing the protected state,
+replacing a wrapped validator in the middle of a loop, overriding `addRule()` or skipping the parent
+constructor; and, from a child process, the declarations the engine checks against them. It asserts
+these known differences:
+
+- A `TypeError` for an argument the class passes to its own method (`Multiple`'s constructor
+  handing `addRule()` a rule that is not a `Validator`; `Globstar::match()` given a `null` or an
+  array pattern) ends at "given": PHP's adds ", called in …/Multiple.php on line N", and the
+  extension's class has no PHP source to name.
+
+## Utopia\Auth\Hash and the password hashes
+
+`_APP_EXTENSION_LIBRARIES=auth` registers the abstract `Utopia\Auth\Hash` and its eight hashes,
+`Argon2`, `Bcrypt`, `MD5`, `PHPass`, `Plaintext`, `Scrypt`, `ScryptModified` and `Sha`, over
+`php-std` (`password_hash()`, `password_verify()`, `crypt()`, `hash()`, `base64_*()`,
+`mb_convert_encoding()`) and `crates/utopia/auth` (PECL `scrypt()`, Firebase's modified scrypt, phpass).
+The proofs, tokens, issuers, verifiers and passkeys of the package stay PHP; `Proofs\Password`
+takes the native `Hash`, which is why the base is native too, and PHP subclasses (the package's
+tests, any app's) extend it and the hashes as they would the PHP classes.
+
+`src/auth/` builds them by hand like the validators, with the helpers they share in
+`src/classes/` (`engine.rs`, `leaf.rs`). `$options` (and `PHPass::$itoa64`) are real typed
+protected properties; a method PHP calls through `$this` (`setOption()` from the constructors and
+`setOptions()`, `getOption()`/`getOptions()` from `hash()`, `getName()`, `hash()` from the
+`verify()` that hashes again, PHPass's `getRandomBytes()` and `encode64()`) runs a subclass's override.
+Options are read as PHP reads them: `password_hash()`'s checks, order and messages (`zval_get_long()`
+of any option, the ignored `salt` warning), `$options['key']` with its `Undefined array key`
+warning, PHPass's arithmetic on whatever its options hold (the engine's `+`, `/`, `%`, `min()`,
+`intval()` and string offsets), and `Hash.php`'s `strict_types` for `setOptions()` with integer keys.
+
+The hashes PHP made verify on the extension and the extension's verify on PHP: `Argon2`
+(`$argon2id$`, `$argon2i$`) and `Bcrypt` (`$2y$`; `$2a$`, `$2b$`, `$2x$` through `crypt()`) hash with
+`password_hash()`'s salt (`php_password_make_salt()`) and verify with `password_verify()`; `PHPass`
+makes blowfish (`$2a$`) and portable (`$P$`, with `$H$` accepted) hashes, and verifies MD5-crypt,
+SHA-crypt, DES and extended DES through `crypt()`. `MD5`, `Sha`, `Plaintext`, `Scrypt`,
+`ScryptModified` and `PHPass`'s portable hash compare with `hash_equals()`'s constant time.
+
+`crates/extension/tests/auth.php` prints a corpus that must be identical on both implementations
+(1,356 lines): each class's reflection; the option API over keys PHP converts (`'1'`, `'01'`, `'-0'`,
+binary) and values of every type; arguments of the wrong kind; `MD5`, all nine `Sha` versions and
+`Plaintext` over passwords that are empty, UTF-8, not UTF-8, with NUL bytes and past 72 bytes;
+`Sha` with versions only `setOption()` stores; `Scrypt` over its parameters and every PECL failure
+(`Error`, warning, `false`); `ScryptModified` with Firebase's vector, other options and missing ones;
+`Argon2` and `Bcrypt` over every `password_hash()` option error, each hash checked by the class and
+by PHP's own `password_verify()` and `crypt()`; 84 hashes PHP made (`password_hash()`, every
+`crypt()` scheme, portable phpass) and 39 malformed ones through every `verify()`; `PHPass` made
+deterministic by a subclass's `getRandomBytes()`, over its options, alphabet and helpers; subclasses
+overriding `setOption()`, `getOption()`, `getOptions()`, `getName()`, `hash()` and `encode64()`;
+and dumps, clones, comparisons and serialization. Its known differences, which no caller depends on:
+
+- `setOptions()` with an integer key throws `Hash.php`'s `TypeError` without PHP's
+  `, called in .../Hash.php on line N`.
+- `Scrypt` and `ScryptModified` work without the PECL `scrypt` extension, where PHP throws
+  `RuntimeException('The scrypt extension is required...')`; a key length PHP cannot allocate is a
+  fatal error there and `false` here (then `RuntimeException`).
+- `Argon2` refuses more than 4 GiB of memory with `ValueError('Memory allocation error')`, where
+  libargon2 tries to allocate it.
+- `PHPass::getRandomBytes()` reads `/dev/urandom` without consulting `open_basedir`.
+- `Argon2` hashes run their lanes one after the other, where libargon2 runs `threads` of them in
+  parallel: the default (3 threads, 64 MiB, 4 passes) takes about twice the wall-clock time,
+  for the same CPU time.
 
 ## Benchmarks
 

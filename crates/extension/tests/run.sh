@@ -38,6 +38,13 @@ for library in $libraries; do
     diff "$output/$library.php.jsonl" "$output/$library.all.jsonl"
 done
 
+# A PHP subclass of every class, cached by opcache: what the extension's defaults and constants
+# must survive (opcache frees what it copies into shared memory as PHP's allocator's).
+for with in "" "$all"; do
+    echo "== opcache (${with:-no switches})" >&2
+    _APP_EXTENSION_LIBRARIES=$with php -d opcache.enable_cli=1 "$tests/opcache.php"
+done
+
 # Classes with no PHP implementation left: their packages' own tests, on the extension.
 for package in user-agent domains emails; do
     echo "== $package (no PHP)" >&2

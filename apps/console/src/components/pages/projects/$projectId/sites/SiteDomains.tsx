@@ -324,7 +324,7 @@ export function SiteDomainsView() {
             open={verifyOpen}
             onOpenChange={setVerifyOpen}
             projectId={projectId ?? ''}
-            rule={selectedRule}
+            rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
             region={project?.region}
             organizationDomainId={getOrganizationDomainId(selectedRule)}
             onVerifySuccess={() => {
@@ -335,7 +335,7 @@ export function SiteDomainsView() {
           <DomainRecordsDialog
             open={recordsOpen}
             onOpenChange={setRecordsOpen}
-            rule={selectedRule}
+            rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
             region={project?.region}
             resourceType="site"
           />
@@ -360,7 +360,7 @@ export function SiteDomainsView() {
             setViewLogsOpen(open)
             if (!open) setViewLogsRule(null)
           }}
-          rule={viewLogsRule}
+          rule={rules.find((r) => r.$id === viewLogsRule.$id) ?? viewLogsRule}
         />
       )}
     </div>

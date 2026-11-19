@@ -1696,4 +1696,14 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'The TXT record was not found yet. DNS changes can take a few minutes to propagate.':
     'רשומת ה-TXT עדיין לא נמצאה. עדכון שינויי DNS עשוי להימשך כמה דקות.',
   Later: 'אחר כך',
+  'Organization photo': 'תמונת הארגון',
+  'Shown next to your organization name across the Console.': 'מוצגת לצד שם הארגון שלך בכל הקונסולה.',
+  'PNG, JPEG, or WebP up to 5MB.': 'PNG,\u200f JPEG או WebP עד 5MB.',
+  'Only organization owners can change the photo.': 'רק בעלי הארגון יכולים לשנות את התמונה.',
+  'Organization photo updated': 'תמונת הארגון עודכנה',
+  'Failed to update organization photo': 'עדכון תמונת הארגון נכשל',
+  'Organization photo removed': 'תמונת הארגון הוסרה',
+  'Failed to remove organization photo': 'הסרת תמונת הארגון נכשלה',
+  'Remove organization photo': 'הסרת תמונת הארגון',
+  'The photo is replaced with a placeholder. You can upload a new photo at any time.': 'התמונה תוחלף בתמונת ברירת מחדל. אפשר להעלות תמונה חדשה בכל עת.',
 }

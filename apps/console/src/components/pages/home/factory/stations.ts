@@ -44,6 +44,7 @@ import {
   stationX,
   travel,
 } from './layout'
+import { ARRIVALS, arrive } from './assembly'
 import { installPower, stationPower, type FrameState } from './frame'
 
 /**
@@ -384,7 +385,8 @@ const storage: Builder = (shop) => {
 
   const hit = STATION_HIT.storage
   const feed = feedZ - TRACK_Z
-  const cruise = REST - 0.05
+  // High enough to carry the tile over an open laptop's lid.
+  const cruise = REST - 0.01
 
   return {
     group: axis.group,
@@ -869,7 +871,26 @@ export class StationLine {
   }
 
   update(frame: FrameState) {
-    const { line } = frame
+    const { line, assembly } = frame
+    // Every rig glides in on the bed with its column (see `assembly.ts`).
+    arrive(
+      this.installer.group.position,
+      slotX(INSTALL_SLOT),
+      0,
+      0,
+      assembly,
+      ARRIVALS.installer,
+    )
+    this.rigs.forEach((rig, index) => {
+      arrive(
+        rig.group.position,
+        stationX(index),
+        0,
+        0,
+        assembly,
+        ARRIVALS.station(index),
+      )
+    })
     const installing = line.cycle - INSTALL_SLOT
     const kind = getProductKind(installing)
     const size = DEVICE_SIZES[kind]

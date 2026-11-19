@@ -161,119 +161,117 @@ export function NetworkSection({ player }: { player: StreamPlayerState }) {
       </div>
 
       <div className="overflow-hidden rounded-xl border border-border">
-        <div className="max-h-[440px] overflow-auto">
-          <Table>
-            <TableHeader className="sticky top-0 z-10 bg-card">
-              <TableRow className="hover:bg-transparent border-b border-border">
-                <TableHead className={HEAD_CLASS}>{t('Time')}</TableHead>
-                <TableHead className={HEAD_CLASS}>{t('Type')}</TableHead>
-                <TableHead className={HEAD_CLASS}>{t('Rendition')}</TableHead>
-                <TableHead className={HEAD_CLASS}>{t('Media time')}</TableHead>
-                <TableHead className={cn(HEAD_CLASS, 'text-right')}>
-                  {t('Size')}
-                </TableHead>
-                <TableHead className={cn(HEAD_CLASS, 'text-right')}>
-                  {t('Time to first byte')}
-                </TableHead>
-                <TableHead className={cn(HEAD_CLASS, 'text-right')}>
-                  {t('Load time')}
-                </TableHead>
-                <TableHead className={cn(HEAD_CLASS, 'text-right')}>
-                  {t('Throughput')}
-                </TableHead>
-                <TableHead className={cn(HEAD_CLASS, 'min-w-[200px]')}>
-                  {t('Waterfall')}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {visible.map((frag) => {
-                const key = segmentKey(frag)
-                const requestStart = frag.at - frag.loadMs
-                const left = ((requestStart - range.start) / range.span) * 100
-                const width = Math.max(0.6, (frag.loadMs / range.span) * 100)
-                const ttfbShare =
-                  frag.loadMs > 0
-                    ? Math.min(1, frag.firstByteMs / frag.loadMs)
-                    : 0
-                const isAudio = frag.mediaKind === 'audio'
-                return (
-                  <TableRow
-                    key={key}
-                    onClick={() =>
-                      setSelectedKey(selectedKey === key ? null : key)
-                    }
-                    className={cn(
-                      'cursor-pointer',
-                      selectedKey === key && 'bg-muted/60',
-                    )}
+        <Table>
+          <TableHeader className="sticky top-0 z-10 bg-card">
+            <TableRow className="hover:bg-transparent border-b border-border">
+              <TableHead className={HEAD_CLASS}>{t('Time')}</TableHead>
+              <TableHead className={HEAD_CLASS}>{t('Type')}</TableHead>
+              <TableHead className={HEAD_CLASS}>{t('Rendition')}</TableHead>
+              <TableHead className={HEAD_CLASS}>{t('Media time')}</TableHead>
+              <TableHead className={cn(HEAD_CLASS, 'text-right')}>
+                {t('Size')}
+              </TableHead>
+              <TableHead className={cn(HEAD_CLASS, 'text-right')}>
+                {t('Time to first byte')}
+              </TableHead>
+              <TableHead className={cn(HEAD_CLASS, 'text-right')}>
+                {t('Load time')}
+              </TableHead>
+              <TableHead className={cn(HEAD_CLASS, 'text-right')}>
+                {t('Throughput')}
+              </TableHead>
+              <TableHead className={cn(HEAD_CLASS, 'min-w-[200px]')}>
+                {t('Waterfall')}
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {visible.map((frag) => {
+              const key = segmentKey(frag)
+              const requestStart = frag.at - frag.loadMs
+              const left = ((requestStart - range.start) / range.span) * 100
+              const width = Math.max(0.6, (frag.loadMs / range.span) * 100)
+              const ttfbShare =
+                frag.loadMs > 0
+                  ? Math.min(1, frag.firstByteMs / frag.loadMs)
+                  : 0
+              const isAudio = frag.mediaKind === 'audio'
+              return (
+                <TableRow
+                  key={key}
+                  onClick={() =>
+                    setSelectedKey(selectedKey === key ? null : key)
+                  }
+                  className={cn(
+                    'cursor-pointer',
+                    selectedKey === key && 'bg-muted/60',
+                  )}
+                >
+                  <TableCell
+                    className={cn(CELL_CLASS, 'text-muted-foreground')}
                   >
-                    <TableCell
-                      className={cn(CELL_CLASS, 'text-muted-foreground')}
+                    +{formatMs(requestStart - loadStart)}
+                  </TableCell>
+                  <TableCell className={CELL_CLASS}>
+                    {isAudio ? t('Audio') : t('Video')}
+                  </TableCell>
+                  <TableCell className={CELL_CLASS}>
+                    {isAudio ? (
+                      '-'
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5">
+                        <span
+                          className="size-2 rounded-[2px]"
+                          style={{ background: levelColor(frag.level) }}
+                        />
+                        {levelName(player.levels[frag.level])}
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className={CELL_CLASS}>
+                    {frag.start.toFixed(1)}s +{frag.duration.toFixed(1)}s
+                  </TableCell>
+                  <TableCell className={cn(CELL_CLASS, 'text-right')}>
+                    {formatBytes(frag.bytes)}
+                  </TableCell>
+                  <TableCell className={cn(CELL_CLASS, 'text-right')}>
+                    {formatMs(frag.firstByteMs)}
+                  </TableCell>
+                  <TableCell className={cn(CELL_CLASS, 'text-right')}>
+                    {formatMs(frag.loadMs)}
+                  </TableCell>
+                  <TableCell className={cn(CELL_CLASS, 'text-right')}>
+                    {formatBitrate(throughput(frag))}
+                  </TableCell>
+                  <TableCell className="px-4 py-3">
+                    <div
+                      dir="ltr"
+                      className="relative h-2.5 rounded-sm bg-muted/50"
                     >
-                      +{formatMs(requestStart - loadStart)}
-                    </TableCell>
-                    <TableCell className={CELL_CLASS}>
-                      {isAudio ? t('Audio') : t('Video')}
-                    </TableCell>
-                    <TableCell className={CELL_CLASS}>
-                      {isAudio ? (
-                        '-'
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5">
-                          <span
-                            className="size-2 rounded-[2px]"
-                            style={{ background: levelColor(frag.level) }}
-                          />
-                          {levelName(player.levels[frag.level])}
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className={CELL_CLASS}>
-                      {frag.start.toFixed(1)}s +{frag.duration.toFixed(1)}s
-                    </TableCell>
-                    <TableCell className={cn(CELL_CLASS, 'text-right')}>
-                      {formatBytes(frag.bytes)}
-                    </TableCell>
-                    <TableCell className={cn(CELL_CLASS, 'text-right')}>
-                      {formatMs(frag.firstByteMs)}
-                    </TableCell>
-                    <TableCell className={cn(CELL_CLASS, 'text-right')}>
-                      {formatMs(frag.loadMs)}
-                    </TableCell>
-                    <TableCell className={cn(CELL_CLASS, 'text-right')}>
-                      {formatBitrate(throughput(frag))}
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
                       <div
-                        dir="ltr"
-                        className="relative h-2.5 rounded-sm bg-muted/50"
+                        className="absolute inset-y-0 flex overflow-hidden rounded-sm"
+                        style={{ left: `${left}%`, width: `${width}%` }}
                       >
                         <div
-                          className="absolute inset-y-0 flex overflow-hidden rounded-sm"
-                          style={{ left: `${left}%`, width: `${width}%` }}
-                        >
-                          <div
-                            className="h-full bg-foreground/25"
-                            style={{ width: `${ttfbShare * 100}%` }}
-                          />
-                          <div
-                            className="h-full flex-1"
-                            style={{
-                              background: isAudio
-                                ? 'var(--muted-foreground)'
-                                : levelColor(frag.level),
-                            }}
-                          />
-                        </div>
+                          className="h-full bg-foreground/25"
+                          style={{ width: `${ttfbShare * 100}%` }}
+                        />
+                        <div
+                          className="h-full flex-1"
+                          style={{
+                            background: isAudio
+                              ? 'var(--muted-foreground)'
+                              : levelColor(frag.level),
+                          }}
+                        />
                       </div>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </div>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
         {selected ? (
           <div className="flex items-center gap-2 border-t border-border bg-muted/30 px-4 py-2.5">
             <span className="text-[12px] font-medium text-foreground">

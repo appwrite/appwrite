@@ -95,7 +95,7 @@ class Get extends Action
 
         $data = null;
 
-        foreach ([new Custom($deviceForFiles, APP_STORAGE_TEAM_PHOTOS), new Initials(), new Fallback()] as $provider) {
+        foreach ([new Custom($deviceForFiles, APP_STORAGE_TEAM_PHOTOS), new Initials(), new Fallback(Fallback::TEAM)] as $provider) {
             if ($provider->supports($profile)) {
                 $data = $provider->get($profile, $width, $height, 'g');
             }

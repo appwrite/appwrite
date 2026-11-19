@@ -71,10 +71,10 @@ use Utopia\Queue\Queue;
  *     leave on the connection that fetched it; rebinding it (see onCommands()) is what
  *     moves the per-message ack path off the receive socket entirely.
  *
- * The two locks are never nested, so they cannot deadlock, and each connection has
- * exactly one lock — a broker built from a live Connection serves both roles from one
- * socket and therefore shares one lock, which is the whole reason $commandsLock is
- * resolved from the source's shape rather than always constructed.
+ * Each connection has one lock. A live Connection serves both roles from one
+ * socket and shares one lock, so receiveEach() invokes callbacks only after the
+ * receive completes. Factory-backed brokers can acknowledge incremental arrivals
+ * on the separate commands connection while the receive lock is held.
  *
  * Together this is what lets a NATS worker run job('…', N) above one, so the broker no
  * longer carries Consumer\Exclusive. Publishing stays on the receive connection: a
@@ -82,7 +82,7 @@ use Utopia\Queue\Queue;
  * publish. Its commands connection is opened lazily on the first ack, so a publisher
  * never pays for a socket it will not use.
  */
-class Nats implements Synchronous, Consumer, Bounded
+class Nats implements Synchronous, Consumer\Streaming, Bounded
 {
     // Wire-level identifiers (stream/subject naming, durable consumers, advisories).
     private const string STREAM_PREFIX = 'Q_';
@@ -1177,21 +1177,59 @@ class Nats implements Synchronous, Consumer, Bounded
 
     public function receive(Queue $queue, int $timeout, int $n = 1): array
     {
+        $messages = [];
+        $this->receiveInto($queue, $timeout, $n, static function (Message $message) use (&$messages): void {
+            $messages[] = $message;
+        });
+        return $messages;
+    }
+
+    public function receiveEach(Queue $queue, int $timeout, int $n, callable $onMessage): void
+    {
+        if (!$this->source instanceof \Closure) {
+            // A shared socket cannot run commands until the receive lock is released.
+            foreach ($this->receive($queue, $timeout, $n) as $message) {
+                $onMessage($message);
+            }
+            return;
+        }
+        $this->receiveInto($queue, $timeout, $n, $onMessage);
+    }
+
+    /** @param callable(Message): void $onMessage */
+    private function receiveInto(Queue $queue, int $timeout, int $n, callable $onMessage): void
+    {
         try {
-            return $this->synchronize(function () use ($queue, $timeout, $n): array {
+            $this->synchronize(function () use ($queue, $timeout, $n, $onMessage): void {
+                $received = 0;
+                $callbackFailed = false;
+                $deliver = static function (Message $message) use ($onMessage, &$callbackFailed): void {
+                    try {
+                        $onMessage($message);
+                    } catch (\Throwable $error) {
+                        $callbackFailed = true;
+                        throw $error;
+                    }
+                };
                 try {
-                    return $this->pull($queue, $timeout, max(1, $n));
+                    $this->pull($queue, $timeout, max(1, $n), $deliver, $received);
                 } catch (ConnectionException|ProtocolException $error) {
-                    // Once. Only pull()'s first fetch fails here, and it handed nothing over.
+                    /** @var bool $callbackFailed Updated by the receive callback. */
+                    if ($callbackFailed) {
+                        throw $error;
+                    }
+                    if ($received > 0) {
+                        // Keep partial deliveries; a retry could exceed the reserved buffer.
+                        $this->report($error);
+                        return;
+                    }
                     if (!$this->lostConnection($error) || !$this->reconnectReceive()) {
                         throw $error;
                     }
-
-                    return $this->pull($queue, $timeout, max(1, $n));
+                    $this->pull($queue, $timeout, max(1, $n), $deliver, $received);
                 }
             });
         } finally {
-            // Off the lock, and on the way out however pull() ended.
             $this->flushReports();
         }
     }
@@ -1199,10 +1237,11 @@ class Nats implements Synchronous, Consumer, Bounded
     /**
      * The body of receive(), on the connection lock.
      *
-     * Holds it across the fetch, which is what an ack from a handler coroutine waits
-     * behind — see the class docblock for that bound and why it is safe.
+     * A separate command connection lets handlers acknowledge while a pull is pending.
+     *
+     * @param callable(Message): void $onMessage
      */
-    private function pull(Queue $queue, int $timeout, int $max): array
+    private function pull(Queue $queue, int $timeout, int $max, callable $onMessage, int &$received): void
     {
         $this->ensure($queue);
         $key = $this->identity($queue);
@@ -1230,23 +1269,9 @@ class Nats implements Synchronous, Consumer, Bounded
         );
         $this->drainDeadLetters($queue, $key);
 
-        // Fetch one message first so a sparse queue never waits for a batch to fill.
-        $deliveries = $this->fetch($this->consumers[$key], 1, (float) $timeout, false);
-
-        // Whatever else is already waiting, on a poll that cannot block.
-        if ($deliveries !== [] && \count($deliveries) < $max) {
-            try {
-                $deliveries = array_merge($deliveries, $this->fetch($this->consumers[$key], $max - \count($deliveries), 0.25, true));
-            } catch (ConnectionException|ProtocolException $error) {
-                $this->report($error);
-            }
-        }
-
-        $messages = [];
-
         $spare = $this->spareDelivery[$key] ?? null;
-
-        foreach ($deliveries as $jsMessage) {
+        $deliver = function (JetStreamMessage $jsMessage) use ($queue, $key, $onMessage, &$received, &$spare): void {
+            $received++;
             // The server allows one delivery past maxDeliver (see provisionOnce()), and it
             // only reaches here when no attempt before it ended in reject() -- a worker
             // died holding each one. Dead-lettered on this delivery rather than by the
@@ -1266,7 +1291,7 @@ class Nats implements Synchronous, Consumer, Bounded
                 if ($spare !== null && $jsMessage->metadata()->numDelivered >= $spare) {
                     $this->park($queue, $jsMessage, 'max deliveries exceeded');
 
-                    continue;
+                    return;
                 }
             }
 
@@ -1283,21 +1308,25 @@ class Nats implements Synchronous, Consumer, Bounded
                 // burning an attempt and a maxAckPending slot for a full ackWait.
                 $this->park($queue, $jsMessage, 'payload could not be decoded');
 
-                continue;
+                return;
             }
 
             /** @var array{pid: string, queue: string, timestamp: int, payload: array<mixed>} $data */
             $this->inFlight[$data['pid']] = $jsMessage;
 
-            $messages[] = new Message($data)
+            $onMessage(new Message($data)
                 // JetStream counts deliveries from 1; expose it as the Redis-style attempt count.
                 ->setAttempts(max(0, $jsMessage->metadata()->numDelivered - 1))
                 ->setMaxAttempts($this->maxDeliver)
                 ->setSequence($jsMessage->metadata()->streamSequence)
-                ->setSize(\strlen($jsMessage->getData()));
-        }
+                ->setSize(\strlen($jsMessage->getData())));
+        };
 
-        return $messages;
+        // Hand the first message over immediately, then top up the same buffer.
+        $this->consumers[$key]->fetchEach(1, $deliver, (float) $timeout);
+        if ($received > 0 && $received < $max) {
+            $this->consumers[$key]->fetchEach($max - $received, $deliver, 0.25, true);
+        }
     }
 
     /**
@@ -1725,7 +1754,7 @@ class Nats implements Synchronous, Consumer, Bounded
             $remaining = $limit ?? $consumer->info(true)->numPending;
             $failure = null;
             while ($remaining > 0) {
-                $jsMessage = $this->fetch($consumer, 1, 1.0, false)[0] ?? null;
+                $jsMessage = $consumer->next(1.0);
                 if (!$jsMessage instanceof JetStreamMessage) {
                     break;
                 }
@@ -2093,22 +2122,6 @@ class Nats implements Synchronous, Consumer, Bounded
         if ($this->commandsConnection instanceof NatsConnection && $this->commandsConnection !== $this->connection) {
             $this->commandsConnection->close();
         }
-    }
-
-    /**
-     * Fetch up to $batch deliveries, as a list.
-     *
-     * @return list<JetStreamMessage>
-     */
-    private function fetch(NatsConsumer $consumer, int $batch, float $timeout, bool $noWait): array
-    {
-        $messages = [];
-
-        foreach ($consumer->fetch($batch, $timeout, $noWait) as $message) {
-            $messages[] = $message;
-        }
-
-        return $messages;
     }
 
     /**

@@ -225,7 +225,14 @@ export function ground(
   return geometry
 }
 
-const MERGED_ATTRIBUTES = ['position', 'normal', 'uv', 'color', 'aFinish']
+const MERGED_ATTRIBUTES = [
+  'position',
+  'normal',
+  'uv',
+  'color',
+  'aFinish',
+  'aArrive',
+]
 
 /**
  * Merges parts into one geometry (one draw call), straight into typed
@@ -308,7 +315,8 @@ export function merge(
  * Merges parts in several finishes into one geometry for the kit's `finish`
  * material: each vertex records its finish (`aFinish`, an index into
  * `FINISHES`), so a rigid assembly of aluminum, steel and rubber parts is a
- * single draw in every pass.
+ * single draw in every pass. Parts not marked as on their way into place
+ * (`aArrive`, see `assembly.ts`) stand still.
  */
 export function mergeFinishes(
   parts: Partial<Record<string, BufferGeometry[]>>,
@@ -322,6 +330,11 @@ export function mergeFinishes(
         'aFinish',
         new BufferAttribute(new Float32Array(count).fill(index), 1),
       )
+      if (!part.hasAttribute('aArrive'))
+        part.setAttribute(
+          'aArrive',
+          new BufferAttribute(new Float32Array(count * 4), 4),
+        )
       tagged.push(part)
     }
   })

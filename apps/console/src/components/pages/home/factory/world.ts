@@ -13,6 +13,7 @@ import {
   Mesh,
   type MeshBasicMaterial,
   PlaneGeometry,
+  type ShaderMaterial,
   TubeGeometry,
   Vector3,
   type Texture,
@@ -27,7 +28,6 @@ import {
 } from './frameworks'
 import {
   box,
-  cylinder,
   ground,
   merge,
   mergeFinishes,
@@ -39,21 +39,29 @@ import {
   FINISHES,
   createKitBeam,
   createKitDisplay,
+  createKitLamp,
+  createKitProjection,
+  setLamp,
   type FactoryKit,
   type Finish,
 } from './kit'
-import { createChevronMaterial } from './materials'
+import {
+  createChevronMaterial,
+  createHologramMaterial,
+  type HologramUniforms,
+} from './materials'
 import type { FactoryPalette } from './palette'
 import {
+  DOCK,
   BED_BACK,
   BED_FRONT,
   BED_TOP,
   CORE,
   COUNTER,
   CYCLE,
-  EXTENSION,
   FASCIA,
   GATE,
+  HOLOGRAM,
   INSTALL_HIT,
   INSTALL_SLOT,
   MOVE,
@@ -81,16 +89,25 @@ import {
   getSinceShip,
   getStationStart,
   hash01,
+  hologramBottom,
   rackZ,
   range,
   slotX,
   stationX,
 } from './layout'
+import {
+  ARRIVALS,
+  SETTLED,
+  type Arrival,
+  arrive,
+  arriving,
+  away,
+  cablesOut,
+  networkOut,
+} from './assembly'
 import { installPower, introStep, stationPower, type FrameState } from './frame'
 import {
   APPWRITE_MARK,
-  DESCRIPTION_SCREEN,
-  DESCRIPTION_WIDTH,
   NAMEPLATE_SIZE,
   TRACK_REPEAT,
   getDescriptionCell,
@@ -115,6 +132,8 @@ const RACK_BASE = 0.06
 const RACK_TOP = RACK_BASE + RACKS.height
 const LOGO_Y = RACK_BASE + RACKS.height * 0.8
 const LOGO_WIDTH = 0.62
+const WALL_CENTER = WALL.y + WALL.height / 2
+const COUNTER_CENTER = COUNTER.y + COUNTER.height / 2
 const BLADE = { pitch: 0.09, height: 0.072, leds: 4 }
 
 /** The gate's tunnel: what the carriers ride into. */
@@ -123,6 +142,8 @@ const GATE_BACK = TUNNEL.back - 0.16
 const GATE_FRONT = BED_FRONT - 0.02
 const GATE_CENTER = GATE.start + GATE.length / 2
 const GATE_SIGN_Y = BED_TOP + GATE.height - 0.2
+/** The chevron strip across the gate's front. */
+const CHEVRON_Y = BED_TOP + 0.34
 
 /** Power cables: one from the Appwrite rack to every column, the installer last. */
 const FEEDS = STATION_COUNT + 1
@@ -130,6 +151,7 @@ const CABLE_RADIUS = 0.016
 
 const matrix = new Matrix4()
 const color = new Color()
+const spot = new Vector3()
 
 /** Static occlusion painted once into the floor. */
 export function getStaticShadowShapes(): ShadowShape[] {
@@ -143,6 +165,7 @@ export function getStaticShadowShapes(): ShadowShape[] {
       depth: BED_DEPTH + 2.6,
       blur: 1.5,
       strength: 0.2,
+      layer: 'bed',
     },
     {
       x: BED_CENTER,
@@ -151,6 +174,7 @@ export function getStaticShadowShapes(): ShadowShape[] {
       depth: BED_DEPTH + 0.16,
       blur: 0.26,
       strength: 0.75,
+      layer: 'bed',
     },
     {
       x: RACKS.x,
@@ -159,6 +183,7 @@ export function getStaticShadowShapes(): ShadowShape[] {
       depth: rowFront - rowBack + 1.6,
       blur: 1.2,
       strength: 0.22,
+      layer: 'racks',
     },
     {
       x: RACKS.x,
@@ -167,6 +192,7 @@ export function getStaticShadowShapes(): ShadowShape[] {
       depth: rowFront - rowBack + 0.08,
       blur: 0.22,
       strength: 0.8,
+      layer: 'racks',
     },
   ]
 }
@@ -389,54 +415,69 @@ const PART_KEYS: readonly PartKey[] = [
 
 type Feed = { points: Vector3[]; station: number }
 
-/** A station's unfolding display. */
-type Extension = {
+/**
+ * The render layer holograms are drawn in, so the engine can draw them by
+ * themselves in front of the page copy (see its `drawFront`).
+ */
+export const HOLOGRAM_LAYER = 1
+
+/** A station's hologram projector, its origin on the lens in the column's top. */
+type Hologram = {
   group: Group
-  /** The display, its origin on the hinge: slides up out of the column's slot, then rides the mast. */
-  riser: Group
-  /** The mast: stored in the column under the slot, it rises with the display and slides with the hinge. */
-  post: Mesh
-  /** The front half, which swings open about the hinge; the back half is fixed to the mast. */
-  left: Group
-  screen: MeshBasicMaterial
+  /** The lens lighting up. */
+  lens: MeshBasicMaterial
+  /** The fan of light from the lens up to the screen. */
+  fan: Mesh<BufferGeometry, ShaderMaterial>
+  screen: Mesh<BufferGeometry, ShaderMaterial>
+  uniforms: HologramUniforms
 }
 
-/** Seconds to unfold fully (folding back takes half). */
-const UNFOLD = 1
-/** Unfold progress at which the front half starts to swing open. */
-const OPEN_START = 0.5
-/** The mast: long enough to stay seated in the column at full lift. */
-const MAST = { width: 0.1, depth: 0.1, length: EXTENSION.lift + 0.2 } as const
-/** The mast sits under the back half, just clear of the hinge. */
-const MAST_OFFSET = 0.07
-/** Where the front half's hinge axis sits, just in front of the screens so the folded halves close with a hair between them. */
-const HINGE_Z = 0.006
+/** Seconds for a hologram to form (it goes out in half the time). */
+const PROJECT = 0.6
+/** How far a hologram has formed when its screen starts to draw in. */
+const SCREEN_START = 0.25
+/** How much a hologram's glass dims what is behind it: more on light pages, so its light still reads. */
+const PANE = { dark: 0.6, light: 0.82 } as const
 
-/** A screen panel showing the part of a station's description cell between `from` and `to` (meters across the open screen). */
-function describedPanel(
-  index: number,
-  from: number,
-  to: number,
-  corners: readonly [boolean, boolean, boolean, boolean],
-): BufferGeometry {
-  const plane = roundedPlane(
-    to - from,
-    DESCRIPTION_SCREEN.height,
-    0.04,
-    corners,
+/** A flat fan of light, `bottom` wide at y = 0 and `top` wide at y = 1. */
+function fan(bottom: number, top: number): BufferGeometry {
+  const geometry = new BufferGeometry()
+  geometry.setAttribute(
+    'position',
+    new BufferAttribute(
+      new Float32Array([
+        -bottom / 2,
+        0,
+        0,
+        bottom / 2,
+        0,
+        0,
+        top / 2,
+        1,
+        0,
+        -top / 2,
+        1,
+        0,
+      ]),
+      3,
+    ),
   )
-  const cell = getDescriptionCell(index, STATION_COUNT)
-  const uv = plane.getAttribute('uv') as BufferAttribute
-  const start = from / DESCRIPTION_WIDTH + 0.5
-  const end = to / DESCRIPTION_WIDTH + 0.5
-  for (let vertex = 0; vertex < uv.count; vertex++) {
-    uv.setXY(
-      vertex,
-      cell.u + (start + uv.getX(vertex) * (end - start)) * cell.du,
-      cell.v + uv.getY(vertex) * cell.dv,
-    )
-  }
-  return plane
+  geometry.setIndex([0, 1, 2, 0, 2, 3])
+  return geometry
+}
+
+/** The eight corners of the box from `min` to `max` in `matrix`'s space, in world space. */
+function corners(
+  matrix: Matrix4,
+  min: readonly [number, number, number],
+  max: readonly [number, number, number],
+): Vector3[] {
+  const points: Vector3[] = []
+  for (const x of [min[0], max[0]])
+    for (const y of [min[1], max[1]])
+      for (const z of [min[2], max[2]])
+        points.push(new Vector3(x, y, z).applyMatrix4(matrix))
+  return points
 }
 
 /**
@@ -458,12 +499,24 @@ export class FactoryWorld {
   private readonly counter: CounterDisplay
   private readonly console: ConsoleDisplay
   private readonly wallScreen: Mesh<BufferGeometry, MeshBasicMaterial>
+  private readonly installerScreen: Mesh
+  private readonly counterScreen: Mesh
   private readonly chevrons = createChevronMaterial()
+  private readonly chevronStrip: Mesh
   private readonly curtain: ReturnType<typeof createKitBeam>
+  private readonly curtainSheet: Mesh
+  private readonly feedCables: Mesh
+  private readonly networkCables: Mesh
+  /** Every server LED's place, and the rack it is in. */
+  private readonly leds: { y: number; z: number; rack: number }[] = []
+  /** Every machine is in place and every cable run out (see `assemble`). */
+  private settled = false
   private readonly feeds: Feed[] = []
-  private readonly extensions: Extension[] = []
-  /** Per station, 0 folded → 1 open; moves at a constant rate toward its target. */
-  private readonly unfold: number[] = new Array(STATION_COUNT).fill(0)
+  private readonly holograms: Hologram[] = []
+  /** Per station, 0 off → 1 formed; moves at a constant rate toward its target. */
+  private readonly projected: number[] = new Array(STATION_COUNT).fill(0)
+  /** Real seconds the holograms' light has been moving (scan lines, rays). */
+  private shimmer = 0
   private readonly geometries: BufferGeometry[] = []
   private baseCount: number | null = null
   /** Where the counter starts: a little over 500,000, different on every visit. */
@@ -482,6 +535,9 @@ export class FactoryWorld {
     const parts = Object.fromEntries(
       PART_KEYS.map((key) => [key, [] as BufferGeometry[]]),
     ) as Record<PartKey, BufferGeometry[]>
+    // The machine being built and how it comes into place as the factory
+    // assembles (see `assembly.ts`); the bed and the track are there from the start.
+    let machine: Arrival | null = null
     const add = (
       key: PartKey,
       geometry: BufferGeometry,
@@ -489,7 +545,9 @@ export class FactoryWorld {
       y: number,
       z: number,
     ) => {
-      parts[key].push(geometry.translate(x, y, z))
+      geometry.translate(x, y, z)
+      if (machine) arriving(geometry, machine)
+      parts[key].push(geometry)
       return geometry
     }
     const plain = (width: number, height: number, depth: number) =>
@@ -622,6 +680,7 @@ export class FactoryWorld {
     }
     for (let index = 0; index < STATION_COUNT; index++) {
       const x = stationX(index)
+      machine = ARRIVALS.station(index)
       column(x)
       // Bezel of the station's display.
       add(
@@ -633,112 +692,68 @@ export class FactoryWorld {
       )
     }
 
-    // The foldable displays, one per station, stored folded inside its column.
-    const { leaf, thickness, height } = EXTENSION
-    const { crease } = DESCRIPTION_SCREEN
-    const leafScreen = DESCRIPTION_SCREEN.leaf
-    const half = (sign: number) => ({
-      // Each half lies on its side of the hinge, its front face at z = 0.
-      body: track(
-        ground(
-          panel(leaf, height, thickness, 0.06).translate(
-            (sign * leaf) / 2,
-            height / 2,
-            -thickness,
-          ),
-          -100,
-          1,
-          0,
-        ),
-      ),
-      face: track(
-        panel(leaf - 0.012, height - 0.024, 0.004, 0.052).translate(
-          (sign * (leaf - 0.012)) / 2 + sign * 0.002,
-          height / 2,
-          0,
-        ),
-      ),
-    })
-    const halves = { left: half(-1), right: half(1) }
-    const spine = track(
-      cylinder(thickness * 0.85, height - 0.02, 20).translate(
-        0,
-        height / 2,
-        -thickness,
-      ),
+    // The hologram projectors, one per station: a lens set into the column's
+    // top, the fan of light it throws up, and the screen that light draws.
+    // Only the lens's housing and glass are there while it is off.
+    const { lens } = HOLOGRAM
+    const lensGeometry = track(
+      new PlaneGeometry(lens.width, lens.depth).rotateX(-Math.PI / 2),
     )
-    const mast = track(
-      box(MAST.width, MAST.length, MAST.depth, 0.012, 1).translate(
-        0,
-        MAST.length / 2,
-        0,
-      ),
+    const fanGeometry = track(fan(lens.width, HOLOGRAM.width))
+    const screenGeometry = track(
+      new PlaneGeometry(HOLOGRAM.width, HOLOGRAM.height),
     )
     for (let index = 0; index < STATION_COUNT; index++) {
       const group = new Group()
-      group.position.set(stationX(index), TOWER_TOP - 0.01, EXTENSION.z)
+      group.position.set(stationX(index), TOWER_TOP, HOLOGRAM.z)
       group.visible = false
-      const post = new Mesh(mast, kit.aluminum)
-      group.add(post)
-      const riser = new Group()
-      riser.add(new Mesh(spine, kit.aluminum))
-      const screen = createKitDisplay(kit, descriptionTexture)
-      const hinge = (sign: number) => {
-        const leafGroup = new Group()
-        // The front half turns about an axis just in front of the screens.
-        const pivot = sign < 0 ? HINGE_Z : 0
-        leafGroup.position.z = pivot
-        const parts = sign < 0 ? halves.left : halves.right
-        const body = new Mesh(parts.body, kit.enclosure)
-        const face = new Mesh(parts.face, kit.matte)
-        body.position.z = -pivot
-        face.position.z = -pivot
-        leafGroup.add(body, face)
-        const glass = new Mesh(
-          track(
-            sign < 0
-              ? describedPanel(index, -(crease + leafScreen), -crease, [
-                  true,
-                  false,
-                  false,
-                  true,
-                ])
-              : describedPanel(index, crease, crease + leafScreen, [
-                  false,
-                  true,
-                  true,
-                  false,
-                ]),
-          ),
-          screen,
-        )
-        glass.position.set(
-          sign * (crease + leafScreen / 2),
-          height / 2,
-          0.0055 - pivot,
-        )
-        leafGroup.add(glass)
-        riser.add(leafGroup)
-        return leafGroup
+      const glow = createKitLamp(kit)
+      const lit = new Mesh(lensGeometry, glow)
+      lit.position.y = 0.0055
+      const beam = new Mesh(fanGeometry, createKitProjection(kit))
+      beam.material.uniforms.uWidths!.value.set(lens.width, HOLOGRAM.width)
+      beam.position.y = 0.006
+      beam.renderOrder = 8
+      const { material, uniforms } = createHologramMaterial()
+      uniforms.uAtlas.value = descriptionTexture
+      const cell = getDescriptionCell(index, STATION_COUNT)
+      uniforms.uCell.value.set(cell.u, cell.v, cell.du, cell.dv)
+      uniforms.uSize.value.set(HOLOGRAM.width, HOLOGRAM.height)
+      uniforms.uPane.value = kit.palette.dark ? PANE.dark : PANE.light
+      const screen = new Mesh(screenGeometry, material)
+      screen.renderOrder = 9
+      for (const mesh of [lit, beam, screen]) {
+        mesh.layers.set(HOLOGRAM_LAYER)
+        mesh.userData.castsNoShadow = true
+        mesh.userData.receivesNoShadow = true
       }
-      const left = hinge(-1)
-      hinge(1)
-      group.add(riser)
+      group.add(lit, beam, screen)
       this.group.add(group)
-      this.extensions.push({ group, riser, post, left, screen })
-      // The slot in the column's top the display and its mast come out of.
+      this.holograms.push({ group, lens: glow, fan: beam, screen, uniforms })
+      // The lens: dark glass in a housing, flush with the column's top.
+      machine = ARRIVALS.station(index)
       add(
         'matte',
-        plain(leaf + 0.03, 0.004, 0.14),
+        plain(lens.width + 0.08, 0.004, lens.depth + 0.06),
         stationX(index),
         TOWER_TOP + 0.001,
-        EXTENSION.z - 0.005,
+        HOLOGRAM.z,
+      )
+      add(
+        'glass',
+        plain(lens.width, 0.003, lens.depth),
+        stationX(index),
+        TOWER_TOP + 0.0035,
+        HOLOGRAM.z,
       )
     }
 
     // The framework installer: a column like the others, with a display where the nameplate goes.
     const installX = slotX(INSTALL_SLOT)
+    machine = ARRIVALS.installer
     column(installX)
+    // The dock the drones plug the models' instruction cards into.
+    add('matte', plain(DOCK.width, 0.004, 0.05), DOCK.x, DOCK.y + 0.001, DOCK.z)
     add(
       'matte',
       panel(FASCIA.width, FASCIA.height, 0.012, 0.05),
@@ -747,17 +762,18 @@ export class FactoryWorld {
       TOWER_FRONT - 0.002,
     )
     this.installer = new InstallerDisplay(kit.palette)
-    const lcd = new Mesh(
+    this.installerScreen = new Mesh(
       track(roundedPlane(FASCIA.width - 0.05, FASCIA.height - 0.05, 0.035)),
       createKitDisplay(kit, this.installer.texture),
     )
-    lcd.position.set(installX, FASCIA.y, TOWER_FRONT + 0.0105)
-    this.group.add(lcd)
+    this.installerScreen.position.set(installX, FASCIA.y, TOWER_FRONT + 0.0105)
+    this.group.add(this.installerScreen)
 
     // The server aisle: racks one after another, doors (glass, servers behind) facing the camera's side.
-    const blades: { y: number; z: number }[] = []
+    const blades: { y: number; z: number; rack: number }[] = []
     for (let rack = 0; rack < RACKS.count; rack++) {
       const z = rackZ(rack)
+      machine = ARRIVALS.rack(rack)
       ground(
         add(
           'enclosure',
@@ -806,10 +822,11 @@ export class FactoryWorld {
           y,
           z,
         )
-        blades.push({ y, z })
+        blades.push({ y, z, rack })
       }
     }
     // The Appwrite rack's end panel, facing the line: black glass, the logo set into it.
+    machine = ARRIVALS.rack(0)
     add(
       'glass',
       box(RACKS.depth - 0.08, RACKS.height - 0.08, 0.014, 0.008, 1),
@@ -822,7 +839,8 @@ export class FactoryWorld {
     this.console = new ConsoleDisplay(kit.palette)
     const frameWidth = WALL.width + 2 * WALL.frame
     const frameHeight = WALL.height + 2 * WALL.frame
-    const wallCenter = WALL.y + WALL.height / 2
+    const wallCenter = WALL_CENTER
+    machine = ARRIVALS.wall
     ground(
       add(
         'enclosure',
@@ -858,6 +876,7 @@ export class FactoryWorld {
     this.group.add(this.wallScreen)
 
     // The shipped counter: a column on the line, after Sites, with a display for a front.
+    machine = ARRIVALS.counter
     column(COUNTER.x, false)
     add(
       'matte',
@@ -867,16 +886,16 @@ export class FactoryWorld {
       COUNTER.z - 0.002,
     )
     this.counter = new CounterDisplay(kit.palette, counterLabel)
-    const screen = new Mesh(
+    this.counterScreen = new Mesh(
       track(roundedPlane(COUNTER.width, COUNTER.height, 0.04)),
       createKitDisplay(kit, this.counter.texture),
     )
-    screen.position.set(
+    this.counterScreen.position.set(
       COUNTER.x,
-      COUNTER.y + COUNTER.height / 2,
+      COUNTER_CENTER,
       COUNTER.z + 0.0105,
     )
-    this.group.add(screen)
+    this.group.add(this.counterScreen)
 
     // Pink power cables on the floor: out of the Appwrite rack, along the aisle
     // in one bundle, peeling off to each machine behind the line. Every
@@ -911,13 +930,14 @@ export class FactoryWorld {
         tubes.push(new TubeGeometry(curve, 160, r, 8, false))
       }
     }
-    const feeds = new Mesh(track(merge(tubes)), kit.cable)
-    feeds.userData.noReflection = true
-    this.group.add(feeds)
+    this.feedCables = new Mesh(track(merge(tubes)), kit.cable)
+    this.feedCables.userData.noReflection = true
+    this.group.add(this.feedCables)
 
     // The network gate: a housing with a tunnel the carriers ride into.
     const gateTop = BED_TOP + GATE.height
     const tunnelTop = BED_TOP + TUNNEL.top
+    machine = ARRIVALS.gate
     ground(
       add(
         'enclosure',
@@ -984,7 +1004,8 @@ export class FactoryWorld {
         z,
       )
     }
-    // Gland plate low on the base's end, where the network cables leave.
+    // Gland plate low on the base's end, where the network cables leave: part of the bed.
+    machine = null
     add(
       'aluminum',
       box(0.03, 0.15, 1.32, 0.008, 1),
@@ -993,6 +1014,7 @@ export class FactoryWorld {
       TRACK_Z,
     )
     // Display on the gate's front, and the chevron strip under it.
+    machine = ARRIVALS.gate
     add(
       'matte',
       panel(FASCIA.width, FASCIA.height, 0.012, 0.05),
@@ -1004,18 +1026,19 @@ export class FactoryWorld {
       'matte',
       panel(GATE.length - 0.2, 0.07, 0.008, 0.03),
       GATE_CENTER,
-      BED_TOP + 0.34,
+      CHEVRON_Y,
       GATE_FRONT - 0.001,
     )
-    const chevrons = new Mesh(
+    machine = null
+    this.chevronStrip = new Mesh(
       track(new PlaneGeometry(GATE.length - 0.24, 0.05)),
       this.chevrons,
     )
-    chevrons.position.set(GATE_CENTER, BED_TOP + 0.34, GATE_FRONT + 0.0075)
-    this.group.add(chevrons)
+    this.chevronStrip.position.set(GATE_CENTER, CHEVRON_Y, GATE_FRONT + 0.0075)
+    this.group.add(this.chevronStrip)
 
     this.curtain = createKitBeam(kit)
-    const curtain = new Mesh(
+    this.curtainSheet = new Mesh(
       track(
         new PlaneGeometry(TUNNEL.front - TUNNEL.back, TUNNEL.top).rotateY(
           Math.PI / 2,
@@ -1023,13 +1046,20 @@ export class FactoryWorld {
       ),
       this.curtain,
     )
-    curtain.position.set(GATE.start + 0.03, BED_TOP + TUNNEL.top / 2, TRACK_Z)
-    curtain.renderOrder = 8
-    this.group.add(curtain)
+    this.curtainSheet.position.set(
+      GATE.start + 0.03,
+      BED_TOP + TUNNEL.top / 2,
+      TRACK_Z,
+    )
+    this.curtainSheet.renderOrder = 8
+    this.group.add(this.curtainSheet)
 
-    const network = new Mesh(track(createNetworkCables()), kit.networkCable)
-    network.userData.noReflection = true
-    this.group.add(network)
+    this.networkCables = new Mesh(
+      track(createNetworkCables()),
+      kit.networkCable,
+    )
+    this.networkCables.userData.noReflection = true
+    this.group.add(this.networkCables)
 
     // Every static machined part, in all its finishes, is one draw.
     this.group.add(new Mesh(track(mergeFinishes(parts, FINISHES)), kit.finish))
@@ -1048,14 +1078,12 @@ export class FactoryWorld {
     blades.forEach((blade, index) => {
       for (let led = 0; led < BLADE.leds; led++) {
         const slot = index * BLADE.leds + led
-        this.bladeLeds.setMatrixAt(
-          slot,
-          matrix.makeTranslation(
-            RACKS_DOOR - 0.0165,
-            blade.y,
-            blade.z + 0.2 - led * 0.045,
-          ),
-        )
+        // Placed with their rack as it rolls in (see `assemble`).
+        this.leds.push({
+          y: blade.y,
+          z: blade.z + 0.2 - led * 0.045,
+          rack: blade.rack,
+        })
         this.bladeLeds.setColorAt(slot, color.set(0x000000))
         this.bladeSeeds.push(hash01(slot * 1.37 + 0.5))
       }
@@ -1075,19 +1103,9 @@ export class FactoryWorld {
     this.nameplates = new InstancedMesh(plate, kit.nameplate, STATION_COUNT + 1)
     this.nameplates.renderOrder = 3
 
-    for (let index = 0; index < STATION_COUNT; index++) {
-      const x = stationX(index)
+    // Each row of the atlas; placed with their machines as they arrive (see `assemble`).
+    for (let index = 0; index <= STATION_COUNT; index++)
       this.plates.setXY(index, index, 0)
-      this.nameplates.setMatrixAt(
-        index,
-        matrix.makeTranslation(x, FASCIA.y, TOWER_FRONT + 0.0105),
-      )
-    }
-    this.plates.setXY(STATION_COUNT, STATION_COUNT, 0)
-    this.nameplates.setMatrixAt(
-      STATION_COUNT,
-      matrix.makeTranslation(GATE_CENTER, GATE_SIGN_Y, GATE_FRONT + 0.0105),
-    )
     for (const mesh of [this.nameplates, this.bladeLeds]) {
       mesh.frustumCulled = false
       this.group.add(mesh)
@@ -1101,23 +1119,114 @@ export class FactoryWorld {
   }
 
   setDescriptionTexture(texture: Texture) {
-    for (const extension of this.extensions) {
-      extension.screen.map = texture
-      extension.screen.needsUpdate = true
-    }
+    for (const { uniforms } of this.holograms) uniforms.uAtlas.value = texture
   }
 
   setCounterLabel(label: string) {
     this.counter.setLabel(label)
   }
 
+  /**
+   * Every hologram that is on, as a box of eight world corners (as of the
+   * last frame's matrices) from its lens up to its screen's top edge. The
+   * engine moves them in front of the page copy.
+   */
+  getDisplayBoxes(): Vector3[][] {
+    const boxes: Vector3[][] = []
+    const { width, height } = HOLOGRAM
+    for (const { group, screen } of this.holograms) {
+      if (!group.visible) continue
+      const top = screen.position.y + height / 2
+      boxes.push(
+        corners(
+          group.matrixWorld,
+          [-width / 2, 0, -0.05],
+          [width / 2, top, 0.05],
+        ),
+      )
+    }
+    return boxes
+  }
+
   setPalette(palette: FactoryPalette) {
     this.console.setPalette(palette)
     this.installer.setPalette(palette)
     this.counter.setPalette(palette)
+    for (const { uniforms } of this.holograms)
+      uniforms.uPane.value = palette.dark ? PANE.dark : PANE.light
+  }
+
+  /**
+   * While the factory assembles (see `assembly.ts`): moves everything that
+   * is not part of the merged hardware (which the finish shader moves
+   * itself) with the machine it belongs to, and pulls the cables out.
+   */
+  private assemble(assembly: number) {
+    const at = (x: number, y: number, z: number, arrival: Arrival) =>
+      arrive(spot, x, y, z, assembly, arrival)
+    at(CORE.x, LOGO_Y, RACKS.front + 0.014, ARRIVALS.rack(0))
+    this.logo.position.copy(spot)
+    at(WALL.x, WALL_CENTER, WALL.z + 0.0055, ARRIVALS.wall)
+    this.wallScreen.position.copy(spot)
+    at(slotX(INSTALL_SLOT), FASCIA.y, TOWER_FRONT + 0.0105, ARRIVALS.installer)
+    this.installerScreen.position.copy(spot)
+    at(COUNTER.x, COUNTER_CENTER, COUNTER.z + 0.0105, ARRIVALS.counter)
+    this.counterScreen.position.copy(spot)
+    at(GATE_CENTER, CHEVRON_Y, GATE_FRONT + 0.0075, ARRIVALS.gate)
+    this.chevronStrip.position.copy(spot)
+    at(GATE.start + 0.03, BED_TOP + TUNNEL.top / 2, TRACK_Z, ARRIVALS.gate)
+    this.curtainSheet.position.copy(spot)
+
+    for (let index = 0; index < STATION_COUNT; index++) {
+      at(
+        stationX(index),
+        FASCIA.y,
+        TOWER_FRONT + 0.0105,
+        ARRIVALS.station(index),
+      )
+      this.nameplates.setMatrixAt(
+        index,
+        matrix.makeTranslation(spot.x, spot.y, spot.z),
+      )
+    }
+    at(GATE_CENTER, GATE_SIGN_Y, GATE_FRONT + 0.0105, ARRIVALS.gate)
+    this.nameplates.setMatrixAt(
+      STATION_COUNT,
+      matrix.makeTranslation(spot.x, spot.y, spot.z),
+    )
+    this.nameplates.instanceMatrix.needsUpdate = true
+
+    // The servers' LEDs roll in with their racks, and the racks' painted
+    // shadow on the floor arrives as they do.
+    let racks = 0
+    for (let rack = 0; rack < RACKS.count; rack++) {
+      const arrival = ARRIVALS.rack(rack)
+      racks += (1 - away(assembly, arrival) / arrival.distance) ** 4
+    }
+    this.kit.floor.uniforms.uRacks!.value = racks / RACKS.count
+    this.leds.forEach((led, index) => {
+      at(RACKS_DOOR - 0.0165, led.y, led.z, ARRIVALS.rack(led.rack))
+      this.bladeLeds.setMatrixAt(
+        index,
+        matrix.makeTranslation(spot.x, spot.y, spot.z),
+      )
+    })
+    this.bladeLeds.instanceMatrix.needsUpdate = true
+
+    // Cables cast their shadows once they lie in full.
+    const feeds = cablesOut(assembly)
+    const reach = networkOut(assembly)
+    this.kit.cableUniforms.uReveal.value = feeds
+    this.kit.networkUniforms.uReach.value = reach
+    this.feedCables.castShadow = feeds >= 1
+    this.settled = assembly >= SETTLED
+    this.networkCables.castShadow = this.settled
+    if (this.settled)
+      this.kit.networkUniforms.uReach.value = Number.POSITIVE_INFINITY
   }
 
   update(frame: FrameState) {
+    if (!this.settled) this.assemble(frame.assembly)
     const { time, line, glows, levels, introTime, palette, highlight } = frame
     const kit = this.kit
     const power = easeOutCubic(introStep(introTime, 0.1, 0.9))
@@ -1244,51 +1353,57 @@ export class FactoryWorld {
       0.06 * flare * power * palette.glowBoost,
     )
 
-    // The hovered station unfolds: its display slides up out of the slot in
-    // the column's top, folded; the mast lifts it; the front half swings open
-    // about the hinge while the mast slides along the slot to centre the
-    // screen, and the screen comes on. An open display reaches over the next
-    // column, so a display stays in its column until the one beside it has
-    // closed; folding runs twice as fast as unfolding, so the neighbour is
-    // back inside before this one opens.
+    // The hovered station projects its hologram: the lens lights, a fan of
+    // light shoots up from it, and the screen it throws draws in from the
+    // bottom, unsteady at first, then holds. Every screen floats at the same
+    // height: where the page copy is laid over the scene, only as high as
+    // keeps every screen clear of it. A screen is wider than the gap to the
+    // next column, so a station waits for its neighbour's to go out; going
+    // out takes half the time.
+    this.shimmer += frame.dt
+    const screenBottom = hologramBottom(frame.lift) - TOWER_TOP
     for (let index = 0; index < STATION_COUNT; index++) {
-      const neighbourOpen = [index - 1, index + 1].some(
-        (other) => (this.unfold[other] ?? 0) > OPEN_START,
+      const neighbourOn = [index - 1, index + 1].some(
+        (other) => (this.projected[other] ?? 0) > SCREEN_START,
       )
-      const target = highlight === index && !neighbourOpen ? 1 : 0
-      const current = this.unfold[index]!
-      const unfold =
+      const target = highlight === index && !neighbourOn ? 1 : 0
+      const current = this.projected[index]!
+      const shown =
         frame.dt === 0
           ? target
           : current +
             Math.max(
-              (-frame.dt * 2) / UNFOLD,
-              Math.min(frame.dt / UNFOLD, target - current),
+              (-frame.dt * 2) / PROJECT,
+              Math.min(frame.dt / PROJECT, target - current),
             )
-      this.unfold[index] = unfold
-      const extension = this.extensions[index]!
-      extension.group.visible = unfold > 0.001
-      if (!extension.group.visible) continue
-      const rise = easeInOutCubic(range(unfold, 0, 0.3))
-      const lift = easeInOutCubic(range(unfold, 0.26, OPEN_START))
-      const open = easeInOutCubic(range(unfold, OPEN_START, 0.86))
-      const fit = frame.fits[index]!
-      // Stored, the display's top sits just under the slot.
-      const bottom =
-        -(1 - rise) * (EXTENSION.height + 0.03) +
-        lift * EXTENSION.lift * fit.lift
-      // Folded, the hinge is at the stack's left edge, centring it over the slot.
-      const hinge = -(1 - open) * (EXTENSION.leaf / 2)
-      extension.riser.position.set(hinge, bottom, 0)
-      // The mast waits under the slot until the display's foot reaches it.
-      extension.post.position.set(
-        hinge + MAST_OFFSET,
-        Math.max(bottom, 0) - MAST.length,
-        0,
+      this.projected[index] = shown
+      const hologram = this.holograms[index]!
+      hologram.group.visible = shown > 0.001
+      if (!hologram.group.visible) continue
+      const level = range(shown, 0, 0.15)
+      setLamp(hologram.lens, palette, level, pink)
+      const light = hologram.fan.material.uniforms
+      light.uLevel!.value = level * palette.beamBoost
+      // Past 1, so the soft front of the light clears the screen's edge.
+      light.uReach!.value = easeOutCubic(range(shown, 0, 0.35)) * 1.12
+      light.uColor!.value.copy(pink)
+      light.uTime!.value = this.shimmer
+      hologram.fan.visible = screenBottom > 0.04
+      hologram.fan.scale.y = Math.max(screenBottom, 0.001)
+      hologram.screen.position.y = screenBottom + HOLOGRAM.height / 2
+      const { uniforms } = hologram
+      uniforms.uReveal.value = easeInOutCubic(range(shown, SCREEN_START, 0.85))
+      uniforms.uFlicker.value = 1 - range(shown, 0.6, 1)
+      uniforms.uTime.value = this.shimmer
+      uniforms.uRim.value.copy(pink)
+      glows.add(
+        stationX(index),
+        TOWER_TOP + 0.02,
+        HOLOGRAM.z,
+        0.5,
+        pink,
+        0.35 * level * palette.glowBoost,
       )
-      // Folded, the front half lies over the back one, screens facing; it swings open toward the camera.
-      extension.left.rotation.y = (1 - open) * Math.PI
-      extension.screen.color.setScalar(range(unfold, 0.84, 1))
     }
 
     // Nameplates come on with each station's power; the bar under each shows activity.
@@ -1356,5 +1471,6 @@ export class FactoryWorld {
     this.counter.dispose()
     this.console.dispose()
     this.chevrons.dispose()
+    for (const { screen } of this.holograms) screen.material.dispose()
   }
 }

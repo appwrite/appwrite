@@ -179,6 +179,8 @@ export const heSitesDictionary: Record<string, string> = {
   'Generating certificate': 'מנפיק תעודה',
   'Verification failed': 'האימות נכשל',
   'Certificate generation failed': 'הנפקת התעודה נכשלה',
+  'A DNS record has the wrong value. Open Records to see which one and what to change it to.':
+    'לרשומת DNS יש ערך שגוי. פתחו את הרשומות כדי לראות איזו רשומה ולמה לשנות אותה.',
   'Waiting for DNS': 'ממתין ל-DNS',
   'Appwrite checks the DNS records every few minutes for 3 days after the domain is added. Use Check now to look again right away.':
     'Appwrite בודק את רשומות ה-DNS כל כמה דקות במשך 3 ימים לאחר הוספת הדומיין. לחצו על "בדוק עכשיו" כדי לבדוק מיד.',
@@ -188,6 +190,16 @@ export const heSitesDictionary: Record<string, string> = {
   'Check now': 'בדוק עכשיו',
   'Not verified yet. Appwrite keeps checking.':
     'עדיין לא אומת. Appwrite ממשיך לבדוק.',
+  'Not needed. Your {type} record is set.':
+    'אין צורך ברשומה הזו. רשומת ה-{type} שלכם מוגדרת.',
+  'Called CNAME flattening on Cloudflare (set it to DNS only) and Alias on Route 53. Some providers name it ANAME.':
+    'ב-Cloudflare זה נקרא CNAME flattening (הגדירו DNS only), וב-Route 53 זה נקרא Alias. יש ספקים שקוראים לזה ANAME.',
+  'It points to {found}. Change it to {value}.':
+    'היא מפנה אל {found}. שנו אותה ל-{value}.',
+  'Your domain points somewhere else. Set this record to {value}.':
+    'הדומיין שלכם מפנה למקום אחר. הגדירו את הרשומה הזו ל-{value}.',
+  'and {n} more': 'ועוד {n}',
+  'DNS is set up': 'ה-DNS מוגדר',
   'Certificate expired': 'פג תוקף התעודה',
   'Renewal failed': 'חידוש התעודה נכשל',
   'Certificate blocked': 'הנפקת התעודה חסומה',
@@ -195,6 +207,8 @@ export const heSitesDictionary: Record<string, string> = {
     'התעודה ממתינה לרשומת DNS. הוסיפו את הרשומה שמופיעה בלוגים ולאחר מכן נסו שוב.',
   'The certificate is waiting on a DNS record. Add the record shown in View logs.':
     'התעודה ממתינה לרשומת DNS. הוסיפו את הרשומה שמופיעה בלוגים.',
+  'The SSL certificate could not be issued. Check View logs, then Retry.':
+    'לא ניתן היה להנפיק את תעודת ה-SSL. בדקו את הלוגים ולאחר מכן נסו שוב.',
   'Renewal blocked': 'חידוש התעודה חסום',
   'Certificate renewal started': 'חידוש התעודה התחיל',
   'Certificate expires on {date}.': 'תוקף התעודה יפוג ב-{date}.',
@@ -619,4 +633,40 @@ export const heSitesDictionary: Record<string, string> = {
     'פרסו אתר עובד בכמה קליקים, ואז התאימו אותו לצרכים שלכם.',
   "This site's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
     'התקנת ה-Git של האתר הזה כבר לא מגיעה ל-repo שלו, ולכן Push חדש לא ייפרס. נתקו את ה-repo ואז חברו אותו מחדש דרך ההתקנה שבה הוא נמצא עכשיו.',
+  'Action needed': 'נדרשת פעולה',
+  'Last check': 'בדיקה אחרונה',
+  'Found:': 'נמצא:',
+  'Wrong value': 'ערך שגוי',
+  'Blocks certificate': 'התעודה חסומה',
+  "Couldn't check": 'לא ניתן לבדוק',
+  Alternative: 'חלופה',
+  'CAA record': 'רשומת CAA',
+  '{type} record': 'רשומת {type}',
+  'ALIAS or ANAME': 'ALIAS או ANAME',
+  'DNS lookup': 'בדיקת DNS',
+  'Domain verification': 'אימות הדומיין',
+  'Point your domain': 'הפניית הדומיין',
+  'Allow the SSL certificate': 'אישור תעודת ה-SSL',
+  'Required · any one': 'חובה · אחת מהן',
+  "We couldn't check DNS. This is on our side; Appwrite will try again.":
+    'לא הצלחנו לבדוק את ה-DNS. הבעיה אצלנו, ו-Appwrite ינסה שוב.',
+  'A CAA record on your domain blocks the certificate. Add the CAA record below next to it (recommended), or delete your existing CAA records.':
+    'רשומת CAA בדומיין שלכם חוסמת את התעודה. הוסיפו לצדה את רשומת ה-CAA שלמטה (מומלץ), או מחקו את רשומות ה-CAA הקיימות.',
+  'Add the records below at your DNS provider. Appwrite checks again automatically for 3 days.':
+    'הוסיפו את הרשומות שלמטה אצל ספק ה-DNS שלכם. Appwrite בודק שוב באופן אוטומטי במשך 3 ימים.',
+  'Automatic checks have stopped. Fix the records below, then verify again.':
+    'הבדיקות האוטומטיות הופסקו. תקנו את הרשומות שלמטה ולאחר מכן אמתו שוב.',
+  "We couldn't check the CAA record. This is on our side; Appwrite will try again.":
+    'לא הצלחנו לבדוק את רשומת ה-CAA. הבעיה אצלנו, ו-Appwrite ינסה שוב.',
+  'Your {type} record is set. Add the CAA record below to finish.':
+    'רשומת ה-{type} שלכם מוגדרת. הוסיפו את רשומת ה-CAA שלמטה כדי לסיים.',
+  'All records are verified.': 'כל הרשומות אומתו.',
+  'Appwrite will issue the SSL certificate next.':
+    'בשלב הבא Appwrite יפיק את תעודת ה-SSL.',
+  'Not detected yet': 'עדיין אין רשומה',
+  'Not detected': 'אין רשומה',
+  'Tracked pageviews and events are billed as analytics usage, which adds up quickly on a high-traffic site.':
+    'צפיות בדפים ואירועים שנמדדים מחויבים כשימוש באנליטיקה, והעלות מצטברת מהר באתר עם תנועה גבוהה.',
+  'If your site sets a Content-Security-Policy, in a header or a <meta> tag, add these sources. Otherwise the browser blocks the tracker and no data is recorded.':
+    'אם האתר שלכם מגדיר Content-Security-Policy, בכותרת או בתגית <meta>, הוסיפו את המקורות האלה. אחרת הדפדפן חוסם את סקריפט המעקב ולא נאספים נתונים.',
 }

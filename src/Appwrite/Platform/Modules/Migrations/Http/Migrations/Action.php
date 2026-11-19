@@ -9,6 +9,8 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Queries\Documents;
 use Utopia\Migration\Resource;
+use Utopia\Migration\Sources\CSV;
+use Utopia\Migration\Sources\JSON as JSONSource;
 use Utopia\Migration\Transfer;
 use Utopia\Platform\Action as PlatformAction;
 use Utopia\Platform\Scope\HTTP;
@@ -119,6 +121,38 @@ abstract class Action extends PlatformAction
         }
 
         return \array_values($scopes);
+    }
+
+    /**
+     * What a retry must be allowed, as authorize() arguments: the same gate the migration's creation route
+     * applied. The worker reads and writes this project's database directly for CSV and JSON transfers
+     * and for imports from the same project, so the recorded grant does not cap those runs; the retrying
+     * key has to hold the scopes itself.
+     *
+     * @return array{0: array<string>, 1: array<array<string>>} resources, further required scopes
+     */
+    protected function retryRequirements(Document $migration): array
+    {
+        $files = [CSV::getName(), JSONSource::getName()];
+        $family = $migration->getAttribute('parentResourceType');
+
+        if (\in_array($migration->getAttribute('destination'), $files, true)) {
+            return [[], [match ($family) {
+                Resource::TYPE_DATABASE_DOCUMENTSDB => ['documentsdb.documents.read'],
+                Resource::TYPE_DATABASE_VECTORSDB => ['vectorsdb.documents.read'],
+                default => ['rows.read', 'documents.read'],
+            }]];
+        }
+
+        if (\in_array($migration->getAttribute('source'), $files, true)) {
+            return [[], [match ($family) {
+                Resource::TYPE_DATABASE_DOCUMENTSDB => ['documentsdb.documents.write'],
+                Resource::TYPE_DATABASE_VECTORSDB => ['vectorsdb.documents.write'],
+                default => ['rows.write', 'documents.write'],
+            }]];
+        }
+
+        return [$migration->getAttribute('resources', []), []];
     }
 
     /**

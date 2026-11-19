@@ -6,6 +6,7 @@ use Ahc\Jwt\JWT;
 use Appwrite\Auth\AuthDevice;
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\MFA\Type;
+use Appwrite\Bus\Events\EmailVerified;
 use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
@@ -195,8 +196,10 @@ abstract class Base extends Action
         // gets a session, and a failed insert rolls the claim back so the token can be retried. The user row lock
         // orders this against an address change, which deletes the token and resets the verification it proves
         $claimed = false;
-        $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $session, $user, $verification, $project, &$claimed, $mqtt) {
+        $emailVerified = false;
+        $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $session, $user, $verification, $project, &$claimed, &$emailVerified, $mqtt) {
             $claimed = false; // A retried attempt starts over
+            $emailVerified = false;
             /** @var User $locked */
             $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
 
@@ -222,6 +225,7 @@ abstract class Base extends Action
                 ]));
 
             if ($verification !== null && !$guarded) {
+                $emailVerified = $verification === 'emailVerification' && !$locked->getAttribute('emailVerification', false);
                 $dbForProject->updateDocument('users', $user->getId(), new Document([$verification => true]));
                 $user->setAttribute($verification, true);
             }
@@ -245,6 +249,10 @@ abstract class Base extends Action
                 ->setEvent('users.[userId].sessions.delete')
                 ->setParam('userId', $user->getId())
                 ->trigger();
+        }
+
+        if ($emailVerified) {
+            $bus->dispatch(new EmailVerified(user: $user->getArrayCopy(), project: $project->getArrayCopy()));
         }
 
         $bus->dispatch(new SessionCreated(
@@ -305,7 +313,7 @@ abstract class Base extends Action
      * @return array{?Document, ?Document} the user and email target created by
      *     this request, if any, so they can be rolled back later
      */
-    protected function resolveUser(User $user, string $provider, string $sub, string $providerEmail, bool $isVerified, string $name, Database $dbForProject, Document $project, array $plan, ProofsPassword $proofForPassword, Authorization $authorization, Mqtt $mqtt, Realtime $queueForRealtime): array
+    protected function resolveUser(User $user, string $provider, string $sub, string $providerEmail, bool $isVerified, string $name, Database $dbForProject, Document $project, array $plan, ProofsPassword $proofForPassword, Authorization $authorization, Mqtt $mqtt, Realtime $queueForRealtime, Bus $bus): array
     {
         $identity = $dbForProject->findOne('identities', [
             Query::equal('provider', [$provider]),
@@ -354,6 +362,9 @@ abstract class Base extends Action
 
                     if ($claimed) {
                         $dbForProject->purgeCachedDocument('users', $user->getId());
+
+                        // The claim is what verified the address, before the caller reads the stored row
+                        $bus->dispatch(new EmailVerified(user: $user->getArrayCopy(), project: $project->getArrayCopy()));
 
                         try {
                             $mqtt->revoke($project->getId(), $user->getId());

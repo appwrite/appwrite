@@ -3,12 +3,15 @@ import { isRedirect } from '@tanstack/react-router'
 import {
   CONSOLE_PROFILES,
   getDebugProfileFeatureOverrides,
-  setDebugProfileFeatureOverride,
 } from '@/lib/console-profiles'
-import { EXPERIMENTS, hasQualityLabel } from '@/lib/experiments'
+import {
+  EXPERIMENTS,
+  hasQualityLabel,
+  setExperimentEnabled,
+} from '@/lib/experiments'
 import { Route as IdentityServersRoute } from '@/routes/_public/projects.$projectId.settings.identity-servers'
-import { Route as AlertsRoute } from '@/routes/_public/projects.$projectId.usage.alerts'
-import { Route as MonitorsRoute } from '@/routes/_public/projects.$projectId.usage.monitors'
+import { Route as MonitorsRoute } from '@/routes/_public/projects.$projectId.monitors'
+import { Route as UsageAlertsRoute } from '@/routes/_public/projects.$projectId.usage.alerts'
 
 describe('hasQualityLabel', () => {
   test('matches only the quality label', () => {
@@ -22,17 +25,19 @@ describe('hasQualityLabel', () => {
 })
 
 describe('experiments catalog', () => {
-  test('lists Appwrite Analytics, project environments, Origin and single sign-on', () => {
+  test('lists Appwrite Analytics, project environments, Origin, single sign-on and alerts', () => {
     expect(EXPERIMENTS.map((experiment) => experiment.flag)).toEqual([
       'analytics',
       'projectEnvironments',
       'vcsOrigin',
       'sso',
+      'alerts',
     ])
     expect(EXPERIMENTS[0]?.name).toBe('Appwrite Analytics')
     expect(EXPERIMENTS[1]?.name).toBe('Project environments')
     expect(EXPERIMENTS[2]?.name).toBe('Origin Git provider')
     expect(EXPERIMENTS[3]?.name).toBe('Single sign-on')
+    expect(EXPERIMENTS[4]?.name).toBe('Monitors and alerts')
     for (const experiment of EXPERIMENTS) {
       expect(experiment.description.length).toBeGreaterThan(0)
     }
@@ -44,12 +49,7 @@ describe('experiments catalog', () => {
     }
   })
 
-  test('usage alerts are off in every profile and only the debug menu turns them on', () => {
-    expect(
-      EXPERIMENTS.some(
-        (experiment) => experiment.flag === ('alerts' as string),
-      ),
-    ).toBe(false)
+  test('usage alerts are off in every profile until the experiment turns them on', () => {
     for (const profile of Object.values(CONSOLE_PROFILES)) {
       expect(profile.features.alerts).toBe(false)
     }
@@ -126,7 +126,9 @@ describe('usage alerts flag', () => {
 
   const params = { projectId: 'project' }
 
-  function enter(route: typeof AlertsRoute | typeof MonitorsRoute): unknown {
+  function enter(
+    route: typeof MonitorsRoute | typeof UsageAlertsRoute,
+  ): unknown {
     const beforeLoad = route.options.beforeLoad as unknown as (context: {
       params: typeof params
       search: Record<string, unknown>
@@ -139,23 +141,41 @@ describe('usage alerts flag', () => {
     }
   }
 
-  test('a deep link to alerts or monitors lands on usage while the flag is off', () => {
-    for (const route of [AlertsRoute, MonitorsRoute]) {
-      const thrown = enter(route)
-      expect(isRedirect(thrown)).toBe(true)
-      expect(
-        (thrown as { options: { to: string; params: unknown } }).options,
-      ).toMatchObject({ to: '/projects/$projectId/usage', params })
-    }
+  test('a deep link to monitors lands on the overview while the flag is off', () => {
+    const thrown = enter(MonitorsRoute)
+    expect(isRedirect(thrown)).toBe(true)
+    expect(
+      (thrown as { options: { to: string; params: unknown } }).options,
+    ).toMatchObject({ to: '/projects/$projectId/overview', params })
   })
 
-  test('the pages open once the debug menu turns the flag on', () => {
-    setDebugProfileFeatureOverride('alerts', true)
-    expect(enter(AlertsRoute)).toBeNull()
+  test('the pages open once the experiment turns the flag on', () => {
+    setExperimentEnabled('alerts', true)
     expect(enter(MonitorsRoute)).toBeNull()
 
-    setDebugProfileFeatureOverride('alerts', false)
+    setExperimentEnabled('alerts', false)
     expect(isRedirect(enter(MonitorsRoute))).toBe(true)
+  })
+})
+
+test('an alert link from before the move opens the alert under monitors', () => {
+  const beforeLoad = UsageAlertsRoute.options
+    .beforeLoad as unknown as (context: {
+    params: { projectId: string }
+    search: Record<string, unknown>
+  }) => unknown
+  let thrown: unknown = null
+  try {
+    beforeLoad({ params: { projectId: 'project' }, search: { alert: 'alert' } })
+  } catch (error) {
+    thrown = error
+  }
+  expect(isRedirect(thrown)).toBe(true)
+  expect(
+    (thrown as { options: { to: string; search: unknown } }).options,
+  ).toMatchObject({
+    to: '/projects/$projectId/monitors/alerts',
+    search: { alert: 'alert' },
   })
 })
 
