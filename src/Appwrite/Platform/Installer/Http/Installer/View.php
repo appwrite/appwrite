@@ -35,6 +35,40 @@ class View extends Action
 
     public function action(int $step, ?string $partial, Request $request, Response $response, Config $config, array $paths): void
     {
+        $response->addHeader('Referrer-Policy', 'no-referrer');
+
+        $querySecret = $request->getQuery('secret');
+        if ($querySecret !== null) {
+            $response->addHeader('Cache-Control', 'no-store');
+
+            if (is_string($querySecret) && Server::secret()->matches($querySecret)) {
+                Server::removeSession($request->getCookie(Server::SESSION_COOKIE));
+                $session = Server::createSession();
+                $isHttps = $request->getProtocol() === 'https';
+                $response->addCookie(
+                    Server::SESSION_COOKIE,
+                    $session['token'],
+                    $session['expiresAt'],
+                    '/install',
+                    null,
+                    $isHttps,
+                    true,
+                    Response::COOKIE_SAMESITE_STRICT
+                );
+            }
+
+            $query = [];
+            if ($request->getQuery('step') !== null) {
+                $query['step'] = $step;
+            }
+            if ($request->getQuery('partial') !== null && $partial !== null) {
+                $query['partial'] = $partial;
+            }
+            $location = '/' . ($query === [] ? '' : '?' . http_build_query($query));
+            $response->redirect($location, Response::STATUS_CODE_SEE_OTHER);
+            return;
+        }
+
         $csrfToken = $this->makeCsrf($request, $response);
 
         $response->addHeader('Content-Security-Policy', implode('; ', Server::INSTALLER_CSP));
