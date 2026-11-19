@@ -494,7 +494,8 @@ jobs:
       - name: Read package extensions
         id: meta
         run: |
-          EXTENSIONS=$(jq -r '[(.require, ."require-dev", .suggest | select(. != null)) | keys[] | select(startswith("ext-")) | ltrimstr("ext-")] | unique | join(", ")' "packages/$PACKAGE/composer.json")
+          # ext-utopia is built in this repository and loaded below, not installed by setup-php.
+          EXTENSIONS=$(jq -r '[(.require, ."require-dev", .suggest | select(. != null)) | keys[] | select(startswith("ext-")) | ltrimstr("ext-") | select(. != "utopia")] | unique | join(", ")' "packages/$PACKAGE/composer.json")
           echo "extensions=$EXTENSIONS" >> "$GITHUB_OUTPUT"
 
       - name: Setup PHP
