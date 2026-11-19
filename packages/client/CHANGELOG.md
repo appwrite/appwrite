@@ -18,7 +18,7 @@ This project follows semantic versioning.
 
 ### Fixed
 
-- The cURL adapter applies `CURLOPT_MAXFILESIZE` / `CURLOPT_MAXFILESIZE_LARGE` to the decoded body as well. cURL checks the cap against the bytes on the wire, so a small gzip or brotli response could expand far past it in memory; the transfer now aborts with a `NetworkException` (code `CURLE_FILESIZE_EXCEEDED`) once the decoded bytes pass the cap.
+- The cURL adapter applies `CURLOPT_MAXFILESIZE` / `CURLOPT_MAXFILESIZE_LARGE` to the decoded body as well. Older libcurl checks the cap only against the bytes on the wire, so a small gzip or brotli response could expand far past it in memory; the transfer now aborts with a `NetworkException` (code `CURLE_FILESIZE_EXCEEDED`) once the decoded bytes pass the cap. The check wraps a write callback passed in the constructor options, reads a numeric-string limit the way cURL does, and takes the smaller limit when both options are set.
 
 ### Removed
 

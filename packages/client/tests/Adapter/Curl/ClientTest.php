@@ -180,6 +180,53 @@ final class ClientTest extends AdapterContract
         });
     }
 
+    /**
+     * @return array<string, array{array<int, mixed>}>
+     */
+    public static function decodedBodyCapConfigurations(): array
+    {
+        $discard = static fn (\CurlHandle $handle, string $chunk): int => \strlen($chunk);
+
+        return [
+            'numeric string limit' => [[\CURLOPT_MAXFILESIZE_LARGE => '10000']],
+            'legacy option' => [[\CURLOPT_MAXFILESIZE => 10_000]],
+            'both options, the smaller applies' => [[\CURLOPT_MAXFILESIZE_LARGE => 100_000_000, \CURLOPT_MAXFILESIZE => 10_000]],
+            'caller write callback' => [[\CURLOPT_MAXFILESIZE_LARGE => 10_000, \CURLOPT_WRITEFUNCTION => $discard]],
+        ];
+    }
+
+    /**
+     * Recent libcurl (8.23 in the Appwrite images) enforces the cap on the decoded body itself, so an end-to-end
+     * transfer cannot tell whether the adapter's own check holds. This drives the write callback the adapter hands
+     * cURL directly, which is what older libcurl relies on.
+     *
+     * @param array<int, mixed> $options
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('decodedBodyCapConfigurations')]
+    public function testTheDecodedBodyCapWrapsTheWriteCallbackInEffect(array $options): void
+    {
+        $client = new Client(options: $options);
+        $request = new \Utopia\Psr7\Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1/');
+
+        $headers = '';
+        $refused = null;
+        $exceeded = false;
+        $built = new \ReflectionMethod($client, 'options')->invokeArgs($client, [$request, &$headers, &$refused, static function (string $chunk): void {
+        }, true, &$exceeded]);
+
+        $this->assertIsArray($built);
+        $write = $built[\CURLOPT_WRITEFUNCTION];
+        $this->assertIsCallable($write);
+        $handle = \curl_init();
+
+        $this->assertSame(6_000, $write($handle, \str_repeat('a', 6_000)));
+        $this->assertSame([false], [$exceeded]);
+
+        // Past the 10 000 byte cap: any count other than the chunk's length aborts the transfer
+        $this->assertSame(0, $write($handle, \str_repeat('a', 6_000)));
+        $this->assertSame([true], [$exceeded]);
+    }
+
     public function testAnEnvironmentProxyCannotCarryARequestPastTheDestination(): void
     {
         // An allowed proxy in front of a disallowed target: checking the proxy's address alone would pass
