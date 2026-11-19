@@ -66,7 +66,13 @@ export function AnnotationMarker({
             {annotations.length > 1 ? annotations.length : null}
           </button>
         </PopoverTrigger>
-        <PopoverContent side="top" className="w-80 p-0">
+        {/* Portaled, but React events still bubble to the chart's drag and click-to-add. */}
+        <PopoverContent
+          side="top"
+          className="w-80 p-0"
+          onMouseDown={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
+        >
           <ul className="max-h-72 divide-y divide-border overflow-y-auto">
             {annotations.map((annotation) => (
               <li key={annotation.$id} className="space-y-1.5 px-3 py-2.5">

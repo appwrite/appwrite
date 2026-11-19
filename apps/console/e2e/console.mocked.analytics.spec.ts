@@ -683,6 +683,68 @@ test.describe('analytics property (mocked API)', () => {
     )
   })
 
+  test('edits and deletes from a note popover without adding a note', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page)
+    await openProperty(page)
+
+    await page.getByRole('button', { name: 'Add note' }).click({
+      timeout: 30_000,
+    })
+    const dialog = page.getByRole('dialog')
+    await dialog.getByLabel('Note text').fill('Launched pricing page')
+    await dialog.getByRole('button', { name: 'Add', exact: true }).click()
+    await expect(page.getByText('Note added')).toBeVisible()
+    await expect(dialog).toHaveCount(0)
+
+    const popover = page.locator('[data-slot="popover-content"]')
+    await page.getByRole('button', { name: 'Show notes' }).click()
+    await popover.getByRole('button', { name: 'Edit note' }).click()
+    await expect(dialog).toHaveCount(1)
+    await expect(dialog).toContainText('Edit note')
+    await dialog.getByRole('button', { name: 'Cancel' }).click()
+    await expect(dialog).toHaveCount(0)
+
+    await page.getByRole('button', { name: 'Show notes' }).click()
+    await popover.getByRole('button', { name: 'Delete note' }).click()
+    await expect(dialog).toHaveCount(1)
+    await expect(dialog).toContainText('Delete note')
+    await dialog.getByRole('button', { name: 'Delete', exact: true }).click()
+    await expect(page.getByText('Note deleted')).toBeVisible()
+    expect(mock.annotations).toEqual([])
+    await expect(dialog).toHaveCount(0)
+  })
+
+  test('wraps a long unbroken note', async ({ page }) => {
+    await mockAppwriteApi(page)
+    await openProperty(page)
+
+    await page.getByRole('button', { name: 'Add note' }).click({
+      timeout: 30_000,
+    })
+    const dialog = page.getByRole('dialog')
+    await dialog.getByLabel('Note text').fill('a'.repeat(600))
+    await expect(dialog.getByText('512/512')).toBeVisible()
+    const viewport = page.viewportSize()!
+    const box = await dialog.boundingBox()
+    expect(box!.x + box!.width).toBeLessThanOrEqual(viewport.width)
+    await expect(
+      dialog.getByRole('button', { name: 'Add', exact: true }),
+    ).toBeInViewport({ ratio: 1 })
+    await dialog.getByRole('button', { name: 'Add', exact: true }).click()
+    await expect(page.getByText('Note added')).toBeVisible()
+
+    await page.getByRole('button', { name: 'Show notes' }).click()
+    const popover = page.locator('[data-slot="popover-content"]')
+    await expect(popover.getByText('a'.repeat(512))).toBeVisible()
+    const popoverBox = await popover.boundingBox()
+    const textBox = await popover.getByText('a'.repeat(512)).boundingBox()
+    expect(textBox!.x + textBox!.width).toBeLessThanOrEqual(
+      popoverBox!.x + popoverBox!.width,
+    )
+  })
+
   test('zooms on a drag without adding a note', async ({ page }) => {
     const mock = await mockAppwriteApi(page)
     await openProperty(page)
