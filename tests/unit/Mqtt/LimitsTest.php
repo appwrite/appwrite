@@ -12,6 +12,7 @@ use Tests\Unit\Mqtt\Fakes\Accounts;
 use Tests\Unit\Mqtt\Fakes\NullPubSub;
 use Tests\Unit\Mqtt\Fakes\RecordingAdapter;
 use Tests\Unit\Mqtt\Fakes\RecordingRedis;
+use Utopia\Abuse\Adapter\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\DI\Container;
 use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Packet\Connack;
@@ -56,7 +57,7 @@ final class LimitsTest extends TestCase
         $redis = $this->redis;
 
         $container = new Container();
-        $container->set('getRedis', fn (): \Closure => fn (): \Redis => $redis);
+        $container->set('timelimit', fn (): \Closure => fn (string $key, int $limit, int $seconds, callable $callback): mixed => $callback(new TimeLimitRedis($key, $limit, $seconds, $redis)));
         $container->set('authenticator', fn (): \Closure => $this->accounts->authenticate(...));
         $container->set('authorizer', fn (): \Closure => $this->accounts->authorize(...));
         $container->set('getPlan', fn (): \Closure => fn (string $projectId): array => $this->plan);
