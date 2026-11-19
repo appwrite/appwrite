@@ -431,6 +431,7 @@
         "PATCH /v1/project/oauth2/auth0",
         "PATCH /v1/project/oauth2/authentik",
         "PATCH /v1/project/oauth2/autodesk",
+        "PATCH /v1/project/oauth2/bird",
         "PATCH /v1/project/oauth2/bitbucket",
         "PATCH /v1/project/oauth2/bitly",
         "PATCH /v1/project/oauth2/box",
