@@ -796,12 +796,13 @@ class Get extends Base
         // since the request read the account fails it, and one that comes later revokes what it wrote
         $conflict = null;
         $linked = null;
-        $replaced = false;
+        $replaced = null;
         $created = null;
         try {
-            $created = $dbForProject->withTransaction(function () use ($dbForProject, $failureRedirect, $snapshot, $grounds, $user, $provider, $oauth2ID, $providerEmail, $credentials, $changes, $state, &$token, &$session, &$conflict, &$linked) {
+            $created = $dbForProject->withTransaction(function () use ($dbForProject, $failureRedirect, $snapshot, $grounds, $user, $provider, $oauth2ID, $providerEmail, $credentials, $changes, $state, $current, &$token, &$session, &$conflict, &$linked, &$replaced) {
                 $conflict = null; // A retried attempt starts over
                 $linked = null;
+                $replaced = null;
 
                 if (!User::lockUnchanged($dbForProject, $snapshot, $grounds)) {
                     $failureRedirect(Exception::GENERAL_BAD_REQUEST);
@@ -819,16 +820,47 @@ class Get extends Base
                     return $dbForProject->createDocument('tokens', $token);
                 }
 
+                // The session flow replaces the caller's current session with the one
+                // created here, so the browser stays signed in. It is deleted under the
+                // lock, so of two callbacks riding the same session only the first gets
+                // past lockUnchanged(). The token flow creates no session here; the app
+                // exchanges the returned token through createSession later. Deleting the
+                // current session in that flow would sign the caller out until the
+                // exchange, so it is left in place.
+                if ($current) {
+                    $previous = $dbForProject->getDocument('sessions', $current);
+                    if (!$previous->isEmpty() && $dbForProject->deleteDocument('sessions', $current)) {
+                        $replaced = $previous;
+                    }
+                }
+
                 return $dbForProject->createDocument('sessions', $session);
             });
         } catch (Duplicate) {
             // The (provider, providerUid) unique index guards the same identity being connected to two users
             $conflict = Exception::USER_ALREADY_EXISTS;
+            $replaced = null; // Rolled back with the rest
         }
 
         // The link's email check could not see another user's link that had not committed, so it is made again now
         if ($conflict === null && $linked !== null && !User::confirmIdentity($dbForProject, $linked)) {
-            $authorization->skip(fn () => $dbForProject->deleteDocument($state['token'] ? 'tokens' : 'sessions', $created->getId()));
+            $restore = $state['token'] ? null : $replaced;
+            $collection = $state['token'] ? 'tokens' : 'sessions';
+            // Undo under the user row lock, so it is ordered against a claim: a claim that got here first deleted
+            // the replacement along with every other session, and the caller's old one must not come back after it
+            $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $user, $collection, $created, $restore) {
+                $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+
+                if (!$dbForProject->deleteDocument($collection, $created->getId())) {
+                    return;
+                }
+
+                if ($restore !== null) {
+                    // Keep the caller signed in to the session the refused link would have replaced
+                    $dbForProject->createDocument('sessions', new Document(\array_diff_key($restore->getArrayCopy(), ['$sequence' => true, '$collection' => true])));
+                }
+            }));
+            $replaced = null;
             $conflict = Exception::GENERAL_BAD_REQUEST;
         }
 
@@ -838,17 +870,7 @@ class Get extends Base
             $failureRedirect($conflict);
         }
 
-        // The session flow replaces the caller's current session with the one
-        // created here, so the browser stays signed in. It is deleted only once the
-        // replacement has held, so a link refused after the commit leaves the caller
-        // signed in. The token flow creates no session here; the app exchanges the
-        // returned token through createSession later. Deleting the current session in
-        // that flow would sign the caller out until the exchange, so it is left in place.
-        if (!$state['token'] && $current) {
-            $replaced = $authorization->skip(fn () => $dbForProject->deleteDocument('sessions', $current));
-        }
-
-        if ($replaced) {
+        if ($replaced !== null) {
             $dbForProject->purgeCachedDocument('users', $user->getId());
 
             try {
