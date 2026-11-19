@@ -3,6 +3,8 @@ includes:
 
 parameters:
     level: max
+    scanFiles:
+        - stubs/Validators.php
     paths:
         - src
         - tests

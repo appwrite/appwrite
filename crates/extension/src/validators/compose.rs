@@ -3,7 +3,7 @@
 //! `JSON\ArrayValidator`, `JSON\ObjectValidator`, `JSON\FCM`) and `Globstar`.
 //!
 //! What these classes mostly do is ask other validators, which may be PHP classes (Appwrite's,
-//! utopia-php/database's, a leaf whose batch is switched off) or the extension's. They ask
+//! utopia-php/database's, a subclass) or the extension's. They ask
 //! through the engine ([`engine::call_method`]), as the PHP classes' `$rule->isValid($value)`
 //! does: the same method resolution (a subclass's override, `__call()`), the same calls in the
 //! same order and number, the same short-circuits, the same exceptions passing through. The
@@ -1359,7 +1359,7 @@ extern "C" fn globstar_match_globstar(ex: &mut ExecuteData, retval: &mut Zval) {
 }
 
 /// Registers the batch's classes, each extending `Utopia\Validator\Validator`. Called from
-/// the module's startup (MINIT), with `validators-compose` on.
+/// the module's startup (MINIT), after the base.
 /// The methods these classes call on the validators they wrap (and on `$rules`).
 static IS_VALID: Callee = Callee::new("isValid");
 static GET_DESCRIPTION: Callee = Callee::new("getDescription");
