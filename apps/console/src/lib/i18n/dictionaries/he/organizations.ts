@@ -114,6 +114,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'כל המשאבים מלבד ניהול הצוות ופעולות כתיבה בחיוב.',
   'Allow OAuth2 Device Authorization Grant (RFC 8628).':
     'אפשרו OAuth2 Device Authorization Grant (RFC 8628).',
+  'Already in this organization': 'כבר נמצא בארגון הזה',
   Amount: 'סכום',
   'Amount due': 'סכום לתשלום',
   'An error occurred': 'אירעה שגיאה',
@@ -461,6 +462,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Enabled: 'מופעל',
   'Enter a coupon code to update your estimated total. Applied credits expire after a set period and do not roll over.':
     'הזינו קוד קופון לעדכון הסכום המשוער. קרדיטים שהוחלו פגים לאחר תקופה מוגדרת ואינם נצברים.',
+  'Enter a domain like example.com': 'הזינו דומיין כמו example.com',
   'Enter a full domain name (e.g. example.com)':
     'הזינו שם דומיין מלא (למשל example.com)',
   'Enter coupon code': 'הזינו קוד קופון',
@@ -532,6 +534,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Failed to load logo files': 'טעינת קובצי הלוגו נכשלה',
   'Failed to load members': 'טעינת החברים נכשלה',
   'Failed to load page': 'טעינת הדף נכשלה',
+  'Failed to load preset records': 'טעינת רשומות ה-DNS של התבנית נכשלה',
   'Failed to load projects': 'טעינת הפרויקטים נכשלה',
   'Failed to load regions': 'טעינת האזורים נכשלה',
   'Failed to mount payment form. Please try again.':
@@ -918,6 +921,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Popular integrations from the marketplace catalog.':
     'אינטגרציות פופולריות מקטלוג המרקטפלייס.',
   Port: 'פורט',
+  'Port is required': 'פורט הוא שדה חובה',
+  'Port must be between 0 and 65535': 'הפורט חייב להיות בין 0 ל-65535',
   'Post-logout redirect URIs': 'כתובות URI להפניה לאחר התנתקות',
   'Postal code': 'מיקוד',
   Premium: 'פרימיום',
@@ -934,6 +939,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Primary payment method updated': 'אמצעי התשלום הראשי עודכן',
   Priority: 'עדיפות',
   'Priority for SRV record': 'עדיפות לרשומת SRV',
+  'Priority is required': 'עדיפות היא שדה חובה',
+  'Priority must be between 0 and 65535': 'העדיפות חייבת להיות בין 0 ל-65535',
   'Privacy policy': 'מדיניות פרטיות',
   Project: 'פרויקט',
   'Project (optional)': 'פרויקט (אופציונלי)',
@@ -943,6 +950,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Project keys': 'מפתחות פרויקט',
   'Project pinned': 'הפרויקט הוצמד',
   'Project unpinned': 'הצמדת הפרויקט בוטלה',
+  'Projects subtotal': 'סכום ביניים של הפרויקטים',
   'Projects that will be deleted:': 'פרויקטים שיימחקו:',
   'Promo code': 'קוד קופון',
   Public: 'ציבורי',
@@ -1145,6 +1153,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'האפליקציה מושבתת ואינה יכולה לאמת משתמשים.',
   'This app may have been deleted or you do not have access.':
     'ייתכן שהאפליקציה נמחקה או שאין לכם גישה.',
+  "This domain can't be transferred. Check the name and try again.":
+    'לא ניתן להעביר את הדומיין הזה. בדקו את השם ונסו שוב.',
   'This entire organization will be deleted, including all of its projects and resources.':
     'כל הארגון הזה יימחק, כולל כל הפרויקטים והמשאבים שלו.',
   'Downgrading to the Free plan is temporarily unavailable here while we refine the experience. You can complete this change in the old console.':
@@ -1158,6 +1168,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'זה בדרך כלל לוקח כמה שניות. השאירו את החלון הזה פתוח.',
   'This usually takes a few seconds to a couple of minutes. Please keep this window open.':
     'זה בדרך כלל לוקח בין כמה שניות לכמה דקות. השאירו את החלון הזה פתוח.',
+  'These DNS records will be added. Records this domain already has are left unchanged. Nothing is created until you confirm.':
+    'רשומות ה-DNS האלה יתווספו. רשומות שכבר קיימות בדומיין נשארות ללא שינוי. לא נוצר שום דבר עד שתאשרו.',
   'This will add': 'פעולה זו תוסיף',
   'This will generate a transfer authorization code for your domain. Keep it private until you use it at the receiving registrar.':
     'פעולה זו תיצור קוד הרשאה להעברת הדומיין שלכם. שמרו אותו בסוד עד לשימוש אצל הרשם הקולט.',
@@ -1287,6 +1299,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   "We've received your request and will get back to you as soon as we can.":
     'קיבלנו את הבקשה שלכם ונחזור אליכם בהקדם האפשרי.',
   Weight: 'משקל',
+  'Weight is required': 'משקל הוא שדה חובה',
+  'Weight must be between 0 and 65535': 'המשקל חייב להיות בין 0 ל-65535',
   'What happens next': 'מה קורה בהמשך',
   "What wasn't working for you? Please share anything that influenced your decision to downgrade. This feedback helps us improve the platform.":
     'מה לא עבד עבורכם? שתפו כל דבר שהשפיע על ההחלטה שלכם לשנמך. המשוב הזה עוזר לנו לשפר את הפלטפורמה.',
@@ -1570,7 +1584,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'לא ניתן היה לטעון אילו מדיניות גיבוי יפסיקו לפעול כשהתוכנית תשתנה.',
   'Could not load which dedicated databases are spun down when your plan changes.':
     'לא ניתן היה לטעון אילו מסדי נתונים ייעודיים יושבתו כשהתוכנית תשתנה.',
-  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.': 'ארגונים שמתקינים את האפליקציה מעניקים לה את הרשאות הגישה שלמטה. משתמשים חוזרים לכתובת ההפניה אחרי התקנה או עדכון של ההתקנה.',
+  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.':
+    'ארגונים שמתקינים את האפליקציה מעניקים לה את הרשאות הגישה שלמטה. משתמשים חוזרים לכתובת ההפניה אחרי התקנה או עדכון של ההתקנה.',
   'Installation settings updated': 'הגדרות ההתקנה עודכנו',
   'No installation scopes are available.': 'אין הרשאות גישה להתקנה זמינות.',
   'Choose a new plan': 'בחירת תוכנית חדשה',
@@ -1637,9 +1652,20 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Failed to set up auto-pay': 'הגדרת התשלום האוטומטי נכשלה',
   'The bank asks for an OTP on automatic payments with this card. Set up auto-pay so payments up to $150 go through without one.':
     'הבנק מבקש OTP בתשלומים אוטומטיים בכרטיס הזה. הגדירו תשלום אוטומטי כדי שתשלומים של עד $150 יעברו בלי OTP.',
-  'Only the card owner can set up auto-pay': 'רק בעל הכרטיס יכול להגדיר תשלום אוטומטי',
+  'Only the card owner can set up auto-pay':
+    'רק בעל הכרטיס יכול להגדיר תשלום אוטומטי',
   'Check nameservers': 'בדיקת שרתי שמות',
   'Nameservers changed': 'שרתי השמות השתנו',
   'The nameservers for this domain no longer point to Appwrite. The domain status has been updated.':
     'שרתי השמות של הדומיין הזה כבר לא מפנים ל-Appwrite. סטטוס הדומיין עודכן.',
+  'Organization photo': 'תמונת הארגון',
+  'Shown next to your organization name across the Console.': 'מוצגת לצד שם הארגון שלך בכל הקונסולה.',
+  'PNG, JPEG, or WebP up to 5MB.': 'PNG,\u200f JPEG או WebP עד 5MB.',
+  'Only organization owners can change the photo.': 'רק בעלי הארגון יכולים לשנות את התמונה.',
+  'Organization photo updated': 'תמונת הארגון עודכנה',
+  'Failed to update organization photo': 'עדכון תמונת הארגון נכשל',
+  'Organization photo removed': 'תמונת הארגון הוסרה',
+  'Failed to remove organization photo': 'הסרת תמונת הארגון נכשלה',
+  'Remove organization photo': 'הסרת תמונת הארגון',
+  'The photo is replaced with a placeholder. You can upload a new photo at any time.': 'התמונה תוחלף בתמונת ברירת מחדל. אפשר להעלות תמונה חדשה בכל עת.',
 }

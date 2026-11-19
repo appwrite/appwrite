@@ -381,6 +381,10 @@ trait Deployment
                 }
 
                 if (!$isAuthorized) {
+                    if ($resource->getAttribute('providerSilentMode', false) === true || $resource->getAttribute('providerStatuses', true) === false) {
+                        continue;
+                    }
+
                     $message = 'Authorization required for external contributor.';
 
                     $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
@@ -413,12 +417,16 @@ trait Deployment
 
                 if (!empty($providerPullRequestId)) {
                     // Update comment ID so running build can update comment
-                    $authorization->skip(fn () => $dbForProject->updateDocuments('deployments', new Document([
-                        'providerCommentId' => \strval($latestCommentId)
-                    ]), [
-                        Query::equal('providerCommitHash', [$providerCommitHash]),
-                        Query::equal('providerBranch', [$providerBranch]),
-                    ]));
+                    if (!empty($latestCommentId)) {
+                        $authorization->skip(fn () => $dbForProject->updateDocuments('deployments', new Document([
+                            'providerCommentId' => \strval($latestCommentId)
+                        ]), [
+                            Query::equal('resourceInternalId', [$resource->getSequence()]),
+                            Query::equal('resourceType', [$resourceCollection]),
+                            Query::equal('providerCommitHash', [$providerCommitHash]),
+                            Query::equal('providerBranch', [$providerBranch]),
+                        ]));
+                    }
 
                     // A build that moved on while the comment was written reported before it
                     // could find the comment, so the comment takes the state it is in now

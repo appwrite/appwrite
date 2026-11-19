@@ -106,6 +106,11 @@ import { CreateRecordDialog } from './CreateRecord'
 import { UpdateRecordDialog } from './UpdateRecord'
 import { DeleteRecordDialog } from './DeleteRecord'
 import { ImportZoneDialog } from './ImportZone'
+import {
+  AddPresetDialog,
+  DNS_PRESET_OPTIONS,
+  type DnsPresetId,
+} from './AddPresetDialog'
 import { RetryVerification } from '../RetryVerification'
 import { DnsRecordContextMenu } from '../_components/DnsRecordContextMenu'
 import type { Models } from '@appwrite.io/console'
@@ -115,7 +120,6 @@ import {
   useDeleteDnsRecord,
   deleteDnsRecord,
   useUpdateDomainZone,
-  useCreatePresetRecords,
   useUpdateDomainTeam,
   useDeleteOrganizationDomain,
   useOrganizations,
@@ -162,6 +166,8 @@ export function View({ initialData }: ViewProps = {}) {
   const [updateRecordDialogOpen, setUpdateRecordDialogOpen] = useState(false)
   const [deleteRecordDialogOpen, setDeleteRecordDialogOpen] = useState(false)
   const [importZoneDialogOpen, setImportZoneDialogOpen] = useState(false)
+  const [addPresetDialogOpen, setAddPresetDialogOpen] = useState(false)
+  const [selectedPreset, setSelectedPreset] = useState<DnsPresetId | null>(null)
   const [retryDialogOpen, setRetryDialogOpen] = useState(false)
   const [selectedRecord, setSelectedRecord] = useState<Models.DnsRecord | null>(
     null,
@@ -246,22 +252,28 @@ export function View({ initialData }: ViewProps = {}) {
       ? getDomainTransferStatusBadgeConfig(effectiveTransferStatus)
       : null
 
-  // Fetch DNS records (use initialData only when no filters so we don't show unfiltered data when filtered)
+  // Fetch DNS records. The loader snapshot fills in only before this query
+  // resolves, and never when filters are on (that snapshot is unfiltered).
+  // A resolved empty page, including after delete, must not bring it back.
   const hasRecordFilters = (filterQueries?.length ?? 0) > 0
-  const { dnsRecords: recordsFromHook, total: recordsTotalFromHook } =
-    useDomainRecords(
-      domainId,
-      pageIndexed,
-      pageSize,
-      filterQueries,
-      recordsSortBy,
-      recordsSortOrder,
-    )
+  const {
+    dnsRecords: recordsFromHook,
+    total: recordsTotalFromHook,
+    isSuccess: recordsLoaded,
+  } = useDomainRecords(
+    domainId,
+    pageIndexed,
+    pageSize,
+    filterQueries,
+    recordsSortBy,
+    recordsSortOrder,
+  )
   const isFirstPage = currentPage === 1
   const canUseInitialRecords =
     isFirstPage &&
     initialData?.records &&
     !hasRecordFilters &&
+    !recordsLoaded &&
     !recordsFromHook?.length
   const rawRecords =
     canUseInitialRecords && initialData?.records
@@ -290,9 +302,19 @@ export function View({ initialData }: ViewProps = {}) {
     return [...lockedRecords, ...unlockedRecords]
   }, [rawRecords])
   const recordsTotal =
-    isFirstPage && initialData?.records && !hasRecordFilters
-      ? (recordsTotalFromHook ?? initialData.records.total)
+    canUseInitialRecords && initialData?.records
+      ? initialData.records.total
       : (recordsTotalFromHook ?? 0)
+
+  // Deleting the last rows of a later page leaves that page empty while
+  // earlier pages still have records. Step back so the list and the count
+  // stay on the same page.
+  useEffect(() => {
+    if (!recordsLoaded || currentPage <= 1) return
+    if ((recordsFromHook?.length ?? 0) > 0) return
+    if ((recordsTotalFromHook ?? 0) === 0) return
+    setCurrentPage(1)
+  }, [recordsLoaded, currentPage, recordsFromHook, recordsTotalFromHook])
 
   // Nameserver delegation of the zone, not a project domain's verification;
   // short enough for one metadata column
@@ -357,9 +379,6 @@ export function View({ initialData }: ViewProps = {}) {
   // Create record mutation
   const createRecordMutation = useCreateDnsRecord(domainId)
 
-  // Preset records
-  const createPresetMutation = useCreatePresetRecords(domainId)
-
   const handleCreateRecord = (data: {
     type: string
     name: string
@@ -370,7 +389,7 @@ export function View({ initialData }: ViewProps = {}) {
     port?: number
     comment?: string
   }) => {
-    createRecordMutation.mutate(
+    return createRecordMutation.mutateAsync(
       {
         type: data.type,
         data: {
@@ -411,7 +430,7 @@ export function View({ initialData }: ViewProps = {}) {
       comment?: string
     },
   ) => {
-    updateRecordMutation.mutate(
+    return updateRecordMutation.mutateAsync(
       {
         recordId,
         type: data.type,
@@ -530,37 +549,9 @@ export function View({ initialData }: ViewProps = {}) {
     })
   }
 
-  // Handle preset selection
-  const handlePresetSelect = async (
-    preset:
-      | 'zoho'
-      | 'mailgun'
-      | 'outlook'
-      | 'protonmail'
-      | 'icloud'
-      | 'google-workspace',
-  ) => {
-    const presetLabels: Record<string, string> = {
-      'google-workspace': 'Google Workspace',
-      outlook: 'Outlook',
-      mailgun: 'Mailgun',
-      zoho: 'Zoho',
-      protonmail: 'ProtonMail',
-      icloud: 'iCloud',
-    }
-
-    // The preset endpoint adds only the records the domain does not have yet,
-    // so applying a preset again, or over matching records, is not an error.
-    // It returns all of the preset's records, so the toast states no count.
-    try {
-      await createPresetMutation.mutateAsync(preset)
-
-      toast.success(
-        `${t('Successfully added')} ${t('DNS records from')} ${presetLabels[preset]}`,
-      )
-    } catch (error) {
-      toast.error(getErrorMessage(error))
-    }
+  const openPresetDialog = (preset: DnsPresetId) => {
+    setSelectedPreset(preset)
+    openDialogAfterOverlayCloses(() => setAddPresetDialogOpen(true))
   }
 
   // Export zone file
@@ -1180,42 +1171,14 @@ export function View({ initialData }: ViewProps = {}) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
-                      <DropdownMenuItem
-                        onClick={() => handlePresetSelect('google-workspace')}
-                        disabled={createPresetMutation.isPending}
-                      >
-                        Google Workspace
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handlePresetSelect('outlook')}
-                        disabled={createPresetMutation.isPending}
-                      >
-                        Outlook
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handlePresetSelect('mailgun')}
-                        disabled={createPresetMutation.isPending}
-                      >
-                        Mailgun
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handlePresetSelect('zoho')}
-                        disabled={createPresetMutation.isPending}
-                      >
-                        Zoho
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handlePresetSelect('protonmail')}
-                        disabled={createPresetMutation.isPending}
-                      >
-                        ProtonMail
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handlePresetSelect('icloud')}
-                        disabled={createPresetMutation.isPending}
-                      >
-                        iCloud
-                      </DropdownMenuItem>
+                      {DNS_PRESET_OPTIONS.map((preset) => (
+                        <DropdownMenuItem
+                          key={preset.id}
+                          onSelect={() => openPresetDialog(preset.id)}
+                        >
+                          {preset.label}
+                        </DropdownMenuItem>
+                      ))}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -1249,42 +1212,14 @@ export function View({ initialData }: ViewProps = {}) {
                         {t('Preset')}
                       </DropdownMenuSubTrigger>
                       <DropdownMenuSubContent className="w-52">
-                        <DropdownMenuItem
-                          onClick={() => handlePresetSelect('google-workspace')}
-                          disabled={createPresetMutation.isPending}
-                        >
-                          Google Workspace
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handlePresetSelect('outlook')}
-                          disabled={createPresetMutation.isPending}
-                        >
-                          Outlook
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handlePresetSelect('mailgun')}
-                          disabled={createPresetMutation.isPending}
-                        >
-                          Mailgun
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handlePresetSelect('zoho')}
-                          disabled={createPresetMutation.isPending}
-                        >
-                          Zoho
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handlePresetSelect('protonmail')}
-                          disabled={createPresetMutation.isPending}
-                        >
-                          ProtonMail
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handlePresetSelect('icloud')}
-                          disabled={createPresetMutation.isPending}
-                        >
-                          iCloud
-                        </DropdownMenuItem>
+                        {DNS_PRESET_OPTIONS.map((preset) => (
+                          <DropdownMenuItem
+                            key={preset.id}
+                            onSelect={() => openPresetDialog(preset.id)}
+                          >
+                            {preset.label}
+                          </DropdownMenuItem>
+                        ))}
                       </DropdownMenuSubContent>
                     </DropdownMenuSub>
                   </DropdownMenuContent>
@@ -2225,6 +2160,13 @@ export function View({ initialData }: ViewProps = {}) {
           isLoading={deleteRecordMutation.isPending}
         />
       )}
+
+      <AddPresetDialog
+        open={addPresetDialogOpen}
+        onOpenChange={setAddPresetDialogOpen}
+        domainId={domainId}
+        preset={selectedPreset}
+      />
 
       {/* Import Zone Dialog */}
       <ImportZoneDialog

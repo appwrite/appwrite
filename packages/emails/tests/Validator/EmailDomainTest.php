@@ -2,9 +2,11 @@
 
 namespace Utopia\Emails\Tests\Validator;
 
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Emails\Validator\EmailDomain;
 
+#[RequiresPhpExtension('utopia')]
 class EmailDomainTest extends TestCase
 {
     public function test_valid_email_domain(): void

@@ -4,7 +4,12 @@
  * Handles email template fetching, updating, and resetting to defaults.
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import {
   ProjectEmailTemplateId,
   ProjectEmailTemplateLocale,
@@ -73,20 +78,27 @@ export async function resetProjectEmailTemplate(
 // HOOKS
 // ============================================================================
 
+export function emailTemplateQueryOptions(
+  projectId: string | null | undefined,
+  type: string | null | undefined,
+  locale: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['emailTemplate', projectId, type, locale],
+    queryFn: () => fetchEmailTemplate(projectId!, type!, locale!),
+    enabled: !!projectId && !!type && !!locale,
+    staleTime: DEFAULT_STALE_TIME,
+    gcTime: DEFAULT_STALE_TIME,
+    refetchOnMount: false,
+  })
+}
+
 export function useEmailTemplate(
   projectId: string | null | undefined,
   type: string | null | undefined,
   locale: string | null | undefined,
 ) {
-  useQueryClient()
-
-  return useQuery({
-    queryKey: ['emailTemplate', projectId, type, locale],
-    queryFn: () => fetchEmailTemplate(projectId!, type!, locale!),
-    enabled: !!projectId && !!type && !!locale,
-    staleTime: DEFAULT_STALE_TIME,
-    refetchOnMount: false,
-  })
+  return useQuery(emailTemplateQueryOptions(projectId, type, locale))
 }
 
 export function useUpdateEmailTemplate(projectId: string | null | undefined) {

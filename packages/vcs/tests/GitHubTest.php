@@ -122,6 +122,48 @@ final class GitHubTest extends Base
         $this->assertSame('1234', $result['installationId']);
     }
 
+    public function testGetEventInstallationRepositories(): void
+    {
+        $payload = (string) json_encode([
+            'action' => 'added',
+            'installation' => [
+                'id' => 1234,
+                'account' => ['login' => 'appwrite'],
+            ],
+            'repository_selection' => 'all',
+            'repositories_added' => [
+                ['id' => 583127841, 'name' => 'appwrite', 'full_name' => 'appwrite/appwrite'],
+                ['id' => '943139433', 'name' => 'console'],
+                ['name' => 'no-id'],
+                'not-a-repository',
+            ],
+            'repositories_removed' => [],
+        ]);
+
+        $events = $this->vcsAdapter->getEvents(GitHub::EVENT_INSTALLATION_REPOSITORIES, $payload);
+
+        $this->assertSame([[
+            'action' => 'added',
+            'installationId' => '1234',
+            'userName' => 'appwrite',
+            'repositoriesAdded' => ['583127841', '943139433'],
+            'repositoriesRemoved' => [],
+        ]], $events);
+    }
+
+    public function testGetEventInstallationHasNoRepositories(): void
+    {
+        $payload = (string) json_encode([
+            'action' => 'deleted',
+            'installation' => ['id' => 1234, 'account' => ['login' => 'appwrite']],
+        ]);
+
+        $events = $this->vcsAdapter->getEvents(GitHub::EVENT_INSTALLATION, $payload);
+
+        $this->assertSame([], $events[0]['repositoriesAdded']);
+        $this->assertSame([], $events[0]['repositoriesRemoved']);
+    }
+
     public function testGetEventIssueCommentOnPullRequest(): void
     {
         $events = $this->vcsAdapter->getEvents(GitHub::EVENT_ISSUE_COMMENT, $this->commentPayload(GitHub::EVENT_ISSUE_COMMENT));
@@ -132,6 +174,7 @@ final class GitHubTest extends Base
             'owner' => self::EVENT_OWNER,
             'installationId' => '9876',
             'pullRequestNumber' => 42,
+            'pullRequestAuthor' => 'hubot',
             'action' => 'created',
             'commentId' => 1001,
             'commentKind' => 'issue',
@@ -159,6 +202,32 @@ final class GitHubTest extends Base
         $this->assertSame('review', $events[0]['commentKind']);
         $this->assertSame(42, $events[0]['pullRequestNumber']);
         $this->assertSame(900, $events[0]['commentReplyToId']);
+        $this->assertSame('hubot', $events[0]['pullRequestAuthor']);
+    }
+
+    public function testGetEventPullRequestAuthor(): void
+    {
+        $payload = (string) json_encode([
+            'action' => 'opened',
+            'number' => 42,
+            'pull_request' => [
+                'user' => ['login' => 'hubot', 'avatar_url' => 'https://avatars.githubusercontent.com/u/1'],
+                'head' => ['ref' => 'feature', 'sha' => 'abc', 'user' => ['login' => self::EVENT_OWNER]],
+                'base' => ['user' => ['login' => self::EVENT_OWNER]],
+            ],
+            'sender' => ['html_url' => 'https://github.com/octocat'],
+            'repository' => [
+                'id' => (int) self::EVENT_REPOSITORY_ID,
+                'name' => self::EVENT_REPOSITORY_NAME,
+                'owner' => ['login' => self::EVENT_OWNER],
+            ],
+            'installation' => ['id' => 9876],
+        ]);
+
+        $events = $this->vcsAdapter->getEvents(GitHub::EVENT_PULL_REQUEST, $payload);
+
+        $this->assertCount(1, $events);
+        $this->assertSame('hubot', $events[0]['pullRequestAuthor']);
     }
 
     private function commentPayload(string $event, bool $pullRequest = true, ?int $replyTo = null): string
@@ -186,9 +255,9 @@ final class GitHubTest extends Base
         ];
 
         if ($event === GitHub::EVENT_ISSUE_COMMENT) {
-            $payload['issue'] = ['number' => 42] + ($pullRequest ? ['pull_request' => ['url' => 'https://api.github.com/pulls/42']] : []);
+            $payload['issue'] = ['number' => 42, 'user' => ['login' => 'hubot']] + ($pullRequest ? ['pull_request' => ['url' => 'https://api.github.com/pulls/42']] : []);
         } else {
-            $payload['pull_request'] = ['number' => 42];
+            $payload['pull_request'] = ['number' => 42, 'user' => ['login' => 'hubot']];
         }
 
         return (string) json_encode($payload);

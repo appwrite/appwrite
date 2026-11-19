@@ -193,13 +193,20 @@ export function getRecordName(domain: string): string {
   return normalized.slice(0, -(apex.length + 1))
 }
 
-export type VerificationMethod = 'cname' | 'nameservers' | 'a' | 'aaaa'
+export type VerificationMethod =
+  | 'cname'
+  | 'alias'
+  | 'nameservers'
+  | 'a'
+  | 'aaaa'
 
 /**
  * Ways a rule's domain can be pointed at Appwrite, the one to show first
- * leading. Most providers refuse a CNAME on an apex domain, so an apex leads
- * with the nameservers (Cloud only), then the A and AAAA records the server
- * also accepts, and keeps the CNAME last for providers that flatten it.
+ * leading. A subdomain takes a CNAME. An apex takes an ALIAS to the CNAME
+ * target, which providers resolve to addresses when queried, so the server's
+ * A and AAAA checks verify it; on Cloud the nameservers are the alternative.
+ * A and AAAA addresses are offered only when there is no CNAME target at all,
+ * since an address can change under the domain.
  */
 export function getVerificationMethods(input: {
   domain: string
@@ -211,11 +218,11 @@ export function getVerificationMethods(input: {
 }): VerificationMethod[] {
   const apex = getRecordName(input.domain) === '@'
   const methods: VerificationMethod[] = []
-  if (input.cname && !apex) methods.push('cname')
-  if (input.cloud && input.nameservers.length > 0) methods.push('nameservers')
-  if (input.a && (!input.cloud || apex)) methods.push('a')
-  if (input.aaaa && (!input.cloud || apex)) methods.push('aaaa')
-  if (input.cname && apex) methods.push('cname')
+  if (input.cname) methods.push(apex ? 'alias' : 'cname')
+  if (input.cloud && apex && input.nameservers.length > 0)
+    methods.push('nameservers')
+  if (!input.cname && input.a) methods.push('a')
+  if (!input.cname && input.aaaa) methods.push('aaaa')
   return methods
 }
 
@@ -274,6 +281,54 @@ export function isCloud(): boolean {
 }
 
 /**
+ * Zones Appwrite serves itself. A hostname in one of these is not the
+ * organization's to register. Regional zones from console variables are
+ * passed in alongside these, so the check holds when the variables fail to
+ * load and still picks up any other zone they carry.
+ */
+const APPWRITE_SERVED_ZONES = [
+  'appwrite.network',
+  'appwrite.run',
+  'appwrite.site',
+  'appwrite.global',
+]
+
+export function isAppwriteServedDomain(
+  domain: string,
+  extraZones: readonly string[] = [],
+): boolean {
+  const normalized = domain.trim().toLowerCase()
+  if (!normalized) return false
+  return [...APPWRITE_SERVED_ZONES, ...extraZones].some(
+    (zone) =>
+      !!zone && (normalized === zone || normalized.endsWith(`.${zone}`)),
+  )
+}
+
+/**
+ * Whether adding this hostname would register a new organization apex while
+ * the organization is already at its Cloud domain cap. A subdomain of an apex
+ * the organization already has does not POST, and neither does a zone
+ * Appwrite serves. Unknown membership does not block: the create still runs,
+ * and the 402 toast stays the fallback.
+ */
+export function blocksNewOrganizationApex(input: {
+  cloud: boolean
+  atLimit: boolean
+  domain: string
+  extraZones?: readonly string[]
+  /** False once the apex lookup confirms it is missing. Null while unknown. */
+  apexRegistered: boolean | null
+}): boolean {
+  if (!input.cloud || !input.atLimit) return false
+  const normalized = input.domain.trim().toLowerCase()
+  if (!isValidDomain(normalized)) return false
+  if (isAppwriteServedDomain(normalized, input.extraZones)) return false
+  if (!getApexDomain(normalized)) return false
+  return input.apexRegistered === false
+}
+
+/**
  * Ensure apex domain exists in organization (Cloud only).
  * Call before creating proxy rules for custom domains.
  * Ignores domain_already_exists and domain_owned_by_different_organization
@@ -290,32 +345,19 @@ export async function ensureApexDomainInOrganization(
   // server's isAppwriteOwned holds. Cloud's zones are listed so the check holds
   // when the variables fail to load, and the variables, which carry only the
   // first sites and functions zone of the project's region, add any other.
-  const owned = [
-    'appwrite.network',
-    'appwrite.run',
-    'appwrite.site',
-    'appwrite.global',
-  ]
+  const extraZones: string[] = []
   try {
     const variables = await queryClient.fetchQuery(
       consoleVariablesQueryOptions(options?.region),
     )
-    owned.push(
+    extraZones.push(
       variables._APP_DOMAIN_SITES ?? '',
       variables._APP_DOMAIN_FUNCTIONS ?? '',
     )
   } catch {
     // Without the variables, still register a custom domain.
   }
-  const normalized = domain.trim().toLowerCase()
-  if (
-    owned.some(
-      (zone) =>
-        !!zone && (normalized === zone || normalized.endsWith(`.${zone}`)),
-    )
-  ) {
-    return
-  }
+  if (isAppwriteServedDomain(domain, extraZones)) return
 
   const apex = getApexDomain(domain)
   if (!apex) return
@@ -347,4 +389,10 @@ export async function ensureApexDomainInOrganization(
     if (e?.type === 'domain_owned_by_different_organization') return
     throw err
   }
+
+  // The add wizards read this list with refetchOnMount: false. Without a
+  // refresh, a subdomain of the apex just created still looks over the cap.
+  await queryClient.invalidateQueries({
+    queryKey: ['domains', 'organization', teamId],
+  })
 }

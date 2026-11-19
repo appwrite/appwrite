@@ -65,6 +65,7 @@ Every adapter takes an API key and a model ID. The model ID is passed to the pro
 
 ```php
 use Utopia\Agents\Adapters\Anthropic;
+use Utopia\Agents\Adapters\Compatible;
 use Utopia\Agents\Adapters\Deepseek;
 use Utopia\Agents\Adapters\Gemini;
 use Utopia\Agents\Adapters\OpenAI;
@@ -80,9 +81,11 @@ new XAI($key, 'grok-4');
 new OpenRouter($key, 'anthropic/claude-sonnet-5.5', referer: 'https://example.com', title: 'My App');
 new Perplexity($key, 'sonar');
 
-// Any OpenAI-compatible server
-new OpenAI($key, 'llama3.1', 'http://localhost:11434/v1/chat/completions');
+// Any OpenAI-compatible server, over Chat Completions
+new Compatible($key, 'llama3.1', 'http://localhost:11434/v1/chat/completions');
 ```
+
+OpenAI runs on the Responses API, so reasoning models can reason and call tools in the same request. Nothing is stored on OpenAI's side: with reasoning on, the encrypted reasoning comes back as a signed `Reasoning` part and is sent again on the next turn. It takes no stop sequences. DeepSeek, xAI, OpenRouter, Perplexity and `Compatible` speak Chat Completions.
 
 ### Tools
 

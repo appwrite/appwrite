@@ -336,6 +336,30 @@ final class RequestTest extends TestCase
         $this->assertSame($first->cacheIdentifier(), $second->cacheIdentifier());
     }
 
+    public function testCacheIdentifierKeysByTheAcceptedTypeNotTheHeader(): void
+    {
+        // A route that upgrades to webp from the Accept header alone, like video thumbnails
+        $route = new Route(Request::METHOD_GET, '/thumbnail');
+        $route->label('cache.accept', ['image/webp']);
+
+        $chrome = $this->negotiatedRequest('image/avif,image/webp,image/apng,*/*;q=0.8', [], $route);
+        $firefox = $this->negotiatedRequest('image/webp,*/*', [], $route);
+        $legacy = $this->negotiatedRequest('image/png,*/*', [], $route);
+
+        $this->assertSame($chrome->cacheIdentifier(), $firefox->cacheIdentifier());
+        $this->assertNotSame($chrome->cacheIdentifier(), $legacy->cacheIdentifier());
+    }
+
+    public function testCacheIdentifierIgnoresAcceptWithoutCacheAccept(): void
+    {
+        $route = new Route(Request::METHOD_GET, '/download');
+
+        $webp = $this->negotiatedRequest('image/webp', ['token' => 'abc'], $route);
+        $html = $this->negotiatedRequest('text/html', ['token' => 'abc'], $route);
+
+        $this->assertSame($webp->cacheIdentifier(), $html->cacheIdentifier());
+    }
+
     public function testGetHeaderLineReturnsStringValue(): void
     {
         $this->request->addHeader('referer', 'https://example.com');
@@ -356,6 +380,41 @@ final class RequestTest extends TestCase
         $request = new Request($swoole);
 
         $this->assertSame('https://a.example, https://b.example', $request->getHeaderLine('referer'));
+    }
+
+    /**
+     * @param array{0: ?string, 1: ?int, 2: ?int} $expected
+     */
+    #[DataProvider('ranges')]
+    public function testParseRange(string $header, array $expected): void
+    {
+        $swoole = new SwooleRequest();
+        $swoole->header = ['range' => $header];
+        $request = new Request($swoole);
+
+        $this->assertSame($expected[0], $request->getRangeUnit());
+        $this->assertSame($expected[1], $request->getRangeStart());
+        $this->assertSame($expected[2], $request->getRangeEnd());
+    }
+
+    /**
+     * @return \Iterator<string, array{string, array{(string | null), (int | null), (int | null)}}>
+     */
+    public static function ranges(): \Iterator
+    {
+        // RFC 9110 bounds are inclusive, so start === end asks for one byte.
+        yield 'first byte' => ['bytes=0-0', ['bytes', 0, 0]];
+        yield 'last byte' => ['bytes=511-511', ['bytes', 511, 511]];
+        yield 'closed' => ['bytes=100-199', ['bytes', 100, 199]];
+        yield 'open ended' => ['bytes=100-', ['bytes', 100, null]];
+        yield 'other unit' => ['items=0-1', ['items', 0, 1]];
+        yield 'reversed' => ['bytes=200-100', [null, null, null]];
+        yield 'suffix' => ['bytes=-500', [null, null, null]];
+        yield 'multiple' => ['bytes=0-99,200-299', [null, null, null]];
+        yield 'not a number' => ['bytes=a-b', [null, null, null]];
+        yield 'no bounds' => ['bytes=', [null, null, null]];
+        yield 'no unit' => ['=0-99', [null, null, null]];
+        yield 'empty' => ['', [null, null, null]];
     }
 
     public function testGetHeadersSynthesizesCookieHeaderFromCookieJar(): void

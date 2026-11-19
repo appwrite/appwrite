@@ -5,11 +5,13 @@ import {
   MARKETING_PAGE_ROUTE_STATIC_DATA,
   marketingRouteLifetime,
 } from '@/lib/marketing/route-static-data'
+import { redirectIfMarketingDisabled } from '@/lib/marketing/marketing-route-guard'
 import { SITE_TOOLS_SCRIPT } from '@/lib/webmcp/site/tools'
 import { useSiteTools } from '@/lib/webmcp/site/use-site-tools'
 
 export const Route = createFileRoute('/docs')({
   ...marketingRouteLifetime,
+  beforeLoad: ({ location }) => redirectIfMarketingDisabled(location.pathname),
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   notFoundComponent: NotFoundView,

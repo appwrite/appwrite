@@ -256,7 +256,8 @@ class Comment
         $imageLight = $protocol . '://' . $hostname . $pathLight;
         $imageDark = $protocol . '://' . $hostname . $pathDark;
 
-        $imageUrl = '<picture><source media="(prefers-color-scheme: dark)" srcset="' . $imageDark . '"><img alt="' . $alt . '" width="' . $width . '" align="center" src="' . $imageLight . '"></picture>';
+        // absmiddle is vertical-align: middle; "center" puts the image's middle on the text baseline, so the label beside it rode high.
+        $imageUrl = '<picture><source media="(prefers-color-scheme: dark)" srcset="' . $imageDark . '"><img alt="' . $alt . '" width="' . $width . '" align="absmiddle" src="' . $imageLight . '"></picture>';
 
         return $imageUrl;
     }

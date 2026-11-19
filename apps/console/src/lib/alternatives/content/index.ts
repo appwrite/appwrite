@@ -4,6 +4,7 @@ import { clerkAlternativeContent } from '@/lib/alternatives/content/clerk'
 import { cloudinaryAlternativeContent } from '@/lib/alternatives/content/cloudinary'
 import { convexAlternativeContent } from '@/lib/alternatives/content/convex'
 import { firebaseAlternativeContent } from '@/lib/alternatives/content/firebase'
+import { muxAlternativeContent } from '@/lib/alternatives/content/mux'
 import { neonAlternativeContent } from '@/lib/alternatives/content/neon'
 import { netlifyAlternativeContent } from '@/lib/alternatives/content/netlify'
 import { planetscaleAlternativeContent } from '@/lib/alternatives/content/planetscale'
@@ -27,6 +28,7 @@ export const ALTERNATIVE_CONTENT: Record<AlternativeId, AlternativeContent> = {
   planetscale: planetscaleAlternativeContent,
   posthog: posthogAlternativeContent,
   plausible: plausibleAlternativeContent,
+  mux: muxAlternativeContent,
 }
 
 export function getAlternativeContent(id: AlternativeId): AlternativeContent {

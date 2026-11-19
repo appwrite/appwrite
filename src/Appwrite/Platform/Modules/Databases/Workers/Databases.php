@@ -14,7 +14,9 @@ use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Restricted;
+use Utopia\Database\Exception\Schema;
 use Utopia\Database\Exception\Structure;
+use Utopia\Database\Exception\Unique;
 use Utopia\Database\Index as IndexObject;
 use Utopia\Database\Query;
 use Utopia\Database\Relationship;
@@ -246,6 +248,12 @@ class Databases extends Action
                 );
             }
 
+            if ($this->isRejection($e)) {
+                Span::add('database.attribute.rejected', $e->getMessage());
+
+                return;
+            }
+
             throw $e;
         } finally {
             if (! $relatedCollection->isEmpty()) {
@@ -367,16 +375,20 @@ class Databases extends Action
 
             foreach ($indexes as $index) {
                 /** @var string[] $attributes */
-                $attributes = $index->getAttribute('attributes');
-                $lengths = $index->getAttribute('lengths');
-                $orders = $index->getAttribute('orders');
+                $attributes = $index->getAttribute('attributes', []);
+                $lengths = $index->getAttribute('lengths', []);
+                $orders = $index->getAttribute('orders', []);
 
-                $found = \array_search($key, $attributes);
+                $found = \array_search($key, $attributes, true);
 
                 if ($found !== false) {
-                    $attributes = \array_values(\array_diff($attributes, [$attributes[$found]]));
-                    $lengths = \array_values(\array_diff($lengths, isset($lengths[$found]) ? [$lengths[$found]] : []));
-                    $orders = \array_values(\array_diff($orders, isset($orders[$found]) ? [$orders[$found]] : []));
+                    // A length and an order belong to the attribute at their own position, so the removed
+                    // attribute takes the ones at its position with it. Pruning by value instead drops every
+                    // length and order equal to them, leaving the index covering more attributes than it has
+                    // lengths or orders.
+                    \array_splice($attributes, $found, 1);
+                    \array_splice($lengths, $found, 1);
+                    \array_splice($orders, $found, 1);
 
                     if (empty($attributes)) {
                         $dbForProject->deleteDocument('indexes', $index->getId());
@@ -484,6 +496,12 @@ class Databases extends Action
                 $index->setAttribute('status', 'failed')
             );
 
+            if ($this->isRejection($e)) {
+                Span::add('database.index.rejected', $e->getMessage());
+
+                return;
+            }
+
             throw $e;
         } finally {
             $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collectionId);
@@ -520,13 +538,19 @@ class Databases extends Action
         $projectId = $project->getId();
         $event = 'databases.[databaseId].collections.[collectionId].indexes.[indexId].delete';
         $key = $index->getAttribute('key');
-        $status = $index->getAttribute('status', '');
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         try {
-            if ($status !== 'failed') {
+            try {
                 $dbForDatabases->deleteIndex('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key);
+            } catch (NotFound $e) {
+                // An index the schema does not hold -- one that never finished creating, or one the schema
+                // lost while its document stayed behind -- is already in the state the delete asks for, so
+                // the document still goes. Recording it as stuck instead leaves the index undeletable: every
+                // retry takes this same path.
+                Span::add('database.index.not_found', $e->getMessage());
             }
+
             $dbForProject->deleteDocument('indexes', $index->getId());
             $index->setAttribute('status', 'deleted');
         } catch (NotFound $e) {
@@ -560,6 +584,21 @@ class Databases extends Action
      * @return void
      * @throws Exception
      */
+    /**
+     * Whether the database refused the attribute or index the customer asked for, rather than
+     * failing to build it: a definition that breaks the schema rules (row width, index length,
+     * relationship) or a unique index over rows that already repeat. The failed status and its
+     * error are the job's result; failing the job as well would report the customer's request
+     * as a worker fault.
+     *
+     * Any other Duplicate (the column or index already exists) still fails the job: it points
+     * at a build left half done, which is ours to look at, not the customer's.
+     */
+    private function isRejection(\Throwable $e): bool
+    {
+        return $e instanceof Schema || $e instanceof Unique;
+    }
+
     protected function deleteDatabase(Document $database, Database $dbForProject, Database $dbForDatabases): void
     {
         $this->deleteByGroup('database_' . $database->getSequence(), [], $dbForProject, function ($collection) use ($database, $dbForProject, $dbForDatabases) {

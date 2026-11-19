@@ -57,6 +57,7 @@ import { Route as MarketingEducationRouteImport } from './routes/_marketing/educ
 import { Route as MarketingEnterpriseRouteImport } from './routes/_marketing/enterprise'
 import { Route as MarketingForAgentsRouteImport } from './routes/_marketing/for-agents'
 import { Route as MarketingHomeRouteImport } from './routes/_marketing/home'
+import { Route as MarketingHome1RouteImport } from './routes/_marketing/home1'
 import { Route as MarketingInnovationTeamsRouteImport } from './routes/_marketing/innovation-teams'
 import { Route as MarketingPartnersRouteImport } from './routes/_marketing/partners'
 import { Route as MarketingPricingRouteImport } from './routes/_marketing/pricing'
@@ -89,6 +90,7 @@ import { Route as ILinkIdRouteImport } from './routes/i.$linkId'
 import { Route as IconsSpriteDotsvgRouteImport } from './routes/icons.sprite[.]svg'
 import { Route as LlmsFullTxtRouteImport } from './routes/llms-full.txt'
 import { Route as LlmsTxtRouteImport } from './routes/llms.txt'
+import { Route as PlayerVideoIdRouteImport } from './routes/player.$videoId'
 import { Route as ApiBlogRssDotxmlRouteImport } from './routes/_api/blog/rss[.]xml'
 import { Route as ApiChangelogRssDotxmlRouteImport } from './routes/_api/changelog/rss[.]xml'
 import { Route as ApiDebugIpRouteImport } from './routes/_api/debug.ip'
@@ -207,6 +209,7 @@ import { Route as PublicProjectsProjectIdFirewallRouteImport } from './routes/_p
 import { Route as PublicProjectsProjectIdFunctionsRouteImport } from './routes/_public/projects.$projectId.functions'
 import { Route as PublicProjectsProjectIdImagineRouteImport } from './routes/_public/projects.$projectId.imagine'
 import { Route as PublicProjectsProjectIdMessagingRouteImport } from './routes/_public/projects.$projectId.messaging'
+import { Route as PublicProjectsProjectIdMonitorsRouteImport } from './routes/_public/projects.$projectId.monitors'
 import { Route as PublicProjectsProjectIdOnboardingRouteImport } from './routes/_public/projects.$projectId.onboarding'
 import { Route as PublicProjectsProjectIdOverviewRouteImport } from './routes/_public/projects.$projectId.overview'
 import { Route as PublicProjectsProjectIdPlaygroundRouteImport } from './routes/_public/projects.$projectId.playground'
@@ -226,6 +229,7 @@ import { Route as PublicOrganizationsOrgIdAppsAppIdRouteImport } from './routes/
 import { Route as PublicOrganizationsOrgIdDomainsIndexRouteImport } from './routes/_public/organizations.$orgId.domains.index'
 import { Route as PublicOrganizationsOrgIdDomainsDomainIdRouteImport } from './routes/_public/organizations.$orgId.domains.$domainId'
 import { Route as PublicOrganizationsOrgIdDomainsBuyRouteImport } from './routes/_public/organizations.$orgId.domains.buy'
+import { Route as PublicOrganizationsOrgIdDomainsContinueRouteImport } from './routes/_public/organizations.$orgId.domains.continue'
 import { Route as PublicOrganizationsOrgIdDomainsTransferInRouteImport } from './routes/_public/organizations.$orgId.domains.transfer-in'
 import { Route as PublicOrganizationsOrgIdMarketplaceIndexRouteImport } from './routes/_public/organizations.$orgId.marketplace.index'
 import { Route as PublicOrganizationsOrgIdSettingsBillingRouteImport } from './routes/_public/organizations.$orgId.settings.billing'
@@ -258,12 +262,16 @@ import { Route as PublicProjectsProjectIdFunctionsEditorRouteImport } from './ro
 import { Route as PublicProjectsProjectIdFunctionsTemplatesRouteImport } from './routes/_public/projects.$projectId.functions.templates'
 import { Route as PublicProjectsProjectIdMessagingIndexRouteImport } from './routes/_public/projects.$projectId.messaging.index'
 import { Route as PublicProjectsProjectIdMessagingMessageIdRouteImport } from './routes/_public/projects.$projectId.messaging.$messageId'
+import { Route as PublicProjectsProjectIdMonitorsIndexRouteImport } from './routes/_public/projects.$projectId.monitors.index'
+import { Route as PublicProjectsProjectIdMonitorsAlertsRouteImport } from './routes/_public/projects.$projectId.monitors.alerts'
 import { Route as PublicProjectsProjectIdRealtimeIndexRouteImport } from './routes/_public/projects.$projectId.realtime.index'
 import { Route as PublicProjectsProjectIdRealtimeChannelsRouteImport } from './routes/_public/projects.$projectId.realtime.channels'
 import { Route as PublicProjectsProjectIdRealtimeDebuggerRouteImport } from './routes/_public/projects.$projectId.realtime.debugger'
 import { Route as PublicProjectsProjectIdRealtimeMessagesRouteImport } from './routes/_public/projects.$projectId.realtime.messages'
 import { Route as PublicProjectsProjectIdReviewsIndexRouteImport } from './routes/_public/projects.$projectId.reviews.index'
 import { Route as PublicProjectsProjectIdReviewsReviewIdRouteImport } from './routes/_public/projects.$projectId.reviews.$reviewId'
+import { Route as PublicProjectsProjectIdReviewsLearningsRouteImport } from './routes/_public/projects.$projectId.reviews.learnings'
+import { Route as PublicProjectsProjectIdReviewsPerformanceRouteImport } from './routes/_public/projects.$projectId.reviews.performance'
 import { Route as PublicProjectsProjectIdReviewsRepositoriesRouteImport } from './routes/_public/projects.$projectId.reviews.repositories'
 import { Route as PublicProjectsProjectIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.settings.index'
 import { Route as PublicProjectsProjectIdSettingsDomainsRouteImport } from './routes/_public/projects.$projectId.settings.domains'
@@ -347,6 +355,7 @@ import { Route as PublicProjectsProjectIdMessagingTopicsIndexRouteImport } from 
 import { Route as PublicProjectsProjectIdMessagingTopicsTopicIdRouteImport } from './routes/_public/projects.$projectId.messaging.topics.$topicId'
 import { Route as PublicProjectsProjectIdSettingsDomainsIndexRouteImport } from './routes/_public/projects.$projectId.settings.domains.index'
 import { Route as PublicProjectsProjectIdSettingsDomainsAddRouteImport } from './routes/_public/projects.$projectId.settings.domains.add'
+import { Route as PublicProjectsProjectIdSettingsIdentityServersLdapRouteImport } from './routes/_public/projects.$projectId.settings.identity-servers.ldap'
 import { Route as PublicProjectsProjectIdSettingsMigrationsIndexRouteImport } from './routes/_public/projects.$projectId.settings.migrations.index'
 import { Route as PublicProjectsProjectIdSettingsMigrationsImportRouteImport } from './routes/_public/projects.$projectId.settings.migrations.import'
 import { Route as PublicProjectsProjectIdSitesSiteIdIndexRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.index'
@@ -372,7 +381,6 @@ import { Route as PublicProjectsProjectIdVideosVideoIdInstallRouteImport } from 
 import { Route as PublicProjectsProjectIdVideosVideoIdRenditionsRouteImport } from './routes/_public/projects.$projectId.videos.$videoId.renditions'
 import { Route as PublicProjectsProjectIdVideosVideoIdSettingsRouteImport } from './routes/_public/projects.$projectId.videos.$videoId.settings'
 import { Route as PublicProjectsProjectIdVideosVideoIdStreamingRouteImport } from './routes/_public/projects.$projectId.videos.$videoId.streaming'
-import { Route as PublicProjectsProjectIdVideosVideoIdSubtitlesRouteImport } from './routes/_public/projects.$projectId.videos.$videoId.subtitles'
 import { Route as PublicProjectsProjectIdVideosVideoIdTimelineRouteImport } from './routes/_public/projects.$projectId.videos.$videoId.timeline'
 import { Route as PublicProjectsProjectIdAuthTeamsTeamIdActivityRouteImport } from './routes/_public/projects.$projectId.auth.teams.$teamId.activity'
 import { Route as PublicProjectsProjectIdAuthTeamsTeamIdMembersRouteImport } from './routes/_public/projects.$projectId.auth.teams.$teamId.members'
@@ -442,6 +450,9 @@ import { Route as PublicProjectsProjectIdSitesSiteIdSettingsGitRouteImport } fro
 import { Route as PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.settings.runtime'
 import { Route as PublicProjectsProjectIdSitesSiteIdUsageCategoryIdRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.usage.$categoryId'
 import { Route as PublicProjectsProjectIdSitesCreateTemplatesTemplateRouteImport } from './routes/_public/projects.$projectId.sites.create.templates.$template'
+import { Route as PublicProjectsProjectIdVideosVideoIdCaptionsIndexRouteImport } from './routes/_public/projects.$projectId.videos.$videoId.captions.index'
+import { Route as PublicProjectsProjectIdVideosVideoIdCaptionsCaptionIdRouteImport } from './routes/_public/projects.$projectId.videos.$videoId.captions.$captionId'
+import { Route as PublicProjectsProjectIdVideosVideoIdCaptionsCreateRouteImport } from './routes/_public/projects.$projectId.videos.$videoId.captions.create'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdOverviewIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.overview.index'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings.index'
@@ -742,6 +753,11 @@ const MarketingHomeRoute = MarketingHomeRouteImport.update({
   path: '/home',
   getParentRoute: () => MarketingRoute,
 } as any)
+const MarketingHome1Route = MarketingHome1RouteImport.update({
+  id: '/home1',
+  path: '/home1',
+  getParentRoute: () => MarketingRoute,
+} as any)
 const MarketingInnovationTeamsRoute =
   MarketingInnovationTeamsRouteImport.update({
     id: '/innovation-teams',
@@ -902,6 +918,11 @@ const LlmsFullTxtRoute = LlmsFullTxtRouteImport.update({
 const LlmsTxtRoute = LlmsTxtRouteImport.update({
   id: '/llms/txt',
   path: '/llms/txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlayerVideoIdRoute = PlayerVideoIdRouteImport.update({
+  id: '/player/$videoId',
+  path: '/player/$videoId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiBlogRssDotxmlRoute = ApiBlogRssDotxmlRouteImport.update({
@@ -1562,6 +1583,12 @@ const PublicProjectsProjectIdMessagingRoute =
     path: '/messaging',
     getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
+const PublicProjectsProjectIdMonitorsRoute =
+  PublicProjectsProjectIdMonitorsRouteImport.update({
+    id: '/monitors',
+    path: '/monitors',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
 const PublicProjectsProjectIdOnboardingRoute =
   PublicProjectsProjectIdOnboardingRouteImport.update({
     id: '/onboarding',
@@ -1674,6 +1701,12 @@ const PublicOrganizationsOrgIdDomainsBuyRoute =
   PublicOrganizationsOrgIdDomainsBuyRouteImport.update({
     id: '/buy',
     path: '/buy',
+    getParentRoute: () => PublicOrganizationsOrgIdDomainsRoute,
+  } as any)
+const PublicOrganizationsOrgIdDomainsContinueRoute =
+  PublicOrganizationsOrgIdDomainsContinueRouteImport.update({
+    id: '/continue',
+    path: '/continue',
     getParentRoute: () => PublicOrganizationsOrgIdDomainsRoute,
   } as any)
 const PublicOrganizationsOrgIdDomainsTransferInRoute =
@@ -1868,6 +1901,18 @@ const PublicProjectsProjectIdMessagingMessageIdRoute =
     path: '/$messageId',
     getParentRoute: () => PublicProjectsProjectIdMessagingRoute,
   } as any)
+const PublicProjectsProjectIdMonitorsIndexRoute =
+  PublicProjectsProjectIdMonitorsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdMonitorsRoute,
+  } as any)
+const PublicProjectsProjectIdMonitorsAlertsRoute =
+  PublicProjectsProjectIdMonitorsAlertsRouteImport.update({
+    id: '/alerts',
+    path: '/alerts',
+    getParentRoute: () => PublicProjectsProjectIdMonitorsRoute,
+  } as any)
 const PublicProjectsProjectIdRealtimeIndexRoute =
   PublicProjectsProjectIdRealtimeIndexRouteImport.update({
     id: '/',
@@ -1902,6 +1947,18 @@ const PublicProjectsProjectIdReviewsReviewIdRoute =
   PublicProjectsProjectIdReviewsReviewIdRouteImport.update({
     id: '/$reviewId',
     path: '/$reviewId',
+    getParentRoute: () => PublicProjectsProjectIdReviewsRoute,
+  } as any)
+const PublicProjectsProjectIdReviewsLearningsRoute =
+  PublicProjectsProjectIdReviewsLearningsRouteImport.update({
+    id: '/learnings',
+    path: '/learnings',
+    getParentRoute: () => PublicProjectsProjectIdReviewsRoute,
+  } as any)
+const PublicProjectsProjectIdReviewsPerformanceRoute =
+  PublicProjectsProjectIdReviewsPerformanceRouteImport.update({
+    id: '/performance',
+    path: '/performance',
     getParentRoute: () => PublicProjectsProjectIdReviewsRoute,
   } as any)
 const PublicProjectsProjectIdReviewsRepositoriesRoute =
@@ -2402,6 +2459,12 @@ const PublicProjectsProjectIdSettingsDomainsAddRoute =
     path: '/add',
     getParentRoute: () => PublicProjectsProjectIdSettingsDomainsRoute,
   } as any)
+const PublicProjectsProjectIdSettingsIdentityServersLdapRoute =
+  PublicProjectsProjectIdSettingsIdentityServersLdapRouteImport.update({
+    id: '/ldap',
+    path: '/ldap',
+    getParentRoute: () => PublicProjectsProjectIdSettingsIdentityServersRoute,
+  } as any)
 const PublicProjectsProjectIdSettingsMigrationsIndexRoute =
   PublicProjectsProjectIdSettingsMigrationsIndexRouteImport.update({
     id: '/',
@@ -2550,12 +2613,6 @@ const PublicProjectsProjectIdVideosVideoIdStreamingRoute =
   PublicProjectsProjectIdVideosVideoIdStreamingRouteImport.update({
     id: '/streaming',
     path: '/streaming',
-    getParentRoute: () => PublicProjectsProjectIdVideosVideoIdRoute,
-  } as any)
-const PublicProjectsProjectIdVideosVideoIdSubtitlesRoute =
-  PublicProjectsProjectIdVideosVideoIdSubtitlesRouteImport.update({
-    id: '/subtitles',
-    path: '/subtitles',
     getParentRoute: () => PublicProjectsProjectIdVideosVideoIdRoute,
   } as any)
 const PublicProjectsProjectIdVideosVideoIdTimelineRoute =
@@ -3014,6 +3071,24 @@ const PublicProjectsProjectIdSitesCreateTemplatesTemplateRoute =
     id: '/templates/$template',
     path: '/templates/$template',
     getParentRoute: () => PublicProjectsProjectIdSitesCreateRoute,
+  } as any)
+const PublicProjectsProjectIdVideosVideoIdCaptionsIndexRoute =
+  PublicProjectsProjectIdVideosVideoIdCaptionsIndexRouteImport.update({
+    id: '/captions/',
+    path: '/captions/',
+    getParentRoute: () => PublicProjectsProjectIdVideosVideoIdRoute,
+  } as any)
+const PublicProjectsProjectIdVideosVideoIdCaptionsCaptionIdRoute =
+  PublicProjectsProjectIdVideosVideoIdCaptionsCaptionIdRouteImport.update({
+    id: '/captions/$captionId',
+    path: '/captions/$captionId',
+    getParentRoute: () => PublicProjectsProjectIdVideosVideoIdRoute,
+  } as any)
+const PublicProjectsProjectIdVideosVideoIdCaptionsCreateRoute =
+  PublicProjectsProjectIdVideosVideoIdCaptionsCreateRouteImport.update({
+    id: '/captions/create',
+    path: '/captions/create',
+    getParentRoute: () => PublicProjectsProjectIdVideosVideoIdRoute,
   } as any)
 const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute =
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRouteImport.update(
@@ -3627,6 +3702,7 @@ export interface FileRoutesByFullPath {
   '/enterprise': typeof MarketingEnterpriseRoute
   '/for-agents': typeof MarketingForAgentsRoute
   '/home': typeof MarketingHomeRoute
+  '/home1': typeof MarketingHome1Route
   '/innovation-teams': typeof MarketingInnovationTeamsRoute
   '/partners': typeof MarketingPartnersRoute
   '/pricing': typeof MarketingPricingRoute
@@ -3657,6 +3733,7 @@ export interface FileRoutesByFullPath {
   '/icons/sprite.svg': typeof IconsSpriteDotsvgRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
+  '/player/$videoId': typeof PlayerVideoIdRoute
   '/docs/': typeof DocsIndexRoute
   '/generator/': typeof GeneratorIndexRoute
   '/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
@@ -3773,6 +3850,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/functions': typeof PublicProjectsProjectIdFunctionsRouteWithChildren
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
+  '/projects/$projectId/monitors': typeof PublicProjectsProjectIdMonitorsRouteWithChildren
   '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
   '/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
   '/projects/$projectId/playground': typeof PublicProjectsProjectIdPlaygroundRoute
@@ -3793,6 +3871,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/apps/$appId': typeof PublicOrganizationsOrgIdAppsAppIdRouteWithChildren
   '/organizations/$orgId/domains/$domainId': typeof PublicOrganizationsOrgIdDomainsDomainIdRouteWithChildren
   '/organizations/$orgId/domains/buy': typeof PublicOrganizationsOrgIdDomainsBuyRoute
+  '/organizations/$orgId/domains/continue': typeof PublicOrganizationsOrgIdDomainsContinueRoute
   '/organizations/$orgId/domains/transfer-in': typeof PublicOrganizationsOrgIdDomainsTransferInRoute
   '/organizations/$orgId/settings/billing': typeof PublicOrganizationsOrgIdSettingsBillingRoute
   '/organizations/$orgId/settings/compliance': typeof PublicOrganizationsOrgIdSettingsComplianceRoute
@@ -3819,14 +3898,17 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/functions/editor': typeof PublicProjectsProjectIdFunctionsEditorRoute
   '/projects/$projectId/functions/templates': typeof PublicProjectsProjectIdFunctionsTemplatesRoute
   '/projects/$projectId/messaging/$messageId': typeof PublicProjectsProjectIdMessagingMessageIdRouteWithChildren
+  '/projects/$projectId/monitors/alerts': typeof PublicProjectsProjectIdMonitorsAlertsRoute
   '/projects/$projectId/realtime/channels': typeof PublicProjectsProjectIdRealtimeChannelsRoute
   '/projects/$projectId/realtime/debugger': typeof PublicProjectsProjectIdRealtimeDebuggerRoute
   '/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
   '/projects/$projectId/reviews/$reviewId': typeof PublicProjectsProjectIdReviewsReviewIdRoute
+  '/projects/$projectId/reviews/learnings': typeof PublicProjectsProjectIdReviewsLearningsRoute
+  '/projects/$projectId/reviews/performance': typeof PublicProjectsProjectIdReviewsPerformanceRoute
   '/projects/$projectId/reviews/repositories': typeof PublicProjectsProjectIdReviewsRepositoriesRoute
   '/projects/$projectId/settings/domains': typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   '/projects/$projectId/settings/firewall': typeof PublicProjectsProjectIdSettingsFirewallRoute
-  '/projects/$projectId/settings/identity-servers': typeof PublicProjectsProjectIdSettingsIdentityServersRoute
+  '/projects/$projectId/settings/identity-servers': typeof PublicProjectsProjectIdSettingsIdentityServersRouteWithChildren
   '/projects/$projectId/settings/migrations': typeof PublicProjectsProjectIdSettingsMigrationsRouteWithChildren
   '/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
   '/projects/$projectId/settings/variables': typeof PublicProjectsProjectIdSettingsVariablesRoute
@@ -3850,6 +3932,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/firewall/': typeof PublicProjectsProjectIdFirewallIndexRoute
   '/projects/$projectId/functions/': typeof PublicProjectsProjectIdFunctionsIndexRoute
   '/projects/$projectId/messaging/': typeof PublicProjectsProjectIdMessagingIndexRoute
+  '/projects/$projectId/monitors/': typeof PublicProjectsProjectIdMonitorsIndexRoute
   '/projects/$projectId/realtime/': typeof PublicProjectsProjectIdRealtimeIndexRoute
   '/projects/$projectId/reviews/': typeof PublicProjectsProjectIdReviewsIndexRoute
   '/projects/$projectId/settings/': typeof PublicProjectsProjectIdSettingsIndexRoute
@@ -3904,6 +3987,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/messaging/providers/create': typeof PublicProjectsProjectIdMessagingProvidersCreateRoute
   '/projects/$projectId/messaging/topics/$topicId': typeof PublicProjectsProjectIdMessagingTopicsTopicIdRouteWithChildren
   '/projects/$projectId/settings/domains/add': typeof PublicProjectsProjectIdSettingsDomainsAddRoute
+  '/projects/$projectId/settings/identity-servers/ldap': typeof PublicProjectsProjectIdSettingsIdentityServersLdapRoute
   '/projects/$projectId/settings/migrations/import': typeof PublicProjectsProjectIdSettingsMigrationsImportRoute
   '/projects/$projectId/sites/$siteId/deployments': typeof PublicProjectsProjectIdSitesSiteIdDeploymentsRouteWithChildren
   '/projects/$projectId/sites/$siteId/domains': typeof PublicProjectsProjectIdSitesSiteIdDomainsRouteWithChildren
@@ -3923,7 +4007,6 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/videos/$videoId/renditions': typeof PublicProjectsProjectIdVideosVideoIdRenditionsRoute
   '/projects/$projectId/videos/$videoId/settings': typeof PublicProjectsProjectIdVideosVideoIdSettingsRoute
   '/projects/$projectId/videos/$videoId/streaming': typeof PublicProjectsProjectIdVideosVideoIdStreamingRoute
-  '/projects/$projectId/videos/$videoId/subtitles': typeof PublicProjectsProjectIdVideosVideoIdSubtitlesRoute
   '/projects/$projectId/videos/$videoId/timeline': typeof PublicProjectsProjectIdVideosVideoIdTimelineRoute
   '/organizations/$orgId/agent/automations/': typeof PublicOrganizationsOrgIdAgentAutomationsIndexRoute
   '/organizations/$orgId/agent/settings/': typeof PublicOrganizationsOrgIdAgentSettingsIndexRoute
@@ -4001,6 +4084,8 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/sites/$siteId/settings/runtime': typeof PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRoute
   '/projects/$projectId/sites/$siteId/usage/$categoryId': typeof PublicProjectsProjectIdSitesSiteIdUsageCategoryIdRoute
   '/projects/$projectId/sites/create/templates/$template': typeof PublicProjectsProjectIdSitesCreateTemplatesTemplateRoute
+  '/projects/$projectId/videos/$videoId/captions/$captionId': typeof PublicProjectsProjectIdVideosVideoIdCaptionsCaptionIdRoute
+  '/projects/$projectId/videos/$videoId/captions/create': typeof PublicProjectsProjectIdVideosVideoIdCaptionsCreateRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRoute
   '/projects/$projectId/databases/mysql/$databaseId/': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute
   '/projects/$projectId/databases/postgres/$databaseId/': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRoute
@@ -4012,6 +4097,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/sites/$siteId/deployments/': typeof PublicProjectsProjectIdSitesSiteIdDeploymentsIndexRoute
   '/projects/$projectId/sites/$siteId/domains/': typeof PublicProjectsProjectIdSitesSiteIdDomainsIndexRoute
   '/projects/$projectId/sites/$siteId/settings/': typeof PublicProjectsProjectIdSitesSiteIdSettingsIndexRoute
+  '/projects/$projectId/videos/$videoId/captions/': typeof PublicProjectsProjectIdVideosVideoIdCaptionsIndexRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRouteWithChildren
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute
@@ -4119,6 +4205,7 @@ export interface FileRoutesByTo {
   '/enterprise': typeof MarketingEnterpriseRoute
   '/for-agents': typeof MarketingForAgentsRoute
   '/home': typeof MarketingHomeRoute
+  '/home1': typeof MarketingHome1Route
   '/innovation-teams': typeof MarketingInnovationTeamsRoute
   '/partners': typeof MarketingPartnersRoute
   '/pricing': typeof MarketingPricingRoute
@@ -4147,6 +4234,7 @@ export interface FileRoutesByTo {
   '/icons/sprite.svg': typeof IconsSpriteDotsvgRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
+  '/player/$videoId': typeof PlayerVideoIdRoute
   '/docs': typeof DocsIndexRoute
   '/generator': typeof GeneratorIndexRoute
   '/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
@@ -4259,6 +4347,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId': typeof PublicProjectsProjectIdIndexRoute
   '/organizations/$orgId/agent/$agentId': typeof PublicOrganizationsOrgIdAgentAgentIdRoute
   '/organizations/$orgId/domains/buy': typeof PublicOrganizationsOrgIdDomainsBuyRoute
+  '/organizations/$orgId/domains/continue': typeof PublicOrganizationsOrgIdDomainsContinueRoute
   '/organizations/$orgId/domains/transfer-in': typeof PublicOrganizationsOrgIdDomainsTransferInRoute
   '/organizations/$orgId/settings/billing': typeof PublicOrganizationsOrgIdSettingsBillingRoute
   '/organizations/$orgId/settings/compliance': typeof PublicOrganizationsOrgIdSettingsComplianceRoute
@@ -4281,13 +4370,16 @@ export interface FileRoutesByTo {
   '/projects/$projectId/firewall/create': typeof PublicProjectsProjectIdFirewallCreateRoute
   '/projects/$projectId/functions/editor': typeof PublicProjectsProjectIdFunctionsEditorRoute
   '/projects/$projectId/functions/templates': typeof PublicProjectsProjectIdFunctionsTemplatesRoute
+  '/projects/$projectId/monitors/alerts': typeof PublicProjectsProjectIdMonitorsAlertsRoute
   '/projects/$projectId/realtime/channels': typeof PublicProjectsProjectIdRealtimeChannelsRoute
   '/projects/$projectId/realtime/debugger': typeof PublicProjectsProjectIdRealtimeDebuggerRoute
   '/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
   '/projects/$projectId/reviews/$reviewId': typeof PublicProjectsProjectIdReviewsReviewIdRoute
+  '/projects/$projectId/reviews/learnings': typeof PublicProjectsProjectIdReviewsLearningsRoute
+  '/projects/$projectId/reviews/performance': typeof PublicProjectsProjectIdReviewsPerformanceRoute
   '/projects/$projectId/reviews/repositories': typeof PublicProjectsProjectIdReviewsRepositoriesRoute
   '/projects/$projectId/settings/firewall': typeof PublicProjectsProjectIdSettingsFirewallRoute
-  '/projects/$projectId/settings/identity-servers': typeof PublicProjectsProjectIdSettingsIdentityServersRoute
+  '/projects/$projectId/settings/identity-servers': typeof PublicProjectsProjectIdSettingsIdentityServersRouteWithChildren
   '/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
   '/projects/$projectId/settings/variables': typeof PublicProjectsProjectIdSettingsVariablesRoute
   '/projects/$projectId/settings/webhooks': typeof PublicProjectsProjectIdSettingsWebhooksRoute
@@ -4306,6 +4398,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/firewall': typeof PublicProjectsProjectIdFirewallIndexRoute
   '/projects/$projectId/functions': typeof PublicProjectsProjectIdFunctionsIndexRoute
   '/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingIndexRoute
+  '/projects/$projectId/monitors': typeof PublicProjectsProjectIdMonitorsIndexRoute
   '/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeIndexRoute
   '/projects/$projectId/reviews': typeof PublicProjectsProjectIdReviewsIndexRoute
   '/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsIndexRoute
@@ -4352,6 +4445,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/messaging/$messageId/settings': typeof PublicProjectsProjectIdMessagingMessageIdSettingsRoute
   '/projects/$projectId/messaging/providers/create': typeof PublicProjectsProjectIdMessagingProvidersCreateRoute
   '/projects/$projectId/settings/domains/add': typeof PublicProjectsProjectIdSettingsDomainsAddRoute
+  '/projects/$projectId/settings/identity-servers/ldap': typeof PublicProjectsProjectIdSettingsIdentityServersLdapRoute
   '/projects/$projectId/settings/migrations/import': typeof PublicProjectsProjectIdSettingsMigrationsImportRoute
   '/projects/$projectId/sites/$siteId/firewall': typeof PublicProjectsProjectIdSitesSiteIdFirewallRoute
   '/projects/$projectId/sites/$siteId/logs': typeof PublicProjectsProjectIdSitesSiteIdLogsRoute
@@ -4368,7 +4462,6 @@ export interface FileRoutesByTo {
   '/projects/$projectId/videos/$videoId/renditions': typeof PublicProjectsProjectIdVideosVideoIdRenditionsRoute
   '/projects/$projectId/videos/$videoId/settings': typeof PublicProjectsProjectIdVideosVideoIdSettingsRoute
   '/projects/$projectId/videos/$videoId/streaming': typeof PublicProjectsProjectIdVideosVideoIdStreamingRoute
-  '/projects/$projectId/videos/$videoId/subtitles': typeof PublicProjectsProjectIdVideosVideoIdSubtitlesRoute
   '/projects/$projectId/videos/$videoId/timeline': typeof PublicProjectsProjectIdVideosVideoIdTimelineRoute
   '/organizations/$orgId/agent/automations': typeof PublicOrganizationsOrgIdAgentAutomationsIndexRoute
   '/organizations/$orgId/agent/settings': typeof PublicOrganizationsOrgIdAgentSettingsIndexRoute
@@ -4442,6 +4535,8 @@ export interface FileRoutesByTo {
   '/projects/$projectId/sites/$siteId/settings/runtime': typeof PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRoute
   '/projects/$projectId/sites/$siteId/usage/$categoryId': typeof PublicProjectsProjectIdSitesSiteIdUsageCategoryIdRoute
   '/projects/$projectId/sites/create/templates/$template': typeof PublicProjectsProjectIdSitesCreateTemplatesTemplateRoute
+  '/projects/$projectId/videos/$videoId/captions/$captionId': typeof PublicProjectsProjectIdVideosVideoIdCaptionsCaptionIdRoute
+  '/projects/$projectId/videos/$videoId/captions/create': typeof PublicProjectsProjectIdVideosVideoIdCaptionsCreateRoute
   '/projects/$projectId/databases/$dbKind/$databaseId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRoute
   '/projects/$projectId/databases/mysql/$databaseId': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute
   '/projects/$projectId/databases/postgres/$databaseId': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRoute
@@ -4453,6 +4548,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/sites/$siteId/deployments': typeof PublicProjectsProjectIdSitesSiteIdDeploymentsIndexRoute
   '/projects/$projectId/sites/$siteId/domains': typeof PublicProjectsProjectIdSitesSiteIdDomainsIndexRoute
   '/projects/$projectId/sites/$siteId/settings': typeof PublicProjectsProjectIdSitesSiteIdSettingsIndexRoute
+  '/projects/$projectId/videos/$videoId/captions': typeof PublicProjectsProjectIdVideosVideoIdCaptionsIndexRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRoute
@@ -4564,6 +4660,7 @@ export interface FileRoutesById {
   '/_marketing/enterprise': typeof MarketingEnterpriseRoute
   '/_marketing/for-agents': typeof MarketingForAgentsRoute
   '/_marketing/home': typeof MarketingHomeRoute
+  '/_marketing/home1': typeof MarketingHome1Route
   '/_marketing/innovation-teams': typeof MarketingInnovationTeamsRoute
   '/_marketing/partners': typeof MarketingPartnersRoute
   '/_marketing/pricing': typeof MarketingPricingRoute
@@ -4594,6 +4691,7 @@ export interface FileRoutesById {
   '/icons/sprite.svg': typeof IconsSpriteDotsvgRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
+  '/player/$videoId': typeof PlayerVideoIdRoute
   '/_marketing/': typeof MarketingIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/generator/': typeof GeneratorIndexRoute
@@ -4711,6 +4809,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/functions': typeof PublicProjectsProjectIdFunctionsRouteWithChildren
   '/_public/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/_public/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
+  '/_public/projects/$projectId/monitors': typeof PublicProjectsProjectIdMonitorsRouteWithChildren
   '/_public/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
   '/_public/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
   '/_public/projects/$projectId/playground': typeof PublicProjectsProjectIdPlaygroundRoute
@@ -4731,6 +4830,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/apps/$appId': typeof PublicOrganizationsOrgIdAppsAppIdRouteWithChildren
   '/_public/organizations/$orgId/domains/$domainId': typeof PublicOrganizationsOrgIdDomainsDomainIdRouteWithChildren
   '/_public/organizations/$orgId/domains/buy': typeof PublicOrganizationsOrgIdDomainsBuyRoute
+  '/_public/organizations/$orgId/domains/continue': typeof PublicOrganizationsOrgIdDomainsContinueRoute
   '/_public/organizations/$orgId/domains/transfer-in': typeof PublicOrganizationsOrgIdDomainsTransferInRoute
   '/_public/organizations/$orgId/settings/billing': typeof PublicOrganizationsOrgIdSettingsBillingRoute
   '/_public/organizations/$orgId/settings/compliance': typeof PublicOrganizationsOrgIdSettingsComplianceRoute
@@ -4757,14 +4857,17 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/functions/editor': typeof PublicProjectsProjectIdFunctionsEditorRoute
   '/_public/projects/$projectId/functions/templates': typeof PublicProjectsProjectIdFunctionsTemplatesRoute
   '/_public/projects/$projectId/messaging/$messageId': typeof PublicProjectsProjectIdMessagingMessageIdRouteWithChildren
+  '/_public/projects/$projectId/monitors/alerts': typeof PublicProjectsProjectIdMonitorsAlertsRoute
   '/_public/projects/$projectId/realtime/channels': typeof PublicProjectsProjectIdRealtimeChannelsRoute
   '/_public/projects/$projectId/realtime/debugger': typeof PublicProjectsProjectIdRealtimeDebuggerRoute
   '/_public/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
   '/_public/projects/$projectId/reviews/$reviewId': typeof PublicProjectsProjectIdReviewsReviewIdRoute
+  '/_public/projects/$projectId/reviews/learnings': typeof PublicProjectsProjectIdReviewsLearningsRoute
+  '/_public/projects/$projectId/reviews/performance': typeof PublicProjectsProjectIdReviewsPerformanceRoute
   '/_public/projects/$projectId/reviews/repositories': typeof PublicProjectsProjectIdReviewsRepositoriesRoute
   '/_public/projects/$projectId/settings/domains': typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   '/_public/projects/$projectId/settings/firewall': typeof PublicProjectsProjectIdSettingsFirewallRoute
-  '/_public/projects/$projectId/settings/identity-servers': typeof PublicProjectsProjectIdSettingsIdentityServersRoute
+  '/_public/projects/$projectId/settings/identity-servers': typeof PublicProjectsProjectIdSettingsIdentityServersRouteWithChildren
   '/_public/projects/$projectId/settings/migrations': typeof PublicProjectsProjectIdSettingsMigrationsRouteWithChildren
   '/_public/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
   '/_public/projects/$projectId/settings/variables': typeof PublicProjectsProjectIdSettingsVariablesRoute
@@ -4788,6 +4891,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/firewall/': typeof PublicProjectsProjectIdFirewallIndexRoute
   '/_public/projects/$projectId/functions/': typeof PublicProjectsProjectIdFunctionsIndexRoute
   '/_public/projects/$projectId/messaging/': typeof PublicProjectsProjectIdMessagingIndexRoute
+  '/_public/projects/$projectId/monitors/': typeof PublicProjectsProjectIdMonitorsIndexRoute
   '/_public/projects/$projectId/realtime/': typeof PublicProjectsProjectIdRealtimeIndexRoute
   '/_public/projects/$projectId/reviews/': typeof PublicProjectsProjectIdReviewsIndexRoute
   '/_public/projects/$projectId/settings/': typeof PublicProjectsProjectIdSettingsIndexRoute
@@ -4842,6 +4946,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/messaging/providers/create': typeof PublicProjectsProjectIdMessagingProvidersCreateRoute
   '/_public/projects/$projectId/messaging/topics/$topicId': typeof PublicProjectsProjectIdMessagingTopicsTopicIdRouteWithChildren
   '/_public/projects/$projectId/settings/domains/add': typeof PublicProjectsProjectIdSettingsDomainsAddRoute
+  '/_public/projects/$projectId/settings/identity-servers/ldap': typeof PublicProjectsProjectIdSettingsIdentityServersLdapRoute
   '/_public/projects/$projectId/settings/migrations/import': typeof PublicProjectsProjectIdSettingsMigrationsImportRoute
   '/_public/projects/$projectId/sites/$siteId/deployments': typeof PublicProjectsProjectIdSitesSiteIdDeploymentsRouteWithChildren
   '/_public/projects/$projectId/sites/$siteId/domains': typeof PublicProjectsProjectIdSitesSiteIdDomainsRouteWithChildren
@@ -4861,7 +4966,6 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/videos/$videoId/renditions': typeof PublicProjectsProjectIdVideosVideoIdRenditionsRoute
   '/_public/projects/$projectId/videos/$videoId/settings': typeof PublicProjectsProjectIdVideosVideoIdSettingsRoute
   '/_public/projects/$projectId/videos/$videoId/streaming': typeof PublicProjectsProjectIdVideosVideoIdStreamingRoute
-  '/_public/projects/$projectId/videos/$videoId/subtitles': typeof PublicProjectsProjectIdVideosVideoIdSubtitlesRoute
   '/_public/projects/$projectId/videos/$videoId/timeline': typeof PublicProjectsProjectIdVideosVideoIdTimelineRoute
   '/_public/organizations/$orgId/agent/automations/': typeof PublicOrganizationsOrgIdAgentAutomationsIndexRoute
   '/_public/organizations/$orgId/agent/settings/': typeof PublicOrganizationsOrgIdAgentSettingsIndexRoute
@@ -4939,6 +5043,8 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/sites/$siteId/settings/runtime': typeof PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRoute
   '/_public/projects/$projectId/sites/$siteId/usage/$categoryId': typeof PublicProjectsProjectIdSitesSiteIdUsageCategoryIdRoute
   '/_public/projects/$projectId/sites/create/templates/$template': typeof PublicProjectsProjectIdSitesCreateTemplatesTemplateRoute
+  '/_public/projects/$projectId/videos/$videoId/captions/$captionId': typeof PublicProjectsProjectIdVideosVideoIdCaptionsCaptionIdRoute
+  '/_public/projects/$projectId/videos/$videoId/captions/create': typeof PublicProjectsProjectIdVideosVideoIdCaptionsCreateRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRoute
   '/_public/projects/$projectId/databases/mysql/$databaseId/': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdIndexRoute
@@ -4950,6 +5056,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/sites/$siteId/deployments/': typeof PublicProjectsProjectIdSitesSiteIdDeploymentsIndexRoute
   '/_public/projects/$projectId/sites/$siteId/domains/': typeof PublicProjectsProjectIdSitesSiteIdDomainsIndexRoute
   '/_public/projects/$projectId/sites/$siteId/settings/': typeof PublicProjectsProjectIdSitesSiteIdSettingsIndexRoute
+  '/_public/projects/$projectId/videos/$videoId/captions/': typeof PublicProjectsProjectIdVideosVideoIdCaptionsIndexRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRouteWithChildren
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/replication': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute
@@ -5061,6 +5168,7 @@ export interface FileRouteTypes {
     | '/enterprise'
     | '/for-agents'
     | '/home'
+    | '/home1'
     | '/innovation-teams'
     | '/partners'
     | '/pricing'
@@ -5091,6 +5199,7 @@ export interface FileRouteTypes {
     | '/icons/sprite.svg'
     | '/llms-full/txt'
     | '/llms/txt'
+    | '/player/$videoId'
     | '/docs/'
     | '/generator/'
     | '/blog/rss.xml'
@@ -5207,6 +5316,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/functions'
     | '/projects/$projectId/imagine'
     | '/projects/$projectId/messaging'
+    | '/projects/$projectId/monitors'
     | '/projects/$projectId/onboarding'
     | '/projects/$projectId/overview'
     | '/projects/$projectId/playground'
@@ -5227,6 +5337,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/apps/$appId'
     | '/organizations/$orgId/domains/$domainId'
     | '/organizations/$orgId/domains/buy'
+    | '/organizations/$orgId/domains/continue'
     | '/organizations/$orgId/domains/transfer-in'
     | '/organizations/$orgId/settings/billing'
     | '/organizations/$orgId/settings/compliance'
@@ -5253,10 +5364,13 @@ export interface FileRouteTypes {
     | '/projects/$projectId/functions/editor'
     | '/projects/$projectId/functions/templates'
     | '/projects/$projectId/messaging/$messageId'
+    | '/projects/$projectId/monitors/alerts'
     | '/projects/$projectId/realtime/channels'
     | '/projects/$projectId/realtime/debugger'
     | '/projects/$projectId/realtime/messages'
     | '/projects/$projectId/reviews/$reviewId'
+    | '/projects/$projectId/reviews/learnings'
+    | '/projects/$projectId/reviews/performance'
     | '/projects/$projectId/reviews/repositories'
     | '/projects/$projectId/settings/domains'
     | '/projects/$projectId/settings/firewall'
@@ -5284,6 +5398,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/firewall/'
     | '/projects/$projectId/functions/'
     | '/projects/$projectId/messaging/'
+    | '/projects/$projectId/monitors/'
     | '/projects/$projectId/realtime/'
     | '/projects/$projectId/reviews/'
     | '/projects/$projectId/settings/'
@@ -5338,6 +5453,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/messaging/providers/create'
     | '/projects/$projectId/messaging/topics/$topicId'
     | '/projects/$projectId/settings/domains/add'
+    | '/projects/$projectId/settings/identity-servers/ldap'
     | '/projects/$projectId/settings/migrations/import'
     | '/projects/$projectId/sites/$siteId/deployments'
     | '/projects/$projectId/sites/$siteId/domains'
@@ -5357,7 +5473,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/videos/$videoId/renditions'
     | '/projects/$projectId/videos/$videoId/settings'
     | '/projects/$projectId/videos/$videoId/streaming'
-    | '/projects/$projectId/videos/$videoId/subtitles'
     | '/projects/$projectId/videos/$videoId/timeline'
     | '/organizations/$orgId/agent/automations/'
     | '/organizations/$orgId/agent/settings/'
@@ -5435,6 +5550,8 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/$siteId/settings/runtime'
     | '/projects/$projectId/sites/$siteId/usage/$categoryId'
     | '/projects/$projectId/sites/create/templates/$template'
+    | '/projects/$projectId/videos/$videoId/captions/$captionId'
+    | '/projects/$projectId/videos/$videoId/captions/create'
     | '/projects/$projectId/databases/$dbKind/$databaseId/'
     | '/projects/$projectId/databases/mysql/$databaseId/'
     | '/projects/$projectId/databases/postgres/$databaseId/'
@@ -5446,6 +5563,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/$siteId/deployments/'
     | '/projects/$projectId/sites/$siteId/domains/'
     | '/projects/$projectId/sites/$siteId/settings/'
+    | '/projects/$projectId/videos/$videoId/captions/'
     | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/security'
@@ -5553,6 +5671,7 @@ export interface FileRouteTypes {
     | '/enterprise'
     | '/for-agents'
     | '/home'
+    | '/home1'
     | '/innovation-teams'
     | '/partners'
     | '/pricing'
@@ -5581,6 +5700,7 @@ export interface FileRouteTypes {
     | '/icons/sprite.svg'
     | '/llms-full/txt'
     | '/llms/txt'
+    | '/player/$videoId'
     | '/docs'
     | '/generator'
     | '/blog/rss.xml'
@@ -5693,6 +5813,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId'
     | '/organizations/$orgId/agent/$agentId'
     | '/organizations/$orgId/domains/buy'
+    | '/organizations/$orgId/domains/continue'
     | '/organizations/$orgId/domains/transfer-in'
     | '/organizations/$orgId/settings/billing'
     | '/organizations/$orgId/settings/compliance'
@@ -5715,10 +5836,13 @@ export interface FileRouteTypes {
     | '/projects/$projectId/firewall/create'
     | '/projects/$projectId/functions/editor'
     | '/projects/$projectId/functions/templates'
+    | '/projects/$projectId/monitors/alerts'
     | '/projects/$projectId/realtime/channels'
     | '/projects/$projectId/realtime/debugger'
     | '/projects/$projectId/realtime/messages'
     | '/projects/$projectId/reviews/$reviewId'
+    | '/projects/$projectId/reviews/learnings'
+    | '/projects/$projectId/reviews/performance'
     | '/projects/$projectId/reviews/repositories'
     | '/projects/$projectId/settings/firewall'
     | '/projects/$projectId/settings/identity-servers'
@@ -5740,6 +5864,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/firewall'
     | '/projects/$projectId/functions'
     | '/projects/$projectId/messaging'
+    | '/projects/$projectId/monitors'
     | '/projects/$projectId/realtime'
     | '/projects/$projectId/reviews'
     | '/projects/$projectId/settings'
@@ -5786,6 +5911,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/messaging/$messageId/settings'
     | '/projects/$projectId/messaging/providers/create'
     | '/projects/$projectId/settings/domains/add'
+    | '/projects/$projectId/settings/identity-servers/ldap'
     | '/projects/$projectId/settings/migrations/import'
     | '/projects/$projectId/sites/$siteId/firewall'
     | '/projects/$projectId/sites/$siteId/logs'
@@ -5802,7 +5928,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/videos/$videoId/renditions'
     | '/projects/$projectId/videos/$videoId/settings'
     | '/projects/$projectId/videos/$videoId/streaming'
-    | '/projects/$projectId/videos/$videoId/subtitles'
     | '/projects/$projectId/videos/$videoId/timeline'
     | '/organizations/$orgId/agent/automations'
     | '/organizations/$orgId/agent/settings'
@@ -5876,6 +6001,8 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/$siteId/settings/runtime'
     | '/projects/$projectId/sites/$siteId/usage/$categoryId'
     | '/projects/$projectId/sites/create/templates/$template'
+    | '/projects/$projectId/videos/$videoId/captions/$captionId'
+    | '/projects/$projectId/videos/$videoId/captions/create'
     | '/projects/$projectId/databases/$dbKind/$databaseId'
     | '/projects/$projectId/databases/mysql/$databaseId'
     | '/projects/$projectId/databases/postgres/$databaseId'
@@ -5887,6 +6014,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/$siteId/deployments'
     | '/projects/$projectId/sites/$siteId/domains'
     | '/projects/$projectId/sites/$siteId/settings'
+    | '/projects/$projectId/videos/$videoId/captions'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/security'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification'
@@ -5997,6 +6125,7 @@ export interface FileRouteTypes {
     | '/_marketing/enterprise'
     | '/_marketing/for-agents'
     | '/_marketing/home'
+    | '/_marketing/home1'
     | '/_marketing/innovation-teams'
     | '/_marketing/partners'
     | '/_marketing/pricing'
@@ -6027,6 +6156,7 @@ export interface FileRouteTypes {
     | '/icons/sprite.svg'
     | '/llms-full/txt'
     | '/llms/txt'
+    | '/player/$videoId'
     | '/_marketing/'
     | '/docs/'
     | '/generator/'
@@ -6144,6 +6274,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/functions'
     | '/_public/projects/$projectId/imagine'
     | '/_public/projects/$projectId/messaging'
+    | '/_public/projects/$projectId/monitors'
     | '/_public/projects/$projectId/onboarding'
     | '/_public/projects/$projectId/overview'
     | '/_public/projects/$projectId/playground'
@@ -6164,6 +6295,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/apps/$appId'
     | '/_public/organizations/$orgId/domains/$domainId'
     | '/_public/organizations/$orgId/domains/buy'
+    | '/_public/organizations/$orgId/domains/continue'
     | '/_public/organizations/$orgId/domains/transfer-in'
     | '/_public/organizations/$orgId/settings/billing'
     | '/_public/organizations/$orgId/settings/compliance'
@@ -6190,10 +6322,13 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/functions/editor'
     | '/_public/projects/$projectId/functions/templates'
     | '/_public/projects/$projectId/messaging/$messageId'
+    | '/_public/projects/$projectId/monitors/alerts'
     | '/_public/projects/$projectId/realtime/channels'
     | '/_public/projects/$projectId/realtime/debugger'
     | '/_public/projects/$projectId/realtime/messages'
     | '/_public/projects/$projectId/reviews/$reviewId'
+    | '/_public/projects/$projectId/reviews/learnings'
+    | '/_public/projects/$projectId/reviews/performance'
     | '/_public/projects/$projectId/reviews/repositories'
     | '/_public/projects/$projectId/settings/domains'
     | '/_public/projects/$projectId/settings/firewall'
@@ -6221,6 +6356,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/firewall/'
     | '/_public/projects/$projectId/functions/'
     | '/_public/projects/$projectId/messaging/'
+    | '/_public/projects/$projectId/monitors/'
     | '/_public/projects/$projectId/realtime/'
     | '/_public/projects/$projectId/reviews/'
     | '/_public/projects/$projectId/settings/'
@@ -6275,6 +6411,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/messaging/providers/create'
     | '/_public/projects/$projectId/messaging/topics/$topicId'
     | '/_public/projects/$projectId/settings/domains/add'
+    | '/_public/projects/$projectId/settings/identity-servers/ldap'
     | '/_public/projects/$projectId/settings/migrations/import'
     | '/_public/projects/$projectId/sites/$siteId/deployments'
     | '/_public/projects/$projectId/sites/$siteId/domains'
@@ -6294,7 +6431,6 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/videos/$videoId/renditions'
     | '/_public/projects/$projectId/videos/$videoId/settings'
     | '/_public/projects/$projectId/videos/$videoId/streaming'
-    | '/_public/projects/$projectId/videos/$videoId/subtitles'
     | '/_public/projects/$projectId/videos/$videoId/timeline'
     | '/_public/organizations/$orgId/agent/automations/'
     | '/_public/organizations/$orgId/agent/settings/'
@@ -6372,6 +6508,8 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/sites/$siteId/settings/runtime'
     | '/_public/projects/$projectId/sites/$siteId/usage/$categoryId'
     | '/_public/projects/$projectId/sites/create/templates/$template'
+    | '/_public/projects/$projectId/videos/$videoId/captions/$captionId'
+    | '/_public/projects/$projectId/videos/$videoId/captions/create'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/'
     | '/_public/projects/$projectId/databases/mysql/$databaseId/'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/'
@@ -6383,6 +6521,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/sites/$siteId/deployments/'
     | '/_public/projects/$projectId/sites/$siteId/domains/'
     | '/_public/projects/$projectId/sites/$siteId/settings/'
+    | '/_public/projects/$projectId/videos/$videoId/captions/'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/replication'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/security'
@@ -6485,6 +6624,7 @@ export interface RootRouteChildren {
   IconsSpriteDotsvgRoute: typeof IconsSpriteDotsvgRoute
   LlmsFullTxtRoute: typeof LlmsFullTxtRoute
   LlmsTxtRoute: typeof LlmsTxtRoute
+  PlayerVideoIdRoute: typeof PlayerVideoIdRoute
   ApiBlogRssDotxmlRoute: typeof ApiBlogRssDotxmlRoute
   ApiChangelogRssDotxmlRoute: typeof ApiChangelogRssDotxmlRoute
   ApiDebugIpRoute: typeof ApiDebugIpRoute
@@ -6843,6 +6983,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketingHomeRouteImport
       parentRoute: typeof MarketingRoute
     }
+    '/_marketing/home1': {
+      id: '/_marketing/home1'
+      path: '/home1'
+      fullPath: '/home1'
+      preLoaderRoute: typeof MarketingHome1RouteImport
+      parentRoute: typeof MarketingRoute
+    }
     '/_marketing/innovation-teams': {
       id: '/_marketing/innovation-teams'
       path: '/innovation-teams'
@@ -7065,6 +7212,13 @@ declare module '@tanstack/react-router' {
       path: '/llms/txt'
       fullPath: '/llms/txt'
       preLoaderRoute: typeof LlmsTxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/player/$videoId': {
+      id: '/player/$videoId'
+      path: '/player/$videoId'
+      fullPath: '/player/$videoId'
+      preLoaderRoute: typeof PlayerVideoIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_api/blog/rss.xml': {
@@ -7893,6 +8047,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdMessagingRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
+    '/_public/projects/$projectId/monitors': {
+      id: '/_public/projects/$projectId/monitors'
+      path: '/monitors'
+      fullPath: '/projects/$projectId/monitors'
+      preLoaderRoute: typeof PublicProjectsProjectIdMonitorsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
     '/_public/projects/$projectId/onboarding': {
       id: '/_public/projects/$projectId/onboarding'
       path: '/onboarding'
@@ -8024,6 +8185,13 @@ declare module '@tanstack/react-router' {
       path: '/buy'
       fullPath: '/organizations/$orgId/domains/buy'
       preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsBuyRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdDomainsRoute
+    }
+    '/_public/organizations/$orgId/domains/continue': {
+      id: '/_public/organizations/$orgId/domains/continue'
+      path: '/continue'
+      fullPath: '/organizations/$orgId/domains/continue'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsContinueRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdDomainsRoute
     }
     '/_public/organizations/$orgId/domains/transfer-in': {
@@ -8250,6 +8418,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdMessagingMessageIdRouteImport
       parentRoute: typeof PublicProjectsProjectIdMessagingRoute
     }
+    '/_public/projects/$projectId/monitors/': {
+      id: '/_public/projects/$projectId/monitors/'
+      path: '/'
+      fullPath: '/projects/$projectId/monitors/'
+      preLoaderRoute: typeof PublicProjectsProjectIdMonitorsIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdMonitorsRoute
+    }
+    '/_public/projects/$projectId/monitors/alerts': {
+      id: '/_public/projects/$projectId/monitors/alerts'
+      path: '/alerts'
+      fullPath: '/projects/$projectId/monitors/alerts'
+      preLoaderRoute: typeof PublicProjectsProjectIdMonitorsAlertsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdMonitorsRoute
+    }
     '/_public/projects/$projectId/realtime/': {
       id: '/_public/projects/$projectId/realtime/'
       path: '/'
@@ -8290,6 +8472,20 @@ declare module '@tanstack/react-router' {
       path: '/$reviewId'
       fullPath: '/projects/$projectId/reviews/$reviewId'
       preLoaderRoute: typeof PublicProjectsProjectIdReviewsReviewIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdReviewsRoute
+    }
+    '/_public/projects/$projectId/reviews/learnings': {
+      id: '/_public/projects/$projectId/reviews/learnings'
+      path: '/learnings'
+      fullPath: '/projects/$projectId/reviews/learnings'
+      preLoaderRoute: typeof PublicProjectsProjectIdReviewsLearningsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdReviewsRoute
+    }
+    '/_public/projects/$projectId/reviews/performance': {
+      id: '/_public/projects/$projectId/reviews/performance'
+      path: '/performance'
+      fullPath: '/projects/$projectId/reviews/performance'
+      preLoaderRoute: typeof PublicProjectsProjectIdReviewsPerformanceRouteImport
       parentRoute: typeof PublicProjectsProjectIdReviewsRoute
     }
     '/_public/projects/$projectId/reviews/repositories': {
@@ -8873,6 +9069,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdSettingsDomainsAddRouteImport
       parentRoute: typeof PublicProjectsProjectIdSettingsDomainsRoute
     }
+    '/_public/projects/$projectId/settings/identity-servers/ldap': {
+      id: '/_public/projects/$projectId/settings/identity-servers/ldap'
+      path: '/ldap'
+      fullPath: '/projects/$projectId/settings/identity-servers/ldap'
+      preLoaderRoute: typeof PublicProjectsProjectIdSettingsIdentityServersLdapRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSettingsIdentityServersRoute
+    }
     '/_public/projects/$projectId/settings/migrations/': {
       id: '/_public/projects/$projectId/settings/migrations/'
       path: '/'
@@ -9046,13 +9249,6 @@ declare module '@tanstack/react-router' {
       path: '/streaming'
       fullPath: '/projects/$projectId/videos/$videoId/streaming'
       preLoaderRoute: typeof PublicProjectsProjectIdVideosVideoIdStreamingRouteImport
-      parentRoute: typeof PublicProjectsProjectIdVideosVideoIdRoute
-    }
-    '/_public/projects/$projectId/videos/$videoId/subtitles': {
-      id: '/_public/projects/$projectId/videos/$videoId/subtitles'
-      path: '/subtitles'
-      fullPath: '/projects/$projectId/videos/$videoId/subtitles'
-      preLoaderRoute: typeof PublicProjectsProjectIdVideosVideoIdSubtitlesRouteImport
       parentRoute: typeof PublicProjectsProjectIdVideosVideoIdRoute
     }
     '/_public/projects/$projectId/videos/$videoId/timeline': {
@@ -9537,6 +9733,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$projectId/sites/create/templates/$template'
       preLoaderRoute: typeof PublicProjectsProjectIdSitesCreateTemplatesTemplateRouteImport
       parentRoute: typeof PublicProjectsProjectIdSitesCreateRoute
+    }
+    '/_public/projects/$projectId/videos/$videoId/captions/': {
+      id: '/_public/projects/$projectId/videos/$videoId/captions/'
+      path: '/captions'
+      fullPath: '/projects/$projectId/videos/$videoId/captions/'
+      preLoaderRoute: typeof PublicProjectsProjectIdVideosVideoIdCaptionsIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdVideosVideoIdRoute
+    }
+    '/_public/projects/$projectId/videos/$videoId/captions/$captionId': {
+      id: '/_public/projects/$projectId/videos/$videoId/captions/$captionId'
+      path: '/captions/$captionId'
+      fullPath: '/projects/$projectId/videos/$videoId/captions/$captionId'
+      preLoaderRoute: typeof PublicProjectsProjectIdVideosVideoIdCaptionsCaptionIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdVideosVideoIdRoute
+    }
+    '/_public/projects/$projectId/videos/$videoId/captions/create': {
+      id: '/_public/projects/$projectId/videos/$videoId/captions/create'
+      path: '/captions/create'
+      fullPath: '/projects/$projectId/videos/$videoId/captions/create'
+      preLoaderRoute: typeof PublicProjectsProjectIdVideosVideoIdCaptionsCreateRouteImport
+      parentRoute: typeof PublicProjectsProjectIdVideosVideoIdRoute
     }
     '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId': {
       id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId'
@@ -10035,6 +10252,7 @@ interface MarketingRouteChildren {
   MarketingEnterpriseRoute: typeof MarketingEnterpriseRoute
   MarketingForAgentsRoute: typeof MarketingForAgentsRoute
   MarketingHomeRoute: typeof MarketingHomeRoute
+  MarketingHome1Route: typeof MarketingHome1Route
   MarketingInnovationTeamsRoute: typeof MarketingInnovationTeamsRoute
   MarketingPartnersRoute: typeof MarketingPartnersRoute
   MarketingPricingRoute: typeof MarketingPricingRoute
@@ -10073,6 +10291,7 @@ const MarketingRouteChildren: MarketingRouteChildren = {
   MarketingEnterpriseRoute: MarketingEnterpriseRoute,
   MarketingForAgentsRoute: MarketingForAgentsRoute,
   MarketingHomeRoute: MarketingHomeRoute,
+  MarketingHome1Route: MarketingHome1Route,
   MarketingInnovationTeamsRoute: MarketingInnovationTeamsRoute,
   MarketingPartnersRoute: MarketingPartnersRoute,
   MarketingPricingRoute: MarketingPricingRoute,
@@ -10348,6 +10567,7 @@ const PublicOrganizationsOrgIdDomainsDomainIdRouteWithChildren =
 interface PublicOrganizationsOrgIdDomainsRouteChildren {
   PublicOrganizationsOrgIdDomainsDomainIdRoute: typeof PublicOrganizationsOrgIdDomainsDomainIdRouteWithChildren
   PublicOrganizationsOrgIdDomainsBuyRoute: typeof PublicOrganizationsOrgIdDomainsBuyRoute
+  PublicOrganizationsOrgIdDomainsContinueRoute: typeof PublicOrganizationsOrgIdDomainsContinueRoute
   PublicOrganizationsOrgIdDomainsTransferInRoute: typeof PublicOrganizationsOrgIdDomainsTransferInRoute
   PublicOrganizationsOrgIdDomainsIndexRoute: typeof PublicOrganizationsOrgIdDomainsIndexRoute
 }
@@ -10358,6 +10578,8 @@ const PublicOrganizationsOrgIdDomainsRouteChildren: PublicOrganizationsOrgIdDoma
       PublicOrganizationsOrgIdDomainsDomainIdRouteWithChildren,
     PublicOrganizationsOrgIdDomainsBuyRoute:
       PublicOrganizationsOrgIdDomainsBuyRoute,
+    PublicOrganizationsOrgIdDomainsContinueRoute:
+      PublicOrganizationsOrgIdDomainsContinueRoute,
     PublicOrganizationsOrgIdDomainsTransferInRoute:
       PublicOrganizationsOrgIdDomainsTransferInRoute,
     PublicOrganizationsOrgIdDomainsIndexRoute:
@@ -11393,6 +11615,24 @@ const PublicProjectsProjectIdMessagingRouteWithChildren =
     PublicProjectsProjectIdMessagingRouteChildren,
   )
 
+interface PublicProjectsProjectIdMonitorsRouteChildren {
+  PublicProjectsProjectIdMonitorsAlertsRoute: typeof PublicProjectsProjectIdMonitorsAlertsRoute
+  PublicProjectsProjectIdMonitorsIndexRoute: typeof PublicProjectsProjectIdMonitorsIndexRoute
+}
+
+const PublicProjectsProjectIdMonitorsRouteChildren: PublicProjectsProjectIdMonitorsRouteChildren =
+  {
+    PublicProjectsProjectIdMonitorsAlertsRoute:
+      PublicProjectsProjectIdMonitorsAlertsRoute,
+    PublicProjectsProjectIdMonitorsIndexRoute:
+      PublicProjectsProjectIdMonitorsIndexRoute,
+  }
+
+const PublicProjectsProjectIdMonitorsRouteWithChildren =
+  PublicProjectsProjectIdMonitorsRoute._addFileChildren(
+    PublicProjectsProjectIdMonitorsRouteChildren,
+  )
+
 interface PublicProjectsProjectIdRealtimeRouteChildren {
   PublicProjectsProjectIdRealtimeChannelsRoute: typeof PublicProjectsProjectIdRealtimeChannelsRoute
   PublicProjectsProjectIdRealtimeDebuggerRoute: typeof PublicProjectsProjectIdRealtimeDebuggerRoute
@@ -11419,6 +11659,8 @@ const PublicProjectsProjectIdRealtimeRouteWithChildren =
 
 interface PublicProjectsProjectIdReviewsRouteChildren {
   PublicProjectsProjectIdReviewsReviewIdRoute: typeof PublicProjectsProjectIdReviewsReviewIdRoute
+  PublicProjectsProjectIdReviewsLearningsRoute: typeof PublicProjectsProjectIdReviewsLearningsRoute
+  PublicProjectsProjectIdReviewsPerformanceRoute: typeof PublicProjectsProjectIdReviewsPerformanceRoute
   PublicProjectsProjectIdReviewsRepositoriesRoute: typeof PublicProjectsProjectIdReviewsRepositoriesRoute
   PublicProjectsProjectIdReviewsIndexRoute: typeof PublicProjectsProjectIdReviewsIndexRoute
 }
@@ -11427,6 +11669,10 @@ const PublicProjectsProjectIdReviewsRouteChildren: PublicProjectsProjectIdReview
   {
     PublicProjectsProjectIdReviewsReviewIdRoute:
       PublicProjectsProjectIdReviewsReviewIdRoute,
+    PublicProjectsProjectIdReviewsLearningsRoute:
+      PublicProjectsProjectIdReviewsLearningsRoute,
+    PublicProjectsProjectIdReviewsPerformanceRoute:
+      PublicProjectsProjectIdReviewsPerformanceRoute,
     PublicProjectsProjectIdReviewsRepositoriesRoute:
       PublicProjectsProjectIdReviewsRepositoriesRoute,
     PublicProjectsProjectIdReviewsIndexRoute:
@@ -11456,6 +11702,21 @@ const PublicProjectsProjectIdSettingsDomainsRouteWithChildren =
     PublicProjectsProjectIdSettingsDomainsRouteChildren,
   )
 
+interface PublicProjectsProjectIdSettingsIdentityServersRouteChildren {
+  PublicProjectsProjectIdSettingsIdentityServersLdapRoute: typeof PublicProjectsProjectIdSettingsIdentityServersLdapRoute
+}
+
+const PublicProjectsProjectIdSettingsIdentityServersRouteChildren: PublicProjectsProjectIdSettingsIdentityServersRouteChildren =
+  {
+    PublicProjectsProjectIdSettingsIdentityServersLdapRoute:
+      PublicProjectsProjectIdSettingsIdentityServersLdapRoute,
+  }
+
+const PublicProjectsProjectIdSettingsIdentityServersRouteWithChildren =
+  PublicProjectsProjectIdSettingsIdentityServersRoute._addFileChildren(
+    PublicProjectsProjectIdSettingsIdentityServersRouteChildren,
+  )
+
 interface PublicProjectsProjectIdSettingsMigrationsRouteChildren {
   PublicProjectsProjectIdSettingsMigrationsImportRoute: typeof PublicProjectsProjectIdSettingsMigrationsImportRoute
   PublicProjectsProjectIdSettingsMigrationsIndexRoute: typeof PublicProjectsProjectIdSettingsMigrationsIndexRoute
@@ -11477,7 +11738,7 @@ const PublicProjectsProjectIdSettingsMigrationsRouteWithChildren =
 interface PublicProjectsProjectIdSettingsRouteChildren {
   PublicProjectsProjectIdSettingsDomainsRoute: typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   PublicProjectsProjectIdSettingsFirewallRoute: typeof PublicProjectsProjectIdSettingsFirewallRoute
-  PublicProjectsProjectIdSettingsIdentityServersRoute: typeof PublicProjectsProjectIdSettingsIdentityServersRoute
+  PublicProjectsProjectIdSettingsIdentityServersRoute: typeof PublicProjectsProjectIdSettingsIdentityServersRouteWithChildren
   PublicProjectsProjectIdSettingsMigrationsRoute: typeof PublicProjectsProjectIdSettingsMigrationsRouteWithChildren
   PublicProjectsProjectIdSettingsSmtpRoute: typeof PublicProjectsProjectIdSettingsSmtpRoute
   PublicProjectsProjectIdSettingsVariablesRoute: typeof PublicProjectsProjectIdSettingsVariablesRoute
@@ -11492,7 +11753,7 @@ const PublicProjectsProjectIdSettingsRouteChildren: PublicProjectsProjectIdSetti
     PublicProjectsProjectIdSettingsFirewallRoute:
       PublicProjectsProjectIdSettingsFirewallRoute,
     PublicProjectsProjectIdSettingsIdentityServersRoute:
-      PublicProjectsProjectIdSettingsIdentityServersRoute,
+      PublicProjectsProjectIdSettingsIdentityServersRouteWithChildren,
     PublicProjectsProjectIdSettingsMigrationsRoute:
       PublicProjectsProjectIdSettingsMigrationsRouteWithChildren,
     PublicProjectsProjectIdSettingsSmtpRoute:
@@ -11611,9 +11872,11 @@ interface PublicProjectsProjectIdVideosVideoIdRouteChildren {
   PublicProjectsProjectIdVideosVideoIdRenditionsRoute: typeof PublicProjectsProjectIdVideosVideoIdRenditionsRoute
   PublicProjectsProjectIdVideosVideoIdSettingsRoute: typeof PublicProjectsProjectIdVideosVideoIdSettingsRoute
   PublicProjectsProjectIdVideosVideoIdStreamingRoute: typeof PublicProjectsProjectIdVideosVideoIdStreamingRoute
-  PublicProjectsProjectIdVideosVideoIdSubtitlesRoute: typeof PublicProjectsProjectIdVideosVideoIdSubtitlesRoute
   PublicProjectsProjectIdVideosVideoIdTimelineRoute: typeof PublicProjectsProjectIdVideosVideoIdTimelineRoute
   PublicProjectsProjectIdVideosVideoIdIndexRoute: typeof PublicProjectsProjectIdVideosVideoIdIndexRoute
+  PublicProjectsProjectIdVideosVideoIdCaptionsCaptionIdRoute: typeof PublicProjectsProjectIdVideosVideoIdCaptionsCaptionIdRoute
+  PublicProjectsProjectIdVideosVideoIdCaptionsCreateRoute: typeof PublicProjectsProjectIdVideosVideoIdCaptionsCreateRoute
+  PublicProjectsProjectIdVideosVideoIdCaptionsIndexRoute: typeof PublicProjectsProjectIdVideosVideoIdCaptionsIndexRoute
 }
 
 const PublicProjectsProjectIdVideosVideoIdRouteChildren: PublicProjectsProjectIdVideosVideoIdRouteChildren =
@@ -11626,12 +11889,16 @@ const PublicProjectsProjectIdVideosVideoIdRouteChildren: PublicProjectsProjectId
       PublicProjectsProjectIdVideosVideoIdSettingsRoute,
     PublicProjectsProjectIdVideosVideoIdStreamingRoute:
       PublicProjectsProjectIdVideosVideoIdStreamingRoute,
-    PublicProjectsProjectIdVideosVideoIdSubtitlesRoute:
-      PublicProjectsProjectIdVideosVideoIdSubtitlesRoute,
     PublicProjectsProjectIdVideosVideoIdTimelineRoute:
       PublicProjectsProjectIdVideosVideoIdTimelineRoute,
     PublicProjectsProjectIdVideosVideoIdIndexRoute:
       PublicProjectsProjectIdVideosVideoIdIndexRoute,
+    PublicProjectsProjectIdVideosVideoIdCaptionsCaptionIdRoute:
+      PublicProjectsProjectIdVideosVideoIdCaptionsCaptionIdRoute,
+    PublicProjectsProjectIdVideosVideoIdCaptionsCreateRoute:
+      PublicProjectsProjectIdVideosVideoIdCaptionsCreateRoute,
+    PublicProjectsProjectIdVideosVideoIdCaptionsIndexRoute:
+      PublicProjectsProjectIdVideosVideoIdCaptionsIndexRoute,
   }
 
 const PublicProjectsProjectIdVideosVideoIdRouteWithChildren =
@@ -11836,6 +12103,7 @@ interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdFunctionsRoute: typeof PublicProjectsProjectIdFunctionsRouteWithChildren
   PublicProjectsProjectIdImagineRoute: typeof PublicProjectsProjectIdImagineRoute
   PublicProjectsProjectIdMessagingRoute: typeof PublicProjectsProjectIdMessagingRouteWithChildren
+  PublicProjectsProjectIdMonitorsRoute: typeof PublicProjectsProjectIdMonitorsRouteWithChildren
   PublicProjectsProjectIdOnboardingRoute: typeof PublicProjectsProjectIdOnboardingRoute
   PublicProjectsProjectIdOverviewRoute: typeof PublicProjectsProjectIdOverviewRoute
   PublicProjectsProjectIdPlaygroundRoute: typeof PublicProjectsProjectIdPlaygroundRoute
@@ -11875,6 +12143,8 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
     PublicProjectsProjectIdImagineRoute: PublicProjectsProjectIdImagineRoute,
     PublicProjectsProjectIdMessagingRoute:
       PublicProjectsProjectIdMessagingRouteWithChildren,
+    PublicProjectsProjectIdMonitorsRoute:
+      PublicProjectsProjectIdMonitorsRouteWithChildren,
     PublicProjectsProjectIdOnboardingRoute:
       PublicProjectsProjectIdOnboardingRoute,
     PublicProjectsProjectIdOverviewRoute: PublicProjectsProjectIdOverviewRoute,
@@ -12095,6 +12365,7 @@ const rootRouteChildren: RootRouteChildren = {
   IconsSpriteDotsvgRoute: IconsSpriteDotsvgRoute,
   LlmsFullTxtRoute: LlmsFullTxtRoute,
   LlmsTxtRoute: LlmsTxtRoute,
+  PlayerVideoIdRoute: PlayerVideoIdRoute,
   ApiBlogRssDotxmlRoute: ApiBlogRssDotxmlRoute,
   ApiChangelogRssDotxmlRoute: ApiChangelogRssDotxmlRoute,
   ApiDebugIpRoute: ApiDebugIpRoute,

@@ -427,6 +427,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Remember your password?': 'זוכרים את הסיסמה?',
   'Requested resources': 'משאבים מבוקשים',
   'Resend verification email': 'שליחה חוזרת של אימייל האימות',
+  'Resend email in {seconds}s': 'שליחה חוזרת בעוד {seconds} שניות',
   'Reset password': 'איפוס סיסמה',
   'Reset your password': 'איפוס הסיסמה שלכם',
   'Send recovery link': 'שליחת קישור שחזור',

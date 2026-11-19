@@ -110,6 +110,7 @@ export const enCatalog = {
         github: 'GitHub',
         x: 'X',
         youtube: 'YouTube',
+        youtubeChannels: 'YouTube channels',
         linkedIn: 'LinkedIn',
         instagram: 'Instagram',
         discord: 'Discord',
@@ -195,6 +196,7 @@ export const enCatalog = {
           vsPlanetScale: 'Appwrite vs. PlanetScale', // pragma: allowlist secret
           vsPostHog: 'Appwrite vs. PostHog', // pragma: allowlist secret
           vsPlausible: 'Appwrite vs. Plausible', // pragma: allowlist secret
+          vsMux: 'Appwrite vs. Mux', // pragma: allowlist secret
           nextjsHosting: 'Next.js hosting',
           reactHosting: 'React hosting',
           vueHosting: 'Vue.js hosting',
@@ -228,6 +230,7 @@ export const enCatalog = {
         activity: 'Activity',
         logs: 'Logs',
         usage: 'Usage',
+        monitors: 'Monitors',
         analytics: 'Analytics',
         errors: 'Errors',
         advisor: 'Advisor',
@@ -285,7 +288,7 @@ export const enCatalog = {
       heroTitleLineOne: 'The open-source cloud for',
       heroTitleLineTwo: 'agents & devs',
       heroDescriptionLineOne:
-        'Appwrite is an MCP & agent-first, OSS platform for building and scaling apps at the speed of thought.', // pragma: allowlist secret
+        'Appwrite is an MCP & agent-first, cloud platform for building and scaling apps at the speed of thought.', // pragma: allowlist secret
       heroDescriptionLineTwo:
         'Give your agents Auth, DBs, Storage, Functions, Messaging, Realtime, and Hosting - all in one place.',
       heroPreviewWorkspace: 'Appwrite', // pragma: allowlist secret
@@ -387,6 +390,7 @@ export const enCatalog = {
         storage: 'Storage',
         functions: 'Functions',
         messaging: 'Messaging',
+        videos: 'Videos',
         realtime: 'Realtime',
         sites: 'Sites',
         analytics: 'Analytics',
@@ -415,6 +419,7 @@ export const enCatalog = {
           storageTagline: 'Upload, transform, and deliver files on CDN.',
           functionsTagline: 'APIs, cron jobs, and event handlers at scale.',
           messagingTagline: 'Email, SMS, and push with topics and targets.',
+          videosTagline: 'Adaptive HLS, DASH, and CMAF streams with subtitles.',
           sitesTagline: 'Static, SSR, and CSR deploys from Git.',
           realtimeName: 'Realtime',
           realtimeTagline: 'Live events, channels, and presence.',

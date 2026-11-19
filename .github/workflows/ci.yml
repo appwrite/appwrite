@@ -177,9 +177,9 @@ jobs:
             uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
             with:
               path: .phpstan-cache
-              key: phpstan-${{ github.sha }}
+              key: phpstan-${{ github.workspace }}-${{ github.sha }}
               restore-keys: |
-                phpstan-
+                phpstan-${{ github.workspace }}-
 
       - parallel:
           - name: Audit dependencies
@@ -206,10 +206,6 @@ jobs:
           - name: Run PHPStan
             if: ${{ !cancelled() && steps.install.outcome == 'success' }}
             run: composer analyze -- --no-progress
-
-          - name: Generate specs
-            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-            run: _APP_STORAGE_LIMIT=5368709120 php app/cli.php specs --version=latest --git=no
 
   locale:
     name: Checks / Locale
@@ -325,6 +321,7 @@ jobs:
       || 'ubuntu-24.04' }}
     outputs:
       matrix: ${{ steps.changed.outputs.matrix }}
+      extension: ${{ steps.changed.outputs.extension }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -371,7 +368,7 @@ jobs:
             fi
           fi
           CHANGED=$(echo "$CHANGED" | tr ' ' '\n' | sort -u \
-            | while read -r package; do [ -d "packages/$package" ] && echo "$package"; done)
+            | while read -r package; do if [ -d "packages/$package" ]; then echo "$package"; fi; done)
 
           # docs-only change: no packages to test
           if [ -z "$CHANGED" ]; then
@@ -397,12 +394,85 @@ jobs:
               done
             } | jq --compact-output --slurp 'unique'
           )
+          # Classes only the utopia extension provides (the validators, Domain, Email, ...): a
+          # package that requires ext-utopia, or runs linked to one, loads the extension, built once
+          # for every package job by `Packages / Extension`. A registry-resolved dependent keeps the
+          # PHP classes of the releases it resolves.
+          # image is left out: its tests decode AVIF and HEIC with the system's libheif, so they run
+          # in the Extension job, against the libheif Appwrite ships, and are skipped here.
+          NATIVE=$(grep -l '"ext-utopia"' packages/*/composer.json | cut -d/ -f2 | grep -vx image | jq -R . | jq -cs .)
+          DEPENDENTS=$(bin/monorepo dependents $(echo "$NATIVE" | jq -r '.[]') | jq -R . | jq -cs .)
+          MATRIX=$(echo "$MATRIX" | jq -c --argjson native "$NATIVE" --argjson dependents "$DEPENDENTS" \
+            'map(. + {extension: ((.package | IN($native[])) or (.linked and (.package | IN($dependents[]))))})')
           echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+          echo "extension=$(echo "$MATRIX" | jq 'any(.extension)')" >> "$GITHUB_OUTPUT"
+
+  package-extension:
+    name: Packages / Extension
+    needs: packages
+    if: needs.packages.outputs.extension == 'true'
+    # The same runner as the package jobs, so the extension links against the libc and the PHP
+    # they load it into.
+    runs-on: >-
+      ${{ (github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name == github.repository)
+      && format('gcrunner={0}-package-extension/runner=standard', github.run_id)
+      || 'ubuntu-24.04' }}
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: '8.5'
+          coverage: none
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang libclang-dev libheif-dev pkg-config
+
+      - name: Cache Cargo
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: package-extension-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}-${{ hashFiles('crates/**') }}
+          restore-keys: |
+            package-extension-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}-
+
+      - name: Install Rust
+        run: |
+          # The package runners have no Rust; GitHub's ubuntu-24.04 has rustup.
+          if ! command -v rustup > /dev/null; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none
+            export PATH="$HOME/.cargo/bin:$PATH"
+            echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          fi
+          rustup toolchain install 1.97.1 --profile minimal
+
+      - name: Build the extension
+        run: cargo +1.97.1 build --release --locked -p utopia-extension
+
+      - name: Upload the extension
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: utopia-extension
+          path: target/release/libutopia.so
+          retention-days: 1
 
   package:
     name: Packages / ${{ matrix.package }}
-    needs: packages
-    if: needs.packages.outputs.matrix != '[]'
+    needs: [packages, package-extension]
+    if: >-
+      !cancelled() && needs.packages.result == 'success' && needs.packages.outputs.matrix != '[]'
+      && needs.package-extension.result != 'failure'
     runs-on: >-
       ${{ (github.event_name != 'pull_request'
       || github.event.pull_request.head.repo.full_name == github.repository)
@@ -424,7 +494,8 @@ jobs:
       - name: Read package extensions
         id: meta
         run: |
-          EXTENSIONS=$(jq -r '[(.require, ."require-dev", .suggest | select(. != null)) | keys[] | select(startswith("ext-")) | ltrimstr("ext-")] | unique | join(", ")' "packages/$PACKAGE/composer.json")
+          # ext-utopia is built in this repository and loaded below, not installed by setup-php.
+          EXTENSIONS=$(jq -r '[(.require, ."require-dev", .suggest | select(. != null)) | keys[] | select(startswith("ext-")) | ltrimstr("ext-") | select(. != "utopia")] | unique | join(", ")' "packages/$PACKAGE/composer.json")
           echo "extensions=$EXTENSIONS" >> "$GITHUB_OUTPUT"
 
       - name: Setup PHP
@@ -435,6 +506,25 @@ jobs:
           tools: composer:v2
           coverage: none
 
+      - name: Download the utopia extension
+        if: matrix.extension
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: utopia-extension
+          path: ${{ runner.temp }}/utopia
+
+      - name: Load the utopia extension
+        if: matrix.extension
+        env:
+          LIBRARY: ${{ runner.temp }}/utopia/libutopia.so
+        run: |
+          if ldd "$LIBRARY" | grep -q 'not found'; then
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends libheif1
+          fi
+          echo "extension=$LIBRARY" | sudo tee "$(php -r 'echo PHP_CONFIG_FILE_SCAN_DIR;')/99-utopia.ini"
+          php --ri utopia > /dev/null
+
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --ignore-platform-reqs
 
@@ -442,7 +532,21 @@ jobs:
         run: bin/monorepo check "$PACKAGE" $LINKED
 
       - name: Test package${{ matrix.linked && ' (linked)' || '' }}
+        if: env.PACKAGE != 'http' || !matrix.linked
         run: bin/monorepo test "$PACKAGE" $LINKED
+
+      # http's e2e servers run in its own test images (Dockerfile.swoole, Dockerfile.fpm), which
+      # copy vendor/ and have no utopia extension: linked, vendor/ holds packages/validators,
+      # whose classes only the extension provides. So its unit tier runs linked, on the
+      # extension, and its e2e tier registry-resolved, on the validators' last PHP release,
+      # until those images carry the extension.
+      - name: Test package (linked, unit)
+        if: env.PACKAGE == 'http' && matrix.linked
+        run: bin/monorepo test "$PACKAGE" --linked --tier=unit
+
+      - name: Test package (e2e)
+        if: env.PACKAGE == 'http' && matrix.linked
+        run: bin/monorepo test "$PACKAGE" --tier=e2e
 
   extension:
     name: Extension
@@ -595,6 +699,11 @@ jobs:
       - name: Run Package Tests
         timeout-minutes: 15
         run: docker compose exec appwrite test --testsuite packages
+
+      # In the image: booting Appwrite needs the utopia extension (Utopia\Locale\Locale).
+      - name: Generate specs
+        timeout-minutes: 10
+        run: docker compose exec -T -e _APP_STORAGE_LIMIT=5368709120 appwrite specs --version=latest --git=no
 
   e2e_general:
     name: Tests / E2E / General
@@ -815,7 +924,8 @@ jobs:
         run: |
           ./dev/openldap/certs.sh
           docker compose up -d --wait openldap
-          docker compose --profile openldap-seed run --rm openldap-seed
+          # --profile would replace COMPOSE_PROFILES and drop the lane's database service
+          COMPOSE_PROFILES="${COMPOSE_PROFILES:+$COMPOSE_PROFILES,}openldap-seed" docker compose run --rm openldap-seed
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
@@ -1264,6 +1374,7 @@ jobs:
       - workflows
       - static-rules
       - packages
+      - package-extension
       - package
       - extension
       - build

@@ -24,9 +24,14 @@ import {
   useCreateFunctionDomainRule,
   useProjectFunction,
   useProject,
+  useProjectDomain,
   useVerifyDomain,
   useDeleteDomain,
 } from '@/lib/react-query/hooks'
+import {
+  DomainPlanLimitNotice,
+  useNewApexPlanLimit,
+} from '@/components/pages/projects/$projectId/shared/NewApexPlanLimit'
 import {
   domainFieldError,
   ensureApexDomainInOrganization,
@@ -57,6 +62,11 @@ export function AddDomainWizard() {
   const deleteMutation = useDeleteDomain(projectId, project?.region)
 
   const [domain, setDomain] = useState('')
+  const { blocked: apexPlanBlocked, limit: domainsLimit } = useNewApexPlanLimit(
+    project?.teamId,
+    domain,
+    project?.region,
+  )
   const [verificationError, setVerificationError] =
     useState<DomainVerificationError | null>(null)
   const [behaviour, setBehaviour] = useState<'active' | 'branch' | 'redirect'>(
@@ -70,6 +80,12 @@ export function AddDomainWizard() {
   const [submitError, setSubmitError] = useState('')
   const domainError = domainFieldError(domain, domainTouched, t) || submitError
   const [rule, setRule] = useState<Models.ProxyRule | null>(null)
+  // A verify, failed or not, saves the checked records on the stored rule.
+  const { rule: liveRule } = useProjectDomain(
+    projectId,
+    project?.region,
+    rule?.$id,
+  )
   // Set while the create waits for the domain's ownership TXT record
   const [claimDomain, setClaimDomain] = useState<string | null>(null)
   const [claimReason, setClaimReason] = useState<DomainClaimReason>('pointed')
@@ -143,6 +159,7 @@ export function AddDomainWizard() {
         return
       }
     }
+    if (apexPlanBlocked) return
 
     setRegistering(true)
     try {
@@ -152,7 +169,9 @@ export function AddDomainWizard() {
     } catch (err: unknown) {
       const e = err as { type?: string }
       if (e?.type !== 'domain_already_exists') {
-        toast.error(getErrorMessage(err, 'Failed to register domain'))
+        const message = getErrorMessage(err, 'Failed to register domain')
+        setSubmitError(message)
+        toast.error(message)
         return
       }
     } finally {
@@ -248,7 +267,7 @@ export function AddDomainWizard() {
         }
       >
         <VerifyDomainContent
-          rule={rule}
+          rule={liveRule ?? rule}
           region={project?.region}
           resourceType="function"
           verificationError={verificationError}
@@ -318,7 +337,7 @@ export function AddDomainWizard() {
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={isPending || !isValidDomain(domain)}
+            disabled={isPending || !isValidDomain(domain) || apexPlanBlocked}
           >
             {t('Add')}
           </Button>
@@ -368,6 +387,12 @@ export function AddDomainWizard() {
             />
             {domainError ? (
               <p className="text-[11px] text-destructive mt-1">{domainError}</p>
+            ) : null}
+            {apexPlanBlocked ? (
+              <DomainPlanLimitNotice
+                orgId={project?.teamId}
+                limit={domainsLimit}
+              />
             ) : null}
           </div>
         </div>

@@ -28,6 +28,8 @@ type DatabaseSidebarTableSearchProps = {
   sortTooltip?: string
   sortDisabled?: boolean
   sortMenu: ReactNode
+  /** Renders in the trailing icon row (e.g. FiltersPopover with triggerVariant="icon"). */
+  filterTrigger?: ReactNode
   className?: string
 }
 
@@ -44,6 +46,7 @@ export function DatabaseSidebarTableSearch({
   sortTooltip,
   sortDisabled = false,
   sortMenu,
+  filterTrigger,
   className,
 }: DatabaseSidebarTableSearchProps) {
   const t = useT()
@@ -52,7 +55,14 @@ export function DatabaseSidebarTableSearch({
   const resolvedSortTooltip = sortTooltip ?? sortAriaLabel
   const resolvedRefreshLabel = t('Refresh')
   const hasClearButton = value.length > 0
-  const trailingActionCount = 2 + (hasClearButton ? 1 : 0)
+  const trailingActionCount =
+    2 + (hasClearButton ? 1 : 0) + (filterTrigger ? 1 : 0)
+  const inputEndPaddingClass =
+    trailingActionCount === 2
+      ? 'pe-[3.25rem]'
+      : trailingActionCount === 3
+        ? 'pe-[4.5rem]'
+        : 'pe-[5.75rem]'
 
   return (
     <div className={cn('relative min-w-0 flex-1', className)}>
@@ -62,15 +72,13 @@ export function DatabaseSidebarTableSearch({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className={cn(
-          'h-8 ps-8 text-[13px]',
-          trailingActionCount === 3 ? 'pe-[4.5rem]' : 'pe-[3.25rem]',
-        )}
+        className={cn('h-8 ps-8 text-[13px]', inputEndPaddingClass)}
         aria-label={resolvedAriaLabel}
         disabled={disabled}
       />
       <div className="absolute end-0.5 top-1/2 flex -translate-y-1/2 items-center">
         <TooltipProvider delayDuration={0}>
+          {filterTrigger}
           {hasClearButton ? (
             <Tooltip>
               <TooltipTrigger asChild>

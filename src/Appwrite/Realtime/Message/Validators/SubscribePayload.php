@@ -74,6 +74,12 @@ class SubscribePayload extends Validator
                 $this->description = 'queries must contain at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries.';
                 return false;
             }
+            foreach ($payload['queries'] ?? [] as $query) {
+                if (!\is_string($query)) {
+                    $this->description = 'queries must contain only strings.';
+                    return false;
+                }
+            }
         }
 
         return true;

@@ -205,6 +205,7 @@ export function GitRepositoryCard({
           installationId: selectedInstallationId,
           providerRepositoryId: selectedRepositoryId,
           providerBranch,
+          providerSilentMode: false,
         }),
       )
     },
@@ -230,7 +231,7 @@ export function GitRepositoryCard({
       return await projectSdk.sites.update(
         buildSiteUpdateParams(site, {
           installationId: undefined,
-          providerRepositoryId: undefined,
+          providerRepositoryId: '',
           providerBranch: undefined,
           providerSilentMode: undefined,
           providerRootDirectory: undefined,

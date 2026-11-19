@@ -131,6 +131,11 @@ async function mockAppwriteApi(
         body: JSON.stringify(body),
       })
 
+    if (apiPath === '/sites' && request.method() === 'GET')
+      return json(200, { total: 0, sites: [] })
+    if (apiPath === '/users') return json(200, { total: 0, users: [] })
+    if (apiPath === `/organizations/${ORGANIZATION.$id}/plan`)
+      return json(200, { $id: 'tier-0', name: 'Free', order: 0 })
     if (apiPath === '/sites' && request.method() === 'POST') {
       creates.push(request)
       return json(201, {
@@ -185,12 +190,16 @@ async function mockAppwriteApi(
     if (apiPath === '/console/plans') return json(200, { total: 0, plans: [] })
     if (apiPath === `/projects/${PROJECT_ID}/stages`)
       return json(200, { total: 0, stages: [] })
-    if (apiPath === '/console/variables') return json(200, {})
+    if (apiPath === '/console/variables')
+      return json(200, { _APP_VCS_PROVIDERS: ['github'] })
     if (
       apiPath === '/console/scopes/project' ||
       apiPath === `/organizations/${ORGANIZATION.$id}/roles`
     )
-      return json(200, { roles: ['owner'], scopes: ['projects.read'] })
+      return json(200, {
+        roles: ['owner'],
+        scopes: ['projects.read', 'sites.read', 'sites.write', 'users.read'],
+      })
     if (apiPath === '/organizations' || apiPath === '/teams')
       return json(200, { total: 1, teams: [ORGANIZATION] })
     if (
@@ -252,9 +261,18 @@ test.describe('site template scopes (mocked API)', () => {
     page,
   }) => {
     const creates = await mockAppwriteApi(page, SCOPES)
+    let catalogRequests = 0
+    page.on('request', (request) => {
+      if (
+        request.method() === 'GET' &&
+        new URL(request.url()).pathname === '/v1/sites/templates'
+      )
+        catalogRequests++
+    })
     await openTemplate(page)
 
     await expect(scopesHeading(page)).toBeVisible()
+    expect(catalogRequests).toBe(0)
     for (const scope of SCOPES) {
       await expect(page.getByText(scope, { exact: true })).toBeVisible()
     }
@@ -276,4 +294,82 @@ test.describe('site template scopes (mocked API)', () => {
     await expect.poll(() => creates.length).toBe(1)
     expect(creates[0].postDataJSON()).not.toHaveProperty('scopes')
   })
+})
+
+async function sitesLinkFromAuth(page: Page) {
+  await page.goto(`/projects/${PROJECT_ID}/auth/users`)
+  const sites = page
+    .locator(`a[href="/projects/${PROJECT_ID}/sites"]:visible`)
+    .first()
+  await expect(sites).toBeVisible()
+  await expect(page.locator('[data-fullscreen-loader]')).toHaveCount(0)
+  return sites
+}
+
+test('shows the first site actions while Git installations are pending', async ({
+  page,
+}) => {
+  await useProfile(page)
+  await mockAppwriteApi(page, [])
+  const sites = await sitesLinkFromAuth(page)
+
+  let release!: () => void
+  const pending = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  await page.route('**/vcs/installations*', async (route) => {
+    if (route.request().method() !== 'GET') return route.fallback()
+    await pending
+    return route.fulfill({
+      headers: corsHeaders(route),
+      json: {
+        total: 1,
+        installations: [{ $id: 'demo-installation', provider: 'github' }],
+      },
+    })
+  })
+  try {
+    await sites.click()
+    await expect(
+      page.getByRole('button', { name: 'Create site', exact: true }).last(),
+    ).toBeEnabled()
+    await expect(page.getByText('React starter', { exact: true })).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: 'Connect GitHub' }),
+    ).toBeDisabled()
+  } finally {
+    release()
+  }
+  await expect(
+    page.getByRole('link', { name: 'Connect GitHub' }),
+  ).toHaveAttribute('href', `/projects/${PROJECT_ID}/sites/create`)
+})
+
+test('opens the creation wizard while the template catalog is pending', async ({
+  page,
+}) => {
+  await useProfile(page)
+  await mockAppwriteApi(page, [])
+  const sites = await sitesLinkFromAuth(page)
+  let release!: () => void
+  const pending = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  await page.route('**/sites/templates?*', async (route) => {
+    if (route.request().method() === 'GET') await pending
+    await route.fallback()
+  })
+  try {
+    await sites.click()
+    await page
+      .getByRole('button', { name: 'Create site', exact: true })
+      .last()
+      .click()
+    await expect(
+      page.getByRole('link', { name: 'Upload your website manually' }),
+    ).toBeVisible()
+  } finally {
+    release()
+  }
+  await expect(page.getByText('React starter', { exact: true })).toBeVisible()
 })

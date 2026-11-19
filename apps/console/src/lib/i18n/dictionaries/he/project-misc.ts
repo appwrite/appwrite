@@ -1062,13 +1062,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Tracking disabled': 'המעקב הושבת',
   'Browser versions': 'גרסאות דפדפן',
   'OS versions': 'גרסאות מערכת הפעלה',
-  'Versions': 'גרסאות',
+  Versions: 'גרסאות',
   'Browser version': 'גרסת דפדפן',
   'OS version': 'גרסת מערכת הפעלה',
-  'Identified users, ranked by visitors':
-    'משתמשים מזוהים, לפי מספר המבקרים',
-  'No identified users in this range':
-    'אין משתמשים מזוהים בטווח הזה',
+  'Identified users, ranked by visitors': 'משתמשים מזוהים, לפי מספר המבקרים',
+  'No identified users in this range': 'אין משתמשים מזוהים בטווח הזה',
   'Event properties': 'מאפייני אירועים',
   'Models and tools': 'מודלים וכלים',
   'Calls by model and by tool': 'קריאות לפי מודל ולפי כלי',
@@ -2690,7 +2688,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Shared with all Functions and Sites in this project.':
     'משותפים לכל הפונקציות והאתרים בפרויקט הזה.',
   'Showing first': 'מוצגות',
-  Since: 'מכיוון ש-',
   'Some PostgreSQL features are not migrated. OAuth users and functions are not migrated automatically.':
     'חלק מהיכולות של PostgreSQL אינן מועברות. משתמשי OAuth ופונקציות אינם מועברים אוטומטית.',
   'Some entities failed to migrate. Check status counts above.':
@@ -2742,7 +2739,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'כאשר במהלך הייבוא נמצאת שורה עם מזהה קיים.',
   'When enabled, all emails will be sent through your configured SMTP server.':
     'כאשר האפשרות מופעלת, כל האימיילים יישלחו דרך שרת ה-SMTP שהגדרתם.',
-  'an A or AAAA record': 'רשומת A או AAAA',
   'and all its databases, functions, and files? This action cannot be undone.':
     'ואת כל מסדי הנתונים, הפונקציות והקבצים שלו? לא ניתן לבטל פעולה זו.',
   characters: 'תווים',
@@ -2759,14 +2755,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'have been enabled.': 'הופעלו.',
   here: 'כאן',
   installations: 'התקנות',
-  // pragma: allowlist secret
-  "instead. If you're using Cloudflare or another CDN, make sure the proxy is disabled (set to DNS only) for this record, since Appwrite serves your domain through its own CDN.":
-    'במקום זאת. אם אתם משתמשים ב-Cloudflare או ב-CDN אחר, ודאו שהפרוקסי מושבת (מוגדר כ-DNS only) עבור הרשומה הזו, כי Appwrite מגיש את הדומיין שלכם דרך ה-CDN שלו.', // pragma: allowlist secret
-  "is an apex domain, CNAME record is only supported by certain providers. If yours doesn't, please verify using":
-    'הוא דומיין שורש (apex), ורשומת CNAME נתמכת רק אצל ספקים מסוימים. אם הספק שלכם לא תומך בכך, אמתו באמצעות',
   item: 'פריט',
   'key for the API key.': 'בתור מפתח ה-API.',
-  nameservers: 'שרתי שמות',
   'protocol has been disabled': 'הושבת',
   'protocol has been enabled': 'הופעל',
   recipient: 'נמען',
@@ -3400,6 +3390,26 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'environments per project.': 'סביבות לכל פרויקט.',
   'Delete an environment to create another.':
     'מחקו סביבה כדי ליצור סביבה אחרת.',
+  // Environments for a plan without them: examples in the switcher and the upgrade they open
+  'Add an environment': 'הוספת סביבה',
+  'Test before you release': 'בדקו לפני השחרור',
+  'Share work in progress': 'שתפו עבודה בתהליך',
+  'Break things freely': 'שברו דברים בלי חשש',
+  'Try changes before your users do': 'נסו שינויים לפני המשתמשים שלכם',
+  'An environment is a separate copy of your project, with its own resources and users.':
+    'סביבה היא עותק נפרד של הפרויקט שלכם, עם משאבים ומשתמשים משלה.',
+  '{plan} includes up to {limit} environments per project.':
+    'תוכנית {plan} כוללת עד {limit} סביבות לכל פרויקט.',
+  'Start from a copy of production': 'התחילו מעותק של פרודקשן',
+  'Copy databases, functions and settings. Bringing data is optional.':
+    'העתיקו מסדי נתונים, פונקציות והגדרות. העתקת הנתונים היא אופציונלית.',
+  'Keep production untouched': 'השאירו את פרודקשן ללא שינוי',
+  'Each environment has its own data, files and users.':
+    'לכל סביבה יש נתונים, קבצים ומשתמשים משלה.',
+  'Switch with one line': 'מעבר בשורת קוד אחת',
+  'Same project ID and endpoint. Set the environment ID in your SDK.':
+    'אותו מזהה פרויקט ואותה נקודת קצה. הגדירו את מזהה הסביבה ב-SDK שלכם.',
+  'Upgrade to {plan}': 'שדרוג ל-{plan}',
   // Settings of an environment: its name, its ID, and deleting it
   'Environment name has been updated': 'שם הסביבה עודכן',
   'Failed to update environment name': 'עדכון שם הסביבה נכשל',
@@ -3731,7 +3741,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Greater than': 'גדול מ-',
   'Greater than or equal': 'גדול או שווה ל-',
   'Inbound bandwidth': 'תעבורה נכנסת',
-  'Know when usage crosses a line': 'דעו מתי השימוש חוצה את הגבול',
+  'Know when something needs attention': 'דעו מתי משהו דורש תשומת לב',
   'Last value': 'ערך אחרון',
   'Less than': 'קטן מ-',
   'Less than or equal': 'קטן או שווה ל-',
@@ -3827,8 +3837,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   '{percent}% of {budget}': '{percent}% מתוך {budget}',
   'Managed by budget': 'מנוהל לפי התקציב',
   'Last sent': 'נשלח לאחרונה',
-  'A monitor raises an alert when its rules hold, and resolves it when usage recovers.':
-    'מוניטור מעלה התראה כשהכללים שלו מתקיימים, וסוגר אותה כשהשימוש חוזר לשגרה.',
   Alert: 'התראה',
   'Alert not found': 'ההתראה לא נמצאה',
   'Budget monitors': 'מוניטורים של תקציב',
@@ -3853,8 +3861,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Monitor has been updated': 'המוניטור עודכן',
   'Monitor not found': 'המוניטור לא נמצא',
   Monitors: 'מוניטורים',
-  'Monitors watch your project usage and notify you when a metric crosses the threshold you set.':
-    'מוניטורים עוקבים אחר השימוש בפרויקט ומתריעים כשמדד חוצה את הסף שהגדרתם.',
+  'Monitors watch your project usage and your endpoints, and notify you when a metric crosses your threshold or a check fails.':
+    'מוניטורים עוקבים אחר השימוש בפרויקט ואחר נקודות הקצה שלכם, ומתריעים כשמדד חוצה את הסף שהגדרתם או כשבדיקה נכשלת.',
   'No alerts yet': 'אין עדיין התראות',
   Ongoing: 'מתמשך',
   Peak: 'שיא',
@@ -3874,8 +3882,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Acknowledged with an API key': 'אושר באמצעות מפתח API',
   'Failed to acknowledge the alert': 'אישור הטיפול בהתראה נכשל',
   'Failed to undo the acknowledgement': 'ביטול אישור הטיפול נכשל',
-  'Let your team know someone is on it. It keeps firing until usage recovers.':
-    'כך הצוות יודע שמישהו מטפל בזה. ההתראה תמשיך לפעול עד שהשימוש יחזור לשגרה.',
+  'Let your team know someone is on it. It keeps firing until its monitor recovers.':
+    'כך הצוות יודע שמישהו מטפל בזה. ההתראה תמשיך לפעול עד שהמוניטור יחזור לשגרה.',
   'Nobody has acknowledged this alert': 'אף אחד עדיין לא אישר טיפול בהתראה הזו',
   "You don't have permission to manage monitors.":
     'אין לכם הרשאה לנהל מוניטורים.',
@@ -4004,38 +4012,53 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Auto-deploy on every push': 'פריסה אוטומטית בכל push',
   // Identity servers (LDAP)
   'Identity servers': 'שרתי זהויות',
+  'Enable LDAP sign-in': 'הפעלת התחברות באמצעות LDAP',
+  'When enabled, users can sign in with their directory username and password.':
+    'כאשר האפשרות מופעלת, משתמשים יכולים להתחבר עם שם המשתמש והסיסמה שלהם בספרייה.',
+  'Tried in order until one answers, up to 10. Pasting an LDAP URL also fills in encryption, port and base DN.':
+    'המארחים מנוסים לפי הסדר עד שאחד מהם עונה, עד 10. הדבקת כתובת URL של LDAP ממלאת גם את ההצפנה, הפורט וה-base DN.',
+  'Leave empty for 636 with LDAPS, or 389 otherwise.':
+    'השאירו ריק עבור 636 עם LDAPS, או 389 אחרת.',
+  'Use None only on a trusted private network.':
+    'השתמשו ב"ללא" רק ברשת פרטית מהימנה.',
+  "Check the directory's certificate before sending any password.":
+    'בדיקת התעודה של הספרייה לפני שליחת סיסמה כלשהי.',
+  'The CA or self-signed certificate to trust. Leave empty to use the system trust store.':
+    'תעודת ה-CA או התעודה בחתימה עצמית שיש לסמוך עליה. השאירו ריק כדי להשתמש במאגר התעודות המהימנות של המערכת.',
+  'How long to wait for each answer, from 1 to 30.':
+    'כמה זמן להמתין לכל תשובה, בין 1 ל-30.',
+  'Service account for the search, or empty for anonymous.':
+    'חשבון השירות לחיפוש, או ריק לחיפוש אנונימי.',
+  'Never shown again. Re-enter it when the connection changes.':
+    'לא מוצגת שוב. הזינו אותה מחדש כשהחיבור משתנה.',
+  'Enter the bind password again to save.':
+    'הזינו שוב את סיסמת ה-Bind כדי לשמור.',
+  'Only its members can sign in. Leave empty to allow everyone.':
+    'רק חברי הקבוצה יכולים להתחבר. השאירו ריק כדי לאפשר לכולם.',
+  'An ID that never changes, such as entryUUID.':
+    'מזהה שאף פעם לא משתנה, כמו entryUUID.',
+  'Attribute holding the display name, usually cn.':
+    'המאפיין שמכיל את שם התצוגה, בדרך כלל cn.',
+  'Attribute holding an E.164 phone number. Optional.':
+    'המאפיין שמכיל מספר טלפון בפורמט E.164. אופציונלי.',
+  'Using Active Directory?': 'משתמשים ב-Active Directory?',
+  'Search identity servers...': 'חיפוש שרתי זהויות...',
+  'Identity servers section': 'אזור שרתי זהויות',
+  'Identity servers navigation': 'ניווט שרתי זהויות',
   LDAP: 'LDAP',
-  'Connect the identity systems your organization already runs so people can sign in with the accounts they have.':
-    'חברו את מערכות הזהויות שהארגון שלכם כבר מפעיל, כדי שמשתמשים יוכלו להתחבר עם החשבונות שכבר יש להם.',
   'Let users sign in with the credentials of your LDAP directory, such as Active Directory or OpenLDAP.':
     'אפשרו למשתמשים להתחבר עם פרטי האימות של ספריית ה-LDAP שלכם, כמו Active Directory או OpenLDAP.',
-  'Turn on LDAP sign-in for this project. Enabling connects to the directory to validate the configuration, so add at least one host and a base DN first.':
-    'הפעלת התחברות דרך LDAP לפרויקט הזה. ההפעלה מתחברת לספרייה כדי לאמת את התצורה, לכן הוסיפו קודם לפחות מארח אחד ו-base DN.',
   Directory: 'ספרייה',
   Hosts: 'מארחים',
-  'Hostnames or IP addresses of the directory, tried in order until one answers. Press Enter after each host, up to 10. Paste an LDAP URL to also fill in encryption, port and base DN.':
-    'שמות מארחים או כתובות IP של הספרייה, מנוסים לפי הסדר עד שאחד מהם עונה. לחצו Enter אחרי כל מארח, עד 10 מארחים. הדביקו כתובת URL של LDAP כדי למלא גם את ההצפנה, הפורט וה-base DN.',
   'Use {dn} as the base DN?': 'להשתמש ב-{dn} בתור base DN?',
   Use: 'שימוש',
-  'Leave empty for the default: 636 for LDAPS, 389 otherwise.':
-    'השאירו ריק לברירת המחדל: 636 עבור LDAPS, אחרת 389.',
-  'LDAPS encrypts from the first byte, StartTLS upgrades a plain connection, None is for a trusted network only.':
-    'LDAPS מצפין מהבייט הראשון, StartTLS משדרג חיבור לא מוצפן, ו"ללא" מיועד לרשת מהימנה בלבד.',
   'Verify certificate': 'אימות תעודה',
-  "Check the directory's certificate against the certificate below, or the system trust store if it is empty.":
-    'בדיקת התעודה של הספרייה מול התעודה שלמטה, או מול מאגר התעודות המהימנות של המערכת אם השדה ריק.',
   'Timeout (seconds)': 'Timeout (שניות)',
-  'Seconds to wait for the directory to connect and answer each operation, from 1 to 30.':
-    'מספר השניות להמתין לחיבור לספרייה ולמענה על כל פעולה, בין 1 ל-30.',
   'Certificate (PEM)': 'תעודה (PEM)',
-  "Certificate of the authority that signed the directory's certificate, or the directory's own certificate if it is self-signed. Paste several to trust more than one. Leave empty to use the system trust store.":
-    'התעודה של הרשות שחתמה על תעודת הספרייה, או התעודה של הספרייה עצמה אם היא בחתימה עצמית. הדביקו כמה תעודות כדי לסמוך על יותר מאחת. השאירו ריק כדי להשתמש במאגר התעודות המהימנות של המערכת.',
   'Base DN': 'Base DN',
   'Subtree the user search starts from, for example ou=people,dc=example,dc=com.':
     'תת-העץ שממנו מתחיל חיפוש המשתמשים, למשל ou=people,dc=example,dc=com.',
   'Bind DN': 'Bind DN',
-  'Service account used to search for users. Leave empty if the directory allows anonymous search.':
-    'חשבון השירות שמשמש לחיפוש משתמשים. השאירו ריק אם הספרייה מאפשרת חיפוש אנונימי.',
   'Bind password': 'סיסמת Bind',
   'User filter': 'מסנן משתמשים',
   'Finds the person signing in. {username} is replaced with what they type.':
@@ -4043,24 +4066,14 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'The user filter must contain {username}.':
     'מסנן המשתמשים חייב לכלול את {username}.',
   'Sign-in rules': 'כללי התחברות',
-  'Using Active Directory? Set the user filter to (sAMAccountName={username}) and the ID attribute to objectGUID.':
-    'משתמשים ב-Active Directory? הגדירו את מסנן המשתמשים ל-(sAMAccountName={username}) ואת מאפיין המזהה ל-objectGUID.',
   'Attribute mapping': 'מיפוי מאפיינים',
   'ID attribute': 'מאפיין מזהה',
-  'Attribute with the identifier that stays the same when an entry is renamed or moved: entryUUID, or objectGUID on Active Directory.':
-    'המאפיין שמכיל את המזהה שנשאר קבוע גם כששם הרשומה משתנה או כשהיא מועברת: entryUUID, או objectGUID ב-Active Directory.',
   'Email attribute': 'מאפיין אימייל',
   'Attribute holding the email address, usually mail.':
     'המאפיין שמכיל את כתובת האימייל, בדרך כלל mail.',
   'Name attribute': 'מאפיין שם',
-  'Attribute holding the display name: cn, or displayName on Active Directory.':
-    'המאפיין שמכיל את שם התצוגה: cn, או displayName ב-Active Directory.',
   'Phone attribute': 'מאפיין טלפון',
-  'Attribute holding the phone number in E.164 format, for example mobile. Leave empty to skip phone numbers.':
-    'המאפיין שמכיל את מספר הטלפון בפורמט E.164, למשל mobile. השאירו ריק כדי לדלג על מספרי טלפון.',
   'Required group DN': 'DN של קבוצה נדרשת',
-  'Group a user must belong to in order to sign in, checked on every sign-in. Leave empty to allow every user the directory authenticates.':
-    'קבוצה שמשתמש חייב להשתייך אליה כדי להתחבר, נבדקת בכל התחברות. השאירו ריק כדי לאפשר כניסה לכל משתמש שהספרייה מאמתת.',
   'Port must be between 1 and 65535.': 'הפורט חייב להיות בין 1 ל-65535.',
   'LDAP settings have been updated.': 'הגדרות ה-LDAP עודכנו.',
   'LDAP sign-in has been enabled.': 'ההתחברות דרך LDAP הופעלה.',
@@ -4088,12 +4101,102 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'המשתמש נמצא, בדיקת הקבוצה עברה, הסיסמה התקבלה.',
   'User found, group check passed.': 'המשתמש נמצא, בדיקת הקבוצה עברה.',
   'Failed to test the LDAP connection': 'בדיקת חיבור ה-LDAP נכשלה',
-  'Stored securely and never shown again. Required again when hosts, port, encryption, certificate settings or bind DN change.':
-    'נשמרת באופן מאובטח ולא מוצגת שוב. נדרשת שוב בכל שינוי של מארחים, פורט, הצפנה, הגדרות התעודה או bind DN.',
-  'Enter the bind password again to save: the connection or certificate settings changed.':
-    'הזינו שוב את סיסמת ה-bind כדי לשמור: הגדרות החיבור או האישור השתנו.',
   'Add at least one host and a base DN to enable LDAP sign-in.':
     'הוסיפו לפחות מארח אחד ו-base DN כדי להפעיל התחברות דרך LDAP.',
   'Add at least one host and a base DN under Settings > Identity servers to enable LDAP sign-in.':
     'הוסיפו לפחות מארח אחד ו-base DN תחת הגדרות > שרתי זהויות כדי להפעיל התחברות דרך LDAP.',
+  // Probe monitors
+  'Enter a URL starting with http:// or https://.':
+    'הזינו כתובת URL שמתחילה ב-http:// או ב-https://.',
+  'Write each header on its own line as Name: value.':
+    'כתבו כל כותרת בשורה נפרדת בתבנית Name: value.',
+  'Enter status codes between 100 and 599.': 'הזינו קודי סטטוס בין 100 ל-599.',
+  'Enter the domain to query.': 'הזינו את הדומיין לשאילתה.',
+  'Enter the host to connect to.': 'הזינו את המארח להתחברות.',
+  'Enter a port between 1 and 65535.': 'הזינו פורט בין 1 ל-65535.',
+  'The timeout must not be longer than the interval.':
+    'הזמן הקצוב לא יכול להיות ארוך מהמרווח בין הבדיקות.',
+  'Monitor type': 'סוג המוניטור',
+  'Expected status codes': 'קודי סטטוס צפויים',
+  'Separate codes with commas.': 'הפרידו בין הקודים בפסיקים.',
+  'Any 2xx status': 'כל סטטוס 2xx',
+  'Certificate expiry warning': 'התראה על תפוגת אישור',
+  'Days before an HTTPS certificate expires to fire. 0 never warns early.':
+    'כמה ימים לפני תפוגת אישור HTTPS להפעיל התראה. 0 לא מתריע מראש.',
+  'One per line, as Name: value.': 'אחת בכל שורה, בתבנית Name: value.',
+  'Record type': 'סוג רשומה',
+  'Expected answer': 'תשובה צפויה',
+  'Leave empty to accept any answer.': 'השאירו ריק כדי לקבל כל תשובה.',
+  Resolver: 'שרת DNS',
+  "Leave empty to use the server's resolver.":
+    'השאירו ריק כדי להשתמש בשרת ה-DNS של השרת.',
+  Checks: 'בדיקות',
+  'The monitor fires when a check fails, and resolves when one passes again.':
+    'המוניטור מופעל כשבדיקה נכשלת, ונסגר כשבדיקה עוברת שוב.',
+  'Check every': 'בדיקה כל',
+  'Check interval': 'מרווח בין בדיקות',
+  'and fail after': 'וכישלון אחרי',
+  'Check timeout': 'זמן קצוב לבדיקה',
+  'Last check': 'בדיקה אחרונה',
+  'Code {code}': 'קוד {code}',
+  'Every {interval}, failing after {timeout}':
+    'כל {interval}, כישלון אחרי {timeout}',
+  Expects: 'מצפה ל',
+  Certificate: 'אישור',
+  'No certificate seen yet': 'עדיין לא נראה אישור',
+  'fires {days} days before it expires': 'מופעל {days} ימים לפני התפוגה',
+  'Any answer': 'כל תשובה',
+  "The server's resolver": 'שרת ה-DNS של השרת',
+  'Checks run on the monitor interval, so this monitor is not being checked.':
+    'הבדיקות רצות לפי המרווח של המוניטור, ולכן המוניטור הזה לא נבדק.',
+  '{type} check': 'בדיקת {type}',
+  'Check that your endpoints respond': 'בדקו שנקודות הקצה שלכם מגיבות',
+  '{type} monitor': 'מוניטור {type}',
+  'Latest latency': 'זמן תגובה אחרון',
+  'Peak latency': 'זמן תגובה מרבי',
+  Result: 'תוצאה',
+  'Resolves when a check passes again.': 'נסגרת כשבדיקה עוברת שוב.',
+  'A monitor raises an alert when its rules hold or its check fails, and resolves it when they recover.':
+    'מוניטור מעלה התראה כשהכללים שלו מתקיימים או כשהבדיקה שלו נכשלת, וסוגר אותה כשהמצב חוזר לשגרה.',
+  'peak latency': 'זמן תגובה מרבי',
+  'Get notified when a URL stops answering with the status you expect, or its certificate is about to expire.':
+    'קבלו התראה כשכתובת URL מפסיקה להחזיר את הסטטוס הצפוי, או כשהאישור שלה עומד לפוג.',
+  'Get notified when a domain stops resolving, or stops answering with the value you expect.':
+    'קבלו התראה כשדומיין מפסיק להיפתר, או מפסיק להחזיר את הערך הצפוי.',
+  'Get notified when a host stops accepting connections on a port.':
+    'קבלו התראה כשמארח מפסיק לקבל חיבורים בפורט.',
+  'Get notified when a mail server stops accepting sessions or its TLS handshake fails.':
+    'קבלו התראה כששרת דואר מפסיק לקבל סשנים או כשלחיצת היד של TLS נכשלת.',
+  Responding: 'מגיב',
+  'Name did not resolve': 'השם לא נפתר',
+  'Connection refused': 'החיבור נדחה',
+  'Connection timed out': 'הזמן הקצוב לחיבור פג',
+  'TLS handshake failed': 'לחיצת היד של TLS נכשלה',
+  'TLS certificate expiring': 'אישור TLS עומד לפוג',
+  'Unexpected status code': 'קוד סטטוס לא צפוי',
+  'Unexpected answer': 'תשובה לא צפויה',
+  'Server refused the session': 'השרת דחה את הסשן',
+  'Target is in a denied network': 'היעד נמצא ברשת חסומה',
+  'Timed out': 'הזמן הקצוב פג',
+  '30 seconds': '30 שניות',
+  '1 minute': 'דקה',
+  '5 seconds': '5 שניות',
+  '10 seconds': '10 שניות',
+  'From the port': 'לפי הפורט',
+  'Upgrade with STARTTLS': 'שדרוג עם STARTTLS',
+  'Implicit TLS': 'TLS מובנה',
+  'Add note': 'הוספת הערה',
+  'Edit note': 'עריכת הערה',
+  'Delete note': 'מחיקת הערה',
+  'Show notes': 'הצגת הערות',
+  'Note added': 'ההערה נוספה',
+  'Note updated': 'ההערה עודכנה',
+  'Note deleted': 'ההערה נמחקה',
+  'Note text': 'תוכן ההערה',
+  'Notes mark releases, campaigns or incidents on the chart for everyone in the project.':
+    'הערות מסמנות על הגרף גרסאות, קמפיינים או תקלות, לכל מי שבפרויקט.',
+  'Launched the new pricing page': 'השקנו את דף המחירים החדש',
+  'The note is removed from the chart for everyone.':
+    'ההערה תוסר מהגרף עבור כולם.',
+  'Former member': 'חבר לשעבר',
 }

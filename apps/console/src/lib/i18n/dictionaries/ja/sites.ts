@@ -83,11 +83,18 @@ export const jaSitesDictionary: Record<string, string> = {
   'Redirect to': 'リダイレクト先',
   'Deployed from': 'デプロイ元',
   'View logs': 'ログを表示',
+  'Update domain': 'ドメインを更新',
+  'Its DNS records and certificate stay the same.': 'DNS レコードと証明書は変更されません。',
+  'Domain has been updated': 'ドメインを更新しました',
+  'Failed to update domain': 'ドメインの更新に失敗しました',
+  'A domain cannot switch between serving a deployment and redirecting. Delete it and add it again.': 'ドメインをデプロイの配信とリダイレクトの間で切り替えることはできません。削除してから追加し直してください。',
   'Domain has been deleted': 'ドメインを削除しました',
   'Loading domains...': 'ドメインを読み込み中...',
   'Generating certificate': '証明書を発行中',
   'Verification failed': '検証に失敗しました',
   'Certificate generation failed': '証明書の発行に失敗しました',
+  'A DNS record has the wrong value. Open Records to see which one and what to change it to.':
+    'DNS レコードの値が正しくありません。「レコード」を開いて、どのレコードを何に変更するかを確認してください。',
   'Waiting for DNS': 'DNS を待機中',
   'Appwrite checks the DNS records every few minutes for 3 days after the domain is added. Use Check now to look again right away.':
     'Appwrite はドメインの追加後 3 日間、数分ごとに DNS レコードを確認します。すぐに確認するには「今すぐ確認」を使用してください。',
@@ -97,6 +104,16 @@ export const jaSitesDictionary: Record<string, string> = {
   'Check now': '今すぐ確認',
   'Not verified yet. Appwrite keeps checking.':
     'まだ検証されていません。Appwrite は確認を続けます。',
+  'Not needed. Your {type} record is set.':
+    '不要です。{type} レコードは設定済みです。',
+  'Called CNAME flattening on Cloudflare (set it to DNS only) and Alias on Route 53. Some providers name it ANAME.':
+    'Cloudflare では CNAME flattening（DNS only に設定）、Route 53 では Alias と呼ばれます。ANAME と呼ぶプロバイダーもあります。',
+  'It points to {found}. Change it to {value}.':
+    '現在は {found} を指しています。{value} に変更してください。',
+  'Your domain points somewhere else. Set this record to {value}.':
+    'ドメインは別の宛先を指しています。このレコードを {value} に設定してください。',
+  'and {n} more': 'ほか {n} 件',
+  'DNS is set up': 'DNS の設定が完了しました',
   'Certificate expired': '証明書の期限切れ',
   'Renewal failed': '証明書の更新に失敗しました',
   'Certificate blocked': '証明書の発行が保留中',
@@ -104,6 +121,8 @@ export const jaSitesDictionary: Record<string, string> = {
     '証明書は DNS レコードを待っています。ログに表示されたレコードを追加してから、再試行してください。',
   'The certificate is waiting on a DNS record. Add the record shown in View logs.':
     '証明書は DNS レコードを待っています。ログに表示されたレコードを追加してください。',
+  'The SSL certificate could not be issued. Check View logs, then Retry.':
+    'SSL 証明書を発行できませんでした。ログを確認してから、再試行してください。',
   'Renewal blocked': '証明書の更新が保留中',
   'Certificate renewal started': '証明書の更新を開始しました',
   'Certificate expires on {date}.': '証明書の有効期限は{date}です。',
@@ -576,4 +595,43 @@ export const jaSitesDictionary: Record<string, string> = {
     '数クリックで動作するサイトをデプロイし、自由にカスタマイズできます。',
   "This site's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
     'このサイトの Git インストールからリポジトリにアクセスできなくなったため、プッシュはデプロイされません。リポジトリの接続を解除してから、現在そのリポジトリがあるインストールで接続し直してください。',
+  'Action needed': '対応が必要',
+  'Found:': '検出値:',
+  'Wrong value': '値が正しくありません',
+  'Blocks certificate': '証明書の発行を妨げる',
+  "Couldn't check": '確認できません',
+  Alternative: '代替手段',
+  'CAA record': 'CAA レコード',
+  '{type} record': '{type} レコード',
+  'ALIAS or ANAME': 'ALIAS または ANAME',
+  'DNS lookup': 'DNS の確認',
+  'Domain verification': 'ドメインの検証',
+  'Point your domain': 'ドメインの向き先',
+  'Allow the SSL certificate': 'SSL 証明書の許可',
+  'Required · any one': '必須 · いずれか 1 つ',
+  "We couldn't check DNS. This is on our side; Appwrite will try again.":
+    'DNS を確認できませんでした。Appwrite 側の問題のため、Appwrite が再試行します。',
+  'A CAA record on your domain blocks the certificate. Add the CAA record below next to it (recommended), or delete your existing CAA records.':
+    'ドメインの CAA レコードが証明書の発行を妨げています。下記の CAA レコードを追加する（推奨）か、既存の CAA レコードを削除してください。',
+  'Add the records below at your DNS provider. Appwrite checks again automatically for 3 days.':
+    'DNS プロバイダーで下記のレコードを追加してください。Appwrite が 3 日間、自動的に再確認します。',
+  'Automatic checks have stopped. Fix the records below, then verify again.':
+    '自動確認は停止しました。下記のレコードを修正してから、もう一度検証してください。',
+  "We couldn't check the CAA record. This is on our side; Appwrite will try again.":
+    'CAA レコードを確認できませんでした。Appwrite 側の問題のため、Appwrite が再試行します。',
+  'Your {type} record is set. Add the CAA record below to finish.':
+    '{type} レコードは設定済みです。下記の CAA レコードを追加して完了してください。',
+  'All records are verified.': 'すべてのレコードが検証されました。',
+  'Appwrite will issue the SSL certificate next.':
+    '次に Appwrite が SSL 証明書を発行します。',
+  'Not detected yet': 'まだ検出されていません',
+  'Not detected': '検出されません',
+  'Tracked pageviews and events are billed as analytics usage, which adds up quickly on a high-traffic site.':
+    '計測されたページビューとイベントはアナリティクスの使用量として課金されます。トラフィックの多いサイトでは料金がすぐに増えます。',
+  'If your site sets a Content-Security-Policy, in a header or a <meta> tag, add these sources. Otherwise the browser blocks the tracker and no data is recorded.':
+    'サイトでヘッダーまたは <meta> タグによって Content-Security-Policy を設定している場合は、以下のソースを追加してください。追加しないとブラウザーがトラッカーをブロックし、データは記録されません。',
+  'Enable analytics': 'アナリティクスを有効化',
+  'Production domains only. Preview deployments are not tracked.':
+    '本番ドメインのみが対象です。プレビューデプロイは計測されません。',
+  'Failed to enable analytics': 'アナリティクスを有効化できませんでした',
 }

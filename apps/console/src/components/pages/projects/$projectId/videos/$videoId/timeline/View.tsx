@@ -8,42 +8,42 @@ import {
 } from 'react'
 import { useParams } from '@tanstack/react-router'
 import {
+  AlertCircle,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Download,
   GalleryHorizontal,
   Loader2,
 } from 'lucide-react'
-import { toast } from 'sonner'
-import {
-  VideoActionButton,
-  VideoFact,
-  VideoPage,
-  VideoSectionCard,
-} from '../../_components/VideoPage'
+import { VideoPage, VideoSectionCard } from '../../_components/VideoPage'
 import { VideoUrlRow } from '../../_components/VideoUrlRow'
-import { useVideoDetailActions } from '../../_components/video-detail-actions'
 import { TimelineSpriteThumb } from '../../_components/player/TimelineSpriteThumb'
 import { CodeBlock } from '@/components/global/shared/CodeBlock'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Button } from '@/components/ui/button'
-import { Slider } from '@/components/ui/slider'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import {
-  isVideoMetadataReady,
-  useCreateVideoTimeline,
   useProjectVideo,
   useVideoTimeline,
   type VideoTimelineCue,
 } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
-import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { formatPlaybackTime } from '@/lib/utils/video-format'
 import { useT } from '@/lib/i18n/translate'
+import { toast } from 'sonner'
+import { downloadBlob } from '@/lib/analytics/export/archive'
+import { downloadTextFile } from '@/lib/videos/subtitle-download'
+import {
+  buildTimelineArchive,
+  fetchTimelineSheet,
+  videoFileSlug,
+} from '@/lib/videos/timeline-download'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 
 function publicUrl(url: string): string {
   try {
@@ -61,32 +61,17 @@ export function View() {
     projectId: string
     videoId: string
   }
-  const { writeDisabledReason } = useVideoDetailActions()
   const { data: video } = useProjectVideo(projectId, videoId)
-  const [requested, setRequested] = useState(false)
-  const timelineQuery = useVideoTimeline(projectId, videoId, {
-    pollWhileMissing: requested,
-  })
-  const createTimeline = useCreateVideoTimeline(projectId, videoId)
+  const timelineQuery = useVideoTimeline(projectId, videoId)
   const timeline = timelineQuery.data
-
-  useEffect(() => {
-    if (timeline) setRequested(false)
-  }, [timeline])
 
   const sheets = useMemo(
     () => new Set((timeline?.cues ?? []).map((cue) => cue.imageUrl)).size,
     [timeline?.cues],
   )
-  const [chosenFrame, setChosenFrame] = useState<number | null>(null)
-  const defaultFrame = useMemo(() => {
-    const index = (timeline?.cues ?? []).findIndex(
-      (cue) => previewIdFromCue(cue) === video?.previewId,
-    )
-    return Math.max(0, index)
-  }, [timeline?.cues, video?.previewId])
+  const [chosenFrame, setChosenFrame] = useState(0)
   const selectedFrame = Math.min(
-    chosenFrame ?? defaultFrame,
+    chosenFrame,
     Math.max(0, (timeline?.cues.length ?? 1) - 1),
   )
   const interval =
@@ -94,83 +79,58 @@ export function View() {
       ? timeline.cues[0].end - timeline.cues[0].start
       : 0
 
+  const [archiving, setArchiving] = useState(false)
+
   if (!video) return null
 
-  // Probed audio-only files report a duration but no frame size; the worker produces no WebVTT for them.
-  const audioOnly = video.duration > 0 && !isVideoMetadataReady(video)
-  const generateDisabledReason =
-    writeDisabledReason ??
-    (audioOnly ? t('Audio-only videos have no frames for a timeline.') : null)
-  const generating = requested || createTimeline.isPending
+  const slug = videoFileSlug(video.name)
 
-  const generate = () =>
-    createTimeline.mutate(undefined, {
-      onSuccess: () => {
-        setRequested(true)
-        toast.success(t('Timeline generation started'))
-      },
-      onError: (error) =>
-        toast.error(getErrorMessage(error) || t('Failed to generate timeline')),
-    })
+  const downloadThumbnails = async () => {
+    if (!timeline) return
+    setArchiving(true)
+    try {
+      const { blob, extension } = await buildTimelineArchive(
+        timeline.cues,
+        fetchTimelineSheet,
+      )
+      downloadBlob(blob, `${slug}-thumbnails.${extension}`)
+    } catch (error) {
+      toast.error(getErrorMessage(error) || t('Failed to download thumbnails'))
+    } finally {
+      setArchiving(false)
+    }
+  }
 
   return (
-    <VideoPage
-      title={t('Timeline')}
-      term="timeline"
-      createLabel={timeline ? t('Regenerate timeline') : t('Generate timeline')}
-      onCreate={generate}
-      createDisabled={generating || Boolean(generateDisabledReason)}
-      createDisabledTooltip={generateDisabledReason ?? undefined}
-    >
+    <VideoPage title={t('Timeline')} term="timeline">
       {timelineQuery.isLoading ? (
         <p className="text-[13px] text-muted-foreground">
           {t('Loading timeline...')}
         </p>
-      ) : !timeline ? (
-        generating ? (
-          <div className="flex items-start gap-3 rounded-xl border border-border bg-card/50 px-5 py-4">
-            <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
-            <div>
-              <p className="text-[14px] font-medium text-foreground">
-                {t('Generating timeline')}
-              </p>
-              <p className="text-[13px] text-muted-foreground">
-                {t(
-                  'Sampling frames into sprite sheets. Thumbnails appear here when ready.',
-                )}
-              </p>
-            </div>
-          </div>
-        ) : (
-          <EmptyState
-            icon={GalleryHorizontal}
-            title={t('No timeline yet')}
-            description={t(
-              'Generate a timeline to get scrubbing thumbnails and a preview image for this video.',
-            )}
-            isEmpty
-            hasFilters={false}
-            variant="card"
-            action={
-              <VideoActionButton
-                size="sm"
-                className="h-9 text-[13px]"
-                onClick={generate}
-                disabledReason={generateDisabledReason}
-              >
-                {t('Generate timeline')}
-              </VideoActionButton>
-            }
-          />
-        )
-      ) : (
+      ) : timeline ? (
         <>
           <VideoSectionCard
             title={t('Thumbnails')}
-            term="sprite"
             description={t(
-              'Scroll through the thumbnails and hover one to see its time range and sprite region. Select one to use it as the preview image.',
+              'Scroll through the thumbnails and hover one to see its time range and sprite region.',
             )}
+            actions={
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1.5 text-[13px]"
+                disabled={archiving}
+                onClick={() => void downloadThumbnails()}
+              >
+                {archiving ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <Download className="size-3.5" />
+                )}
+                {t('Download')}
+              </Button>
+            }
           >
             <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-4">
               {[
@@ -205,12 +165,6 @@ export function View() {
             />
           </VideoSectionCard>
 
-          <PreviewImageCard
-            cues={timeline.cues}
-            selectedIndex={selectedFrame}
-            onSelect={setChosenFrame}
-          />
-
           <VideoSectionCard
             title={t('Timeline file')}
             term="timeline"
@@ -218,6 +172,24 @@ export function View() {
               'A WebVTT file that maps time ranges to sprite sheet regions. Point your player thumbnail option at this URL.',
             )}
             bodyClassName="space-y-3"
+            actions={
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1.5 text-[13px]"
+                onClick={() =>
+                  downloadTextFile(
+                    timeline.vtt,
+                    `${slug}-timeline.vtt`,
+                    'text/vtt',
+                  )
+                }
+              >
+                <Download className="size-3.5" />
+                {t('Download')}
+              </Button>
+            }
           >
             <div className="divide-y divide-border">
               <VideoUrlRow
@@ -228,10 +200,52 @@ export function View() {
             <TimelineFilePreview vtt={timeline.vtt} />
           </VideoSectionCard>
         </>
-      )}
-
-      {timeline ? null : (
-        <PreviewImageCard cues={null} selectedIndex={0} onSelect={() => {}} />
+      ) : timelineQuery.state === 'processing' ? (
+        <div className="flex items-start gap-3 rounded-xl border border-border bg-card/50 px-5 py-4">
+          <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
+          <div>
+            <p className="text-[14px] font-medium text-foreground">
+              {t('Generating timeline')}
+            </p>
+            <p className="text-[13px] text-muted-foreground">
+              {t(
+                'Sampling frames into sprite sheets. Thumbnails appear here when ready.',
+              )}
+            </p>
+          </div>
+        </div>
+      ) : timelineQuery.state === 'error' ? (
+        <div className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/5 px-5 py-4">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+          <div>
+            <p className="text-[14px] font-medium text-foreground">
+              {t('Timeline generation failed')}
+            </p>
+            <p className="text-[13px] text-muted-foreground">
+              {timelineQuery.timelineError ||
+                t('The worker could not sample frames from this video.')}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <EmptyState
+          icon={GalleryHorizontal}
+          title={
+            timelineQuery.state === 'skipped'
+              ? t('No timeline for this video')
+              : t('No timeline yet')
+          }
+          description={
+            timelineQuery.state === 'skipped'
+              ? t('Audio-only videos have no frames for a timeline.')
+              : t(
+                  'A timeline is generated when a video is created. Thumbnails appear here once it is ready.',
+                )
+          }
+          isEmpty
+          hasFilters={false}
+          variant="card"
+        />
       )}
     </VideoPage>
   )
@@ -504,129 +518,5 @@ function TimelineFilePreview({ vtt }: { vtt: string }) {
         </div>
       ) : null}
     </div>
-  )
-}
-
-function previewIdFromCue(cue: VideoTimelineCue): string | null {
-  try {
-    const segments = new URL(cue.imageUrl).pathname.split('/')
-    const index = segments.lastIndexOf('previews')
-    return index >= 0 ? (segments[index + 1] ?? null) || null : null
-  } catch {
-    return null
-  }
-}
-
-const PREVIEW_SAVE_UNAVAILABLE =
-  "Saving a preview frame isn't available yet. The Videos API can't set a video's poster frame."
-
-function PreviewImageCard({
-  cues,
-  selectedIndex,
-  onSelect,
-}: {
-  cues: VideoTimelineCue[] | null
-  selectedIndex: number
-  onSelect: (index: number) => void
-}) {
-  const t = useT()
-  const cue = cues?.[selectedIndex]
-
-  return (
-    <VideoSectionCard
-      title={t('Preview image')}
-      term="preview"
-      description={t(
-        'The frame shown before playback starts. Select a thumbnail above or scrub through the video to choose it.',
-      )}
-      footer={
-        cues && cue ? (
-          <VideoActionButton
-            size="sm"
-            className="h-9 text-[13px]"
-            disabledReason={PREVIEW_SAVE_UNAVAILABLE}
-          >
-            {t('Set as preview')}
-          </VideoActionButton>
-        ) : undefined
-      }
-    >
-      {!cues || !cue ? (
-        <p className="text-[13px] text-muted-foreground">
-          {t('Generate a timeline to choose a preview image.')}
-        </p>
-      ) : (
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-          <div className="relative w-full max-w-[240px] shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
-            <TimelineSpriteThumb cue={cue} className="w-full" />
-            <span className="pointer-events-none absolute bottom-1.5 start-1.5 rounded bg-black/70 px-1.5 py-0.5 font-mono text-[11px] tabular-nums text-white">
-              {formatPlaybackTime(cue.start)}
-            </span>
-          </div>
-
-          <div className="flex min-w-0 flex-1 flex-col gap-5">
-            <dl className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
-              <VideoFact
-                label={t('Selected frame')}
-                value={formatPlaybackTime(cue.start)}
-                mono
-              />
-              <VideoFact
-                label={t('Position')}
-                value={t('{index} of {total}')
-                  .replace('{index}', String(selectedIndex + 1))
-                  .replace('{total}', String(cues.length))}
-              />
-              <VideoFact
-                label={t('Time range')}
-                value={`${formatPlaybackTime(cue.start)} - ${formatPlaybackTime(cue.end)}`}
-                mono
-              />
-              <VideoFact
-                label={t('Size')}
-                value={
-                  cue.width > 0 ? `${cue.width} × ${cue.height}` : undefined
-                }
-                mono
-              />
-            </dl>
-
-            <div className="flex max-w-xl items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="h-8 w-8 shrink-0"
-                aria-label={t('Previous frame')}
-                disabled={selectedIndex === 0}
-                onClick={() => onSelect(selectedIndex - 1)}
-              >
-                <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
-              </Button>
-              <Slider
-                aria-label={t('Preview frame')}
-                min={0}
-                max={Math.max(0, cues.length - 1)}
-                step={1}
-                value={[selectedIndex]}
-                onValueChange={([value]) => onSelect(value ?? 0)}
-                className="flex-1"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="h-8 w-8 shrink-0"
-                aria-label={t('Next frame')}
-                disabled={selectedIndex >= cues.length - 1}
-                onClick={() => onSelect(selectedIndex + 1)}
-              >
-                <ChevronRight className="h-4 w-4 rtl:rotate-180" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-    </VideoSectionCard>
   )
 }
