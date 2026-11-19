@@ -32,6 +32,7 @@ struct Registered {
     job: Job,
     coroutines: usize,
     prefetch: usize,
+    max_in_flight: usize,
 }
 
 /// A worker server: register a [`Job`] per queue, hooks to run around
@@ -55,7 +56,7 @@ struct Registered {
 /// # async fn run() -> Result<(), utopia_queue::Error> {
 /// let broker = Arc::new(Redis::new(Arc::new(Connection::new("localhost", 6379)), Arc::new(Connection::new("localhost", 6379))));
 /// let mut server = Server::new(Adapter::new(broker, 1, Runtime::Workers));
-/// server.job("emails", 4, None)?.inject("message").action(|scope| async move {
+/// server.job("emails", 4, None, None)?.inject("message").action(|scope| async move {
 ///     let _message = scope.message();
 /// });
 /// std::sync::Arc::new(server).start().await?;
@@ -121,19 +122,27 @@ impl Server {
         }
     }
 
-    /// Registers the job of a queue: `coroutines` handlers at once, and up
-    /// to `prefetch` (default `coroutines`, at least that) unacknowledged
-    /// messages.
-    pub fn job(&mut self, queue: &str, coroutines: usize, prefetch: Option<usize>) -> Result<&mut Job> {
+    /// Registers the job of a queue: `coroutines` handlers at once, a receive
+    /// buffer of `prefetch` messages (default `coroutines`), and up to
+    /// `max_in_flight` held messages in all, running handlers and pending
+    /// confirmations included (default `coroutines + prefetch`).
+    pub fn job(
+        &mut self,
+        queue: &str,
+        coroutines: usize,
+        prefetch: Option<usize>,
+        max_in_flight: Option<usize>,
+    ) -> Result<&mut Job> {
         if queue.is_empty() {
             return Err(Error::server("Queue name is required"));
         }
         let coroutines = coroutines.max(1);
         let prefetch = prefetch.unwrap_or(coroutines);
-        if prefetch < coroutines {
-            return Err(Error::InvalidArgument("Prefetch must be at least the number of coroutines".into()));
+        let max_in_flight = max_in_flight.unwrap_or(coroutines + prefetch);
+        if prefetch < 1 || max_in_flight < 1 {
+            return Err(Error::InvalidArgument("Prefetch and maxInFlight must be positive".into()));
         }
-        self.jobs.insert(queue.to_owned(), Registered { job: Job::new(), coroutines, prefetch });
+        self.jobs.insert(queue.to_owned(), Registered { job: Job::new(), coroutines, prefetch, max_in_flight });
         if let Ok(mut names) = self.queues.lock()
             && !names.iter().any(|n| n == queue)
         {
@@ -165,9 +174,16 @@ impl Server {
         self.jobs.get(queue).map_or(1, |j| j.coroutines)
     }
 
-    /// The prefetch of a queue (1 when unregistered).
+    /// The receive-buffer capacity of a queue (1 when unregistered).
     pub fn prefetch(&self, queue: &str) -> usize {
         self.jobs.get(queue).map_or(1, |j| j.prefetch)
+    }
+
+    /// The held-message limit of a queue (1 when unregistered).
+    ///
+    /// PHP: `maxInFlight($queue)`.
+    pub fn max_in_flight(&self, queue: &str) -> usize {
+        self.jobs.get(queue).map_or(1, |j| j.max_in_flight)
     }
 
     /// The adapter.
@@ -332,18 +348,23 @@ impl Server {
                 Some(factory) => factory(name),
                 None => self.adapter.create_consumer(name),
             };
-            let (coroutines, prefetch) = (registered.coroutines, registered.prefetch);
-            if prefetch > 1 && consumer.is_exclusive() {
+            let (coroutines, prefetch, max_in_flight) =
+                (registered.coroutines, registered.prefetch, registered.max_in_flight);
+            // An exclusive socket cannot overlap receive with processing or
+            // confirmation. A single in-flight delivery serializes those phases.
+            if max_in_flight > 1 && consumer.is_exclusive() {
                 return Err(Error::server(format!(
-                    "Queue '{name}' is registered with job('{name}', {coroutines}), but its consumer {} drives a single socket that only one coroutine may read at a time. Use one coroutine with prefetch 1 and add replicas for throughput.",
+                    "Queue '{name}' is registered with job('{name}', {coroutines}), but its consumer {} drives a single socket that only one coroutine may read at a time. Use maxInFlight 1 and add replicas for throughput.",
                     consumer.name()
                 )));
             }
+            // Broker retry backoff also holds acknowledgement credits. Leave
+            // room beyond this worker's limit; replicas share the broker ceiling.
             if let Some(ceiling) = consumer.in_flight_ceiling().await
-                && ceiling <= prefetch as i64
+                && ceiling <= max_in_flight as i64
             {
                 return Err(Error::server(format!(
-                    "Queue '{name}' is registered with job('{name}', {coroutines}), but its consumer {} holds at most {ceiling} message(s) in flight. Waiting retries also count toward this ceiling, so filling it with local deliveries can stop further delivery. Raise the in-flight ceiling (Broker\\Nats: maxAckPending) above {prefetch}, or lower the prefetch limit.",
+                    "Queue '{name}' is registered with job('{name}', {coroutines}), but its consumer {} holds at most {ceiling} message(s) in flight. Waiting retries also count toward this ceiling, so filling it with local deliveries can stop further delivery. Raise the in-flight ceiling (Broker\\Nats: maxAckPending) above {max_in_flight}, or lower maxInFlight.",
                     consumer.name()
                 )));
             }
@@ -351,6 +372,7 @@ impl Server {
                 queue: Queue::with(name.clone(), self.adapter.namespace(), 0)?,
                 coroutines,
                 prefetch,
+                max_in_flight: Some(max_in_flight),
                 consumer,
             });
         }

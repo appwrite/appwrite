@@ -781,9 +781,9 @@
       "id": "queue-nov18",
       "title": "utopia-queue: follow main's Swoole, Kubernetes and NATS reap changes",
       "area": "Libraries",
-      "status": "todo",
-      "updated": "2026-11-18T10:47:00Z",
-      "note": "Main changed about 155 lines of utopia-php/queue after the Nov 16 merge: the Swoole adapter's receive buffer and refill, a KubernetesJob heartbeat that keeps extending a message's delivery deadline while its job runs, and NATS retrying a reap on a rebuilt commands connection (a fix for the PHP NATS client; check whether async-nats needs it). Not ported in the Nov 18 merge; the queue marker stays behind."
+      "status": "done",
+      "updated": "2026-11-19T12:00:00Z",
+      "note": "Ported through utopia-php/queue 31e6c54766: job(queue, coroutines, prefetch, max_in_flight) with prefetch as the receive buffer and maxInFlight as the held-message limit (default coroutines + prefetch), a Swoole-style receive buffer refilled at its half-full watermark with a separate dispatcher, NATS streaming deliveries (Consumer::receive_each, utopia-nats fetch_each), the KubernetesJob heartbeat that extends a delivery while its job runs, and Platform passing maxInFlight through. The NATS reap retry on a rebuilt commands connection is not ported: it works around utopia-php/nats ticking a dead socket, and async-nats notices a closed socket and reconnects on its own."
     },
     {
       "id": "teams-photo",

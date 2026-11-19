@@ -62,6 +62,20 @@ pub trait Consumer: Send + Sync {
     /// fill. Empty on timeout. Each message needs its own commit or reject.
     fn receive<'a>(&'a self, queue: &'a Queue, timeout: i64, n: i64) -> BoxFuture<'a, Result<Vec<Message>>>;
 
+    /// Like [`Consumer::receive`], but hands each message to `on_message`
+    /// (and so registers it) before waiting for the rest of the pull
+    /// (`Consumer\Streaming::receiveEach()`). `None` when the consumer
+    /// cannot stream.
+    fn receive_each<'a>(
+        &'a self,
+        _queue: &'a Queue,
+        _timeout: i64,
+        _n: i64,
+        _on_message: &'a mut (dyn FnMut(Message) + Send),
+    ) -> Option<BoxFuture<'a, Result<()>>> {
+        None
+    }
+
     /// Acknowledges a processed message.
     fn commit<'a>(&'a self, queue: &'a Queue, message: &'a Message) -> BoxFuture<'a, Result<()>>;
 
@@ -117,6 +131,15 @@ pub trait Consumer: Send + Sync {
 impl<C: Consumer + ?Sized> Consumer for Arc<C> {
     fn receive<'a>(&'a self, queue: &'a Queue, timeout: i64, n: i64) -> BoxFuture<'a, Result<Vec<Message>>> {
         (**self).receive(queue, timeout, n)
+    }
+    fn receive_each<'a>(
+        &'a self,
+        queue: &'a Queue,
+        timeout: i64,
+        n: i64,
+        on_message: &'a mut (dyn FnMut(Message) + Send),
+    ) -> Option<BoxFuture<'a, Result<()>>> {
+        (**self).receive_each(queue, timeout, n, on_message)
     }
     fn commit<'a>(&'a self, queue: &'a Queue, message: &'a Message) -> BoxFuture<'a, Result<()>> {
         (**self).commit(queue, message)

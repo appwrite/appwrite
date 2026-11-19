@@ -38,4 +38,4 @@ xxhash-rust = { workspace = true, optional = true }
 
 [package.metadata.utopia]
 category = "servers"
-php-sync = "087d776492a31c35483cdb3b23e1710045dce967"
+php-sync = "31e6c54766ceb505208e1ffc4c85723282050c16"

@@ -155,6 +155,7 @@ pub const OPS: &[&str] = &[
     "stream.delete",
     "consumer.new",
     "consumer.fetch",
+    "consumer.fetch_each",
     "consumer.next",
     "consumer.info",
     "consumer.names",
@@ -3070,6 +3071,44 @@ async fn call_jetstream(op: &str, a: &Args<'_>, session: &mut Session) -> OpResu
             );
             let elapsed = start.elapsed();
             let mut out = batch_value(session, batch);
+            out.extend(timing(elapsed, a));
+            Ok(Outcome::ok(Value::Object(out)))
+        }
+        "consumer.fetch_each" => {
+            let consumer = get::<utopia_nats::jetstream::Consumer>(session, a, "consumer")?.lock().await.clone();
+            let start = Instant::now();
+            let mut arrived = Vec::new();
+            let mut each = |m: utopia_nats::jetstream::JetStreamMessage| {
+                arrived.push(m);
+                Ok(())
+            };
+            try_lib!(
+                consumer
+                    .fetch_each(
+                        conn!(),
+                        a.opt_i64("batch")?.unwrap_or(1),
+                        &mut each,
+                        timeout(a)?,
+                        a.opt_bool("no_wait")?.unwrap_or(false),
+                        a.opt_i64("max_bytes")?
+                    )
+                    .await
+            );
+            let elapsed = start.elapsed();
+            let messages: Vec<Value> = arrived
+                .into_iter()
+                .map(|m| {
+                    let mut v = js_message_value(&m);
+                    let mut out = Map::new();
+                    out.insert("handle".into(), shared(session, m));
+                    if let Value::Object(fields) = v.take() {
+                        out.extend(fields);
+                    }
+                    Value::Object(out)
+                })
+                .collect();
+            let mut out = Map::new();
+            out.insert("messages".into(), Value::Array(messages));
             out.extend(timing(elapsed, a));
             Ok(Outcome::ok(Value::Object(out)))
         }

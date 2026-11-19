@@ -228,6 +228,22 @@ final class Adapter implements Base, Benchmarks
 
                 return self::delivered($messages, $s);
             },
+            'broker.receive_each' => function (array $a, Session $s): array {
+                // Each delivery as it arrives, committed there when `commit` is set:
+                // the payloads and attempts in arrival order.
+                $broker = self::consumer($a, $s);
+                $queue = self::queue($a['queue']);
+                $out = ['payloads' => [], 'attempts' => []];
+                $broker->receiveEach($queue, $a['timeout'] ?? 0, $a['n'] ?? 1, static function (Message $message) use ($broker, $queue, $a, &$out): void {
+                    $out['payloads'][] = Typed::dump($message->getPayload());
+                    $out['attempts'][] = $message->getAttempts();
+                    if ($a['commit'] ?? false) {
+                        $broker->commit($queue, $message);
+                    }
+                });
+
+                return $out;
+            },
             'broker.commit' => fn (array $a, Session $s) => self::consumer($a, $s)->commit(self::queue($a['queue']), self::message($a, $s)),
             'broker.commit_all' => function (array $a, Session $s): array {
                 // Every commit at once, each in its own coroutine: settlements that
@@ -678,6 +694,9 @@ final class Adapter implements Base, Benchmarks
         $adapter = new Workers($consumer, 1);
         $state = ['handled' => [], 'succeeded' => [], 'errors' => [], 'active' => 0, 'max' => 0];
         $spec = ['queue' => self::queue($a['queue']), 'coroutines' => $a['coroutines'] ?? 1, 'prefetch' => $a['prefetch'] ?? ($a['coroutines'] ?? 1), 'consumer' => $consumer];
+        if (isset($a['maxInFlight'])) {
+            $spec['maxInFlight'] = $a['maxInFlight'];
+        }
         $run = function () use ($adapter, $spec, $a, &$state): void {
             $deadline = Coroutine::create(function () use ($adapter): void {
                 Coroutine::sleep(5);
@@ -727,14 +746,14 @@ final class Adapter implements Base, Benchmarks
         $out = ['jobs' => []];
         foreach ($a['jobs'] ?? [] as $job) {
             try {
-                $server->job($job['queue'], $job['coroutines'] ?? 1, $job['prefetch'] ?? null);
-                $out['jobs'][] = [$job['queue'], $server->coroutines($job['queue']), $server->prefetch($job['queue'])];
+                $server->job($job['queue'], $job['coroutines'] ?? 1, $job['prefetch'] ?? null, $job['maxInFlight'] ?? null);
+                $out['jobs'][] = [$job['queue'], $server->coroutines($job['queue']), $server->prefetch($job['queue']), $server->maxInFlight($job['queue'])];
             } catch (\Throwable $error) {
                 $out['jobs'][] = ['$error' => ['class' => $error::class, 'message' => $error->getMessage()]];
             }
         }
         $out['registered'] = array_keys($server->jobs());
-        $out['unregistered'] = [$server->coroutines('none'), $server->prefetch('none')];
+        $out['unregistered'] = [$server->coroutines('none'), $server->prefetch('none'), $server->maxInFlight('none')];
         if ($a['start'] ?? false) {
             try {
                 foreach (array_keys($server->jobs()) as $queue) {
@@ -830,7 +849,7 @@ final class Adapter implements Base, Benchmarks
             $hook->action($record($name, $spec));
         };
         foreach ($a['jobs'] as $spec) {
-            $job = $server->job($spec['queue'], $spec['coroutines'] ?? 1, $spec['prefetch'] ?? null);
+            $job = $server->job($spec['queue'], $spec['coroutines'] ?? 1, $spec['prefetch'] ?? null, $spec['maxInFlight'] ?? null);
             if (isset($spec['hook'])) {
                 $job->hook($spec['hook']);
             }

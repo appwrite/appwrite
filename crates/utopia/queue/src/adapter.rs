@@ -6,7 +6,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use utopia_async::sync::{Notify, Semaphore};
+use utopia_async::sync::{Notify, Semaphore, mpsc};
 
 use crate::connection::BoxFuture;
 use crate::contract::Consumer;
@@ -37,15 +37,19 @@ pub type SuccessCallback = Arc<dyn Fn(Arc<Message>, Arc<Resources>) -> BoxFuture
 pub type ErrorCallback =
     Arc<dyn Fn(Option<Arc<Message>>, Error, Arc<Resources>) -> BoxFuture<'static, Result<()>> + Send + Sync>;
 
-/// One queue to consume: identity, handler concurrency, prefetch and consumer.
+/// One queue to consume: identity, handler concurrency, receive buffer,
+/// in-flight limit and consumer.
 #[derive(Clone)]
 pub struct Spec {
     /// The queue.
     pub queue: Queue,
     /// Handlers that may run at once.
     pub coroutines: usize,
-    /// Unacknowledged messages allowed at once (at least `coroutines`).
+    /// Received messages waiting for a handler (the receive buffer).
     pub prefetch: usize,
+    /// Messages held at once: buffered, running and awaiting confirmation
+    /// (default `coroutines + prefetch`).
+    pub max_in_flight: Option<usize>,
     /// The consumer for this queue.
     pub consumer: Arc<dyn Consumer>,
 }
@@ -282,6 +286,47 @@ impl Adapter {
         success: &SuccessCallback,
         error: &ErrorCallback,
     ) -> Result<()> {
+        // Keeps the broker's delivery deadline extended while the handler runs,
+        // so the ack deadline is not a ceiling on how long a job may take. The
+        // heartbeat stops before the message is acknowledged.
+        let beat = spec.consumer.extend_interval().await.filter(|b| *b > 0.0);
+        let extended: MessageCallback;
+        let message = match beat {
+            None => message,
+            Some(beat) => {
+                let (inner, consumer, queue, trace) =
+                    (message.clone(), spec.consumer.clone(), spec.queue.clone(), self.trace.clone());
+                extended = Arc::new(move |m: Arc<Message>, context: Arc<Resources>| {
+                    let (inner, consumer, queue, trace) =
+                        (inner.clone(), consumer.clone(), queue.clone(), trace.clone());
+                    Box::pin(async move {
+                        let finished = Arc::new(Notify::new());
+                        let heartbeat = {
+                            let (finished, held) = (finished.clone(), (*m).clone());
+                            utopia_async::spawn(async move {
+                                while utopia_async::timeout(Duration::from_secs_f64(beat), finished.notified())
+                                    .await
+                                    .is_err()
+                                {
+                                    // A missed beat must not fail a job that is still succeeding.
+                                    if let Err(e) = consumer.extend(&queue, std::slice::from_ref(&held)).await {
+                                        trace(&format!(
+                                            "Failed to extend queue message {}: {e}\n",
+                                            String::from_utf8_lossy(held.pid().as_bytes())
+                                        ));
+                                    }
+                                }
+                            })
+                        };
+                        let result = inner(m, context).await;
+                        finished.notify_one();
+                        let _ = heartbeat.await;
+                        result
+                    })
+                });
+                &extended
+            }
+        };
         while !self.is_stopped() {
             let received = match spec.consumer.receive(&spec.queue, self.receive_timeout, 1).await {
                 Ok(mut batch) if !batch.is_empty() => batch.swap_remove(0),
@@ -296,14 +341,22 @@ impl Adapter {
     }
 
     /// Claims up to `max` messages; a failed receive is reported and waited out.
+    /// A streaming consumer hands each one to `on_message` as it arrives
+    /// instead, and nothing is returned.
     async fn next_batch(
         &self,
         error: &ErrorCallback,
         queue: &Queue,
         consumer: &dyn Consumer,
         max: usize,
+        on_message: Option<&mut (dyn FnMut(Message) + Send)>,
     ) -> Vec<Message> {
-        match consumer.receive(queue, self.receive_timeout, max as i64).await {
+        let streamed = match on_message.and_then(|f| consumer.receive_each(queue, self.receive_timeout, max as i64, f))
+        {
+            Some(receiving) => receiving.await.map(|()| Vec::new()),
+            None => consumer.receive(queue, self.receive_timeout, max as i64).await,
+        };
+        match streamed {
             Ok(batch) => batch,
             Err(e) => {
                 let text = e.to_string();
@@ -316,7 +369,8 @@ impl Adapter {
         }
     }
 
-    /// The long-running loop of one queue.
+    /// The long-running loop of one queue: a bounded receive buffer and a
+    /// renewal loop, independent of processing concurrency.
     async fn run(
         &self,
         spec: &Spec,
@@ -331,11 +385,13 @@ impl Adapter {
             c.push(consumer.clone());
         }
         let (coroutines, prefetch) = (spec.coroutines, spec.prefetch);
-        if coroutines < 1 || prefetch < coroutines {
-            return Err(Error::InvalidArgument("Prefetch must be at least the positive number of coroutines".into()));
+        let max_in_flight = spec.max_in_flight.unwrap_or(coroutines + prefetch);
+        if coroutines < 1 || prefetch < 1 || max_in_flight < 1 {
+            return Err(Error::InvalidArgument("Coroutines, prefetch and maxInFlight must be positive".into()));
         }
         let queue = &spec.queue;
         let running = Arc::new(Semaphore::new(coroutines));
+        let (buffer, mut buffered) = mpsc::channel::<(u64, Message)>(prefetch);
         let available = Arc::new(Notify::new());
         let deliveries: Arc<Mutex<HashMap<u64, Message>>> = Arc::new(Mutex::new(HashMap::new()));
         let finished = Arc::new(Notify::new());
@@ -368,51 +424,26 @@ impl Adapter {
                 }
             })
         });
-        let mut tasks = utopia_async::task::JoinSet::new();
-        let mut next_id: u64 = 0;
-        let in_flight = |d: &Arc<Mutex<HashMap<u64, Message>>>| d.lock().map(|d| d.len()).unwrap_or(0);
-        while !self.is_stopped() {
-            while prefetch - in_flight(&deliveries).min(prefetch) < (prefetch / 2).max(1) && !self.is_stopped() {
-                let _ = utopia_async::timeout(Duration::from_millis(100), available.notified()).await;
-            }
-            if self.is_stopped() {
-                break;
-            }
-            let room = prefetch - in_flight(&deliveries).min(prefetch);
-            let batch = self.next_batch(&error, queue, consumer.as_ref(), room).await;
-            let mut ids = Vec::with_capacity(batch.len());
-            if let Ok(mut d) = deliveries.lock() {
-                for m in &batch {
-                    next_id += 1;
-                    d.insert(next_id, m.clone());
-                    ids.push(next_id);
-                }
-            }
-            for (index, (message_value, id)) in batch.iter().zip(ids.iter()).enumerate() {
+
+        // Leaves messages in the receive buffer until a handler can take one.
+        let dispatch = async {
+            let mut tasks = utopia_async::task::JoinSet::new();
+            let mut waiting: Vec<(u64, Message)> = Vec::new();
+            loop {
+                // Reap finished handlers so a long-running loop does not accumulate them.
+                while let Some(Some(_)) = futures_util::FutureExt::now_or_never(tasks.join_next()) {}
                 let permit = running.clone().acquire_owned().await.map_err(|e| Error::Runtime(e.to_string()))?;
+                let Some((id, m)) = buffered.recv().await else {
+                    drop(permit);
+                    break;
+                };
                 if self.is_stopped() {
                     drop(permit);
-                    let waiting = &batch[index..];
-                    if let Some(release) = consumer.release(queue, waiting) {
-                        let result = release.await;
-                        if let Err(e) = result {
-                            let text = e.to_string();
-                            if let Err(report) =
-                                error(None, e, Arc::new(Resources::child(self.resources.clone()))).await
-                            {
-                                self.unreported("receive", &text, &report);
-                            }
-                        }
-                    }
-                    if let Ok(mut d) = deliveries.lock() {
-                        for id in &ids[index..] {
-                            d.remove(id);
-                        }
-                    }
-                    break;
+                    waiting.push((id, m));
+                    continue;
                 }
-                let (m, consumer, queue, message_cb, success, error, deliveries, available, id) = (
-                    message_value.clone(),
+                available.notify_one();
+                let (consumer, queue, message_cb, success, error, deliveries, available) = (
                     consumer.clone(),
                     queue.clone(),
                     message.clone(),
@@ -420,11 +451,11 @@ impl Adapter {
                     error.clone(),
                     deliveries.clone(),
                     available.clone(),
-                    *id,
                 );
                 let trace = self.trace.clone();
                 let context = Arc::new(Resources::child(self.resources.clone()));
                 tasks.spawn(async move {
+                    // Confirmation may remain in flight while the next handler starts.
                     let permit = Mutex::new(Some(permit));
                     let handled = || {
                         if let Ok(mut p) = permit.lock() {
@@ -439,14 +470,88 @@ impl Adapter {
                     available.notify_one();
                 });
             }
-        }
-        while tasks.join_next().await.is_some() {}
+            if !waiting.is_empty() {
+                let messages: Vec<Message> = waiting.iter().map(|(_, m)| m.clone()).collect();
+                if let Some(release) = consumer.release(queue, &messages)
+                    && let Err(e) = release.await
+                {
+                    let text = e.to_string();
+                    if let Err(report) = error(None, e, Arc::new(Resources::child(self.resources.clone()))).await {
+                        self.unreported("receive", &text, &report);
+                    }
+                }
+                if let Ok(mut d) = deliveries.lock() {
+                    for (id, _) in &waiting {
+                        d.remove(id);
+                    }
+                }
+            }
+            // Keep renewing until every handler and confirmation has finished.
+            while tasks.join_next().await.is_some() {}
+            Ok::<(), Error>(())
+        };
+
+        // NATS ADR-37: refill the receive buffer at its half-full watermark.
+        // Outstanding deliveries have a separate cap, including pending confirmations.
+        let receive = async {
+            let in_flight = |d: &Arc<Mutex<HashMap<u64, Message>>>| d.lock().map(|d| d.len()).unwrap_or(0);
+            let length = |b: &mpsc::Sender<(u64, Message)>| b.max_capacity() - b.capacity();
+            let threshold = prefetch / 2;
+            let mut next_id: u64 = 0;
+            while !self.is_stopped() {
+                while (length(&buffer) > threshold || in_flight(&deliveries) >= max_in_flight) && !self.is_stopped() {
+                    let _ = utopia_async::timeout(Duration::from_millis(100), available.notified()).await;
+                }
+                // Let ready confirmations release their credits before sizing the fetch.
+                utopia_async::yield_now().await;
+                if self.is_stopped() {
+                    break;
+                }
+                let room = (prefetch.saturating_sub(length(&buffer)))
+                    .min(max_in_flight.saturating_sub(in_flight(&deliveries)));
+                if room == 0 {
+                    continue;
+                }
+                // Room is reserved, so a streamed message only overflows if the buffer was
+                // filled behind our back; it is then pushed once the receive returns.
+                let mut overflow: Vec<(u64, Message)> = Vec::new();
+                let batch = {
+                    let mut deliver = |m: Message| {
+                        next_id += 1;
+                        if let Ok(mut d) = deliveries.lock() {
+                            d.insert(next_id, m.clone());
+                        }
+                        if let Err(mpsc::error::TrySendError::Full(item) | mpsc::error::TrySendError::Closed(item)) =
+                            buffer.try_send((next_id, m))
+                        {
+                            overflow.push(item);
+                        }
+                    };
+                    self.next_batch(&error, queue, consumer.as_ref(), room, Some(&mut deliver)).await
+                };
+                for m in batch {
+                    next_id += 1;
+                    if let Ok(mut d) = deliveries.lock() {
+                        d.insert(next_id, m.clone());
+                    }
+                    overflow.push((next_id, m));
+                }
+                for item in overflow {
+                    if buffer.send(item).await.is_err() {
+                        break;
+                    }
+                }
+            }
+            drop(buffer);
+        };
+
+        let ((), dispatched) = utopia_async::join!(receive, dispatch);
         done.store(true, Ordering::SeqCst);
         finished.notify_one();
         if let Some(renew) = renew {
             let _ = renew.await;
         }
-        Ok(())
+        dispatched
     }
 
     fn unreported(&self, who: &str, error: &str, report: &Error) {

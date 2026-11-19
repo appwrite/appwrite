@@ -144,7 +144,7 @@ $platform->getCli()->run(); // init, then migrate console
 
 ## Register queue workers
 
-Actions of a worker service become jobs, each on its queue (`v1-<name>` unless configured), with its own concurrency and prefetch; worker-start and worker-stop actions become worker hooks.
+Actions of a worker service become jobs, each on its queue (`v1-<name>` unless configured), with its own concurrency, receive buffer (prefetch) and in-flight limit (maxInFlight); worker-start and worker-stop actions become worker hooks.
 
 ```
 use std::sync::Arc;

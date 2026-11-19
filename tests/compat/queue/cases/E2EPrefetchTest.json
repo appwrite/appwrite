@@ -1133,6 +1133,143 @@
           "expect": null
         }
       ]
+    },
+    {
+      "name": "streaming pull progresses through broker backpressure",
+      "state": [],
+      "steps": [
+        {
+          "op": "nats.broker",
+          "args": {
+            "time": 1700000000,
+            "ack_wait": 0.2,
+            "max_ack_pending": 2
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish_many",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-streaming",
+              "namespace": "utopia-queue"
+            },
+            "payloads": [
+              {
+                "id": 1
+              },
+              {
+                "id": 2
+              },
+              {
+                "id": 3
+              },
+              {
+                "id": 4
+              },
+              {
+                "id": 5
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive_each",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-streaming",
+              "namespace": "utopia-queue"
+            },
+            "timeout": 1,
+            "n": 5,
+            "commit": true
+          },
+          "expect": {
+            "payloads": [
+              {
+                "$array": [
+                  [
+                    "id",
+                    1
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "id",
+                    2
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "id",
+                    3
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "id",
+                    4
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "id",
+                    5
+                  ]
+                ]
+              }
+            ],
+            "attempts": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-streaming",
+              "namespace": "utopia-queue"
+            },
+            "failed": false
+          },
+          "expect": 0
+        },
+        {
+          "op": "nats.delete",
+          "args": {
+            "queues": [
+              "${ns}-streaming"
+            ]
+          },
+          "expect": null
+        }
+      ]
     }
   ]
 }

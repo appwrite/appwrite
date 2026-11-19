@@ -21,12 +21,14 @@
           [
             "v1-functions",
             8,
-            8
+            8,
+            16
           ],
           [
             "database_db_main",
             1,
-            1
+            1,
+            2
           ]
         ],
         "registered": [
@@ -34,6 +36,7 @@
           "database_db_main"
         ],
         "unregistered": [
+          1,
           1,
           1
         ]
@@ -54,13 +57,15 @@
           [
             "v1-mails",
             1,
-            1
+            1,
+            2
           ]
         ],
         "registered": [
           "v1-mails"
         ],
         "unregistered": [
+          1,
           1,
           1
         ]
@@ -82,13 +87,15 @@
           [
             "v1-mails",
             1,
-            1
+            1,
+            2
           ]
         ],
         "registered": [
           "v1-mails"
         ],
         "unregistered": [
+          1,
           1,
           1
         ]
@@ -116,6 +123,7 @@
         "registered": [],
         "unregistered": [
           1,
+          1,
           1
         ]
       }
@@ -131,6 +139,7 @@
         "jobs": [],
         "registered": [],
         "unregistered": [
+          1,
           1,
           1
         ],
@@ -174,13 +183,15 @@
               [
                 "v1-functions",
                 8,
-                8
+                8,
+                16
               ]
             ],
             "registered": [
               "v1-functions"
             ],
             "unregistered": [
+              1,
               1,
               1
             ],
@@ -236,12 +247,14 @@
               [
                 "database_db_main",
                 1,
-                1
+                1,
+                2
               ],
               [
                 "v1-functions",
                 8,
-                8
+                8,
+                16
               ]
             ],
             "registered": [
@@ -249,6 +262,7 @@
               "v1-functions"
             ],
             "unregistered": [
+              1,
               1,
               1
             ],
@@ -303,12 +317,14 @@
               [
                 "database_db_main",
                 1,
-                1
+                1,
+                2
               ],
               [
                 "v1-functions",
                 8,
-                8
+                8,
+                16
               ]
             ],
             "registered": [
@@ -316,6 +332,7 @@
               "v1-functions"
             ],
             "unregistered": [
+              1,
               1,
               1
             ],
@@ -373,7 +390,8 @@
               [
                 "v1-functions",
                 8,
-                8
+                8,
+                16
               ]
             ],
             "registered": [
@@ -381,12 +399,13 @@
             ],
             "unregistered": [
               1,
+              1,
               1
             ],
             "start": {
               "$error": {
                 "class": "Exception",
-                "message": "Queue 'v1-functions' is registered with job('v1-functions', 8), but its consumer Tests\\Compat\\Queue\\MemoryExclusive drives a single socket that only one coroutine may read at a time. Use one coroutine with prefetch 1 and add replicas for throughput."
+                "message": "Queue 'v1-functions' is registered with job('v1-functions', 8), but its consumer Tests\\Compat\\Queue\\MemoryExclusive drives a single socket that only one coroutine may read at a time. Use maxInFlight 1 and add replicas for throughput."
               }
             }
           }
@@ -438,7 +457,8 @@
               [
                 "v1-functions",
                 1,
-                2
+                2,
+                3
               ]
             ],
             "registered": [
@@ -446,12 +466,13 @@
             ],
             "unregistered": [
               1,
+              1,
               1
             ],
             "start": {
               "$error": {
                 "class": "Exception",
-                "message": "Queue 'v1-functions' is registered with job('v1-functions', 1), but its consumer Tests\\Compat\\Queue\\MemoryExclusive drives a single socket that only one coroutine may read at a time. Use one coroutine with prefetch 1 and add replicas for throughput."
+                "message": "Queue 'v1-functions' is registered with job('v1-functions', 1), but its consumer Tests\\Compat\\Queue\\MemoryExclusive drives a single socket that only one coroutine may read at a time. Use maxInFlight 1 and add replicas for throughput."
               }
             }
           }
@@ -459,7 +480,7 @@
       ]
     },
     {
-      "name": "start accepts one coroutine on an exclusive consumer",
+      "name": "start accepts one in-flight message on an exclusive consumer",
       "steps": [
         {
           "op": "memory.new",
@@ -480,7 +501,8 @@
             },
             "jobs": [
               {
-                "queue": "v1-functions"
+                "queue": "v1-functions",
+                "maxInFlight": 1
               }
             ],
             "start": true
@@ -490,6 +512,7 @@
               [
                 "v1-functions",
                 1,
+                1,
                 1
               ]
             ],
@@ -497,6 +520,7 @@
               "v1-functions"
             ],
             "unregistered": [
+              1,
               1,
               1
             ],
@@ -517,71 +541,7 @@
       ]
     },
     {
-      "name": "start refuses a coroutine cap at the in-flight ceiling",
-      "steps": [
-        {
-          "op": "memory.new",
-          "args": {
-            "messages": [],
-            "ceiling": 8
-          },
-          "bind": "c",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "server.configure",
-          "args": {
-            "consumer": {
-              "$ref": "c"
-            },
-            "jobs": [
-              {
-                "queue": "v1-functions",
-                "coroutines": 8
-              }
-            ],
-            "start": true
-          },
-          "expect": {
-            "jobs": [
-              [
-                "v1-functions",
-                8,
-                8
-              ]
-            ],
-            "registered": [
-              "v1-functions"
-            ],
-            "unregistered": [
-              1,
-              1
-            ],
-            "start": {
-              "$error": {
-                "class": "Exception",
-                "message": "Queue 'v1-functions' is registered with job('v1-functions', 8), but its consumer Tests\\Compat\\Queue\\MemoryBounded holds at most 8 message(s) in flight. Waiting retries also count toward this ceiling, so filling it with local deliveries can stop further delivery. Raise the in-flight ceiling (Broker\\Nats: maxAckPending) above 8, or lower the prefetch limit."
-              }
-            }
-          }
-        },
-        {
-          "op": "memory.log",
-          "args": {
-            "consumer": {
-              "$ref": "c"
-            }
-          },
-          "expect": [
-            "close"
-          ]
-        }
-      ]
-    },
-    {
-      "name": "start accepts a coroutine cap below the in-flight ceiling",
+      "name": "start refuses an in-flight limit at the broker ceiling",
       "steps": [
         {
           "op": "memory.new",
@@ -613,13 +573,144 @@
               [
                 "v1-functions",
                 8,
-                8
+                8,
+                16
               ]
             ],
             "registered": [
               "v1-functions"
             ],
             "unregistered": [
+              1,
+              1,
+              1
+            ],
+            "start": {
+              "$error": {
+                "class": "Exception",
+                "message": "Queue 'v1-functions' is registered with job('v1-functions', 8), but its consumer Tests\\Compat\\Queue\\MemoryBounded holds at most 16 message(s) in flight. Waiting retries also count toward this ceiling, so filling it with local deliveries can stop further delivery. Raise the in-flight ceiling (Broker\\Nats: maxAckPending) above 16, or lower maxInFlight."
+              }
+            }
+          }
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "start accepts a coroutine cap below the in-flight ceiling",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [],
+            "ceiling": 17
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.configure",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "v1-functions",
+                "coroutines": 8
+              }
+            ],
+            "start": true
+          },
+          "expect": {
+            "jobs": [
+              [
+                "v1-functions",
+                8,
+                8,
+                16
+              ]
+            ],
+            "registered": [
+              "v1-functions"
+            ],
+            "unregistered": [
+              1,
+              1,
+              1
+            ],
+            "start": "ok"
+          }
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "buffer size does not set the broker in-flight limit",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [],
+            "ceiling": 17
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.configure",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "jobs",
+                "coroutines": 2,
+                "prefetch": 32,
+                "maxInFlight": 8
+              }
+            ],
+            "start": true
+          },
+          "expect": {
+            "jobs": [
+              [
+                "jobs",
+                2,
+                32,
+                8
+              ]
+            ],
+            "registered": [
+              "jobs"
+            ],
+            "unregistered": [
+              1,
               1,
               1
             ],
@@ -671,13 +762,15 @@
               [
                 "v1-functions",
                 8,
-                8
+                8,
+                16
               ]
             ],
             "registered": [
               "v1-functions"
             ],
             "unregistered": [
+              1,
               1,
               1
             ],
@@ -687,7 +780,7 @@
       ]
     },
     {
-      "name": "prefetch defaults to coroutines",
+      "name": "prefetch and maxInFlight defaults",
       "op": "server.configure",
       "args": {
         "jobs": [
@@ -697,6 +790,12 @@
           {
             "queue": "b",
             "coroutines": 4
+          },
+          {
+            "queue": "c",
+            "coroutines": 8,
+            "prefetch": 2,
+            "maxInFlight": 32
           }
         ]
       },
@@ -705,43 +804,67 @@
           [
             "a",
             1,
-            1
+            1,
+            2
           ],
           [
             "b",
             4,
-            4
+            4,
+            8
+          ],
+          [
+            "c",
+            8,
+            2,
+            32
           ]
         ],
         "registered": [
           "a",
-          "b"
+          "b",
+          "c"
         ],
         "unregistered": [
+          1,
           1,
           1
         ]
       }
     },
     {
-      "name": "prefetch below coroutines is rejected before registering the job",
+      "name": "non-positive limits are rejected before registering the job",
       "op": "server.configure",
       "args": {
         "jobs": [
           {
             "queue": "invalid",
             "coroutines": 4,
-            "prefetch": 0
+            "prefetch": 0,
+            "maxInFlight": 1
           },
           {
             "queue": "invalid",
+            "coroutines": 4,
+            "prefetch": -1,
+            "maxInFlight": 1
+          },
+          {
+            "queue": "invalid",
+            "coroutines": 4,
+            "prefetch": 1,
+            "maxInFlight": 0
+          },
+          {
+            "queue": "invalid",
+            "coroutines": 4,
+            "prefetch": 1,
+            "maxInFlight": -1
+          },
+          {
+            "queue": "small",
             "coroutines": 4,
             "prefetch": 1
-          },
-          {
-            "queue": "invalid",
-            "coroutines": 4,
-            "prefetch": 3
           },
           {
             "queue": "valid",
@@ -755,31 +878,46 @@
           {
             "$error": {
               "class": "InvalidArgumentException",
-              "message": "Prefetch must be at least the number of coroutines"
+              "message": "Prefetch and maxInFlight must be positive"
             }
           },
           {
             "$error": {
               "class": "InvalidArgumentException",
-              "message": "Prefetch must be at least the number of coroutines"
+              "message": "Prefetch and maxInFlight must be positive"
             }
           },
           {
             "$error": {
               "class": "InvalidArgumentException",
-              "message": "Prefetch must be at least the number of coroutines"
+              "message": "Prefetch and maxInFlight must be positive"
+            }
+          },
+          {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Prefetch and maxInFlight must be positive"
             }
           },
           [
+            "small",
+            4,
+            1,
+            5
+          ],
+          [
             "valid",
             4,
-            9
+            9,
+            13
           ]
         ],
         "registered": [
+          "small",
           "valid"
         ],
         "unregistered": [
+          1,
           1,
           1
         ]

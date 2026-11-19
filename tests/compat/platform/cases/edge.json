@@ -2217,6 +2217,7 @@
               "queue": "v1-databases",
               "coroutines": 4,
               "prefetch": 4,
+              "maxInFlight": 8,
               "desc": "db",
               "groups": [
                 "db"
@@ -2263,6 +2264,7 @@
               "queue": "shared",
               "coroutines": 1,
               "prefetch": 1,
+              "maxInFlight": 2,
               "desc": "",
               "groups": [],
               "params": [],
@@ -2293,7 +2295,7 @@
         {
           "$error": {
             "class": "InvalidArgumentException",
-            "message": "Prefetch must be at least the number of coroutines",
+            "message": "Prefetch and maxInFlight must be positive",
             "code": 0
           }
         },
@@ -2303,6 +2305,7 @@
               "queue": "v1-databases",
               "coroutines": 1,
               "prefetch": 1,
+              "maxInFlight": 2,
               "desc": "db",
               "groups": [
                 "db"
@@ -2320,17 +2323,56 @@
           "stop": []
         },
         true,
+        null,
         {
-          "$error": {
-            "class": "InvalidArgumentException",
-            "message": "Prefetch must be at least the number of coroutines",
-            "code": 0
-          }
-        },
-        {
-          "jobs": [],
-          "start": [],
-          "stop": []
+          "jobs": [
+            {
+              "queue": "v1-databases",
+              "coroutines": 4,
+              "prefetch": 2,
+              "maxInFlight": 6,
+              "desc": "db",
+              "groups": [
+                "db"
+              ],
+              "params": [
+                "id"
+              ],
+              "dependencies": [
+                "message"
+              ],
+              "labels": []
+            },
+            {
+              "queue": "v1-functions",
+              "coroutines": 1,
+              "prefetch": 1,
+              "maxInFlight": 2,
+              "desc": "",
+              "groups": [],
+              "params": [],
+              "dependencies": [],
+              "labels": []
+            }
+          ],
+          "start": [
+            {
+              "desc": "",
+              "groups": [],
+              "params": [],
+              "dependencies": [],
+              "labels": []
+            }
+          ],
+          "stop": [
+            {
+              "desc": "",
+              "groups": [],
+              "params": [],
+              "dependencies": [],
+              "labels": []
+            }
+          ]
         },
         true,
         {
@@ -2413,6 +2455,7 @@
               "queue": "v1-a",
               "coroutines": 1,
               "prefetch": 1,
+              "maxInFlight": 2,
               "desc": "",
               "groups": [],
               "params": [],
@@ -2430,6 +2473,7 @@
               "queue": "v1-a",
               "coroutines": 1,
               "prefetch": 1,
+              "maxInFlight": 2,
               "desc": "",
               "groups": [],
               "params": [],
@@ -2440,6 +2484,7 @@
               "queue": "v1-b",
               "coroutines": 1,
               "prefetch": 1,
+              "maxInFlight": 2,
               "desc": "",
               "groups": [],
               "params": [],

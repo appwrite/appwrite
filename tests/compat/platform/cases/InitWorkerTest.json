@@ -44,7 +44,9 @@
                   },
                   "functions": {
                     "queue": "v1-functions",
-                    "coroutines": 8
+                    "coroutines": 8,
+                    "prefetch": 3,
+                    "maxInFlight": 20
                   }
                 }
               }
@@ -64,6 +66,7 @@
               "queue": "database_db_main",
               "coroutines": 1,
               "prefetch": 100,
+              "maxInFlight": 101,
               "desc": "",
               "groups": [],
               "params": [],
@@ -73,7 +76,8 @@
             {
               "queue": "v1-functions",
               "coroutines": 8,
-              "prefetch": 8,
+              "prefetch": 3,
+              "maxInFlight": 20,
               "desc": "",
               "groups": [],
               "params": [],
@@ -121,7 +125,9 @@
                 "jobs": {
                   "functions": {
                     "queue": "v1-functions",
-                    "coroutines": 8
+                    "coroutines": 8,
+                    "prefetch": 3,
+                    "maxInFlight": 20
                   }
                 }
               }
@@ -140,7 +146,8 @@
             {
               "queue": "v1-functions",
               "coroutines": 8,
-              "prefetch": 8,
+              "prefetch": 3,
+              "maxInFlight": 20,
               "desc": "",
               "groups": [],
               "params": [],

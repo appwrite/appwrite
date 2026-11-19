@@ -884,7 +884,49 @@ impl Nats {
         Ok(())
     }
 
-    async fn pull(&self, queue: &Queue, timeout: i64, max: usize) -> Result<Vec<Message>> {
+    /// `receiveEach()`: pulls on the receive lock, handing each message over
+    /// as it arrives.
+    async fn receive_streamed(
+        &self,
+        queue: &Queue,
+        timeout: i64,
+        n: i64,
+        on_message: &mut (dyn FnMut(Message) + Send),
+    ) -> Result<()> {
+        if self.closed.load(Ordering::SeqCst) {
+            return Err(nats_error("Utopia\\NATS\\Exception\\ConnectionException", "Not connected (status: closed)"));
+        }
+        let result = {
+            let _guard = self.receive.lock().await;
+            let mut received = 0;
+            match self.pull(queue, timeout, n.max(1) as usize, on_message, &mut received).await {
+                // Keep partial deliveries; a retry could exceed the reserved buffer.
+                Err(e @ Error::Nats { .. }) if received > 0 => {
+                    self.report(e);
+                    Ok(())
+                }
+                Err(e) if received == 0 && lost_connection(&e) && self.reconnect_receive().await => {
+                    self.pull(queue, timeout, n.max(1) as usize, on_message, &mut received).await
+                }
+                other => other,
+            }
+        };
+        // Off the lock, and on the way out however the pull ended.
+        self.flush_reports();
+        result
+    }
+
+    /// The body of a receive, on the receive lock: hands each delivery to
+    /// `on_message` as it arrives, counting every one taken in `received`
+    /// (those set aside too).
+    async fn pull(
+        &self,
+        queue: &Queue,
+        timeout: i64,
+        max: usize,
+        on_message: &mut (dyn FnMut(Message) + Send),
+        received: &mut usize,
+    ) -> Result<()> {
         self.ensure(queue).await?;
         let key = identity(queue);
         self.state().served.entry(key.clone()).or_insert_with(|| queue.clone());
@@ -904,63 +946,81 @@ impl Nats {
         self.drain_dead_letters(queue, &key).await;
         let consumer =
             self.state().consumers.get(&key).cloned().ok_or_else(|| Error::Runtime("consumer missing".into()))?;
-        let mut deliveries = self.fetch(&consumer, 1, timeout as f64, false).await?;
-        if !deliveries.is_empty() && deliveries.len() < max {
-            // A failed top-up keeps the deliveries already fetched: dropped,
-            // they would wait out ackWait before anyone saw them again.
-            match self.fetch(&consumer, max - deliveries.len(), 0.25, true).await {
-                Ok(more) => deliveries.extend(more),
-                Err(e) => self.report(e),
-            }
-        }
         let mut spare = self.state().spare.get(&key).copied().flatten();
-        let mut messages = Vec::with_capacity(deliveries.len());
-        for delivery in deliveries {
-            let (delivered, sequence) = match delivery.info() {
-                Ok(i) => (i.delivered, i.stream_sequence as i64),
-                Err(_) => (1, 0),
-            };
-            if let Some(s) = spare
-                && delivered >= s
-            {
-                match consumer.clone().info().await {
-                    Ok(info) => {
-                        spare = spare_of(&info.config);
-                        self.state().spare.insert(key.clone(), spare);
-                    }
-                    Err(e) => self.report(jetstream_error(e)),
-                }
-                if spare.is_some_and(|s| delivered >= s) {
-                    self.park(queue, &delivery, "max deliveries exceeded").await;
-                    continue;
-                }
+        // Hand the first message over immediately, then top up the same buffer.
+        if let Some(mut stream) = self.batch(&consumer, 1, timeout as f64, false).await? {
+            while let Some(Ok(delivery)) = stream.next().await {
+                *received += 1;
+                self.deliver(queue, &key, &consumer, &mut spare, delivery, on_message).await?;
             }
-            let size = delivery.payload.len() as i64;
-            Message::warn_if_large(queue.name(), size);
-            let data = self.config.codec.decode(&delivery.payload).ok();
-            let envelope = match data {
-                Some(Value::Array(a))
-                    if ["pid", "queue", "timestamp"]
-                        .iter()
-                        .all(|k| a.get_str(k).is_some_and(|v| !matches!(v, Value::Null))) =>
-                {
-                    a
-                }
-                _ => {
-                    self.park(queue, &delivery, "payload could not be decoded").await;
-                    continue;
-                }
-            };
-            let mut message = Message::from_envelope(&envelope)?;
-            message
-                .set_attempts((delivered - 1).max(0))
-                .set_max_attempts(Some(self.config.max_deliver))
-                .set_sequence(Some(sequence))
-                .set_size(Some(size));
-            self.state().in_flight.insert(message.pid().as_bytes().to_vec(), delivery);
-            messages.push(message);
         }
-        Ok(messages)
+        if *received > 0
+            && *received < max
+            && let Some(mut stream) = self.batch(&consumer, max - *received, 0.25, true).await?
+        {
+            while let Some(Ok(delivery)) = stream.next().await {
+                *received += 1;
+                self.deliver(queue, &key, &consumer, &mut spare, delivery, on_message).await?;
+            }
+        }
+        Ok(())
+    }
+
+    /// One delivery of a pull: set aside past its spare attempt or when its
+    /// payload cannot be decoded, else registered in flight and handed over.
+    async fn deliver(
+        &self,
+        queue: &Queue,
+        key: &str,
+        consumer: &PullConsumer,
+        spare: &mut Option<i64>,
+        delivery: jetstream::Message,
+        on_message: &mut (dyn FnMut(Message) + Send),
+    ) -> Result<()> {
+        let (delivered, sequence) = match delivery.info() {
+            Ok(i) => (i.delivered, i.stream_sequence as i64),
+            Err(_) => (1, 0),
+        };
+        if let Some(s) = *spare
+            && delivered >= s
+        {
+            match consumer.clone().info().await {
+                Ok(info) => {
+                    *spare = spare_of(&info.config);
+                    self.state().spare.insert(key.to_owned(), *spare);
+                }
+                Err(e) => self.report(jetstream_error(e)),
+            }
+            if spare.is_some_and(|s| delivered >= s) {
+                self.park(queue, &delivery, "max deliveries exceeded").await;
+                return Ok(());
+            }
+        }
+        let size = delivery.payload.len() as i64;
+        Message::warn_if_large(queue.name(), size);
+        let data = self.config.codec.decode(&delivery.payload).ok();
+        let envelope = match data {
+            Some(Value::Array(a))
+                if ["pid", "queue", "timestamp"]
+                    .iter()
+                    .all(|k| a.get_str(k).is_some_and(|v| !matches!(v, Value::Null))) =>
+            {
+                a
+            }
+            _ => {
+                self.park(queue, &delivery, "payload could not be decoded").await;
+                return Ok(());
+            }
+        };
+        let mut message = Message::from_envelope(&envelope)?;
+        message
+            .set_attempts((delivered - 1).max(0))
+            .set_max_attempts(Some(self.config.max_deliver))
+            .set_sequence(Some(sequence))
+            .set_size(Some(size));
+        self.state().in_flight.insert(message.pid().as_bytes().to_vec(), delivery);
+        on_message(message);
+        Ok(())
     }
 
     async fn fetch(
@@ -971,30 +1031,32 @@ impl Nats {
         no_wait: bool,
     ) -> Result<Vec<jetstream::Message>> {
         let mut out = Vec::new();
-        if !no_wait && timeout <= 0.0 {
-            // A pull that may not wait at all collects nothing before its deadline.
-            return Ok(out);
-        }
-        if no_wait {
-            let mut stream = consumer.fetch().max_messages(batch).messages().await.map_err(jetstream_error)?;
-            while let Some(m) = stream.next().await {
-                match m {
-                    Ok(m) => out.push(m),
-                    Err(_) => break,
-                }
-            }
-        } else {
-            let expires = Duration::from_secs_f64(timeout.max(0.001));
-            let mut stream =
-                consumer.batch().max_messages(batch).expires(expires).messages().await.map_err(jetstream_error)?;
-            while let Some(m) = stream.next().await {
-                match m {
-                    Ok(m) => out.push(m),
-                    Err(_) => break,
-                }
+        if let Some(mut stream) = self.batch(consumer, batch, timeout, no_wait).await? {
+            while let Some(Ok(m)) = stream.next().await {
+                out.push(m);
             }
         }
         Ok(out)
+    }
+
+    /// A pull request for up to `batch` messages, whose deliveries are read
+    /// as they arrive. `None` when it may not wait at all and so could
+    /// collect nothing before its deadline.
+    async fn batch(
+        &self,
+        consumer: &PullConsumer,
+        batch: usize,
+        timeout: f64,
+        no_wait: bool,
+    ) -> Result<Option<async_nats::jetstream::consumer::pull::Batch>> {
+        if no_wait {
+            return consumer.fetch().max_messages(batch).messages().await.map(Some).map_err(jetstream_error);
+        }
+        if timeout <= 0.0 {
+            return Ok(None);
+        }
+        let expires = Duration::from_secs_f64(timeout.max(0.001));
+        consumer.batch().max_messages(batch).expires(expires).messages().await.map(Some).map_err(jetstream_error)
     }
 
     /// Sets aside a message no handler should see: straight to the dead
@@ -1854,25 +1916,21 @@ impl Publisher for Nats {
 impl Consumer for Nats {
     fn receive<'a>(&'a self, queue: &'a Queue, timeout: i64, n: i64) -> BoxFuture<'a, Result<Vec<Message>>> {
         Box::pin(async move {
-            if self.closed.load(Ordering::SeqCst) {
-                return Err(nats_error(
-                    "Utopia\\NATS\\Exception\\ConnectionException",
-                    "Not connected (status: closed)",
-                ));
-            }
-            let result = {
-                let _guard = self.receive.lock().await;
-                match self.pull(queue, timeout, n.max(1) as usize).await {
-                    // Once: only the first fetch fails here, and it handed nothing over.
-                    Err(e) if lost_connection(&e) && self.reconnect_receive().await => {
-                        self.pull(queue, timeout, n.max(1) as usize).await
-                    }
-                    other => other,
-                }
-            };
-            self.flush_reports();
-            result
+            let mut messages = Vec::new();
+            let mut collect = |message: Message| messages.push(message);
+            self.receive_streamed(queue, timeout, n, &mut collect).await?;
+            Ok(messages)
         })
+    }
+
+    fn receive_each<'a>(
+        &'a self,
+        queue: &'a Queue,
+        timeout: i64,
+        n: i64,
+        on_message: &'a mut (dyn FnMut(Message) + Send),
+    ) -> Option<BoxFuture<'a, Result<()>>> {
+        Some(Box::pin(self.receive_streamed(queue, timeout, n, on_message)))
     }
 
     fn commit<'a>(&'a self, _queue: &'a Queue, message: &'a Message) -> BoxFuture<'a, Result<()>> {

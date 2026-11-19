@@ -197,7 +197,8 @@
             },
             "coroutines": 1,
             "stop_after": 5,
-            "hold_ms": 5
+            "hold_ms": 5,
+            "maxInFlight": 1
           },
           "expect": {
             "handled": [
@@ -292,7 +293,8 @@
             "stop_after": 3,
             "fail": [
               "p02"
-            ]
+            ],
+            "maxInFlight": 1
           },
           "expect": {
             "handled": [

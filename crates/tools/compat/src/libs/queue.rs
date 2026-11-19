@@ -42,6 +42,7 @@ pub const OPS: &[&str] = &[
     "broker.publish",
     "broker.publish_many",
     "broker.receive",
+    "broker.receive_each",
     "broker.commit",
     "broker.commit_all",
     "broker.reject",
@@ -700,6 +701,37 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
                 Err(e) => err(e),
             }
         }
+        "broker.receive_each" => {
+            // Each delivery as it arrives, committed there when `commit` is set
+            // (on its own task: the handoff cannot wait): the payloads and
+            // attempts in arrival order.
+            let q = q!(a);
+            let c = broker(session)?.consumer();
+            let commit = a.opt_bool("commit")?.unwrap_or(false);
+            let (mut payloads, mut attempts, mut commits) = (Vec::new(), Vec::new(), Vec::new());
+            let mut each = |m: Message| {
+                payloads.push(dump(&Value::Array(m.payload().clone())));
+                attempts.push(m.attempts());
+                if commit {
+                    let (c, q) = (c.clone(), q.clone());
+                    commits.push(utopia_async::spawn(async move { c.commit(&q, &m).await }));
+                }
+            };
+            let received =
+                match c.receive_each(&q, a.opt_i64("timeout")?.unwrap_or(0), a.opt_i64("n")?.unwrap_or(1), &mut each) {
+                    Some(receiving) => receiving.await,
+                    None => Err(Error::Logic(format!("{} does not stream", c.name()))),
+                };
+            for handle in commits {
+                if let Ok(Err(e)) = handle.await {
+                    return Ok(err(e));
+                }
+            }
+            match received {
+                Ok(()) => Outcome::ok(json!({"payloads": payloads, "attempts": attempts})),
+                Err(e) => err(e),
+            }
+        }
         "broker.commit" => {
             let q = q!(a);
             let m = message(&a, session)?;
@@ -1224,15 +1256,18 @@ async fn configure(a: &Args<'_>, session: &mut Session) -> Result<Outcome, Fault
         let name = j.str("queue")?;
         let coroutines = j.opt_i64("coroutines")?.unwrap_or(1).max(0) as usize;
         let prefetch = j.opt_i64("prefetch")?.map(|p| p.max(0) as usize);
-        match server.job(name, coroutines, prefetch) {
-            Ok(_) => jobs.push(json!([name, server.coroutines(name), server.prefetch(name)])),
+        let max_in_flight = j.opt_i64("maxInFlight")?.map(|p| p.max(0) as usize);
+        match server.job(name, coroutines, prefetch, max_in_flight) {
+            Ok(_) => {
+                jobs.push(json!([name, server.coroutines(name), server.prefetch(name), server.max_in_flight(name)]))
+            }
             Err(e) => jobs.push(error_json(&e)),
         }
     }
     let mut out = json!({
         "jobs": jobs,
         "registered": server.jobs(),
-        "unregistered": [server.coroutines("none"), server.prefetch("none")],
+        "unregistered": [server.coroutines("none"), server.prefetch("none"), server.max_in_flight("none")],
     });
     if a.opt_bool("start")?.unwrap_or(false) {
         let server = Arc::new(server);
@@ -1370,6 +1405,7 @@ async fn run(a: &Args<'_>, session: &mut Session) -> Result<Outcome, Fault> {
             name,
             s.opt_i64("coroutines")?.unwrap_or(1) as usize,
             s.opt_i64("prefetch")?.map(|p| p as usize),
+            s.opt_i64("maxInFlight")?.map(|p| p as usize),
         ) {
             Ok(j) => j,
             Err(e) => return Ok(err(e)),
@@ -1552,6 +1588,7 @@ async fn consume(a: &Args<'_>, session: &mut Session) -> Result<Outcome, Fault> 
         .unwrap_or_default();
     let coroutines = a.opt_i64("coroutines")?.unwrap_or(1) as usize;
     let prefetch = a.opt_i64("prefetch")?.map_or(coroutines, |p| p as usize);
+    let max_in_flight = a.opt_i64("maxInFlight")?.map(|p| p as usize);
 
     let (st, stop) = (state.clone(), stopper.clone());
     let on_message: MessageCallback = Arc::new(move |m: Arc<Message>, _| {
@@ -1593,8 +1630,9 @@ async fn consume(a: &Args<'_>, session: &mut Session) -> Result<Outcome, Fault> 
         utopia_async::sleep(std::time::Duration::from_secs(5)).await;
         stopper.stop();
     });
-    let result =
-        adapter.consume(on_message, on_success, on_error, vec![Spec { queue, coroutines, prefetch, consumer }]).await;
+    let result = adapter
+        .consume(on_message, on_success, on_error, vec![Spec { queue, coroutines, prefetch, max_in_flight, consumer }])
+        .await;
     deadline.abort();
     if let Err(e) = result {
         return Ok(err(e));

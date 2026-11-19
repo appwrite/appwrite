@@ -374,6 +374,12 @@
         "Utopia\\Queue\\Broker\\Nats::receive"
       ]
     },
+    "broker.receive_each": {
+      "doc": "$broker->receiveEach(queue, timeout, n, callback) (Consumer\\Streaming), committing each delivery as it arrives when `commit`: the payloads and attempts in arrival order",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Nats::receiveEach"
+      ]
+    },
     "broker.commit": {
       "doc": "$broker->commit(queue, message)",
       "covers": [
@@ -542,13 +548,14 @@
       "doc": "fixture: the memory consumer's log"
     },
     "server.configure": {
-      "doc": "register jobs, read coroutines()/prefetch()/jobs(), optionally start() on a memory consumer",
+      "doc": "register jobs, read coroutines()/prefetch()/maxInFlight()/jobs(), optionally start() on a memory consumer",
       "covers": [
         "Utopia\\Queue\\Server::__construct",
         "Utopia\\Queue\\Server::job",
         "Utopia\\Queue\\Server::jobs",
         "Utopia\\Queue\\Server::coroutines",
         "Utopia\\Queue\\Server::prefetch",
+        "Utopia\\Queue\\Server::maxInFlight",
         "Utopia\\Queue\\Server::consumer",
         "Utopia\\Queue\\Adapter::__construct",
         "Utopia\\Queue\\Adapter::createConsumer",

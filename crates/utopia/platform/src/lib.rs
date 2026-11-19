@@ -126,8 +126,8 @@ pub enum Error {
     /// The HTTP application refused a route (a path taken twice).
     #[error(transparent)]
     Http(#[from] utopia_http::Error),
-    /// The worker server refused a job (no queue name, prefetch below
-    /// coroutines).
+    /// The worker server refused a job (no queue name, prefetch or
+    /// maxInFlight below one).
     #[error(transparent)]
     Queue(#[from] utopia_queue::Error),
     /// The CLI refused a hook (an injection declared twice).

@@ -340,6 +340,42 @@ impl Consumer {
         no_wait: bool,
         max_bytes: Option<i64>,
     ) -> Result<MessageBatch> {
+        let mut messages = MessageBatch::default();
+        let mut add = |message: Message| {
+            messages.add_message(message);
+            Ok(())
+        };
+        self.pull(conn, batch, timeout, no_wait, max_bytes, &mut add).await?;
+        Ok(messages)
+    }
+
+    /// Like [`Consumer::fetch`], but hands each message to `on_message` as
+    /// it arrives, before the rest of the pull. A failing callback ends the
+    /// pull with its error, the inbox released first.
+    ///
+    /// PHP: `Consumer::fetchEach()`.
+    pub async fn fetch_each(
+        &self,
+        conn: &mut Connection,
+        batch: i64,
+        on_message: &mut (dyn FnMut(JetStreamMessage) -> Result<()> + Send),
+        timeout: Option<Duration>,
+        no_wait: bool,
+        max_bytes: Option<i64>,
+    ) -> Result<()> {
+        let mut each = |message: Message| on_message(JetStreamMessage::new(message));
+        self.pull(conn, batch, timeout, no_wait, max_bytes, &mut each).await
+    }
+
+    async fn pull(
+        &self,
+        conn: &mut Connection,
+        batch: i64,
+        timeout: Option<Duration>,
+        no_wait: bool,
+        max_bytes: Option<i64>,
+        on_message: &mut (dyn FnMut(Message) -> Result<()> + Send),
+    ) -> Result<()> {
         let timeout = timeout.map_or(5.0, |t| t.as_secs_f64());
         let subject = format!("{}.CONSUMER.MSG.NEXT.{}.{}", self.api_prefix, self.stream, self.name());
         let mut request = Object::new();
@@ -362,11 +398,10 @@ impl Consumer {
         conn.settle(Some(Duration::from_secs_f64(timeout).min(Connection::SETTLE_TIMEOUT))).await?;
         let inbox = conn.new_inbox();
         let sub = conn.subscribe(&inbox, None, None).await?;
-        let mut messages = MessageBatch::default();
         let mut pending = match conn.publish(&subject, &payload, Some(&inbox), None).await {
             Ok(()) => {
                 let after_timeout = if ends { FETCH_REPLY_WAIT } else { FETCH_DRAIN_WAIT };
-                self.collect(conn, &sub, &mut messages, batch, timeout, after_timeout).await.err()
+                self.collect(conn, &sub, on_message, batch, timeout, after_timeout).await.err()
             }
             Err(error) => Some(error),
         };
@@ -375,7 +410,7 @@ impl Consumer {
         }
         match pending {
             Some(error) => Err(error),
-            None => Ok(messages),
+            None => Ok(()),
         }
     }
 
@@ -386,14 +421,15 @@ impl Consumer {
         &self,
         conn: &mut Connection,
         sub: &Subscription,
-        messages: &mut MessageBatch,
+        on_message: &mut (dyn FnMut(Message) -> Result<()> + Send),
         batch: i64,
         timeout: f64,
         after_timeout: f64,
     ) -> Result<()> {
         let deadline = Instant::now() + Duration::from_secs_f64(timeout.max(0.0));
         let mut drained = false;
-        while (messages.len() as i64) < batch {
+        let mut received: i64 = 0;
+        while received < batch {
             // Past the timeout, still read what the server sent: it counted each
             // message as delivered, and one left unread is held until ackWait and
             // charged an attempt, however late it arrives or is read.
@@ -419,7 +455,8 @@ impl Consumer {
                     break;
                 }
             }
-            messages.add_message(message);
+            on_message(message)?;
+            received += 1;
         }
         Ok(())
     }

@@ -77,7 +77,7 @@ utopia_async::Runtime::new()?.block_on(async {
     });
     server.init().inject("log").action(move |scope| async move { step(&scope, "init".into()) });
     server
-        .job("mails", 1, None)?
+        .job("mails", 1, None, None)?
         .param("to", php_std::Value::Null, Text::new(256), "Recipient", false)
         .inject("log")
         .action(move |scope| async move {
@@ -149,7 +149,7 @@ utopia_async::Runtime::new()?.block_on(async {
     server.resources().set("log", log.clone());
     let step = |scope: &Scope, name: String| scope.get::<Log>("log").unwrap().lock().unwrap().push(name);
 
-    server.job("mails", 1, None)?.inject("message").action(|scope| async move {
+    server.job("mails", 1, None, None)?.inject("message").action(|scope| async move {
         let message = scope.message().unwrap();
         match message.payload().get_str("to").and_then(|to| to.to_php_string().ok()) {
             Some(to) if !to.is_empty() => Ok(()),

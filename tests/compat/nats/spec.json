@@ -1347,6 +1347,12 @@
         "Utopia\\NATS\\JetStream\\MessageBatch::getMessages"
       ]
     },
+    "consumer.fetch_each": {
+      "doc": "$consumer->fetchEach(batch, callback, timeout?, noWait?, maxBytes?), each arrival recorded by the callback: {messages (handles and data), within?, at_least?}",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\Consumer::fetchEach"
+      ]
+    },
     "consumer.next": {
       "doc": "$consumer->next(timeout?)",
       "covers": [

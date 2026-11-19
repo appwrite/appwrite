@@ -593,7 +593,7 @@ final class Adapter implements Base, Benchmarks
                         $worker = $platform->getWorker();
                         $jobs = [];
                         foreach ($worker->jobs() as $queue => $job) {
-                            $jobs[] = ['queue' => $queue, 'coroutines' => $worker->coroutines($queue), 'prefetch' => $worker->prefetch($queue), 'desc' => $job->getDesc(), 'groups' => $job->getGroups(), 'params' => array_keys($job->getParams()), 'dependencies' => $job->getDependencies(), 'labels' => self::labels($job, $x)];
+                            $jobs[] = ['queue' => $queue, 'coroutines' => $worker->coroutines($queue), 'prefetch' => $worker->prefetch($queue), 'maxInFlight' => $worker->maxInFlight($queue), 'desc' => $job->getDesc(), 'groups' => $job->getGroups(), 'params' => array_keys($job->getParams()), 'dependencies' => $job->getDependencies(), 'labels' => self::labels($job, $x)];
                         }
                         $hooks = fn (array $list) => array_map(fn (Hook $h) => ['desc' => $h->getDesc(), 'groups' => $h->getGroups(), 'params' => array_keys($h->getParams()), 'dependencies' => $h->getDependencies(), 'labels' => self::labels($h, $x)], $list);
 

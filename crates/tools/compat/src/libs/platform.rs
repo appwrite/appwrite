@@ -510,6 +510,7 @@ fn init(spec: &Value) -> Init {
                             queue: c.get("queue").and_then(Value::as_str).map(str::to_owned),
                             coroutines: c.get("coroutines").and_then(Value::as_i64),
                             prefetch: c.get("prefetch").and_then(Value::as_u64).map(|n| n as usize),
+                            max_in_flight: c.get("maxInFlight").and_then(Value::as_u64).map(|n| n as usize),
                         },
                     )
                 })
@@ -629,6 +630,7 @@ async fn platform(a: &Args<'_>) -> Result<Value, Fault> {
                                 out.insert("queue".into(), json!(queue));
                                 out.insert("coroutines".into(), json!(worker.coroutines(queue)));
                                 out.insert("prefetch".into(), json!(worker.prefetch(queue)));
+                                out.insert("maxInFlight".into(), json!(worker.max_in_flight(queue)));
                                 out.extend(std::mem::take(o));
                                 return Value::Object(out);
                             }

@@ -204,7 +204,7 @@ utopia_async::Runtime::new()?.block_on(async {
     let mut server = Server::new(Adapter::new(broker, 1, Runtime::Drain));
 
     server
-        .job("mails", 1, None)?
+        .job("mails", 1, None, None)?
         .param("to", php_std::Value::Null, Text::new(256), "Recipient", false)
         .inject("message")
         .action(|scope| async move {

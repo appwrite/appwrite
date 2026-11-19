@@ -46,7 +46,8 @@
               "namespace": "${ns}"
             },
             "coroutines": 1,
-            "stop_after": 2
+            "stop_after": 2,
+            "maxInFlight": 1
           },
           "expect": {
             "handled": [

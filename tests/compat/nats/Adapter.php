@@ -642,6 +642,15 @@ final class Adapter implements Base, Benchmarks
 
                 return self::batch($s, $batch) + self::timing(microtime(true) - $start, $a);
             },
+            'consumer.fetch_each' => function (array $a, Session $s) {
+                $start = microtime(true);
+                $messages = [];
+                $s->get($a['consumer'])->fetchEach($a['batch'] ?? 1, function (JetStreamMessage $m) use ($s, &$messages): void {
+                    $messages[] = ['handle' => $s->handle($m)] + self::jsMessage($m);
+                }, self::timeout($a), $a['no_wait'] ?? false, $a['max_bytes'] ?? null);
+
+                return ['messages' => $messages] + self::timing(microtime(true) - $start, $a);
+            },
             'consumer.next' => function (array $a, Session $s) {
                 $message = $s->get($a['consumer'])->next(self::timeout($a));
 

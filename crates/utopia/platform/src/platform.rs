@@ -21,8 +21,11 @@ pub struct JobConfig {
     pub queue: Option<String>,
     /// The messages handled at once (at least 1, default 1).
     pub coroutines: Option<i64>,
-    /// The unacknowledged messages allowed (default: `coroutines`).
+    /// The receive-buffer capacity (default: `coroutines`).
     pub prefetch: Option<usize>,
+    /// The unacknowledged messages allowed (`maxInFlight`, default:
+    /// `coroutines + prefetch`).
+    pub max_in_flight: Option<usize>,
 }
 
 /// What [`Platform::init`] needs for workers.
@@ -425,7 +428,7 @@ impl Platform {
                     let queue =
                         config.queue.or_else(|| params.queue_name.clone()).unwrap_or_else(|| format!("v1-{name}"));
                     let coroutines = usize::try_from(config.coroutines.unwrap_or(1).max(1)).unwrap_or(1);
-                    worker.job(&queue, coroutines, config.prefetch)?
+                    worker.job(&queue, coroutines, config.prefetch, config.max_in_flight)?
                 };
                 let groups: Vec<&str> = action.get_groups().iter().map(String::as_str).collect();
                 hook.groups(&groups).desc(action.description().unwrap_or(""));
