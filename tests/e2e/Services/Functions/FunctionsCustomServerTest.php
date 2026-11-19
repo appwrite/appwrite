@@ -23,6 +23,7 @@ use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\System\System;
 
 final class FunctionsCustomServerTest extends Scope
 {
@@ -1396,6 +1397,63 @@ final class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(204, $deployment['headers']['status-code']);
+    }
+
+    public function testDeploymentBuildDeduplicationAndMarkerTtl(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => Id::unique(),
+            'name' => 'Dedupe TTL Test',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+        ]);
+
+        /**
+         * Test for SUCCESS
+         */
+        $deployment = $this->createDeployment($functionId, [
+            'code' => $this->packageFunction('basic'),
+            'activate' => true,
+        ]);
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $deploymentId = $deployment['body']['$id'] ?? '';
+
+        $this->assertEventually(function () use ($functionId, $deploymentId) {
+            $deployment = $this->getDeployment($functionId, $deploymentId);
+
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 50000, 500);
+
+        $redis = new \Redis();
+        try {
+            $redis->connect(System::getEnv('_APP_REDIS_HOST', 'redis'), (int) System::getEnv('_APP_REDIS_PORT', '6379'));
+            $password = System::getEnv('_APP_REDIS_PASS', '');
+            if ($password !== '') {
+                $user = System::getEnv('_APP_REDIS_USER', '');
+                $redis->auth($user !== '' ? [$user, $password] : $password);
+            }
+        } catch (\Throwable $e) {
+            $this->markTestSkipped('Redis is not reachable: ' . $e->getMessage());
+        }
+
+        try {
+            $project = $this->getProject();
+            $internalId = (string) ($project['$internalId'] ?? $project['$sequence'] ?? '');
+            $pattern = $internalId !== '' ? "*jobs-event-{$internalId}-*" : '*jobs-event-*';
+            $keys = $redis->keys($pattern);
+
+            $this->assertNotEmpty($keys, 'Expected dedupe markers to be recorded in Redis for the deployment build callbacks');
+
+            foreach ($keys as $key) {
+                $ttl = $redis->ttl($key);
+                $this->assertGreaterThan(0, $ttl, "Dedupe marker {$key} stored without TTL in Redis");
+                $this->assertLessThanOrEqual(3600, $ttl, "Dedupe marker {$key} TTL exceeds 3600 seconds");
+            }
+        } finally {
+            $redis->close();
+            $this->cleanupFunction($functionId);
+        }
     }
 
     /**
