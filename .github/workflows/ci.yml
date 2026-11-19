@@ -398,7 +398,9 @@ jobs:
           # package that requires ext-utopia, or runs linked to one, loads the extension, built once
           # for every package job by `Packages / Extension`. A registry-resolved dependent keeps the
           # PHP classes of the releases it resolves.
-          NATIVE=$(grep -l '"ext-utopia"' packages/*/composer.json | cut -d/ -f2 | jq -R . | jq -cs .)
+          # image is left out: its tests decode AVIF and HEIC with the system's libheif, so they run
+          # in the Extension job, against the libheif Appwrite ships, and are skipped here.
+          NATIVE=$(grep -l '"ext-utopia"' packages/*/composer.json | cut -d/ -f2 | grep -vx image | jq -R . | jq -cs .)
           DEPENDENTS=$(bin/monorepo dependents $(echo "$NATIVE" | jq -r '.[]') | jq -R . | jq -cs .)
           MATRIX=$(echo "$MATRIX" | jq -c --argjson native "$NATIVE" --argjson dependents "$DEPENDENTS" \
             'map(. + {extension: ((.package | IN($native[])) or (.linked and (.package | IN($dependents[]))))})')
@@ -515,17 +517,9 @@ jobs:
         env:
           LIBRARY: ${{ runner.temp }}/utopia/libutopia.so
         run: |
-          # libheif decodes AVIF and HEIC only through its plugins, which image's tests read.
-          packages=""
           if ldd "$LIBRARY" | grep -q 'not found'; then
-            packages="libheif1"
-          fi
-          if [ "$PACKAGE" = image ]; then
-            packages="$packages libheif1 libheif-plugin-libde265 libheif-plugin-aomdec"
-          fi
-          if [ -n "$packages" ]; then
             sudo apt-get update
-            sudo apt-get install -y --no-install-recommends $packages
+            sudo apt-get install -y --no-install-recommends libheif1
           fi
           echo "extension=$LIBRARY" | sudo tee "$(php -r 'echo PHP_CONFIG_FILE_SCAN_DIR;')/99-utopia.ini"
           php --ri utopia > /dev/null
