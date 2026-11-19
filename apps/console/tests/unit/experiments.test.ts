@@ -22,15 +22,17 @@ describe('hasQualityLabel', () => {
 })
 
 describe('experiments catalog', () => {
-  test('lists Appwrite Analytics, project environments and Origin', () => {
+  test('lists Appwrite Analytics, project environments, Origin and alerts', () => {
     expect(EXPERIMENTS.map((experiment) => experiment.flag)).toEqual([
       'analytics',
       'projectEnvironments',
       'vcsOrigin',
+      'alerts',
     ])
     expect(EXPERIMENTS[0]?.name).toBe('Appwrite Analytics')
     expect(EXPERIMENTS[1]?.name).toBe('Project environments')
     expect(EXPERIMENTS[2]?.name).toBe('Origin Git provider')
+    expect(EXPERIMENTS[3]?.name).toBe('Monitors and alerts')
     for (const experiment of EXPERIMENTS) {
       expect(experiment.description.length).toBeGreaterThan(0)
     }
@@ -42,12 +44,7 @@ describe('experiments catalog', () => {
     }
   })
 
-  test('usage alerts are off in every profile and only the debug menu turns them on', () => {
-    expect(
-      EXPERIMENTS.some(
-        (experiment) => experiment.flag === ('alerts' as string),
-      ),
-    ).toBe(false)
+  test('usage alerts are off in every profile until the experiment turns them on', () => {
     for (const profile of Object.values(CONSOLE_PROFILES)) {
       expect(profile.features.alerts).toBe(false)
     }
@@ -147,7 +144,7 @@ describe('usage alerts flag', () => {
     }
   })
 
-  test('the pages open once the debug menu turns the flag on', () => {
+  test('the pages open once the experiment turns the flag on', () => {
     setDebugProfileFeatureOverride('alerts', true)
     expect(enter(AlertsRoute)).toBeNull()
     expect(enter(MonitorsRoute)).toBeNull()
