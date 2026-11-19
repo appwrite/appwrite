@@ -53,9 +53,41 @@ type Phase =
   | 'reauthorize'
   | 'error'
 
+/** What the minted key sends; SMS needs a provider with an `sms` API (Bird). */
+export type OneClickChannel = 'email' | 'sms'
+
+/** Copy per channel, as whole sentences so each one translates on its own. */
+const CHANNEL_COPY = {
+  email: {
+    intro:
+      'Let Appwrite create the API key for a verified domain and fill these fields.',
+    loading: 'Loading domains…',
+    empty: 'Add and verify a sending domain, then check again.',
+    manage: 'Manage domains',
+    pick: 'Domain',
+    loadFailed: 'Failed to load domains from the email provider',
+    mintFailed: 'Failed to create the API key with the email provider',
+  },
+  sms: {
+    intro: 'Let Appwrite create the API key and fill in one of your senders.',
+    loading: 'Loading senders…',
+    empty: 'Add a sender, then check again.',
+    manage: 'Manage senders',
+    pick: 'Sender',
+    loadFailed: 'Failed to load senders from the SMS provider',
+    mintFailed: 'Failed to create the API key with the SMS provider',
+  },
+} as const
+
 interface OneClickSetupProps {
-  /** Email provider that mints the API key the wizard sends with. */
+  /** Provider that mints the API key the wizard sends with. */
   provider: AvailableSmtpQuickSetupProvider
+  channel?: OneClickChannel
+  /**
+   * Names this setup in the authorization round trip, so the wizard reopens
+   * the right card when one provider serves two (Bird email and Bird SMS).
+   */
+  target?: string
   analyticsAction: AnalyticsActionId
   /** Provider name filled in when the user left it empty. */
   defaultName: string
@@ -68,6 +100,8 @@ interface OneClickSetupProps {
     name?: string
     fromName?: string
     fromEmail?: string
+    /** SMS sender. */
+    from?: string
   }) => void
   /** Run the flow on mount, used when returning from authorization. */
   autoStart?: boolean
@@ -86,13 +120,15 @@ export interface OneClickSetupHandle {
 }
 
 /**
- * One-click setup for a messaging email provider (Resend, Bird): authorize
- * the provider once, then let Appwrite mint a sending-only API key for a
- * verified domain and fill the wizard's API key and sender fields.
+ * One-click setup for a messaging provider (Resend and Bird email, Bird SMS):
+ * authorize the provider once, then let Appwrite mint a sending-only API key
+ * and fill the wizard's API key and sender fields. Email picks a verified
+ * domain; SMS picks one of the workspace's senders.
  *
  * Same credentials and reconnect rules as the project SMTP one-click setup;
  * only the fields differ. The wizard decides how the key is used: Resend
- * sends through its API, Bird through its SMTP relay.
+ * sends through its API, Bird email through its SMTP relay, Bird SMS through
+ * the Bird provider.
  *
  * The key exists at the provider from the moment it is minted, but nothing
  * depends on it until the messaging provider is created. Until the wizard
@@ -106,6 +142,8 @@ export const OneClickSetup = forwardRef<
 >(function OneClickSetup(
   {
     provider,
+    channel = 'email',
+    target,
     analyticsAction,
     defaultName,
     projectName,
@@ -116,6 +154,8 @@ export const OneClickSetup = forwardRef<
   ref,
 ) {
   const t = useT()
+  const copy = CHANNEL_COPY[channel]
+  const sms = channel === 'sms' ? provider.sms : undefined
   const { account } = useAuth()
   const accountId =
     (account as { $id?: string } | null | undefined)?.$id ?? null
@@ -157,13 +197,20 @@ export const OneClickSetup = forwardRef<
     setErrorMessage('')
     try {
       const list = sortQuickSetupDomains(
-        await callWith(provider, provider.api.listDomains),
+        await callWith(
+          provider,
+          sms ? sms.listSenders : provider.api.listDomains,
+        ),
       )
       setDomains(list)
-      const initial = pickDefaultQuickSetupDomain(
-        list,
-        typeof values.fromEmail === 'string' ? values.fromEmail : undefined,
-      )
+      const initial = sms
+        ? (list.find(
+            (sender) => sender.verified && sender.name === values.from,
+          ) ?? list.find((sender) => sender.verified))
+        : pickDefaultQuickSetupDomain(
+            list,
+            typeof values.fromEmail === 'string' ? values.fromEmail : undefined,
+          )
       if (!initial) {
         setPhase('no-domains')
         return
@@ -171,12 +218,12 @@ export const OneClickSetup = forwardRef<
       setDomainId(initial.id)
       setPhase('ready')
     } catch (error) {
-      failWith(error, 'Failed to load domains from the email provider')
+      failWith(error, copy.loadFailed)
     }
     // `values` is read for a default only; re-running on each keystroke would
     // reload the domain list while the user types.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [callWith, failWith, provider])
+  }, [callWith, copy, failWith, provider, sms])
 
   useEffect(() => {
     if (!autoStart || startedRef.current || !connected) return
@@ -200,7 +247,7 @@ export const OneClickSetup = forwardRef<
   const authorize = () => {
     if (!accountId) return
     try {
-      startProviderAuthorization(provider)
+      startProviderAuthorization(provider, target)
     } catch (error) {
       failWith(error, 'Failed to connect the email provider')
     }
@@ -212,18 +259,38 @@ export const OneClickSetup = forwardRef<
     setErrorMessage('')
     try {
       const credential = await callWith(provider, (accessToken) =>
-        provider.api.createCredential(accessToken, {
-          name: buildCredentialName(
-            projectName,
-            provider.credentialNameMaxLength,
-          ),
-          domainId: selectedDomain.id,
-        }),
+        sms
+          ? sms.createCredential(accessToken, {
+              name: buildCredentialName(
+                projectName,
+                provider.credentialNameMaxLength,
+                'Appwrite SMS',
+              ),
+            })
+          : provider.api.createCredential(accessToken, {
+              name: buildCredentialName(
+                projectName,
+                provider.credentialNameMaxLength,
+              ),
+              domainId: selectedDomain.id,
+            }),
       )
       // Generating again replaces the key in the form, so the previous one
       // (if any) is revoked here as well. A key that arrives after the wizard
       // left this step is revoked instead and never reaches the form.
       if (!minted.track(credential)) return
+
+      if (sms) {
+        const currentProviderName =
+          typeof values.name === 'string' ? values.name.trim() : ''
+        onFill({
+          apiKey: credential.secret,
+          name: currentProviderName ? undefined : t(defaultName),
+          from: selectedDomain.name,
+        })
+        setPhase('done')
+        return
+      }
 
       const currentEmail =
         typeof values.fromEmail === 'string' ? values.fromEmail.trim() : ''
@@ -244,7 +311,7 @@ export const OneClickSetup = forwardRef<
       })
       setPhase('done')
     } catch (error) {
-      failWith(error, 'Failed to create the API key with the email provider')
+      failWith(error, copy.mintFailed)
     }
   }
 
@@ -263,11 +330,7 @@ export const OneClickSetup = forwardRef<
           <p className="text-[13px] font-medium text-foreground">
             {t('One-click setup')}
           </p>
-          <p className="text-[12px] text-muted-foreground">
-            {t(
-              'Let Appwrite create the API key for a verified domain and fill these fields.',
-            )}
-          </p>
+          <p className="text-[12px] text-muted-foreground">{t(copy.intro)}</p>
         </div>
         {phase === 'idle' ? (
           // Same label whether or not the provider is already connected; only
@@ -294,7 +357,7 @@ export const OneClickSetup = forwardRef<
               <p className="flex items-center gap-2 text-[12px] text-muted-foreground">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 {phase === 'loading'
-                  ? t('Loading domains…')
+                  ? t(copy.loading)
                   : t('Creating the sending credential…')}
               </p>
             ) : null}
@@ -306,7 +369,7 @@ export const OneClickSetup = forwardRef<
                     htmlFor="one-click-domain"
                     className="text-[12px] font-medium"
                   >
-                    {t('Domain')}
+                    {t(copy.pick)}
                   </Label>
                   <Select value={domainId} onValueChange={setDomainId}>
                     <SelectTrigger
@@ -349,7 +412,7 @@ export const OneClickSetup = forwardRef<
             {phase === 'no-domains' ? (
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-[12px] text-muted-foreground">
-                  {t('Add and verify a sending domain, then check again.')}
+                  {t(copy.empty)}
                 </p>
                 <div className="flex shrink-0 gap-2">
                   <Button
@@ -360,11 +423,11 @@ export const OneClickSetup = forwardRef<
                     asChild
                   >
                     <a
-                      href={provider.domainsUrl}
+                      href={sms ? sms.sendersUrl : provider.domainsUrl}
                       target="_blank"
                       rel="noreferrer"
                     >
-                      {t('Manage domains')}
+                      {t(copy.manage)}
                       <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
                     </a>
                   </Button>

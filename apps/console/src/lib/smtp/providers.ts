@@ -28,6 +28,7 @@ import {
   BIRD_CREDENTIAL_NAME_MAX_LENGTH,
   BIRD_DOMAINS_URL,
   BIRD_OAUTH_SCOPES,
+  BIRD_SENDERS_URL,
   BIRD_SMTP_PORT,
   BIRD_SMTP_SECURE,
   BIRD_SMTP_USERNAME,
@@ -35,9 +36,11 @@ import {
 } from './bird'
 import {
   createBirdCredential,
+  createBirdSmsCredential,
   deleteBirdCredential,
   isBirdUnauthorizedError,
   listBirdDomains,
+  listBirdSmsSenders,
 } from './bird-api'
 import type { QuickSetupDomain } from './quick-setup'
 
@@ -60,6 +63,20 @@ export interface SmtpQuickSetupApi {
   deleteCredential(accessToken: string, credentialId: string): Promise<void>
   /** True when the provider rejected the access token (triggers one refresh + retry). */
   isUnauthorizedError(error: unknown): boolean
+}
+
+/**
+ * SMS calls for the messaging wizard's SMS one-click setup, on providers that
+ * also send SMS. Senders reuse the domain shape so the same picker lists them.
+ */
+export interface SmsQuickSetupApi {
+  listSenders(accessToken: string): Promise<QuickSetupDomain[]>
+  createCredential(
+    accessToken: string,
+    input: { name: string },
+  ): Promise<SmtpQuickSetupCredential>
+  /** Where the user manages SMS senders at the provider. */
+  sendersUrl: string
 }
 
 export interface SmtpQuickSetupProvider {
@@ -95,6 +112,8 @@ export interface SmtpQuickSetupProvider {
   /** Console OAuth2 provider that issues an access token for this provider. */
   oauth?: { provider: OAuthProvider; scopes: string[] }
   api?: SmtpQuickSetupApi
+  /** Bird also sends SMS, with a key minted by the same authorization. */
+  sms?: SmsQuickSetupApi
 }
 
 /** Provider entry that the flow can actually run end to end. */
@@ -155,6 +174,11 @@ export const SMTP_QUICK_SETUP_PROVIDERS: readonly SmtpQuickSetupProvider[] = [
       createCredential: createBirdCredential,
       deleteCredential: deleteBirdCredential,
       isUnauthorizedError: isBirdUnauthorizedError,
+    },
+    sms: {
+      listSenders: listBirdSmsSenders,
+      createCredential: createBirdSmsCredential,
+      sendersUrl: BIRD_SENDERS_URL,
     },
   },
   {

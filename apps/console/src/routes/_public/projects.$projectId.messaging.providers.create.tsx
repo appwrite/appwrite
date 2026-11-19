@@ -16,6 +16,7 @@ import { pageTitle } from '@/lib/utils/page-title'
 const createProviderSearchSchema = z.object({
   smtpSetup: z.enum(['connected', 'failed']).optional().catch(undefined),
   smtpProvider: z.string().optional().catch(undefined),
+  smtpTarget: z.string().optional().catch(undefined),
   error: z.string().optional().catch(undefined),
 })
 

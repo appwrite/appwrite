@@ -29,6 +29,7 @@ import {
 import {
   proxyCreateBirdApiKey,
   proxyListBirdDomains,
+  proxyListBirdSenders,
   proxyRevokeBirdApiKey,
 } from '@/lib/smtp/bird-proxy'
 
@@ -105,6 +106,26 @@ describe('OAuth2 round trip', () => {
     expect(parseQuickSetupReturn(undefined)).toBeNull()
   })
 
+  test('names the card when one provider serves two setups', () => {
+    const returnUrl =
+      'https://cloud.appwrite.io/projects/proj/messaging/providers/create'
+    const urls = buildQuickSetupOAuthUrls(returnUrl, 'bird', 'bird-sms')
+
+    expect(urls.success).toBe(
+      `${returnUrl}?smtpSetup=connected&smtpProvider=bird&smtpTarget=bird-sms`,
+    )
+    expect(
+      parseQuickSetupReturn({
+        smtpSetup: 'connected',
+        smtpProvider: 'bird',
+        smtpTarget: 'bird-sms',
+      }),
+    ).toEqual({ status: 'connected', providerId: 'bird', target: 'bird-sms' })
+    expect(
+      stripQuickSetupReturn({ smtpTarget: 'bird-sms', alert: 'keep-me' }),
+    ).toEqual({ alert: 'keep-me' })
+  })
+
   test('strips the round-trip params, including the unused login token', () => {
     expect(
       stripQuickSetupReturn({
@@ -158,6 +179,12 @@ describe('sending domains and sender defaults', () => {
     expect(emailBelongsToDomain('@example.com', 'example.com')).toBe(false)
     expect(emailBelongsToDomain('noreply@', 'example.com')).toBe(false)
     expect(defaultSenderEmail('example.com')).toBe('noreply@example.com')
+  })
+
+  test('names SMS credentials after their channel', () => {
+    expect(buildCredentialName('Lumen Fitness', 64, 'Appwrite SMS')).toBe(
+      'Appwrite SMS: Lumen Fitness',
+    )
   })
 
   test('keeps credential names within the provider limit', () => {
@@ -441,6 +468,34 @@ describe('Bird proxy guard rails', () => {
     }) as unknown as typeof fetch
     return sent
   }
+
+  test('mints SMS keys with only the SMS write scope', () => {
+    expect(
+      sanitizeCreateBirdApiKeyBody({
+        name: 'Appwrite SMS: demo',
+        channel: 'sms',
+      }),
+    ).toEqual({
+      name: 'Appwrite SMS: demo',
+      scopes: [{ scope: 'sms', level: 'write' }],
+    })
+    expect(
+      sanitizeCreateBirdApiKeyBody({ name: 'k', channel: 'api_keys' }),
+    ).toBeNull()
+  })
+
+  test('lists SMS senders from the region the token names', async () => {
+    const sent = captureUpstream()
+    await proxyListBirdSenders(
+      new Request('https://console.test/bird/senders?limit=100', {
+        headers: { Authorization: 'Bearer bt_eu1_token' },
+      }),
+    )
+
+    expect(sent.url).toBe(
+      'https://eu1.platform.bird.com/v1/sms/senders?limit=100',
+    )
+  })
 
   test('rebuilds the create-key payload as email-only', () => {
     expect(

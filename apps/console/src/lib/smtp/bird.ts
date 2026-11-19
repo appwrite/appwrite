@@ -7,13 +7,17 @@
 
 /**
  * A grant can only put scopes on a key that it holds itself, so it asks for
- * `emails:write` (the key's only scope) next to `api_keys:write` (to mint and
- * revoke the key) and `domains:read` (to list sending domains).
+ * the keys' scopes (`emails:write` for SMTP, `sms:write` for the SMS
+ * provider) next to `api_keys:write` (to mint and revoke the keys),
+ * `domains:read` (to list sending domains) and `sms_management:read` (to list
+ * SMS senders). One grant serves both one-click setups.
  */
 export const BIRD_OAUTH_SCOPES = [
   'api_keys:write',
   'emails:write',
   'domains:read',
+  'sms:write',
+  'sms_management:read',
 ]
 
 /** SMTP relay settings documented at https://bird.com/docs/guides/email/smtp */
@@ -22,6 +26,7 @@ export const BIRD_SMTP_USERNAME = 'bird'
 export const BIRD_SMTP_SECURE = 'tls' as const
 
 export const BIRD_DOMAINS_URL = 'https://bird.com/dashboard/w/email/domains'
+export const BIRD_SENDERS_URL = 'https://bird.com/dashboard/w/sms/senders'
 /** Bird publishes no limit for key names; stay well inside any sensible one. */
 export const BIRD_CREDENTIAL_NAME_MAX_LENGTH = 64
 
@@ -75,13 +80,18 @@ export function isBirdApiKeyId(value: string): boolean {
   )
 }
 
+/** What a minted key may send; each channel gets exactly one write scope. */
+export type BirdKeyChannel = 'email' | 'sms'
+
+const CHANNEL_SCOPE = { email: 'emails', sms: 'sms' } as const
+
 /**
  * Sanitized body for `POST /v1/api-keys`. The server relay rebuilds the
- * payload from this so it can only ever mint keys that send email.
+ * payload from this so it can only ever mint keys that send email or SMS.
  */
 export interface CreateBirdApiKeyBody {
   name: string
-  scopes: [{ scope: 'emails'; level: 'write' }]
+  scopes: [{ scope: 'emails' | 'sms'; level: 'write' }]
 }
 
 export function sanitizeCreateBirdApiKeyBody(
@@ -91,5 +101,7 @@ export function sanitizeCreateBirdApiKeyBody(
   const record = input as Record<string, unknown>
   const name = typeof record.name === 'string' ? record.name.trim() : ''
   if (!name || name.length > BIRD_CREDENTIAL_NAME_MAX_LENGTH) return null
-  return { name, scopes: [{ scope: 'emails', level: 'write' }] }
+  const channel = record.channel ?? 'email'
+  if (channel !== 'email' && channel !== 'sms') return null
+  return { name, scopes: [{ scope: CHANNEL_SCOPE[channel], level: 'write' }] }
 }

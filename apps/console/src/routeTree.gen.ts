@@ -93,6 +93,7 @@ import { Route as LlmsTxtRouteImport } from './routes/llms.txt'
 import { Route as PlayerVideoIdRouteImport } from './routes/player.$videoId'
 import { Route as ApiBirdApiKeysRouteImport } from './routes/_api/bird/api-keys'
 import { Route as ApiBirdDomainsRouteImport } from './routes/_api/bird/domains'
+import { Route as ApiBirdSendersRouteImport } from './routes/_api/bird/senders'
 import { Route as ApiBlogRssDotxmlRouteImport } from './routes/_api/blog/rss[.]xml'
 import { Route as ApiChangelogRssDotxmlRouteImport } from './routes/_api/changelog/rss[.]xml'
 import { Route as ApiDebugIpRouteImport } from './routes/_api/debug.ip'
@@ -933,6 +934,11 @@ const ApiBirdApiKeysRoute = ApiBirdApiKeysRouteImport.update({
 const ApiBirdDomainsRoute = ApiBirdDomainsRouteImport.update({
   id: '/_api/bird/domains',
   path: '/bird/domains',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBirdSendersRoute = ApiBirdSendersRouteImport.update({
+  id: '/_api/bird/senders',
+  path: '/bird/senders',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiBlogRssDotxmlRoute = ApiBlogRssDotxmlRouteImport.update({
@@ -3735,6 +3741,7 @@ export interface FileRoutesByFullPath {
   '/generator/': typeof GeneratorIndexRoute
   '/bird/api-keys': typeof ApiBirdApiKeysRouteWithChildren
   '/bird/domains': typeof ApiBirdDomainsRoute
+  '/bird/senders': typeof ApiBirdSendersRoute
   '/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
   '/changelog/rss.xml': typeof ApiChangelogRssDotxmlRoute
   '/debug/ip': typeof ApiDebugIpRoute
@@ -4236,6 +4243,7 @@ export interface FileRoutesByTo {
   '/generator': typeof GeneratorIndexRoute
   '/bird/api-keys': typeof ApiBirdApiKeysRouteWithChildren
   '/bird/domains': typeof ApiBirdDomainsRoute
+  '/bird/senders': typeof ApiBirdSendersRoute
   '/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
   '/changelog/rss.xml': typeof ApiChangelogRssDotxmlRoute
   '/debug/ip': typeof ApiDebugIpRoute
@@ -4695,6 +4703,7 @@ export interface FileRoutesById {
   '/generator/': typeof GeneratorIndexRoute
   '/_api/bird/api-keys': typeof ApiBirdApiKeysRouteWithChildren
   '/_api/bird/domains': typeof ApiBirdDomainsRoute
+  '/_api/bird/senders': typeof ApiBirdSendersRoute
   '/_api/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
   '/_api/changelog/rss.xml': typeof ApiChangelogRssDotxmlRoute
   '/_api/debug/ip': typeof ApiDebugIpRoute
@@ -5202,6 +5211,7 @@ export interface FileRouteTypes {
     | '/generator/'
     | '/bird/api-keys'
     | '/bird/domains'
+    | '/bird/senders'
     | '/blog/rss.xml'
     | '/changelog/rss.xml'
     | '/debug/ip'
@@ -5703,6 +5713,7 @@ export interface FileRouteTypes {
     | '/generator'
     | '/bird/api-keys'
     | '/bird/domains'
+    | '/bird/senders'
     | '/blog/rss.xml'
     | '/changelog/rss.xml'
     | '/debug/ip'
@@ -6161,6 +6172,7 @@ export interface FileRouteTypes {
     | '/generator/'
     | '/_api/bird/api-keys'
     | '/_api/bird/domains'
+    | '/_api/bird/senders'
     | '/_api/blog/rss.xml'
     | '/_api/changelog/rss.xml'
     | '/_api/debug/ip'
@@ -6626,6 +6638,7 @@ export interface RootRouteChildren {
   PlayerVideoIdRoute: typeof PlayerVideoIdRoute
   ApiBirdApiKeysRoute: typeof ApiBirdApiKeysRouteWithChildren
   ApiBirdDomainsRoute: typeof ApiBirdDomainsRoute
+  ApiBirdSendersRoute: typeof ApiBirdSendersRoute
   ApiBlogRssDotxmlRoute: typeof ApiBlogRssDotxmlRoute
   ApiChangelogRssDotxmlRoute: typeof ApiChangelogRssDotxmlRoute
   ApiDebugIpRoute: typeof ApiDebugIpRoute
@@ -7234,6 +7247,13 @@ declare module '@tanstack/react-router' {
       path: '/bird/domains'
       fullPath: '/bird/domains'
       preLoaderRoute: typeof ApiBirdDomainsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/bird/senders': {
+      id: '/_api/bird/senders'
+      path: '/bird/senders'
+      fullPath: '/bird/senders'
+      preLoaderRoute: typeof ApiBirdSendersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_api/blog/rss.xml': {
@@ -12360,6 +12380,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlayerVideoIdRoute: PlayerVideoIdRoute,
   ApiBirdApiKeysRoute: ApiBirdApiKeysRouteWithChildren,
   ApiBirdDomainsRoute: ApiBirdDomainsRoute,
+  ApiBirdSendersRoute: ApiBirdSendersRoute,
   ApiBlogRssDotxmlRoute: ApiBlogRssDotxmlRoute,
   ApiChangelogRssDotxmlRoute: ApiChangelogRssDotxmlRoute,
   ApiDebugIpRoute: ApiDebugIpRoute,

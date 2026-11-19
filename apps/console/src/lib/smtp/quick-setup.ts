@@ -36,10 +36,15 @@ export function isProviderTokenExpired(
 export const QUICK_SETUP_STATUS_PARAM = 'smtpSetup'
 /** Query param carrying which provider was authorized. */
 export const QUICK_SETUP_PROVIDER_PARAM = 'smtpProvider'
+/**
+ * Query param naming what the authorization was for, when one provider serves
+ * several setups on a page (the messaging wizard's Bird email and Bird SMS).
+ */
+export const QUICK_SETUP_TARGET_PARAM = 'smtpTarget'
 
 export type QuickSetupReturn =
-  | { status: 'connected'; providerId: string }
-  | { status: 'failed'; providerId: string; message?: string }
+  | { status: 'connected'; providerId: string; target?: string }
+  | { status: 'failed'; providerId: string; target?: string; message?: string }
 
 function asNonEmptyString(value: unknown): string | undefined {
   if (typeof value === 'string') return value.trim() || undefined
@@ -81,9 +86,13 @@ export function buildQuickSetupOAuthUrls(
   /** Absolute URL of the page to come back to. */
   returnUrl: string,
   providerId: string,
+  target?: string,
 ): { success: string; failure: string } {
   const separator = returnUrl.includes('?') ? '&' : '?'
-  const provider = `${QUICK_SETUP_PROVIDER_PARAM}=${encodeURIComponent(providerId)}`
+  let provider = `${QUICK_SETUP_PROVIDER_PARAM}=${encodeURIComponent(providerId)}`
+  if (target) {
+    provider += `&${QUICK_SETUP_TARGET_PARAM}=${encodeURIComponent(target)}`
+  }
   return {
     success: `${returnUrl}${separator}${QUICK_SETUP_STATUS_PARAM}=connected&${provider}`,
     failure: `${returnUrl}${separator}${QUICK_SETUP_STATUS_PARAM}=failed&${provider}`,
@@ -101,13 +110,17 @@ export function parseQuickSetupReturn(
   const params = search as Record<string, unknown>
   const status = params[QUICK_SETUP_STATUS_PARAM]
   const providerId = asNonEmptyString(params[QUICK_SETUP_PROVIDER_PARAM])
+  const target = asNonEmptyString(params[QUICK_SETUP_TARGET_PARAM])
 
   if (!providerId) return null
-  if (status === 'connected') return { status: 'connected', providerId }
+  if (status === 'connected') {
+    return { status: 'connected', providerId, ...(target ? { target } : {}) }
+  }
   if (status === 'failed') {
     return {
       status: 'failed',
       providerId,
+      ...(target ? { target } : {}),
       message: parseOAuthErrorMessage(params.error),
     }
   }
@@ -122,6 +135,7 @@ export function stripQuickSetupReturn(prev: unknown): Record<string, unknown> {
       : {}
   delete next[QUICK_SETUP_STATUS_PARAM]
   delete next[QUICK_SETUP_PROVIDER_PARAM]
+  delete next[QUICK_SETUP_TARGET_PARAM]
   delete next.error
   // Appwrite's token flow also appends a one-time login token that the quick
   // setup never uses. Drop it so it does not linger in the address bar, the
@@ -292,8 +306,8 @@ export function createMintedCredentialTracker<
 export function buildCredentialName(
   projectName: string,
   maxLength: number,
+  prefix = 'Appwrite SMTP',
 ): string {
-  const prefix = 'Appwrite SMTP'
   const trimmed = projectName.trim()
   const name = trimmed ? `${prefix}: ${trimmed}` : prefix
   if (name.length <= maxLength) return name

@@ -3036,6 +3036,21 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'שליחת אימייל טרנזקציוני דרך Mailgun.',
   'Send transactional email through Resend.':
     'שליחת אימייל טרנזקציוני דרך Resend.',
+  'Send SMS through Bird.': 'שליחת SMS דרך Bird.',
+  'A Bird API key with the sms:write scope.':
+    'מפתח API של Bird עם ההרשאה sms:write.',
+  'A sender your Bird workspace owns: a number with its country code, or an alphanumeric sender ID.':
+    'שולח שבבעלות סביבת העבודה שלכם ב-Bird: מספר עם קידומת המדינה, או מזהה שולח אלפאנומרי.',
+  'One-click Bird SMS': 'SMS של Bird בקליק אחד',
+  'Let Appwrite create the API key and fill in one of your senders.':
+    'תנו ל-Appwrite ליצור את מפתח ה-API ולמלא את אחד מהשולחים שלכם.',
+  'Loading senders…': 'טוען שולחים…',
+  'Add a sender, then check again.': 'הוסיפו שולח, ואז בדקו שוב.',
+  'Manage senders': 'ניהול שולחים',
+  'Failed to load senders from the SMS provider':
+    'טעינת השולחים מספק ה-SMS נכשלה',
+  'Failed to create the API key with the SMS provider':
+    'יצירת מפתח ה-API מול ספק ה-SMS נכשלה',
   'Send email through the Bird SMTP relay.':
     'שליחת אימייל דרך שרת ה-SMTP של Bird.',
   'A Bird API key with the emails:write scope.':

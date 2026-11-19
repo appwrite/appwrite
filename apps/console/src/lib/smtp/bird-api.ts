@@ -6,7 +6,7 @@
  * forward the bearer token verbatim and never persist it.
  */
 
-import { birdRegion } from './bird'
+import { birdRegion, type BirdKeyChannel } from './bird'
 import type { QuickSetupDomain } from './quick-setup'
 import type { SmtpQuickSetupCredential } from './providers'
 
@@ -117,8 +117,8 @@ function normalizeDomain(
   }
 }
 
-const DOMAINS_PAGE_SIZE = 100
-const DOMAINS_MAX_PAGES = 10
+const LIST_PAGE_SIZE = 100
+const LIST_MAX_PAGES = 10
 
 /** Every sending domain in the connected Bird workspace (verified or not). */
 export async function listBirdDomains(
@@ -132,8 +132,8 @@ export async function listBirdDomains(
   const domains: QuickSetupDomain[] = []
   let cursor: string | undefined
 
-  for (let page = 0; page < DOMAINS_MAX_PAGES; page++) {
-    const params = new URLSearchParams({ limit: String(DOMAINS_PAGE_SIZE) })
+  for (let page = 0; page < LIST_MAX_PAGES; page++) {
+    const params = new URLSearchParams({ limit: String(LIST_PAGE_SIZE) })
     if (cursor) params.set('starting_after', cursor)
 
     const result = await birdFetch<{
@@ -153,6 +153,26 @@ export async function listBirdDomains(
   return domains
 }
 
+async function mintBirdKey(
+  accessToken: string,
+  name: string,
+  channel: BirdKeyChannel,
+): Promise<SmtpQuickSetupCredential> {
+  const result = await birdFetch<{ id?: unknown; token?: unknown }>(
+    '/api-keys',
+    accessToken,
+    {
+      method: 'POST',
+      body: JSON.stringify({ name, channel }),
+    },
+  )
+
+  if (typeof result?.id !== 'string' || typeof result?.token !== 'string') {
+    throw new BirdApiError('Bird did not return an API key', 502)
+  }
+  return { id: result.id, secret: result.token }
+}
+
 /**
  * Mint a key that can only send email. Bird keys are scoped by permission,
  * not by domain, so the key can send from any verified domain in the
@@ -162,19 +182,58 @@ export async function createBirdCredential(
   accessToken: string,
   input: { name: string; domainId?: string },
 ): Promise<SmtpQuickSetupCredential> {
-  const result = await birdFetch<{ id?: unknown; token?: unknown }>(
-    '/api-keys',
-    accessToken,
-    {
-      method: 'POST',
-      body: JSON.stringify({ name: input.name }),
-    },
-  )
+  return await mintBirdKey(accessToken, input.name, 'email')
+}
 
-  if (typeof result?.id !== 'string' || typeof result?.token !== 'string') {
-    throw new BirdApiError('Bird did not return an API key', 502)
+/** Mint a key that can only send SMS, for the Bird messaging provider. */
+export async function createBirdSmsCredential(
+  accessToken: string,
+  input: { name: string },
+): Promise<SmtpQuickSetupCredential> {
+  return await mintBirdKey(accessToken, input.name, 'sms')
+}
+
+type BirdSenderResponse = {
+  id?: unknown
+  sender?: unknown
+  status?: unknown
+}
+
+/**
+ * Senders the workspace owns (numbers and alphanumeric IDs), in the domain
+ * shape the one-click picker already renders. Whether a sender may reach a
+ * country is decided per destination by Bird, so only rejected senders are
+ * left unselectable.
+ */
+export async function listBirdSmsSenders(
+  accessToken: string,
+): Promise<QuickSetupDomain[]> {
+  const senders: QuickSetupDomain[] = []
+  let cursor: string | undefined
+
+  for (let page = 0; page < LIST_MAX_PAGES; page++) {
+    const params = new URLSearchParams({ limit: String(LIST_PAGE_SIZE) })
+    if (cursor) params.set('starting_after', cursor)
+
+    const result = await birdFetch<{
+      data?: BirdSenderResponse[]
+      next_cursor?: unknown
+    }>(`/senders?${params.toString()}`, accessToken)
+
+    for (const raw of result?.data ?? []) {
+      if (typeof raw.id !== 'string' || typeof raw.sender !== 'string') continue
+      senders.push({
+        id: raw.id,
+        name: raw.sender,
+        verified: raw.status !== 'rejected',
+      })
+    }
+
+    if (typeof result?.next_cursor !== 'string' || !result.next_cursor) break
+    cursor = result.next_cursor
   }
-  return { id: result.id, secret: result.token }
+
+  return senders
 }
 
 /** Best-effort cleanup when a freshly minted key could not be saved to the project. */

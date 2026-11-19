@@ -83,6 +83,20 @@ async function forwardToBird(
   )
 }
 
+/** `GET /v1/sms/senders`, one page at a time (SMS one-click setup). */
+export async function proxyListBirdSenders(
+  request: Request,
+): Promise<Response> {
+  const caller = admitBirdRequest(request)
+  if ('refusal' in caller) return caller.refusal
+
+  return await forwardToBird(request, caller, {
+    method: 'GET',
+    path: '/v1/sms/senders',
+    forwardQuery: true,
+  })
+}
+
 /** `GET /v1/email/domains`, one page at a time. */
 export async function proxyListBirdDomains(
   request: Request,
@@ -99,7 +113,7 @@ export async function proxyListBirdDomains(
 
 /**
  * `POST /v1/api-keys`: the payload is rebuilt server-side so this relay can
- * only mint keys that send email, whatever the caller sends.
+ * only mint keys that send email or SMS, whatever the caller sends.
  */
 export async function proxyCreateBirdApiKey(
   request: Request,

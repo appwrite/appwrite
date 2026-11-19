@@ -261,6 +261,8 @@ export const ANALYTICS_ACTIONS = {
   // Messaging
   'messaging-quick-setup-resend': 'Messaging One-Click Setup Resend Clicked',
   'messaging-quick-setup-bird': 'Messaging One-Click Setup Bird Clicked',
+  'messaging-quick-setup-bird-sms':
+    'Messaging One-Click Setup Bird SMS Clicked',
 
   // Resource creation
   'create-project': 'Create Project Clicked',

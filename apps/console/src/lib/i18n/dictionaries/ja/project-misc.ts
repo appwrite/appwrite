@@ -2546,6 +2546,22 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'Mailgun 経由でトランザクションメールを送信します。',
   'Send transactional email through Resend.':
     'Resend 経由でトランザクションメールを送信します。',
+  'Send SMS through Bird.': 'Bird 経由で SMS を送信します。',
+  'A Bird API key with the sms:write scope.':
+    'sms:write スコープを持つ Bird の API キー。',
+  'A sender your Bird workspace owns: a number with its country code, or an alphanumeric sender ID.':
+    'Bird ワークスペースが所有する送信元: 国番号付きの電話番号、または英数字の送信者 ID。',
+  'One-click Bird SMS': 'ワンクリック Bird SMS',
+  'Let Appwrite create the API key and fill in one of your senders.':
+    'Appwrite が API キーを作成し、送信元を入力します。',
+  'Loading senders…': '送信元を読み込み中…',
+  'Add a sender, then check again.':
+    '送信元を追加して、もう一度確認してください。',
+  'Manage senders': '送信元を管理',
+  'Failed to load senders from the SMS provider':
+    'SMS プロバイダーから送信元を読み込めませんでした',
+  'Failed to create the API key with the SMS provider':
+    'SMS プロバイダーでの API キーの作成に失敗しました',
   'Send email through the Bird SMTP relay.':
     'Bird の SMTP リレー経由でメールを送信します。',
   'A Bird API key with the emails:write scope.':

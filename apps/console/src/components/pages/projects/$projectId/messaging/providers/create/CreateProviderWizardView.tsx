@@ -54,6 +54,7 @@ import {
 import { AwsSesRegionSelect } from '../../_components/AwsSesRegionSelect'
 import {
   OneClickSetup,
+  type OneClickChannel,
   type OneClickSetupHandle,
 } from './_components/OneClickSetup'
 
@@ -97,6 +98,7 @@ interface ProviderConfig {
    */
   oneClick?: {
     provider: SmtpQuickSetupProviderId
+    channel?: OneClickChannel
     /** Provider name filled in when the user left it empty. */
     defaultName: string
     analyticsAction: AnalyticsActionId
@@ -362,6 +364,47 @@ const PROVIDERS: ProviderConfig[] = [
       }),
   },
   // SMS
+  {
+    id: 'bird-sms',
+    name: 'Bird',
+    type: 'sms',
+    description: 'Send SMS through Bird.',
+    icon: 'bird.svg',
+    fields: [
+      COMMON_NAME_FIELD,
+      {
+        key: 'apiKey',
+        label: 'API key',
+        type: 'password',
+        required: true,
+        placeholder: 'bk_eu1_…',
+        helper: 'A Bird API key with the sms:write scope.',
+      },
+      {
+        key: 'from',
+        label: 'Sender',
+        type: 'text',
+        required: true,
+        placeholder: '+447700900123',
+        helper:
+          'A sender your Bird workspace owns: a number with its country code, or an alphanumeric sender ID.',
+      },
+    ],
+    oneClick: {
+      provider: 'bird',
+      channel: 'sms',
+      defaultName: 'One-click Bird SMS',
+      analyticsAction: 'messaging-quick-setup-bird-sms',
+    },
+    submit: (projectSdk, providerId, v) =>
+      projectSdk.messaging.createBirdProvider({
+        providerId,
+        name: String(v.name).trim(),
+        apiKey: optString(v.apiKey),
+        from: optString(v.from),
+        enabled: true,
+      }),
+  },
   {
     id: 'twilio',
     name: 'Twilio',
@@ -693,9 +736,14 @@ export function CreateProviderWizardView() {
     () => providers.find((p) => p.id === selectedId) ?? null,
     [providers, selectedId],
   )
-  const selectedOneClickProvider = selected?.oneClick
+  const oneClickProvider = selected?.oneClick
     ? getAvailableSmtpQuickSetupProvider(selected.oneClick.provider)
     : undefined
+  // SMS setups need a provider that mints SMS keys.
+  const selectedOneClickProvider =
+    selected?.oneClick?.channel === 'sms' && !oneClickProvider?.sms
+      ? undefined
+      : oneClickProvider
 
   const grouped = useMemo(() => {
     const out: Record<ProviderType, ProviderConfig[]> = {
@@ -723,9 +771,17 @@ export function CreateProviderWizardView() {
     if (!quickSetupReturn || handledReturnRef.current) return
     handledReturnRef.current = true
 
-    const returned = PROVIDERS.find(
-      (p) => p.oneClick?.provider === quickSetupReturn.providerId,
-    )
+    // The target names the card when one provider serves two (Bird email
+    // and Bird SMS); returns without one fall back to the provider's card.
+    const returned =
+      PROVIDERS.find(
+        (p) =>
+          p.id === quickSetupReturn.target &&
+          p.oneClick?.provider === quickSetupReturn.providerId,
+      ) ??
+      PROVIDERS.find(
+        (p) => p.oneClick?.provider === quickSetupReturn.providerId,
+      )
     if (!returned) return
 
     navigate({
@@ -829,6 +885,8 @@ export function CreateProviderWizardView() {
             <OneClickSetup
               ref={oneClickRef}
               provider={selectedOneClickProvider}
+              channel={selected.oneClick.channel}
+              target={selected.id}
               analyticsAction={selected.oneClick.analyticsAction}
               defaultName={selected.oneClick.defaultName}
               projectName={project?.name ?? ''}
@@ -841,6 +899,7 @@ export function CreateProviderWizardView() {
                   ...(fields.name ? { name: fields.name } : {}),
                   ...(fields.fromName ? { fromName: fields.fromName } : {}),
                   ...(fields.fromEmail ? { fromEmail: fields.fromEmail } : {}),
+                  ...(fields.from ? { from: fields.from } : {}),
                 }))
               }
             />
