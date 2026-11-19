@@ -2,17 +2,14 @@ import { useTheme } from 'next-themes'
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { isHtmlDarkChrome, isResolvedThemeDarkChrome } from '@/lib/html-theme'
 import { FIVE_ASPECT } from '@/lib/init/init5-hero/five-field'
-import type { Init5HeroVariantId } from '@/lib/init/init5-hero/hero-variant'
 import type {
   Init5SceneController,
-  Init5SceneFactory,
   Init5SceneLayout,
   Init5ScenePalette,
 } from '@/lib/init/init5-hero/scene-types'
 import { useInitLowPowerAnimationDecision } from '@/lib/init/use-init-low-power-animations'
 import { cn } from '@/lib/utils'
 import { INIT5_HERO_ANCHOR_ATTRIBUTE } from './init5/init5-hero-anchor'
-import { useInit5Hero } from './init5/init5-hero-context'
 import { Init5CompactMark, Init5StaticFive } from './init5/Init5FiveMark'
 
 type Init5HeroBackgroundProps = {
@@ -30,23 +27,11 @@ declare global {
   }
 }
 
-const SCENE_LOADERS: Record<
-  Init5HeroVariantId,
-  () => Promise<Init5SceneFactory>
-> = {
-  particles: () =>
-    import('@/lib/init/init5-hero/scenes/particles-scene').then(
-      (mod) => mod.createParticlesScene,
-    ),
-  trails: () =>
-    import('@/lib/init/init5-hero/scenes/light-trails-scene').then(
-      (mod) => mod.createLightTrailsScene,
-    ),
-  glass: () =>
-    import('@/lib/init/init5-hero/scenes/glass-scene').then(
-      (mod) => mod.createGlassScene,
-    ),
-}
+/** three.js and the scene load on demand so the hero copy never waits on them. */
+const loadScene = () =>
+  import('@/lib/init/init5-hero/scenes/light-trails-scene').then(
+    (mod) => mod.createLightTrailsScene,
+  )
 
 const DEFAULT_LAYOUT: Init5SceneLayout = { cx: 0.72, cy: 0.5, height: 0.62 }
 
@@ -137,7 +122,6 @@ function Init5HeroScene({
   containerRef: RefObject<HTMLElement | null>
   active: boolean
 }) {
-  const { variant, replayToken } = useInit5Hero()
   const hostRef = useRef<HTMLDivElement>(null)
   const controllerRef = useRef<Init5SceneController | null>(null)
   const activeRef = useRef(active)
@@ -163,11 +147,11 @@ function Init5HeroScene({
     )
   }, [])
 
-  // Boot (or swap) the WebGL scene for the selected concept.
+  // Boot the WebGL light-trails scene.
   useEffect(() => {
     const container = containerRef.current
     const host = hostRef.current
-    if (!container || !host || !variant) return
+    if (!container || !host) return
 
     let disposed = false
     let controller: Init5SceneController | null = null
@@ -179,7 +163,7 @@ function Init5HeroScene({
     canvas.setAttribute('aria-hidden', 'true')
     host.appendChild(canvas)
 
-    SCENE_LOADERS[variant]()
+    loadScene()
       .then((createScene) => {
         if (disposed) return
         const box = container.getBoundingClientRect()
@@ -222,15 +206,11 @@ function Init5HeroScene({
       controller?.dispose()
       canvas.remove()
     }
-  }, [containerRef, variant, lowPower, reducedMotion, syncActive])
+  }, [containerRef, lowPower, reducedMotion, syncActive])
 
   useEffect(() => {
     syncActive()
   }, [active, syncActive])
-
-  useEffect(() => {
-    if (replayToken > 0) controllerRef.current?.replayIntro()
-  }, [replayToken])
 
   // Theme changes: wait two frames so the new html class has applied.
   useEffect(() => {
@@ -339,7 +319,7 @@ function Init5HeroScene({
       window.removeEventListener('resize', measure)
       document.removeEventListener('visibilitychange', handleVisibility)
     }
-  }, [containerRef, syncActive, variant])
+  }, [containerRef, syncActive])
 
   const fallbackLayout = layout ?? DEFAULT_LAYOUT
 
@@ -368,8 +348,8 @@ function Init5HeroScene({
 }
 
 /**
- * Init 5 hero stage. Full hero: the WebGL concept picked in the switcher
- * (particles, light trails or glass). Compact sticky bar: lightweight SVG mark.
+ * Init 5 hero stage. Full hero: WebGL light trails racing along the 5.
+ * Compact sticky bar: lightweight SVG mark.
  */
 export function Init5HeroBackground({
   containerRef,

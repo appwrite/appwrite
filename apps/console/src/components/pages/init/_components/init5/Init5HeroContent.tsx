@@ -4,9 +4,7 @@ import type { InitDisplayEvent } from '@/lib/init/types'
 import { cn } from '@/lib/utils'
 import { InitWordmark } from '../InitWordmark'
 import { INIT5_HERO_ANCHOR_ATTRIBUTE } from './init5-hero-anchor'
-import { useInit5Hero } from './init5-hero-context'
 import { Init5HeroCountdown } from './Init5HeroCountdown'
-import { Init5HeroVariantSwitcher } from './Init5HeroVariantSwitcher'
 
 const REVEAL_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1]
 const WIPE_EASE: [number, number, number, number] = [0.65, 0, 0.35, 1]
@@ -88,7 +86,6 @@ export function Init5HeroContent({
   presence?: ReactNode
   reduceMotion: boolean
 }) {
-  const { replayToken, showSwitcher } = useInit5Hero()
   const showCountdown = !event.isRecapMode && event.currentDay <= 0
   const anchorProps = { [INIT5_HERO_ANCHOR_ATTRIBUTE]: '' }
 
@@ -102,11 +99,9 @@ export function Init5HeroContent({
       />
 
       <div
-        key={replayToken}
         className={cn(
           'flex flex-col items-center pb-16 text-center sm:pb-20',
           'lg:order-1 lg:items-start lg:py-24 lg:text-start',
-          showSwitcher && 'pb-28 sm:pb-28 lg:pb-28',
         )}
       >
         {headerAddon}
@@ -153,8 +148,6 @@ export function Init5HeroContent({
 
         {presence}
       </div>
-
-      {showSwitcher ? <Init5HeroVariantSwitcher /> : null}
     </div>
   )
 }

@@ -80,10 +80,6 @@ export function clamp01(value: number) {
   return Math.min(1, Math.max(0, value))
 }
 
-export function easeOutExpo(t: number) {
-  return t >= 1 ? 1 : 1 - 2 ** (-10 * t)
-}
-
 export function easeOutCubic(t: number) {
   return 1 - (1 - t) ** 3
 }

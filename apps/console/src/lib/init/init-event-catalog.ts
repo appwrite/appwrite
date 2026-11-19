@@ -7,11 +7,8 @@ export const INIT_EVENT_CATALOG: Record<
   'init-nov-2026': { edition: 5, editionLabel: 'Init 5' },
 }
 
-/** Debug-only events without full page content. */
-const INIT_DEBUG_ONLY_EVENT_IDS = new Set(['init-sep-2026'])
-
 export function isKnownLaunchEventId(id: string): boolean {
-  return id in INIT_EVENT_CATALOG || INIT_DEBUG_ONLY_EVENT_IDS.has(id)
+  return id in INIT_EVENT_CATALOG
 }
 
 export function formatInitEventDebugLabel(

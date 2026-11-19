@@ -75,10 +75,6 @@ import {
   type UserOsOverride,
 } from '@/lib/user-os'
 import { formatMockInitActiveEventLabel } from '@/lib/init/active-event-debug'
-import {
-  formatInit5HeroVariant,
-  INIT5_HERO_VARIANTS,
-} from '@/lib/init/init5-hero/hero-variant'
 import { formatInitMockCurrentDay } from '@/lib/init/mock-current-day'
 import { formatInitMockTicketType } from '@/lib/init/ticket-types'
 import type { FaviconStatus } from '@/hooks/use-favicon'
@@ -1550,24 +1546,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         submenu: lowPowerAnimationSubmenu,
       },
       {
-        label: 'Init 5 hero',
-        description: formatInit5HeroVariant(overrides.init5HeroVariant),
-        icon: <Sparkles className="h-3 w-3" />,
-        submenu: INIT5_HERO_VARIANTS.map((option) => ({
-          label: option.label,
-          description: option.description,
-          onClick: () => {
-            setDebugOverride('init5HeroVariant', option.id)
-            setIsOpen(false)
-          },
-          active: overrides.init5HeroVariant === option.id,
-          icon: <Sparkles className="h-3 w-3" />,
-        })),
-      },
-      {
         label: 'Reset settings',
         description:
-          'Restore event, day, ticket mock, hero, confetti preview, and low power to defaults.',
+          'Restore event, day, ticket mock, confetti preview, and low power to defaults.',
         onClick: () => {
           resetInitMenuDebugOverrides()
           setOverrides(loadDebugOverrides())

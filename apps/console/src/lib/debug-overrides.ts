@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react'
 import { isKnownLaunchEventId } from '@/lib/init/init-event-catalog'
 import {
-  DEFAULT_INIT5_HERO_VARIANT,
-  INIT5_HERO_VARIANT_IDS,
-  type Init5HeroVariantId,
-} from '@/lib/init/init5-hero/hero-variant'
-import {
   getInitMockCurrentDayDefault,
   isValidInitMockCurrentDay,
 } from '@/lib/init/mock-current-day'
@@ -34,8 +29,6 @@ export const DEBUG_OVERRIDE_KEYS = {
   mockInitTicketType: 'debug:mockInitTicketType',
   previewInitReactionConfetti: 'debug:previewInitReactionConfetti',
   initLowPowerAnimations: 'debug:initLowPowerAnimations',
-  /** Init 5 hero concept (particles, light trails, glass) while the cover is being picked. */
-  init5HeroVariant: 'debug:init5HeroVariant',
   /** Overrides detected client OS for UI toggles and keyboard shortcuts. */
   userOs: 'debug:userOs',
   /** @deprecated Migrated to `userOs`; kept for one-time localStorage migration. */
@@ -118,8 +111,6 @@ export type DebugOverrides = {
   previewInitReactionConfetti: boolean
   /** Controls Init animation optimizations for constrained devices. */
   initLowPowerAnimations: InitLowPowerAnimationsOverride
-  /** Which Init 5 hero concept renders on `/init` for the November event. */
-  init5HeroVariant: Init5HeroVariantId
   /**
    * Overrides detected client OS for OS toggles, docs tabs, and keyboard
    * shortcut labels / visualizer. `'auto'` uses device detection.
@@ -305,11 +296,6 @@ export function loadDebugOverrides(): DebugOverrides {
       ['auto', 'on', 'off'] as const,
       'auto',
     ),
-    init5HeroVariant: readStringFromStorage(
-      DEBUG_OVERRIDE_KEYS.init5HeroVariant,
-      INIT5_HERO_VARIANT_IDS,
-      DEFAULT_INIT5_HERO_VARIANT,
-    ),
     userOs: readUserOsOverrideFromStorage(),
     unlockOnboardingLocks: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.unlockOnboardingLocks,
@@ -439,7 +425,6 @@ export const INIT_MENU_DEBUG_KEYS = [
   'mockInitTicketType',
   'previewInitReactionConfetti',
   'initLowPowerAnimations',
-  'init5HeroVariant',
 ] as const satisfies readonly (keyof DebugOverrides)[]
 
 export type InitMenuDebugKey = (typeof INIT_MENU_DEBUG_KEYS)[number]
@@ -499,7 +484,6 @@ export function getDefaultDebugOverrides(): DebugOverrides {
     mockInitTicketType: null,
     previewInitReactionConfetti: false,
     initLowPowerAnimations: 'auto',
-    init5HeroVariant: DEFAULT_INIT5_HERO_VARIANT,
     userOs: 'auto',
     unlockOnboardingLocks: false,
     previewOnboardingComplete: false,

@@ -1390,20 +1390,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   Past: '過去',
   Upcoming: '近日公開',
   'AUGUST 31 - SEPTEMBER 4': '8月31日 - 9月4日',
-  'NOVEMBER 23 - 27': '11月23日 - 27日',
+  'NOVEMBER 30 - DECEMBER 4': '11月30日 - 12月4日',
   'Starts in': '開始まで',
-  'Hero concept': 'ヒーローのコンセプト',
-  Concept: 'コンセプト',
-  Particles: 'パーティクル',
-  'Light trails': '光の軌跡',
-  Glass: 'ガラス',
-  'Replay intro': 'イントロを再生',
-  'Luminous particle 5 that assembles, breathes and reacts to the cursor.':
-    '光る粒子が集まって 5 の形になり、呼吸するように動き、カーソルに反応します。',
-  'Streaks of light racing along the 5, drawn in Init line-art style.':
-    'Init の線画スタイルで、光の筋が 5 に沿って走ります。',
-  'A refractive glass and chrome 5 on a lit stage.':
-    '照らされたステージ上の、屈折するガラスとクロームの 5。',
   Previews: 'プレビュー',
   'Early access. Saved in this browser.':
     '早期アクセスです。このブラウザに保存されます。',

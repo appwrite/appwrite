@@ -9,7 +9,6 @@ import {
 import {
   INIT_JULY_2026_TICKET_CONFIG,
   INIT_NOV_2026_TICKET_CONFIG,
-  INIT_SEP_2026_TICKET_CONFIG,
 } from './ticket-config'
 import { INIT_JULY_2026_PRIZES } from './prizes'
 import { isKnownLaunchEventId } from './init-event-catalog'
@@ -204,12 +203,12 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     id: 'init-nov-2026',
     slug: 'init-nov-2026',
     name: 'init',
-    dateRangeLabel: 'NOVEMBER 23 - 27',
-    headline: 'Init returns November 23 - 27',
+    dateRangeLabel: 'NOVEMBER 30 - DECEMBER 4',
+    headline: 'Init returns November 30 - December 4',
     description:
-      'Init returns November 23 - 27. Five days of launches including Appwrite Videos, Appwrite Analytics, TablesDB upgrades, and Appwrite Distribution.',
-    startDate: '2026-11-23',
-    endDate: '2026-11-27',
+      'Init returns November 30 - December 4. Five days of launches including Appwrite Videos, Appwrite Analytics, TablesDB upgrades, and Appwrite Distribution.',
+    startDate: '2026-11-30',
+    endDate: '2026-12-04',
     status: 'upcoming',
     tickets: INIT_NOV_2026_TICKET_CONFIG,
     primaryCta: {
@@ -308,9 +307,9 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     recap: {
       headline: 'Init recap',
       description:
-        'Five days of Init 5 launches are in the books. Rewatch sessions and explore every announcement from November 23 - 27.',
+        'Five days of Init 5 launches are in the books. Rewatch sessions and explore every announcement from November 30 - December 4.',
       bannerMessage:
-        'Init November 23 - 27 has ended. Browse the full recap below.',
+        'Init November 30 - December 4 has ended. Browse the full recap below.',
       introTitle: 'Everything we shipped',
       introDescription:
         'From Appwrite Videos and Analytics to TablesDB upgrades and Appwrite Distribution. Explore the full launch timeline.',
@@ -345,38 +344,6 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
         shareButtonLabel: 'Share ticket',
       },
     },
-  },
-  {
-    id: 'init-sep-2026',
-    slug: 'init-sep-2026',
-    name: 'init',
-    dateRangeLabel: 'SEP 15 - 19',
-    headline: 'Init returns Sep 15 - 19',
-    description:
-      'Init returns Sep 15 - 19. Another week of launches, workshops, and community celebrations.',
-    startDate: '2026-09-15',
-    endDate: '2026-09-19',
-    status: 'upcoming',
-    tickets: INIT_SEP_2026_TICKET_CONFIG,
-    primaryCta: { label: 'Save the date', href: '/init', external: false },
-    onlineCount: 0,
-    hiddenOnlineCount: 0,
-    onlineCountCapped: false,
-    othersOnlineCount: 0,
-    days: [],
-    schedule: [],
-    onlineUsers: [],
-    recentlyOnlineUsers: [],
-    liveActivities: [],
-    getInvolved: [
-      {
-        id: 'notify',
-        title: 'Get notified',
-        description: 'Be the first to know when registration opens.',
-        icon: Ticket,
-        href: '/init',
-      },
-    ],
   },
 ]
 

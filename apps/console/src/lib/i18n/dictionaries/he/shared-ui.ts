@@ -1427,20 +1427,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   Past: 'עבר',
   Upcoming: 'בקרוב',
   'AUGUST 31 - SEPTEMBER 4': '31 באוגוסט - 4 בספטמבר',
-  'NOVEMBER 23 - 27': '23-27 בנובמבר',
+  'NOVEMBER 30 - DECEMBER 4': '30 בנובמבר - 4 בדצמבר',
   'Starts in': 'מתחיל בעוד',
-  'Hero concept': 'קונספט לכותרת',
-  Concept: 'קונספט',
-  Particles: 'חלקיקים',
-  'Light trails': 'שובלי אור',
-  Glass: 'זכוכית',
-  'Replay intro': 'הפעלת הפתיח מחדש',
-  'Luminous particle 5 that assembles, breathes and reacts to the cursor.':
-    'חלקיקים זוהרים שמתכנסים לצורת 5, נושמים ומגיבים לסמן.',
-  'Streaks of light racing along the 5, drawn in Init line-art style.':
-    'שובלי אור שרצים לאורך הספרה 5, בסגנון הקו של Init.',
-  'A refractive glass and chrome 5 on a lit stage.':
-    'ספרה 5 מזכוכית ומכרום על במה מוארת.',
   Previews: 'תצוגות מקדימות',
   'Early access. Saved in this browser.': 'גישה מוקדמת. נשמר בדפדפן הזה.',
   'Appwrite Analytics': 'Appwrite Analytics',

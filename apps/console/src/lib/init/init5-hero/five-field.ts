@@ -168,18 +168,6 @@ export function resampleClosed(points: Vec2[], spacing: number): ResampledLoop {
   return { points: out, arc, length }
 }
 
-/** Deterministic PRNG (mulberry32) so every replay looks identical. */
-export function createRandom(seed = 0x5eed) {
-  let state = seed >>> 0
-  return () => {
-    state = (state + 0x6d2b79f5) >>> 0
-    let t = state
-    t = Math.imul(t ^ (t >>> 15), t | 1)
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
-
 export type FiveField = {
   resolution: number
   /** Side of the square sampling domain, in stage units. */
@@ -454,73 +442,4 @@ export function extractIsoContours(field: FiveField, level: number): Vec2[][] {
   }
 
   return loops.sort((a, b) => b.length - a.length)
-}
-
-/**
- * Random points inside the 5 (rejection sampled against the SDF).
- * Returns `[x, y, sdf]` triplets in stage units.
- */
-export function sampleFiveInterior(
-  field: FiveField,
-  count: number,
-  random: () => number,
-): Float32Array {
-  const out = new Float32Array(count * 3)
-  const halfWidth = FIVE_ASPECT / 2
-  let written = 0
-  let guard = 0
-  while (written < count && guard < count * 40) {
-    guard++
-    const x = (random() * 2 - 1) * halfWidth
-    const y = random() - 0.5
-    const distance = field.sample(x, y)
-    if (distance >= 0) continue
-    out[written * 3] = x
-    out[written * 3 + 1] = y
-    out[written * 3 + 2] = distance
-    written++
-  }
-  return out
-}
-
-/** Contour length cache for arc-length sampling along the outline. */
-export function measureLoop(points: Vec2[]) {
-  const cumulative = new Float32Array(points.length + 1)
-  for (let i = 1; i <= points.length; i++) {
-    const a = points[i - 1]
-    const b = points[i % points.length]
-    cumulative[i] = cumulative[i - 1] + Math.hypot(b.x - a.x, b.y - a.y)
-  }
-  return cumulative
-}
-
-/** Point + outward normal at normalized arc position `t` along a closed loop. */
-export function pointOnLoop(
-  points: Vec2[],
-  cumulative: Float32Array,
-  t: number,
-): { x: number; y: number; nx: number; ny: number } {
-  const total = cumulative[cumulative.length - 1]
-  const target = (((t % 1) + 1) % 1) * total
-  let lo = 0
-  let hi = points.length - 1
-  while (lo < hi) {
-    const mid = (lo + hi + 1) >> 1
-    if (cumulative[mid] <= target) lo = mid
-    else hi = mid - 1
-  }
-  const a = points[lo]
-  const b = points[(lo + 1) % points.length]
-  const span = cumulative[lo + 1] - cumulative[lo] || 1
-  const w = (target - cumulative[lo]) / span
-  const dx = b.x - a.x
-  const dy = b.y - a.y
-  const len = Math.hypot(dx, dy) || 1
-  // Counter-clockwise winding: outward normal is the tangent rotated clockwise.
-  return {
-    x: a.x + dx * w,
-    y: a.y + dy * w,
-    nx: dy / len,
-    ny: -dx / len,
-  }
 }
