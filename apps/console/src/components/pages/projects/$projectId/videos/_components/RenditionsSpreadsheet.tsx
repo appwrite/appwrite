@@ -85,13 +85,13 @@ const RENDITIONS_COLUMN_MIN_PX = {
 } as const
 const RENDITIONS_COLUMN_ORDER = [
   'id',
+  'status',
   'profile',
   'output',
   'resolution',
   'videoBitRate',
   'audioBitRate',
   'segmentLength',
-  'status',
   'encodingTime',
   'created',
 ] as const satisfies ReadonlyArray<keyof typeof RENDITIONS_COLUMN_MIN_PX>
@@ -122,13 +122,13 @@ const RENDITION_COLUMNS: Array<{
   sortable?: false
 }> = [
   { key: '$id', labelKey: 'ID', sortable: false },
+  { key: 'status', labelKey: 'Status' },
   { key: 'profile', labelKey: 'Profile', term: 'profile' },
   { key: 'output', labelKey: 'Output', term: 'output' },
   { key: 'resolution', labelKey: 'Resolution' },
   { key: 'videoBitRate', labelKey: 'Video bitrate', term: 'bitrate' },
   { key: 'audioBitRate', labelKey: 'Audio bitrate' },
   { key: 'segmentLength', labelKey: 'Segment length', term: 'targetDuration' },
-  { key: 'status', labelKey: 'Status' },
   { key: 'encodingTime', labelKey: 'Encoding time' },
   { key: 'created', labelKey: 'Created' },
 ]
@@ -331,6 +331,21 @@ export function RenditionsSpreadsheet({
                       </div>
                     </td>
                     <td className={cn('px-3 py-2', bodyCellBorderClass)}>
+                      <div className="flex flex-col gap-1.5">
+                        <VideoStatusBadge
+                          status={rendition.status}
+                          kind="rendition"
+                          error={rendition.error}
+                        />
+                        {active ? (
+                          <ProgressBarRow
+                            value={parseVideoProgress(rendition.progress)}
+                            className="mb-0 max-w-[160px]"
+                          />
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className={cn('px-3 py-2', bodyCellBorderClass)}>
                       {profileName ? (
                         <Link
                           to="/projects/$projectId/videos/profiles"
@@ -385,21 +400,6 @@ export function RenditionsSpreadsheet({
                       {Number(rendition.targetDuration) > 0
                         ? `${rendition.targetDuration}s`
                         : '-'}
-                    </td>
-                    <td className={cn('px-3 py-2', bodyCellBorderClass)}>
-                      <div className="flex flex-col gap-1.5">
-                        <VideoStatusBadge
-                          status={rendition.status}
-                          kind="rendition"
-                          error={rendition.error}
-                        />
-                        {active ? (
-                          <ProgressBarRow
-                            value={parseVideoProgress(rendition.progress)}
-                            className="mb-0 max-w-[160px]"
-                          />
-                        ) : null}
-                      </div>
                     </td>
                     <td
                       className={cn(

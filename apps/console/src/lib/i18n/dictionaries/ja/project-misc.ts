@@ -704,7 +704,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Tracking disabled': '計測を無効にしました',
   'Browser versions': 'ブラウザのバージョン',
   'OS versions': 'OS のバージョン',
-  'Versions': 'バージョン',
+  Versions: 'バージョン',
   'Browser version': 'ブラウザのバージョン',
   'OS version': 'OS のバージョン',
   'Identified users, ranked by visitors': '識別されたユーザー (訪問者数順)',
@@ -2192,7 +2192,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Shared with all Functions and Sites in this project.':
     'このプロジェクト内のすべての Functions とサイトで共有されます。',
   'Showing first': '最初の',
-  Since: '開始',
   'Some PostgreSQL features are not migrated. OAuth users and functions are not migrated automatically.':
     '一部の PostgreSQL 機能は移行されません。OAuth ユーザーと Functions は自動的に移行されません。',
   'Some entities failed to migrate. Check status counts above.':
@@ -2245,7 +2244,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'インポート中に既存の ID を持つ行に遭遇した場合。',
   'When enabled, all emails will be sent through your configured SMTP server.':
     '有効にすると、すべてのメールは設定した SMTP サーバー経由で送信されます。',
-  'an A or AAAA record': 'A または AAAA レコード',
   'and all its databases, functions, and files? This action cannot be undone.':
     'とそのすべてのデータベース、Functions、ファイル? この操作は元に戻せません。',
   characters: '文字',
@@ -2263,14 +2261,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'have been enabled.': 'を有効にしました。',
   here: 'こちら',
   installations: 'インストール',
-  // pragma: allowlist secret
-  "instead. If you're using Cloudflare or another CDN, make sure the proxy is disabled (set to DNS only) for this record, since Appwrite serves your domain through its own CDN.":
-    'を使用してください。Cloudflare やその他の CDN を使用している場合は、Appwrite が独自の CDN 経由でドメインを配信するため、このレコードのプロキシを無効 (DNS only) にしてください。', // pragma: allowlist secret
-  "is an apex domain, CNAME record is only supported by certain providers. If yours doesn't, please verify using":
-    'はエイペックスドメインです。CNAME レコードは一部のプロバイダーでのみサポートされています。サポートされていない場合は、次で検証してください',
   item: '項目',
   'key for the API key.': 'API キーのキー。',
-  nameservers: 'ネームサーバー',
   'protocol has been disabled': 'プロトコルを無効にしました',
   'protocol has been enabled': 'プロトコルを有効にしました',
   recipient: '受信者',
@@ -3522,7 +3514,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Project:': 'プロジェクト:',
   'Failed to load migrations': 'マイグレーションの読み込みに失敗しました',
   'Failed to refresh migrations': 'マイグレーションの更新に失敗しました',
-  'The list below may be out of date.': '以下の一覧は最新でない可能性があります。',
+  'The list below may be out of date.':
+    '以下の一覧は最新でない可能性があります。',
   'An environment with this ID already exists in this project.':
     'この ID の環境はこのプロジェクトに既に存在します。',
   'Use lowercase letters, numbers and hyphens, starting with a letter or a number.':
@@ -4017,8 +4010,10 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'スマートフォンがサイレントやおやすみモードでも鳴ります。',
   Severity: '重大度',
   Warning: '警告',
-  'Worth knowing about. Nothing needs doing yet.': '知っておくべき情報です。まだ対応は不要です。',
-  'Look into it soon, before it becomes a problem.': '問題になる前に、早めに確認してください。',
+  'Worth knowing about. Nothing needs doing yet.':
+    '知っておくべき情報です。まだ対応は不要です。',
+  'Look into it soon, before it becomes a problem.':
+    '問題になる前に、早めに確認してください。',
   'Something is broken and needs fixing.': '何かが壊れていて、修正が必要です。',
   'Critical. Rings on phones even on silent.':
     '重要。サイレントでもスマートフォンが鳴ります。',
@@ -4054,7 +4049,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'This rule has a schedule this version of the Console cannot show. It is kept unless you remove it or set a new one.':
     'このルールには、このバージョンのコンソールでは表示できないスケジュールがあります。削除するか新しいスケジュールを設定しない限り、そのまま保持されます。',
   'Remove schedule': 'スケジュールを削除',
-  'The schedule will be removed when you save.': '保存するとスケジュールが削除されます。',
+  'The schedule will be removed when you save.':
+    '保存するとスケジュールが削除されます。',
   'Apply this rule only on certain days or at certain times. When off, the rule is always active.':
     '特定の曜日や時間帯にのみこのルールを適用します。オフの場合、ルールは常に有効です。',
   Repeat: '繰り返し',

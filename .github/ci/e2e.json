@@ -566,7 +566,7 @@
       "storage_antivirus": "disabled",
       "compose_profiles": "",
       "wait": "",
-      "services": ["Account", "Videos"]
+      "services": ["Account", "Realtime", "Videos"]
     },
     {
       "label": "Screenshots",

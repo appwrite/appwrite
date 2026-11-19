@@ -1285,6 +1285,16 @@ class Deletes extends Action
             Console::error('Failed to delete rules: ' . $th->getMessage());
         }
 
+        // Delete rule records
+        try {
+            $this->deleteByGroup('ruleRecords', [
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete rule records: ' . $th->getMessage());
+        }
+
         // Delete Keys
         try {
             $this->deleteByGroup('keys', [
@@ -2421,6 +2431,11 @@ class Deletes extends Action
         if (isset($document['certificateId'])) {
             $dbForPlatform->deleteDocument('certificates', $document['certificateId']);
         }
+
+        // Record checks belong to this rule alone, even when its domain was recreated
+        $dbForPlatform->deleteDocuments('ruleRecords', [
+            Query::equal('ruleInternalId', [$document->getSequence()]),
+        ]);
     }
 
     /**

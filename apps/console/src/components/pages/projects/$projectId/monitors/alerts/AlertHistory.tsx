@@ -185,7 +185,7 @@ export function AlertHistory({
               )}
             </p>
             <Link
-              to="/projects/$projectId/usage/monitors"
+              to="/projects/$projectId/monitors"
               params={{ projectId }}
               search={{}}
               className="mt-3 inline-block text-[13px] font-medium text-foreground underline underline-offset-4"

@@ -12,7 +12,7 @@ import { useT } from '@/lib/i18n/translate'
 import { useUpdateAlert } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { StatusPill } from '../monitors/StatusPill'
+import { StatusPill } from '../StatusPill'
 import { alertLength } from '@/lib/alerts/timeline'
 import { alertCondition, alertRatio, formatAlertValue } from './AlertHistory'
 
@@ -306,7 +306,7 @@ export function AlertDrawer({
 
             <Button asChild variant="outline" size="sm">
               <Link
-                to="/projects/$projectId/usage/monitors"
+                to="/projects/$projectId/monitors"
                 params={{ projectId }}
                 search={{ monitor: alert.monitorId }}
                 onClick={() => onOpenChange(false)}

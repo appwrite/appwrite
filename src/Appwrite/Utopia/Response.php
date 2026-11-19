@@ -252,6 +252,7 @@ class Response extends SwooleResponse
     // Proxy
     public const MODEL_PROXY_RULE = 'proxyRule';
     public const MODEL_PROXY_RULE_LIST = 'proxyRuleList';
+    public const MODEL_PROXY_RULE_RECORD = 'proxyRuleRecord';
 
     // Schedules
     public const MODEL_SCHEDULE = 'schedule';

@@ -16,9 +16,9 @@ final class Jobs
 {
     /**
      * @param list<string> $workers Worker action names already selected to run
-     * @param array<string, array{queue: string, queueEnv?: string, coroutines?: int}> $config
+     * @param array<string, array{queue: string, queueEnv?: string, coroutines?: int, prefetch?: int, maxInFlight?: int}> $config
      * @param callable(string, mixed=): mixed $env Compatible with {@see \Utopia\System\System::getEnv}
-     * @return array<string, array{queue: string, coroutines: int}>
+     * @return array<string, array{queue: string, coroutines: int, prefetch: int, maxInFlight: int}>
      */
     public static function resolve(array $workers, array $config, callable $env): array
     {
@@ -48,9 +48,24 @@ final class Jobs
                 }
             }
 
+            $prefetch = $spec['prefetch'] ?? $coroutines;
+            $maxInFlight = $spec['maxInFlight'] ?? null;
+            if ($single) {
+                $override = $env('_APP_WORKER_PREFETCH');
+                if ($override !== false && $override !== null && $override !== '') {
+                    $prefetch = (int) $override;
+                }
+                $override = $env('_APP_WORKER_MAX_IN_FLIGHT');
+                if ($override !== false && $override !== null && $override !== '') {
+                    $maxInFlight = (int) $override;
+                }
+            }
+
             $jobs[$name] = [
                 'queue' => (string) $queue,
                 'coroutines' => $coroutines,
+                'prefetch' => $prefetch,
+                'maxInFlight' => $maxInFlight ?? ($coroutines + $prefetch),
             ];
         }
 

@@ -664,6 +664,21 @@ test.describe('videos (mocked API)', () => {
     await expect(link).toHaveCount(0)
   })
 
+  test('shows rendition status right after the ID', async ({ page }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page)
+    const headers = page.getByRole('columnheader')
+
+    await open(page, `/${VIDEO_ID}/renditions`, () =>
+      headers.filter({ hasText: 'Status' }),
+    )
+
+    const names = (await headers.allInnerTexts()).map((text) => text.trim())
+    const id = names.indexOf('ID')
+    expect(id).toBeGreaterThanOrEqual(0)
+    expect(names[id + 1]).toBe('Status')
+  })
+
   test('docks a small player while scrolling the overview', async ({
     page,
   }) => {
