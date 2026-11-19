@@ -41,6 +41,14 @@ import { AuthenticatorType, MessagingProviderType } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
+import { UserActionsMenu } from '../_components/UserActionsMenu'
+import { SendMessageMenuItem } from '../../messaging/_components/SendMessageMenu'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
@@ -412,6 +420,9 @@ export function View() {
               'aria-label': t('Back to users'),
             }}
           />
+        }
+        titleRightContent={
+          <UserActionsMenu projectId={projectId!} user={user} />
         }
         tabs={tabs}
         activeTab={activeTab}
@@ -2848,6 +2859,7 @@ function TargetsTab({
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                       {t('Created')}
                     </TableHead>
+                    <TableHead className="w-12 px-4 py-3" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -2872,6 +2884,23 @@ function TargetsTab({
                           date={new Date(target.$createdAt)}
                           className="text-[12px] text-muted-foreground"
                         />
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-end">
+                        <div className="flex justify-end">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <RowActionsMenuTrigger
+                                aria-label={`${t('Actions for')} ${target.name || target.identifier}`}
+                              />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <SendMessageMenuItem
+                                projectId={projectId}
+                                target={target}
+                              />
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

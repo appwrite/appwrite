@@ -13,6 +13,7 @@ import {
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query, ID } from '@appwrite.io/console'
+import type { Models } from '@appwrite.io/console'
 import type { User } from '@/lib/utils/mock-data'
 import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -367,7 +368,10 @@ export function useProjectUsers(
 
     return usersData.users.map((user: unknown) => {
       // Result of the last breached-password check; null when never checked.
-      const { passwordPwned } = user as { passwordPwned?: boolean | null }
+      const { passwordPwned, targets } = user as {
+        passwordPwned?: boolean | null
+        targets?: Models.Target[]
+      }
       return {
         $id: user.$id,
         name: user.name || '',
@@ -385,11 +389,13 @@ export function useProjectUsers(
         accessedAt: user.accessedAt || undefined,
         passwordPwned:
           typeof passwordPwned === 'boolean' ? passwordPwned : null,
+        targets: targets ?? [],
       } as User & {
         phone?: string
         mfaEnabled?: boolean
         accessedAt?: string
         passwordPwned?: boolean | null
+        targets: Models.Target[]
       }
     })
   }, [usersData])
