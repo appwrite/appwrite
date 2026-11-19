@@ -963,6 +963,20 @@ switch ($command) {
             }
             $checks['pint'] = '../../vendor/bin/pint --config ../../pint.json' . ($fix ? '' : ' --test');
             $checks['phpstan'] = '../../vendor/bin/phpstan analyse --memory-limit=1G';
+            // A class the utopia extension provides is declared for analysis by its package's
+            // stubs/ (packages/validators/stubs/Validators.php). A package that depends on it
+            // scans the copy Composer installed, so it sees the PHPDoc types the extension's
+            // runtime reflection lacks.
+            $stubs = glob("{$directory}/vendor/" . ORG . '/*/stubs/*.php') ?: [];
+            if ($stubs !== []) {
+                $config = sys_get_temp_dir() . "/phpstan-{$package}-" . getmypid() . '.neon';
+                $lines = ['includes:', '    - ' . realpath("{$directory}/phpstan.neon"), 'parameters:', '    scanFiles:'];
+                foreach ($stubs as $stub) {
+                    $lines[] = '        - ' . realpath($stub);
+                }
+                file_put_contents($config, implode("\n", $lines) . "\n");
+                $checks['phpstan'] .= " --configuration {$config}";
+            }
 
             foreach ($checks as $tool => $command) {
                 passthru("cd {$directory} && {$command}", $code);
