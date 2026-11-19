@@ -1264,26 +1264,10 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
             return;
         }
 
-        // Pings are the SDK heartbeat, so they skip the message limit and never wait on the database.
-        if ($type === 'ping') {
-            $messageType = 'ping';
-            $responseJson = \json_encode($messageDispatcher->dispatch(new Container($container), $message));
-            $server->send([$connection], $responseJson);
-            $outboundBytes += \strlen($responseJson);
+        // Pings are the SDK heartbeat, so they skip the message limit and the project lookup.
+        $isPing = $type === 'ping';
 
-            if (!empty($projectId) && $projectId !== 'console') {
-                $usage->add([
-                    METRIC_REALTIME_INBOUND => $rawSize,
-                    METRIC_REALTIME_OUTBOUND => \strlen($responseJson),
-                    METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT => 1,
-                ], $projectId);
-            }
-
-            $success = true;
-            return;
-        }
-
-        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+        if (!$isPing && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
             $isRateLimited = $container->get('timelimit')(
                 'project:{project},container:{container},connection:{connection}',
                 APP_LIMIT_REALTIME_MESSAGES,
@@ -1332,7 +1316,7 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
             $database->setMetadata('user', $impersonatedUserId);
         }
 
-        if (!empty($projectId) && $projectId !== 'console') {
+        if (!$isPing && !empty($projectId) && $projectId !== 'console') {
             // Negative-cache race: if any prior code path queried projects:$projectId
             // before this project existed (e.g. a router probe during connection
             // setup), the Database's shared cache may hold an empty result. Try the
@@ -1362,12 +1346,19 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
             checkForProjectUsage($project);
         }
 
+        // Pings have no project document, so their usage goes to the connection's project.
+        $usageProjectId = match (true) {
+            $project !== null && !$project->isEmpty() => $project->getId(),
+            $isPing && !empty($projectId) && $projectId !== 'console' => $projectId,
+            default => null,
+        };
+
         // Record realtime inbound bytes for this project
         // not making this a part of the dispatcher as we need to get the inbound bytes as well even if we dont enter the dispatcher
-        if ($project !== null && !$project->isEmpty()) {
+        if ($usageProjectId !== null) {
             $usage->add([
                 METRIC_REALTIME_INBOUND => $rawSize,
-            ], $project->getId());
+            ], $usageProjectId);
         }
 
         if (is_null($message) || (!array_key_exists('type', $message) && !array_key_exists('data', $message))) {
@@ -1415,11 +1406,11 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
             $bytes = \strlen($responseJson);
             $outboundBytes += $bytes;
 
-            if ($project !== null && !$project->isEmpty()) {
+            if ($usageProjectId !== null) {
                 $usage->add([
                     METRIC_REALTIME_OUTBOUND => $bytes,
                     METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT => 1,
-                ], $project->getId());
+                ], $usageProjectId);
             }
         }
 
