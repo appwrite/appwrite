@@ -519,7 +519,7 @@ export class FactoryEngine {
       this.scene.updateMatrixWorld()
       this.renderReflection()
       this.reflectionWarm = true
-      if (!this.isLooping() && this.assembly >= ASSEMBLED) {
+      if (!this.isLooping()) {
         this.reflectionFade = 1
         this.renderFrame(0)
       }
@@ -1163,12 +1163,9 @@ export class FactoryEngine {
     // Once per frame, not once per pass: the reflection and the view share it.
     this.scene.updateMatrixWorld()
     if (this.reflection) {
-      // Eases in over half a second once warm and the machine stands in
-      // place, and out when the GPU cannot keep up (see `trackPerformance`).
-      const target =
-        this.reflectionOn && this.reflectionWarm && this.assembly >= ASSEMBLED
-          ? 1
-          : 0
+      // Eases in over half a second once warm, as the factory assembles on
+      // it, and out when the GPU cannot keep up (see `trackPerformance`).
+      const target = this.reflectionOn && this.reflectionWarm ? 1 : 0
       this.reflectionFade = MathUtils.clamp(
         this.reflectionFade + Math.sign(target - this.reflectionFade) * dt * 2,
         0,
