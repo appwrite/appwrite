@@ -4833,6 +4833,7 @@
             "up_down_counter",
             "mqtt.connections.active",
             [
+              0,
               1
             ]
           ]
