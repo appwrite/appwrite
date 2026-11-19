@@ -37,10 +37,10 @@ New projects have no [encoding profiles](/docs/products/videos/profiles), so cre
 6. Click **Create video**.
 
 {% only_dark %}
-![Create video wizard with a demo movie selected, the Videos destination bucket, CMAF output, and three profiles](/images/docs/videos/dark/create-video.avif)
+![Create video wizard with a video file attached for upload, the Videos destination bucket, CMAF output, and three profiles](/images/docs/videos/dark/create-video.avif)
 {% /only_dark %}
 {% only_light %}
-![Create video wizard with a demo movie selected, the Videos destination bucket, CMAF output, and three profiles](/images/docs/videos/create-video.avif)
+![Create video wizard with a video file attached for upload, the Videos destination bucket, CMAF output, and three profiles](/images/docs/videos/create-video.avif)
 {% /only_light %}
 
 The Console uploads the file from your browser, creates the video, and queues a rendition for each profile you selected. You can close the wizard while this runs, but keep the tab open until the upload finishes and the renditions are queued. Encoding runs on Appwrite and continues after you close the tab.
