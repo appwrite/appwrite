@@ -70,16 +70,16 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "32.3.0",
+            "version": "32.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "2ed11392c3759c5f7df415ede8296b5b75ff7f9c"
+                "reference": "2c6226025a58c3d29c50a0def50a872abd693298"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/2ed11392c3759c5f7df415ede8296b5b75ff7f9c",
-                "reference": "2ed11392c3759c5f7df415ede8296b5b75ff7f9c",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/2c6226025a58c3d29c50a0def50a872abd693298",
+                "reference": "2c6226025a58c3d29c50a0def50a872abd693298",
                 "shasum": ""
             },
             "require": {
@@ -112,11 +112,11 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/32.3.0",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/32.4.0",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2026-11-11T13:02:34+00:00",
-            "published-time": "2026-11-11T13:03:14+00:00"
+            "time": "2026-11-16T13:51:09+00:00",
+            "published-time": "2026-11-16T13:52:46+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -1906,16 +1906,16 @@
         },
         {
             "name": "paragonie/constant_time_encoding",
-            "version": "v3.1.4",
+            "version": "v3.1.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/paragonie/constant_time_encoding.git",
-                "reference": "5efef6e6cb43e088ccab7d0c1e2f2ab25b9e8b54"
+                "reference": "ceed38ba49d98b85808edfc4f04750ff61eb9739"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/paragonie/constant_time_encoding/zipball/5efef6e6cb43e088ccab7d0c1e2f2ab25b9e8b54",
-                "reference": "5efef6e6cb43e088ccab7d0c1e2f2ab25b9e8b54",
+                "url": "https://api.github.com/repos/paragonie/constant_time_encoding/zipball/ceed38ba49d98b85808edfc4f04750ff61eb9739",
+                "reference": "ceed38ba49d98b85808edfc4f04750ff61eb9739",
                 "shasum": ""
             },
             "require": {
@@ -1971,8 +1971,8 @@
                 "issues": "https://github.com/paragonie/constant_time_encoding/issues",
                 "source": "https://github.com/paragonie/constant_time_encoding"
             },
-            "time": "2026-11-06T20:31:19+00:00",
-            "published-time": "2026-11-06T20:39:39+00:00"
+            "time": "2026-11-18T13:55:22+00:00",
+            "published-time": "2026-11-18T13:55:46+00:00"
         },
         {
             "name": "php-http/discovery",
@@ -4714,16 +4714,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "10.1.4",
+            "version": "10.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "74a59b3daab80f23b56c3630edd2a63a581dcb84"
+                "reference": "e42ba86072def691858636042d2370c2dfe06878"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/74a59b3daab80f23b56c3630edd2a63a581dcb84",
-                "reference": "74a59b3daab80f23b56c3630edd2a63a581dcb84",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/e42ba86072def691858636042d2370c2dfe06878",
+                "reference": "e42ba86072def691858636042d2370c2dfe06878",
                 "shasum": ""
             },
             "require": {
@@ -4733,7 +4733,7 @@
                 "ext-redis": "*",
                 "php": ">=8.5",
                 "utopia-php/async": "^0.2",
-                "utopia-php/cache": "^6.1.3 || ^7.0",
+                "utopia-php/cache": "^8.0",
                 "utopia-php/console": "^0.1 || ^0.2",
                 "utopia-php/mongo": "^1.5.4",
                 "utopia-php/pools": "^2.0",
@@ -4781,10 +4781,10 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/10.1.4"
+                "source": "https://github.com/utopia-php/database/tree/10.2.1"
             },
-            "time": "2026-11-16T07:14:10+00:00",
-            "published-time": "2026-11-16T07:14:42+00:00"
+            "time": "2026-11-18T06:11:14+00:00",
+            "published-time": "2026-11-18T06:14:35+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -4990,16 +4990,16 @@
         },
         {
             "name": "web-auth/webauthn-lib",
-            "version": "5.3.12",
+            "version": "5.3.14",
             "source": {
                 "type": "git",
                 "url": "https://github.com/web-auth/webauthn-lib.git",
-                "reference": "c7aeeb1d35e39b7d32ab5146cce4b668f271a68e"
+                "reference": "768fb8cf7bebaad8a08b3015e206dda95e3320fa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/web-auth/webauthn-lib/zipball/c7aeeb1d35e39b7d32ab5146cce4b668f271a68e",
-                "reference": "c7aeeb1d35e39b7d32ab5146cce4b668f271a68e",
+                "url": "https://api.github.com/repos/web-auth/webauthn-lib/zipball/768fb8cf7bebaad8a08b3015e206dda95e3320fa",
+                "reference": "768fb8cf7bebaad8a08b3015e206dda95e3320fa",
                 "shasum": ""
             },
             "require": {
@@ -5060,7 +5060,7 @@
                 "webauthn"
             ],
             "support": {
-                "source": "https://github.com/web-auth/webauthn-lib/tree/5.3.12"
+                "source": "https://github.com/web-auth/webauthn-lib/tree/5.3.14"
             },
             "funding": [
                 {
@@ -5072,8 +5072,8 @@
                     "type": "patreon"
                 }
             ],
-            "time": "2026-11-03T09:21:08+00:00",
-            "published-time": "2026-11-03T09:27:24+00:00"
+            "time": "2026-11-18T16:46:55+00:00",
+            "published-time": "2026-11-18T16:56:49+00:00"
         },
         {
             "name": "webmozart/assert",
@@ -5219,16 +5219,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "5.20.6",
+            "version": "5.20.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "8310c19cf647f48fdf12333b38a28692f7a19c38"
+                "reference": "267c3e138fd78b19e2473138003141abbfd019e7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/8310c19cf647f48fdf12333b38a28692f7a19c38",
-                "reference": "8310c19cf647f48fdf12333b38a28692f7a19c38",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/267c3e138fd78b19e2473138003141abbfd019e7",
+                "reference": "267c3e138fd78b19e2473138003141abbfd019e7",
                 "shasum": ""
             },
             "require": {
@@ -5266,10 +5266,10 @@
             "description": "SDK generator for Appwrite APIs across multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/5.20.6"
+                "source": "https://github.com/appwrite/sdk-generator/tree/5.20.7"
             },
-            "time": "2026-11-17T18:03:56+00:00",
-            "published-time": "2026-11-17T18:06:34+00:00"
+            "time": "2026-11-18T12:30:54+00:00",
+            "published-time": "2026-11-18T12:31:31+00:00"
         },
         {
             "name": "brianium/paratest",
@@ -5991,11 +5991,11 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.3.5",
+            "version": "2.3.6",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/645a1bd6bead15fc1b8474137467961d0fa30a79",
-                "reference": "645a1bd6bead15fc1b8474137467961d0fa30a79",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/00cedebb76cc82c1592414fa4f616cefdccda16f",
+                "reference": "00cedebb76cc82c1592414fa4f616cefdccda16f",
                 "shasum": ""
             },
             "require": {
@@ -6051,8 +6051,8 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-11-03T12:14:22+00:00",
-            "published-time": "2026-11-03T12:14:36+00:00"
+            "time": "2026-11-15T19:58:26+00:00",
+            "published-time": "2026-11-15T19:58:39+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -7778,16 +7778,16 @@
         },
         {
             "name": "symfony/polyfill-php85",
-            "version": "v1.43.0",
+            "version": "v1.44.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-php85.git",
-                "reference": "86a42cbcc07adc331481a5ab310a4024bfc227f6"
+                "reference": "94c794cb5ba51784bc259f11e9f128593297d8dc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-php85/zipball/86a42cbcc07adc331481a5ab310a4024bfc227f6",
-                "reference": "86a42cbcc07adc331481a5ab310a4024bfc227f6",
+                "url": "https://api.github.com/repos/symfony/polyfill-php85/zipball/94c794cb5ba51784bc259f11e9f128593297d8dc",
+                "reference": "94c794cb5ba51784bc259f11e9f128593297d8dc",
                 "shasum": ""
             },
             "require": {
@@ -7834,7 +7834,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-php85/tree/v1.43.0"
+                "source": "https://github.com/symfony/polyfill-php85/tree/v1.44.0"
             },
             "funding": [
                 {
@@ -7854,8 +7854,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-09-25T15:46:47+00:00",
-            "published-time": "2026-09-30T10:23:32+00:00"
+            "time": "2026-10-30T15:20:09+00:00",
+            "published-time": "2026-11-15T14:20:22+00:00"
         },
         {
             "name": "symfony/process",
