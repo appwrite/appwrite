@@ -21,10 +21,10 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
       imageAlt: 'Appwrite Analytics placeholder mock',
     },
     isLive: true,
-    sessionCount: 2,
+    sessionCount: 1,
     headerNavCta: {
       label: 'Explore Appwrite Analytics',
-      href: '/docs/products/analytics',
+      href: '/products/analytics',
       external: false,
     },
     resources: [
@@ -34,6 +34,13 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
         title: 'Introducing Appwrite Analytics',
         href: '/init',
         actionLabel: 'Coming soon',
+      },
+      {
+        id: 'init5-day1-product',
+        typeLabel: 'Product',
+        title: 'Appwrite Analytics',
+        href: '/products/analytics',
+        actionLabel: 'View product',
       },
       {
         id: 'init5-day1-docs',
@@ -57,10 +64,10 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
       mockVisualId: 'appwrite-2',
       imageAlt: 'Appwrite Videos placeholder mock',
     },
-    sessionCount: 2,
+    sessionCount: 1,
     headerNavCta: {
       label: 'Explore Appwrite Videos',
-      href: '/init',
+      href: '/products/videos',
       external: false,
     },
     resources: [
@@ -70,6 +77,13 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
         title: 'Introducing Appwrite Videos',
         href: '/init',
         actionLabel: 'Coming soon',
+      },
+      {
+        id: 'init5-day2-product',
+        typeLabel: 'Product',
+        title: 'Appwrite Videos',
+        href: '/products/videos',
+        actionLabel: 'View product',
       },
     ],
   },
@@ -86,7 +100,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
       mockVisualId: 'appwrite-2',
       imageAlt: 'Appwrite Zero placeholder mock',
     },
-    sessionCount: 2,
+    sessionCount: 1,
     headerNavCta: {
       label: 'Explore Appwrite Zero',
       href: '/init',
@@ -115,10 +129,10 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
       mockVisualId: 'databases',
       imageAlt: 'TablesDB upgrade placeholder mock',
     },
-    sessionCount: 2,
+    sessionCount: 1,
     headerNavCta: {
       label: 'Explore TablesDB',
-      href: '/docs/products/databases/tables',
+      href: '/products/databases',
       external: false,
     },
     resources: [
@@ -128,6 +142,13 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
         title: 'TablesDB just got upgraded',
         href: '/init',
         actionLabel: 'Coming soon',
+      },
+      {
+        id: 'init5-day4-product',
+        typeLabel: 'Product',
+        title: 'Appwrite Databases',
+        href: '/products/databases',
+        actionLabel: 'View product',
       },
       {
         id: 'init5-day4-docs',
@@ -142,18 +163,18 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     day: 5,
     dateLabel: 'DECEMBER 4',
     weekdayLabel: 'FRIDAY, DECEMBER 4',
-    title: 'Appwrite Monitors and Appwrite Beep',
+    title: 'Introducing Appwrite Monitors & Beep',
     description: 'Know when your project needs you, wherever you are.',
     longDescription:
       'Appwrite Monitors alert you when project usage crosses a threshold, and Appwrite Beep, our mobile app, puts those alerts on your phone. We close the week with the grand prize draw.',
     icon: BellRing,
     visual: {
       mockVisualId: 'firewall',
-      imageAlt: 'Appwrite Monitors and Appwrite Beep placeholder mock',
+      imageAlt: 'Appwrite Monitors & Beep placeholder mock',
     },
-    sessionCount: 2,
+    sessionCount: 1,
     headerNavCta: {
-      label: 'Explore Monitors and Beep',
+      label: 'Explore Monitors & Beep',
       href: '/init',
       external: false,
     },
@@ -161,7 +182,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
       {
         id: 'init5-day5-announce',
         typeLabel: 'Blog',
-        title: 'Introducing Appwrite Monitors and Appwrite Beep',
+        title: 'Introducing Appwrite Monitors & Beep',
         href: '/init',
         actionLabel: 'Coming soon',
       },
@@ -188,14 +209,6 @@ export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     href: INIT_YOUTUBE_CHANNEL_HREF,
   },
   {
-    id: 'sched-nov5-day1-ama',
-    day: 1,
-    platform: 'reddit',
-    title: 'Appwrite Analytics AMA',
-    startsAt: '2026-11-30T10:00:00-08:00',
-    href: 'https://www.reddit.com/r/appwrite/',
-  },
-  {
     id: 'sched-nov5-videos',
     day: 2,
     platform: 'youtube',
@@ -203,14 +216,6 @@ export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     startsAt: '2026-12-01T09:00:00-08:00',
     isLive: true,
     href: INIT_YOUTUBE_CHANNEL_HREF,
-  },
-  {
-    id: 'sched-nov5-day2-ama',
-    day: 2,
-    platform: 'reddit',
-    title: 'Appwrite Videos AMA',
-    startsAt: '2026-12-01T10:00:00-08:00',
-    href: 'https://www.reddit.com/r/appwrite/',
   },
   {
     id: 'sched-nov5-zero',
@@ -222,14 +227,6 @@ export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     href: INIT_YOUTUBE_CHANNEL_HREF,
   },
   {
-    id: 'sched-nov5-day3-ama',
-    day: 3,
-    platform: 'reddit',
-    title: 'Appwrite Zero AMA',
-    startsAt: '2026-12-02T10:00:00-08:00',
-    href: 'https://www.reddit.com/r/appwrite/',
-  },
-  {
     id: 'sched-nov5-tablesdb',
     day: 4,
     platform: 'youtube',
@@ -239,29 +236,13 @@ export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     href: INIT_YOUTUBE_CHANNEL_HREF,
   },
   {
-    id: 'sched-nov5-day4-ama',
-    day: 4,
-    platform: 'reddit',
-    title: 'TablesDB AMA',
-    startsAt: '2026-12-03T10:00:00-08:00',
-    href: 'https://www.reddit.com/r/appwrite/',
-  },
-  {
     id: 'sched-nov5-finale',
     day: 5,
     platform: 'youtube',
-    title: 'Monitors and Beep launch, plus the finale',
+    title: 'Monitors & Beep launch, plus the finale',
     startsAt: '2026-12-04T09:00:00-08:00',
     isLive: true,
     href: INIT_YOUTUBE_CHANNEL_HREF,
-  },
-  {
-    id: 'sched-nov5-day5-ama',
-    day: 5,
-    platform: 'reddit',
-    title: 'Monitors and Beep AMA',
-    startsAt: '2026-12-04T10:00:00-08:00',
-    href: 'https://www.reddit.com/r/appwrite/',
   },
   {
     id: 'sched-nov5-discord-closing',
@@ -270,6 +251,14 @@ export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     title: 'Init community recap',
     startsAt: '2026-12-05T09:00:00-08:00',
     href: '/discord',
+  },
+  {
+    id: 'sched-nov5-ama',
+    day: 6,
+    platform: 'reddit',
+    title: 'Init 5 AMA',
+    startsAt: '2026-12-05T10:00:00-08:00',
+    href: 'https://www.reddit.com/r/appwrite/',
   },
 ]
 
@@ -343,7 +332,7 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
     day: 5,
     dateLabel: 'DECEMBER 4',
     scheduleItemId: 'sched-nov5-finale',
-    sessionTitle: 'Monitors and Beep launch, plus the finale',
+    sessionTitle: 'Monitors & Beep launch, plus the finale',
     platform: 'youtube',
     href: INIT_YOUTUBE_CHANNEL_HREF,
     title: 'Grand prize · details coming soon',

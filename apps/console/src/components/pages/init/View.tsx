@@ -42,6 +42,7 @@ import { LiveBannerBar } from './_components/LiveBannerBar'
 import { InitRecapBanner } from './_components/InitRecapBanner'
 import { InitRecapIntro } from './_components/InitRecapIntro'
 import { DayDetailCard } from './_components/DayDetailCard'
+import { InitAmaCard } from './_components/InitAmaCard'
 import { LockedDayDetailCard } from './_components/LockedDayDetailCard'
 import { InitReleaseAvailabilityStage } from './_components/InitReleaseAvailabilityStage'
 import { EventSchedulePanel } from './_components/EventSchedulePanel'
@@ -207,6 +208,15 @@ function InitPageContent({
                     />
                   ),
                 )}
+                <InitAmaCard
+                  event={event}
+                  items={event.schedule.filter(
+                    (item) =>
+                      item.platform === 'reddit' &&
+                      item.day > (event.days.at(-1)?.day ?? 0),
+                  )}
+                  isRecapMode={event.isRecapMode}
+                />
               </div>
               <div className="flex flex-col gap-6 lg:sticky lg:top-20 lg:self-start">
                 <EventSchedulePanel event={event} embedded />

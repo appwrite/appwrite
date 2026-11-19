@@ -12,7 +12,7 @@ import { InitDayMockVisual } from './InitDayMockVisual'
 import { Badge } from '@/components/ui/badge'
 import { InitDayCardHeaderNav } from './InitDayCardHeaderNav'
 import { InitScheduleRow } from './InitScheduleRow'
-import { ArrowUpRight, BookOpen, FileText, Play } from 'lucide-react'
+import { ArrowUpRight, BookOpen, FileText, Package, Play } from 'lucide-react'
 import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useInitHref } from '@/lib/init/use-init-href'
@@ -97,12 +97,16 @@ const TITLE_CLASS =
   'font-aeonik-pro text-[clamp(32px,4.5vw,42px)] font-normal leading-none tracking-tight'
 
 function DayTitle({ title }: { title: string }) {
-  const lastSpace = title.lastIndexOf(' ')
-  const leading = lastSpace === -1 ? '' : title.slice(0, lastSpace + 1)
-  const lastWord = lastSpace === -1 ? title : title.slice(lastSpace + 1)
+  // "Introducing" gets its own line, with the product name below it.
+  const introducing = title.startsWith('Introducing ')
+  const name = introducing ? title.slice('Introducing '.length) : title
+  const lastSpace = name.lastIndexOf(' ')
+  const leading = lastSpace === -1 ? '' : name.slice(0, lastSpace + 1)
+  const lastWord = lastSpace === -1 ? name : name.slice(lastSpace + 1)
 
   return (
-    <h3 className={cn(TITLE_CLASS, 'text-foreground')}>
+    <h3 className={cn(TITLE_CLASS, 'text-balance text-foreground')}>
+      {introducing ? <span className="block">Introducing</span> : null}
       {leading ? <span>{leading}</span> : null}
       <span className="whitespace-nowrap">
         {lastWord}
@@ -169,7 +173,8 @@ interface DayDetailCardProps {
 
 function DayResourceRow({ resource }: { resource: LaunchEventDayResource }) {
   const type = resource.typeLabel.toLowerCase()
-  const ResourceIcon = type === 'docs' ? BookOpen : FileText
+  const ResourceIcon =
+    type === 'docs' ? BookOpen : type === 'product' ? Package : FileText
   const isBlogLink = Boolean(parseBlogPagePath(resource.href))
   const isDocsLink = Boolean(parseDocsPagePath(resource.href))
   const resolved = useInitHref(resource.href)

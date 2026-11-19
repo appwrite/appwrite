@@ -52,3 +52,25 @@ describe('init schedule live state', () => {
     expect(ended?.isStartingSoon).toBe(false)
   })
 })
+
+describe('init schedule titles', () => {
+  const init5 = LAUNCH_EVENTS.find((entry) => entry.id === 'init-nov-2026')!
+  const titleOf = (currentDay: number, id: string) =>
+    applyInitEventVisibility(init5, { currentDay, nowMs: 0 }).schedule.find(
+      (item) => item.id === id,
+    )?.title
+
+  test('masks a launch session until its day unlocks', () => {
+    expect(titleOf(1, 'sched-nov5-videos')).toBe('Product tour')
+    expect(titleOf(2, 'sched-nov5-videos')).toBe(
+      'Appwrite Videos launch stream',
+    )
+  })
+
+  test('keeps the titles of sessions after the launch week', () => {
+    expect(titleOf(0, 'sched-nov5-ama')).toBe('Init 5 AMA')
+    expect(titleOf(3, 'sched-nov5-discord-closing')).toBe(
+      'Init community recap',
+    )
+  })
+})
