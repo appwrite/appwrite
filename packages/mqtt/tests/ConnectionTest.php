@@ -334,7 +334,7 @@ final class ConnectionTest extends TestCase
         $this->assertInstanceOf(Connection::class, $handler->connection);
         $this->assertTrue($handler->connection->closed);
         $this->assertFalse($handler->connection->active, 'a connection closed during onConnect was marked active');
-        $this->assertSame([0], $telemetry->upDownCounters['mqtt.connections.active']->values, 'a connection closed during onConnect moved the active gauge');
+        $this->assertRecorded([0], $telemetry->upDownCounters['mqtt.connections.active'], 'a connection closed during onConnect moved the active gauge');
         $this->assertArrayNotHasKey('mqtt.connections.opened', $telemetry->counters, 'a connection closed during onConnect was counted as opened');
     }
 
@@ -344,7 +344,7 @@ final class ConnectionTest extends TestCase
         (new Server(new RecordingAdapter(), new AcceptingHandler()))->setTelemetry($telemetry)->start();
 
         // Test for SUCCESS: a broker that has accepted nothing still reports 0.
-        $this->assertSame([0], $telemetry->upDownCounters['mqtt.connections.active']->values);
+        $this->assertRecorded([0], $telemetry->upDownCounters['mqtt.connections.active']);
     }
 
     public function testConnectThatThrowsIsCountedAndClosed(): void
@@ -398,8 +398,8 @@ final class ConnectionTest extends TestCase
         $this->assertSame([], $adapter->sent, 'a CONNECT that threw was sent a CONNACK');
         $this->assertSame([9], $adapter->closed);
         $this->assertSame(['receive: Connection refused'], $errors);
-        $this->assertSame([1], $telemetry->counters['mqtt.connections.opened']->values, 'a CONNECT that threw was not counted');
-        $this->assertSame([0], $telemetry->upDownCounters['mqtt.connections.active']->values, 'a CONNECT that threw moved the active gauge');
+        $this->assertRecorded([1], $telemetry->counters['mqtt.connections.opened'], 'a CONNECT that threw was not counted');
+        $this->assertRecorded([0], $telemetry->upDownCounters['mqtt.connections.active'], 'a CONNECT that threw moved the active gauge');
     }
 
     public function testSecondConnectIsAProtocolErrorThatClosesTheConnection(): void
@@ -446,5 +446,16 @@ final class ConnectionTest extends TestCase
         }
 
         return $delivery;
+    }
+
+    /**
+     * The test telemetry adapter keeps every amount an instrument recorded in its `values`.
+     *
+     * @param list<float|int> $expected
+     */
+    private function assertRecorded(array $expected, object $instrument, string $message = ''): void
+    {
+        $this->assertTrue(\property_exists($instrument, 'values'), $instrument::class . ' does not record values');
+        $this->assertSame($expected, $instrument->values, $message);
     }
 }
