@@ -799,10 +799,9 @@ class Get extends Base
         $replaced = false;
         $created = null;
         try {
-            $created = $dbForProject->withTransaction(function () use ($dbForProject, $failureRedirect, $snapshot, $grounds, $user, $provider, $oauth2ID, $providerEmail, $credentials, $changes, $state, $current, &$token, &$session, &$conflict, &$linked, &$replaced) {
+            $created = $dbForProject->withTransaction(function () use ($dbForProject, $failureRedirect, $snapshot, $grounds, $user, $provider, $oauth2ID, $providerEmail, $credentials, $changes, $state, &$token, &$session, &$conflict, &$linked) {
                 $conflict = null; // A retried attempt starts over
                 $linked = null;
-                $replaced = false;
 
                 if (!User::lockUnchanged($dbForProject, $snapshot, $grounds)) {
                     $failureRedirect(Exception::GENERAL_BAD_REQUEST);
@@ -818,15 +817,6 @@ class Get extends Base
 
                 if ($state['token']) {
                     return $dbForProject->createDocument('tokens', $token);
-                }
-
-                // The session flow replaces the caller's current session with the one
-                // created here, so the browser stays signed in. The token flow creates
-                // no session here; the app exchanges the returned token through
-                // createSession later. Deleting the current session in that flow would
-                // sign the caller out until the exchange, so it is left in place.
-                if ($current) {
-                    $replaced = $dbForProject->deleteDocument('sessions', $current);
                 }
 
                 return $dbForProject->createDocument('sessions', $session);
@@ -846,6 +836,16 @@ class Get extends Base
             // A request whose link did not hold must not leave behind the user it just created
             $this->dropNewUser($dbForProject, $authorization, $newUser, $newTarget);
             $failureRedirect($conflict);
+        }
+
+        // The session flow replaces the caller's current session with the one
+        // created here, so the browser stays signed in. It is deleted only once the
+        // replacement has held, so a link refused after the commit leaves the caller
+        // signed in. The token flow creates no session here; the app exchanges the
+        // returned token through createSession later. Deleting the current session in
+        // that flow would sign the caller out until the exchange, so it is left in place.
+        if (!$state['token'] && $current) {
+            $replaced = $authorization->skip(fn () => $dbForProject->deleteDocument('sessions', $current));
         }
 
         if ($replaced) {
