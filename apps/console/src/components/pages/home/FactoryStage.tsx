@@ -46,8 +46,8 @@ const isRtl = () =>
  * The hero's 3D software factory. It starts before the page hydrates, from
  * the labels and icons this renders (`data-factory-labels`,
  * `data-factory-icons`), renders only while on screen and never above
- * 60 fps. Product names are shown on the machines; hovering one unfolds a
- * display that explains the product, clear of the hero's title and
+ * 60 fps. Product names are shown on the machines; hovering one projects a
+ * hologram that explains the product, clear of the hero's title and
  * description laid over the scene (`data-factory-copy`).
  */
 export function FactoryStage({ className }: { className?: string }) {
@@ -61,7 +61,7 @@ export function FactoryStage({ className }: { className?: string }) {
   const names = STATION_IDS.map((id) => t(PRODUCT_REGISTRY[id].name))
   /** What the machine prints: every station's name, then the gate's sign. */
   const plates = [...names, NETWORK_NAME]
-  /** What each unfolded display says: up to three lines, ending in the brand underscore. */
+  /** What each hologram says: up to three lines, ending in the brand underscore. */
   const copy: Record<FactoryStationId, string> = {
     auth: t(
       'Sign users in with email, OAuth, or passkeys, plus MFA, teams, and roles',
@@ -206,7 +206,7 @@ export function FactoryStage({ className }: { className?: string }) {
         <Share2 strokeWidth={2} />
       </div>
 
-      {/* What the displays say, for screen readers. */}
+      {/* What the holograms say, for screen readers. */}
       <ul className="sr-only">
         {STATION_IDS.map((id, index) => (
           <li key={id}>{`${names[index]}: ${descriptions[index]}`}</li>

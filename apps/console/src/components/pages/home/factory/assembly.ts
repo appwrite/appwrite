@@ -110,7 +110,7 @@ const NETWORK_RUN = { start: 1.3, speed: 4, gain: 20 } as const
 
 /** When the line starts powering up: it starts moving once the queue is in. */
 export const POWER_ON = 1.7
-/** Every machine stands in place: displays may unfold. */
+/** Every machine stands in place: holograms may come on. */
 export const ASSEMBLED = 1.9
 /** Every cable has run out: nothing of the assembly moves after this. */
 export const SETTLED = 3.2

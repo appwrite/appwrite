@@ -23,8 +23,8 @@ export type FrameState = {
   /** Real shadow maps are on, so fake contact blobs can step back. */
   realShadows: boolean
   /**
-   * How far every display's mast rises (0 → 1): one height for all, so no
-   * open display meets the page copy laid over the scene.
+   * How high every hologram's screen floats (0 → 1): one height for all,
+   * so no hologram meets the page copy laid over the scene.
    */
   lift: number
 }

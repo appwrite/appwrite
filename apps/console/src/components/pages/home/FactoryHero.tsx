@@ -23,7 +23,7 @@ export function FactoryHero() {
       <HomeSoftLights />
 
       <div className="relative z-[1] mx-auto w-full max-w-7xl px-4 pt-12 sm:px-6 sm:pt-16 lg:pointer-events-none lg:px-8 lg:pt-[clamp(3.5rem,7dvh,6rem)]">
-        {/* On large screens the scene runs under the copy: only the copy itself takes the pointer, and the machines' displays keep clear of the title and description (`data-factory-copy`), standing in front of whatever else they meet. */}
+        {/* On large screens the scene runs under the copy: only the copy itself takes the pointer, and the machines' holograms keep clear of the title and description (`data-factory-copy`), standing in front of whatever else they meet. */}
         <div className="max-w-xl xl:max-w-2xl">
           <Button
             variant="outline"
@@ -92,7 +92,7 @@ export function FactoryHero() {
       </div>
 
       <FactoryStage className="mt-4 h-[clamp(400px,70vw,560px)] sm:mt-6 lg:absolute lg:inset-0 lg:z-0 lg:mt-0 lg:h-auto" />
-      {/* Over the copy: an open display is drawn again here, so it stands in front of the copy (see the engine's `setFront`). */}
+      {/* Over the copy: a hologram that is on is drawn here, so it stands in front of the copy (see the engine's `setFront`). */}
       <canvas
         data-factory-front
         aria-hidden

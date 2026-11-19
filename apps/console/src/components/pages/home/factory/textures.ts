@@ -7,7 +7,7 @@ import {
   SRGBColorSpace,
 } from 'three'
 import type { FactoryPalette } from './palette'
-import { EXTENSION, FASCIA, PRODUCT_KINDS, type ProductKind } from './layout'
+import { FASCIA, HOLOGRAM, PRODUCT_KINDS, type ProductKind } from './layout'
 
 type Context = CanvasRenderingContext2D
 
@@ -344,20 +344,10 @@ export const APPWRITE_MARK = [
   'M24.4429 9.46094V14.9383H14.4492C15.4906 13.94 16.1401 12.5248 16.1401 10.9548C16.1401 10.4369 16.0696 9.93598 15.9373 9.46094H24.4429Z',
 ]
 
-/** The unfolded screen: one half on each side of the hinge. */
-export const DESCRIPTION_SCREEN = {
-  /** Screen width on each half. */
-  leaf: EXTENSION.leaf - EXTENSION.border - 0.002,
-  /** Half the crease at the hinge: a hairline, so text runs across it. */
-  crease: 0.002,
-  height: EXTENSION.height - 2 * EXTENSION.border,
-} as const
-/** Edge to edge, unfolded: both halves' screens and the crease between them. */
-export const DESCRIPTION_WIDTH =
-  2 * (DESCRIPTION_SCREEN.crease + DESCRIPTION_SCREEN.leaf)
+/** One station's hologram, edge to edge, in pixels. */
 const DESCRIPTION_CELL = {
   width: 1024,
-  height: Math.round((1024 * DESCRIPTION_SCREEN.height) / DESCRIPTION_WIDTH),
+  height: Math.round((1024 * HOLOGRAM.height) / HOLOGRAM.width),
 }
 /** Two columns of cells keep the atlas within every GPU's size limit. */
 const DESCRIPTION_COLUMNS = 2
@@ -455,8 +445,9 @@ function wrap(context: Context, text: string, width: number): string[] {
 }
 
 /**
- * What each station's unfolded screen says: the product icon and name, then
- * what the product does, centered on a backlit LCD like the nameplates.
+ * What each station's hologram says: the product icon and name, then what
+ * the product does. The hologram shows it as light, so the dark base reads
+ * as clear glass and the brand lights in its corners as coloured haze.
  */
 export function createDescriptionAtlas(
   icons: readonly string[],
