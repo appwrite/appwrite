@@ -59,6 +59,8 @@ export function createFloorMaterial(shadow: Texture) {
           ),
         },
         uOcclusion: { value: 0.5 },
+        // How far the racks have rolled in, so their painted shadow comes with them.
+        uRacks: { value: 1 },
         uPool: { value: 0 },
         uPoolShape: { value: new Vector4(1, -0.2, 0.07, 0.26) },
         uReflection: { value: null },
@@ -83,6 +85,7 @@ export function createFloorMaterial(shadow: Texture) {
       uniform sampler2D uShadow;
       uniform vec4 uShadowBounds;
       uniform float uOcclusion;
+      uniform float uRacks;
       uniform float uPool;
       uniform vec4 uPoolShape;
       uniform sampler2D uReflection;
@@ -100,7 +103,9 @@ export function createFloorMaterial(shadow: Texture) {
         color += vec3(uPool) * exp(-dot(pool, pool));
 
         vec2 suv = (p - uShadowBounds.xy) / (uShadowBounds.zw - uShadowBounds.xy);
-        float shade = texture2D(uShadow, vec2(suv.x, 1.0 - suv.y)).r;
+        // The bed's shadow (red), and the racks' (green) as far as they have arrived.
+        vec2 shadows = texture2D(uShadow, vec2(suv.x, 1.0 - suv.y)).rg;
+        float shade = shadows.r + shadows.g * uRacks;
         color *= 1.0 - shade * uOcclusion;
 
         #ifdef USE_REFLECTION

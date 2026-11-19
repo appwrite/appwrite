@@ -8,8 +8,10 @@ export type FrameState = {
   time: number
   /** Real seconds since the previous frame. */
   dt: number
-  /** Real seconds since the scene booted. Drives the power-up. */
+  /** Power-up seconds (running faster than real ones) since the assembled line started powering up. */
   introTime: number
+  /** Real seconds since the scene first showed, as the factory assembles (see `assembly.ts`). */
+  assembly: number
   line: LineState
   palette: FactoryPalette
   glows: GlowLayer

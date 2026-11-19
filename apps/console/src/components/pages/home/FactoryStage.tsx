@@ -2,13 +2,7 @@
 
 import { createClientOnlyFn } from '@tanstack/react-start'
 import { Share2 } from 'lucide-react'
-import {
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type PointerEvent as ReactPointerEvent,
-} from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useT } from '@/lib/i18n/translate'
 import { PRODUCT_REGISTRY } from '@/lib/products/registry'
 import { cn } from '@/lib/utils'
@@ -73,7 +67,7 @@ export function FactoryStage({ className }: { className?: string }) {
       'Sign users in with email, OAuth, or passkeys, plus MFA, teams, and roles',
     ),
     databases: t(
-      'Run managed Postgres and MySQL, or store tables, documents, and vectors in one project',
+      'Five databases in one project: Postgres, MySQL, TablesDB, DocumentsDB, and VectorsDB',
     ),
     storage: t(
       'Upload files, resize images on the fly, and deliver them over a global CDN',
@@ -169,25 +163,12 @@ export function FactoryStage({ className }: { className?: string }) {
     engineRef.current?.setPromptLabel(promptLabelRef.current)
   }, [labelsKey])
 
-  const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === 'touch') return
-    const rect = event.currentTarget.getBoundingClientRect()
-    engineRef.current?.setPointer(
-      event.clientX - rect.left,
-      event.clientY - rect.top,
-    )
-  }
-
-  const handlePointerLeave = () => engineRef.current?.setPointer(null, null)
-
   return (
     <div
       ref={containerRef}
       data-factory-stage
       data-factory-labels={JSON.stringify(labels)}
       className={cn('factory-stage relative w-full select-none', className)}
-      onPointerMove={handlePointerMove}
-      onPointerLeave={handlePointerLeave}
     >
       <canvas
         role="img"

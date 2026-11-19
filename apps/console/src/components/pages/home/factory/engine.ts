@@ -28,11 +28,18 @@ import {
   WebGLRenderer,
   type Texture,
 } from 'three'
+import { ASSEMBLED, POWER_ON, SETTLED } from './assembly'
 import { GlowLayer, ShadowLayer } from './effects'
 import { createFrameworkAtlas, loadFrameworkIcons } from './frameworks'
 import { releaseShapes } from './geometry'
 import type { FrameState } from './frame'
-import { applyKitPalette, createKit, disposeKit, type FactoryKit } from './kit'
+import {
+  applyKitPalette,
+  createKit,
+  createArrivingDepthMaterial,
+  disposeKit,
+  type FactoryKit,
+} from './kit'
 import {
   BED_BACK,
   BED_FRONT,
@@ -150,11 +157,11 @@ const FRAMINGS: Record<'overlay' | 'band' | 'narrow', Framing> = {
   },
 }
 
-/** Factory clock when the scene boots: a line already full of products. */
+/** Factory clock when the line starts: full of products. */
 const START_TIME = 30 * CYCLE + MOVE + 0.02
 /** Still frame for reduced motion: several machines mid-action. */
 const STILL_TIME = 30 * CYCLE + MOVE + 0.5
-/** The line's power-up, in its own seconds: lights come on, then it starts moving. */
+/** The line's power-up once it has assembled, in its own seconds: lights come on, then it starts moving. */
 const INTRO_END = 2.4
 /** The power-up plays this many times faster than it is written, so the line is up and moving within a second. */
 const INTRO_SPEED = 3
@@ -194,6 +201,27 @@ const nextFrame = () =>
       requestAnimationFrame(() => resolve())
     else setTimeout(resolve, 16)
   })
+
+/** The convex outline around `points`, every one wound the same way (monotone chain). */
+function outline(points: Vector2[]): Vector2[] {
+  const sorted = [...points].sort((a, b) => a.x - b.x || a.y - b.y)
+  const chain = (from: Vector2[]) => {
+    const hull: Vector2[] = []
+    for (const point of from) {
+      while (hull.length >= 2) {
+        const a = hull[hull.length - 2]!
+        const b = hull[hull.length - 1]!
+        if ((b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x) > 0)
+          break
+        hull.pop()
+      }
+      hull.push(point)
+    }
+    hull.pop()
+    return hull
+  }
+  return [...chain(sorted), ...chain(sorted.reverse())]
+}
 
 export class FactoryEngine {
   private readonly renderer: WebGLRenderer
@@ -270,6 +298,8 @@ export class FactoryEngine {
   private lastNow = 0
   private lastRender = 0
   private time = START_TIME
+  /** Real seconds of the factory assembling itself (see `assembly.ts`). */
+  private assembly = 0
   private introTime = 0
   private slowWindows = 0
   private fastWindows = 0
@@ -280,7 +310,13 @@ export class FactoryEngine {
   private pointerTarget = new Vector2(0, 0)
   private readonly hoverPointer = new Vector2()
   private pointerInside = false
+  /** Whether the pointer may open a display, or (over the page copy) only keep one open. */
+  private pointerOpens = true
   private hovered = -1
+  /** The layer over the page copy that open displays are drawn again on (see `setFront`). */
+  private front: CanvasRenderingContext2D | null = null
+  /** The front layer shows a display, so it needs clearing once none is open. */
+  private frontShown = false
   private needsHoverTest = false
   private mobile = false
   private composition: FactoryComposition = 'band'
@@ -321,6 +357,7 @@ export class FactoryEngine {
     )
     options.canvas.addEventListener('webglcontextlost', this.handleContextLost)
     if (options.reducedMotion) {
+      this.assembly = SETTLED
       this.introTime = INTRO_END + 2
       this.time = STILL_TIME
     }
@@ -378,6 +415,7 @@ export class FactoryEngine {
       kit,
       this.options.promptLabel,
       this.options.rtl,
+      this.options.reducedMotion ? Number.NEGATIVE_INFINITY : START_TIME,
     )
     this.scene.add(this.drones.group)
     // The machine is built; the shapes it was built from can go.
@@ -481,7 +519,7 @@ export class FactoryEngine {
       this.scene.updateMatrixWorld()
       this.renderReflection()
       this.reflectionWarm = true
-      if (!this.isLooping()) {
+      if (!this.isLooping() && this.assembly >= ASSEMBLED) {
         this.reflectionFade = 1
         this.renderFrame(0)
       }
@@ -594,12 +632,19 @@ export class FactoryEngine {
       object.castShadow = !object.userData.castsNoShadow
       object.receiveShadow = !object.userData.receivesNoShadow
       if (!object.castShadow) return
+      // Hardware in the shared finish comes into place, and its shadow with it.
+      const arrives = material === this.kit?.finish
       const key = (object as InstancedMesh).isInstancedMesh
         ? object.uuid
-        : `${!!material.map}|${material.side}|${material.shadowSide}`
+        : arrives
+          ? 'finish'
+          : `${!!material.map}|${material.side}|${material.shadowSide}`
       let depth = depths.get(key)
       if (!depth) {
-        depth = new MeshDepthMaterial()
+        depth =
+          arrives && this.kit
+            ? createArrivingDepthMaterial(this.kit)
+            : new MeshDepthMaterial()
         depths.set(key, depth)
         this.depthMaterials.push(depth)
       }
@@ -948,8 +993,8 @@ export class FactoryEngine {
     const ease = Math.min(1, dt * 2.6)
     this.pointer.x += (this.pointerTarget.x - this.pointer.x) * ease
     this.pointer.y += (this.pointerTarget.y - this.pointer.y) * ease
-    // A slow push-in while the line powers up, then a barely moving camera.
-    const settle = 1 - easeOutCubic(range(this.introTime, 0, INTRO_END + 0.6))
+    // A slow push-in while the factory assembles, then a barely moving camera.
+    const settle = 1 - easeOutCubic(range(this.assembly, 0, ASSEMBLED + 0.6))
     const framing = this.framing
     const drift = this.options.reducedMotion
       ? 0
@@ -958,12 +1003,12 @@ export class FactoryEngine {
       framing.azimuth +
       this.pointer.x * MathUtils.degToRad(2.4) +
       drift +
-      settle * MathUtils.degToRad(-4)
+      settle * MathUtils.degToRad(-5)
     const elevation =
       framing.elevation +
       this.pointer.y * MathUtils.degToRad(1.4) +
-      settle * MathUtils.degToRad(2)
-    const distance = this.distance * (1 + settle * 0.07)
+      settle * MathUtils.degToRad(3)
+    const distance = this.distance * (1 + settle * 0.09)
 
     const [targetX, targetY, targetZ] = framing.target
     this.target.set(targetX, targetY, targetZ)
@@ -1006,7 +1051,8 @@ export class FactoryEngine {
     this.rafId = requestAnimationFrame(this.tick)
     // Cap at 60 fps: high refresh screens get the same scene for half the work.
     if (this.lastRender && now - this.lastRender < FRAME_INTERVAL - 2.5) return
-    const dt = Math.min((now - this.lastNow) / 1000, 0.05)
+    // The first tick's timestamp can fall just before `start` read the clock.
+    const dt = MathUtils.clamp((now - this.lastNow) / 1000, 0, 0.05)
     this.trackPerformance(now - (this.lastRender || now))
     this.lastNow = now
     this.lastRender = now
@@ -1068,16 +1114,20 @@ export class FactoryEngine {
     if (!kit || !world || !stations || !products || !glows || !shadows) return
 
     if (!this.options.reducedMotion) {
-      this.introTime += dt * INTRO_SPEED
-      // The line holds still while it powers up, then eases into its rhythm.
+      this.assembly += dt
+      // Assembled, the line powers up; it holds still until it has, then
+      // eases into its rhythm.
+      this.introTime = Math.max(0, this.assembly - POWER_ON) * INTRO_SPEED
       const speed = easeInOutCubic(range(this.introTime, 1.5, INTRO_END))
       this.time += dt * speed
     }
+    kit.assembly.value = this.assembly
 
     const frame: FrameState = this.frameState ?? {
       time: this.time,
       dt,
       introTime: this.introTime,
+      assembly: this.assembly,
       line: getLineState(this.time),
       palette: this.palette,
       glows,
@@ -1091,9 +1141,11 @@ export class FactoryEngine {
     frame.time = this.time
     frame.dt = dt
     frame.introTime = this.introTime
+    frame.assembly = this.assembly
     frame.line = getLineState(this.time)
     frame.palette = this.palette
-    frame.highlight = this.hovered
+    // Displays unfold only from machines standing in place.
+    frame.highlight = this.assembly >= ASSEMBLED ? this.hovered : -1
     this.fitDisplays()
     frame.lift = this.lift
 
@@ -1111,8 +1163,12 @@ export class FactoryEngine {
     // Once per frame, not once per pass: the reflection and the view share it.
     this.scene.updateMatrixWorld()
     if (this.reflection) {
-      // Eases in over half a second once warm, and out when the GPU cannot keep up (see `trackPerformance`).
-      const target = this.reflectionOn && this.reflectionWarm ? 1 : 0
+      // Eases in over half a second once warm and the machine stands in
+      // place, and out when the GPU cannot keep up (see `trackPerformance`).
+      const target =
+        this.reflectionOn && this.reflectionWarm && this.assembly >= ASSEMBLED
+          ? 1
+          : 0
       this.reflectionFade = MathUtils.clamp(
         this.reflectionFade + Math.sign(target - this.reflectionFade) * dt * 2,
         0,
@@ -1124,11 +1180,91 @@ export class FactoryEngine {
     }
     this.renderer.render(this.scene, this.camera)
     this.rendered = true
+    this.drawFront()
     if (this.needsHoverTest) this.testHover()
   }
 
-  /** Pointer in CSS pixels relative to the canvas, or null when it leaves. */
-  setPointer(x: number | null, y: number | null) {
+  /**
+   * A transparent canvas laid over the page copy, covering the stage: open
+   * displays are drawn again on it, so they stand in front of the copy
+   * instead of behind it. Null to stop.
+   */
+  setFront(canvas: HTMLCanvasElement | null) {
+    if (this.front && this.frontShown) {
+      const { width, height } = this.front.canvas
+      this.front.clearRect(0, 0, width, height)
+    }
+    this.front = canvas?.getContext('2d') ?? null
+    this.frontShown = false
+    if (this.ready && !this.isLooping()) this.renderFrame(0)
+  }
+
+  /**
+   * Copies every open display, cut to its outline, from the frame just
+   * rendered onto the front layer, where it covers the copy it meets. Runs
+   * in the same task as the render, while the frame can still be read.
+   */
+  private drawFront() {
+    const front = this.front
+    const world = this.world
+    if (!front || !world) return
+    // Only where the copy is laid over the scene.
+    const boxes =
+      this.composition === 'overlay' && !this.mobile
+        ? world.getDisplayBoxes()
+        : []
+    if (!boxes.length && !this.frontShown) return
+    const source = this.options.canvas
+    const layer = front.canvas
+    if (layer.width !== source.width || layer.height !== source.height) {
+      layer.width = source.width
+      layer.height = source.height
+    } else {
+      front.clearRect(0, 0, layer.width, layer.height)
+    }
+    this.frontShown = boxes.length > 0
+    if (!this.frontShown) return
+
+    let left = layer.width
+    let top = layer.height
+    let right = 0
+    let bottom = 0
+    front.save()
+    front.beginPath()
+    for (const corners of boxes) {
+      const points = corners.map((corner) => {
+        corner.project(this.camera)
+        return new Vector2(
+          ((corner.x + 1) / 2) * layer.width,
+          ((1 - corner.y) / 2) * layer.height,
+        )
+      })
+      outline(points).forEach((point, index) => {
+        if (index) front.lineTo(point.x, point.y)
+        else front.moveTo(point.x, point.y)
+        left = Math.min(left, point.x)
+        top = Math.min(top, point.y)
+        right = Math.max(right, point.x)
+        bottom = Math.max(bottom, point.y)
+      })
+      front.closePath()
+    }
+    front.clip()
+    const x = Math.max(0, Math.floor(left))
+    const y = Math.max(0, Math.floor(top))
+    const width = Math.min(layer.width, Math.ceil(right)) - x
+    const height = Math.min(layer.height, Math.ceil(bottom)) - y
+    if (width > 0 && height > 0)
+      front.drawImage(source, x, y, width, height, x, y, width, height)
+    front.restore()
+  }
+
+  /**
+   * Pointer in CSS pixels relative to the canvas, or null when it leaves.
+   * Over the page copy (`opens` false) it only keeps the display it is on
+   * open, so the copy stays readable to point at everywhere else.
+   */
+  setPointer(x: number | null, y: number | null, opens = true) {
     if (x === null || y === null || this.options.reducedMotion) {
       this.pointerInside = false
       this.pointerTarget.set(0, 0)
@@ -1136,6 +1272,7 @@ export class FactoryEngine {
       return
     }
     this.pointerInside = true
+    this.pointerOpens = opens
     const nx = (x / this.width) * 2 - 1
     const ny = -(y / this.height) * 2 + 1
     this.pointerTarget.set(nx, ny)
@@ -1148,6 +1285,14 @@ export class FactoryEngine {
     this.needsHoverTest = false
     if (!this.pointerInside) return
     this.raycaster.setFromCamera(this.hoverPointer, this.camera)
+    if (!this.pointerOpens) {
+      const held = this.hovered
+      this.hovered = -1
+      if (held < 0) return
+      for (const box of [this.stationBoxes[held]!, ...this.displayBoxes[held]!])
+        if (this.raycaster.ray.intersectsBox(box)) this.hovered = held
+      return
+    }
     let best = -1
     let bestDistance = Number.POSITIVE_INFINITY
     const test = (box: Box3, index: number) => {

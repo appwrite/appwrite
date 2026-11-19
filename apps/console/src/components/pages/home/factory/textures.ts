@@ -161,6 +161,11 @@ export type ShadowShape = {
   depth: number
   blur: number
   strength: number
+  /**
+   * Whose shadow it is: the bed's, there from the start (red), or the
+   * racks', which arrives with them (green; see the floor's `uRacks`).
+   */
+  layer: 'bed' | 'racks'
 }
 
 export const SHADOW_BOUNDS = {
@@ -187,7 +192,10 @@ export function createShadowTexture(shapes: ShadowShape[]): CanvasTexture {
   const toX = (x: number) => (x - SHADOW_BOUNDS.minX) * SHADOW_PX_PER_UNIT
   const toY = (z: number) => (z - SHADOW_BOUNDS.minZ) * SHADOW_PX_PER_UNIT
   for (const shape of shapes) {
-    context.shadowColor = `rgba(255,255,255,${shape.strength})`
+    context.shadowColor =
+      shape.layer === 'bed'
+        ? `rgba(255,0,0,${shape.strength})`
+        : `rgba(0,255,0,${shape.strength})`
     context.shadowBlur = shape.blur * SHADOW_PX_PER_UNIT
     context.shadowOffsetX = offset
     context.fillStyle = '#fff'
