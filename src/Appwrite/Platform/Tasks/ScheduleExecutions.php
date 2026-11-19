@@ -43,7 +43,7 @@ class ScheduleExecutions extends Action
     {
         $source = new Source\Executions($dbForPlatform, $getProjectDB, $getIsResourceBlocked);
 
-        // A Redis failure ends the loop that holds the connection; the pool drops it.
+        // The scheduler rides out Redis failures through onError; the client reconnects on its next command.
         $pools->get('lock')->use(function (\Redis $redis) use ($source, $telemetry, $publisherForFunctions): void {
             $scheduler = new Scheduler(
                 source: $source,

@@ -46,7 +46,7 @@ class ScheduleFunctions extends Action
             fn (array $schedule): int => $this->spreadWindow($schedule, $dbForPlatform),
         );
 
-        // A Redis failure ends the loop that holds the connection; the pool drops it.
+        // The scheduler rides out Redis failures through onError; the client reconnects on its next command.
         $pools->get('lock')->use(function (\Redis $redis) use ($source, $telemetry, $publisherForFunctions, $dbForPlatform): void {
             $scheduler = new Scheduler(
                 source: $source,

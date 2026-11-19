@@ -163,7 +163,8 @@ final class Scheduler
      *                             (saturation: seconds the window start trails "now")
      * @param \Closure|null $onError receives reconciliation failures (a sync that throws, a row
      *                               `make` rejects) so dispatch keeps running on the last good
-     *                               view; without it those failures rethrow. Called as
+     *                               view, and store failures, after which the instance follows
+     *                               until the store answers again; without it both rethrow. Called as
      *                               `($onError)(\Throwable $error, ?Row $row)`, the row being the
      *                               one `make` rejected, or null for a failure no single row owns.
      *                               A handler that declares one parameter still works
@@ -597,20 +598,29 @@ final class Scheduler
             return false;
         }
 
-        $next = new Claim(
-            $this->token,
-            (float) $this->clock->now()->format('U.u') + $this->leaseSeconds,
-            (float) $this->pendingCoveredUntil->format('U.u'),
-            // The read that fed *this* tick, not the newest one: a sync that
-            // landed after the window was selected did not contribute to it,
-            // and claiming otherwise would tell a successor that schedules
-            // this tick never saw are already covered. A tick that has not
-            // reconciled at all leaves what a predecessor recorded intact,
-            // rather than erasing the only view anyone has.
-            $this->pendingSyncedUntil instanceof \DateTimeImmutable ? (float) $this->pendingSyncedUntil->format('U.u') : $this->store->load()?->syncedUntil,
-        );
+        try {
+            $next = new Claim(
+                $this->token,
+                (float) $this->clock->now()->format('U.u') + $this->leaseSeconds,
+                (float) $this->pendingCoveredUntil->format('U.u'),
+                // The read that fed *this* tick, not the newest one: a sync that
+                // landed after the window was selected did not contribute to it,
+                // and claiming otherwise would tell a successor that schedules
+                // this tick never saw are already covered. A tick that has not
+                // reconciled at all leaves what a predecessor recorded intact,
+                // rather than erasing the only view anyone has.
+                $this->pendingSyncedUntil instanceof \DateTimeImmutable ? (float) $this->pendingSyncedUntil->format('U.u') : $this->store->load()?->syncedUntil,
+            );
+            $swapped = $this->store->swap($this->token, $next);
+        } catch (\Throwable $error) {
+            // The window stays uncommitted, so it is re-covered like a lost lease.
+            $this->clearPending();
+            $this->report($error, 'store');
 
-        if (!$this->store->swap($this->token, $next)) {
+            return false;
+        }
+
+        if (!$swapped) {
             // Deposed mid-tick: the new leader re-covers this window, so
             // nothing is lost — but a lease shorter than a dispatch takes
             // would do this every tick, which is worth seeing.
@@ -650,7 +660,9 @@ final class Scheduler
      * exception propagates before commit, so a supervised restart
      * re-delivers the tick instead of losing it. Reconciliation errors
      * go through onError and leave the last good view dispatching —
-     * stale schedules beat a stopped scheduler.
+     * stale schedules beat a stopped scheduler. So do store errors: the
+     * instance sits the tick out as a follower and tries again next tick,
+     * while the lease decides who leads in the meantime.
      *
      * The handler is called once per due moment in the tick, not once per
      * tick: everything sharing a moment arrives together, oldest moment
@@ -711,9 +723,23 @@ final class Scheduler
     /**
      * Confirm or take leadership. Returns the current claim when this
      * instance holds it (or just took it), null when another holder's
-     * claim is still live.
+     * claim is still live or the store cannot say. A store that fails
+     * leaves leadership unknown, so the instance follows for the tick and
+     * asks again on the next one; the client reconnects on its next command.
      */
     private function elect(): ?Claim
+    {
+        try {
+            return $this->contend();
+        } catch (\Throwable $error) {
+            $this->clearPending();
+            $this->report($error, 'store');
+
+            return null;
+        }
+    }
+
+    private function contend(): ?Claim
     {
         $claim = $this->store->load();
         $now = (float) $this->clock->now()->format('U.u');
@@ -770,14 +796,21 @@ final class Scheduler
 
     private function release(): void
     {
-        $claim = $this->store->load();
-        if (!$claim instanceof Claim || $claim->token !== $this->token) {
-            return;
-        }
-
-        // An empty, expired claim keeps the watermark and frees the lease.
-        $this->store->swap($this->token, new Claim('', 0.0, $claim->coveredUntil, $claim->syncedUntil));
         $this->clearPending();
+
+        // Best effort: a store that fails here would hide the error that
+        // stopped the loop, and the lease runs out on its own anyway.
+        try {
+            $claim = $this->store->load();
+            if (!$claim instanceof Claim || $claim->token !== $this->token) {
+                return;
+            }
+
+            // An empty, expired claim keeps the watermark and frees the lease.
+            $this->store->swap($this->token, new Claim('', 0.0, $claim->coveredUntil, $claim->syncedUntil));
+        } catch (\Throwable) {
+            $this->errorTotal->add(1, ['stage' => 'store']);
+        }
     }
 
     private function clearPending(): void
