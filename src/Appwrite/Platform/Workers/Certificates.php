@@ -17,6 +17,7 @@ use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model\Rule;
+use Appwrite\Utopia\Response\Model\RuleRecord;
 use Exception;
 use Throwable;
 use Utopia\Bus\Bus;
@@ -601,6 +602,10 @@ class Certificates extends Action
             'renewAt' => $certificate->getAttribute('renewDate', ''),
             'expireAt' => $certificate->getAttribute('expireDate', ''),
             'certificateStatus' => $certificate->getAttribute('status', ''),
+            'records' => \array_map(
+                fn (Document|array $record) => (new RuleRecord())->payload($record instanceof Document ? $record : new Document($record)),
+                $rule->getAttribute('records', []),
+            ),
         ])));
 
         $queueForEvents
