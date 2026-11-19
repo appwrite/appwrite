@@ -14,7 +14,7 @@ A one-hour video could need hundreds of thumbnails. Loading each as its own imag
 
 Appwrite queues timeline generation when you create a video. The job downloads its own copy of the source, probes it if needed, and writes the sprites and index. There is nothing to configure.
 
-Open the video and select **Timeline** to browse the generated thumbnails.
+Open the video and select **Timeline** to browse the generated thumbnails. From there you can copy the timeline URL, download the timeline file, or download every sprite with a matching `timeline.vtt` as a `.tar.gz` archive.
 
 The video's `timelineStatus` shows how far the job has got:
 
@@ -30,21 +30,31 @@ The timeline is generated once per video and is not retried if it fails.
 
 # WebVTT index {% #webvtt-index %}
 
-Load the index from `/v1/videos/<VIDEO_ID>/timelines?project=<PROJECT_ID>`. The SDKs expose it as `videos.getTimelines({ videoId })`. Each cue points at a sprite and the region of one thumbnail inside it, using a `#xywh=x,y,width,height` media fragment. For example:
+Load the index from `/v1/videos/<VIDEO_ID>/timelines?project=<PROJECT_ID>`. The SDKs expose it as `videos.getTimelines({ videoId })`. Each cue points at a sprite and the region of one thumbnail inside it, using a `#xywh=x,y,width,height` media fragment. For a short 16:9 clip:
 
 ```text
 WEBVTT
 
-00:00:00.000 --> 00:00:05.000
+00:00:00.000 --> 00:00:02.000
 thumbnails/<THUMBNAIL_ID>?project=<PROJECT_ID>#xywh=0,0,480,270
 
-00:00:05.000 --> 00:00:10.000
+00:00:02.000 --> 00:00:04.000
 thumbnails/<THUMBNAIL_ID>?project=<PROJECT_ID>#xywh=480,0,480,270
 ```
 
 Each thumbnail is 480 pixels wide, and each sprite holds a grid of up to 4 × 4 thumbnails. Cue paths are relative to the timeline URL. Resolve them against it to get the full image URL.
 
-Many players can show thumbnails from a WebVTT thumbnail track, either built in or with a plugin. Until the timeline is generated, the request returns `video_timelines_not_found`. Since generation runs in the background, check `timelineStatus` every few seconds after creating a video if you need the timeline right away.
+The time between thumbnails depends on the video's length:
+
+| Duration | One thumbnail every |
+|----------|---------------------|
+| Under 2 minutes | 2 seconds |
+| 2 to 10 minutes | 5 seconds |
+| 10 to 30 minutes | 10 seconds |
+| 30 to 60 minutes | 20 seconds |
+| 1 hour or more | 30 seconds |
+
+Many players can show thumbnails from a WebVTT thumbnail track, either built in or with a plugin. Until the timeline is generated, and always for audio-only videos, the request returns `404` with the `video_timelines_not_found` error. Since generation runs in the background, check `timelineStatus` every few seconds after creating a video if you need the timeline right away.
 
 # Use thumbnails in a custom player {% #custom-player %}
 

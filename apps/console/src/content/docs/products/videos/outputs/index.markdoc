@@ -8,19 +8,20 @@ An **output** is the streaming format a [rendition](/docs/products/videos/rendit
 
 # What a manifest looks like {% #what-a-manifest-looks-like %}
 
-A manifest is a small text file. You rarely read one, but seeing it makes the rest of this page easier to follow. A simplified HLS master manifest for a three-rung ladder looks like this:
+A manifest is a small text file. You rarely read one, but seeing it makes the rest of this page easier to follow. Here is a CMAF HLS master manifest for a two-rung ladder with one caption track, with some attributes trimmed:
 
 ```text
 #EXTM3U
-#EXT-X-STREAM-INF:BANDWIDTH=5192000,RESOLUTION=1920x1080
-renditions/<RENDITION_ID_1080P>/streams/0/playlist.m3u8
-#EXT-X-STREAM-INF:BANDWIDTH=2928000,RESOLUTION=1280x720
-renditions/<RENDITION_ID_720P>/streams/0/playlist.m3u8
-#EXT-X-STREAM-INF:BANDWIDTH=1528000,RESOLUTION=854x480
-renditions/<RENDITION_ID_480P>/streams/0/playlist.m3u8
+#EXT-X-VERSION:4
+#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="group_audio",NAME="Audio 1",AUTOSELECT=YES,URI="/v1/videos/<VIDEO_ID>/outputs/cmaf/renditions/<RENDITION_ID_360P>/streams/1/playlist.m3u8?project=<PROJECT_ID>"
+#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",NAME="English",DEFAULT=YES,LANGUAGE="eng",URI="/v1/videos/<VIDEO_ID>/outputs/hls/captions/<CAPTION_ID>/manifest?project=<PROJECT_ID>"
+#EXT-X-STREAM-INF:BANDWIDTH=800000,RESOLUTION=640x360,CODECS="avc1.64001e,mp4a.40.2",AUDIO="group_audio",SUBTITLES="subs"
+/v1/videos/<VIDEO_ID>/outputs/cmaf/renditions/<RENDITION_ID_360P>/streams/0/playlist.m3u8?project=<PROJECT_ID>
+#EXT-X-STREAM-INF:BANDWIDTH=2800000,RESOLUTION=1280x720,CODECS="avc1.64001f,mp4a.40.2",AUDIO="group_audio",SUBTITLES="subs"
+/v1/videos/<VIDEO_ID>/outputs/cmaf/renditions/<RENDITION_ID_720P>/streams/0/playlist.m3u8?project=<PROJECT_ID>
 ```
 
-Each entry tells the player how much bandwidth a rendition needs and where its playlist lives. The player measures its own connection and picks the best entry it can sustain. A DASH `.mpd` manifest carries the same information as XML.
+The `EXT-X-MEDIA` lines list the audio track and each caption track. Each `EXT-X-STREAM-INF` entry tells the player how much bandwidth a rendition needs and where its playlist lives. The player measures its own connection and picks the best entry it can sustain. A DASH `.mpd` manifest carries the same information as XML.
 
 # Choose an output {% #choose-an-output %}
 
@@ -53,11 +54,11 @@ Add your endpoint in front and your project ID as a query parameter:
 https://<REGION>.cloud.appwrite.io/v1/videos/<VIDEO_ID>/outputs/cmaf/master.m3u8?project=<PROJECT_ID>
 ```
 
-Players cannot send Appwrite headers, so the project ID travels in the URL. Every playlist, segment, and caption link inside the manifest carries it too.
+Most players cannot send Appwrite headers, so the project ID travels in the URL. Every playlist, segment, and caption link inside the manifest carries it too.
 
 In the Console, open a video and select **Streaming** to copy every URL, including the per-rendition playlists and caption manifests. The SDKs build the same URLs with `getHlsManifest()`, `getDashManifest()`, `getCmafHlsManifest()`, and `getCmafDashManifest()`.
 
-A master manifest lists only renditions that are `ready`. Until one is ready, there is nothing to stream. When more renditions finish, the manifest grows, and players pick them up the next time they load it.
+A master manifest lists only renditions that are `ready`. Until a rendition for that output is ready, the master manifest returns `404` with the `video_rendition_not_found` error. When more renditions finish, the manifest grows, and players pick them up the next time they load it.
 
 The URL is stable. It does not change when you add or delete renditions, so you can store it, or rebuild it from the video ID whenever you need it.
 
@@ -65,7 +66,7 @@ The URL is stable. It does not change when you add or delete renditions, so you 
 
 1. The **master manifest**, which lists each rendition with its resolution and bitrate, and each caption track.
 2. A **media playlist** for the rendition it picks (HLS and CMAF HLS). DASH lists segments in the master manifest itself.
-3. **Segments**, a few seconds of video each, one after another. The player moves up or down the ladder between segments as bandwidth changes.
+3. **Segments** of up to 4 seconds each, one after another. The player moves up or down the ladder between segments as bandwidth changes.
 
 All of these requests check the video's read permissions, not the source file's. See [Permissions](/docs/products/videos/permissions#playback).
 

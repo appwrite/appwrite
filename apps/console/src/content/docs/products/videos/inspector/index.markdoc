@@ -9,8 +9,8 @@ The **inspector** shows what the player in the Console is doing while it plays a
 # Open the inspector {% #open-the-inspector %}
 
 1. Open **Videos** in your project and select a video with at least one ready rendition.
-2. Select **Inspector** under **Playback** in the video menu. It opens in its own window next to the video, so you can watch both at once.
-3. Play the video. The inspector fills in as the session runs.
+2. Play the video on its **Overview**. The inspector shows under the player and fills in as the session runs.
+3. To give it more room, select **Inspector** under **Playback** in the video menu, or click **Inspector** in the player controls. It opens in its own window, so you can keep the video and the inspector side by side.
 
 The inspector measures the session in your browser on your connection. To see how a stream behaves for slower viewers, throttle the network in your browser's developer tools and play again.
 
@@ -26,15 +26,15 @@ If you are new to video, these few numbers tell you most of what matters:
 | **Quality switches** | How often the player changed rendition | A few early on, then stable |
 | **Dropped frames** | Frames the device could not decode in time | Near zero. Many dropped frames point to a device or codec limit, not the network |
 
-The **experience score** rolls these into one number for the session, and **Diagnostics** points out what pulled it down.
+The **experience score** rolls these into one number for the session, built from four parts: **Startup**, **Smoothness**, **Picture quality**, and **Stability**. **Diagnostics** points out what pulled it down.
 
 # Sections {% #sections %}
 
 | Section | What it shows |
 |---------|---------------|
 | **Overview** | An **experience score** for the session, with diagnostics, time to first frame, rebuffering, average bitrate, quality switches, dropped frames, upscaling, bandwidth estimate, and watch time. Charts for bandwidth and bitrate, and buffer health |
-| **Quality** | The bitrate ladder the player parsed, time spent on each rendition, and the history of quality switches |
-| **Network** | Every segment request, with transferred bytes, average throughput, median time to first byte, and the slowest 5% load time |
+| **Quality** | The bitrate ladder the player parsed, time spent on each rendition, and the history of quality switches. Lock the player to one rendition, or set it back to **Auto quality** |
+| **Network** | Every segment request in a waterfall, with transferred bytes, average throughput, median time to first byte, and the slowest 5% load time |
 | **Events** | Player events, newest first, such as loads, quality switches, stalls, and errors |
 | **Manifests** | The master manifest and media playlists the player loaded, to copy, reload, or open in a new tab |
 | **Device** | Codec support and playback capabilities of this device and browser, and whether each rendition can play smoothly here |
@@ -58,3 +58,5 @@ Use the inspector to check a change to your [profiles](/docs/products/videos/pro
 # Share a session {% #share-a-session %}
 
 Use **Copy summary** to paste the session's key numbers into an issue or a chat, **Export session** to download the full session as a JSON file, and **Copy log** in **Events** to share the player events. This makes it easier to compare runs, or to show a teammate exactly what happened.
+
+To start over without reloading the page, use **Restart session**, or **Clear collected data** to keep playing with empty charts.

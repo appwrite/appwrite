@@ -14,51 +14,39 @@ New projects have no [encoding profiles](/docs/products/videos/profiles), so cre
 
 1. Sign in to [Appwrite Cloud](https://cloud.appwrite.io) and open a project.
 2. Open **Videos** in the sidebar and select **Encoding profiles**.
-3. Click **Create profile**, choose the **360p** preset, and click **Create**.
-4. Repeat for the **720p** and **1080p** presets.
+3. Click **Create profile**.
+4. Select the **360p**, **720p**, and **1080p** presets, and click **Create**.
 
 # Create a video {% #create-a-video %}
 
 1. Select **Videos** and click **Create video**.
 2. Choose a source:
-   - **Upload**: Drop an MP4, MOV, WebM, MKV, or audio file and pick a **Destination bucket**. If the project has no buckets yet, click **Create Videos bucket**. The uploaded file is stored in that bucket and stays there.
+   - **Upload**: Drop an MP4, MOV, WebM, MKV, or audio file and pick a **Destination bucket**. If the project has no buckets yet, click **Create Videos bucket**. The file is uploaded to that bucket and stays there.
    - **Storage**: Choose a file that is already in a bucket. Nothing is copied.
-   - **Demo**: Import an open movie to explore Videos without a file of your own.
+   - **Demo**: Pick one of the Blender open movies to try Videos without a file of your own. The Console downloads it and uploads it to the destination bucket.
 3. Optionally enter a **Name**. It defaults to the file name.
 4. Under **Profiles**, keep the selection or change it. Every profile that would not upscale the source is selected for you. Profiles larger than the source are marked **Upscale**, since upscaling adds size without adding detail.
 5. Keep the output at **CMAF**, the default. CMAF encodes once and serves both an HLS and a DASH manifest. To pick HLS or DASH instead, open **Advanced settings**.
 6. Click **Create video**.
 
-Video creation continues in the background, so you can close the wizard while the file uploads and encodes.
+The Console uploads the file from your browser, creates the video, and queues a rendition for each profile you selected. You can close the wizard while this runs, but keep the tab open until the upload finishes and the renditions are queued. Encoding runs on Appwrite and continues after you close the tab.
+
+You can also start from Storage: open a video or audio file and click **Create video** to open the wizard with that file selected.
 
 # Watch it encode {% #watch-it-encode %}
 
-Open the video and select **Renditions**. Each rendition moves from **Queued** to **Ready**, with a progress percentage while it encodes.
+Open the video and select **Renditions**. Each rendition moves from **Queued** to **Encoding** to **Ready**, with a progress percentage while it encodes.
 
 The video page shows a player as soon as one rendition is ready.
 
 # Allow playback {% #allow-playback %}
 
-A video created in the Console has no permissions yet, so it only plays inside the Console. To play it from a public page, grant **Read** to **Any** on the video with a [server SDK](/docs/sdks#server):
+A video you create in the Console is private. Only API keys and members of your project, in the Console, can play it. To play it on a public page:
 
-```js
-const sdk = require('node-appwrite');
+1. Open the video and select **Settings**.
+2. Under **Access**, turn on **Public playback**.
 
-const client = new sdk.Client()
-    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-    .setProject('<PROJECT_ID>')
-    .setKey('<API_KEY>');
-
-const videos = new sdk.Videos(client);
-
-await videos.update({
-    videoId: '<VIDEO_ID>',
-    name: '<VIDEO_NAME>', // required, pass the current name to keep it
-    permissions: [sdk.Permission.read(sdk.Role.any())]
-});
-```
-
-The source file in Storage can stay private. Playback checks the video's permissions, not the file's. See [Permissions](/docs/products/videos/permissions) to keep videos private to signed-in users or teams.
+This grants **Read** to **Any** on the video. The source file in Storage can stay private, because playback checks the video's permissions, not the file's. See [Permissions](/docs/products/videos/permissions) to share videos only with signed-in users or teams instead.
 
 # Play the stream {% #play-the-stream %}
 

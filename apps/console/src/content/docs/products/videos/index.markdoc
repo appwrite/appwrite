@@ -76,7 +76,7 @@ One rendition per profile and output, statuses, progress, and retries.
 HLS, DASH, and CMAF, master manifests, and which players support each.
 {% /cards_item %}
 {% cards_item href="/docs/products/videos/captions" title="Captions" %}
-Upload WebVTT or SubRip, extract embedded tracks, and set a default language.
+Upload WebVTT or SubRip, extract embedded tracks, and pick a default track.
 {% /cards_item %}
 {% cards_item href="/docs/products/videos/timeline" title="Timeline" %}
 Sprite sheets with a WebVTT index for scrubbing thumbnails.

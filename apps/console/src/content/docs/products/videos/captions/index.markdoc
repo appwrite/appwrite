@@ -40,12 +40,12 @@ Most editing tools and transcription services export one of these. Save files as
 
 # Uploaded captions {% #uploaded-captions %}
 
-Upload a **WebVTT** (`.vtt`) or **SubRip** (`.srt`) file to a Storage bucket, then attach it to the video. Appwrite converts it to WebVTT and segments it for streaming in the background. The bucket must allow these extensions.
+Upload a **WebVTT** (`.vtt`) or **SubRip** (`.srt`) file to a Storage bucket, then attach it to the video. Appwrite converts it to WebVTT and segments it for streaming in the background. The bucket must allow these extensions. Any other file returns the `video_caption_not_valid` error.
 
 1. Open the video and select **Captions**.
 2. Click **Upload caption**.
 3. Select a **Subtitle file** from Storage.
-4. Choose a **Language** and enter a **Name**, for example `English`.
+4. Choose a **Language**. The **Name** fills in from it, for example `English`, and you can change it.
 5. Turn on **Default caption** to have players show it automatically.
 6. Click **Create**.
 
@@ -79,7 +79,9 @@ You can add up to 30 captions per video per hour. Past that, `videos.createCapti
 
 # Embedded captions {% #embedded-captions %}
 
-Subtitle tracks embedded in the source container are extracted automatically during the first rendition or timeline job. They appear in the captions list marked as embedded (`embedded: true`), with no backing file in Storage.
+Subtitle tracks embedded in the source container are extracted automatically during the first rendition or timeline job, usually within seconds of creating the video. They appear in the captions list marked as embedded (`embedded: true`), with no backing file in Storage. Each track is named after its title in the source, or its language tag if it has no title.
+
+If the source marks a track as its default, that track becomes the video's default caption, unless the video already has one.
 
 Only text tracks are extracted, such as SubRip, WebVTT, MP4 `mov_text`, and ASS/SSA. Image-based subtitles, such as PGS or VobSub tracks from Blu-ray and DVD rips, are skipped. To use those, convert them to WebVTT or SubRip and upload the result.
 
@@ -87,9 +89,11 @@ Extraction runs once per video. If you delete an embedded caption, it is not ext
 
 # Language codes {% #language-codes %}
 
-Each caption has an **ISO 639-2** three-letter language code, such as `eng`, `spa`, or `heb`. Embedded tracks without a language tag show as `und` (undetermined).
+Each caption has an **ISO 639-2** three-letter language code, such as `eng`, `spa`, or `heb`. Where a language has two codes, use the terminology code, such as `deu` for German, `fra` for French, and `zho` for Chinese. Two-letter codes such as `en` are rejected.
 
-To fix a track's language, open it and change the **Language**. Retagging updates the name, code, or default flag without re-processing the file. Changing the file itself re-packages the track.
+Embedded tracks without a language tag show as `und` (undetermined).
+
+To fix a track's language in the Console, open the caption and change **Language** in the editor's **Settings** panel. Retagging updates the name, code, or default flag without re-processing the file. Changing the file itself re-packages the track.
 
 With a server SDK, pass only the fields you want to change:
 
@@ -107,7 +111,7 @@ To replace the text of a track, pass a new `bucketId` and `fileId` together. Lis
 
 # Default caption {% #default-caption %}
 
-Players turn on the **default** caption automatically. When you upload a caption in the same language as an embedded default track, the upload takes over the default flag.
+Players turn on the **default** caption automatically. A video has at most one default caption, so making a caption the default removes the flag from the previous one. When you upload a caption in the same language as an embedded default track, the upload takes over the default flag.
 
 Set a default when most viewers watch with the sound off, as on social feeds, or when the spoken language differs from your audience's. Leave it off when captions are optional, so viewers who do not need them get a clean picture. Viewers can always turn captions on or off from the player.
 
@@ -119,7 +123,7 @@ Set a default when most viewers watch with the sound off, as on social feeds, or
 | `started` | Processing | Converting to WebVTT and segmenting |
 | `ready` | Ready | Listed in the master manifest |
 | `error` | Failed | The file could not be processed. `error` says why |
-| `aborted` | Aborted | Processing was stopped before it finished |
+| `aborted` | Aborted | Processing made no progress for 12 hours and was stopped |
 
 To retry a failed caption, update it with a corrected file by passing a new `bucketId` and `fileId`, or delete it and upload again.
 
@@ -128,9 +132,9 @@ To retry a failed caption, update it with a corrected file by passing a new `buc
 Click **Create caption** to write a track from scratch, or open an existing caption to change it. The editor shows the player, a list of cues, and a timeline under the picture.
 
 - Add a cue at the playhead, split a cue, or drag cues and their edges on the timeline to retime them.
-- Use **Shift timings** to move all cues, or only the selected ones, when a track is out of sync.
-- Use **Fix overlaps** and **Remove empty cues** to clean up a track, and filter the list to **Only cues with issues**.
-- Import cues **From your computer** or **From Storage**.
+- From the **Tools** menu, use **Shift timings** to move all cues, or only the selected ones, when a track is out of sync.
+- Use **Fix overlaps** and **Remove empty cues** in the same menu to clean up a track, and filter the list to **Only cues with issues**.
+- Use **Import** to load cues **From your computer** or **From Storage**, and **Export** to download the track.
 
 When you **Save**, the editor writes the track as a WebVTT file to the Storage bucket you choose in its settings, and the caption is re-packaged in the background. The bucket must accept `.vtt` files.
 
@@ -146,10 +150,10 @@ The editor checks every cue against common captioning guidelines. **Errors** blo
 | A line longer than 42 characters | Warning |
 | More than 2 lines | Warning |
 
-You can also **Download** any track as WebVTT or SubRip from its actions menu, for example to send it to a translator.
+You can also download any track from its actions menu with **Download WebVTT** or **Download SRT**, for example to send it to a translator.
 
 # Delete a caption {% #delete-a-caption %}
 
 Deleting a caption removes its segments and drops it from the manifest. For uploaded captions, the file stays in Storage.
 
-You cannot delete a caption while it is processing. The request returns `video_caption_in_progress`; wait for it to finish.
+You cannot delete a caption while it is processing. The request returns `video_caption_in_progress`, so wait for it to finish.

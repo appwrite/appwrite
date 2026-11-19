@@ -24,7 +24,8 @@ Visitors who are not signed in can play a stream that grants Read to `Role.any()
 
 When you create a video without `permissions`:
 
-- **With an API key or from the Console**, the video has no permissions. Only API keys and members of your Console project can read it, and it does not play anywhere else.
+- **With an API key**, the video has no permissions. Only API keys and members of your project, in the Console, can read it, and it does not play anywhere else.
+- **From the Console**, the video is private in the same way. Turn on **Public playback** in its settings to share it. See [Change access later](#change-access-later).
 - **With a user session**, the user who created it gets read, update, and delete permissions.
 
 ## Set permissions on create {% #set-permissions-on-create %}
@@ -54,7 +55,14 @@ Signed-in users can also create videos from a client SDK, from files they can re
 
 ## Change access later {% #change-access-later %}
 
-Update the video's permissions with `videos.update()`. The new list replaces the old one, and `name` is required, so pass the current name to keep it:
+In the Console, open the video, select **Settings**, and use the **Access** card:
+
+- **Public playback** grants or removes **Read** for **Any** as soon as you flip it.
+- **Permissions** edits read, update, and delete for any role. Click **Update** to save.
+
+While a video has no Read for Any, every tab of the video shows a **This video is private** notice with a link to these settings.
+
+With a server SDK, update the video's permissions with `videos.update()`. The new list replaces the old one, and `name` is required, so pass the current name to keep it:
 
 ```js
 await videos.update({
@@ -77,7 +85,33 @@ await videos.update({
 
 ## Private playback {% #private-playback %}
 
-For a video that is not readable by `Role.any()`, every manifest and segment request must carry the viewer's Appwrite session, the same as a private file download. Test private playback while signed in as a viewer, not only from the Console. A `401` or `404` on the manifest usually means the request reached Appwrite without a session that can read the video.
+For a video that is not readable by `Role.any()`, every manifest, playlist, and segment request must carry the viewer's identity. A request without it returns `404` with the `video_not_found` error.
+
+Players load these URLs on their own, so on the web the request carries the viewer's session only when the browser sends the Appwrite session cookie. Browsers treat that cookie as a third-party cookie and often block it, unless your Appwrite endpoint is on a [custom domain](/docs/products/network/custom-domains#third-party-cookies) that shares your app's domain. With a custom domain, private videos play in any player, including Safari's native one.
+
+Without a custom domain, use a player that lets you add request headers, and send a [JWT](/docs/products/auth/jwt) for the signed-in user with each request. For example, with hls.js:
+
+```js
+import { Client, Account } from 'appwrite'
+import Hls from 'hls.js'
+
+const client = new Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<PROJECT_ID>')
+const account = new Account(client)
+
+let { jwt } = await account.createJWT()
+// JWTs expire after 15 minutes. Refresh before then for long videos.
+setInterval(async () => ({ jwt } = await account.createJWT()), 10 * 60 * 1000)
+
+const hls = new Hls({
+  xhrSetup: (xhr) => xhr.setRequestHeader('X-Appwrite-JWT', jwt),
+})
+hls.loadSource('<HLS_MANIFEST_URL>')
+hls.attachMedia(document.getElementById('player'))
+```
+
+Test private playback while signed in as a viewer, not only from the Console. The Console plays private videos for project members through its own access, so it does not show what your viewers get.
 
 ## Renditions and captions {% #renditions-and-captions %}
 
@@ -92,8 +126,8 @@ API keys and Console sessions manage videos through scopes:
 | `videos.read` | List and read videos, renditions, captions, and codecs |
 | `videos.write` | Create, update, and delete videos, renditions, and captions |
 | `videos.play` | Load manifests, segments, captions, timelines, and thumbnails. Visitors who are not signed in have only this scope |
-| `project.profiles.read` | List and read [encoding profiles](/docs/products/videos/profiles) |
-| `project.profiles.write` | Create, update, and delete encoding profiles |
+| `project.videos.profiles.read` | List and read [encoding profiles](/docs/products/videos/profiles) |
+| `project.videos.profiles.write` | Create, update, and delete encoding profiles |
 
 Encoding profiles are project settings, so only API keys and the Console can manage them, not client SDKs.
 

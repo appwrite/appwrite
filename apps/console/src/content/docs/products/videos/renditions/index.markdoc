@@ -10,7 +10,7 @@ A **rendition** is one encoded copy of a [video](/docs/products/videos/videos) a
 
 Viewers watch on very different connections. If you only had a 1080p copy, someone on a slow mobile network would wait for it to buffer. With a ladder of renditions, the player starts on one it can fetch quickly, then moves up or down a few seconds at a time as the connection changes. This is **adaptive bitrate streaming**, and it is why a stream keeps playing when Wi-Fi drops to cellular.
 
-Each rendition is split into short **segments** of a few seconds. The player downloads them one after another and can change rendition between segments.
+Each rendition is split into short **segments** of up to 4 seconds. The player downloads them one after another and can change rendition between segments.
 
 # One per profile and output {% #one-per-profile-and-output %}
 
@@ -65,6 +65,8 @@ Encoding time depends mostly on the source duration and the profile's resolution
 
 You can create up to 15 renditions per video per hour. Past that, `videos.createRendition()` returns a `general_rate_limit_exceeded` error until the hour is up.
 
+The profile's codec must support the output you ask for. H.264, the only codec available today, supports all three.
+
 # Status and progress {% #status-and-progress %}
 
 A rendition reports its `status` and a `progress` percentage while it encodes.
@@ -73,38 +75,51 @@ A rendition reports its `status` and a `progress` percentage while it encodes.
 |--------|---------------|---------|
 | `pending` | Queued | Waiting for an encoding worker |
 | `started` | Encoding | Transcoding the source |
-| `ended` | Encoded | Transcoding finished |
-| `uploading` | Uploading | Storing segments and manifests |
+| `ended` | Encoded | Transcoding finished. Segments and manifests are being stored |
 | `ready` | Ready | Included in the master manifest and ready to stream |
 | `error` | Failed | The encode failed |
-| `aborted` | Aborted | The encode was stopped before it finished |
+| `aborted` | Aborted | The encode made no progress for 12 hours and was stopped |
 
 Each rendition also records `startedAt` and `endedAt`, its `width`, `height`, bitrates, and `codec`, and `targetDuration`, the length of its longest segment in seconds. When a rendition fails or is aborted, `error` says why.
 
-`progress` is a percentage sent as a string, such as `"42.5"`. Parse it with `parseFloat` before you compare or display it.
+`progress` is a percentage sent as a string, such as `"42"`. Parse it with `parseFloat` before you compare or display it.
 
 # Wait until ready {% #wait-until-ready %}
 
-The Console updates rendition progress live. In your own backend, list the video's renditions and check their status. Filter by `status` and `output` to keep the response small:
+The Console updates rendition progress live. In your own backend, list the video's renditions with [queries](/docs/products/databases/tablesdb/queries) on `status` and `output`:
 
 ```js
+const { Query } = sdk;
+
 async function isStreamable(videoId) {
     const { total } = await videos.listRenditions({
         videoId,
-        output: sdk.VideoOutput.Cmaf,
-        status: sdk.VideoRenditionStatus.Ready
+        queries: [
+            Query.equal('output', ['cmaf']),
+            Query.equal('status', ['ready'])
+        ]
     });
     return total > 0;
 }
 ```
 
+You can also filter and sort renditions on `profileId`, `name`, `codec`, `width`, `height`, `videoBitRate`, `audioBitRate`, `progress`, `targetDuration`, `startedAt`, and `endedAt`.
+
 A common pattern is to mark the video as published in your own database once `isStreamable` returns `true`, and to show a "processing" state until then. Poll every few seconds rather than in a tight loop, since encoding takes seconds to minutes.
 
-To tell when *every* rendition has finished, list them without the `status` filter and check that none is `pending`, `started`, `ended`, or `uploading`.
+To tell when *every* rendition has finished, check that none is still in progress:
+
+```js
+const { total: inProgress } = await videos.listRenditions({
+    videoId,
+    queries: [Query.equal('status', ['pending', 'started', 'ended'])]
+});
+const finished = inProgress === 0;
+```
 
 # Retry a failed rendition {% #retry-a-failed-rendition %}
 
-A failed or aborted rendition is not retried in place. Delete it and create it again for the same profile and output.
+A failed or aborted rendition is not retried in place. In the Console, click **Retry** on the rendition in the **Renditions** tab, or select several and retry them together. Retry deletes each rendition and creates it again. With an SDK, do the same yourself:
 
 ```js
 await videos.deleteRendition({ videoId, renditionId });
@@ -117,4 +132,4 @@ If the same profile fails again, read the rendition's `error`, then check the so
 
 Deleting a rendition removes its segments and drops it from the master manifest. Players stop offering that quality on their next manifest load. Other renditions of the video keep streaming.
 
-You cannot delete a rendition while it is encoding or uploading. The request returns `video_rendition_in_progress`; wait for the job to finish. A rendition that stays stuck in progress is eventually marked `aborted`, and can be deleted then.
+You cannot delete a rendition while it is encoding or storing segments, which is the `started` and `ended` statuses. The request returns `video_rendition_in_progress`, so wait for the job to finish. A queued rendition can be deleted at any time. A rendition that makes no progress for 12 hours is marked `aborted`, and can be deleted then.

@@ -25,17 +25,17 @@ New projects have no profiles. Create the ones you need before you encode your f
 
 | Field | Description |
 |-------|-------------|
-| `name` | Label shown in the Console, for example `720p` |
+| `name` | Label shown in the Console, up to 128 characters, for example `720p` |
 | `width`, `height` | Target picture size in pixels |
 | `videoBitRate` | Target video bitrate in **kilobits per second** |
 | `audioBitRate` | Target audio bitrate in **kilobits per second** |
-| `codec` | Video codec. Defaults to `h264` (H.264). List the codecs you can use with `videos.listCodecs()` |
+| `codec` | Video codec. Defaults to `h264` (H.264), the only codec available today. `videos.listCodecs()` lists the codecs you can use |
 
-Width and height can be from 16 to 4,320 pixels. Video bitrate can be from 32 to 20,000 kbps, and audio bitrate from 32 to 512 kbps. Each profile must be unique: two profiles cannot share the same width, height, bitrates, and codec.
+Width and height can be from 16 to 4,320 pixels. Video bitrate can be from 32 to 20,000 kbps, and audio bitrate from 32 to 512 kbps. Two profiles cannot share the same width, height, bitrates, and codec. A duplicate returns the `video_profile_already_exists` error.
 
 # Presets {% #presets %}
 
-When you create a profile in the Console, you can start from a preset or enter your own values under **Custom profile**:
+When you create profiles in the Console, you can pick one or more presets at once, or enter your own values under **Custom profile**:
 
 | Preset | Resolution | Video bitrate | Audio bitrate |
 |--------|------------|---------------|---------------|
@@ -50,15 +50,15 @@ When you create a profile in the Console, you can start from a preset or enter y
 
 1. Open **Videos** in your project and select **Encoding profiles**.
 2. Click **Create profile**.
-3. Choose a preset, or switch to **Custom profile** and enter a **Name**, **Width**, **Height**, **Video bitrate**, and **Audio bitrate**.
+3. Select one or more presets. Presets you already have are marked **Exists**. To enter your own values instead, click **Custom profile** and fill in **Name**, **Width**, **Height**, **Video bitrate**, and **Audio bitrate**.
 4. Click **Create**.
 
-The new profile shows up in the **Profiles** list when you create a video or add renditions. Profile names are labels only, so name them by purpose if that helps your team, for example `720p-mobile`.
+New profiles show up in the **Profiles** list when you create a video or add renditions. Profile names are labels only, so name them by purpose if that helps your team, for example `720p-mobile`.
 
 With a server SDK, create profiles from the `project` service:
 
 {% info title="Required scope" %}
-The API key used for these calls needs the `project.profiles.write` scope.
+The API key used for these calls needs the `project.videos.profiles.write` scope. Listing and reading profiles needs `project.videos.profiles.read`.
 {% /info %}
 
 {% multicode %}
@@ -122,7 +122,9 @@ When you build your own ladder:
 
 A profile that is larger than the source picture **upscales** it. Upscaling adds size and encoding time without adding detail. The Console marks these profiles as **Upscale** and leaves them out of the default selection when you create renditions.
 
-The check compares short edge with short edge and long edge with long edge, so it works the same for landscape and portrait video. A 1080 × 1920 portrait clip does not upscale with the `1080p` profile (1920 × 1080), because both edges match. Until the source is probed, its size is unknown and no profile is marked.
+The check compares short edge with short edge and long edge with long edge, so it works the same for landscape and portrait video. A 1080 × 1920 portrait clip does not upscale with the `1080p` profile (1920 × 1080), because both edges match.
+
+When you create a video, the Console reads the picture size from the file in your browser. When you add renditions later, it uses the size probed from the source. If the size is unknown, for example because your browser cannot decode the file, no profile is marked.
 
 You can still encode an upscaling profile, for example to keep every video on the same ladder. It just costs more without looking better.
 
