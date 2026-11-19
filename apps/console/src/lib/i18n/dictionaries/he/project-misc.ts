@@ -2688,7 +2688,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Shared with all Functions and Sites in this project.':
     'משותפים לכל הפונקציות והאתרים בפרויקט הזה.',
   'Showing first': 'מוצגות',
-  Since: 'מכיוון ש-',
   'Some PostgreSQL features are not migrated. OAuth users and functions are not migrated automatically.':
     'חלק מהיכולות של PostgreSQL אינן מועברות. משתמשי OAuth ופונקציות אינם מועברים אוטומטית.',
   'Some entities failed to migrate. Check status counts above.':
@@ -2758,7 +2757,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   installations: 'התקנות',
   item: 'פריט',
   'key for the API key.': 'בתור מפתח ה-API.',
-  nameservers: 'שרתי שמות',
   'protocol has been disabled': 'הושבת',
   'protocol has been enabled': 'הופעל',
   recipient: 'נמען',

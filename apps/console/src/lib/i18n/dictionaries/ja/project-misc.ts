@@ -2192,7 +2192,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Shared with all Functions and Sites in this project.':
     'このプロジェクト内のすべての Functions とサイトで共有されます。',
   'Showing first': '最初の',
-  Since: '開始',
   'Some PostgreSQL features are not migrated. OAuth users and functions are not migrated automatically.':
     '一部の PostgreSQL 機能は移行されません。OAuth ユーザーと Functions は自動的に移行されません。',
   'Some entities failed to migrate. Check status counts above.':
@@ -2264,7 +2263,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   installations: 'インストール',
   item: '項目',
   'key for the API key.': 'API キーのキー。',
-  nameservers: 'ネームサーバー',
   'protocol has been disabled': 'プロトコルを無効にしました',
   'protocol has been enabled': 'プロトコルを有効にしました',
   recipient: '受信者',
