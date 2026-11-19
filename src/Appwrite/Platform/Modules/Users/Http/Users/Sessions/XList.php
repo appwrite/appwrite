@@ -7,9 +7,15 @@ use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\Queries\Sessions;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Order as OrderException;
+use Utopia\Database\Exception\Query as QueryException;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
 use Utopia\Platform\Scope\HTTP;
@@ -47,32 +53,101 @@ class XList extends Action
             ))
             ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
+            ->param('queries', [], new Sessions(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter and order on the following attributes: $id, $createdAt, $updatedAt, ' . implode(', ', Sessions::ALLOWED_ATTRIBUTES), true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('locale')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale): void
-    {
+    public function action(
+        string $userId,
+        bool $includeTotal,
+        array $queries,
+        Response $response,
+        Database $dbForProject,
+        Locale $locale,
+    ): void {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
-        $sessions = $user->getAttribute('sessions', []);
-        foreach ($sessions as $key => $session) {
+
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
+        $queries[] = Query::equal('userInternalId', [$user->getSequence()]);
+
+        $cursor = Query::getCursorQueries($queries, false);
+        $cursor = \reset($cursor);
+
+        if ($cursor !== false) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
+            $sessionId = $cursor->getValue();
+            $cursorDocument = $dbForProject->getDocument('sessions', $sessionId);
+
+            if (
+                $cursorDocument->isEmpty()
+                || $cursorDocument->getAttribute('userInternalId') !== $user->getSequence()
+            ) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Session '{$sessionId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument);
+        }
+
+        $grouped = Query::groupByType($queries);
+        $filterQueries = $grouped->filters;
+
+        // A caller that filters on expire owns the time window; otherwise list only
+        // active sessions, as the endpoint documents.
+        $hasExpireFilter = false;
+        foreach ($filterQueries as $query) {
+            if ($query->getAttribute() === 'expire') {
+                $hasExpireFilter = true;
+                break;
+            }
+        }
+
+        if (!$hasExpireFilter) {
+            $expire = Query::greaterThanEqual('expire', DateTime::now());
+            $queries[] = $expire;
+            $filterQueries[] = $expire;
+        }
+
+        // Today's endpoint returns every session up to the subquery cap. Keep that
+        // default for callers that do not paginate, while queries and total can now
+        // go beyond it.
+        if ($grouped->limit === null) {
+            $queries[] = Query::limit(APP_LIMIT_SUBQUERY);
+        }
+
+        try {
+            $sessions = $dbForProject->find('sessions', $queries);
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values to be non-null.");
+        }
+        $total = $includeTotal ? $dbForProject->count('sessions', $filterQueries, APP_LIMIT_COUNT) : 0;
+
+        foreach ($sessions as $session) {
             /** @var Document $session */
             $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
             $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', false);
             $session->setAttribute('userName', $user->getAttribute('name', ''));
-            $sessions[$key] = $session;
         }
 
         $response->dynamic(new Document([
             'sessions' => $sessions,
-            'total' => $includeTotal ? count($sessions) : 0,
+            'total' => $total,
         ]), Response::MODEL_SESSION_LIST);
     }
 }
