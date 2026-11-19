@@ -230,6 +230,7 @@ export const enCatalog = {
         activity: 'Activity',
         logs: 'Logs',
         usage: 'Usage',
+        monitors: 'Monitors',
         analytics: 'Analytics',
         errors: 'Errors',
         advisor: 'Advisor',

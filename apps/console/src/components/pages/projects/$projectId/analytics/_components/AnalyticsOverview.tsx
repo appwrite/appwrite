@@ -839,7 +839,7 @@ export function AnalyticsOverview({
               className="h-7 gap-1.5 px-2 text-[12px] text-muted-foreground"
             >
               <Link
-                to="/projects/$projectId/usage/monitors"
+                to="/projects/$projectId/monitors"
                 params={{ projectId }}
                 search={{ metric: alertMetric }}
               >

@@ -3,7 +3,7 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import {
   StatusPill,
   ruleState,
-} from '@/components/pages/projects/$projectId/usage/monitors/StatusPill'
+} from '@/components/pages/projects/$projectId/monitors/StatusPill'
 import {
   organizationBudgetMonitorsQueryOptions,
   useOrganizationById,
