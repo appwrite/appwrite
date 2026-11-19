@@ -3,6 +3,21 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "gpt-62-astra-and-sol-launch-with-cheaper-astra-pricing",
+    "href": "/blog/post/gpt-62-astra-and-sol-launch-with-cheaper-astra-pricing",
+    "title": "GPT-6.2 Astra and Sol launch with cheaper Astra pricing",
+    "description": "OpenAI launches GPT-6.2 Astra and Sol. Astra is 20% cheaper per token than GPT-6 Astra, Sol keeps GPT-6.1 Sol pricing, and both use fewer output tokens.",
+    "date": "2026-11-19",
+    "lastUpdated": "2026-11-19",
+    "timeToRead": 6,
+    "author": "aishwari",
+    "category": "news",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/gpt-62-astra-and-sol-launch-with-cheaper-astra-pricing/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-cli-terminal",
     "href": "/blog/post/announcing-cli-terminal",
     "title": "Introducing the terminal command in the Appwrite CLI",
