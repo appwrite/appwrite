@@ -447,6 +447,46 @@ test.describe('email body preview (mocked API)', () => {
 })
 
 test.describe('email template preview (mocked API)', () => {
+  test('opens Verification while Recovery is pending and reuses it on return', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, emailMessage('sent'))
+
+    let verificationRequests = 0
+    page.on('request', (request) => {
+      if (
+        request.method() === 'GET' &&
+        new URL(request.url()).pathname.endsWith(
+          '/templates/email/verification',
+        )
+      ) {
+        verificationRequests++
+      }
+    })
+
+    let releaseRecovery!: () => void
+    const recovery = new Promise<void>((resolve) => {
+      releaseRecovery = resolve
+    })
+    await page.route('**/project/templates/email/recovery*', async (route) => {
+      await recovery
+      await route.fallback()
+    })
+    try {
+      await openTemplates(page)
+      await expect(previewFrame(page).getByText('Verify email')).toBeVisible()
+    } finally {
+      releaseRecovery()
+    }
+
+    const auth = `/projects/${PROJECT.$id}/auth`
+    await page.locator(`a[href="${auth}/users"]`).first().click()
+    await expect(page.getByPlaceholder('Search users...')).toBeVisible()
+    await page.locator(`a[href="${auth}/templates"]`).first().click()
+    await expect(previewFrame(page).getByText('Verify email')).toBeVisible()
+    expect(verificationRequests).toBe(1)
+  })
+
   test('an editable template opens on the source', async ({ page }) => {
     await mockAppwriteApi(page, emailMessage('sent'), { smtpEnabled: true })
     await openTemplates(page)

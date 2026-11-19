@@ -1,7 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { getProjectRegion, setProjectRegion } from '@/lib/appwrite/sdk'
-import { LONG_STALE_TIME } from '@/lib/react-query/hooks/constants'
 
 type ProjectWithRegion = { $id?: string; region?: string } | null | undefined
 
@@ -37,13 +36,11 @@ export async function ensureProjectRegion(
     return
   }
 
-  const { fetchProject } = await import('@/lib/react-query/hooks/projects')
+  const { projectQueryOptions } = await import(
+    '@/lib/react-query/hooks/projects'
+  )
   const project = await queryClient
-    .ensureQueryData({
-      queryKey: ['project', projectId],
-      queryFn: () => fetchProject(projectId),
-      staleTime: LONG_STALE_TIME,
-    })
+    .ensureQueryData(projectQueryOptions(projectId))
     .catch(() => null)
 
   if (project?.region) {
