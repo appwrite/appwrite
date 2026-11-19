@@ -1,0 +1,7 @@
+{
+    "projectId": "6afeb0ba3957ca6c99ab",
+    "apiKey": "standard_1d277263bdf1bcb1ac122694a9c8def465d7017198eef634dfdab835796662c7833c183ae1eb36ff04ccf96d93452ca5f56ee7d983091842b67ab5b3b824d8785253f976c5e25ea8c763728515207c1c6438afb5fc4808e4a56d125fc2c37d071301ae31b96972c04aac195061ad33e361390306269dc158f439cf003ff8bcf2",
+    "videoId": "6afeb0bb48cd1c16aed3",
+    "renditionId": "6afeb0bbcd88bd830d05",
+    "masterUrl": "http://appwrite.test/v1/videos/6afeb0bb48cd1c16aed3/outputs/hls/master.m3u8?project=6afeb0ba3957ca6c99ab"
+}
