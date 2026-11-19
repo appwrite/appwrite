@@ -139,6 +139,10 @@ class Create extends Action
             });
         }
 
+        if (empty($databases)) {
+            throw new Exception(Exception::PROJECT_REGION_UNSUPPORTED, 'Region "' . $region . '" has no database configured');
+        }
+
         $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE');
         $index = \array_search($databaseOverride, $databases);
         if ($index !== false) {
