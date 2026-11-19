@@ -1396,6 +1396,9 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Origin Git provider': 'Origin Git プロバイダー',
   'Deploy from Cursor Origin repositories.':
     'Cursor Origin のリポジトリからデプロイします。',
+  'Appwrite Videos': 'Appwrite Videos',
+  'Stream Storage files over HLS and DASH, with docs.':
+    'ストレージのファイルを HLS と DASH で配信します。ドキュメント付きです。',
   'Repository not available': 'リポジトリを利用できません',
   'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
     'この Git インストールからリポジトリにアクセスできなくなりました。削除された、インストールから外された、または別のインストールに移された可能性があります。デプロイを続けるには、リポジトリを接続し直してください。',

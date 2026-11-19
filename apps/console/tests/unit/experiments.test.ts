@@ -25,17 +25,19 @@ describe('hasQualityLabel', () => {
 })
 
 describe('experiments catalog', () => {
-  test('lists Appwrite Analytics, project environments, Origin and alerts', () => {
+  test('lists Appwrite Analytics, project environments, Origin, alerts and Videos', () => {
     expect(EXPERIMENTS.map((experiment) => experiment.flag)).toEqual([
       'analytics',
       'projectEnvironments',
       'vcsOrigin',
       'alerts',
+      'videos',
     ])
     expect(EXPERIMENTS[0]?.name).toBe('Appwrite Analytics')
     expect(EXPERIMENTS[1]?.name).toBe('Project environments')
     expect(EXPERIMENTS[2]?.name).toBe('Origin Git provider')
     expect(EXPERIMENTS[3]?.name).toBe('Monitors and alerts')
+    expect(EXPERIMENTS[4]?.name).toBe('Appwrite Videos')
     for (const experiment of EXPERIMENTS) {
       expect(experiment.description.length).toBeGreaterThan(0)
     }
@@ -50,6 +52,12 @@ describe('experiments catalog', () => {
   test('usage alerts are off in every profile until the experiment turns them on', () => {
     for (const profile of Object.values(CONSOLE_PROFILES)) {
       expect(profile.features.alerts).toBe(false)
+    }
+  })
+
+  test('Videos is off in every profile until the experiment turns it on', () => {
+    for (const profile of Object.values(CONSOLE_PROFILES)) {
+      expect(profile.features.videos).toBe(false)
     }
   })
 })
