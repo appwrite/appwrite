@@ -2,56 +2,44 @@
 //! package's own PHP value objects (`OperatingSystem`, `Client`, `Device`, `Bot`),
 //! built once per agent and returned as the same object on every call, as PHP does.
 //! Their class entries are looked up once per request.
+//!
+//! The class is built by hand ([`crate::classes`]) rather than with `#[php_class]`, like
+//! `Locale`: its state is `UserAgent.php`'s own private typed properties (the promoted
+//! `readonly string $value` last), and its methods are plain handlers reading and writing
+//! their slots. Through `#[php_class]`, every call paid for ext-php-rs's glue (a `zend_try`
+//! and `catch_unwind`, and `ArgParser` for `parse()`'s string), which cost more than
+//! `parse()` and `raw()` themselves.
 
 use std::cell::Cell;
+use std::sync::atomic::{AtomicPtr, Ordering};
 
-use ext_php_rs::boxed::ZBox;
+use ext_php_rs::args::ArgInfoTables;
 use ext_php_rs::convert::IntoZval;
 use ext_php_rs::exception::PhpException;
-use ext_php_rs::flags::ClassFlags;
-use ext_php_rs::prelude::*;
-use ext_php_rs::types::{ZendHashTable, ZendStr, Zval};
-use ext_php_rs::zend::{ClassEntry, ce};
+use ext_php_rs::flags::{ClassFlags, MethodFlags};
+use ext_php_rs::types::{ZendHashTable, ZendObject, ZendStr, Zval};
+use ext_php_rs::zend::{ClassEntry, ExecuteData, ce};
 use utopia_user_agent::{Text, detection};
 
-use crate::string::PhpString;
-use crate::string::Value;
+use crate::classes::engine::{
+    self, Declared, MAY_BE_ARRAY, MAY_BE_BOOL, MAY_BE_NULL, MAY_BE_STRING, Property, PropertyType, get, has_exception,
+    initialize, set, str_zval_arg, too_few,
+};
+use crate::classes::leaf::{self, Method, PRIVATE, PUBLIC, stored, this};
 
-/// `Utopia\UserAgent\UserAgent`: the string and each category once detected. Its
-/// private properties are the PHP class's, so `==`, `var_dump()` and `(array)` match.
-#[php_class]
-#[php(name = "Utopia\\UserAgent\\UserAgent", flags = ClassFlags::Final)]
-pub struct UserAgent {
-    value: Zval,
-    operating_system: Zval,
-    client: Zval,
-    device: Zval,
-    bot: Zval,
-    bot_resolved: bool,
-}
+/// A public static method.
+const PUBLIC_STATIC: MethodFlags = MethodFlags::Public.union(MethodFlags::Static);
 
-impl Clone for UserAgent {
-    fn clone(&self) -> Self {
-        Self {
-            value: self.value.shallow_clone(),
-            operating_system: self.operating_system.shallow_clone(),
-            client: self.client.shallow_clone(),
-            device: self.device.shallow_clone(),
-            bot: self.bot.shallow_clone(),
-            bot_resolved: self.bot_resolved,
-        }
-    }
-}
+static USER_AGENT: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
 
-/// A PHP string of `bytes`, or `null`.
-fn text(value: Option<&[u8]>) -> Zval {
-    let mut zval = Zval::new();
-    match value {
-        Some(bytes) => zval.set_zend_string(ZendStr::new(bytes, false)),
-        None => zval.set_null(),
-    }
-    zval
-}
+// The private properties of `UserAgent.php`, in its declaration order.
+static OPERATING_SYSTEM_PROPERTY: Property = Property::new("operatingSystem");
+static CLIENT_PROPERTY: Property = Property::new("client");
+static DEVICE_PROPERTY: Property = Property::new("device");
+static BOT_PROPERTY: Property = Property::new("bot");
+static BOT_RESOLVED: Property = Property::new("botResolved");
+/// `private readonly string $value`, promoted by the constructor.
+static VALUE: Property = Property::new("value");
 
 /// The package's value classes, in the order of [`CLASSES`].
 const NAMES: [&str; 4] = [
@@ -75,23 +63,39 @@ pub fn request_shutdown() {
     CLASSES.with(|classes| classes.iter().for_each(|class| class.set(std::ptr::null())));
 }
 
-/// The class entry of `NAMES[index]`, autoloading it as PHP does on first use.
-fn class(index: usize) -> PhpResult<&'static ClassEntry> {
+/// The class entry of `NAMES[index]`, autoloading it as PHP does on first use; `None` with
+/// the `Error` pending.
+fn class(index: usize) -> Option<&'static ClassEntry> {
     let cached = CLASSES.with(|classes| classes[index].get());
     // SAFETY: a user class entry lives until the request ends, when the pointer is forgotten.
     if let Some(entry) = unsafe { cached.as_ref() } {
-        return Ok(entry);
+        return Some(entry);
     }
     let name = NAMES[index];
-    let entry = ClassEntry::try_find(name)
-        .ok_or_else(|| PhpException::new(format!("Class \"{name}\" not found"), 0, ce::error()))?;
+    let Some(entry) = ClassEntry::try_find(name) else {
+        if !has_exception() {
+            PhpException::new(format!("Class \"{name}\" not found"), 0, ce::error()).throw();
+        }
+        return None;
+    };
     CLASSES.with(|classes| classes[index].set(entry));
-    Ok(entry)
+    Some(entry)
+}
+
+/// A PHP string of `bytes`, or `null`.
+fn text(value: Option<&[u8]>) -> Zval {
+    let mut zval = Zval::new();
+    match value {
+        Some(bytes) => zval.set_zend_string(ZendStr::new(bytes, false)),
+        None => zval.set_null(),
+    }
+    zval
 }
 
 /// `new $class(...$arguments)` for the class `NAMES[index]`, calling its constructor
-/// as `new` does: by the class's constructor pointer, not by name.
-fn object<const N: usize>(index: usize, arguments: [Option<&Text<'_>>; N]) -> PhpResult<Zval> {
+/// as `new` does: by the class's constructor pointer, not by name. `None` with the
+/// exception pending when the class is missing or its constructor threw.
+fn object<const N: usize>(index: usize, arguments: [Option<&Text<'_>>; N]) -> Option<Zval> {
     let entry = class(index)?;
     let mut object = entry.new();
     let mut arguments = arguments.map(|argument| text(argument.map(AsRef::as_ref)));
@@ -110,139 +114,238 @@ fn object<const N: usize>(index: usize, arguments: [Option<&Text<'_>>; N]) -> Ph
                 std::ptr::null_mut(),
             );
         }
+        if has_exception() {
+            return None;
+        }
     }
-    object.into_zval(false).map_err(PhpException::from)
+    object.into_zval(false).ok()
 }
 
-/// Calls `$value->toArray()`, or gives `null` for `null`.
-fn fields(value: &Zval) -> PhpResult<Zval> {
+/// The bytes of a string [`Zval`].
+fn bytes(value: &Zval) -> &[u8] {
+    value.zend_str().map_or(&[], ZendStr::as_bytes)
+}
+
+/// `$this->property ??= detect($this->value)`: the object detected once, then the same one.
+/// `None` with the exception pending.
+fn detected(this: &mut ZendObject, property: &Property, detect: impl FnOnce(&[u8]) -> Option<Zval>) -> Option<Zval> {
+    let scope = stored(&USER_AGENT);
+    let current = get(scope, this, property)?;
+    if !current.is_null() {
+        return Some(current);
+    }
+    let value = get(scope, this, &VALUE)?;
+    let found = detect(bytes(&value))?;
+    set(scope, this, property, found.shallow_clone());
+    Some(found)
+}
+
+fn operating_system_of(this: &mut ZendObject) -> Option<Zval> {
+    detected(this, &OPERATING_SYSTEM_PROPERTY, |value| {
+        let found = detection::operating_system(value);
+        object(OPERATING_SYSTEM, [found.code.as_ref(), found.name.as_ref(), found.version.as_ref()])
+    })
+}
+
+fn client_of(this: &mut ZendObject) -> Option<Zval> {
+    detected(this, &CLIENT_PROPERTY, |value| {
+        let found = detection::client(value);
+        object(
+            CLIENT,
+            [
+                found.kind.as_ref(),
+                found.code.as_ref(),
+                found.name.as_ref(),
+                found.version.as_ref(),
+                found.engine.as_ref(),
+                found.engine_version.as_ref(),
+            ],
+        )
+    })
+}
+
+fn device_of(this: &mut ZendObject) -> Option<Zval> {
+    detected(this, &DEVICE_PROPERTY, |value| {
+        let found = detection::device(value);
+        object(DEVICE, [found.kind.as_ref(), found.brand.as_ref(), found.model.as_ref()])
+    })
+}
+
+/// `bot()`: detected once (`$botResolved`), then the same object or `null`.
+fn bot_of(this: &mut ZendObject) -> Option<Zval> {
+    let scope = stored(&USER_AGENT);
+    if !engine::truthy(&get(scope, this, &BOT_RESOLVED)?) {
+        let value = get(scope, this, &VALUE)?;
+        let bot = match detection::bot(bytes(&value)) {
+            Some(found) => object(BOT, [Some(&found.name), Some(&found.category)])?,
+            None => Zval::null(),
+        };
+        set(scope, this, &BOT_PROPERTY, bot);
+        let mut resolved = Zval::new();
+        resolved.set_bool(true);
+        set(scope, this, &BOT_RESOLVED, resolved);
+    }
+    get(scope, this, &BOT_PROPERTY)
+}
+
+/// `$value->toArray()`, or `null` for `null` (`?->`). `None` with the exception pending.
+fn fields(value: &Zval) -> Option<Zval> {
     match value.object() {
-        Some(object) => object.try_call_method("toArray", vec![]).map_err(PhpException::from),
-        None => Ok(Zval::null()),
+        Some(object) => object.try_call_method("toArray", vec![]).ok(),
+        None => Some(Zval::null()),
     }
 }
 
-impl UserAgent {
-    fn bytes(&self) -> &[u8] {
-        self.value.zend_str().map_or(&[], ZendStr::as_bytes)
+// Handlers ----------------------------------------------------------------------------------
+
+/// `private function __construct(private readonly string $value)`.
+extern "C" fn construct(ex: &mut ExecuteData, _: &mut Zval) {
+    let Some(arg) = engine::arg(ex, 0) else {
+        too_few(ex, "Utopia\\UserAgent\\UserAgent::__construct", engine::args_count(ex), 1, 1);
+        return;
+    };
+    let Some(value) = str_zval_arg(ex, 1, arg) else { return };
+    if let Some(this) = this(ex) {
+        // A second initialization of the readonly property goes through the engine, which
+        // refuses it.
+        initialize(stored(&USER_AGENT), this, &VALUE, value);
     }
 }
 
-#[php_impl]
-impl UserAgent {
-    /// The private properties of `UserAgent.php`, in its declaration order.
-    #[php(getter, name = "operatingSystem", vis = "private")]
-    pub fn operating_system_property(&self) -> Value {
-        Value(self.operating_system.shallow_clone())
+/// `parse(string $value): self`: `new self($value)`, with `$value` initialized as the
+/// constructor initializes it.
+extern "C" fn parse(ex: &mut ExecuteData, retval: &mut Zval) {
+    let Some(arg) = engine::arg(ex, 0) else {
+        too_few(ex, "Utopia\\UserAgent\\UserAgent::parse", engine::args_count(ex), 1, 1);
+        return;
+    };
+    let Some(value) = str_zval_arg(ex, 1, arg) else { return };
+    let scope = stored(&USER_AGENT);
+    let mut object = ZendObject::new(scope);
+    initialize(scope, &mut object, &VALUE, value);
+    // The box's reference moves to the return value.
+    if let Err(error) = object.set_zval(retval, false) {
+        PhpException::from(error).throw();
     }
+}
 
-    #[php(getter, name = "client", vis = "private")]
-    pub fn client_property(&self) -> Value {
-        Value(self.client.shallow_clone())
+/// `raw(): string`.
+extern "C" fn raw(ex: &mut ExecuteData, retval: &mut Zval) {
+    let Some(this) = this(ex) else { return };
+    if let Some(value) = get(stored(&USER_AGENT), this, &VALUE) {
+        *retval = value;
     }
+}
 
-    #[php(getter, name = "device", vis = "private")]
-    pub fn device_property(&self) -> Value {
-        Value(self.device.shallow_clone())
+/// Returns what `of` gives for `$this`; nothing, with the exception pending, when it threw.
+fn answer(ex: &mut ExecuteData, retval: &mut Zval, of: Category) {
+    let Some(this) = this(ex) else { return };
+    if let Some(value) = of(this) {
+        *retval = value;
     }
+}
 
-    #[php(getter, name = "bot", vis = "private")]
-    pub fn bot_property(&self) -> Value {
-        Value(self.bot.shallow_clone())
+extern "C" fn operating_system(ex: &mut ExecuteData, retval: &mut Zval) {
+    answer(ex, retval, operating_system_of);
+}
+
+extern "C" fn client(ex: &mut ExecuteData, retval: &mut Zval) {
+    answer(ex, retval, client_of);
+}
+
+extern "C" fn device(ex: &mut ExecuteData, retval: &mut Zval) {
+    answer(ex, retval, device_of);
+}
+
+extern "C" fn bot(ex: &mut ExecuteData, retval: &mut Zval) {
+    answer(ex, retval, bot_of);
+}
+
+/// `isBot(): bool`: `$this->bot() instanceof Bot`.
+extern "C" fn is_bot(ex: &mut ExecuteData, retval: &mut Zval) {
+    let Some(this) = this(ex) else { return };
+    if let Some(bot) = bot_of(this) {
+        retval.set_bool(bot.is_object());
     }
+}
 
-    #[php(getter, name = "botResolved", vis = "private")]
-    pub fn bot_resolved_property(&self) -> bool {
-        self.bot_resolved
-    }
+/// A category's object (or `null`) for `$this`; `None` with the exception pending.
+type Category = fn(&mut ZendObject) -> Option<Zval>;
 
-    #[php(getter, name = "value", vis = "private")]
-    pub fn value_property(&self) -> Value {
-        Value(self.value.shallow_clone())
-    }
+/// What `toArray()` holds, in `UserAgent.php`'s order: each key and its category.
+const CATEGORIES: [(&str, Category); 4] =
+    [("os", operating_system_of), ("client", client_of), ("device", device_of), ("bot", bot_of)];
 
-    #[php(vis = "private")]
-    pub fn __construct(value: PhpString<'_>) -> Self {
-        Self::parse(value)
-    }
-
-    pub fn parse(value: PhpString<'_>) -> Self {
-        Self {
-            value: text(Some(value.bytes())),
-            operating_system: Zval::null(),
-            client: Zval::null(),
-            device: Zval::null(),
-            bot: Zval::null(),
-            bot_resolved: false,
+/// `toArray(): array`: each category's `toArray()`.
+extern "C" fn to_array(ex: &mut ExecuteData, retval: &mut Zval) {
+    let Some(this) = this(ex) else { return };
+    let mut result = ZendHashTable::with_capacity(4);
+    for (key, of) in CATEGORIES {
+        let Some(value) = of(this) else { return };
+        let Some(value) = fields(&value) else { return };
+        if let Err(error) = result.insert(key, value) {
+            PhpException::from(error).throw();
+            return;
         }
     }
+    retval.set_hashtable(result);
+}
 
-    pub fn raw(&self) -> Value {
-        Value(self.value.shallow_clone())
+/// `string $value`.
+const VALUE_PARAM: &[leaf::Param] = &[("value", MAY_BE_STRING, None)];
+
+/// The methods, in `UserAgent.php`'s order. A return of 0 is a class, set by [`register_class`].
+const METHODS: &[Method] = &[
+    Method { name: "__construct", handler: construct, flags: PRIVATE, params: VALUE_PARAM, returns: 0 },
+    Method { name: "parse", handler: parse, flags: PUBLIC_STATIC, params: VALUE_PARAM, returns: 0 },
+    Method { name: "raw", handler: raw, flags: PUBLIC, params: &[], returns: MAY_BE_STRING },
+    Method { name: "operatingSystem", handler: operating_system, flags: PUBLIC, params: &[], returns: 0 },
+    Method { name: "client", handler: client, flags: PUBLIC, params: &[], returns: 0 },
+    Method { name: "device", handler: device, flags: PUBLIC, params: &[], returns: 0 },
+    Method { name: "bot", handler: bot, flags: PUBLIC, params: &[], returns: 0 },
+    Method { name: "isBot", handler: is_bot, flags: PUBLIC, params: &[], returns: MAY_BE_BOOL },
+    Method { name: "toArray", handler: to_array, flags: PUBLIC, params: &[], returns: MAY_BE_ARRAY },
+];
+
+/// Declares `UserAgent.php`'s properties in its order, and the methods' class return types.
+fn register_class(class: &'static mut ClassEntry, tables: ArgInfoTables) {
+    let body = Declared { private: true, readonly: false, promoted: false };
+    for (property, index) in [
+        (&OPERATING_SYSTEM_PROPERTY, OPERATING_SYSTEM),
+        (&CLIENT_PROPERTY, CLIENT),
+        (&DEVICE_PROPERTY, DEVICE),
+        (&BOT_PROPERTY, BOT),
+    ] {
+        let ty = PropertyType::Class { name: NAMES[index], nullable: true };
+        engine::declare_property(class, property, ty, body, Some(Zval::null()));
     }
-
-    #[php(name = "operatingSystem")]
-    pub fn operating_system(&mut self) -> PhpResult<Value> {
-        if self.operating_system.is_null() {
-            let found = detection::operating_system(self.bytes());
-            self.operating_system =
-                object(OPERATING_SYSTEM, [found.code.as_ref(), found.name.as_ref(), found.version.as_ref()])?;
-        }
-        Ok(Value(self.operating_system.shallow_clone()))
-    }
-
-    pub fn client(&mut self) -> PhpResult<Value> {
-        if self.client.is_null() {
-            let found = detection::client(self.bytes());
-            self.client = object(
-                CLIENT,
-                [
-                    found.kind.as_ref(),
-                    found.code.as_ref(),
-                    found.name.as_ref(),
-                    found.version.as_ref(),
-                    found.engine.as_ref(),
-                    found.engine_version.as_ref(),
-                ],
-            )?;
-        }
-        Ok(Value(self.client.shallow_clone()))
-    }
-
-    pub fn device(&mut self) -> PhpResult<Value> {
-        if self.device.is_null() {
-            let found = detection::device(self.bytes());
-            self.device = object(DEVICE, [found.kind.as_ref(), found.brand.as_ref(), found.model.as_ref()])?;
-        }
-        Ok(Value(self.device.shallow_clone()))
-    }
-
-    pub fn bot(&mut self) -> PhpResult<Value> {
-        if !self.bot_resolved {
-            if let Some(found) = detection::bot(self.bytes()) {
-                self.bot = object(BOT, [Some(&found.name), Some(&found.category)])?;
+    let mut resolved = Zval::new();
+    resolved.set_bool(false);
+    engine::declare_property(class, &BOT_RESOLVED, PropertyType::Mask(MAY_BE_BOOL), body, Some(resolved));
+    let promoted = Declared { private: true, readonly: true, promoted: true };
+    engine::declare_property(class, &VALUE, PropertyType::Mask(MAY_BE_STRING), promoted, None);
+    USER_AGENT.store(class, Ordering::Release);
+    leaf::patch(class, METHODS, tables, &[]);
+    for (method, name, nullable) in [
+        ("parse", "Utopia\\UserAgent\\UserAgent", false),
+        ("operatingSystem", NAMES[OPERATING_SYSTEM], false),
+        ("client", NAMES[CLIENT], false),
+        ("device", NAMES[DEVICE], false),
+        ("bot", NAMES[BOT], true),
+    ] {
+        if let Some(info) = engine::arg_info(class, method) {
+            engine::set_class_type(&mut info[0], name);
+            if nullable {
+                info[0].type_.type_mask |= MAY_BE_NULL;
             }
-            self.bot_resolved = true;
         }
-        Ok(Value(self.bot.shallow_clone()))
     }
+}
 
-    #[php(name = "isBot")]
-    pub fn is_bot(&mut self) -> PhpResult<bool> {
-        Ok(self.bot()?.0.is_object())
-    }
-
-    #[php(name = "toArray")]
-    pub fn array(&mut self) -> PhpResult<ZBox<ZendHashTable>> {
-        let mut result = ZendHashTable::new();
-        let os = self.operating_system()?;
-        result.insert("os", fields(&os.0)?)?;
-        let client = self.client()?;
-        result.insert("client", fields(&client.0)?)?;
-        let device = self.device()?;
-        result.insert("device", fields(&device.0)?)?;
-        let bot = self.bot()?;
-        result.insert("bot", fields(&bot.0)?)?;
-        Ok(result)
-    }
+/// Registers `Utopia\UserAgent\UserAgent`. Called from the module's startup (MINIT).
+pub fn register() -> ext_php_rs::error::Result<()> {
+    leaf::class("Utopia\\UserAgent\\UserAgent", METHODS)
+        .flags(ClassFlags::Final)
+        .registration(register_class)
+        .register()
 }
