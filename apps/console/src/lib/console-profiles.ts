@@ -71,9 +71,10 @@ export type ConsoleProfileFeatures = {
   /** Project environments switcher in the project sidebar (`/project/environments`, Cloud only). */
   projectEnvironments: boolean
   /**
-   * Organization settings → Single sign-on (Cloud only, owners). Its Domains
-   * section claims a domain with a DNS record so people who sign up with a
-   * verified email on it join the organization. An experiment, off by default.
+   * Organization settings → Single sign-on (Cloud only, owners). Owners verify
+   * email domains with a DNS record and connect identity providers, so people
+   * on those domains sign in with their company login. An experiment, off by
+   * default.
    */
   sso: boolean
   /** An experiment, off by default; the quality team turns it on from the header Previews menu. Usage monitors and the alerts they raise: the Usage sidebar's Monitors and Alerts pages, their quick actions, budget monitors in billing, and the alert events in the webhook event picker. */

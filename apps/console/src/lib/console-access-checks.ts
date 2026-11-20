@@ -449,9 +449,9 @@ export function canShowOrgApiKeysSettings(
 }
 
 /**
- * Organization settings → Single sign-on (experiment + owners). Its domains
- * decide who joins the organization and with which roles, so only owners see
- * it, as only owners can invite.
+ * Organization settings → Single sign-on (experiment + owners). Its identity
+ * providers add the people who sign in through them as members, with the
+ * provider's roles, so only owners see it, as only owners can invite.
  */
 export function canShowOrgSsoSettings(
   access: ConsoleAccess,

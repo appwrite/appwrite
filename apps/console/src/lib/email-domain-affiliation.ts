@@ -10,8 +10,8 @@ export function getVerifiedEmailDomains(
 }
 
 /**
- * Whether an email is on one of the verified domains. Exact match, like
- * sign-up auto-join: a subdomain is its own domain and is verified on its own.
+ * Whether an email is on one of the verified domains. Exact match: a subdomain
+ * is its own domain and is verified on its own.
  */
 export function isInternalEmail(
   email: string | null | undefined,
