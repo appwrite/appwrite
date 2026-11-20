@@ -55,6 +55,8 @@ import {
 import { VCSDetectionType, ID } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { AnalyticsToggle } from './AnalyticsToggle'
 import { buildVcsAuthUrl, type VcsProviderId } from '@/lib/vcs/providers'
 import { getSiteTemplateScreenshotUrl } from '@/lib/sites/site-template-wizard'
 import { validateVariables } from '@/lib/variables'
@@ -107,6 +109,8 @@ interface TemplateConfigViewProps {
 
 export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
   const t = useT()
+  const { features } = useConsoleProfile()
+  const [analytics, setAnalytics] = useState(true)
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -317,6 +321,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
           providerRootDirectory: connectRootDir || undefined,
           providerSilentMode: false,
         }),
+        analytics: features.analytics && analytics,
       })
       createdSiteId = site.$id
 
@@ -673,6 +678,13 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
               placeholder={t('Auto-generated')}
             />
           </div>
+
+          {features.analytics && (
+            <AnalyticsToggle
+              checked={analytics}
+              onCheckedChange={setAnalytics}
+            />
+          )}
 
           {/* Framework (if template supports multiple) */}
           {template.frameworks && template.frameworks.length > 1 && (

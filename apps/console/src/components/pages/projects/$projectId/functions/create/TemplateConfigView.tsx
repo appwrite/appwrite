@@ -156,6 +156,12 @@ export function TemplateConfigView({
     }
   }, [specifications, specification])
 
+  // Event-driven templates, such as the alert ones, list no `any` permission and
+  // start private, so nobody can call them over HTTP with a forged payload.
+  useEffect(() => {
+    if (template) setIsPublic(template.permissions?.includes('any') ?? true)
+  }, [template])
+
   useEffect(() => {
     if (template) {
       if (!functionName) setFunctionName(template.name)

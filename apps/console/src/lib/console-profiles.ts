@@ -64,7 +64,7 @@ export type ConsoleProfileFeatures = {
   databaseSpecifications: boolean
   /** Native MongoDB databases via the `mongo` SDK service. */
   nativeDbsMongo: boolean
-  /** Videos product (transcoding, renditions, subtitles, HLS/DASH playback) via the `videos` SDK service. */
+  /** An experiment, off by default; the quality team turns it on from the header Previews menu. Videos product (transcoding, renditions, subtitles, HLS/DASH playback) via the `videos` SDK service. */
   videos: boolean
   /**
    * Internal only, switched on from the debug menu. Review product (AI code
@@ -102,13 +102,6 @@ export type ConsoleProfileFeatures = {
   blogDrafts: boolean
   /** Product analytics: tracked properties, visitor stats, and per-event metrics */
   analytics: boolean
-  /**
-   * Clicking Humans / Bots in analytics filters the page. `trafficType` isn't
-   * a query attribute, so this filters on an empty vs non-empty
-   * `botCategory`, which depends on how the backend stores human events.
-   * Off until that's confirmed.
-   */
-  analyticsTrafficFilter: boolean
   /** Appwrite push messaging provider (create wizard and its QoS/expiry settings). */
   appwritePush: boolean
 }
@@ -153,7 +146,6 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   cookieBanner: 'Cookie banner',
   blogDrafts: 'Blog drafts',
   analytics: 'Analytics',
-  analyticsTrafficFilter: 'Analytics humans/bots filter',
   appwritePush: 'Appwrite push',
 }
 
@@ -210,7 +202,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       blogDrafts: false,
       // Off until launch; enable from Debug → Feature flags.
       analytics: false,
-      analyticsTrafficFilter: false,
       appwritePush: true,
     },
   },
@@ -254,7 +245,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       cookieBanner: false,
       blogDrafts: false,
       analytics: false,
-      analyticsTrafficFilter: false,
       appwritePush: true,
     },
   },

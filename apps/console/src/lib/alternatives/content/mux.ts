@@ -154,7 +154,7 @@ export const muxAlternativeContent: AlternativeContent = {
     {
       question: 'Can I control the encoding ladder?',
       answer:
-        'Yes. Every project starts with a default ladder of encoding profiles. Add your own profile with a resolution, video and audio bitrate, and codec, and each video gets at most one rendition per profile and output.',
+        'Yes. Start from resolution presets or add your own profile with a resolution, video and audio bitrate, and codec. Each video gets at most one rendition per profile and output.',
     },
     {
       question: 'Which players work with Appwrite Videos?',

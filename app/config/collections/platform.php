@@ -404,13 +404,13 @@ $platformCollections = [
             Attribute::string(key: 'ruleId'),
             // 'CAA', 'CNAME', 'A' or 'AAAA'
             Attribute::string(key: 'type', size: 16, required: true),
-            // Hostname the record was looked up for
+            // Hostname the record was looked up for, or the parent a blocking CAA record was found on
             Attribute::string(key: 'name', required: true),
             // Value the user must set
             Attribute::string(key: 'expected', required: true),
             // Values DNS returned, at most 10
             Attribute::string(key: 'current', array: true, default: []),
-            // 'verified', 'missing', 'mismatch' or 'failed'
+            // 'verified', 'missing', 'mismatch', 'misplaced' or 'failed'
             Attribute::string(key: 'status', size: 16, required: true),
             Attribute::string(key: 'message', size: 1000, default: ''),
             Attribute::boolean(key: 'required', default: false),

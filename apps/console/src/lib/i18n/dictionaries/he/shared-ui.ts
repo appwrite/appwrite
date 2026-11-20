@@ -1426,6 +1426,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Appwrite Analytics': 'Appwrite Analytics',
   'Visitor, page, and campaign tracking.':
     'מעקב אחרי מבקרים, עמודים וקמפיינים.',
+  'Appwrite Videos': 'Appwrite Videos',
+  'Transcode, stream, and caption videos.': 'קידוד, הזרמה וכתוביות לסרטונים.',
   'Project environments': 'סביבות פרויקט',
   'Switch or clone staging and production.':
     'מעבר או שכפול בין staging לפרודקשן.',

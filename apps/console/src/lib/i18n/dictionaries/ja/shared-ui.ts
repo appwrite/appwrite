@@ -1390,6 +1390,9 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Appwrite Analytics': 'Appwrite Analytics',
   'Visitor, page, and campaign tracking.':
     '訪問者、ページ、キャンペーンを計測します。',
+  'Appwrite Videos': 'Appwrite Videos',
+  'Transcode, stream, and caption videos.':
+    '動画のトランスコード、配信、字幕付けを行います。',
   'Project environments': 'プロジェクト環境',
   'Switch or clone staging and production.':
     'ステージングと本番を切り替え、複製します。',

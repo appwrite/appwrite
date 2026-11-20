@@ -169,18 +169,20 @@ export const heSitesDictionary: Record<string, string> = {
   Logs: 'לוגים',
   Records: 'רשומות',
   'Update domain': 'עדכון דומיין',
-  'Its DNS records and certificate stay the same.': 'רשומות ה-DNS והתעודה שלו יישארו ללא שינוי.',
+  'Its DNS records and certificate stay the same.':
+    'רשומות ה-DNS והתעודה שלו יישארו ללא שינוי.',
   'Domain has been updated': 'הדומיין עודכן',
   'Failed to update domain': 'עדכון הדומיין נכשל',
-  'A domain cannot switch between serving a deployment and redirecting. Delete it and add it again.': 'דומיין לא יכול לעבור בין הגשת פריסה להפניה. יש למחוק אותו ולהוסיף אותו מחדש.',
+  'A domain cannot switch between serving a deployment and redirecting. Delete it and add it again.':
+    'דומיין לא יכול לעבור בין הגשת פריסה להפניה. יש למחוק אותו ולהוסיף אותו מחדש.',
   'Domain has been deleted': 'הדומיין נמחק',
   'Loading domains...': 'טוען דומיינים...',
   Verified: 'מאומת',
   'Generating certificate': 'מנפיק תעודה',
   'Verification failed': 'האימות נכשל',
   'Certificate generation failed': 'הנפקת התעודה נכשלה',
-  'A DNS record has the wrong value. Open Records to see which one and what to change it to.':
-    'לרשומת DNS יש ערך שגוי. פתחו את הרשומות כדי לראות איזו רשומה ולמה לשנות אותה.',
+  'A DNS record has the wrong value or name. Open Records to see which one and what to change it to.':
+    'לרשומת DNS יש ערך או שם שגויים. פתחו את הרשומות כדי לראות איזו רשומה ולמה לשנות אותה.',
   'Waiting for DNS': 'ממתין ל-DNS',
   'Appwrite checks the DNS records every few minutes for 3 days after the domain is added. Use Check now to look again right away.':
     'Appwrite בודק את רשומות ה-DNS כל כמה דקות במשך 3 ימים לאחר הוספת הדומיין. לחצו על "בדוק עכשיו" כדי לבדוק מיד.',
@@ -196,6 +198,10 @@ export const heSitesDictionary: Record<string, string> = {
     'ב-Cloudflare זה נקרא CNAME flattening (הגדירו DNS only), וב-Route 53 זה נקרא Alias. יש ספקים שקוראים לזה ANAME.',
   'It points to {found}. Change it to {value}.':
     'היא מפנה אל {found}. שנו אותה ל-{value}.',
+  'It was added as {found}. In your DNS provider, enter only {name} as the host.':
+    'היא נוספה בשם {found}. אצל ספק ה-DNS, הזינו רק {name} בתור ה-Host.',
+  "Enter only {name} in your DNS provider's Host or Name field. Most providers add {apex} for you.":
+    'הזינו רק {name} בשדה Host או Name אצל ספק ה-DNS. רוב הספקים מוסיפים את {apex} בעצמם.',
   'Your domain points somewhere else. Set this record to {value}.':
     'הדומיין שלכם מפנה למקום אחר. הגדירו את הרשומה הזו ל-{value}.',
   'and {n} more': 'ועוד {n}',
@@ -637,6 +643,12 @@ export const heSitesDictionary: Record<string, string> = {
   'Last check': 'בדיקה אחרונה',
   'Found:': 'נמצא:',
   'Wrong value': 'ערך שגוי',
+  'Wrong name': 'שם שגוי',
+  'Found at:': 'נמצא ב:',
+  'Wrong type': 'סוג שגוי',
+  'Found {type}:': 'נמצאה רשומת {type}:',
+  'Your domain has an {type} record ({found}) instead of a CNAME, often a URL redirect or parking record at your DNS provider. Delete it, then add the CNAME below.':
+    'לדומיין יש רשומת {type} ({found}) במקום CNAME, לרוב רשומת הפניית URL או חניה אצל ספק ה-DNS. מחקו אותה, ואז הוסיפו את ה-CNAME שלמטה.',
   'Blocks certificate': 'התעודה חסומה',
   "Couldn't check": 'לא ניתן לבדוק',
   Alternative: 'חלופה',
@@ -669,4 +681,8 @@ export const heSitesDictionary: Record<string, string> = {
     'צפיות בדפים ואירועים שנמדדים מחויבים כשימוש באנליטיקה, והעלות מצטברת מהר באתר עם תנועה גבוהה.',
   'If your site sets a Content-Security-Policy, in a header or a <meta> tag, add these sources. Otherwise the browser blocks the tracker and no data is recorded.':
     'אם האתר שלכם מגדיר Content-Security-Policy, בכותרת או בתגית <meta>, הוסיפו את המקורות האלה. אחרת הדפדפן חוסם את סקריפט המעקב ולא נאספים נתונים.',
+  'Enable analytics': 'הפעלת אנליטיקה',
+  'Production domains only. Preview deployments are not tracked.':
+    'דומיינים של סביבת הייצור בלבד. פריסות תצוגה מקדימה אינן נמדדות.',
+  'Failed to enable analytics': 'הפעלת האנליטיקה נכשלה',
 }

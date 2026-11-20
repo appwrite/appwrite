@@ -180,6 +180,47 @@ final class ClientTest extends AdapterContract
         });
     }
 
+    /**
+     * @return array<string, array{array<int, mixed>}>
+     */
+    public static function bodyOptions(): array
+    {
+        return [
+            'write callback' => [[\CURLOPT_WRITEFUNCTION => static fn (\CurlHandle $handle, string $chunk): int => \strlen($chunk)]],
+            'return transfer' => [[\CURLOPT_RETURNTRANSFER => true]],
+            'file' => [[\CURLOPT_FILE => \fopen('php://memory', 'w+')]],
+        ];
+    }
+
+    /**
+     * @param array<int, mixed> $options
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('bodyOptions')]
+    public function testTheAdapterKeepsTheResponseBodyAndItsCapOverCallerOptions(array $options): void
+    {
+        Http::serve(function (int $port) use ($options): void {
+            $client = new Client(options: $options + [\CURLOPT_MAXFILESIZE_LARGE => 10_000]);
+            $factory = new Request\Factory();
+
+            \ob_start();
+            try {
+                $response = $client->sendRequest($factory->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/gzip?repeat=64'));
+            } finally {
+                $printed = (string) \ob_get_clean();
+            }
+
+            $this->assertSame('', $printed);
+            $this->assertSame(64 * 7, \strlen((string) $response->getBody()));
+
+            try {
+                $client->sendRequest($factory->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/gzip?repeat=40000'));
+                $this->fail('A decoded body past the maximum file size was accepted.');
+            } catch (NetworkException $networkException) {
+                $this->assertSame(\CURLE_FILESIZE_EXCEEDED, $networkException->getCode());
+            }
+        });
+    }
+
     public function testAnEnvironmentProxyCannotCarryARequestPastTheDestination(): void
     {
         // An allowed proxy in front of a disallowed target: checking the proxy's address alone would pass

@@ -1,0 +1,419 @@
+---
+layout: article
+title: Encoding profiles
+description: Learn how Appwrite Videos encoding profiles set the resolution, bitrate, and codec of each rendition, and how profile changes apply.
+---
+
+An **encoding profile** is a reusable encoding target. It sets the resolution, video bitrate, audio bitrate, and codec for every [rendition](/docs/products/videos/renditions) encoded from it. Profiles belong to a project and are shared by all its videos.
+
+Together, the profiles you encode a video with form its **bitrate ladder**: a set of renditions from low to high quality that players switch between as bandwidth changes.
+
+# Resolution and bitrate {% #resolution-and-bitrate %}
+
+Two numbers decide how a rendition looks and how much data it needs:
+
+- **Resolution** is the picture size, such as 1280 × 720. Larger pictures show more detail on large screens, but a phone in a pocket-sized player gains little from 4K.
+- **Bitrate** is how much data each second of video uses. More bits mean fewer compression artifacts, but the viewer's connection must keep up. A 5,000 kbps rendition needs a steady connection of about 5 Mbps or more.
+
+A good profile pairs the two: enough bitrate for its resolution to look clean, and no more. Fast motion, like sports or games, needs more bitrate than a talking head at the same resolution.
+
+# Start with no profiles {% #start-with-no-profiles %}
+
+New projects have no profiles. Create the ones you need before you encode your first video. The [presets](#presets) are a good starting point.
+
+# What a profile contains {% #what-a-profile-contains %}
+
+| Field | Description |
+|-------|-------------|
+| `name` | Label shown in the Console, up to 128 characters, for example `720p` |
+| `width`, `height` | Target picture size in pixels |
+| `videoBitRate` | Target video bitrate in **kilobits per second** |
+| `audioBitRate` | Target audio bitrate in **kilobits per second** |
+| `codec` | Video codec. Defaults to `h264` (H.264), the only codec available today. `GET /v1/videos/codecs` lists the codecs you can use |
+
+Width and height can be from 16 to 4,320 pixels. Video bitrate can be from 32 to 20,000 kbps, and audio bitrate from 32 to 512 kbps. Two profiles cannot share the same width, height, bitrates, and codec. A duplicate returns the `video_profile_already_exists` error.
+
+# Presets {% #presets %}
+
+When you create profiles in the Console, you can pick one or more presets at once, or enter your own values under **Custom profile**:
+
+| Preset | Resolution | Video bitrate | Audio bitrate |
+|--------|------------|---------------|---------------|
+| 360p | 640 × 360 | 800 kbps | 96 kbps |
+| 480p | 854 × 480 | 1,400 kbps | 128 kbps |
+| 720p | 1280 × 720 | 2,800 kbps | 128 kbps |
+| 1080p | 1920 × 1080 | 5,000 kbps | 192 kbps |
+| 1440p | 2560 × 1440 | 8,000 kbps | 192 kbps |
+| 2160p | 3840 × 2160 | 16,000 kbps | 192 kbps |
+
+# Create a profile {% #create-a-profile %}
+
+1. Open **Videos** in your project and select **Encoding profiles**.
+2. Click **Create profile**.
+3. Select one or more presets. Presets you already have are marked **Exists**. To enter your own values instead, click **Custom profile** and fill in **Name**, **Width**, **Height**, **Video bitrate**, and **Audio bitrate**.
+4. Click **Create**.
+
+New profiles show up in the **Profiles** list when you create a video or add renditions. Profile names are labels only, so name them by purpose if that helps your team, for example `720p-mobile`.
+
+{% only_dark %}
+![Encoding profiles tab listing the 360p, 720p, and 1080p profiles with their codec, resolution, and bitrates](/images/docs/videos/dark/profiles.avif)
+{% /only_dark %}
+{% only_light %}
+![Encoding profiles tab listing the 360p, 720p, and 1080p profiles with their codec, resolution, and bitrates](/images/docs/videos/profiles.avif)
+{% /only_light %}
+
+With a server SDK, create profiles from the `project` service:
+
+{% info title="Required scope" %}
+The API key used for these calls needs the `project.videos.profiles.write` scope. Listing and reading profiles needs `project.videos.profiles.read`.
+{% /info %}
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const project = new sdk.Project(client);
+
+const profile = await project.createVideoProfile({
+    name: '720p',
+    videoBitRate: 2800,
+    audioBitRate: 128,
+    width: 1280,
+    height: 720,
+    codec: sdk.VideoCodec.H264 // optional
+});
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.project import Project
+from appwrite.enums.video_codec import VideoCodec
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+project = Project(client)
+
+profile = project.create_video_profile(
+    name = '720p',
+    video_bit_rate = 2800,
+    audio_bit_rate = 128,
+    width = 1280,
+    height = 720,
+    codec = VideoCodec.H264 # optional
+)
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart' as enums;
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+Project project = Project(client);
+
+final profile = await project.createVideoProfile(
+    name: '720p',
+    videoBitRate: 2800,
+    audioBitRate: 128,
+    width: 1280,
+    height: 720,
+    codec: enums.VideoCodec.h264, // (optional)
+);
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Project;
+use Appwrite\Enums\VideoCodec;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<API_KEY>');
+
+$project = new Project($client);
+
+$profile = $project->createVideoProfile(
+    name: '720p',
+    videoBitRate: 2800,
+    audioBitRate: 128,
+    width: 1280,
+    height: 720,
+    codec: VideoCodec::H264() // optional
+);
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+include Appwrite::Enums
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<API_KEY>')
+
+project = Project.new(client)
+
+profile = project.create_video_profile(
+    name: '720p',
+    video_bit_rate: 2800,
+    audio_bit_rate: 128,
+    width: 1280,
+    height: 720,
+    codec: VideoCodec::H264 # optional
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Enums;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<API_KEY>");
+
+Project project = new Project(client);
+
+VideoProfile profile = await project.CreateVideoProfile(
+    name: "720p",
+    videoBitRate: 2800,
+    audioBitRate: 128,
+    width: 1280,
+    height: 720,
+    codec: VideoCodec.H264 // optional
+);
+```
+
+```server-deno
+import { Client, Project, VideoCodec } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const project = new Project(client);
+
+const profile = await project.createVideoProfile({
+    name: '720p',
+    videoBitRate: 2800,
+    audioBitRate: 128,
+    width: 1280,
+    height: 720,
+    codec: VideoCodec.H264 // optional
+});
+```
+
+```server-go
+package main
+
+import (
+	"fmt"
+
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/project"
+)
+
+func main() {
+	client := appwrite.NewClient(
+		appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+		appwrite.WithProject("<PROJECT_ID>"),
+		appwrite.WithKey("<API_KEY>"),
+	)
+
+	service := project.New(client)
+
+	profile, err := service.CreateVideoProfile(
+		"720p",
+		2800,
+		128,
+		1280,
+		720,
+		service.WithCreateVideoProfileCodec("h264"),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(profile)
+}
+```
+
+```server-swift
+import Appwrite
+import AppwriteEnums
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+let project = Project(client)
+
+let profile = try await project.createVideoProfile(
+    name: "720p",
+    videoBitRate: 2800,
+    audioBitRate: 128,
+    width: 1280,
+    height: 720,
+    codec: .h264 // optional
+)
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.enums.VideoCodec
+import io.appwrite.services.Project
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+val project = Project(client)
+
+val profile = project.createVideoProfile(
+    name = "720p",
+    videoBitRate = 2800,
+    audioBitRate = 128,
+    width = 1280,
+    height = 720,
+    codec = VideoCodec.H264 // optional
+)
+```
+
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.exceptions.AppwriteException;
+import io.appwrite.enums.VideoCodec;
+import io.appwrite.services.Project;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>");
+
+Project project = new Project(client);
+
+try {
+    project.createVideoProfile(
+        "720p", // name
+        2800L, // videoBitRate
+        128L, // audioBitRate
+        1280L, // width
+        720L, // height
+        VideoCodec.H264, // codec (optional)
+        new CoroutineCallback<>((result, error) -> {
+            if (error != null) {
+                error.printStackTrace();
+                return;
+            }
+
+            System.out.println(result);
+        })
+    );
+} catch (AppwriteException e) {
+    e.printStackTrace();
+}
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::enums::VideoCodec;
+use appwrite::services::Project;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let project = Project::new(&client);
+
+    let profile = project.create_video_profile(
+        "720p",
+        2800,
+        128,
+        1280,
+        720,
+        Some(VideoCodec::H264) // codec
+    ).await?;
+
+    println!("{:?}", profile);
+
+    Ok(())
+}
+```
+
+```http
+POST /v1/project/videos/profiles HTTP/1.1
+Content-Type: application/json
+X-Appwrite-Project: <PROJECT_ID>
+X-Appwrite-Key: <API_KEY>
+
+{
+  "name": "720p",
+  "videoBitRate": 2800,
+  "audioBitRate": 128,
+  "width": 1280,
+  "height": 720
+}
+```
+{% /multicode %}
+
+List profiles with `project.listVideoProfiles()`. Results are sorted from the lowest resolution to the highest, and you can search them by name with `Query.search('search', '720p')`.
+
+# Design a ladder {% #design-a-ladder %}
+
+You do not need many profiles. Three to five usually cover every viewer, from a weak mobile connection to a fast desktop one. Each extra rendition adds encoding time and storage.
+
+| Use case | Suggested profiles |
+|----------|--------------------|
+| Short social clips, mostly on phones | 360p, 480p, 720p |
+| General web and app video | 360p, 480p, 720p, 1080p |
+| High-detail content on large screens | 480p, 720p, 1080p, 1440p, 2160p |
+| Audio-only, such as podcasts | One profile. Only its audio bitrate matters |
+
+When you build your own ladder:
+
+- **Start low enough.** The lowest rendition is what viewers on a poor connection get. Without one around 360p, they buffer instead of playing.
+- **Space the rungs out.** Each step should roughly double the bitrate of the one below. Rungs that are too close waste encoding time, since players gain little by switching between them.
+- **Stop at the source.** A rung above the source resolution only upscales. See [Upscaling](#upscaling).
+- **Keep audio steady.** Viewers notice audio quality changing more than picture quality. Use the same audio bitrate across most rungs, as the presets do.
+
+# Upscaling {% #upscaling %}
+
+A profile that is larger than the source picture **upscales** it. Upscaling adds size and encoding time without adding detail. The Console marks these profiles as **Upscale** and leaves them out of the default selection when you create renditions.
+
+The check compares short edge with short edge and long edge with long edge, so it works the same for landscape and portrait video. A 1080 × 1920 portrait clip does not upscale with the `1080p` profile (1920 × 1080), because both edges match.
+
+When you create a video, the Console reads the picture size from the file in your browser. When you add renditions later, it uses the size probed from the source. If the size is unknown, for example because your browser cannot decode the file, no profile is marked.
+
+You can still encode an upscaling profile, for example to keep every video on the same ladder. It just costs more without looking better.
+
+# Changes and deletion {% #changes-and-deletion %}
+
+Profiles are configuration, not media:
+
+- **Updating** a profile does not re-encode renditions that already exist. To apply the change, delete those renditions and create them again. An update replaces every field except the codec, so pass the name, size, and bitrates each time. To change the codec, create a new profile.
+- **Deleting** a profile keeps the renditions that were already encoded with it. Each rendition keeps its own copy of the profile's size and bitrates.

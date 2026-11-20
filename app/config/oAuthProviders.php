@@ -87,6 +87,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Autodesk',
     ],
+    'bird' => [
+        'name' => 'Bird',
+        'developers' => 'https://bird.com/auth.md',
+        'icon' => 'icon-bird',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Bird',
+    ],
     'bitbucket' => [
         'name' => 'BitBucket',
         'developers' => 'https://developer.atlassian.com/bitbucket',
