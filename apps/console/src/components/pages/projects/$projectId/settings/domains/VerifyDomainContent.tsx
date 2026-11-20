@@ -888,7 +888,8 @@ export function VerifyDomainContent({
       ? checks.find(
           (check) =>
             (check.type === 'A' || check.type === 'AAAA') &&
-            check.status === 'mismatch',
+            check.status === 'mismatch' &&
+            check.current.length > 0,
         )
       : undefined
 
