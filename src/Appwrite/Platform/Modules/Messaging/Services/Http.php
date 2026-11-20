@@ -16,6 +16,10 @@ use Appwrite\Platform\Modules\Messaging\Http\Providers\Apns\Create as CreateApns
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Apns\Update as UpdateApnsProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Appwrite\Create as CreateAppwriteProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Appwrite\Update as UpdateAppwriteProvider;
+use Appwrite\Platform\Modules\Messaging\Http\Providers\Bird\Email\Create as CreateBirdEmailProvider;
+use Appwrite\Platform\Modules\Messaging\Http\Providers\Bird\Email\Update as UpdateBirdEmailProvider;
+use Appwrite\Platform\Modules\Messaging\Http\Providers\Bird\Sms\Create as CreateBirdSMSProvider;
+use Appwrite\Platform\Modules\Messaging\Http\Providers\Bird\Sms\Update as UpdateBirdSMSProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Delete as DeleteProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Fcm\Create as CreateFcmProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Fcm\Update as UpdateFcmProvider;
@@ -69,6 +73,8 @@ class Http extends Service
         $this->addAction('updateResendProvider', UpdateResendProvider::class);
         $this->addAction('createSmtpProvider', CreateSmtpProvider::class);
         $this->addAction('updateSmtpProvider', UpdateSmtpProvider::class);
+        $this->addAction('createBirdEmailProvider', CreateBirdEmailProvider::class);
+        $this->addAction('updateBirdEmailProvider', UpdateBirdEmailProvider::class);
         $this->addAction('createMsg91Provider', CreateMsg91Provider::class);
         $this->addAction('updateMsg91Provider', UpdateMsg91Provider::class);
         $this->addAction('createTelesignProvider', CreateTelesignProvider::class);
@@ -79,6 +85,8 @@ class Http extends Service
         $this->addAction('updateTwilioProvider', UpdateTwilioProvider::class);
         $this->addAction('createVonageProvider', CreateVonageProvider::class);
         $this->addAction('updateVonageProvider', UpdateVonageProvider::class);
+        $this->addAction('createBirdSMSProvider', CreateBirdSMSProvider::class);
+        $this->addAction('updateBirdSMSProvider', UpdateBirdSMSProvider::class);
         $this->addAction('createFcmProvider', CreateFcmProvider::class);
         $this->addAction('updateFcmProvider', UpdateFcmProvider::class);
         $this->addAction('createApnsProvider', CreateApnsProvider::class);
