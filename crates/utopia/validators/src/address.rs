@@ -268,10 +268,12 @@ impl Validator for Url {
     /// `Value must be a valid URL`, followed by the scheme, fragment and transport limits that apply.
     fn description(&self) -> String {
         let schemes = (!self.allowed_schemes.is_empty()).then(|| self.allowed_schemes.join(", "));
-        let description = network::url_description(
+        let mut description = Vec::new();
+        network::url_description(
             schemes.as_deref().map(str::as_bytes),
             self.allow_fragments,
             self.https_or_loopback,
+            &mut description,
         );
         String::from_utf8_lossy(&description).into_owned()
     }

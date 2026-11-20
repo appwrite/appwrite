@@ -84,7 +84,9 @@ impl Host {
 impl Validator for Host {
     /// Lists the allowed hosts: `URL host must be one of: a, b`.
     fn description(&self) -> String {
-        String::from_utf8_lossy(&network::host_description(self.whitelist.join(", ").as_bytes())).into_owned()
+        let mut description = Vec::new();
+        network::host_description(self.whitelist.join(", ").as_bytes(), &mut description);
+        String::from_utf8_lossy(&description).into_owned()
     }
 
     is_valid_via_validate!();
@@ -125,7 +127,7 @@ impl Validator for Label {
     /// `Value must be 1 to 63 lowercase letters, digits and hyphens, and must
     /// not start or end with a hyphen.`
     fn description(&self) -> String {
-        String::from_utf8_lossy(&text::label_description()).into_owned()
+        text::LABEL_DESCRIPTION.to_owned()
     }
 
     is_valid_via_validate!();

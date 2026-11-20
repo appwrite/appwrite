@@ -82,7 +82,9 @@ impl Validator for WhiteList {
     fn description(&self) -> String {
         let items: Vec<Vec<u8>> =
             self.list.iter().map(|v| Input::Value(v).to_bytes().map(Cow::into_owned).unwrap_or_default()).collect();
-        String::from_utf8_lossy(&text::white_list_description(&items.join(&b", "[..]))).into_owned()
+        let mut description = Vec::new();
+        text::white_list_description(&items.join(&b", "[..]), &mut description);
+        String::from_utf8_lossy(&description).into_owned()
     }
 
     /// The description, or [`Error::Engine`] for a strict list holding an object, which cannot be described.
@@ -144,7 +146,9 @@ impl<V: Validator> ArrayList<V> {
         let item = (!inner.is_empty() && inner != "0").then_some(inner.as_bytes());
         let length = i64::try_from(self.length).unwrap_or(i64::MAX);
         // Built from UTF-8 strings only.
-        String::from_utf8_lossy(&compose::array_list_description(length, item)).into_owned()
+        let mut description = Vec::new();
+        compose::array_list_description(length, item, &mut description);
+        String::from_utf8_lossy(&description).into_owned()
     }
 
     /// The verdict after the inner validator's: the description wraps the inner one.

@@ -41,3 +41,9 @@ for package in user-agent domains emails validators; do
     echo "== $package (no PHP)" >&2
     vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php "packages/$package/tests"
 done
+
+# Locale has no package to test, so its corpus is checked against the output pinned from the PHP
+# class it replaced (utopia-php/locale).
+echo "== locale (pinned PHP output)" >&2
+php -d precision=-1 "$tests/locale.php" > "$output/locale.jsonl"
+diff "$tests/locale.expected.jsonl" "$output/locale.jsonl"

@@ -64,7 +64,10 @@ fn php_length(length: usize) -> i64 {
 }
 
 /// A description built from UTF-8 strings.
-fn utf8(description: Vec<u8>) -> String {
+/// A description written by `describe`.
+fn utf8(describe: impl FnOnce(&mut Vec<u8>)) -> String {
+    let mut description = Vec::new();
+    describe(&mut description);
     String::from_utf8_lossy(&description).into_owned()
 }
 
@@ -83,7 +86,7 @@ pub struct Array {
 impl Validator for Array {
     /// `Value must be a valid JSON array`, followed by the length limit when there is one.
     fn description(&self) -> String {
-        utf8(json_array_description(php_length(self.length)))
+        utf8(|out| json_array_description(php_length(self.length), out))
     }
 
     is_valid_via_validate!();
@@ -126,7 +129,7 @@ pub struct Object {
 impl Validator for Object {
     /// `Value must be a valid JSON object`, followed by the length limit when there is one.
     fn description(&self) -> String {
-        utf8(json_object_description(php_length(self.length)))
+        utf8(|out| json_object_description(php_length(self.length), out))
     }
 
     is_valid_via_validate!();

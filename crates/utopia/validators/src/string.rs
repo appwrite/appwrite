@@ -101,11 +101,13 @@ impl Validator for Text {
     /// `Value must be a valid string`, followed by the length, character and blank limits that apply.
     fn description(&self) -> String {
         let allow_list = (!self.allow_list.is_empty()).then(|| self.allow_list.join(", "));
-        let description = text::text_description(
+        let mut description = Vec::new();
+        text::text_description(
             php_int(self.length),
             php_int(self.min),
             allow_list.as_deref().map(str::as_bytes),
             self.require_non_blank,
+            &mut description,
         );
         String::from_utf8_lossy(&description).into_owned()
     }
@@ -144,7 +146,9 @@ impl Validator for Identifier {
     /// `Value must contain only letters, digits and underscores and must not start
     /// with a digit`, with the length limit when there is one.
     fn description(&self) -> String {
-        String::from_utf8_lossy(&text::identifier_description(php_int(self.length))).into_owned()
+        let mut description = Vec::new();
+        text::identifier_description(php_int(self.length), &mut description);
+        String::from_utf8_lossy(&description).into_owned()
     }
 
     is_valid_via_validate!();
@@ -199,8 +203,9 @@ impl Contains {
 impl Validator for Contains {
     /// Lists the patterns and the case rule: `Value must contain one of (a, b) (case-insensitive)`.
     fn description(&self) -> String {
-        String::from_utf8_lossy(&text::contains_description(self.patterns.join(", ").as_bytes(), self.strict))
-            .into_owned()
+        let mut description = Vec::new();
+        text::contains_description(self.patterns.join(", ").as_bytes(), self.strict, &mut description);
+        String::from_utf8_lossy(&description).into_owned()
     }
 
     is_valid_via_validate!();

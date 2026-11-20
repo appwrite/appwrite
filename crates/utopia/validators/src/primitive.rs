@@ -129,7 +129,9 @@ impl Validator for Integer {
     /// The range of the configured size and sign, such as `Value must be a valid
     /// signed 32-bit integer between -2,147,483,648 and 2,147,483,647`.
     fn description(&self) -> String {
-        String::from_utf8_lossy(&self.check().description()).into_owned()
+        let mut description = Vec::new();
+        self.check().description(&mut description);
+        String::from_utf8_lossy(&description).into_owned()
     }
 
     is_valid_via_validate!();
@@ -254,7 +256,9 @@ impl Range {
 impl Validator for Range {
     /// The bounds, with commas between thousands: `Value must be a valid range between 1 and 1,000`.
     fn description(&self) -> String {
-        String::from_utf8_lossy(&scalar::range_description(self.min, self.max)).into_owned()
+        let mut description = Vec::new();
+        scalar::range_description(self.min, self.max, &mut description);
+        String::from_utf8_lossy(&description).into_owned()
     }
 
     is_valid_via_validate!();
