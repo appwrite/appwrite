@@ -236,7 +236,11 @@ function RecordStatus({
     case 'missing':
       if (record.conflict) {
         return (
-          <Badge variant="error" className={pill}>
+          <Badge
+            variant="error"
+            className={pill}
+            title={record.conflict.message || undefined}
+          >
             {t('Wrong type')}
           </Badge>
         )
