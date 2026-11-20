@@ -880,6 +880,15 @@ export function VerifyDomainContent({
   const records = (rule as Models.ProxyRule & { records?: ProxyRuleRecord[] })
     .records
   const checks = records?.length ? records : null
+  const conflict = checks?.some(
+    (check) => check.type === 'CNAME' && check.status === 'missing',
+  )
+    ? checks.find(
+        (check) =>
+          (check.type === 'A' || check.type === 'AAAA') &&
+          check.status === 'mismatch',
+      )
+    : undefined
 
   const isCloud = useMemo(() => isCloudEndpoint(), [])
 
@@ -959,8 +968,13 @@ export function VerifyDomainContent({
   // The record each method asks for, with the status of its last check.
   const getPointingRecord = (method: VerificationMethod): DnsRecord | null => {
     switch (method) {
-      case 'cname':
-        return cname ? getRecord('CNAME', verifiedCname ?? cname) : null
+      case 'cname': {
+        if (!cname) return null
+        const record = getRecord('CNAME', verifiedCname ?? cname)
+        return record.check?.status === 'missing' && conflict
+          ? { ...record, conflict }
+          : record
+      }
       case 'alias':
         return cname
           ? {
