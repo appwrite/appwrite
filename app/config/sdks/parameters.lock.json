@@ -2420,7 +2420,7 @@
             "replyToEmail",
             "enabled"
         ],
-        "messaging.createBirdProvider": [
+        "messaging.createBirdSMSProvider": [
             "providerId",
             "name",
             "from",
@@ -2714,7 +2714,7 @@
             "replyToName",
             "replyToEmail"
         ],
-        "messaging.updateBirdProvider": [
+        "messaging.updateBirdSMSProvider": [
             "providerId",
             "name",
             "enabled",
@@ -6966,7 +6966,7 @@
             "replyToEmail",
             "enabled"
         ],
-        "messaging.createBirdProvider": [
+        "messaging.createBirdSMSProvider": [
             "providerId",
             "name",
             "from",
@@ -7260,7 +7260,7 @@
             "replyToName",
             "replyToEmail"
         ],
-        "messaging.updateBirdProvider": [
+        "messaging.updateBirdSMSProvider": [
             "providerId",
             "name",
             "enabled",

@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Messaging\Http\Providers\Bird;
+namespace Appwrite\Platform\Modules\Messaging\Http\Providers\Bird\Sms;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -25,15 +25,15 @@ class Create extends Action
 
     public static function getName(): string
     {
-        return 'createBirdProvider';
+        return 'createBirdSMSProvider';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
-            ->setHttpPath('/v1/messaging/providers/bird')
-            ->desc('Create Bird provider')
+            ->setHttpPath('/v1/messaging/providers/bird-sms')
+            ->desc('Create Bird SMS provider')
             ->groups(['api', 'messaging'])
             ->label('audits.event', 'provider.create')
             ->label('audits.resource', 'provider/{response.$id}')
@@ -43,9 +43,9 @@ class Create extends Action
             ->label('sdk', new Method(
                 namespace: 'messaging',
                 group: 'providers',
-                name: 'createBirdProvider',
+                name: 'createBirdSMSProvider',
                 description: <<<EOT
-                Create a new Bird provider. It sends SMS through Bird with a workspace API key that holds the `sms:write` scope.
+                Create a new Bird SMS provider. It sends SMS through Bird with a workspace API key that holds the `sms:write` scope.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
