@@ -531,6 +531,7 @@ function getDnsBanners(
   rule: Models.ProxyRule,
   pointing: ProxyRuleRecord[],
   caa: ProxyRuleRecord | undefined,
+  conflict: ProxyRuleRecord | undefined,
 ): DnsBanner[] {
   const verified = pointing.find((check) => check.status === 'verified')
   const banners: DnsBanner[] = []
@@ -541,6 +542,17 @@ function getDnsBanners(
       text: t(
         'A CAA record on your domain blocks the certificate. Add the CAA record below next to it (recommended), or delete your existing CAA records.',
       ),
+    })
+  }
+  if (!verified && conflict) {
+    banners.push({
+      tone: 'error',
+      prefix: t('{type} record').replace('{type}', conflict.type),
+      text: t(
+        'Your domain has an {type} record ({found}) instead of a CNAME, often a URL redirect or parking record at your DNS provider. Delete it, then add the CNAME below.',
+      )
+        .replace('{type}', conflict.type)
+        .replace('{found}', conflict.current[0] ?? ''),
     })
   }
   if (!verified) {
@@ -1146,7 +1158,9 @@ export function VerifyDomainContent({
     ),
   ]
   const offersNameservers = tabOptions.some((tab) => tab.id === 'nameservers')
-  const banners = checks ? getDnsBanners(t, rule, pointingChecks, caaCheck) : []
+  const banners = checks
+    ? getDnsBanners(t, rule, pointingChecks, caaCheck, conflict)
+    : []
   // The banners above the records already say what to do next, so they
   // replace the generic "wait and try again" alert. The rule updates live, so
   // that alert also goes once its DNS has passed.
