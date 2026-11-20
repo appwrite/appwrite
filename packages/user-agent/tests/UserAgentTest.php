@@ -220,8 +220,11 @@ final class UserAgentTest extends TestCase
         $agent = UserAgent::parse('Mozilla/5.0 (X11; Linux x86_64) Firefox/120.0');
         $agent->toArray();
 
-        $this->assertFalse(isset($agent->value)); // @phpstan-ignore property.notFound
-        $this->assertFalse(isset($agent->client)); // @phpstan-ignore property.notFound
+        // Private from outside the class, even once set: `isset()` is false, as it is on the PHP class.
+        foreach (['value', 'client'] as $property) {
+            $this->assertFalse(isset($agent->{$property}), $property); // @phpstan-ignore property.notFound, property.notFound
+        }
+
         $this->assertSame([], get_object_vars($agent));
     }
 
