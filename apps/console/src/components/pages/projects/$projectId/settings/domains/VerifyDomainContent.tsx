@@ -1100,13 +1100,12 @@ export function VerifyDomainContent({
   ]
   const offersNameservers = tabOptions.some((tab) => tab.id === 'nameservers')
   const banners = checks ? getDnsBanners(t, rule, pointingChecks, caaCheck) : []
-  // A banner that names the wrong record replaces the generic "wait and try
-  // again" alert, and "DNS is set up" already says the certificate is next.
-  // The rule updates live, so that alert also goes once its DNS has passed.
-  const wrongRecord = banners.some((banner) => banner.tone === 'error')
+  // The banners above the records already say what to do next, so they
+  // replace the generic "wait and try again" alert. The rule updates live, so
+  // that alert also goes once its DNS has passed.
   const dnsSetUp = banners.some((banner) => banner.dnsSetUp)
   const shownError =
-    (wrongRecord || dnsSetUp || !isDnsUnverified(rule)) &&
+    (banners.length > 0 || !isDnsUnverified(rule)) &&
     typeof verificationError === 'object' &&
     verificationError?.pending
       ? null
