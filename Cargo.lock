@@ -2623,6 +2623,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "utopia-query"
+version = "0.1.0"
+dependencies = [
+ "md-5",
+ "php-std",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "utopia-user-agent"
 version = "0.1.0"
 dependencies = [
