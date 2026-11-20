@@ -75,7 +75,7 @@ GPT-6.2 Sol's results are about getting close to Astra for much less:
 * **LifeVal:** Sol outscores **GPT-6 Astra** at about **one-seventh of the cost**. LifeVal tests everyday tasks tailored to someone's needs, such as finding a home that fits a family's budget and commute.
 * **GDPval v2:** Sol improves **5.3 points** over GPT-6.1 Sol.
 
-For most coding agents, that FrontierCode result is the one to watch. A model that writes mergeable code at a fifth of the flagship's cost is a strong default for long agent loops.
+For most coding agents, the FrontierCode result is worth watching. On FrontierCode 2.0, Sol comes close to Astra's coding performance at roughly one-fifth of its cost, making it a promising option for long-running coding agents.
 
 # Professional outputs, computer use, and code
 
@@ -91,7 +91,7 @@ Beyond benchmarks, OpenAI highlights a few practical changes in GPT-6.2 Astra:
 
 **Both GPT-6.2 Astra and Sol meet the Critical threshold for cybersecurity under OpenAI's Preparedness Framework, like GPT-6 Astra.** They find and exploit vulnerabilities more effectively, but they also write more secure code and produce better patches. OpenAI made defensive capabilities a core focus, with new training signals to help developers prevent and repair flaws like those uncovered by [PHP2Shell](/blog/post/php2shell-appwrite-not-affected).
 
-Because of those capabilities, both models launch with tighter safeguards for higher-risk cybersecurity assistance. OpenAI notes that these protections also restrict some legitimate vulnerability research and security testing workflows. Defenders can use earlier GPT-6 models with reduced cyber refusals through [OpenAI Daybreak](https://openai.com/daybreak/), and OpenAI says it will work to bring GPT-6.2 models there.
+Because of those capabilities, both models launch with tighter safeguards for higher-risk cybersecurity assistance. OpenAI notes that these protections also restrict some legitimate vulnerability research and security testing workflows. OpenAI Daybreak offers GPT-6 Sol with reduced cybersecurity refusals through Daybreak Blue, alongside GPT-6 Astra in alpha and GPT-6 Cyber for advanced authorized security testing through Daybreak Red. OpenAI plans to bring GPT-6.2 models to [Daybreak](https://openai.com/daybreak/).
 
 Other safety points from the announcement and the [GPT-6.2 system card](https://deploymentsafety.openai.com/gpt-6-2-astra-sol):
 
@@ -117,7 +117,7 @@ This is the first time Pro 200 subscribers get Ultrafast, starting with GPT-6.2 
 
 # Should you use GPT-6.2 Astra or GPT-6.2 Sol?
 
-**Use GPT-6.2 Sol as the default for coding agents and everyday work, and switch to GPT-6.2 Astra when the task needs the best possible result.** Sol lands within half a point of Astra on FrontierCode 2.0 at about a fifth of the cost, so defaulting everything to Astra is hard to justify.
+**GPT-6.2 Sol is a strong starting point for coding agents and everyday workloads, while Astra is better suited to especially demanding tasks.** On FrontierCode 2.0, Sol comes within 0.5 points of Astra at about one-fifth of the benchmark cost.
 
 * **Choose GPT-6.2 Astra** for scientific work, complex professional deliverables like legal work, financial models, and slide decks built from templates, and precise computer use in CAD and simulation tools.
 * **Choose GPT-6.2 Sol** for coding agents, multistep agentic workflows, writing, and high-volume tasks where cost matters.
@@ -132,7 +132,7 @@ Cheaper Astra tokens and an efficient Sol make it more realistic to run agents i
 
 [Appwrite](/) is an open source backend that covers all of it in one project: [Auth](/docs/products/auth), [Databases](/docs/products/databases), [Storage](/docs/products/storage), [Functions](/docs/products/functions), [Messaging](/docs/products/messaging), and [Sites](/docs/products/sites) for deploying the frontend next to them. Run it on managed Cloud or self-host it. To call GPT-6.2 Sol or Astra from server-side code, see [AI in Appwrite Functions](/docs/tooling/ai/ai-in-functions).
 
-If you build with Codex, the [Appwrite plugin for Codex](/blog/post/appwrite-codex-plugin-hosted-mcp) bundles the hosted [Appwrite MCP server](/docs/tooling/ai/mcp-servers) and [Appwrite Skills](/docs/tooling/ai/skills). Install it, sign in with OAuth, and your GPT-6.2 agent writes real SDK calls against a backend that already exists instead of guessing at one.
+If you build with Codex, the [Appwrite plugin for Codex](/blog/post/appwrite-codex-plugin-hosted-mcp) bundles the hosted [Appwrite MCP server](/docs/tooling/ai/mcp-servers) and [Appwrite Skills](/docs/tooling/ai/skills). Install the plugin, sign in with OAuth, and give Codex access to your Appwrite project, APIs, and SDK guidance to build against your existing backend.
 
 [Create a free Appwrite project](https://cloud.appwrite.io/), install the plugin, and ask Codex running GPT-6.2 Sol to build an authentication flow and database schema against it.
 
