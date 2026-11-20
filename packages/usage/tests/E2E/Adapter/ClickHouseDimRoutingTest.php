@@ -184,7 +184,8 @@ class ClickHouseDimRoutingTest extends ClickHouseTestCase
         $this->assertSame(7, $totals['billing.compute']['function']);
         $this->assertSame(100, $totals[$this->metric]['']);
         $this->assertCount(3, $totals);
-        $this->assertProjectionUsed($queryId, 'p_by_resourceType_teamInternalId');
+        // An upgraded table keeps p_by_resourceType, which serves this read too.
+        $this->assertAnyProjectionUsed($queryId);
     }
 
     public function testBillingWindowScopedToATeamStillRoutesAndCountsOnlyThatTeam(): void
@@ -239,13 +240,17 @@ class ClickHouseDimRoutingTest extends ClickHouseTestCase
         $this->assertProjectionUsed($queryId, 'p_by_resourceType_teamInternalId');
     }
 
-    public function testMaterializingResourceTypeProjectionPreservesExistingTotals(): void
+    public function testMaterializingTeamProjectionPreservesExistingTotals(): void
     {
         $events = $this->resolveTableName($this->adapter, 'getEventsTableName');
         $database = $this->databaseName($this->adapter);
+        $this->seedHistoricalRow('billing.events', 10, '-5 days', ['resourceType' => 'bucket', 'teamInternalId' => '7']);
+        $this->seedHistoricalRow('billing.events', 500, '-5 days', ['resourceType' => 'bucket', 'teamInternalId' => '8']);
         $this->queryRaw($this->adapter, "ALTER TABLE `{$database}`.`{$events}` DROP PROJECTION p_by_resourceType_teamInternalId");
         $this->usage->setup(); // Attaches the definition, but not historical parts.
+        // Scoped to a team, so a p_by_resourceType kept by an upgraded table cannot serve it.
         $queries = [
+            Query::equal('teamInternalId', ['7']),
             Query::greaterThanEqual('time', $this->hourAligned('-7 days')),
             Query::lessThan('time', $this->hourAligned('-2 days')),
             UsageQuery::groupBy('resourceType'),
@@ -253,14 +258,14 @@ class ClickHouseDimRoutingTest extends ClickHouseTestCase
         $beforeId = bin2hex(random_bytes(8));
         $this->adapter->setNextQueryId($beforeId);
         $before = $this->usage->find('1', $queries, Usage::TYPE_EVENT);
-        $this->assertSame(100, $this->totalOf($before));
+        $this->assertSame(10, $this->totalOf($before));
         $this->assertNoProjectionUsed($beforeId);
 
         $this->queryRaw($this->adapter, "ALTER TABLE `{$database}`.`{$events}` MATERIALIZE PROJECTION p_by_resourceType_teamInternalId SETTINGS mutations_sync = 2");
         $afterId = bin2hex(random_bytes(8));
         $this->adapter->setNextQueryId($afterId);
         $after = $this->usage->find('1', $queries, Usage::TYPE_EVENT);
-        $this->assertSame(100, $this->totalOf($after));
+        $this->assertSame(10, $this->totalOf($after));
         $this->assertProjectionUsed($afterId, 'p_by_resourceType_teamInternalId');
     }
 
