@@ -827,6 +827,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Screens: '画面',
   'Most viewed screens': '最も閲覧された画面',
   'Where visitors are browsing from': '訪問者の閲覧地域',
+  'Where your users are': 'ユーザーの所在地',
   'What visitors are browsing with': '訪問者の利用環境',
   'What your users are on': 'ユーザーの利用環境',
   'Active users': 'アクティブユーザー',

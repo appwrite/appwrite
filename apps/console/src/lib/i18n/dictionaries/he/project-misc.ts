@@ -1183,6 +1183,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Screens: 'מסכים',
   'Most viewed screens': 'המסכים הנצפים ביותר',
   'Where visitors are browsing from': 'מהיכן המבקרים גולשים',
+  'Where your users are': 'איפה המשתמשים שלך נמצאים',
   'What visitors are browsing with': 'באיזה כלים המבקרים גולשים',
   'What your users are on': 'במה המשתמשים שלך משתמשים',
   'Active users': 'משתמשים פעילים',
