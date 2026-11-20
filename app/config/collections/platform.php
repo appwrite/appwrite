@@ -410,7 +410,7 @@ $platformCollections = [
             Attribute::string(key: 'expected', required: true),
             // Values DNS returned, at most 10
             Attribute::string(key: 'current', array: true, default: []),
-            // 'verified', 'missing', 'mismatch' or 'failed'
+            // 'verified', 'missing', 'mismatch', 'misplaced' or 'failed'
             Attribute::string(key: 'status', size: 16, required: true),
             Attribute::string(key: 'message', size: 1000, default: ''),
             Attribute::boolean(key: 'required', default: false),
