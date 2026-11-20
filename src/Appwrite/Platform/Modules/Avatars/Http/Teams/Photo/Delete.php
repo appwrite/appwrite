@@ -1,12 +1,11 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Teams\Http\Teams\Photo;
+namespace Appwrite\Platform\Modules\Avatars\Http\Teams\Photo;
 
 use Appwrite\Abuse\Limit;
 use Appwrite\AvatarPhotos\Providers\Fallback;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -14,6 +13,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
+use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
 
@@ -29,21 +29,22 @@ class Delete extends Base
     public function __construct()
     {
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_DELETE)
-            ->setHttpPath('/v1/teams/:teamId/photo')
+            ->setHttpMethod(UtopiaAction::HTTP_REQUEST_METHOD_DELETE)
+            ->setHttpPath('/v1/avatars/teams/:teamId/photo')
+            ->httpAlias('/v1/teams/:teamId/photo')
             ->desc('Delete photo')
-            ->groups(['api', 'teams'])
+            ->groups(['api', 'avatars', 'teams'])
             ->label('event', 'teams.[teamId].update')
             ->label('scope', 'teams.write')
             ->label('audits.event', 'team.update')
             ->label('audits.resource', 'team/{request.teamId}')
             ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
-                namespace: 'teams',
-                group: 'teams',
-                name: 'deletePhoto',
+                namespace: 'avatars',
+                group: null,
+                name: 'deleteTeamPhoto',
                 description: <<<'EOT'
-                Delete the photo of a team and store the built-in static placeholder in its place. The placeholder is the team's photo from then on, so it takes priority over the initials of the team name until a new photo is uploaded with teams.updatePhoto.
+                Delete the photo of a team and store the built-in static placeholder in its place. The placeholder is the team's photo from then on, so it takes priority over the initials of the team name until a new photo is uploaded with avatars.updateTeamPhoto.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [

@@ -295,7 +295,7 @@ trait Deployment
                             try {
                                 $comment = new Comment($platform, $vcs->supportsCommentImages());
                                 $comment->parseComment($vcs->getComment($owner, $repositoryName, $latestCommentId));
-                                $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $commentPreviewUrl);
+                                $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $commentPreviewUrl, $providerCommitHash);
 
                                 $latestCommentId = \strval($vcs->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                             } catch (\Throwable $e) {
@@ -306,7 +306,7 @@ trait Deployment
                         }
                     } else {
                         $comment = new Comment($platform, $vcs->supportsCommentImages());
-                        $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $commentPreviewUrl);
+                        $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $commentPreviewUrl, $providerCommitHash);
                         $latestCommentId = \strval($vcs->createComment($owner, $repositoryName, $providerPullRequestId, $comment->generateComment()));
 
                         if (!empty($latestCommentId)) {
@@ -368,7 +368,7 @@ trait Deployment
                             try {
                                 $comment = new Comment($platform, $vcs->supportsCommentImages());
                                 $comment->parseComment($vcs->getComment($owner, $repositoryName, $latestCommentId));
-                                $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
+                                $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '', $providerCommitHash);
 
                                 $latestCommentId = \strval($vcs->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                             } catch (\Throwable $e) {
@@ -659,7 +659,7 @@ trait Deployment
                             if (!empty($previewUrl)) {
                                 $comment = new Comment($platform, $vcs->supportsCommentImages());
                                 $comment->parseComment($vcs->getComment($owner, $repositoryName, $latestCommentId));
-                                $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $previewUrl);
+                                $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $previewUrl, $providerCommitHash);
                                 $vcs->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment());
                             }
                         } catch (\Throwable $e) {

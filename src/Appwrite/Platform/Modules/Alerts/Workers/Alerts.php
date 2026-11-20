@@ -371,6 +371,21 @@ class Alerts extends Action
     }
 
     /**
+     * A push's title, which a locked screen shows first: how urgent a firing alert is, or that it
+     * resolved, then the monitor and where it fired, as `[Warning] Requests spike on Pulse`. A
+     * severity from before severities reads as the console's default, warning; an empty place is
+     * left out.
+     */
+    protected static function pushTitle(Status $status, string $severity, string $rule, string $place): string
+    {
+        $label = $status === Status::Firing
+            ? (Severity::tryFrom($severity) ?? Severity::Warning)->name
+            : 'Resolved';
+
+        return '[' . $label . '] ' . $rule . ($place === '' ? '' : ' on ' . $place);
+    }
+
+    /**
      * Console path of the project's usage pages; the notification links to its alerts and monitors pages.
      */
     protected function path(Document $project): string
@@ -511,7 +526,7 @@ class Alerts extends Action
                 ],
                 // What the member's devices show; the resolved push replaces the firing one by its tag.
                 push: [
-                    'title' => ($status === Status::Firing ? 'Firing: ' : 'Resolved: ') . (string) $monitor->getAttribute('name'),
+                    'title' => static::pushTitle($status, (string) $alert->getAttribute('severity'), (string) $monitor->getAttribute('name'), $projectName),
                     'body' => \implode(' ', \array_filter([$email->summary(), $notice['location']])),
                     'tag' => 'alert:' . $alert->getId(),
                     // The severity the alert opened with, so editing the monitor later

@@ -1,7 +1,6 @@
 import { Fragment, useState, useMemo, type ReactNode } from 'react'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
-import type { ProxyRuleRecord } from '@/lib/appwrite/proxy-rules'
 import { isDnsUnverified, isWaitingForDns } from '@/lib/utils/status-badge'
 import {
   getRecordName,
@@ -73,9 +72,9 @@ const POINTING_METHODS: Record<string, VerificationMethod> = {
  * never the target the developer set.
  */
 function getAliasCheck(
-  checks: ProxyRuleRecord[] | null,
+  checks: Models.ProxyRuleRecord[] | null,
   value: string,
-): ProxyRuleRecord | undefined {
+): Models.ProxyRuleRecord | undefined {
   const addresses =
     checks?.filter((check) => check.type === 'A' || check.type === 'AAAA') ?? []
   const check =
@@ -163,11 +162,11 @@ export type DnsRecord = {
   priority?: number
   badge?: string
   /** What DNS had for this record at the last check. */
-  check?: ProxyRuleRecord
+  check?: Models.ProxyRuleRecord
   /** The record type that already verifies the domain, when this one is an unused alternative. */
   notNeeded?: string
   /** A record of another type that answers the name instead of this missing one, such as a provider's URL redirect. */
-  conflict?: ProxyRuleRecord
+  conflict?: Models.ProxyRuleRecord
 }
 
 /** A section label, outlined so it never reads as a record status. */
@@ -534,9 +533,9 @@ function DnsBannerAlert({ banner }: { banner: DnsBanner }) {
 function getDnsBanners(
   t: (text: string) => string,
   rule: Models.ProxyRule,
-  pointing: ProxyRuleRecord[],
-  caa: ProxyRuleRecord | undefined,
-  conflict: ProxyRuleRecord | undefined,
+  pointing: Models.ProxyRuleRecord[],
+  caa: Models.ProxyRuleRecord | undefined,
+  conflict: Models.ProxyRuleRecord | undefined,
 ): DnsBanner[] {
   const verified = pointing.find((check) => check.status === 'verified')
   const banners: DnsBanner[] = []
@@ -919,8 +918,7 @@ export function VerifyDomainContent({
   } = useConsoleVariables(region)
   // The records the last DNS check saved. Older servers and rules nobody
   // checked have none, and the screen shows only the records to add.
-  const records = (rule as Models.ProxyRule & { records?: ProxyRuleRecord[] })
-    .records
+  const records = rule.records
   const checks = records?.length ? records : null
   // A subdomain points with its CNAME, so an A or AAAA record found where the
   // CNAME is missing answers in its place: a provider's URL redirect or parking

@@ -3970,6 +3970,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '{count} 件の通知を送信 (クールダウンごとに 1 件)',
   'Its alerts stay in the history.': 'アラートは履歴に残ります。',
   'Send alerts to a webhook': 'アラートを Webhook に送信',
+  'Deploy an alert function': 'アラート用の関数をデプロイ',
   Owners: 'オーナー',
   Editors: '編集者',
   Analysts: 'アナリスト',
