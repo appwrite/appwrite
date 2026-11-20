@@ -346,11 +346,14 @@ class Update extends Base
             $live = false;
         }
 
+        // Enforce Cold Start if spec limits or logging change; a runtime is built for its logging mode.
         if (!empty($site->getAttribute('deploymentId'))) {
             $specsChanged = false;
             if ($site->getAttribute('runtimeSpecification', '') !== $runtimeSpecification) {
                 $specsChanged = true;
             } elseif ($site->getAttribute('buildSpecification', '') !== $buildSpecification) {
+                $specsChanged = true;
+            } elseif ($site->getAttribute('logging', true) !== $logging) {
                 $specsChanged = true;
             }
 

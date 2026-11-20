@@ -57,7 +57,7 @@ trait FunctionsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], $params);
+        ], ['logging' => true, ...$params]);
 
         $this->assertEquals(201, $function['headers']['status-code'], 'Setup function failed with status code: ' . $function['headers']['status-code'] . ' and response: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
 
@@ -171,7 +171,7 @@ trait FunctionsBase
         $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), $params);
+        ], $this->getHeaders()), ['logging' => true, ...$params]);
 
         return $function;
     }

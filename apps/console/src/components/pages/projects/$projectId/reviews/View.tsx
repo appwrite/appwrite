@@ -35,6 +35,7 @@ import {
 } from '@/lib/table-filters'
 import { cn } from '@/lib/utils'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
+import { Credits } from './_components/Credits'
 import { Learnings } from './_components/Learnings'
 import { Performance } from './_components/Performance'
 import { Repositories } from './_components/Repositories'
@@ -284,6 +285,9 @@ export function View() {
           !hasToolbar && !firstRun && 'pt-4 sm:pt-6',
         )}
       >
+        {activeTab === 'reviews' && !firstRun && (
+          <Credits projectId={projectId} organizationId={project?.teamId} />
+        )}
         {firstRun ? (
           <ReviewsEmptyState
             onChoose={showRepositories}

@@ -2424,6 +2424,23 @@
             "qos",
             "expiry"
         ],
+        "messaging.createBirdEmailProvider": [
+            "providerId",
+            "name",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail",
+            "enabled"
+        ],
+        "messaging.createBirdSMSProvider": [
+            "providerId",
+            "name",
+            "from",
+            "apiKey",
+            "enabled"
+        ],
         "messaging.createEmail": [
             "messageId",
             "subject",
@@ -2701,6 +2718,23 @@
             "enabled",
             "qos",
             "expiry"
+        ],
+        "messaging.updateBirdEmailProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail"
+        ],
+        "messaging.updateBirdSMSProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "from"
         ],
         "messaging.updateEmail": [
             "messageId",
@@ -3415,6 +3449,11 @@
             "enabled"
         ],
         "project.updateOAuth2Autodesk": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Bird": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -6933,6 +6972,23 @@
             "qos",
             "expiry"
         ],
+        "messaging.createBirdEmailProvider": [
+            "providerId",
+            "name",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail",
+            "enabled"
+        ],
+        "messaging.createBirdSMSProvider": [
+            "providerId",
+            "name",
+            "from",
+            "apiKey",
+            "enabled"
+        ],
         "messaging.createEmail": [
             "messageId",
             "subject",
@@ -7210,6 +7266,23 @@
             "enabled",
             "qos",
             "expiry"
+        ],
+        "messaging.updateBirdEmailProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail"
+        ],
+        "messaging.updateBirdSMSProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "from"
         ],
         "messaging.updateEmail": [
             "messageId",
@@ -7882,6 +7955,11 @@
             "enabled"
         ],
         "project.updateOAuth2Autodesk": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Bird": [
             "clientId",
             "clientSecret",
             "enabled"

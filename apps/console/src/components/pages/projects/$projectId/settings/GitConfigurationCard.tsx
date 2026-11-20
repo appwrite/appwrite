@@ -40,7 +40,6 @@ import { Button } from '@/components/ui/button'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   Dialog,
   DialogContent,
@@ -151,9 +150,8 @@ export function GitConfigurationCard({
   isVcsEnabled = true,
 }: GitConfigurationCardProps) {
   const t = useT()
-  const { features } = useConsoleProfile()
   const { vcsProviders } = useConsoleVariables()
-  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features, vcsProviders)
+  const vcsOAuthProviders = getVisibleVcsOAuthProviders(vcsProviders)
   const queryClient = useQueryClient()
   // Fall back to the GitHub-only helper when a generalized builder isn't provided.
   const vcsAuthUrl = (
