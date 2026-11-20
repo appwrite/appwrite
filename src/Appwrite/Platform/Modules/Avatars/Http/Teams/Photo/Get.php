@@ -47,7 +47,7 @@ class Get extends Action
             ->label('sdk', new Method(
                 namespace: 'avatars',
                 group: null,
-                name: 'getPhoto',
+                name: 'getTeamPhoto',
                 description: <<<'EOT'
                 Returns the photo of a team: the uploaded photo (see teams.updatePhoto), else the initials of the team name, else a built-in static placeholder.
                 EOT,
