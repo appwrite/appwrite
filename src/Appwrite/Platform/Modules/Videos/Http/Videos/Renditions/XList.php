@@ -103,7 +103,7 @@ class XList extends Base
             $renditionId = $cursor->getValue();
             $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('videosRenditions', $renditionId));
 
-            if ($cursorDocument->isEmpty()) {
+            if ($cursorDocument->isEmpty() || $cursorDocument->getAttribute('videoInternalId') !== $video->getSequence()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Rendition '{$renditionId}' for the 'cursor' value not found.");
             }
 
