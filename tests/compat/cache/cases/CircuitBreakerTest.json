@@ -2075,6 +2075,1086 @@
           "expect": false
         }
       ]
+    },
+    {
+      "name": "testSlowCoordinationIsRefusedWithoutOpeningTheCircuit (getVersion)",
+      "steps": [
+        {
+          "op": "coordination.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 3600,
+            "minimum_throughput": 1,
+            "slow": [
+              "Utopia\\Cache\\Adapter\\Redis\\TimeoutException"
+            ],
+            "slow_ratio": 0.9
+          },
+          "bind": "br",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "bind": "v",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "coordination.fail",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "failing": true,
+            "class": "Utopia\\Cache\\Adapter\\Redis\\TimeoutException",
+            "message": "read deadline expired"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Cache\\Exception\\Unavailable",
+              "message": "Versioned cache unavailable"
+            }
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "breaker.slow",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "testAllSlowCoordinationOpensTheCircuit (getVersion)",
+      "steps": [
+        {
+          "op": "coordination.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "key": "key"
+          },
+          "bind": "v",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 3600,
+            "minimum_throughput": 1,
+            "slow": [
+              "Utopia\\Cache\\Adapter\\Redis\\TimeoutException"
+            ],
+            "slow_ratio": 0.9
+          },
+          "bind": "br",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "coordination.fail",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "failing": true,
+            "class": "Utopia\\Cache\\Adapter\\Redis\\TimeoutException",
+            "message": "read deadline expired"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Cache\\Exception\\Unavailable",
+              "message": "Versioned cache unavailable"
+            }
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": "open"
+        }
+      ]
+    },
+    {
+      "name": "testABrokenConnectionStillOpensThroughTheFailureRule (getVersion)",
+      "steps": [
+        {
+          "op": "coordination.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "key": "key"
+          },
+          "bind": "v",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 3600,
+            "minimum_throughput": 1,
+            "slow": [
+              "Utopia\\Cache\\Adapter\\Redis\\TimeoutException"
+            ],
+            "slow_ratio": 0.9
+          },
+          "bind": "br",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "coordination.fail",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "failing": true,
+            "class": "Utopia\\Cache\\Adapter\\Redis\\ConnectionException",
+            "message": "connection lost"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Cache\\Exception\\Unavailable",
+              "message": "Versioned cache unavailable"
+            }
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": "open"
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "breaker.slow",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "testSlowCoordinationIsRefusedWithoutOpeningTheCircuit (loadVersioned)",
+      "steps": [
+        {
+          "op": "coordination.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 3600,
+            "minimum_throughput": 1,
+            "slow": [
+              "Utopia\\Cache\\Adapter\\Redis\\TimeoutException"
+            ],
+            "slow_ratio": 0.9
+          },
+          "bind": "br",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "bind": "v",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "coordination.fail",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "failing": true,
+            "class": "Utopia\\Cache\\Adapter\\Redis\\TimeoutException",
+            "message": "read deadline expired"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.load_versioned",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Cache\\Exception\\Unavailable",
+              "message": "Versioned cache unavailable"
+            }
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "breaker.slow",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "testAllSlowCoordinationOpensTheCircuit (loadVersioned)",
+      "steps": [
+        {
+          "op": "coordination.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "key": "key"
+          },
+          "bind": "v",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 3600,
+            "minimum_throughput": 1,
+            "slow": [
+              "Utopia\\Cache\\Adapter\\Redis\\TimeoutException"
+            ],
+            "slow_ratio": 0.9
+          },
+          "bind": "br",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "coordination.fail",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "failing": true,
+            "class": "Utopia\\Cache\\Adapter\\Redis\\TimeoutException",
+            "message": "read deadline expired"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.load_versioned",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Cache\\Exception\\Unavailable",
+              "message": "Versioned cache unavailable"
+            }
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": "open"
+        }
+      ]
+    },
+    {
+      "name": "testABrokenConnectionStillOpensThroughTheFailureRule (loadVersioned)",
+      "steps": [
+        {
+          "op": "coordination.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "key": "key"
+          },
+          "bind": "v",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 3600,
+            "minimum_throughput": 1,
+            "slow": [
+              "Utopia\\Cache\\Adapter\\Redis\\TimeoutException"
+            ],
+            "slow_ratio": 0.9
+          },
+          "bind": "br",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "coordination.fail",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "failing": true,
+            "class": "Utopia\\Cache\\Adapter\\Redis\\ConnectionException",
+            "message": "connection lost"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.load_versioned",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Cache\\Exception\\Unavailable",
+              "message": "Versioned cache unavailable"
+            }
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": "open"
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "breaker.slow",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "testSlowCoordinationIsRefusedWithoutOpeningTheCircuit (compareAndSwap)",
+      "steps": [
+        {
+          "op": "coordination.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 3600,
+            "minimum_throughput": 1,
+            "slow": [
+              "Utopia\\Cache\\Adapter\\Redis\\TimeoutException"
+            ],
+            "slow_ratio": 0.9
+          },
+          "bind": "br",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "bind": "v",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "coordination.fail",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "failing": true,
+            "class": "Utopia\\Cache\\Adapter\\Redis\\TimeoutException",
+            "message": "read deadline expired"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.compare_and_swap",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key",
+            "data": "value",
+            "hash": "",
+            "version": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Cache\\Exception\\Unavailable",
+              "message": "Versioned cache unavailable"
+            }
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "breaker.slow",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "testAllSlowCoordinationOpensTheCircuit (compareAndSwap)",
+      "steps": [
+        {
+          "op": "coordination.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "key": "key"
+          },
+          "bind": "v",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 3600,
+            "minimum_throughput": 1,
+            "slow": [
+              "Utopia\\Cache\\Adapter\\Redis\\TimeoutException"
+            ],
+            "slow_ratio": 0.9
+          },
+          "bind": "br",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "coordination.fail",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "failing": true,
+            "class": "Utopia\\Cache\\Adapter\\Redis\\TimeoutException",
+            "message": "read deadline expired"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.compare_and_swap",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key",
+            "data": "value",
+            "hash": "",
+            "version": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Cache\\Exception\\Unavailable",
+              "message": "Versioned cache unavailable"
+            }
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": "open"
+        }
+      ]
+    },
+    {
+      "name": "testABrokenConnectionStillOpensThroughTheFailureRule (compareAndSwap)",
+      "steps": [
+        {
+          "op": "coordination.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "key": "key"
+          },
+          "bind": "v",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 3600,
+            "minimum_throughput": 1,
+            "slow": [
+              "Utopia\\Cache\\Adapter\\Redis\\TimeoutException"
+            ],
+            "slow_ratio": 0.9
+          },
+          "bind": "br",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "coordination.fail",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "failing": true,
+            "class": "Utopia\\Cache\\Adapter\\Redis\\ConnectionException",
+            "message": "connection lost"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.compare_and_swap",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key",
+            "data": "value",
+            "hash": "",
+            "version": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Cache\\Exception\\Unavailable",
+              "message": "Versioned cache unavailable"
+            }
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": "open"
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "breaker.slow",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "testASlowLoadIsAMissThatKeepsTheCircuitClosed",
+      "steps": [
+        {
+          "op": "coordination.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 3600,
+            "minimum_throughput": 1,
+            "slow": [
+              "Utopia\\Cache\\Adapter\\Redis\\TimeoutException"
+            ],
+            "slow_ratio": 0.9
+          },
+          "bind": "br",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.save",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key",
+            "data": "value"
+          },
+          "expect": true
+        },
+        {
+          "op": "coordination.slow_load",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "slow": true
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.load",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key",
+            "ttl": 60
+          },
+          "expect": false
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.slow",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": 1
+        }
+      ]
     }
   ]
 }

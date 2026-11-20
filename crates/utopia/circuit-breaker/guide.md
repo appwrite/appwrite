@@ -57,6 +57,63 @@ echo $breaker->getState()->value, "\n"; // open
 echo $breaker->call(open: fn () => 'fallback', close: fn () => 'skipped'), "\n"; // fallback
 ```
 
+## Tell slow from broken
+
+A dependency that answers slowly is not broken. Name the error types that mean "too slow" in `slow` (matched with `Failure::is_a`), and they never count toward `failure_ratio`. Instead the circuit opens once `slow_ratio` of the window's calls were slow or failed, over `slow_minimum_throughput` calls, or once the window holds `minimum_throughput` calls and none succeeded. A slow call returns the fallback; while half open a slow probe is neutral.
+
+```
+use std::borrow::Cow;
+
+use utopia_circuit_breaker::{CircuitBreaker, Failure, Options, State};
+
+struct Timeout;
+
+impl Failure for Timeout {
+    fn exception_type(&self) -> Cow<'_, str> {
+        Cow::Borrowed("TimeoutException")
+    }
+}
+
+let breaker = CircuitBreaker::new(Options {
+    failure_ratio: 0.5,
+    minimum_throughput: 3,
+    slow: vec!["TimeoutException".into()],
+    slow_ratio: 0.9,
+    slow_minimum_throughput: Some(20),
+    ..Options::default()
+})?;
+
+utopia_async::run(async {
+    breaker.call(|| "fallback", async { Ok::<_, Timeout>("ok") }).await?;
+    for _ in 0..5 {
+        breaker.call(|| "fallback", async { Err::<&str, _>(Timeout) }).await?;
+    }
+    assert_eq!(breaker.state().await?, State::Closed);
+    assert_eq!(breaker.slow().await?, 5);
+    Ok::<_, utopia_circuit_breaker::Error>(())
+})?;
+# Ok::<(), Box<dyn std::error::Error>>(())
+```
+
+```php
+use Utopia\CircuitBreaker\CircuitBreaker;
+
+$breaker = new CircuitBreaker(
+    failureRatio: 0.5,
+    minimumThroughput: 3,
+    slow: [\RuntimeException::class],
+    slowRatio: 0.9,
+    slowMinimumThroughput: 20,
+);
+
+$breaker->call(open: fn () => 'fallback', close: fn () => 'ok');
+for ($i = 0; $i < 5; $i++) {
+    $breaker->call(open: fn () => 'fallback', close: fn () => throw new \RuntimeException('read deadline expired'));
+}
+echo $breaker->getState()->value, "\n"; // closed
+echo $breaker->getSlowCount(), "\n"; // 5
+```
+
 ## Probe for recovery
 
 After `timeout` seconds an open circuit is half open: up to `half_open_permitted_calls` probes run at once, `success_threshold` successes close it, and one failure opens it again. `call_with_probe` runs a lighter call as the probe.

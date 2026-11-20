@@ -12,6 +12,7 @@ use Tests\Compat\Benchmarks;
 use Tests\Compat\Fault;
 use Tests\Compat\Session;
 use Utopia\Client\Adapter\Curl\Client as Curl;
+use Utopia\Client\Adapter\Curl\DecodedSizeLimit;
 use Utopia\Client\Client;
 use Utopia\Client\Decorator\Retry;
 use Utopia\Client\Decorator\Retry\Backoff;
@@ -161,6 +162,24 @@ final class Adapter implements Base, Benchmarks
 
                 return ['sleeps' => $sleeps->list, 'calls' => $calls?->count];
             },
+            'decoded_size_limit.from_options' => fn (array $a, Session $s) => DecodedSizeLimit::fromOptions(self::sizeOptions($a))?->bytes,
+            'decoded_size_limit.wrap' => function (array $a, Session $s) {
+                $limit = DecodedSizeLimit::fromOptions(self::sizeOptions($a)) ?? throw new Fault('no cap');
+                $written = [];
+                $exceeded = false;
+                $write = $limit->wrap(static function (\CurlHandle $handle, string $chunk) use (&$written): int {
+                    $written[] = \strlen($chunk);
+
+                    return \strlen($chunk);
+                }, $exceeded);
+                $handle = curl_init();
+                $returns = [];
+                foreach ($a['chunks'] as $length) {
+                    $returns[] = $write($handle, str_repeat('a', $length));
+                }
+
+                return ['returns' => $returns, 'exceeded' => $exceeded, 'written' => $written];
+            },
             'pool.send' => function (array $a, Session $s) {
                 $created = 0;
                 $connections = new Connections(new Stack(), 'test', $a['size'], function () use (&$created) {
@@ -195,6 +214,24 @@ final class Adapter implements Base, Benchmarks
      * continue, or '' for a new trace); its traceparent is random, so results
      * carry `${traceparent}` in its place.
      */
+    /**
+     * The cURL options `large` and `legacy` stand for: CURLOPT_MAXFILESIZE_LARGE and CURLOPT_MAXFILESIZE.
+     *
+     * @return array<int, mixed>
+     */
+    private static function sizeOptions(array $a): array
+    {
+        $options = [];
+        if (\array_key_exists('large', $a)) {
+            $options[\CURLOPT_MAXFILESIZE_LARGE] = $a['large'];
+        }
+        if (\array_key_exists('legacy', $a)) {
+            $options[\CURLOPT_MAXFILESIZE] = $a['legacy'];
+        }
+
+        return $options;
+    }
+
     private static function traced(array $a, callable $send): mixed
     {
         if (!\array_key_exists('span', $a)) {

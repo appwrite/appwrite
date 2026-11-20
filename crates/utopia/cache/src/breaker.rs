@@ -19,6 +19,29 @@ impl Failure for Error {
     fn exception_type(&self) -> Cow<'_, str> {
         Cow::Borrowed(self.php_class())
     }
+
+    /// `instanceof` along the PHP class hierarchy, so a breaker's `slow`
+    /// list can name `Redis\TimeoutException` or one of its parents
+    /// (`Redis\ConnectionException`, `RedisException`, ...).
+    fn is_a(&self, class: &str) -> bool {
+        const CONNECTION: &[&str] =
+            &["Utopia\\Cache\\Adapter\\Redis\\ConnectionException", "RedisException", "RuntimeException", "Exception"];
+        let parents: &[&str] = match self {
+            Error::Timeout(_) | Error::Idle(_) => CONNECTION,
+            Error::Connection(_) => &CONNECTION[1..],
+            Error::Redis(_)
+            | Error::RedisCluster(_)
+            | Error::Memcached(_)
+            | Error::NoScript(_)
+            | Error::Unavailable { .. } => &["RuntimeException", "Exception"],
+            Error::Runtime(_) | Error::Json(_) => &["Exception"],
+            Error::InvalidArgument(_) => &["LogicException", "Exception"],
+            Error::Type(_) => &["Error"],
+            Error::Exception(_) | Error::Engine(_) | Error::Storage { .. } => &[],
+        };
+        let class = class.trim_start_matches('\\');
+        class == self.php_class() || class == "Throwable" || parents.contains(&class)
+    }
 }
 
 /// A breaker's own failure (its shared store failed), as a cache error.

@@ -141,10 +141,10 @@ impl Http {
 
     /// A copy that refuses a response body past `bytes` (`None` or `0`:
     /// no cap) with [`Error::Network`]: a `Content-Length` above it before
-    /// the body is read (`Maximum file size exceeded`, as cURL), the bytes
-    /// received past it, and the decoded bytes past it, so a small
-    /// compressed body cannot expand past the cap in memory (`Response
-    /// body exceeds the maximum file size.`).
+    /// the body is read (`Maximum file size exceeded`, as cURL), and the
+    /// bytes received or decoded past it, so a small compressed body cannot
+    /// expand past the cap in memory (`Would have exceeded max file size`,
+    /// as cURL; see [`DecodedSizeLimit`]).
     ///
     /// PHP: the cURL adapter's `CURLOPT_MAXFILESIZE` /
     /// `CURLOPT_MAXFILESIZE_LARGE` options (`new Curl(options:
@@ -531,7 +531,7 @@ impl Http {
                 && length > cap
             {
                 connection.open = false;
-                return Err(Retry::Fail(Error::Network(WIRE_EXCEEDED.into())));
+                return Err(Retry::Fail(Error::Network(DECLARED_EXCEEDED.into())));
             }
             let decodes = decompress && !matches!(framing, Framing::None);
             let mut decoder = if decodes { Decoder::for_headers(&head.headers).map_err(Retry::Fail)? } else { None };
@@ -969,11 +969,17 @@ impl Decoder {
     }
 }
 
-/// cURL's message for a body past `CURLOPT_MAXFILESIZE`, as received.
-const WIRE_EXCEEDED: &str = "Maximum file size exceeded";
+/// cURL's message for a `Content-Length` past `CURLOPT_MAXFILESIZE`,
+/// refused before the body is read.
+const DECLARED_EXCEEDED: &str = "Maximum file size exceeded";
 
-/// The cURL adapter's message for a decoded body past the cap.
-const DECODED_EXCEEDED: &str = "Response body exceeds the maximum file size.";
+/// cURL's message for body bytes past `CURLOPT_MAXFILESIZE` while the body
+/// is read. The cURL the PHP side runs counts the bytes it hands to the
+/// write function, decoded, so a compressed body that expands past the cap
+/// fails here too, before the adapter's own `DecodedSizeLimit` (whose
+/// `Response body exceeds the maximum file size.` only a cURL counting the
+/// wire bytes alone lets through) sees the chunk.
+const READ_EXCEEDED: &str = "Would have exceeded max file size";
 
 /// The maximum file size, counted against the body as received and as
 /// decoded.
@@ -983,12 +989,14 @@ const DECODED_EXCEEDED: &str = "Response body exceeds the maximum file size.";
 struct Limit {
     cap: Option<u64>,
     received: u64,
-    decoded: u64,
+    decoded: Option<DecodedSizeLimit>,
 }
 
 impl Limit {
     fn new(cap: Option<u64>) -> Limit {
-        Limit { cap, received: 0, decoded: 0 }
+        let decoded =
+            cap.and_then(|c| DecodedSizeLimit::from_options(Some(i64::try_from(c).unwrap_or(i64::MAX)), None));
+        Limit { cap, received: 0, decoded }
     }
 
     /// Counts body bytes as they arrive (after chunked framing, before
@@ -996,17 +1004,102 @@ impl Limit {
     fn receive(&mut self, bytes: usize) -> Result<(), Error> {
         self.received += bytes as u64;
         match self.cap {
-            Some(cap) if self.received > cap => Err(Error::Network(WIRE_EXCEEDED.into())),
+            Some(cap) if self.received > cap => Err(Error::Network(READ_EXCEEDED.into())),
             _ => Ok(()),
         }
     }
 
     /// Counts decoded bytes before they reach the sink.
     fn decode(&mut self, bytes: usize) -> Result<(), Error> {
-        self.decoded += bytes as u64;
-        match self.cap {
-            Some(cap) if self.decoded > cap => Err(Error::Network(DECODED_EXCEEDED.into())),
-            _ => Ok(()),
+        if self.decoded.as_mut().is_some_and(|limit| !limit.admit(bytes)) {
+            return Err(Error::Network(READ_EXCEEDED.into()));
+        }
+        Ok(())
+    }
+}
+
+/// A cap on the bytes handed to a response body's writer, so a small
+/// compressed body cannot expand past the maximum file size in memory.
+/// [`Http::with_max_file_size`] applies one to every decoded body.
+///
+/// ```
+/// use utopia_client::DecodedSizeLimit;
+///
+/// let mut limit = DecodedSizeLimit::from_options(Some(10_000), None).unwrap();
+/// let mut written = Vec::new();
+/// let mut exceeded = false;
+/// let mut write = limit.wrap(|chunk: &[u8]| { written.push(chunk.len()); chunk.len() }, &mut exceeded);
+///
+/// assert_eq!(write(&[b'a'; 6_000]), 6_000);
+/// assert_eq!(write(&[b'a'; 4_000]), 4_000);
+/// assert_eq!(write(b"a"), 0); // one byte past the cap aborts the transfer
+/// drop(write);
+/// assert!(exceeded);
+/// assert_eq!(written, [6_000, 4_000]);
+/// ```
+///
+/// ```php
+/// use Utopia\Client\Adapter\Curl\DecodedSizeLimit;
+///
+/// $limit = DecodedSizeLimit::fromOptions([\CURLOPT_MAXFILESIZE_LARGE => 10_000]);
+/// $exceeded = false;
+/// $write = $limit->wrap(fn ($handle, string $chunk): int => \strlen($chunk), $exceeded);
+///
+/// echo $write(curl_init(), str_repeat('a', 10_000)), "\n"; // 10000
+/// echo $write(curl_init(), 'a'), "\n"; // 0
+/// var_dump($exceeded); // bool(true)
+/// ```
+///
+/// PHP: `Utopia\Client\Adapter\Curl\DecodedSizeLimit`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DecodedSizeLimit {
+    bytes: u64,
+    received: u64,
+}
+
+impl DecodedSizeLimit {
+    /// The cap the options configure, or `None` for none: a value that is
+    /// not positive sets none, and when both are set the smaller applies.
+    ///
+    /// PHP: `fromOptions([CURLOPT_MAXFILESIZE_LARGE => $large,
+    /// CURLOPT_MAXFILESIZE => $legacy])`, each value read as an integer
+    /// the way PHP casts a scalar (as cURL reads it).
+    pub fn from_options(large: Option<i64>, legacy: Option<i64>) -> Option<Self> {
+        let bytes = [large, legacy].into_iter().flatten().filter(|&b| b > 0).min()?;
+        Some(DecodedSizeLimit { bytes: bytes as u64, received: 0 })
+    }
+
+    /// The cap, in bytes.
+    ///
+    /// PHP: `$limit->bytes`.
+    pub fn bytes(&self) -> u64 {
+        self.bytes
+    }
+
+    /// Counts `bytes` more; whether the total is still within the cap.
+    fn admit(&mut self, bytes: usize) -> bool {
+        self.received = self.received.saturating_add(bytes as u64);
+        self.received <= self.bytes
+    }
+
+    /// Wraps a writer so the transfer aborts, with `exceeded` set, once the
+    /// bytes handed to it pass the cap: below the cap each chunk goes to
+    /// `write` and its count is returned; past it, nothing is written and 0
+    /// (a count other than the chunk's length) is returned.
+    ///
+    /// PHP: `wrap($write, $exceeded)` around a `CURLOPT_WRITEFUNCTION`
+    /// (the cURL handle argument has no counterpart).
+    pub fn wrap<'a>(
+        &'a mut self,
+        mut write: impl FnMut(&[u8]) -> usize + 'a,
+        exceeded: &'a mut bool,
+    ) -> impl FnMut(&[u8]) -> usize + 'a {
+        move |chunk| {
+            if !self.admit(chunk.len()) {
+                *exceeded = true;
+                return 0;
+            }
+            write(chunk)
         }
     }
 }
@@ -1749,7 +1842,7 @@ mod tests {
 
         let uri = serve(gzipped(&b"utopia ".repeat(40_000))).await;
         let error = http.send(Request::new("GET", &uri).unwrap()).await.unwrap_err();
-        assert_eq!(error, Error::Network("Response body exceeds the maximum file size.".into()));
+        assert_eq!(error, Error::Network("Would have exceeded max file size".into()));
 
         let uri = serve(gzipped(&b"utopia ".repeat(64))).await;
         let response = http.send(Request::new("GET", &uri).unwrap()).await.unwrap();
@@ -1767,7 +1860,7 @@ mod tests {
     async fn a_body_without_a_length_is_capped_as_received() {
         let uri = serve(b"HTTP/1.1 200 OK\r\nConnection: close\r\n\r\nabcdefgh").await;
         let error = Http::new().with_max_file_size(Some(4)).send(Request::new("GET", &uri).unwrap()).await.unwrap_err();
-        assert_eq!(error, Error::Network("Maximum file size exceeded".into()));
+        assert_eq!(error, Error::Network("Would have exceeded max file size".into()));
     }
 
     #[utopia_async::test]

@@ -596,6 +596,15 @@
                   0
                 ]
               ]
+            ],
+            [
+              "breaker.slow",
+              [
+                [
+                  "default",
+                  0
+                ]
+              ]
             ]
           ]
         }
@@ -812,6 +821,15 @@
                   0
                 ]
               ]
+            ],
+            [
+              "edge.breaker.slow",
+              [
+                [
+                  "default",
+                  0
+                ]
+              ]
             ]
           ]
         },
@@ -837,6 +855,10 @@
             ],
             [
               "edge.breaker.successes",
+              1
+            ],
+            [
+              "edge.breaker.slow",
               1
             ]
           ]
@@ -1180,6 +1202,15 @@
                 ],
                 [
                   "breaker.successes",
+                  [
+                    [
+                      "users-api",
+                      0
+                    ]
+                  ]
+                ],
+                [
+                  "breaker.slow",
                   [
                     [
                       "users-api",
@@ -1779,6 +1810,15 @@
                   0
                 ]
               ]
+            ],
+            [
+              "breaker.slow",
+              [
+                [
+                  "default",
+                  0
+                ]
+              ]
             ]
           ]
         }
@@ -1844,6 +1884,15 @@
             ],
             [
               "breaker.successes",
+              [
+                [
+                  "default",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.slow",
               [
                 [
                   "default",
@@ -1919,6 +1968,15 @@
                       0
                     ]
                   ]
+                ],
+                [
+                  "breaker.slow",
+                  [
+                    [
+                      "default",
+                      0
+                    ]
+                  ]
                 ]
               ]
             ]
@@ -1961,6 +2019,15 @@
             ],
             [
               "breaker.successes",
+              [
+                [
+                  "default",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.slow",
               [
                 [
                   "default",
@@ -2088,6 +2155,15 @@
                   0
                 ]
               ]
+            ],
+            [
+              "breaker.slow",
+              [
+                [
+                  "kept",
+                  0
+                ]
+              ]
             ]
           ]
         },
@@ -2113,6 +2189,10 @@
             ],
             [
               "breaker.successes",
+              1
+            ],
+            [
+              "breaker.slow",
               1
             ]
           ]
@@ -2172,6 +2252,15 @@
                   0
                 ]
               ]
+            ],
+            [
+              "breaker.slow",
+              [
+                [
+                  "kept",
+                  0
+                ]
+              ]
             ]
           ]
         },
@@ -2197,6 +2286,10 @@
             ],
             [
               "breaker.successes",
+              1
+            ],
+            [
+              "breaker.slow",
               1
             ]
           ]
@@ -2236,6 +2329,10 @@
             [
               "breaker.successes",
               []
+            ],
+            [
+              "breaker.slow",
+              []
             ]
           ]
         },
@@ -2276,6 +2373,15 @@
             ],
             [
               "breaker.successes",
+              [
+                [
+                  "kept",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.slow",
               [
                 [
                   "kept",
@@ -2378,6 +2484,15 @@
                   0
                 ]
               ]
+            ],
+            [
+              "breaker.slow",
+              [
+                [
+                  "users-api",
+                  0
+                ]
+              ]
             ]
           ]
         },
@@ -2433,6 +2548,15 @@
                   0
                 ]
               ]
+            ],
+            [
+              "breaker.slow",
+              [
+                [
+                  "users-api",
+                  0
+                ]
+              ]
             ]
           ]
         },
@@ -2473,6 +2597,15 @@
             ],
             [
               "breaker.successes",
+              [
+                [
+                  "users-api",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.slow",
               [
                 [
                   "users-api",

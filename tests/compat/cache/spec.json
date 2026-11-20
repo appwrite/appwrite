@@ -126,10 +126,16 @@
       ]
     },
     "breaker.new": {
-      "doc": "fixture: new UtopiaCircuitBreaker(minimumThroughput?, timeout?), tripped when trip"
+      "doc": "fixture: new UtopiaCircuitBreaker(minimumThroughput?, timeout?, slow?, slowRatio?, slowMinimumThroughput?), tripped when trip"
     },
     "breaker.is_open": {
       "doc": "fixture: $breaker->isOpen()"
+    },
+    "breaker.state": {
+      "doc": "fixture: $breaker->getState()->value"
+    },
+    "breaker.slow": {
+      "doc": "fixture: $breaker->getSlowCount()"
     },
     "failing.new": {
       "doc": "fixture: CircuitBreakerTest's FailingAdapter (every operation throws)"
@@ -159,13 +165,16 @@
       "doc": "fixture: SET key value on the cache-cluster (a string where a cache hash is expected)"
     },
     "coordination.new": {
-      "doc": "fixture: CircuitBreakerTest's CoordinationMemory (Memory whose versioned operations count calls and throw a RuntimeException while failing)"
+      "doc": "fixture: CircuitBreakerTest's CoordinationMemory (Memory whose versioned operations count calls and throw the set failure), also SlowLoadMemory (load throws a Redis TimeoutException while slow_load is set)"
     },
     "coordination.fail": {
-      "doc": "fixture: set a CoordinationMemory's failing flag"
+      "doc": "fixture: set (failing) or clear a CoordinationMemory's failure: new <class>(message), by default a RuntimeException('Transport unavailable'); class RuntimeException, Utopia\\Cache\\Adapter\\Redis\\TimeoutException or ConnectionException"
     },
     "coordination.calls": {
       "doc": "fixture: the versioned calls that reached a CoordinationMemory"
+    },
+    "coordination.slow_load": {
+      "doc": "fixture: set whether a CoordinationMemory's load throws a Redis TimeoutException (SlowLoadMemory)"
     },
     "breaker.failures": {
       "doc": "fixture: $breaker->getFailureCount()"

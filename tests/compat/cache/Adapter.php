@@ -199,6 +199,9 @@ final class Adapter implements Base, Benchmarks
                 $breaker = new Breaker(...array_filter([
                     'minimumThroughput' => $a['minimum_throughput'] ?? null,
                     'timeout' => $a['timeout'] ?? null,
+                    'slow' => $a['slow'] ?? null,
+                    'slowRatio' => isset($a['slow_ratio']) ? (float) $a['slow_ratio'] : null,
+                    'slowMinimumThroughput' => $a['slow_minimum_throughput'] ?? null,
                 ], fn ($v) => $v !== null));
                 if ($a['trip'] ?? false) {
                     $breaker->trip();
@@ -207,6 +210,8 @@ final class Adapter implements Base, Benchmarks
                 return $s->handle($breaker);
             },
             'breaker.is_open' => fn (array $a, Session $s) => self::breaker($a['breaker'], $s)->isOpen(),
+            'breaker.state' => fn (array $a, Session $s) => self::breaker($a['breaker'], $s)->getState()->value,
+            'breaker.slow' => fn (array $a, Session $s) => self::breaker($a['breaker'], $s)->getSlowCount(),
             'failing.new' => fn (array $a, Session $s) => $s->handle(new FailingAdapter()),
             'counting_failing.new' => fn (array $a, Session $s) => $s->handle(new CountingFailingAdapter()),
             'counting_failing.loads' => function (array $a, Session $s) {
@@ -254,7 +259,17 @@ final class Adapter implements Base, Benchmarks
                 if (!$adapter instanceof CoordinationMemory) {
                     throw new Fault('not a coordination adapter');
                 }
-                $adapter->failing = $a['failing'];
+                $class = $a['class'] ?? \RuntimeException::class;
+                $adapter->failure = $a['failing'] ? new $class($a['message'] ?? 'Transport unavailable') : null;
+
+                return;
+            },
+            'coordination.slow_load' => function (array $a, Session $s) {
+                $adapter = $s->get($a['adapter']);
+                if (!$adapter instanceof CoordinationMemory) {
+                    throw new Fault('not a coordination adapter');
+                }
+                $adapter->slowLoad = $a['slow'];
 
                 return;
             },
@@ -951,19 +966,34 @@ final class RecordingTelemetry extends TestTelemetry
     }
 }
 
-/** CircuitBreakerTest's real in-process cache with a controllable transport failure. */
+/**
+ * CircuitBreakerTest's real in-process cache with a controllable transport failure (`failure`, thrown by the
+ * versioned operations), and SlowLoadMemory's slow load (`slowLoad`: load throws a TimeoutException).
+ */
 final class CoordinationMemory extends Memory
 {
     public int $calls = 0;
 
-    public bool $failing = false;
+    public ?\Throwable $failure = null;
+
+    public bool $slowLoad = false;
 
     private function check(): void
     {
         $this->calls++;
-        if ($this->failing) {
-            throw new \RuntimeException('Transport unavailable');
+        if ($this->failure instanceof \Throwable) {
+            throw $this->failure;
         }
+    }
+
+    #[\Override]
+    public function load(string $key, int $ttl, string $hash = ''): mixed
+    {
+        if ($this->slowLoad) {
+            throw new \Utopia\Cache\Adapter\Redis\TimeoutException('read deadline expired');
+        }
+
+        return parent::load($key, $ttl, $hash);
     }
 
     #[\Override]

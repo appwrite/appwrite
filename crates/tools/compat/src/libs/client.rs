@@ -9,8 +9,8 @@ use std::sync::{Arc, Mutex};
 
 use serde_json::{Value, json};
 use utopia_client::{
-    Adapter, Anywhere, Backoff, Body, Client, Destinations, Error, Http, IpRange, Outcome as Attempt, Pool,
-    PublicInternet, Request, Response, Retry, Sink, Sleep, Strategy, Tls, Uri, redirect,
+    Adapter, Anywhere, Backoff, Body, Client, DecodedSizeLimit, Destinations, Error, Http, IpRange, Outcome as Attempt,
+    Pool, PublicInternet, Request, Response, Retry, Sink, Sleep, Strategy, Tls, Uri, redirect,
 };
 use utopia_pools::{Pool as Connections, Stack};
 
@@ -34,6 +34,8 @@ pub const OPS: &[&str] = &[
     "client.stream",
     "client.supports_response_streaming",
     "client.record",
+    "decoded_size_limit.from_options",
+    "decoded_size_limit.wrap",
     "pool.send",
 ];
 
@@ -321,6 +323,31 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                     }
                 }
             }
+        }
+        "decoded_size_limit.from_options" => Outcome::ok(
+            DecodedSizeLimit::from_options(curl_int(a.opt("large")), curl_int(a.opt("legacy"))).map(|l| l.bytes()),
+        ),
+        "decoded_size_limit.wrap" => {
+            let Some(mut limit) = DecodedSizeLimit::from_options(curl_int(a.opt("large")), curl_int(a.opt("legacy")))
+            else {
+                return Err(Fault::new("no cap"));
+            };
+            let mut written = Vec::new();
+            let mut exceeded = false;
+            let mut returns = Vec::new();
+            {
+                let mut write = limit.wrap(
+                    |chunk: &[u8]| {
+                        written.push(chunk.len());
+                        chunk.len()
+                    },
+                    &mut exceeded,
+                );
+                for length in a.array("chunks")? {
+                    returns.push(write(&vec![b'a'; length.as_u64().unwrap_or(0) as usize]));
+                }
+            }
+            Outcome::Ok(json!({"returns": returns, "exceeded": exceeded, "written": written}))
         }
         "pool.send" => {
             let created = Arc::new(Mutex::new(0i64));
@@ -720,4 +747,15 @@ fn replace(haystack: &[u8], needle: &[u8], with: &[u8]) -> Vec<u8> {
         }
     }
     out
+}
+
+/// A cURL option value read as an integer the way PHP casts a scalar
+/// (`(int) $value`); `None` for null or a non-scalar, as `is_scalar()`.
+fn curl_int(value: Option<&Value>) -> Option<i64> {
+    match value? {
+        Value::Number(n) => n.as_i64().or_else(|| n.as_f64().map(|f| f as i64)),
+        Value::Bool(b) => Some(i64::from(*b)),
+        Value::String(s) => Some(php_std::format::Arg::Str(s.as_bytes()).to_int()),
+        _ => None,
+    }
 }

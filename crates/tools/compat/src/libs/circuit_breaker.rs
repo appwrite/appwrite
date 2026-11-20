@@ -39,6 +39,7 @@ pub const OPS: &[&str] = &[
     "breaker.state",
     "breaker.is",
     "breaker.failures",
+    "breaker.slow",
     "breaker.successes",
     "breaker.trip",
     "breaker.calls",
@@ -221,12 +222,42 @@ impl Telemetry for Recording {
     }
 }
 
-/// A callback's failure, reported as PHP's `RuntimeException`.
-struct RuntimeException;
+/// A callback's failure: the PHP exception class the PHP adapter throws
+/// (`RuntimeException` unless a case names another), matched against the
+/// breaker's `slow` list along PHP's SPL hierarchy.
+struct Thrown(String);
 
-impl Failure for RuntimeException {
+impl Thrown {
+    fn runtime() -> Self {
+        Thrown("RuntimeException".to_owned())
+    }
+
+    fn of(class: Option<&str>) -> Self {
+        class.map_or_else(Thrown::runtime, |c| Thrown(c.to_owned()))
+    }
+}
+
+impl Failure for Thrown {
     fn exception_type(&self) -> Cow<'_, str> {
-        Cow::Borrowed("RuntimeException")
+        Cow::Borrowed(&self.0)
+    }
+
+    /// `instanceof` over the SPL exceptions the cases throw.
+    fn is_a(&self, class: &str) -> bool {
+        let parents: &[&str] = match self.0.as_str() {
+            "UnexpectedValueException"
+            | "OutOfBoundsException"
+            | "OverflowException"
+            | "RangeException"
+            | "UnderflowException" => &["RuntimeException", "Exception"],
+            "DomainException" | "InvalidArgumentException" | "LengthException" | "OutOfRangeException" => {
+                &["LogicException", "Exception"]
+            }
+            "RuntimeException" | "LogicException" => &["Exception"],
+            _ => &[],
+        };
+        let class = class.trim_start_matches('\\');
+        class == self.0 || class == "Throwable" || parents.contains(&class)
     }
 }
 
@@ -281,6 +312,17 @@ fn options(a: &Args<'_>) -> Result<Options, Fault> {
     if let Some(v) = a.opt_i64("half_open_permitted_calls")? {
         o.half_open_permitted_calls = v;
     }
+    if a.opt("slow").is_some() {
+        o.slow = a
+            .array("slow")?
+            .iter()
+            .map(|c| c.as_str().map(str::to_owned).ok_or_else(|| Fault::new("slow: class names")))
+            .collect::<Result<_, _>>()?;
+    }
+    if let Some(v) = a.opt_f64("slow_ratio")? {
+        o.slow_ratio = v;
+    }
+    o.slow_minimum_throughput = a.opt_i64("slow_minimum_throughput")?;
     Ok(o)
 }
 
@@ -309,25 +351,27 @@ fn run_call<'a>(
             async move {
                 for action in spec["during"].as_array().cloned().unwrap_or_default() {
                     let a = Args(&action);
-                    let value = match a.str("op").map_err(|_| RuntimeException)? {
+                    let value = match a.str("op").map_err(|_| Thrown::runtime())? {
                         "call" => {
                             let target = match a.opt("breaker") {
-                                Some(h) => session.get::<Arc<CircuitBreaker>>(h).map_err(|_| RuntimeException)?.clone(),
+                                Some(h) => {
+                                    session.get::<Arc<CircuitBreaker>>(h).map_err(|_| Thrown::runtime())?.clone()
+                                }
                                 None => breaker.clone(),
                             };
-                            run_call(target, action.clone(), session).await.map_err(|_| RuntimeException)?
+                            run_call(target, action.clone(), session).await.map_err(|_| Thrown::runtime())?
                         }
-                        "state" => json!(breaker.state().await.map_err(|_| RuntimeException)?.as_str()),
+                        "state" => json!(breaker.state().await.map_err(|_| Thrown::runtime())?.as_str()),
                         "observe" => {
-                            let t = session.get::<Arc<Recording>>(a.value("telemetry").map_err(|_| RuntimeException)?);
-                            observe(t.map_err(|_| RuntimeException)?).await
+                            let t = session.get::<Arc<Recording>>(a.value("telemetry").map_err(|_| Thrown::runtime())?);
+                            observe(t.map_err(|_| Thrown::runtime())?).await
                         }
-                        _ => return Err(RuntimeException),
+                        _ => return Err(Thrown::runtime()),
                     };
                     during.lock().unwrap_or_else(|e| e.into_inner()).push(value);
                 }
                 if spec.get("throw").is_some() {
-                    return Err(RuntimeException);
+                    return Err(Thrown::of(spec.get("class").and_then(Json::as_str)));
                 }
                 Ok(spec.get("result").cloned().unwrap_or(Json::Null))
             }
@@ -471,6 +515,10 @@ pub async fn call_op(op: &str, args: &Json, session: &mut Session) -> OpResult {
             Ok(n) => Outcome::ok(n),
             Err(e) => err(e),
         },
+        "breaker.slow" => match breaker(session)?.slow().await {
+            Ok(n) => Outcome::ok(n),
+            Err(e) => err(e),
+        },
         "breaker.successes" => match breaker(session)?.successes().await {
             Ok(n) => Outcome::ok(n),
             Err(e) => err(e),
@@ -489,15 +537,17 @@ pub async fn call_op(op: &str, args: &Json, session: &mut Session) -> OpResult {
                 let result = match step.as_str().unwrap_or("") {
                     "trip" => b.trip().await.map(|()| Json::Null),
                     "probe" => {
-                        b.call_with_probe(
-                            || json!("fallback"),
-                            async { Ok::<_, RuntimeException>(json!("closed")) },
-                            async { Ok(json!("probe")) },
-                        )
+                        b.call_with_probe(|| json!("fallback"), async { Ok::<_, Thrown>(json!("closed")) }, async {
+                            Ok(json!("probe"))
+                        })
                         .await
                     }
-                    "fail" => b.call(|| json!("fallback"), async { Err::<Json, _>(RuntimeException) }).await,
-                    _ => b.call(|| json!("fallback"), async { Ok::<_, RuntimeException>(json!("ok")) }).await,
+                    "fail" => b.call(|| json!("fallback"), async { Err::<Json, _>(Thrown::runtime()) }).await,
+                    "slow" => {
+                        let slow = Thrown("UnexpectedValueException".to_owned());
+                        b.call(|| json!("fallback"), async { Err::<Json, _>(slow) }).await
+                    }
+                    _ => b.call(|| json!("fallback"), async { Ok::<_, Thrown>(json!("ok")) }).await,
                 }
                 .map_err(fault)?;
                 let state = b.state().await.map_err(fault)?;
@@ -511,17 +561,30 @@ pub async fn call_op(op: &str, args: &Json, session: &mut Session) -> OpResult {
             let b = breaker(session)?;
             let mut counts: Vec<(String, i64)> = Vec::new();
             for outcome in a.array("outcomes")? {
-                let fail = outcome.as_str() == Some("fail");
-                let value = b
-                    .call(|| "fallback", async move { if fail { Err(RuntimeException) } else { Ok("ok") } })
-                    .await
-                    .map_err(fault)?;
+                let thrown = match (outcome.as_str(), outcome.get("throw").and_then(Json::as_str)) {
+                    (Some("fail"), _) => Some(Thrown::runtime()),
+                    (_, Some(class)) => Some(Thrown(class.to_owned())),
+                    _ => None,
+                };
+                let value = b.call(|| "fallback", async move { thrown.map_or(Ok("ok"), Err) }).await.map_err(fault)?;
                 match counts.iter_mut().find(|(k, _)| k == value) {
                     Some((_, n)) => *n += 1,
                     None => counts.push((value.to_owned(), 1)),
                 }
             }
             Outcome::Ok(Json::Object(counts.into_iter().map(|(k, n)| (k, json!(n))).collect()))
+        }
+        "sleep" if a.opt("slot").is_some() => {
+            let slot = a.opt_i64("slot")?.unwrap_or(1).max(1);
+            let start = php_std::datetime::time();
+            loop {
+                let now = php_std::datetime::time();
+                if now != start && now % slot == 0 {
+                    break;
+                }
+                utopia_async::sleep(std::time::Duration::from_millis(10)).await;
+            }
+            Outcome::Ok(Json::Null)
         }
         "sleep" => {
             utopia_async::sleep(std::time::Duration::from_secs_f64(a.f64("ms")? / 1000.0)).await;

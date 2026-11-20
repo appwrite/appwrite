@@ -10,6 +10,15 @@
 //! through at once: `success_threshold` successes close it, one failure
 //! opens it again.
 //!
+//! A call that failed with one of the `slow` error types answered too
+//! slowly rather than failed: it never counts toward `failure_ratio`, only
+//! as a call in its denominator. Instead the circuit opens once
+//! `slow_ratio` of the window's calls were slow or failed (over
+//! `slow_minimum_throughput` calls), or once a window of
+//! `minimum_throughput` calls has no success at all. A slow probe is
+//! neutral; `slow_minimum_throughput` slow probes in one half-open period
+//! open the circuit again.
+//!
 //! The verdict (state, when it opened, probe counts) can be shared between
 //! processes through an [`Adapter`] ([`Redis`], or a [`Table`] in one
 //! process); the window is always measured per process. Breakers report
@@ -55,7 +64,7 @@
 //! | `Utopia\CircuitBreaker\CircuitBreaker` | [`CircuitBreaker`], configured with [`Options`] |
 //! | `call(open, close, halfOpen)` | [`CircuitBreaker::call`], [`CircuitBreaker::call_with_probe`]: `close` and `half_open` are futures returning `Result`; an `Err` is a failed call |
 //! | `getState()`, `isOpen()`, `isClosed()`, `isHalfOpen()` | [`CircuitBreaker::state`] |
-//! | `getFailureCount()`, `getSuccessCount()` | [`CircuitBreaker::failures`], [`CircuitBreaker::successes`] |
+//! | `getFailureCount()`, `getSlowCount()`, `getSuccessCount()` | [`CircuitBreaker::failures`], [`CircuitBreaker::slow`], [`CircuitBreaker::successes`] |
 //! | `trip()`, `setTelemetry()` | [`CircuitBreaker::trip`], [`CircuitBreaker::set_telemetry`] |
 //! | `Utopia\CircuitBreaker\CircuitState` | [`State`] |
 //! | `Utopia\CircuitBreaker\Adapter` | [`Adapter`] (values are [`Stored`]) |
@@ -63,6 +72,7 @@
 //! | `Adapter\SwooleTable`, `SwooleTable::createTable()` | [`Table`], [`SharedTable::new`] |
 //! | `Adapter\AdapterException`, `\InvalidArgumentException` | [`Error::Adapter`], [`Error::InvalidArgument`] |
 //! | the exception class of a failed call (`exception.type`) | [`Failure::exception_type`] |
+//! | `slow` exceptions matched with `instanceof` | [`Options::slow`], matched with [`Failure::is_a`] |
 
 #![warn(missing_docs)]
 
@@ -138,6 +148,16 @@ impl State {
 pub trait Failure {
     /// The name of the error's type, such as `RuntimeException`.
     fn exception_type(&self) -> Cow<'_, str>;
+
+    /// Whether the error is of the type named `class` or one derived from
+    /// it: how a failure is matched against [`Options::slow`]. By default
+    /// only its own type, [`Failure::exception_type`]; override it for
+    /// errors with a hierarchy.
+    ///
+    /// PHP: `$error instanceof $class`.
+    fn is_a(&self, class: &str) -> bool {
+        self.exception_type() == class
+    }
 }
 
 impl Failure for &str {
@@ -192,12 +212,26 @@ pub struct Options {
     pub minimum_throughput: i64,
     /// Probes allowed at once while half open; the rest take the fallback.
     pub half_open_permitted_calls: i64,
+    /// Error types (matched with [`Failure::is_a`]) meaning the dependency
+    /// answered too slowly rather than failed: such a call never counts
+    /// toward `failure_ratio`, returns the fallback, and is judged by
+    /// `slow_ratio` instead.
+    pub slow: Vec<String>,
+    /// The share of calls in the window that must have been slow or failed
+    /// to open the circuit, in (0, 1]. Ignored when `slow` is empty.
+    pub slow_ratio: f64,
+    /// Calls the window must hold before `slow_ratio` is trusted, at least
+    /// 1; `None` uses `minimum_throughput`. A window with no success opens
+    /// at `minimum_throughput` regardless. While half open, this many slow
+    /// probes in one period open the circuit again.
+    pub slow_minimum_throughput: Option<i64>,
 }
 
 impl Default for Options {
     /// Open for 30 s, closed after 2 successful probes, judged over 10 s
     /// once 20 calls were made, opening at a 50% failure rate, one probe at a
-    /// time, named `default`, without a metric prefix.
+    /// time, named `default`, without a metric prefix, and no slow error
+    /// types (a slow ratio of 1, the slow minimum the failure minimum).
     fn default() -> Self {
         Options {
             timeout: 30,
@@ -208,6 +242,9 @@ impl Default for Options {
             failure_ratio: 0.5,
             minimum_throughput: 20,
             half_open_permitted_calls: 1,
+            slow: Vec::new(),
+            slow_ratio: 1.0,
+            slow_minimum_throughput: None,
         }
     }
 }
@@ -220,11 +257,15 @@ struct Tally {
     successes: i64,
     opened_at: Option<i64>,
     half_open_in_flight: i64,
+    /// Slow probes this process saw in the current half-open period.
+    half_open_slow: i64,
     active_calls: i64,
     slot: i64,
     window_failures: i64,
+    window_slow: i64,
     window_calls: i64,
     previous_failures: i64,
+    previous_slow: i64,
     previous_calls: i64,
 }
 
@@ -237,28 +278,65 @@ impl Tally {
         self.window_failures + self.previous_failures
     }
 
+    fn window_slow_count(&self) -> i64 {
+        self.window_slow + self.previous_slow
+    }
+
+    fn window_call_count(&self) -> i64 {
+        self.window_calls + self.previous_calls
+    }
+
     fn reset_window(&mut self, window: i64) {
         self.slot = now().div_euclid(window);
         self.window_failures = 0;
+        self.window_slow = 0;
         self.window_calls = 0;
         self.previous_failures = 0;
+        self.previous_slow = 0;
         self.previous_calls = 0;
     }
 
-    /// Adds one outcome to the window; the failures and calls it now holds.
-    fn record(&mut self, window: i64, failed: bool) -> (i64, i64) {
+    /// Adds one outcome (a success when neither `failed` nor `slow`) to the
+    /// window.
+    fn record(&mut self, window: i64, failed: bool, slow: bool) {
         let slot = now().div_euclid(window);
         if slot != self.slot {
             let elapsed = slot - self.slot;
             self.previous_failures = if elapsed == 1 { self.window_failures } else { 0 };
+            self.previous_slow = if elapsed == 1 { self.window_slow } else { 0 };
             self.previous_calls = if elapsed == 1 { self.window_calls } else { 0 };
             self.window_failures = 0;
+            self.window_slow = 0;
             self.window_calls = 0;
             self.slot = slot;
         }
         self.window_failures += i64::from(failed);
+        self.window_slow += i64::from(slow);
         self.window_calls += 1;
-        (self.window_failure_count(), self.window_calls + self.previous_calls)
+    }
+
+    /// The window holds `minimum` calls and `count` of them reach `ratio`.
+    fn exceeds_ratio(&self, count: i64, ratio: f64, minimum: i64) -> bool {
+        let calls = self.window_call_count();
+        calls >= minimum && (count as f64 / calls as f64) >= ratio
+    }
+
+    /// The slow rule: slow and failed calls together reach `slow_ratio`
+    /// over the slow minimum, or the window holds the failure minimum of
+    /// calls and none succeeded. Only with slow error types configured.
+    fn exceeds_slow_rule(&self, options: &Options) -> bool {
+        if options.slow.is_empty() {
+            return false;
+        }
+        let unsuccessful = self.window_slow_count() + self.window_failure_count();
+        self.exceeds_ratio(unsuccessful, options.slow_ratio, options.slow_minimum())
+            || (self.window_call_count() >= options.minimum_throughput && unsuccessful == self.window_call_count())
+    }
+}
+
+impl Options {
+    fn slow_minimum(&self) -> i64 {
+        self.slow_minimum_throughput.unwrap_or(self.minimum_throughput)
     }
 }
 
@@ -374,6 +452,15 @@ impl CircuitBreaker {
         if options.half_open_permitted_calls < 1 {
             return invalid("Half-open permitted calls must be at least 1.");
         }
+        if options.slow.iter().any(String::is_empty) {
+            return invalid("Slow exceptions must be Throwable class names.");
+        }
+        if options.slow_ratio <= 0.0 || options.slow_ratio > 1.0 || options.slow_ratio.is_nan() {
+            return invalid("Slow ratio must be greater than 0 and at most 1.");
+        }
+        if options.slow_minimum_throughput.is_some_and(|m| m < 1) {
+            return invalid("Slow minimum throughput must be at least 1.");
+        }
         Ok(CircuitBreaker {
             shared: Arc::new(Shared {
                 options,
@@ -394,8 +481,8 @@ impl CircuitBreaker {
     /// `breaker.calls`, `breaker.callback_failures`, `breaker.fallbacks` and
     /// `breaker.transitions`, the gauge `breaker.event.timestamp`, and the
     /// observable gauges `breaker.active_calls`, `breaker.state`,
-    /// `breaker.failures` and `breaker.successes` (read when the backend
-    /// collects), all prefixed with the metric prefix.
+    /// `breaker.failures`, `breaker.successes` and `breaker.slow` (read
+    /// when the backend collects), all prefixed with the metric prefix.
     ///
     /// A breaker observed by one backend and prefix is reported once, by
     /// one set of gauges shared with every other breaker bound there; binding
@@ -459,7 +546,8 @@ impl CircuitBreaker {
     /// probe (or `close` when there is none) if fewer than
     /// `half_open_permitted_calls` probes are running. When the call
     /// returns `Ok`, its value is returned; when it returns `Err`, the
-    /// failure counts against the dependency and `open`'s fallback is
+    /// failure counts against the dependency (or, for one of the `slow`
+    /// error types, the call counts as slow) and `open`'s fallback is
     /// returned. While open, or when the probes are saturated, `open`'s
     /// fallback is returned without running anything.
     ///
@@ -538,16 +626,33 @@ impl CircuitBreaker {
                 Some(probe) if initial == State::HalfOpen => probe.await,
                 _ => close.await,
             };
-            let failure = match called {
+            let slow = |e: &dyn Failure| shared.options.slow.iter().any(|class| e.is_a(class));
+            let (failure, is_slow) = match called {
                 Ok(value) => match shared.on_success(instruments.as_deref()).await {
                     Ok(()) => {
                         outcome = "success";
                         return Ok(value);
                     }
-                    Err(e) => e.exception_type().into_owned(),
+                    Err(e) => (e.exception_type().into_owned(), slow(&e)),
                 },
-                Err(e) => e.exception_type().into_owned(),
+                Err(e) => (e.exception_type().into_owned(), slow(&e)),
             };
+            if is_slow {
+                exception = Some(failure);
+                shared.on_slow(instruments.as_deref()).await?;
+                let state = lock(&shared.tally).state();
+                if let Some(i) = &instruments {
+                    i.fallbacks.add(
+                        1,
+                        &shared.attributes(&[
+                            ("circuit_breaker.reason", Value::from("slow")),
+                            ("circuit_breaker.state", Value::from(state.as_str())),
+                        ]),
+                    );
+                }
+                outcome = "slow";
+                return Ok(open());
+            }
             let state = lock(&shared.tally).state();
             if let Some(i) = &instruments {
                 i.callback_failures.add(
@@ -583,6 +688,7 @@ impl CircuitBreaker {
                 "unknown" => "exception",
                 "fallback" => "fallback_exception",
                 "success" => "success_exception",
+                "slow" => "slow_exception",
                 _ => "short_circuit_exception",
             };
         }
@@ -639,6 +745,14 @@ impl CircuitBreaker {
         Ok(if tally.state() == State::HalfOpen { tally.failures } else { tally.window_failure_count() })
     }
 
+    /// Slow calls in the window.
+    ///
+    /// PHP: `getSlowCount()`.
+    pub async fn slow(&self) -> Result<i64, Error> {
+        self.shared.sync_from_cache().await?;
+        Ok(lock(&self.shared.tally).window_slow_count())
+    }
+
     /// Successful probes since the circuit was last half open.
     ///
     /// PHP: `getSuccessCount()`.
@@ -658,19 +772,20 @@ impl CircuitBreaker {
     }
 }
 
-/// Registers the four observable gauges reporting every breaker in
+/// Registers the five observable gauges reporting every breaker in
 /// `breakers` through `telemetry`.
 fn observe(telemetry: &dyn Telemetry, prefix: &str, breakers: &Arc<Mutex<Vec<Weak<Shared>>>>) {
     let prefix = prefix.trim_matches('.');
     let name = |n: &str| if prefix.is_empty() { n.to_owned() } else { format!("{prefix}.{n}") };
     type Read = fn(&Tally) -> i64;
-    let gauges: [(&str, Option<&str>, bool, Read); 4] = [
+    let gauges: [(&str, Option<&str>, bool, Read); 5] = [
         ("breaker.active_calls", Some("{call}"), false, |t| t.active_calls),
         ("breaker.state", None, true, |t| t.state().gauge()),
         ("breaker.failures", Some("{failure}"), true, |t| {
             if t.state() == State::HalfOpen { t.failures } else { t.window_failure_count() }
         }),
         ("breaker.successes", Some("{success}"), true, |t| t.successes),
+        ("breaker.slow", Some("{call}"), false, |t| t.window_slow_count()),
     ];
     for (gauge, unit, sync, read) in gauges {
         let breakers = breakers.clone();
@@ -726,6 +841,11 @@ impl Shared {
         let successes = integer(cache.get(&self.field(SUCCESSES)).await?).map_or(0, |n| n.max(0));
         let opened_at = integer(cache.get(&self.field(OPENED_AT)).await?);
         let mut tally = lock(&self.tally);
+        // A slow-probe count belongs to one half-open period: another
+        // process ending it or starting the next one clears it.
+        if state != State::HalfOpen || opened_at != tally.opened_at {
+            tally.half_open_slow = 0;
+        }
         tally.state = Some(state);
         tally.failures = failures;
         tally.successes = successes;
@@ -757,7 +877,11 @@ impl Shared {
             let from = lock(&self.tally).state();
             self.set_failures(0).await?;
             self.set_successes(0).await?;
-            lock(&self.tally).reset_window(self.options.window);
+            {
+                let mut tally = lock(&self.tally);
+                tally.reset_window(self.options.window);
+                tally.half_open_slow = 0;
+            }
             self.set_state(State::HalfOpen).await?;
             self.record_transition(instruments, from, State::HalfOpen);
         }
@@ -774,7 +898,7 @@ impl Shared {
                 }
             }
             State::Closed => {
-                lock(&self.tally).record(self.options.window, false);
+                lock(&self.tally).record(self.options.window, false, false);
             }
             State::Open => {}
         }
@@ -786,8 +910,38 @@ impl Shared {
             self.increment_failures().await?;
             return self.transition_to_open(instruments).await;
         }
-        let (failures, calls) = lock(&self.tally).record(self.options.window, true);
-        if calls >= self.options.minimum_throughput && (failures as f64 / calls as f64) >= self.options.failure_ratio {
+        let opens = {
+            let mut tally = lock(&self.tally);
+            tally.record(self.options.window, true, false);
+            let o = &self.options;
+            tally.exceeds_ratio(tally.window_failure_count(), o.failure_ratio, o.minimum_throughput)
+                || tally.exceeds_slow_rule(o)
+        };
+        if opens {
+            self.transition_to_open(instruments).await?;
+        }
+        Ok(())
+    }
+
+    /// A slow call only dilutes the failure ratio; the slow rule counts
+    /// every call that did not succeed. A slow probe is neutral until the
+    /// slow minimum of them in one half-open period opens the circuit.
+    async fn on_slow(&self, instruments: Option<&Instruments>) -> Result<(), Error> {
+        let opens = {
+            let mut tally = lock(&self.tally);
+            match tally.state() {
+                State::HalfOpen => {
+                    tally.half_open_slow += 1;
+                    tally.half_open_slow >= self.options.slow_minimum()
+                }
+                State::Open => false,
+                State::Closed => {
+                    tally.record(self.options.window, false, true);
+                    tally.exceeds_slow_rule(&self.options)
+                }
+            }
+        };
+        if opens {
             self.transition_to_open(instruments).await?;
         }
         Ok(())
@@ -797,6 +951,7 @@ impl Shared {
         let from = lock(&self.tally).state();
         self.set_opened_at(Some(now())).await?;
         self.set_successes(0).await?;
+        lock(&self.tally).half_open_slow = 0;
         self.set_state(State::Open).await?;
         self.record_transition(instruments, from, State::Open);
         Ok(())
@@ -806,7 +961,11 @@ impl Shared {
         let from = lock(&self.tally).state();
         self.set_failures(0).await?;
         self.set_successes(0).await?;
-        lock(&self.tally).reset_window(self.options.window);
+        {
+            let mut tally = lock(&self.tally);
+            tally.reset_window(self.options.window);
+            tally.half_open_slow = 0;
+        }
         self.set_opened_at(None).await?;
         self.set_state(State::Closed).await?;
         self.record_transition(instruments, from, State::Closed);
@@ -944,6 +1103,59 @@ mod tests {
         }
         assert_eq!(second.state().await.unwrap(), State::Open);
         assert_eq!(second.failures().await.unwrap(), 0);
+    }
+
+    struct Timeout;
+
+    impl Failure for Timeout {
+        fn exception_type(&self) -> Cow<'_, str> {
+            Cow::Borrowed("Timeout")
+        }
+    }
+
+    fn slow_options(minimum_throughput: i64, slow_minimum_throughput: Option<i64>) -> Options {
+        Options {
+            minimum_throughput,
+            slow: vec!["Timeout".into()],
+            slow_ratio: 0.9,
+            slow_minimum_throughput,
+            window: 60,
+            ..Options::default()
+        }
+    }
+
+    #[utopia_async::test]
+    async fn slow_calls_are_not_failures() {
+        let breaker = CircuitBreaker::new(slow_options(3, Some(20))).unwrap();
+        breaker.call(|| "fallback", async { Ok::<_, Timeout>("ok") }).await.unwrap();
+        for _ in 0..5 {
+            let value = breaker.call(|| "fallback", async { Err::<&str, _>(Timeout) }).await.unwrap();
+            assert_eq!(value, "fallback");
+        }
+        assert_eq!(breaker.state().await.unwrap(), State::Closed);
+        assert_eq!(breaker.failures().await.unwrap(), 0);
+        assert_eq!(breaker.slow().await.unwrap(), 5);
+    }
+
+    #[utopia_async::test]
+    async fn a_window_without_success_opens_on_the_failure_minimum() {
+        let breaker = CircuitBreaker::new(slow_options(3, Some(20))).unwrap();
+        for _ in 0..2 {
+            breaker.call(|| "fallback", async { Err::<&str, _>(Timeout) }).await.unwrap();
+        }
+        assert_eq!(breaker.state().await.unwrap(), State::Closed);
+        breaker.call(|| "fallback", fail()).await.unwrap();
+        assert_eq!(breaker.state().await.unwrap(), State::Open);
+        assert_eq!((breaker.failures().await.unwrap(), breaker.slow().await.unwrap()), (1, 2));
+    }
+
+    #[test]
+    fn rejects_out_of_range_slow_options() {
+        let error = CircuitBreaker::new(Options { slow_ratio: 0.0, ..Options::default() }).unwrap_err();
+        assert_eq!(error.to_string(), "Slow ratio must be greater than 0 and at most 1.");
+        let error =
+            CircuitBreaker::new(Options { slow_minimum_throughput: Some(0), ..Options::default() }).unwrap_err();
+        assert_eq!(error.to_string(), "Slow minimum throughput must be at least 1.");
     }
 
     #[test]

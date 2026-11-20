@@ -12959,7 +12959,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Client\\Exception\\NetworkException",
-              "message": "Response body exceeds the maximum file size."
+              "message": "Would have exceeded max file size"
             }
           }
         },

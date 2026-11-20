@@ -44,6 +44,8 @@ pub const OPS: &[&str] = &[
     "counting_failing.purges",
     "breaker.new",
     "breaker.is_open",
+    "breaker.state",
+    "breaker.slow",
     "adapter.purge_failure",
     "fs.mkdir",
     "fs.delete",
@@ -51,6 +53,7 @@ pub const OPS: &[&str] = &[
     "coordination.new",
     "coordination.fail",
     "coordination.calls",
+    "coordination.slow_load",
     "breaker.failures",
     "probe.calls",
     "null_load.new",
@@ -788,6 +791,13 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
             if let Some(t) = a.opt_i64("timeout")? {
                 options.timeout = t;
             }
+            if a.opt("slow").is_some() {
+                options.slow = a.array("slow")?.iter().filter_map(|c| c.as_str().map(str::to_owned)).collect();
+            }
+            if let Some(r) = a.opt_f64("slow_ratio")? {
+                options.slow_ratio = r;
+            }
+            options.slow_minimum_throughput = a.opt_i64("slow_minimum_throughput")?;
             let breaker = match Breaker::new(options) {
                 Ok(breaker) => Arc::new(breaker),
                 Err(e) => return Ok(Outcome::err(e.php_class(), e.to_string())),
@@ -803,6 +813,20 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
             let breaker = session.get::<Arc<Breaker>>(a.value("breaker")?)?.clone();
             match breaker.state().await {
                 Ok(state) => Outcome::ok(state == utopia_circuit_breaker::State::Open),
+                Err(e) => Outcome::err(e.php_class(), e.to_string()),
+            }
+        }
+        "breaker.state" => {
+            let breaker = session.get::<Arc<Breaker>>(a.value("breaker")?)?.clone();
+            match breaker.state().await {
+                Ok(state) => Outcome::ok(state.as_str()),
+                Err(e) => Outcome::err(e.php_class(), e.to_string()),
+            }
+        }
+        "breaker.slow" => {
+            let breaker = session.get::<Arc<Breaker>>(a.value("breaker")?)?.clone();
+            match breaker.slow().await {
+                Ok(slow) => Outcome::ok(slow),
                 Err(e) => Outcome::err(e.php_class(), e.to_string()),
             }
         }
@@ -852,7 +876,20 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
         "coordination.fail" => {
             let h = handle(session, a.value("adapter")?)?;
             let state = h.coordination.ok_or_else(|| Fault::new("not a coordination adapter"))?;
-            state.failing.store(a.bool("failing")?, Ordering::SeqCst);
+            let message = a.opt_str("message")?.unwrap_or("Transport unavailable").to_owned();
+            let failure = match a.opt_str("class")?.unwrap_or("RuntimeException") {
+                "Utopia\\Cache\\Adapter\\Redis\\TimeoutException" => Error::Timeout(message),
+                "Utopia\\Cache\\Adapter\\Redis\\ConnectionException" => Error::Connection(message),
+                "RuntimeException" => Error::Runtime(message),
+                other => return Err(Fault::new(format!("coordination.fail: no `{other}`"))),
+            };
+            *state.failure.lock().unwrap_or_else(|e| e.into_inner()) = a.bool("failing")?.then_some(failure);
+            Outcome::Ok(Json::Null)
+        }
+        "coordination.slow_load" => {
+            let h = handle(session, a.value("adapter")?)?;
+            let state = h.coordination.ok_or_else(|| Fault::new("not a coordination adapter"))?;
+            state.slow_load.store(a.bool("slow")?, Ordering::SeqCst);
             Outcome::Ok(Json::Null)
         }
         "coordination.calls" => {
@@ -1429,11 +1466,14 @@ impl Adapter for Probe {
 }
 
 /// CircuitBreakerTest's `CoordinationMemory`: Memory whose versioned
-/// operations count their calls and fail while `failing` is set.
+/// operations count their calls and fail with `failure` while it is set,
+/// and whose load fails with a timeout while `slow_load` is set
+/// (`SlowLoadMemory`).
 #[derive(Default)]
 struct CoordinationState {
     calls: AtomicI64,
-    failing: std::sync::atomic::AtomicBool,
+    failure: std::sync::Mutex<Option<Error>>,
+    slow_load: std::sync::atomic::AtomicBool,
 }
 
 struct Coordination {
@@ -1444,10 +1484,10 @@ struct Coordination {
 impl Coordination {
     fn check(&self) -> utopia_cache::Result<()> {
         self.state.calls.fetch_add(1, Ordering::SeqCst);
-        if self.state.failing.load(Ordering::SeqCst) {
-            return Err(Error::Runtime("Transport unavailable".into()));
+        match &*self.state.failure.lock().unwrap_or_else(|e| e.into_inner()) {
+            Some(failure) => Err(failure.clone()),
+            None => Ok(()),
         }
-        Ok(())
     }
 }
 
@@ -1458,7 +1498,14 @@ impl Adapter for Coordination {
         ttl: i64,
         hash: &str,
     ) -> impl Future<Output = utopia_cache::Result<Option<Value>>> + Send {
-        self.memory.load(key, ttl, hash)
+        let slow = self.state.slow_load.load(Ordering::SeqCst);
+        let load = self.memory.load(key, ttl, hash);
+        async move {
+            if slow {
+                return Err(Error::Timeout("read deadline expired".into()));
+            }
+            load.await
+        }
     }
     fn save(
         &self,

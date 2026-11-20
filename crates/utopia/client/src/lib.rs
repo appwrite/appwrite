@@ -45,6 +45,7 @@
 //! | `Client` | [`Client`] |
 //! | `Adapter`, `Psr18\StreamingClientInterface`, `Psr18\ResponseStreamingClientInterface`, `Decorator` | [`Adapter`] ([`Adapter::stream_with_response`], [`Adapter::supports_response_streaming`]), [`Sink`] |
 //! | `Adapter\Curl\Client`, `Adapter\SwooleCoroutine\Client` | [`Http`] |
+//! | `Adapter\Curl\DecodedSizeLimit` | [`DecodedSizeLimit`] |
 //! | `Decorator\Retry` | [`Retry`] |
 //! | `Decorator\Retry\Strategy` | [`Strategy`], [`Outcome`] |
 //! | `Decorator\Retry\Backoff` | [`Backoff`] |
@@ -77,7 +78,7 @@ pub use adapter::{Adapter, Certificate, Options, Sink, Tls};
 pub use client::Client;
 pub use destinations::{Anywhere, Destinations, IpRange, PublicInternet};
 pub use error::Error;
-pub use http::Http;
+pub use http::{DecodedSizeLimit, Http};
 pub use message::{Body, Headers, Request, Response};
 pub use pool::Pool;
 pub use retry::{Backoff, Outcome, Retry, Sleep, Strategy, Timer};

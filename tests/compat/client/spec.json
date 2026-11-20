@@ -720,6 +720,85 @@
     "client.record": {
       "doc": "fixture: {sleeps, calls} of a client handle: the sleeps its Retry recorded and the requests its legacy adapter sent (null without one)"
     },
+    "decoded_size_limit.from_options": {
+      "doc": "DecodedSizeLimit::fromOptions([CURLOPT_MAXFILESIZE_LARGE => large?, CURLOPT_MAXFILESIZE => legacy?])?->bytes, each value any JSON scalar (cast as PHP casts it) or absent",
+      "covers": [
+        "Utopia\\Client\\Adapter\\Curl\\DecodedSizeLimit::fromOptions"
+      ],
+      "fuzz": [
+        {
+          "name": "options",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "large": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": -2,
+                    "max": 20000
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "0123456789.e- +x",
+                    "min": 0,
+                    "max": 6,
+                    "tricky": 0.4
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      true,
+                      false,
+                      null,
+                      1.5,
+                      -0.5
+                    ]
+                  }
+                ]
+              },
+              "legacy": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": -2,
+                    "max": 20000
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "0123456789.e- +x",
+                    "min": 0,
+                    "max": 6,
+                    "tricky": 0.4
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      true,
+                      false,
+                      null
+                    ]
+                  }
+                ]
+              }
+            },
+            "optional": [
+              "large",
+              "legacy"
+            ]
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "decoded_size_limit.wrap": {
+      "doc": "DecodedSizeLimit::fromOptions(like decoded_size_limit.from_options)->wrap(a write function recording each chunk's length and returning it, $exceeded), then the wrapped function called with a chunk of each length in `chunks`: {returns: what each call returned, exceeded, written: the lengths the write function saw}",
+      "covers": [
+        "Utopia\\Client\\Adapter\\Curl\\DecodedSizeLimit::wrap"
+      ]
+    },
     "pool.send": {
       "doc": "new Pool(new Connections(new Stack(), 'test', size, fn () => new Curl() (counted), 0.0)), `held` connections popped and kept, then sendRequest (or stream, with `stream`) each of `requests`: {responses, created}",
       "covers": [
@@ -1209,6 +1288,16 @@
       "symbol": "Utopia\\Client\\Client::withCertificate",
       "php": "An encrypted client key is decrypted with the passphrase.",
       "reason": "The passphrase is kept but rustls reads unencrypted PKCS#8, PKCS#1 and SEC1 keys only: an encrypted key fails with TlsException. rustls has no key decryption; decrypting PEM keys would need OpenSSL."
+    },
+    {
+      "symbol": "Utopia\\Client\\Adapter\\Curl\\DecodedSizeLimit::wrap",
+      "php": "$write is mixed and checked at run time: a value that is not callable throws InvalidArgumentException('CURLOPT_WRITEFUNCTION must be callable.'). The wrapped closure takes the cURL handle as its first argument.",
+      "reason": "The Rust writer is an `impl FnMut(&[u8]) -> usize`: a non-callable does not type-check, so DecodedSizeLimitTest::testItRejectsAWriteCallbackThatIsNotCallable has no case. There is no cURL handle to pass."
+    },
+    {
+      "symbol": "Utopia\\Client\\Adapter\\Curl\\Client::sendRequest",
+      "php": "A body read past CURLOPT_MAXFILESIZE fails with cURL's own message, which depends on the libcurl version: the one the PHP side runs counts the decoded bytes it hands to the write function, so it reports `Would have exceeded max file size` for a compressed body that expands past the cap; a libcurl counting only the wire bytes lets the adapter's DecodedSizeLimit report `Response body exceeds the maximum file size.` instead.",
+      "reason": "Http follows the reference libcurl: bytes received or decoded past the cap fail with `Would have exceeded max file size`, a Content-Length past it with `Maximum file size exceeded`."
     }
   ],
   "bench": {

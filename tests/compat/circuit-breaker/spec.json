@@ -85,7 +85,7 @@
       "doc": "fixture: [[gauge, callback count], ...]"
     },
     "breaker.new": {
-      "doc": "new CircuitBreaker(timeout?, successThreshold?, cache: store?, key?, telemetry?, metricPrefix?, window?, failureRatio?, minimumThroughput?, halfOpenPermittedCalls?)",
+      "doc": "new CircuitBreaker(timeout?, successThreshold?, cache: store?, key?, telemetry?, metricPrefix?, window?, failureRatio?, minimumThroughput?, halfOpenPermittedCalls?, slow?: exception class names, slowRatio?, slowMinimumThroughput?)",
       "covers": [
         "Utopia\\CircuitBreaker\\CircuitBreaker::__construct"
       ]
@@ -100,19 +100,19 @@
       ]
     },
     "breaker.call": {
-      "doc": "$breaker->call(open: fn => fallback, close, halfOpen?) where close and half_open are {result} or {throw}, optionally running `during` actions inside first ({op: call|state|observe}): the result, or {result, during}",
+      "doc": "$breaker->call(open: fn => fallback, close, halfOpen?) where close and half_open are {result} or {throw, class?} (a RuntimeException unless `class` names another), optionally running `during` actions inside first ({op: call|state|observe}): the result, or {result, during}",
       "covers": [
         "Utopia\\CircuitBreaker\\CircuitBreaker::call"
       ]
     },
     "breaker.calls": {
-      "doc": "one call per `outcomes` entry (succeed or fail, fallback 'fallback', result 'ok'): count of each returned value",
+      "doc": "one call per `outcomes` entry (succeed, fail: a RuntimeException, or {throw: exception class}; fallback 'fallback', result 'ok'): count of each returned value",
       "covers": [
         "Utopia\\CircuitBreaker\\CircuitBreaker::call"
       ]
     },
     "breaker.scenario": {
-      "doc": "a breaker made like breaker.new, then each of `steps` (succeed, fail, probe: with a half-open callback, trip): [result, state, failures, successes] after each",
+      "doc": "a breaker made like breaker.new, then each of `steps` (succeed, fail: a RuntimeException, slow: an UnexpectedValueException, probe: with a half-open callback, trip): [result, state, failures, successes] after each",
       "covers": [
         "Utopia\\CircuitBreaker\\CircuitBreaker::__construct",
         "Utopia\\CircuitBreaker\\CircuitBreaker::call",
@@ -134,9 +134,12 @@
               "failure_ratio": { "gen": "float", "min": -0.1, "max": 1.2 },
               "minimum_throughput": { "gen": "int", "min": 0, "max": 6 },
               "half_open_permitted_calls": { "gen": "int", "min": 0, "max": 2 },
-              "steps": { "gen": "array", "min": 0, "max": 30, "items": { "gen": "pick", "from": ["succeed", "fail", "fail", "probe", "trip"] } }
+              "steps": { "gen": "array", "min": 0, "max": 30, "items": { "gen": "pick", "from": ["succeed", "fail", "fail", "slow", "slow", "probe", "trip"] } },
+              "slow": { "gen": "pick", "from": [[], ["UnexpectedValueException"], ["RuntimeException"], ["Exception"], ["LogicException"]] },
+              "slow_ratio": { "gen": "float", "min": -0.1, "max": 1.2 },
+              "slow_minimum_throughput": { "gen": "int", "min": 0, "max": 6 }
             },
-            "optional": ["timeout", "success_threshold", "key", "window", "failure_ratio", "minimum_throughput", "half_open_permitted_calls"]
+            "optional": ["timeout", "success_threshold", "key", "window", "failure_ratio", "minimum_throughput", "half_open_permitted_calls", "slow", "slow_ratio", "slow_minimum_throughput"]
           },
           "iterations": 500
         }
@@ -162,6 +165,12 @@
         "Utopia\\CircuitBreaker\\CircuitBreaker::getFailureCount"
       ]
     },
+    "breaker.slow": {
+      "doc": "$breaker->getSlowCount()",
+      "covers": [
+        "Utopia\\CircuitBreaker\\CircuitBreaker::getSlowCount"
+      ]
+    },
     "breaker.successes": {
       "doc": "$breaker->getSuccessCount()",
       "covers": [
@@ -175,7 +184,7 @@
       ]
     },
     "sleep": {
-      "doc": "fixture: waits `ms` milliseconds (open timeouts and windows are in whole seconds)"
+      "doc": "fixture: waits `ms` milliseconds (open timeouts and windows are in whole seconds), or with `slot` until the next whole multiple of `slot` seconds starts (the tests' awaitSlotStart)"
     }
   },
   "generators": {},
@@ -202,6 +211,11 @@
       "symbol": "Utopia\\CircuitBreaker\\Adapter\\SwooleTable::createTable",
       "php": "A Swoole\\Table has a fixed number of rows: set() on a full table fails with AdapterException.",
       "reason": "SharedTable is a map in process memory that grows; Swoole's real capacity depends on its hash conflict allowance and is not a contract."
+    },
+    {
+      "symbol": "Utopia\\CircuitBreaker\\CircuitBreaker::__construct",
+      "php": "`slow` entries are class names checked with is_a(..., Throwable::class, true): a class that does not exist or is not Throwable throws InvalidArgumentException('Slow exceptions must be Throwable class names.').",
+      "reason": "Rust has no class registry: `slow` holds error type names matched with Failure::is_a, so only an empty name is rejected (with the same message). SlowCallTest's two invalid-class cases (stdClass, a missing class) are therefore not ported as cases."
     }
   ]
 }

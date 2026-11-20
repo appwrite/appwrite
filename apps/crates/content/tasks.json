@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-20T14:30:00Z",
+  "updated": "2026-11-20T18:00:00Z",
   "tasks": [
     {
       "id": "crate-layout",
@@ -800,6 +800,14 @@
       "status": "done",
       "updated": "2026-11-20T14:30:00Z",
       "note": "Nov 20, in a 2-hour box. messaging: email::Bird (and email::bird::Category) ported from utopia-php/messaging's Bird email adapter, with the body counted toward its 20 MB message limit; constructor new(api_key, category, endpoint) as PHP's. The compat drivers gain the bird_email adapter and the Email\\Bird\\Category enum; BirdEmailTest.json has 23 cases covering 21 of the PHP test's 23 tests, hand-written and replayed in Rust with 0 differences (the 20 MB send and the 100 x 600 KiB batch split are left out: their recorded requests would be tens of MB). client: Http::with_max_file_size (PHP's CURLOPT_MAXFILESIZE[_LARGE]) refuses a Content-Length above the cap and bytes received past it as curl does, and decoded bytes past it as the cURL adapter now does (NetworkException, CURLE_FILESIZE_EXCEEDED); two CurlClientTest cases, unverified until CI runs PHP (Docker was down). The adapter owning CURLOPT_WRITEFUNCTION/FILE/RETURNTRANSFER has no Rust counterpart: Rust takes no raw curl options. php-sync: messaging d5814e3594, client 4aea3b8b99."
+    },
+    {
+      "id": "lib-port-breaker-slow-calls-client-cap-message",
+      "title": "circuit-breaker slow calls, client DecodedSizeLimit and cURL's size message from main",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-11-20T18:00:00Z",
+      "note": "Nov 20, in a 2-hour box, fixing the Compat (libraries) CI lane on #14308. circuit-breaker: Options gain slow, slow_ratio and slow_minimum_throughput (PHP's slow, slowRatio, slowMinimumThroughput); a call whose error is one of the slow types (Failure::is_a, PHP's instanceof) returns the fallback without counting as a failure, the slow rule opens on (slow + failed) / calls over the slow minimum or on a window of minimum_throughput calls with no success, a slow probe is neutral until the slow minimum of them in one half-open period reopens the circuit, and the per-process slow-probe count resets with each period, also when another process starts it. CircuitBreaker::slow() (getSlowCount) and the breaker.slow gauge; the 17 CircuitBreakerTest telemetry cases now expect it. SlowCallTest.json ports SlowCallTest as 34 cases (the drivers take slow options, throw a named SPL exception, and wait for a slot start), and the scenario fuzz covers slow steps. Not ported: the two invalid-class cases (Rust has no class registry, a deviation) and the throwing-fallback case (the existing call deviation). cache: cache errors implement Failure::is_a along the PHP hierarchy (Redis TimeoutException < ConnectionException < RedisException < RuntimeException), and the cache's new CircuitBreakerTest slow tests are 10 more cases. client: DecodedSizeLimit (from_options, wrap, bytes) ported and mapped; DecodedSizeLimitTest.json has 11 cases (the non-callable write is a deviation). Bytes received or decoded past CURLOPT_MAXFILESIZE now fail with cURL's 'Would have exceeded max file size' as CI's libcurl reports (it counts decoded bytes before the adapter's own check sees them); a Content-Length past it keeps 'Maximum file size exceeded'. Expectations are hand-written from CI's PHP output and replayed in Rust; PHP runs only in CI (Docker was down). php-sync: circuit-breaker and cache d814e60996, client 4aea3b8b99."
     }
   ]
 }

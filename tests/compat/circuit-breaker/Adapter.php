@@ -108,6 +108,7 @@ final class Adapter implements Base, Benchmarks
                 'half_open' => self::of($a, $s)->isHalfOpen(),
             ],
             'breaker.failures' => fn (array $a, Session $s) => self::of($a, $s)->getFailureCount(),
+            'breaker.slow' => fn (array $a, Session $s) => self::of($a, $s)->getSlowCount(),
             'breaker.successes' => fn (array $a, Session $s) => self::of($a, $s)->getSuccessCount(),
             'breaker.trip' => function (array $a, Session $s) {
                 self::of($a, $s)->trip();
@@ -115,13 +116,22 @@ final class Adapter implements Base, Benchmarks
                 return;
             },
             'sleep' => function (array $a, Session $s) {
+                if (isset($a['slot'])) {
+                    $start = time();
+                    while (time() === $start || time() % $a['slot'] !== 0) {
+                        usleep(10_000);
+                    }
+
+                    return;
+                }
                 usleep((int) ($a['ms'] * 1000));
 
                 return;
             },
             // A breaker made like breaker.new, then each of `steps` (succeed,
-            // fail, probe: a half-open callback, trip) with the state, failure
-            // and success counts after it.
+            // fail: a RuntimeException, slow: an UnexpectedValueException,
+            // probe: a half-open callback, trip) with the state, failure and
+            // success counts after it.
             'breaker.scenario' => function (array $a, Session $s) {
                 $breaker = self::breaker($a, $s);
                 $out = [];
@@ -130,6 +140,7 @@ final class Adapter implements Base, Benchmarks
                         'trip' => $breaker->trip(),
                         'probe' => $breaker->call(open: static fn () => 'fallback', close: static fn () => 'closed', halfOpen: static fn () => 'probe'),
                         'fail' => $breaker->call(open: static fn () => 'fallback', close: static fn () => throw new \RuntimeException('failed')),
+                        'slow' => $breaker->call(open: static fn () => 'fallback', close: static fn () => throw new \UnexpectedValueException('slow')),
                         default => $breaker->call(open: static fn () => 'fallback', close: static fn () => 'ok'),
                     };
                     $out[] = [$result, $breaker->getState()->value, $breaker->getFailureCount(), $breaker->getSuccessCount()];
@@ -137,14 +148,16 @@ final class Adapter implements Base, Benchmarks
 
                 return $out;
             },
-            // Calls with failing or succeeding callbacks, `count` times each, in order.
+            // One call per outcome, in order: succeed, fail (a RuntimeException)
+            // or {throw: exception class}.
             'breaker.calls' => function (array $a, Session $s) {
                 $breaker = self::of($a, $s);
                 $out = [];
                 foreach ($a['outcomes'] as $outcome) {
+                    $class = $outcome === 'fail' ? \RuntimeException::class : (\is_array($outcome) ? $outcome['throw'] : null);
                     $out[] = $breaker->call(
                         open: static fn () => 'fallback',
-                        close: $outcome === 'fail' ? static fn () => throw new \RuntimeException('failed') : static fn () => 'ok',
+                        close: $class === null ? static fn () => 'ok' : static fn () => throw new $class('failed'),
                     );
                 }
 
@@ -155,7 +168,7 @@ final class Adapter implements Base, Benchmarks
 
     /**
      * Runs one call: `close` (and `half_open` when given) are callbacks
-     * `{result}` or `{throw}` with optional `during` actions run inside them
+     * `{result}` or `{throw, class?}` (a RuntimeException by default) with optional `during` actions run inside them
      * first (nested calls, state reads, gauge observations), whose results
      * are reported as `during`.
      */
@@ -173,7 +186,9 @@ final class Adapter implements Base, Benchmarks
                     };
                 }
                 if (isset($spec['throw'])) {
-                    throw new \RuntimeException($spec['throw']);
+                    $class = $spec['class'] ?? \RuntimeException::class;
+
+                    throw new $class($spec['throw']);
                 }
 
                 return $spec['result'] ?? null;
@@ -211,9 +226,9 @@ final class Adapter implements Base, Benchmarks
     private static function breaker(array $a, Session $s): CircuitBreaker
     {
         $named = [];
-        foreach (['timeout' => 'timeout', 'success_threshold' => 'successThreshold', 'key' => 'key', 'metric_prefix' => 'metricPrefix', 'window' => 'window', 'failure_ratio' => 'failureRatio', 'minimum_throughput' => 'minimumThroughput', 'half_open_permitted_calls' => 'halfOpenPermittedCalls'] as $arg => $param) {
+        foreach (['timeout' => 'timeout', 'success_threshold' => 'successThreshold', 'key' => 'key', 'metric_prefix' => 'metricPrefix', 'window' => 'window', 'failure_ratio' => 'failureRatio', 'minimum_throughput' => 'minimumThroughput', 'half_open_permitted_calls' => 'halfOpenPermittedCalls', 'slow' => 'slow', 'slow_ratio' => 'slowRatio', 'slow_minimum_throughput' => 'slowMinimumThroughput'] as $arg => $param) {
             if (\array_key_exists($arg, $a)) {
-                $named[$param] = $arg === 'failure_ratio' ? (float) $a[$arg] : $a[$arg];
+                $named[$param] = \in_array($arg, ['failure_ratio', 'slow_ratio'], true) ? (float) $a[$arg] : $a[$arg];
             }
         }
         if (isset($a['store'])) {
