@@ -682,7 +682,7 @@ test.describe('organization single sign-on', () => {
     await expect(update).toBeDisabled()
     // Owners are never locked out, and the card says so
     await expect(required).toHaveAccessibleDescription(
-      /Owners can always sign in any way\..*Owners can always sign in with any method, so a broken provider never locks your organization out\./,
+      /Owners can always sign in any way\..*Owners can always sign in with any method, so a broken identity provider never locks your organization out\./,
     )
 
     // Turning it off needs no confirmation
