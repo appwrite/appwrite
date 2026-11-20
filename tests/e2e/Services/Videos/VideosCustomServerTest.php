@@ -14,6 +14,7 @@ use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Scopes\VideoCustom;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
+use Utopia\Database\Document;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
@@ -747,6 +748,109 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, $response['body']['total']);
         $this->assertContains($captionId, \array_column($response['body']['captions'], '$id'));
+
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', $this->headers(), [
+            'queries' => [
+                Query::equal('code', ['eng'])->toString(),
+            ],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $response['body']['total']);
+        $this->assertContains($captionId, \array_column($response['body']['captions'], '$id'));
+
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', $this->headers(), [
+            'queries' => [
+                Query::equal('code', ['fra'])->toString(),
+            ],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', $this->headers(), [
+            'queries' => [
+                Query::equal('notAnAttribute', ['x'])->toString(),
+            ],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $second = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getCaptionFile()['$id'],
+            'name' => 'French',
+            'code' => 'fra',
+            'default' => false,
+        ]);
+        $this->assertEquals(201, $second['headers']['status-code']);
+        $secondId = $second['body']['$id'];
+        $secondReady = $this->waitForCaptionTerminalState($videoId, $secondId);
+        $this->assertEquals('ready', $secondReady['status']);
+
+        $page = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', $this->headers(), [
+            'queries' => [Query::limit(1)->toString()],
+        ]);
+        $this->assertEquals(200, $page['headers']['status-code']);
+        $this->assertCount(1, $page['body']['captions']);
+        $this->assertEquals(2, $page['body']['total'], 'total counts every caption for the video, not the page');
+
+        $uncounted = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', $this->headers(), [
+            'queries' => [Query::limit(1)->toString()],
+            'total' => false,
+        ]);
+        $this->assertEquals(200, $uncounted['headers']['status-code']);
+        $this->assertCount(1, $uncounted['body']['captions']);
+        $this->assertEquals(0, $uncounted['body']['total']);
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function childListsProvider(): iterable
+    {
+        yield 'captions' => ['captions'];
+        yield 'renditions' => ['renditions'];
+    }
+
+    /**
+     * A cursor must name a row of the video being listed. A row of another video
+     * is rejected the same way as an ID that does not exist, so the list cannot
+     * reveal whether that row exists or how it sorts against the caller's rows.
+     */
+    #[DataProvider('childListsProvider')]
+    public function testListRejectsACursorFromAnotherVideo(string $children): void
+    {
+        $videoId = $this->createVideo();
+        $otherVideoId = $this->createVideo();
+
+        $createChild = fn (string $id): string => $children === 'captions'
+            ? $this->createCaption($id)
+            : $this->createRendition($id, 'hls');
+
+        $ownId = $createChild($videoId);
+        $otherId = $createChild($otherVideoId);
+
+        $own = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/' . $children, $this->headers(), [
+            'queries' => [Query::cursorAfter(new Document(['$id' => $ownId]))->toString()],
+        ]);
+        $this->assertEquals(200, $own['headers']['status-code']);
+
+        $foreign = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/' . $children, $this->headers(), [
+            'queries' => [Query::cursorAfter(new Document(['$id' => $otherId]))->toString()],
+        ]);
+        $this->assertEquals(400, $foreign['headers']['status-code']);
+        $this->assertEquals('general_cursor_not_found', $foreign['body']['type']);
+    }
+
+    private function createCaption(string $videoId): string
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getCaptionFile()['$id'],
+            'name' => 'English',
+            'code' => 'eng',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        return $response['body']['$id'];
     }
 
     public function testUpdateCaption(): void
@@ -1908,24 +2012,53 @@ final class VideosCustomServerTest extends Scope
         $this->assertGreaterThanOrEqual(1, $response['body']['total']);
         $this->assertContains($renditionId, \array_column($response['body']['renditions'], '$id'));
 
-        // Filters replace the pre-merge behaviour of hard-coding status=ready,
-        // which hid failed and in-progress renditions entirely.
+        // Queries replace the pre-merge dedicated output/status params. Callers
+        // filter with Query.equal the same way as every other Appwrite list.
         $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers(), [
-            'output' => 'hls',
+            'queries' => [
+                Query::equal('output', ['hls'])->toString(),
+            ],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, $response['body']['total']);
 
         $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers(), [
-            'output' => 'dash',
+            'queries' => [
+                Query::equal('output', ['dash'])->toString(),
+            ],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(0, $response['body']['total']);
 
         $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers(), [
-            'status' => 'nonsense',
+            'queries' => [
+                Query::equal('notAnAttribute', ['x'])->toString(),
+            ],
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
+
+        $secondId = $this->createReadyRendition($videoId, 'dash');
+
+        $page = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'queries' => [Query::limit(1)->toString()],
+        ]);
+        $this->assertEquals(200, $page['headers']['status-code']);
+        $this->assertCount(1, $page['body']['renditions']);
+        $this->assertEquals(2, $page['body']['total'], 'total counts every rendition for the video, not the page');
+
+        $uncounted = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'queries' => [Query::limit(1)->toString()],
+            'total' => false,
+        ]);
+        $this->assertEquals(200, $uncounted['headers']['status-code']);
+        $this->assertCount(1, $uncounted['body']['renditions']);
+        $this->assertEquals(0, $uncounted['body']['total']);
+
+        $listed = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers());
+        $this->assertEquals(200, $listed['headers']['status-code']);
+        $listedIds = \array_column($listed['body']['renditions'], '$id');
+        $this->assertContains($renditionId, $listedIds);
+        $this->assertContains($secondId, $listedIds);
     }
 
     public function testGetRenditionNotFound(): void
@@ -2243,7 +2376,9 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('ready', $cmafBody['status']);
 
         $cmafList = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers(), [
-            'output' => 'cmaf',
+            'queries' => [
+                Query::equal('output', ['cmaf'])->toString(),
+            ],
         ]);
         $this->assertEquals(200, $cmafList['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, $cmafList['body']['total']);

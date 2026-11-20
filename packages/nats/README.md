@@ -248,6 +248,12 @@ foreach ($batch as $msg) {
     // $msg->inProgress(); // Extend ack deadline
 }
 
+// Handle arrivals before the entire pull has completed (client 1.7+).
+$consumer->fetchEach(10, function ($msg) {
+    echo "Processing: {$msg->getData()}\n";
+    $msg->ack();
+}, timeout: 5.0);
+
 // Fetch single message
 $msg = $consumer->next(timeout: 5.0);
 

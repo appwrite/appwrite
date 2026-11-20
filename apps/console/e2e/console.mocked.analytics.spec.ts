@@ -129,6 +129,8 @@ type MockOptions = {
   agentProps?: boolean
   /** Install and push events from the mobile tracking SDKs. */
   mobileEvents?: boolean
+  /** The project is at its plan's analytics property limit. */
+  propertyLimitReached?: boolean
 }
 
 const MOBILE_EVENT_COUNTS: Record<string, number> = {
@@ -328,6 +330,14 @@ async function mockAppwriteApi(
 
     if (apiPath === `/sites/${SITE_ID}/analytics`) {
       mock.siteAnalytics.push(request)
+      if (options.propertyLimitReached) {
+        return json(402, {
+          message:
+            'You have reached the limit for analytics properties on this plan. Upgrade to increase the limit.',
+          code: 402,
+          type: 'analytics_property_limit_exceeded',
+        })
+      }
       siteAnalyticsEnabled = request.postDataJSON().enabled
       return json(200, site(siteAnalyticsEnabled))
     }
@@ -746,5 +756,32 @@ test.describe('analytics property (mocked API)', () => {
       `/projects/${PROJECT_ID}/analytics/${PROPERTY_ID}`,
     )
     await attachScreenshot(page, 'site-settings-analytics')
+  })
+
+  test('turns the site switch back off when the update fails', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page, { propertyLimitReached: true })
+    await page.goto(`/projects/${PROJECT_ID}/sites/${SITE_ID}/settings`, {
+      waitUntil: 'domcontentloaded',
+    })
+
+    const toggle = page.locator('#site-analytics')
+    const siteCard = page.locator('div.rounded-xl').filter({ has: toggle })
+    const update = siteCard.getByRole('button', { name: 'Update', exact: true })
+    await expect(toggle).not.toBeChecked({ timeout: 30_000 })
+    await expect(siteCard).toContainText('billed as analytics usage')
+    await toggle.click()
+    await expect(siteCard).toContainText('script-src https://sdk.appwrite.io')
+    await update.click()
+
+    await expect(
+      page.getByText('You have reached the limit for analytics properties'),
+    ).toBeVisible()
+    await expect(toggle).not.toBeChecked()
+    await expect(update).toBeDisabled()
+    await expect(siteCard).toContainText('Disabled - no tracker is added.')
+    expect(mock.siteAnalytics).toHaveLength(1)
+    await attachScreenshot(page, 'site-settings-analytics-limit')
   })
 })

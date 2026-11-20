@@ -61,7 +61,6 @@ import {
 } from '@/lib/vcs/providers'
 
 const REPO_PAGE_SIZE = 7
-const DEFAULT_TEMPLATE_PAGE_SIZE = 9
 
 // Helper to safely extract framework string
 function getFrameworkString(framework: unknown): string {
@@ -600,7 +599,6 @@ export function CreateSiteView() {
           {projectId ? (
             <SiteTemplateGallery
               projectId={projectId}
-              defaultPageSize={DEFAULT_TEMPLATE_PAGE_SIZE}
               pageSizeOptions={[12, 18, 36, 72]}
               onSelectTemplate={handleSelectTemplate}
             />

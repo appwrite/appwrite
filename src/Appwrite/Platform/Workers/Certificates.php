@@ -17,6 +17,7 @@ use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model\Rule;
+use Appwrite\Utopia\Response\Model\RuleRecord;
 use Exception;
 use Throwable;
 use Utopia\Bus\Bus;
@@ -191,7 +192,7 @@ class Certificates extends Action
 
         try {
             // Verify DNS records
-            $this->validateDomain($rule, $domain, $validationDomain);
+            $this->validateDomain($rule, $domain, $dbForPlatform, $validationDomain);
             // Reset logs and status for the rule
             $rule->setAttribute('logs', '');
             $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
@@ -200,7 +201,7 @@ class Certificates extends Action
         } catch (AppwriteException $err) {
             Console::warning('Domain verification failed: ' . $err->getMessage());
             $date = \date('H:i:s');
-            $logs = "\033[90m[{$date}] \033[31mDNS verification failed: \033[0m\n";
+            $logs = "\033[90m[{$date}] \033[31mDNS check failed: \033[0m\n";
             $logs .= \mb_strcut($err->getMessage(), 0, 500000); // Limit to 500kb
             $rule->setAttribute('logs', $logs);
         } finally {
@@ -346,7 +347,7 @@ class Certificates extends Action
             // already passed for this rule: a second run of the same check can
             // only agree, or fail on a transient and contradict that result.
             if (!$skipRenewCheck && !$skipDomainValidation) {
-                $this->validateDomain($rule, $domain, $validationDomain);
+                $this->validateDomain($rule, $domain, $dbForPlatform, $validationDomain);
             }
 
             $awaitingProvider = !$certificates->isInstantGeneration($domain->get(), $domainType);
@@ -601,6 +602,10 @@ class Certificates extends Action
             'renewAt' => $certificate->getAttribute('renewDate', ''),
             'expireAt' => $certificate->getAttribute('expireDate', ''),
             'certificateStatus' => $certificate->getAttribute('status', ''),
+            'records' => \array_map(
+                fn (Document|array $record) => (new RuleRecord())->payload($record instanceof Document ? $record : new Document($record)),
+                $rule->getAttribute('records', []),
+            ),
         ])));
 
         $queueForEvents
@@ -639,12 +644,13 @@ class Certificates extends Action
      *
      * @param Document $rule Rule to validate
      * @param Domain $domain Domain to validate
+     * @param Database $dbForPlatform Database the record checks are stored in
      * @param string|null $validationDomain Override for main domain check
      *
      * @return void
      * @throws Exception
      */
-    private function validateDomain(Document $rule, Domain $domain, ?string $validationDomain = null): void
+    private function validateDomain(Document $rule, Domain $domain, Database $dbForPlatform, ?string $validationDomain = null): void
     {
         $mainDomain = $validationDomain ?? $this->getMainDomain();
         $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
@@ -661,11 +667,10 @@ class Certificates extends Action
 
         try {
             $this->verifyRule($rule);
-        } catch (AppwriteException $err) {
-            $msg = $err->getMessage() . "\n";
-            $msg .= "Verify your DNS records are correctly configured and try again.\n";
-            $msg .= "If they're correct and it still fails, please retry after sometime. DNS records can take up to 48 hours to propagate.\n";
-            throw new AppwriteException($err->getType(), $msg);
+        } finally {
+            // The checks are stored whether or not the domain passed. The rule write that
+            // follows reads them back for the events.
+            $this->updateRecords($rule, $dbForPlatform);
         }
     }
 

@@ -1062,13 +1062,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Tracking disabled': 'המעקב הושבת',
   'Browser versions': 'גרסאות דפדפן',
   'OS versions': 'גרסאות מערכת הפעלה',
-  'Versions': 'גרסאות',
+  Versions: 'גרסאות',
   'Browser version': 'גרסת דפדפן',
   'OS version': 'גרסת מערכת הפעלה',
-  'Identified users, ranked by visitors':
-    'משתמשים מזוהים, לפי מספר המבקרים',
-  'No identified users in this range':
-    'אין משתמשים מזוהים בטווח הזה',
+  'Identified users, ranked by visitors': 'משתמשים מזוהים, לפי מספר המבקרים',
+  'No identified users in this range': 'אין משתמשים מזוהים בטווח הזה',
   'Event properties': 'מאפייני אירועים',
   'Models and tools': 'מודלים וכלים',
   'Calls by model and by tool': 'קריאות לפי מודל ולפי כלי',
@@ -2690,7 +2688,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Shared with all Functions and Sites in this project.':
     'משותפים לכל הפונקציות והאתרים בפרויקט הזה.',
   'Showing first': 'מוצגות',
-  Since: 'מכיוון ש-',
   'Some PostgreSQL features are not migrated. OAuth users and functions are not migrated automatically.':
     'חלק מהיכולות של PostgreSQL אינן מועברות. משתמשי OAuth ופונקציות אינם מועברים אוטומטית.',
   'Some entities failed to migrate. Check status counts above.':
@@ -2742,7 +2739,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'כאשר במהלך הייבוא נמצאת שורה עם מזהה קיים.',
   'When enabled, all emails will be sent through your configured SMTP server.':
     'כאשר האפשרות מופעלת, כל האימיילים יישלחו דרך שרת ה-SMTP שהגדרתם.',
-  'an A or AAAA record': 'רשומת A או AAAA',
   'and all its databases, functions, and files? This action cannot be undone.':
     'ואת כל מסדי הנתונים, הפונקציות והקבצים שלו? לא ניתן לבטל פעולה זו.',
   characters: 'תווים',
@@ -2759,14 +2755,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'have been enabled.': 'הופעלו.',
   here: 'כאן',
   installations: 'התקנות',
-  // pragma: allowlist secret
-  "instead. If you're using Cloudflare or another CDN, make sure the proxy is disabled (set to DNS only) for this record, since Appwrite serves your domain through its own CDN.":
-    'במקום זאת. אם אתם משתמשים ב-Cloudflare או ב-CDN אחר, ודאו שהפרוקסי מושבת (מוגדר כ-DNS only) עבור הרשומה הזו, כי Appwrite מגיש את הדומיין שלכם דרך ה-CDN שלו.', // pragma: allowlist secret
-  "is an apex domain, CNAME record is only supported by certain providers. If yours doesn't, please verify using":
-    'הוא דומיין שורש (apex), ורשומת CNAME נתמכת רק אצל ספקים מסוימים. אם הספק שלכם לא תומך בכך, אמתו באמצעות',
   item: 'פריט',
   'key for the API key.': 'בתור מפתח ה-API.',
-  nameservers: 'שרתי שמות',
   'protocol has been disabled': 'הושבת',
   'protocol has been enabled': 'הופעל',
   recipient: 'נמען',

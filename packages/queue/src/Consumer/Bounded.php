@@ -17,7 +17,7 @@ namespace Utopia\Queue\Consumer;
  * has no slot left to deliver into. It stops handing out work it could have run,
  * which reads from outside as a queue that is backed up for no reason.
  *
- * {@see \Utopia\Queue\Server::start()} reads this to refuse a coroutine cap at or
+ * {@see \Utopia\Queue\Server::start()} reads this to refuse a local in-flight cap at or
  * above the ceiling, the way {@see Exclusive} refuses a cap above one — a
  * configuration whose failure mode is a wedged queue, caught at boot rather than
  * found in a backlog graph. Null means the broker is unbounded (or declines to

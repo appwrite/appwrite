@@ -17,6 +17,7 @@ use Tests\Unit\Mqtt\Fakes\RecordingAdapter;
 use Tests\Unit\Mqtt\Fakes\RecordingExporter;
 use Tests\Unit\Mqtt\Fakes\RecordingRedis;
 use Tests\Unit\Mqtt\Fakes\UnavailableTelemetry;
+use Utopia\Abuse\Adapter\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
@@ -138,7 +139,7 @@ final class HandlerTest extends TestCase
         };
 
         $container = new Container();
-        $container->set('getRedis', fn (): \Closure => fn (): \Redis => new RecordingRedis());
+        $container->set('timelimit', fn (): \Closure => fn (string $key, int $limit, int $seconds, callable $callback): mixed => $callback(new TimeLimitRedis($key, $limit, $seconds, new RecordingRedis())));
         $container->set('authenticator', fn (): \Closure => $this->accounts->authenticate(...));
         $container->set('authorizer', fn (): \Closure => $authorize);
         $container->set('getPlan', fn (): \Closure => fn (string $projectId): array => []);

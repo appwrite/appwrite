@@ -1,6 +1,5 @@
 //! The text leaf validators of `packages/validators`: `Text`, `Identifier` (a `Text`),
-//! `WhiteList`, `Contains` and `Label`, over [`utopia_validators`], behind `validators-text`
-//! (and `validators`, whose base they extend).
+//! `WhiteList`, `Contains` and `Label`, over [`utopia_validators`], extending the base.
 //!
 //! Built by hand like the scalar batch ([`super::scalar`]): the state each PHP constructor
 //! keeps lives in real typed protected properties, declared as `packages/validators` declares

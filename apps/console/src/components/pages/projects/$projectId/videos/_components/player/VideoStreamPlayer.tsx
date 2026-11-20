@@ -33,7 +33,8 @@ import {
 } from '@/lib/react-query/hooks/videos'
 import {
   getVideoPlayerViewportStyle,
-  resolveVideoViewportAspect,
+  renditionFrame,
+  resolvePlayerAspect,
 } from '@/lib/utils/video-format'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -131,6 +132,13 @@ export function VideoStreamPlayer({
     },
   )
   const output = chosenOutput ?? preferredOutput
+  // Keep the first output that became playable. Another output finishing
+  // later would otherwise swap the manifest under a playing video.
+  useEffect(() => {
+    if (chosenOutput == null && preferredOutput !== 'source') {
+      setChosenOutput(preferredOutput)
+    }
+  }, [chosenOutput, preferredOutput])
   const changeOutput = (next: PlaybackOutput) => {
     setChosenOutput(next)
     if (!embed) playerPrefs.update({ output: next })
@@ -289,14 +297,28 @@ export function VideoStreamPlayer({
   reloadRef.current = reload
 
   // The quality list comes from the master manifest, which players only read
-  // once. Renditions often finish seconds apart, so batch them.
+  // once. Renditions often finish seconds apart, so batch them. Reloading
+  // tears the stream down, so never do it under a playing video: wait for a
+  // pause or the end, and meanwhile the menu offers a manual reload.
   useEffect(() => {
     if (!hasNewRenditions) return
-    const timer = window.setTimeout(
-      () => reloadRef.current({ silent: true }),
-      1500,
-    )
-    return () => window.clearTimeout(timer)
+    const el = videoRef.current
+    let timer: number | undefined
+    const schedule = () => {
+      window.clearTimeout(timer)
+      timer = window.setTimeout(() => {
+        if (el && !el.paused && !el.ended) return
+        reloadRef.current({ silent: true })
+      }, 1500)
+    }
+    if (!el || el.paused || el.ended) schedule()
+    el?.addEventListener('pause', schedule)
+    el?.addEventListener('ended', schedule)
+    return () => {
+      window.clearTimeout(timer)
+      el?.removeEventListener('pause', schedule)
+      el?.removeEventListener('ended', schedule)
+    }
   }, [hasNewRenditions, outputReadyKey])
 
   const { state, setLevel, setSubtitleTrack, clearEvents } = useStreamPlayer(
@@ -503,16 +525,30 @@ export function VideoStreamPlayer({
     : featured
       ? 'max(240px, min(800px, calc(100cqh - 32px)))'
       : 'max(240px, min(800px, calc(100cqh - 24px)))'
-  const viewportAspect = useMemo(() => {
-    if (mediaPixelSize) {
-      return mediaPixelSize
-    }
-    return resolveVideoViewportAspect(
+  // Size the frame from the renditions before the stream loads: their padded
+  // box, not the source, is the shape that decodes.
+  const expectedFrame = useMemo(
+    () => renditionFrame(renditions, output),
+    [renditions, output],
+  )
+  const viewportAspect = useMemo(
+    () =>
+      resolvePlayerAspect(
+        {
+          width: video.width,
+          height: video.height,
+          aspectRatio: video.aspectRatio,
+        },
+        mediaPixelSize ?? expectedFrame,
+      ),
+    [
+      mediaPixelSize,
+      expectedFrame,
       video.width,
       video.height,
       video.aspectRatio,
-    )
-  }, [mediaPixelSize, video.width, video.height, video.aspectRatio])
+    ],
+  )
   const viewportStyle = useMemo(
     () =>
       embed
@@ -934,13 +970,24 @@ export function VideoStreamPlayer({
               {frameMessage}
               {memberPreview && !state.fatalError ? (
                 <div
-                  className={cn(
-                    'pointer-events-none absolute start-3 top-3 z-10 flex items-center gap-1.5 rounded-md border border-white/15 bg-black/60 px-2.5 py-1.5 text-[12px] text-white/85 backdrop-blur-md transition duration-300',
-                    !controlsVisible && '-translate-y-1 opacity-0',
-                  )}
+                  role="status"
+                  data-video-private
+                  className="pointer-events-none absolute inset-x-3 top-3 z-10 flex items-start gap-2.5 rounded-lg border border-amber-400/40 bg-amber-950/80 px-3.5 py-2.5 text-white shadow-lg backdrop-blur-md sm:inset-x-auto sm:start-3 sm:max-w-md"
                 >
-                  <Lock className="size-3.5" aria-hidden />
-                  {t('Private video. Only project members can watch it here.')}
+                  <Lock
+                    className="mt-0.5 size-4 shrink-0 text-amber-300"
+                    aria-hidden
+                  />
+                  <div className="min-w-0 text-[13px] leading-snug">
+                    <p className="font-semibold text-amber-200">
+                      {t('This video is private')}
+                    </p>
+                    <p className="mt-0.5 text-white/80">
+                      {t(
+                        'Visitors get an error here. You can watch because you are a project member.',
+                      )}
+                    </p>
+                  </div>
                 </div>
               ) : null}
               {playerControls ? (

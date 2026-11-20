@@ -209,6 +209,7 @@ import { Route as PublicProjectsProjectIdFirewallRouteImport } from './routes/_p
 import { Route as PublicProjectsProjectIdFunctionsRouteImport } from './routes/_public/projects.$projectId.functions'
 import { Route as PublicProjectsProjectIdImagineRouteImport } from './routes/_public/projects.$projectId.imagine'
 import { Route as PublicProjectsProjectIdMessagingRouteImport } from './routes/_public/projects.$projectId.messaging'
+import { Route as PublicProjectsProjectIdMonitorsRouteImport } from './routes/_public/projects.$projectId.monitors'
 import { Route as PublicProjectsProjectIdOnboardingRouteImport } from './routes/_public/projects.$projectId.onboarding'
 import { Route as PublicProjectsProjectIdOverviewRouteImport } from './routes/_public/projects.$projectId.overview'
 import { Route as PublicProjectsProjectIdPlaygroundRouteImport } from './routes/_public/projects.$projectId.playground'
@@ -261,6 +262,8 @@ import { Route as PublicProjectsProjectIdFunctionsEditorRouteImport } from './ro
 import { Route as PublicProjectsProjectIdFunctionsTemplatesRouteImport } from './routes/_public/projects.$projectId.functions.templates'
 import { Route as PublicProjectsProjectIdMessagingIndexRouteImport } from './routes/_public/projects.$projectId.messaging.index'
 import { Route as PublicProjectsProjectIdMessagingMessageIdRouteImport } from './routes/_public/projects.$projectId.messaging.$messageId'
+import { Route as PublicProjectsProjectIdMonitorsIndexRouteImport } from './routes/_public/projects.$projectId.monitors.index'
+import { Route as PublicProjectsProjectIdMonitorsAlertsRouteImport } from './routes/_public/projects.$projectId.monitors.alerts'
 import { Route as PublicProjectsProjectIdRealtimeIndexRouteImport } from './routes/_public/projects.$projectId.realtime.index'
 import { Route as PublicProjectsProjectIdRealtimeChannelsRouteImport } from './routes/_public/projects.$projectId.realtime.channels'
 import { Route as PublicProjectsProjectIdRealtimeDebuggerRouteImport } from './routes/_public/projects.$projectId.realtime.debugger'
@@ -1580,6 +1583,12 @@ const PublicProjectsProjectIdMessagingRoute =
     path: '/messaging',
     getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
+const PublicProjectsProjectIdMonitorsRoute =
+  PublicProjectsProjectIdMonitorsRouteImport.update({
+    id: '/monitors',
+    path: '/monitors',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
 const PublicProjectsProjectIdOnboardingRoute =
   PublicProjectsProjectIdOnboardingRouteImport.update({
     id: '/onboarding',
@@ -1891,6 +1900,18 @@ const PublicProjectsProjectIdMessagingMessageIdRoute =
     id: '/$messageId',
     path: '/$messageId',
     getParentRoute: () => PublicProjectsProjectIdMessagingRoute,
+  } as any)
+const PublicProjectsProjectIdMonitorsIndexRoute =
+  PublicProjectsProjectIdMonitorsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdMonitorsRoute,
+  } as any)
+const PublicProjectsProjectIdMonitorsAlertsRoute =
+  PublicProjectsProjectIdMonitorsAlertsRouteImport.update({
+    id: '/alerts',
+    path: '/alerts',
+    getParentRoute: () => PublicProjectsProjectIdMonitorsRoute,
   } as any)
 const PublicProjectsProjectIdRealtimeIndexRoute =
   PublicProjectsProjectIdRealtimeIndexRouteImport.update({
@@ -3829,6 +3850,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/functions': typeof PublicProjectsProjectIdFunctionsRouteWithChildren
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
+  '/projects/$projectId/monitors': typeof PublicProjectsProjectIdMonitorsRouteWithChildren
   '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
   '/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
   '/projects/$projectId/playground': typeof PublicProjectsProjectIdPlaygroundRoute
@@ -3876,6 +3898,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/functions/editor': typeof PublicProjectsProjectIdFunctionsEditorRoute
   '/projects/$projectId/functions/templates': typeof PublicProjectsProjectIdFunctionsTemplatesRoute
   '/projects/$projectId/messaging/$messageId': typeof PublicProjectsProjectIdMessagingMessageIdRouteWithChildren
+  '/projects/$projectId/monitors/alerts': typeof PublicProjectsProjectIdMonitorsAlertsRoute
   '/projects/$projectId/realtime/channels': typeof PublicProjectsProjectIdRealtimeChannelsRoute
   '/projects/$projectId/realtime/debugger': typeof PublicProjectsProjectIdRealtimeDebuggerRoute
   '/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
@@ -3909,6 +3932,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/firewall/': typeof PublicProjectsProjectIdFirewallIndexRoute
   '/projects/$projectId/functions/': typeof PublicProjectsProjectIdFunctionsIndexRoute
   '/projects/$projectId/messaging/': typeof PublicProjectsProjectIdMessagingIndexRoute
+  '/projects/$projectId/monitors/': typeof PublicProjectsProjectIdMonitorsIndexRoute
   '/projects/$projectId/realtime/': typeof PublicProjectsProjectIdRealtimeIndexRoute
   '/projects/$projectId/reviews/': typeof PublicProjectsProjectIdReviewsIndexRoute
   '/projects/$projectId/settings/': typeof PublicProjectsProjectIdSettingsIndexRoute
@@ -4346,6 +4370,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/firewall/create': typeof PublicProjectsProjectIdFirewallCreateRoute
   '/projects/$projectId/functions/editor': typeof PublicProjectsProjectIdFunctionsEditorRoute
   '/projects/$projectId/functions/templates': typeof PublicProjectsProjectIdFunctionsTemplatesRoute
+  '/projects/$projectId/monitors/alerts': typeof PublicProjectsProjectIdMonitorsAlertsRoute
   '/projects/$projectId/realtime/channels': typeof PublicProjectsProjectIdRealtimeChannelsRoute
   '/projects/$projectId/realtime/debugger': typeof PublicProjectsProjectIdRealtimeDebuggerRoute
   '/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
@@ -4373,6 +4398,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/firewall': typeof PublicProjectsProjectIdFirewallIndexRoute
   '/projects/$projectId/functions': typeof PublicProjectsProjectIdFunctionsIndexRoute
   '/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingIndexRoute
+  '/projects/$projectId/monitors': typeof PublicProjectsProjectIdMonitorsIndexRoute
   '/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeIndexRoute
   '/projects/$projectId/reviews': typeof PublicProjectsProjectIdReviewsIndexRoute
   '/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsIndexRoute
@@ -4783,6 +4809,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/functions': typeof PublicProjectsProjectIdFunctionsRouteWithChildren
   '/_public/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/_public/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
+  '/_public/projects/$projectId/monitors': typeof PublicProjectsProjectIdMonitorsRouteWithChildren
   '/_public/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
   '/_public/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
   '/_public/projects/$projectId/playground': typeof PublicProjectsProjectIdPlaygroundRoute
@@ -4830,6 +4857,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/functions/editor': typeof PublicProjectsProjectIdFunctionsEditorRoute
   '/_public/projects/$projectId/functions/templates': typeof PublicProjectsProjectIdFunctionsTemplatesRoute
   '/_public/projects/$projectId/messaging/$messageId': typeof PublicProjectsProjectIdMessagingMessageIdRouteWithChildren
+  '/_public/projects/$projectId/monitors/alerts': typeof PublicProjectsProjectIdMonitorsAlertsRoute
   '/_public/projects/$projectId/realtime/channels': typeof PublicProjectsProjectIdRealtimeChannelsRoute
   '/_public/projects/$projectId/realtime/debugger': typeof PublicProjectsProjectIdRealtimeDebuggerRoute
   '/_public/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
@@ -4863,6 +4891,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/firewall/': typeof PublicProjectsProjectIdFirewallIndexRoute
   '/_public/projects/$projectId/functions/': typeof PublicProjectsProjectIdFunctionsIndexRoute
   '/_public/projects/$projectId/messaging/': typeof PublicProjectsProjectIdMessagingIndexRoute
+  '/_public/projects/$projectId/monitors/': typeof PublicProjectsProjectIdMonitorsIndexRoute
   '/_public/projects/$projectId/realtime/': typeof PublicProjectsProjectIdRealtimeIndexRoute
   '/_public/projects/$projectId/reviews/': typeof PublicProjectsProjectIdReviewsIndexRoute
   '/_public/projects/$projectId/settings/': typeof PublicProjectsProjectIdSettingsIndexRoute
@@ -5287,6 +5316,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/functions'
     | '/projects/$projectId/imagine'
     | '/projects/$projectId/messaging'
+    | '/projects/$projectId/monitors'
     | '/projects/$projectId/onboarding'
     | '/projects/$projectId/overview'
     | '/projects/$projectId/playground'
@@ -5334,6 +5364,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/functions/editor'
     | '/projects/$projectId/functions/templates'
     | '/projects/$projectId/messaging/$messageId'
+    | '/projects/$projectId/monitors/alerts'
     | '/projects/$projectId/realtime/channels'
     | '/projects/$projectId/realtime/debugger'
     | '/projects/$projectId/realtime/messages'
@@ -5367,6 +5398,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/firewall/'
     | '/projects/$projectId/functions/'
     | '/projects/$projectId/messaging/'
+    | '/projects/$projectId/monitors/'
     | '/projects/$projectId/realtime/'
     | '/projects/$projectId/reviews/'
     | '/projects/$projectId/settings/'
@@ -5804,6 +5836,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/firewall/create'
     | '/projects/$projectId/functions/editor'
     | '/projects/$projectId/functions/templates'
+    | '/projects/$projectId/monitors/alerts'
     | '/projects/$projectId/realtime/channels'
     | '/projects/$projectId/realtime/debugger'
     | '/projects/$projectId/realtime/messages'
@@ -5831,6 +5864,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/firewall'
     | '/projects/$projectId/functions'
     | '/projects/$projectId/messaging'
+    | '/projects/$projectId/monitors'
     | '/projects/$projectId/realtime'
     | '/projects/$projectId/reviews'
     | '/projects/$projectId/settings'
@@ -6240,6 +6274,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/functions'
     | '/_public/projects/$projectId/imagine'
     | '/_public/projects/$projectId/messaging'
+    | '/_public/projects/$projectId/monitors'
     | '/_public/projects/$projectId/onboarding'
     | '/_public/projects/$projectId/overview'
     | '/_public/projects/$projectId/playground'
@@ -6287,6 +6322,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/functions/editor'
     | '/_public/projects/$projectId/functions/templates'
     | '/_public/projects/$projectId/messaging/$messageId'
+    | '/_public/projects/$projectId/monitors/alerts'
     | '/_public/projects/$projectId/realtime/channels'
     | '/_public/projects/$projectId/realtime/debugger'
     | '/_public/projects/$projectId/realtime/messages'
@@ -6320,6 +6356,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/firewall/'
     | '/_public/projects/$projectId/functions/'
     | '/_public/projects/$projectId/messaging/'
+    | '/_public/projects/$projectId/monitors/'
     | '/_public/projects/$projectId/realtime/'
     | '/_public/projects/$projectId/reviews/'
     | '/_public/projects/$projectId/settings/'
@@ -6939,18 +6976,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketingForAgentsRouteImport
       parentRoute: typeof MarketingRoute
     }
-    '/_marketing/home1': {
-      id: '/_marketing/home1'
-      path: '/home1'
-      fullPath: '/home1'
-      preLoaderRoute: typeof MarketingHome1RouteImport
-      parentRoute: typeof MarketingRoute
-    }
     '/_marketing/home': {
       id: '/_marketing/home'
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof MarketingHomeRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/home1': {
+      id: '/_marketing/home1'
+      path: '/home1'
+      fullPath: '/home1'
+      preLoaderRoute: typeof MarketingHome1RouteImport
       parentRoute: typeof MarketingRoute
     }
     '/_marketing/innovation-teams': {
@@ -8010,6 +8047,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdMessagingRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
+    '/_public/projects/$projectId/monitors': {
+      id: '/_public/projects/$projectId/monitors'
+      path: '/monitors'
+      fullPath: '/projects/$projectId/monitors'
+      preLoaderRoute: typeof PublicProjectsProjectIdMonitorsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
     '/_public/projects/$projectId/onboarding': {
       id: '/_public/projects/$projectId/onboarding'
       path: '/onboarding'
@@ -8373,6 +8417,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$projectId/messaging/$messageId'
       preLoaderRoute: typeof PublicProjectsProjectIdMessagingMessageIdRouteImport
       parentRoute: typeof PublicProjectsProjectIdMessagingRoute
+    }
+    '/_public/projects/$projectId/monitors/': {
+      id: '/_public/projects/$projectId/monitors/'
+      path: '/'
+      fullPath: '/projects/$projectId/monitors/'
+      preLoaderRoute: typeof PublicProjectsProjectIdMonitorsIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdMonitorsRoute
+    }
+    '/_public/projects/$projectId/monitors/alerts': {
+      id: '/_public/projects/$projectId/monitors/alerts'
+      path: '/alerts'
+      fullPath: '/projects/$projectId/monitors/alerts'
+      preLoaderRoute: typeof PublicProjectsProjectIdMonitorsAlertsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdMonitorsRoute
     }
     '/_public/projects/$projectId/realtime/': {
       id: '/_public/projects/$projectId/realtime/'
@@ -11557,6 +11615,24 @@ const PublicProjectsProjectIdMessagingRouteWithChildren =
     PublicProjectsProjectIdMessagingRouteChildren,
   )
 
+interface PublicProjectsProjectIdMonitorsRouteChildren {
+  PublicProjectsProjectIdMonitorsAlertsRoute: typeof PublicProjectsProjectIdMonitorsAlertsRoute
+  PublicProjectsProjectIdMonitorsIndexRoute: typeof PublicProjectsProjectIdMonitorsIndexRoute
+}
+
+const PublicProjectsProjectIdMonitorsRouteChildren: PublicProjectsProjectIdMonitorsRouteChildren =
+  {
+    PublicProjectsProjectIdMonitorsAlertsRoute:
+      PublicProjectsProjectIdMonitorsAlertsRoute,
+    PublicProjectsProjectIdMonitorsIndexRoute:
+      PublicProjectsProjectIdMonitorsIndexRoute,
+  }
+
+const PublicProjectsProjectIdMonitorsRouteWithChildren =
+  PublicProjectsProjectIdMonitorsRoute._addFileChildren(
+    PublicProjectsProjectIdMonitorsRouteChildren,
+  )
+
 interface PublicProjectsProjectIdRealtimeRouteChildren {
   PublicProjectsProjectIdRealtimeChannelsRoute: typeof PublicProjectsProjectIdRealtimeChannelsRoute
   PublicProjectsProjectIdRealtimeDebuggerRoute: typeof PublicProjectsProjectIdRealtimeDebuggerRoute
@@ -12027,6 +12103,7 @@ interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdFunctionsRoute: typeof PublicProjectsProjectIdFunctionsRouteWithChildren
   PublicProjectsProjectIdImagineRoute: typeof PublicProjectsProjectIdImagineRoute
   PublicProjectsProjectIdMessagingRoute: typeof PublicProjectsProjectIdMessagingRouteWithChildren
+  PublicProjectsProjectIdMonitorsRoute: typeof PublicProjectsProjectIdMonitorsRouteWithChildren
   PublicProjectsProjectIdOnboardingRoute: typeof PublicProjectsProjectIdOnboardingRoute
   PublicProjectsProjectIdOverviewRoute: typeof PublicProjectsProjectIdOverviewRoute
   PublicProjectsProjectIdPlaygroundRoute: typeof PublicProjectsProjectIdPlaygroundRoute
@@ -12066,6 +12143,8 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
     PublicProjectsProjectIdImagineRoute: PublicProjectsProjectIdImagineRoute,
     PublicProjectsProjectIdMessagingRoute:
       PublicProjectsProjectIdMessagingRouteWithChildren,
+    PublicProjectsProjectIdMonitorsRoute:
+      PublicProjectsProjectIdMonitorsRouteWithChildren,
     PublicProjectsProjectIdOnboardingRoute:
       PublicProjectsProjectIdOnboardingRoute,
     PublicProjectsProjectIdOverviewRoute: PublicProjectsProjectIdOverviewRoute,

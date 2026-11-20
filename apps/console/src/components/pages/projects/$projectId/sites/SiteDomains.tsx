@@ -176,7 +176,14 @@ export function SiteDomainsView() {
                         onRecords={handleRecords}
                         onDelete={handleDelete}
                       >
-                      <TableRow>
+                      <TableRow
+                        className="cursor-pointer"
+                        // The row opens its DNS records; its links and buttons keep their own action.
+                        onClick={(event) => {
+                          if ((event.target as HTMLElement).closest('a, button')) return
+                          handleRecords(ruleData)
+                        }}
+                      >
                         <TableCell className="px-4 py-3">
                           <a
                             href={visitUrl(ruleData.domain)}
@@ -235,9 +242,13 @@ export function SiteDomainsView() {
                           </div>
                         </TableCell>
                         <TableCell className="px-4 py-3">
-                          <DateTooltip date={ruleData.$createdAt} />
+                          <DateTooltip date={ruleData.$createdAt} live />
                         </TableCell>
-                        <TableCell className="px-4 py-3 text-end">
+                        <TableCell
+                          className="px-4 py-3 text-end"
+                          // Its menu renders in a portal, whose clicks still bubble to the row.
+                          onClick={(event) => event.stopPropagation()}
+                        >
                           <div className="flex justify-end">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -324,7 +335,7 @@ export function SiteDomainsView() {
             open={verifyOpen}
             onOpenChange={setVerifyOpen}
             projectId={projectId ?? ''}
-            rule={selectedRule}
+            rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
             region={project?.region}
             organizationDomainId={getOrganizationDomainId(selectedRule)}
             onVerifySuccess={() => {
@@ -335,7 +346,7 @@ export function SiteDomainsView() {
           <DomainRecordsDialog
             open={recordsOpen}
             onOpenChange={setRecordsOpen}
-            rule={selectedRule}
+            rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
             region={project?.region}
             resourceType="site"
           />
@@ -360,7 +371,7 @@ export function SiteDomainsView() {
             setViewLogsOpen(open)
             if (!open) setViewLogsRule(null)
           }}
-          rule={viewLogsRule}
+          rule={rules.find((r) => r.$id === viewLogsRule.$id) ?? viewLogsRule}
         />
       )}
     </div>

@@ -114,6 +114,8 @@ export type StreamPlayerState = {
   /** HTTP status of the request that failed playback, when known. */
   fatalStatus: number | null
   loadStartedAt: number | null
+  /** When the stream itself was first requested, after the player library loaded. */
+  requestedAt: number | null
   manifestLoadedAt: number | null
   firstFrameAt: number | null
 }
@@ -133,6 +135,7 @@ const INITIAL_STATE: StreamPlayerState = {
   fatalError: null,
   fatalStatus: null,
   loadStartedAt: null,
+  requestedAt: null,
   manifestLoadedAt: null,
   firstFrameAt: null,
 }
@@ -387,6 +390,7 @@ export function useDashPlayer(
     const manifestUrl = applyVideoStreamAccess(src, access)
     pushEvent({ kind: 'info', name: 'LOAD_SOURCE', detail: manifestUrl })
 
+    setState((prev) => ({ ...prev, requestedAt: Date.now() }))
     void player
       .load(manifestUrl)
       .then(() => {

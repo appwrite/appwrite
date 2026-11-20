@@ -44,6 +44,7 @@ import {
   stationX,
   travel,
 } from './layout'
+import { ARRIVALS, arrive } from './assembly'
 import { installPower, stationPower, type FrameState } from './frame'
 
 /**
@@ -870,7 +871,26 @@ export class StationLine {
   }
 
   update(frame: FrameState) {
-    const { line } = frame
+    const { line, assembly } = frame
+    // Every rig glides in on the bed with its column (see `assembly.ts`).
+    arrive(
+      this.installer.group.position,
+      slotX(INSTALL_SLOT),
+      0,
+      0,
+      assembly,
+      ARRIVALS.installer,
+    )
+    this.rigs.forEach((rig, index) => {
+      arrive(
+        rig.group.position,
+        stationX(index),
+        0,
+        0,
+        assembly,
+        ARRIVALS.station(index),
+      )
+    })
     const installing = line.cycle - INSTALL_SLOT
     const kind = getProductKind(installing)
     const size = DEVICE_SIZES[kind]

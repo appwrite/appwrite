@@ -10,6 +10,7 @@ use Utopia\NATS\Connection;
 use Utopia\NATS\ConnectionOptions;
 use Utopia\NATS\JetStream\Consumer;
 use Utopia\NATS\JetStream\ConsumerInfo;
+use Utopia\NATS\JetStream\JetStreamMessage;
 use Utopia\NATS\Tests\Support\FakeTransport;
 use Utopia\NATS\Tests\Support\LateReadTransport;
 
@@ -23,6 +24,51 @@ use Utopia\NATS\Tests\Support\LateReadTransport;
  */
 final class ConsumerPullRequestTest extends TestCase
 {
+    public function testFetchEachDeliversBeforeTheRestOfTheBatchArrives(): void
+    {
+        $fake = new FakeTransport();
+        $consumer = $this->consumer($this->connect($fake));
+        $sid = '';
+        $this->reply($fake, static function (string $id) use (&$sid): string {
+            $sid = $id;
+            return self::messageFrame($id, 'first');
+        });
+        $received = [];
+
+        $consumer->fetchEach(2, static function (JetStreamMessage $message) use ($fake, &$sid, &$received): void {
+            $received[] = $message->getData();
+            if ($message->getData() === 'first') {
+                // The server cannot send more until the caller processes the first.
+                $fake->pushInbound(self::messageFrame($sid, 'second'));
+            }
+        }, 0.02, true);
+
+        $this->assertSame(['first', 'second'], $received);
+        $this->assertStringContainsString("UNSUB {$sid}\r\n", $fake->written);
+    }
+
+    public function testFetchEachCleansUpAfterCallbackFailure(): void
+    {
+        $fake = new FakeTransport();
+        $consumer = $this->consumer($this->connect($fake));
+        $sid = '';
+        $this->reply($fake, static function (string $id) use (&$sid): string {
+            $sid = $id;
+            return self::messageFrame($id, 'first');
+        });
+        $failure = new \RuntimeException('callback failed');
+        $caught = null;
+
+        try {
+            $consumer->fetchEach(2, static fn (): never => throw $failure, 0.02, true);
+        } catch (\Throwable $error) {
+            $caught = $error;
+        }
+
+        $this->assertSame($failure, $caught);
+        $this->assertStringContainsString("UNSUB {$sid}\r\n", $fake->written);
+    }
+
     private function connect(FakeTransport $fake): Connection
     {
         return Connection::connect(new ConnectionOptions(

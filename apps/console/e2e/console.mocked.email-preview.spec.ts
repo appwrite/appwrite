@@ -293,6 +293,15 @@ async function mockAppwriteApi(
         replyTo: '',
         subject: 'Verify your email',
       })
+    if (apiPath === '/messaging/messages')
+      return json(200, { total: 1, messages: [message] })
+    if (apiPath === '/project/keys')
+      return json(200, {
+        total: 1,
+        keys: [
+          { $id: 'demo', name: 'Demo server key', scopes: [], $createdAt: NOW },
+        ],
+      })
     if (apiPath === `/messaging/messages/${MESSAGE_ID}`)
       return json(200, message)
     if (apiPath === `/messaging/messages/${MESSAGE_ID}/targets`)
@@ -447,6 +456,46 @@ test.describe('email body preview (mocked API)', () => {
 })
 
 test.describe('email template preview (mocked API)', () => {
+  test('opens Verification while Recovery is pending and reuses it on return', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, emailMessage('sent'))
+
+    let verificationRequests = 0
+    page.on('request', (request) => {
+      if (
+        request.method() === 'GET' &&
+        new URL(request.url()).pathname.endsWith(
+          '/templates/email/verification',
+        )
+      ) {
+        verificationRequests++
+      }
+    })
+
+    let releaseRecovery!: () => void
+    const recovery = new Promise<void>((resolve) => {
+      releaseRecovery = resolve
+    })
+    await page.route('**/project/templates/email/recovery*', async (route) => {
+      await recovery
+      await route.fallback()
+    })
+    try {
+      await openTemplates(page)
+      await expect(previewFrame(page).getByText('Verify email')).toBeVisible()
+    } finally {
+      releaseRecovery()
+    }
+
+    const auth = `/projects/${PROJECT.$id}/auth`
+    await page.locator(`a[href="${auth}/users"]`).first().click()
+    await expect(page.getByPlaceholder('Search users...')).toBeVisible()
+    await page.locator(`a[href="${auth}/templates"]`).first().click()
+    await expect(previewFrame(page).getByText('Verify email')).toBeVisible()
+    expect(verificationRequests).toBe(1)
+  })
+
   test('an editable template opens on the source', async ({ page }) => {
     await mockAppwriteApi(page, emailMessage('sent'), { smtpEnabled: true })
     await openTemplates(page)
@@ -477,4 +526,80 @@ test.describe('email template preview (mocked API)', () => {
     await expect(project).toHaveCSS('font-weight', /^(bold|[6-9]00)$/)
     await expect(previewFrame(page).getByText('{{b}}')).toHaveCount(0)
   })
+})
+
+test.describe('project navigation with pending requests', () => {
+  for (const scenario of [
+    { screen: 'overview', pending: '/project/keys', content: RECIPIENT.name },
+    {
+      screen: 'messaging',
+      pending: '/messaging/providers',
+      content: 'Your Acme Docs files expire in two days',
+    },
+  ]) {
+    test(`opens ${scenario.screen} while ${scenario.pending} is pending`, async ({
+      page,
+    }) => {
+      await mockAppwriteApi(page, emailMessage('sent'))
+      await page.goto(`/organizations/${ORGANIZATION.$id}`)
+      const projectLink = page.getByRole('link', {
+        name: 'View project',
+        exact: true,
+      })
+      await expect(projectLink).toBeVisible()
+      await expect(page.locator('[data-fullscreen-loader]')).toHaveCount(0)
+      let release!: () => void
+      const pending = new Promise<void>((resolve) => {
+        release = resolve
+      })
+      let requests = 0
+      await page.route(`**${scenario.pending}*`, async (route) => {
+        if (route.request().method() === 'GET') {
+          requests++
+          await pending
+        }
+        await route.fallback()
+      })
+      const requested = page.waitForRequest(
+        (request) =>
+          request.method() === 'GET' &&
+          new URL(request.url()).pathname.endsWith(scenario.pending),
+      )
+      try {
+        await projectLink.click()
+        if (scenario.screen === 'messaging') {
+          await page
+            .locator(`a[href="/projects/${PROJECT.$id}/messaging"]:visible`)
+            .first()
+            .click()
+        }
+        await requested
+        await expect(
+          page.getByText(scenario.content, { exact: true }).first(),
+        ).toBeVisible({ timeout: 3000 })
+      } finally {
+        release()
+      }
+      if (scenario.screen === 'overview') {
+        const key = page.getByText('Demo server key', { exact: true })
+        await expect(key).toBeVisible()
+        const project = `/projects/${PROJECT.$id}`
+        await page
+          .locator(`a[href="${project}/messaging"]:visible`)
+          .first()
+          .click()
+        await expect(
+          page.getByText('Your Acme Docs files expire in two days', {
+            exact: true,
+          }),
+        ).toBeVisible()
+        await page
+          .locator(`a[href="${project}/overview"]:visible`)
+          .first()
+          .click()
+        await expect(key).toBeVisible()
+        expect(requests).toBe(1)
+      }
+    })
+  }
 })

@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import { gunzipSync } from 'node:zlib'
 import type { Locator, Page, Request, Route } from '@playwright/test'
 import type { Models } from '@appwrite.io/console'
 import { expect, test } from './fixtures'
@@ -235,6 +236,7 @@ type Calls = {
   bucketLists: URL[]
   sourceViews: URL[]
   manifests: URL[]
+  videoUpdates: Record<string, unknown>[]
 }
 
 /** A preset the mocked server refuses, to cover a partly failed batch. */
@@ -258,6 +260,7 @@ async function mockAppwriteApi(
     bucketLists: [],
     sourceViews: [],
     manifests: [],
+    videoUpdates: [],
   }
 
   await page.route('**/*', async (route) => {
@@ -309,6 +312,16 @@ async function mockAppwriteApi(
     }
     if (apiPath === '/videos') {
       return json(200, { total: 1, videos: [video] })
+    }
+    if (apiPath === `/videos/${VIDEO_ID}` && method !== 'GET') {
+      const body = request.postDataJSON() as Record<string, unknown>
+      calls.videoUpdates.push(body)
+      video = {
+        ...video,
+        name: String(body.name),
+        $permissions: (body.permissions as string[]) ?? video.$permissions,
+      }
+      return json(200, video)
     }
     if (apiPath === `/videos/${VIDEO_ID}`) return json(200, video)
     if (apiPath === `/videos/${VIDEO_ID}/renditions`) {
@@ -560,6 +573,112 @@ test.describe('videos (mocked API)', () => {
     await screenshot(page, 'videos-player-locked.png')
   })
 
+  test('keeps the overview player size for a letterboxed video', async ({
+    page,
+  }) => {
+    await enableVideos(page)
+    // A 2.39:1 source in 16:9 renditions decodes as a padded 16:9 frame.
+    await mockAppwriteApi(
+      page,
+      { ...VIDEO, width: 1920, height: 804, aspectRatio: '2.39:1' },
+      RENDITIONS,
+      PROFILES,
+      true,
+    )
+    await open(page, `/${VIDEO_ID}/settings`, (page) =>
+      page.getByRole('switch', { name: 'Public playback' }),
+    )
+    await page.evaluate(() => {
+      const heights: number[] = []
+      ;(window as unknown as { heights: number[] }).heights = heights
+      const sample = () => {
+        const frame = document.querySelector('video')?.parentElement
+        if (frame)
+          heights.push(Math.round(frame.getBoundingClientRect().height))
+        requestAnimationFrame(sample)
+      }
+      sample()
+    })
+
+    await page
+      .locator(`a[href$="/videos/${VIDEO_ID}"][data-status]`)
+      .first()
+      .click()
+    const video = page.locator('video')
+    await expect
+      .poll(() => video.evaluate((node: HTMLVideoElement) => node.videoHeight))
+      .toBeGreaterThan(0)
+    await page.waitForTimeout(500)
+
+    const heights = await page.evaluate(
+      () => (window as unknown as { heights: number[] }).heights,
+    )
+    expect(heights.length).toBeGreaterThan(0)
+    expect(new Set(heights).size).toBe(1)
+  })
+
+  test('keeps the player size when the stream loads', async ({ page }) => {
+    await enableVideos(page)
+    // Rendition sizes round, so the 16:9 stream is a hair off the source
+    // ratio. The frame keeps the source ratio it rendered with first.
+    await mockAppwriteApi(
+      page,
+      { ...VIDEO, width: 1000, height: 560 },
+      RENDITIONS,
+      PROFILES,
+      true,
+    )
+    await open(page, `/${VIDEO_ID}`, (page) => page.locator('video'))
+    const video = page.locator('video')
+    await expect
+      .poll(() => video.evaluate((node: HTMLVideoElement) => node.readyState))
+      .toBeGreaterThanOrEqual(1)
+
+    const frame = (await video.boundingBox())!
+    expect(Math.abs(frame.height - (frame.width * 560) / 1000)).toBeLessThan(1)
+  })
+
+  test('shows encoding progress on every video tab', async ({ page }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page, VIDEO, [
+      { ...RENDITIONS[0], status: 'started', progress: '40', endedAt: '' },
+      {
+        ...RENDITIONS[0],
+        $id: 'rendition000000000000002',
+        name: '1080p',
+        width: 1920,
+        height: 1080,
+      },
+    ])
+    const progress = page.getByText('Processing renditions')
+    const link = page.getByRole('link', { name: 'View renditions' })
+
+    await open(page, `/${VIDEO_ID}`, () => progress)
+    await expect(link).toBeVisible()
+    await screenshot(page, 'videos-progress-overview.png')
+
+    await open(page, `/${VIDEO_ID}/timeline`, () => progress)
+    await expect(link).toBeVisible()
+
+    await open(page, `/${VIDEO_ID}/renditions`, () => progress)
+    await expect(link).toHaveCount(0)
+  })
+
+  test('shows rendition status right after the ID', async ({ page }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page)
+    const headers = page.getByRole('columnheader')
+
+    await open(page, `/${VIDEO_ID}/renditions`, () =>
+      headers.filter({ hasText: 'Status' }),
+    )
+
+    const names = (await headers.allInnerTexts()).map((text) => text.trim())
+    const id = names.indexOf('ID')
+    expect(id).toBeGreaterThanOrEqual(0)
+    expect(names[id + 1]).toBe('Status')
+  })
+
   test('docks a small player while scrolling the overview', async ({
     page,
   }) => {
@@ -631,7 +750,7 @@ test.describe('videos (mocked API)', () => {
 
       await expect(
         page.getByText(
-          'Private video. Only project members can watch it here.',
+          'Visitors get an error here. You can watch because you are a project member.',
         ),
       ).toBeVisible({ timeout: 60_000 })
       expect(
@@ -654,6 +773,71 @@ test.describe('videos (mocked API)', () => {
       })
     })
   }
+
+  test('warns that a video is private', async ({ page }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page)
+    const warning = page.getByText('This video is private', { exact: true })
+
+    await open(page, `/${VIDEO_ID}`, () => warning)
+    await expect(
+      page.getByText('Only project members and API keys can watch it.', {
+        exact: false,
+      }),
+    ).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Make public' })).toHaveCount(
+      0,
+    )
+    await screenshot(page, 'videos-private-warning.png')
+  })
+
+  test('opens the video permissions from the private warning', async ({
+    page,
+  }) => {
+    await enableVideos(page)
+    const calls = await mockAppwriteApi(page, {
+      ...VIDEO,
+      $permissions: ['read("users")', 'update("users")'],
+    })
+    const warning = page.getByText('This video is private', { exact: true })
+
+    await open(page, `/${VIDEO_ID}`, () => warning)
+    await expect(
+      page.getByText(
+        'Only signed-in users with read access can watch it in your app.',
+        { exact: false },
+      ),
+    ).toBeVisible()
+    await page.getByRole('link', { name: 'Permissions' }).click()
+
+    const toggle = page.getByRole('switch', { name: 'Public playback' })
+    await expect(toggle).not.toBeChecked()
+    await screenshot(page, 'videos-settings-access.png')
+    await toggle.click()
+
+    await expect(toggle).toBeChecked()
+    await expect(warning).toHaveCount(0)
+    expect(calls.videoUpdates).toEqual([
+      {
+        name: VIDEO.name,
+        permissions: ['read("users")', 'update("users")', 'read("any")'],
+      },
+    ])
+  })
+
+  test('shows no private warning for a public video', async ({ page }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page, { ...VIDEO, $permissions: ['read("any")'] })
+
+    await open(page, `/${VIDEO_ID}/settings`, (page) =>
+      page.getByRole('switch', { name: 'Public playback' }),
+    )
+
+    await expect(
+      page.getByRole('switch', { name: 'Public playback' }),
+    ).toBeChecked()
+    await expect(page.getByText('This video is private')).toHaveCount(0)
+  })
 
   test('asks for a rendition when a video has none', async ({ page }) => {
     await enableVideos(page)
@@ -767,6 +951,75 @@ test.describe('videos (mocked API)', () => {
     expect(colors).toEqual(['red', 'blue'])
 
     await screenshot(page, 'videos-timeline.png')
+  })
+
+  test('downloads the timeline file and thumbnails', async ({ page }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page)
+    await open(page, `/${VIDEO_ID}/timeline`, (page) =>
+      page.getByText('Timeline file', { exact: true }),
+    )
+    const download = (card: string) =>
+      page
+        .locator('section')
+        .filter({ has: page.getByRole('heading', { name: card }) })
+        .getByRole('button', { name: 'Download' })
+
+    const [vtt] = await Promise.all([
+      page.waitForEvent('download'),
+      download('Timeline file').click(),
+    ])
+    expect(vtt.suggestedFilename()).toBe('launch-keynote-timeline.vtt')
+    expect(readFileSync(await vtt.path(), 'utf8')).toBe(TIMELINE)
+
+    const [archive] = await Promise.all([
+      page.waitForEvent('download'),
+      download('Thumbnails').click(),
+    ])
+    expect(archive.suggestedFilename()).toBe('launch-keynote-thumbnails.tar.gz')
+    const tar = gunzipSync(readFileSync(await archive.path()))
+    const listing = tar.toString('latin1')
+    expect(listing).toContain('timeline.vtt')
+    expect(listing).toContain('sprite-1.png#xywh=160,0,160,90')
+    // The sheet is stored byte for byte.
+    expect(tar.includes(THUMBNAIL)).toBe(true)
+  })
+
+  test('skips a black opening frame for the poster', async ({ page }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page)
+    // Later routes win: the first sheet frame is black, the second detailed.
+    await page.route(`**/v1/videos/${VIDEO_ID}/thumbnails/**`, (route) =>
+      route.fulfill({
+        status: 200,
+        headers: { ...corsHeaders(route), 'content-type': 'image/png' },
+        body: fixture('sprite-poster.png'),
+      }),
+    )
+    await open(page, `/${VIDEO_ID}/settings`, (page) =>
+      page.locator('aside [style*="background-position"]').first(),
+    )
+
+    await expect(
+      page.locator('aside [style*="background-position"]').first(),
+    ).toHaveCSS('background-position', '-160px 0px')
+  })
+
+  test('letterboxes list thumbnails in black', async ({ page }) => {
+    await enableVideos(page)
+    await mockAppwriteApi(page)
+    const frame = page
+      .locator(
+        `main a[href$="/videos/${VIDEO_ID}"] [style*="background-position"]`,
+      )
+      .first()
+
+    await open(page, '', () => frame)
+
+    await expect(frame.locator('..')).toHaveCSS(
+      'background-color',
+      'rgb(0, 0, 0)',
+    )
   })
 
   test('reports a timeline that failed', async ({ page }) => {

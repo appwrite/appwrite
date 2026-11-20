@@ -159,6 +159,20 @@ Database::addFilter(
     }
 );
 
+Database::addFilter(
+    'subQueryRuleRecords',
+    function (mixed $value) {
+        return;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        return $database->getAuthorization()->skip(fn () => $database
+            ->find('ruleRecords', [
+                Query::equal('ruleInternalId', [$document->getSequence()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]));
+    }
+);
+
 // Dev keys were removed in 2.3.0, but installs that have not yet run the V25
 // migration still carry this filter on the projects collection. Without it
 // registered, every project document fails to decode.
