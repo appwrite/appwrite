@@ -1,7 +1,6 @@
 import {
   FlaskConical,
   Gauge,
-  GitBranch,
   Layers,
   LockKeyhole,
   type LucideIcon,
@@ -36,7 +35,6 @@ const EXPERIMENT_ICONS = {
   alerts: Gauge,
   analytics: ANALYTICS_PRODUCT_ICON,
   projectEnvironments: Layers,
-  vcsOrigin: GitBranch,
   sso: LockKeyhole,
   videos: VIDEOS_PRODUCT_ICON,
 } as const satisfies Record<Experiment['flag'], LucideIcon>

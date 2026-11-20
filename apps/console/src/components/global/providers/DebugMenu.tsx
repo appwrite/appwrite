@@ -1843,14 +1843,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Auth & security' },
               ),
               createProfileFeatureFlagItem(
-                'Origin Git provider',
-                'Show Origin (Cursor) on Git connect. Existing installations always render.',
-                'vcsOrigin',
-                profileId,
-                features.vcsOrigin,
-                { category: 'Auth & security' },
-              ),
-              createProfileFeatureFlagItem(
                 'Cookie banner',
                 'Show the locale-gated cookie consent banner and footer cookie settings.',
                 'cookieBanner',
@@ -2130,7 +2122,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.databaseSpecifications,
     features.accountApplications,
     features.userVerification,
-    features.vcsOrigin,
     features.cookieBanner,
     features.blogDrafts,
     features.orgApiKeys,

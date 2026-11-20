@@ -41,11 +41,6 @@ export type ConsoleProfileFeatures = {
   accountPasskeys: boolean
   /** Console account Applications page (OAuth2 consents granted on the account). */
   accountApplications: boolean
-  /**
-   * Origin (Cursor) on Git connect. An experiment, off by default; existing
-   * installations still render, only new connect actions are gated.
-   */
-  vcsOrigin: boolean
   /** Organization compliance (DPA, BAA, SOC 2) */
   compliance: boolean
   /** Organization API keys */
@@ -131,7 +126,6 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   accountOAuth: 'Account OAuth sign-in',
   accountPasskeys: 'Account passkeys',
   accountApplications: 'Account applications',
-  vcsOrigin: 'Origin Git provider',
   compliance: 'Compliance',
   orgApiKeys: 'Partners keys',
   agent: 'Agent',
@@ -187,7 +181,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       accountOAuth: true,
       accountPasskeys: true,
       accountApplications: true,
-      vcsOrigin: false,
       compliance: true,
       orgApiKeys: false,
       agent: false,
@@ -232,7 +225,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       accountOAuth: false,
       accountPasskeys: false,
       accountApplications: false,
-      vcsOrigin: false,
       compliance: false,
       orgApiKeys: false,
       agent: false,
@@ -363,6 +355,7 @@ const REMOVED_PROFILE_FEATURE_KEYS = [
   'extraOAuthLogin',
   'projectTransfers',
   'extraVcsOAuth',
+  'vcsOrigin',
 ] as const
 
 function migrateStoredProfileFeatures(
@@ -372,9 +365,6 @@ function migrateStoredProfileFeatures(
     Record<string, unknown>
   if (!('agent' in next) && typeof next.aiAssistant === 'boolean') {
     next.agent = next.aiAssistant
-  }
-  if (!('vcsOrigin' in next) && typeof next.extraVcsOAuth === 'boolean') {
-    next.vcsOrigin = next.extraVcsOAuth
   }
   for (const key of REMOVED_PROFILE_FEATURE_KEYS) {
     delete next[key]
@@ -555,8 +545,7 @@ function parseEnvFeatureOverride(value: string): boolean | null {
 /**
  * Per-feature overrides from runtime env vars (e.g.
  * VITE_CONSOLE_USER_VERIFICATION, VITE_CONSOLE_COOKIE_BANNER,
- * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_VCS_ORIGIN,
- * VITE_CONSOLE_DATABASE_PITR_RESTORE,
+ * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_DATABASE_PITR_RESTORE,
  * VITE_CONSOLE_PROJECT_ENVIRONMENTS, VITE_CONSOLE_BROWSER_ALERTS), applied on top
  * of the canonical profile. A stored debug override still wins.
  */
@@ -577,10 +566,6 @@ function applyEnvFeatureOverrides(
   const blogDrafts = parseEnvFeatureOverride(config.blogDrafts)
   if (blogDrafts !== null) {
     next = { ...next, blogDrafts }
-  }
-  const vcsOrigin = parseEnvFeatureOverride(config.vcsOrigin)
-  if (vcsOrigin !== null) {
-    next = { ...next, vcsOrigin }
   }
   const databasePitrRestore = parseEnvFeatureOverride(
     config.databasePitrRestore,

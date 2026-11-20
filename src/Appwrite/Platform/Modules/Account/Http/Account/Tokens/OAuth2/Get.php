@@ -90,9 +90,8 @@ class Get extends Base
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
-        if ($protocol === 'https' && $port !== '443') {
-            $callbackBase .= ':' . $port;
-        } elseif ($protocol === 'http' && $port !== '80') {
+        // An empty port means the host named none, so the scheme's default applies
+        if ($port !== '' && $port !== ($protocol === 'https' ? '443' : '80')) {
             $callbackBase .= ':' . $port;
         }
 
@@ -125,7 +124,7 @@ class Get extends Base
         $port = $request->getPort();
         $redirectBase = $platform['consoleUrl'] ?? '';
         // Only the derived console URL follows the request port; an explicit one carries its own
-        if (empty(System::getEnv('_APP_CONSOLE_URL')) && $port !== ($protocol === 'https' ? '443' : '80')) {
+        if (empty(System::getEnv('_APP_CONSOLE_URL')) && $port !== '' && $port !== ($protocol === 'https' ? '443' : '80')) {
             $redirectBase .= ':' . $port;
         }
 

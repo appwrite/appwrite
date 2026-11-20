@@ -27,7 +27,7 @@ const STEPS: ProductEmptyStateStep[] = [
     icon: ANALYTICS_PRODUCT_ICON,
     title: 'Watch your traffic',
     description:
-      'Visitors, pages, sources, locations, and bots, plus any custom events you track.',
+      'Visitors and app users, pages and screens, sources, locations, and bots, plus any custom events you track.',
   },
 ]
 
