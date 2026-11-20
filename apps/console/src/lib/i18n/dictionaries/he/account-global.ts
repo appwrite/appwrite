@@ -1461,4 +1461,39 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'רק בעלים של הארגון יכולים לתבוע בעלות על פרויקט לתוכו. צרו ארגון בבעלותכם כדי לקבל אותו.',
   'Until the project is claimed, the site only opens on a device that has opened its owner link. Use Visit on that device first.':
     'עד שתיתבע בעלות על הפרויקט, האתר נפתח רק במכשיר שפתח את קישור הבעלים שלו. השתמשו קודם ב-Visit באותו מכשיר.',
+  // Single sign-on (/sso)
+  'Sign in with SSO': 'התחברות עם SSO',
+  'This organization requires single sign-on. Sign in with SSO to continue.':
+    'הארגון הזה מחייב התחברות יחידה (SSO). כדי להמשיך, התחברו עם SSO.',
+  'Taking you to your identity provider...':
+    'מעבירים אתכם לספק הזהויות שלכם...',
+  'Choose how to sign in': 'בחרו איך להתחבר',
+  'Use a different email': 'שימוש באימייל אחר',
+  'Work email': 'אימייל בעבודה',
+  'Continuing...': 'ממשיכים...',
+  "Single sign-on isn't set up for {domain}.":
+    'התחברות יחידה (SSO) לא מוגדרת עבור {domain}.',
+  'Sign in with email and password': 'התחברות עם אימייל וסיסמה',
+  'Failed to look up single sign-on for this email':
+    'לא הצלחנו לבדוק התחברות יחידה (SSO) עבור האימייל הזה',
+  'Back to the Console': 'חזרה לקונסולה',
+  'Go to your account': 'מעבר לחשבון שלכם',
+  'Signed in as {email}.': 'מחוברים בתור {email}.',
+  "Single sign-on for your organization isn't set up correctly. Contact your administrator.":
+    'ההתחברות היחידה (SSO) של הארגון שלכם לא מוגדרת נכון. פנו למנהל המערכת.',
+  'This sign-in was started in another browser or took too long. Start again.':
+    'ההתחברות הזו התחילה בדפדפן אחר או נמשכה זמן רב מדי. התחילו מחדש.',
+  'Single sign-on could not finish. Start again, or contact your administrator if it keeps happening.':
+    'ההתחברות היחידה (SSO) לא הושלמה. התחילו מחדש, ואם זה חוזר על עצמו, פנו למנהל המערכת.',
+  'This identity provider is not available.': 'ספק הזהויות הזה אינו זמין.',
+  'Single sign-on could not finish. Start again from the sign-in page.':
+    'ההתחברות היחידה (SSO) לא הושלמה. התחילו מחדש מדף ההתחברות.',
+  'Single sign-on for your organization is not working right now. Contact your administrator.':
+    'ההתחברות היחידה (SSO) של הארגון שלכם לא עובדת כרגע. פנו למנהל המערכת.',
+  'Enter your work email to continue with single sign-on.':
+    'הזינו את האימייל שלכם בעבודה כדי להמשיך בהתחברות יחידה (SSO).',
+  "Your identity provider returned an email that isn't on a domain your organization verified. Sign in with your work email account.":
+    'ספק הזהויות שלכם החזיר אימייל שאינו בדומיין שהארגון שלכם אימת. התחברו עם חשבון האימייל שלכם בעבודה.',
+  "Your identity provider didn't share your email address. Ask your administrator to release the email to Appwrite.":
+    'ספק הזהויות שלכם לא שיתף את כתובת האימייל שלכם. בקשו ממנהל המערכת לאפשר את שיתוף האימייל עם Appwrite.',
 }

@@ -40,6 +40,7 @@ const AUTH_REDIRECT_PATHS = new Set([
   '/sign-in',
   '/sign-up',
   '/recovery',
+  '/sso',
   '/reset',
   '/mfa',
   '/verify-email',

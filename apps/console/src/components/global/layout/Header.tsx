@@ -46,6 +46,8 @@ import { applyScreenshotModeAccount } from '@/lib/screenshot-mode'
 import { getConsoleAccountUnauthenticatedError } from '@/lib/console-account-cache'
 import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
 import { organizationsQueryOptions } from '@/lib/react-query/hooks/organizations'
+import { consoleTeamQueryOptions } from '@/lib/react-query/hooks/teams'
+import { isSSORequiredError } from '@/lib/sso-required'
 import {
   getConsoleAccountFromCache,
   getConsoleAccountSync,
@@ -495,6 +497,14 @@ export function ConsoleHeader({
       ? orgId
       : undefined
     : orgId
+  // The last organization may require single sign-on that this session did
+  // not come from: go back to the Console home instead, which opens one the
+  // person can use.
+  const { error: backOrganizationError } = useQuery({
+    ...consoleTeamQueryOptions(orgId),
+    enabled: shouldValidateBackOrganizationLink,
+  })
+  const backOrganizationRefused = isSSORequiredError(backOrganizationError)
   const { features, isCloud } = useConsoleProfile()
   const { catalog } = useI18n()
   const headerCopy = catalog.app.header
@@ -878,13 +888,20 @@ export function ConsoleHeader({
               size="sm"
               className="hidden h-9 shrink-0 gap-1.5 px-2.5 text-[13px] @[850px]:inline-flex"
             >
-              <Link
-                to="/organizations/$orgId"
-                params={{ orgId: backToOrganizationOrgId }}
-              >
-                <ArrowLeft className="h-4 w-4" />
-                {headerCopy.actions.backToOrganization}
-              </Link>
+              {backOrganizationRefused ? (
+                <Link to="/">
+                  <ArrowLeft className="h-4 w-4" />
+                  {headerCopy.actions.backToOrganization}
+                </Link>
+              ) : (
+                <Link
+                  to="/organizations/$orgId"
+                  params={{ orgId: backToOrganizationOrgId }}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  {headerCopy.actions.backToOrganization}
+                </Link>
+              )}
             </Button>
           ) : null}
 
