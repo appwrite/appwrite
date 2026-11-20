@@ -52,7 +52,9 @@ final class CommentTest extends TestCase
         // Name, commit and status first, the Console link last; a site adds its preview in between
         $this->assertStringContainsString("| Site | Commit | Status | Preview | QR | Details |\n", $text);
         $this->assertStringContainsString("| Function | Commit | Status | Details |\n", $text);
-        $this->assertStringContainsString('| **Landing** | `cc9b013` |  _Ready_ | [Preview URL](https://landing.appwrite.network) | [QR Code](https://cloud.appwrite.io/v1/avatars/qr?text=https%3A%2F%2Flanding.appwrite.network) | [View logs](https://cloud.appwrite.io/console/projects/project1/sites/landing/deployments/dep1) |', $text);
+        // The QR link's scheme follows _APP_OPTIONS_FORCE_HTTPS, so the row is checked around it
+        $this->assertStringContainsString('| **Landing** | `cc9b013` |  _Ready_ | [Preview URL](https://landing.appwrite.network) | [QR Code](', $text);
+        $this->assertStringContainsString('/v1/avatars/qr?text=https%3A%2F%2Flanding.appwrite.network) | [View logs](https://cloud.appwrite.io/console/projects/project1/sites/landing/deployments/dep1) |', $text);
         $this->assertStringContainsString('| **Billing** | `cc9b013` |  _Ready_ | [View logs](https://cloud.appwrite.io/console/projects/project1/functions/billing/deployments/dep2) |', $text);
     }
 
