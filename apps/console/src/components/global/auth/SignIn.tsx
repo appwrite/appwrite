@@ -6,7 +6,7 @@ import * as z from 'zod'
 import { useEffect, useState, type ReactNode } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { AppwriteException, ID } from '@appwrite.io/console'
-import { Bug, Eye, EyeOff, Fingerprint } from 'lucide-react'
+import { Bug, Eye, EyeOff, Fingerprint, KeyRound } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -280,6 +280,8 @@ interface SignInProps {
   onPasskeyAutofill?: () => void
   /** Shows a "Sign in with a passkey" button that opens the browser's passkey prompt. */
   onPasskeySignIn?: () => void
+  /** Shows a "Sign in with SSO" button that opens the company sign-in page. */
+  showSSO?: boolean
   redirect?: string // Optional redirect URL to preserve when switching between sign-in/sign-up
   /** Debug preview routes: cross-links stay on /debug/*-preview; demo user is fill-only. */
   preview?: boolean
@@ -295,6 +297,7 @@ export function SignIn({
   onPasskeySignIn,
   redirect,
   preview = false,
+  showSSO = false,
 }: SignInProps) {
   const t = useT()
   const { isDebugModeOpen } = useDebugMode()
@@ -537,6 +540,20 @@ export function SignIn({
                 {showPasskeyButton ? t('Or') : t('Or continue with')}
               </Divider>
             </>
+          )}
+
+          {mode === 'sign-in' && showSSO && !preview && (
+            <Button
+              asChild
+              variant="outline"
+              className="h-9 w-full"
+              disabled={!!oauthLoading || formBusy}
+            >
+              <Link to="/sso" search={{ redirect }}>
+                <KeyRound className="size-4" />
+                {t('Sign in with SSO')}
+              </Link>
+            </Button>
           )}
 
           {showPasskeyButton && (

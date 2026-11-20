@@ -1658,6 +1658,44 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Nameservers changed': 'שרתי השמות השתנו',
   'The nameservers for this domain no longer point to Appwrite. The domain status has been updated.':
     'שרתי השמות של הדומיין הזה כבר לא מפנים ל-Appwrite. סטטוס הדומיין עודכן.',
+  // Single sign-on
+  'Single sign-on': 'התחברות יחידה (SSO)',
+  'Email not on a verified domain': 'אימייל שאינו בדומיין מאומת',
+  'Verify your company domain so teammates join on sign-up.':
+    'אמתו את הדומיין של החברה כדי שחברי הצוות יצטרפו בהרשמה.',
+  'People who sign up with a verified email on these domains join this organization automatically, with the roles you choose.':
+    'מי שנרשם עם אימייל מאומת באחד הדומיינים האלה מצטרף לארגון אוטומטית, עם התפקידים שבחרתם.',
+  'No email domains yet': 'אין עדיין דומייני אימייל',
+  'Add your company domain so teammates join this organization when they sign up.':
+    'הוסיפו את הדומיין של החברה כדי שחברי הצוות יצטרפו לארגון כשהם נרשמים.',
+  'Roles for new members': 'תפקידים לחברים חדשים',
+  'Email domain added': 'דומיין האימייל נוסף',
+  'Email domain updated': 'דומיין האימייל עודכן',
+  'Email domain deleted': 'דומיין האימייל נמחק',
+  'Failed to update email domain': 'עדכון דומיין האימייל נכשל',
+  'Failed to delete email domain': 'מחיקת דומיין האימייל נכשלה',
+  'Delete email domain': 'מחיקת דומיין אימייל',
+  'New people stop joining through it. People who already joined stay members.':
+    'אנשים חדשים יפסיקו להצטרף דרכו. מי שכבר הצטרף יישאר חבר בארגון.',
+  'People who sign up with a verified email on this domain join this organization.':
+    'מי שנרשם עם אימייל מאומת בדומיין הזה מצטרף לארגון.',
+  'Only the domain, without @. Subdomains need their own entry.':
+    'רק הדומיין, בלי @. כל תת-דומיין מוסיפים בנפרד.',
+  'Pick at least one role.': 'בחרו לפחות תפקיד אחד.',
+  'Roles people get when they join. Same roles as Invite Members.':
+    'התפקידים שמצטרפים חדשים מקבלים. אותם תפקידים כמו בהזמנת חברים.',
+  'Another organization claimed this domain. Add this TXT record to prove it is yours, then add it again.':
+    'ארגון אחר כבר הוסיף את הדומיין הזה. הוסיפו את רשומת ה-TXT הזו כדי להוכיח שהוא שלכם, ואז הוסיפו אותו שוב.',
+  'Update roles': 'עדכון תפקידים',
+  'Applies to people who join from now on. People who already joined keep their roles; change those in Members.':
+    'חל על מי שמצטרף מעכשיו. מי שכבר הצטרף שומר על התפקידים שלו, ואפשר לשנות אותם בחברים.',
+  'Add this TXT record at your DNS provider, then verify. It can take a few minutes to propagate.':
+    'הוסיפו את רשומת ה-TXT הזו אצל ספק ה-DNS ולאחר מכן אמתו. העדכון עשוי להימשך כמה דקות.',
+  'Until the domain is verified, nobody joins automatically.':
+    'עד שהדומיין יאומת, אף אחד לא מצטרף אוטומטית.',
+  'The TXT record was not found yet. DNS changes can take a few minutes to propagate.':
+    'רשומת ה-TXT עדיין לא נמצאה. עדכון שינויי DNS עשוי להימשך כמה דקות.',
+  Later: 'אחר כך',
   'Organization photo': 'תמונת הארגון',
   'Shown next to your organization name across the Console.': 'מוצגת לצד שם הארגון שלך בכל הקונסולה.',
   'PNG, JPEG, or WebP up to 5MB.': 'PNG,\u200f JPEG או WebP עד 5MB.',

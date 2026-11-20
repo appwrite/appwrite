@@ -1679,6 +1679,44 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Nameservers changed': 'ネームサーバーが変更されました',
   'The nameservers for this domain no longer point to Appwrite. The domain status has been updated.':
     'このドメインのネームサーバーは Appwrite を指していません。ドメインのステータスを更新しました。',
+  // Single sign-on
+  'Single sign-on': 'シングルサインオン',
+  'Email not on a verified domain': '検証済みドメイン外のメール',
+  'Verify your company domain so teammates join on sign-up.':
+    '会社のドメインを検証すると、チームメンバーがサインアップ時に参加します。',
+  'People who sign up with a verified email on these domains join this organization automatically, with the roles you choose.':
+    'これらのドメインの確認済みメールアドレスでサインアップしたユーザーは、選択したロールでこの組織に自動的に参加します。',
+  'No email domains yet': 'メールドメインはまだありません',
+  'Add your company domain so teammates join this organization when they sign up.':
+    '会社のドメインを追加すると、チームメンバーはサインアップ時にこの組織に参加します。',
+  'Roles for new members': '新しいメンバーのロール',
+  'Email domain added': 'メールドメインを追加しました',
+  'Email domain updated': 'メールドメインを更新しました',
+  'Email domain deleted': 'メールドメインを削除しました',
+  'Failed to update email domain': 'メールドメインの更新に失敗しました',
+  'Failed to delete email domain': 'メールドメインの削除に失敗しました',
+  'Delete email domain': 'メールドメインを削除',
+  'New people stop joining through it. People who already joined stay members.':
+    '新しいユーザーはこのドメインから参加しなくなります。参加済みのユーザーはメンバーのままです。',
+  'People who sign up with a verified email on this domain join this organization.':
+    'このドメインの確認済みメールアドレスでサインアップしたユーザーは、この組織に参加します。',
+  'Only the domain, without @. Subdomains need their own entry.':
+    '@を付けずにドメインのみを入力してください。サブドメインは個別に追加します。',
+  'Pick at least one role.': 'ロールを1つ以上選択してください。',
+  'Roles people get when they join. Same roles as Invite Members.':
+    '参加時に付与されるロールです。メンバー招待と同じロールを使用します。',
+  'Another organization claimed this domain. Add this TXT record to prove it is yours, then add it again.':
+    'このドメインは別の組織が登録しています。このTXTレコードを追加して所有権を証明してから、もう一度追加してください。',
+  'Update roles': 'ロールを更新',
+  'Applies to people who join from now on. People who already joined keep their roles; change those in Members.':
+    'これから参加するユーザーに適用されます。参加済みのユーザーは現在のロールのままです。変更はメンバーから行ってください。',
+  'Add this TXT record at your DNS provider, then verify. It can take a few minutes to propagate.':
+    'このTXTレコードをDNSプロバイダーに追加してから検証してください。反映まで数分かかる場合があります。',
+  'Until the domain is verified, nobody joins automatically.':
+    'ドメインが検証されるまで、自動的に参加するユーザーはいません。',
+  'The TXT record was not found yet. DNS changes can take a few minutes to propagate.':
+    'TXTレコードがまだ見つかりません。DNSの変更が反映されるまで数分かかる場合があります。',
+  Later: '後で',
   'Organization photo': '組織の写真',
   'Shown next to your organization name across the Console.': 'コンソール全体で組織名の横に表示されます。',
   'PNG, JPEG, or WebP up to 5MB.': 'PNG、JPEG、WebP(5MBまで)。',

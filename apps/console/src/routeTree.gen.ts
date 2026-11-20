@@ -43,6 +43,7 @@ import { Route as AuthRecoveryRouteImport } from './routes/_auth/recovery'
 import { Route as AuthSignInRouteImport } from './routes/_auth/sign-in'
 import { Route as AuthSignOutRouteImport } from './routes/_auth/sign-out'
 import { Route as AuthSignUpRouteImport } from './routes/_auth/sign-up'
+import { Route as AuthSsoRouteImport } from './routes/_auth/sso'
 import { Route as AuthVerifyEmailRouteImport } from './routes/_auth/verify-email'
 import { Route as MarketingIndexRouteImport } from './routes/_marketing/index'
 import { Route as MarketingAffiliatesRouteImport } from './routes/_marketing/affiliates'
@@ -238,6 +239,7 @@ import { Route as PublicOrganizationsOrgIdSettingsDangerZoneRouteImport } from '
 import { Route as PublicOrganizationsOrgIdSettingsMembersRouteImport } from './routes/_public/organizations.$orgId.settings.members'
 import { Route as PublicOrganizationsOrgIdSettingsOauthAppsRouteImport } from './routes/_public/organizations.$orgId.settings.oauth-apps'
 import { Route as PublicOrganizationsOrgIdSettingsPartnersRouteImport } from './routes/_public/organizations.$orgId.settings.partners'
+import { Route as PublicOrganizationsOrgIdSettingsSsoRouteImport } from './routes/_public/organizations.$orgId.settings.sso'
 import { Route as PublicProjectsProjectIdAnalyticsPropertyIdRouteImport } from './routes/_public/projects.$projectId.analytics.$propertyId'
 import { Route as PublicProjectsProjectIdAnalyticsAddRouteImport } from './routes/_public/projects.$projectId.analytics.add'
 import { Route as PublicProjectsProjectIdAppsAddRouteImport } from './routes/_public/projects.$projectId.apps.add'
@@ -681,6 +683,11 @@ const AuthSignOutRoute = AuthSignOutRouteImport.update({
 const AuthSignUpRoute = AuthSignUpRouteImport.update({
   id: '/sign-up',
   path: '/sign-up',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthSsoRoute = AuthSsoRouteImport.update({
+  id: '/sso',
+  path: '/sso',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
@@ -1755,6 +1762,12 @@ const PublicOrganizationsOrgIdSettingsPartnersRoute =
   PublicOrganizationsOrgIdSettingsPartnersRouteImport.update({
     id: '/partners',
     path: '/partners',
+    getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
+  } as any)
+const PublicOrganizationsOrgIdSettingsSsoRoute =
+  PublicOrganizationsOrgIdSettingsSsoRouteImport.update({
+    id: '/sso',
+    path: '/sso',
     getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
   } as any)
 const PublicProjectsProjectIdAnalyticsPropertyIdRoute =
@@ -3689,6 +3702,7 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof AuthSignInRoute
   '/sign-out': typeof AuthSignOutRoute
   '/sign-up': typeof AuthSignUpRoute
+  '/sso': typeof AuthSsoRoute
   '/verify-email': typeof AuthVerifyEmailRoute
   '/affiliates': typeof MarketingAffiliatesRoute
   '/agencies': typeof MarketingAgenciesRoute
@@ -3879,6 +3893,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/organizations/$orgId/settings/partners': typeof PublicOrganizationsOrgIdSettingsPartnersRoute
+  '/organizations/$orgId/settings/sso': typeof PublicOrganizationsOrgIdSettingsSsoRoute
   '/projects/$projectId/analytics/$propertyId': typeof PublicProjectsProjectIdAnalyticsPropertyIdRouteWithChildren
   '/projects/$projectId/analytics/add': typeof PublicProjectsProjectIdAnalyticsAddRoute
   '/projects/$projectId/apps/add': typeof PublicProjectsProjectIdAppsAddRoute
@@ -4192,6 +4207,7 @@ export interface FileRoutesByTo {
   '/sign-in': typeof AuthSignInRoute
   '/sign-out': typeof AuthSignOutRoute
   '/sign-up': typeof AuthSignUpRoute
+  '/sso': typeof AuthSsoRoute
   '/verify-email': typeof AuthVerifyEmailRoute
   '/affiliates': typeof MarketingAffiliatesRoute
   '/agencies': typeof MarketingAgenciesRoute
@@ -4355,6 +4371,7 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/organizations/$orgId/settings/partners': typeof PublicOrganizationsOrgIdSettingsPartnersRoute
+  '/organizations/$orgId/settings/sso': typeof PublicOrganizationsOrgIdSettingsSsoRoute
   '/projects/$projectId/analytics/add': typeof PublicProjectsProjectIdAnalyticsAddRoute
   '/projects/$projectId/apps/add': typeof PublicProjectsProjectIdAppsAddRoute
   '/projects/$projectId/auth/oauth2-server': typeof PublicProjectsProjectIdAuthOauth2ServerRouteWithChildren
@@ -4647,6 +4664,7 @@ export interface FileRoutesById {
   '/_auth/sign-in': typeof AuthSignInRoute
   '/_auth/sign-out': typeof AuthSignOutRoute
   '/_auth/sign-up': typeof AuthSignUpRoute
+  '/_auth/sso': typeof AuthSsoRoute
   '/_auth/verify-email': typeof AuthVerifyEmailRoute
   '/_marketing/affiliates': typeof MarketingAffiliatesRoute
   '/_marketing/agencies': typeof MarketingAgenciesRoute
@@ -4838,6 +4856,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/_public/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/_public/organizations/$orgId/settings/partners': typeof PublicOrganizationsOrgIdSettingsPartnersRoute
+  '/_public/organizations/$orgId/settings/sso': typeof PublicOrganizationsOrgIdSettingsSsoRoute
   '/_public/projects/$projectId/analytics/$propertyId': typeof PublicProjectsProjectIdAnalyticsPropertyIdRouteWithChildren
   '/_public/projects/$projectId/analytics/add': typeof PublicProjectsProjectIdAnalyticsAddRoute
   '/_public/projects/$projectId/apps/add': typeof PublicProjectsProjectIdAppsAddRoute
@@ -5155,6 +5174,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-out'
     | '/sign-up'
+    | '/sso'
     | '/verify-email'
     | '/affiliates'
     | '/agencies'
@@ -5345,6 +5365,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/settings/members'
     | '/organizations/$orgId/settings/oauth-apps'
     | '/organizations/$orgId/settings/partners'
+    | '/organizations/$orgId/settings/sso'
     | '/projects/$projectId/analytics/$propertyId'
     | '/projects/$projectId/analytics/add'
     | '/projects/$projectId/apps/add'
@@ -5658,6 +5679,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-out'
     | '/sign-up'
+    | '/sso'
     | '/verify-email'
     | '/affiliates'
     | '/agencies'
@@ -5821,6 +5843,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/settings/members'
     | '/organizations/$orgId/settings/oauth-apps'
     | '/organizations/$orgId/settings/partners'
+    | '/organizations/$orgId/settings/sso'
     | '/projects/$projectId/analytics/add'
     | '/projects/$projectId/apps/add'
     | '/projects/$projectId/auth/oauth2-server'
@@ -6112,6 +6135,7 @@ export interface FileRouteTypes {
     | '/_auth/sign-in'
     | '/_auth/sign-out'
     | '/_auth/sign-up'
+    | '/_auth/sso'
     | '/_auth/verify-email'
     | '/_marketing/affiliates'
     | '/_marketing/agencies'
@@ -6303,6 +6327,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/settings/members'
     | '/_public/organizations/$orgId/settings/oauth-apps'
     | '/_public/organizations/$orgId/settings/partners'
+    | '/_public/organizations/$orgId/settings/sso'
     | '/_public/projects/$projectId/analytics/$propertyId'
     | '/_public/projects/$projectId/analytics/add'
     | '/_public/projects/$projectId/apps/add'
@@ -6883,6 +6908,13 @@ declare module '@tanstack/react-router' {
       path: '/sign-up'
       fullPath: '/sign-up'
       preLoaderRoute: typeof AuthSignUpRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/sso': {
+      id: '/_auth/sso'
+      path: '/sso'
+      fullPath: '/sso'
+      preLoaderRoute: typeof AuthSsoRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/verify-email': {
@@ -8248,6 +8280,13 @@ declare module '@tanstack/react-router' {
       path: '/partners'
       fullPath: '/organizations/$orgId/settings/partners'
       preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsPartnersRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
+    }
+    '/_public/organizations/$orgId/settings/sso': {
+      id: '/_public/organizations/$orgId/settings/sso'
+      path: '/sso'
+      fullPath: '/organizations/$orgId/settings/sso'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsSsoRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
     }
     '/_public/projects/$projectId/analytics/$propertyId': {
@@ -10206,6 +10245,7 @@ interface AuthRouteChildren {
   AuthSignInRoute: typeof AuthSignInRoute
   AuthSignOutRoute: typeof AuthSignOutRoute
   AuthSignUpRoute: typeof AuthSignUpRoute
+  AuthSsoRoute: typeof AuthSsoRoute
   AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
   AuthAuthMagicUrlRoute: typeof AuthAuthMagicUrlRoute
   AuthEducationJoinRoute: typeof AuthEducationJoinRoute
@@ -10225,6 +10265,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthSignInRoute: AuthSignInRoute,
   AuthSignOutRoute: AuthSignOutRoute,
   AuthSignUpRoute: AuthSignUpRoute,
+  AuthSsoRoute: AuthSsoRoute,
   AuthVerifyEmailRoute: AuthVerifyEmailRoute,
   AuthAuthMagicUrlRoute: AuthAuthMagicUrlRoute,
   AuthEducationJoinRoute: AuthEducationJoinRoute,
@@ -10616,6 +10657,7 @@ interface PublicOrganizationsOrgIdSettingsRouteChildren {
   PublicOrganizationsOrgIdSettingsMembersRoute: typeof PublicOrganizationsOrgIdSettingsMembersRoute
   PublicOrganizationsOrgIdSettingsOauthAppsRoute: typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   PublicOrganizationsOrgIdSettingsPartnersRoute: typeof PublicOrganizationsOrgIdSettingsPartnersRoute
+  PublicOrganizationsOrgIdSettingsSsoRoute: typeof PublicOrganizationsOrgIdSettingsSsoRoute
 }
 
 const PublicOrganizationsOrgIdSettingsRouteChildren: PublicOrganizationsOrgIdSettingsRouteChildren =
@@ -10632,6 +10674,8 @@ const PublicOrganizationsOrgIdSettingsRouteChildren: PublicOrganizationsOrgIdSet
       PublicOrganizationsOrgIdSettingsOauthAppsRoute,
     PublicOrganizationsOrgIdSettingsPartnersRoute:
       PublicOrganizationsOrgIdSettingsPartnersRoute,
+    PublicOrganizationsOrgIdSettingsSsoRoute:
+      PublicOrganizationsOrgIdSettingsSsoRoute,
   }
 
 const PublicOrganizationsOrgIdSettingsRouteWithChildren =

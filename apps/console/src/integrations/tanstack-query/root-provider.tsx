@@ -1,8 +1,22 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import {
+  MutationCache,
+  QueryCache,
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query'
 import { registerActiveEnvironmentChange } from '@/lib/active-environment'
+import { isSSORequiredError, redirectToRequiredSSO } from '@/lib/sso-required'
 
 export function getContext() {
+  // An organization that requires single sign-on refuses its members until they
+  // sign in through it: send them there from any request it refuses.
+  const onError = (error: unknown) => {
+    if (isSSORequiredError(error)) redirectToRequiredSSO()
+  }
+
   const queryClient = new QueryClient({
+    queryCache: new QueryCache({ onError }),
+    mutationCache: new MutationCache({ onError }),
     defaultOptions: {
       queries: {
         // Disable automatic refetching on window focus to reduce CPU usage

@@ -373,6 +373,7 @@ function SignInPage() {
             ? handlePasskeySignIn
             : undefined
         }
+        showSSO={features.sso}
         isLoading={signInMutation.isPending || passkeyBusy || isOpeningMfa}
         oauthLoading={oauthLoading}
         redirect={search.redirect}

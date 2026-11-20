@@ -448,6 +448,18 @@ export function canShowOrgApiKeysSettings(
   return !!features.orgApiKeys && canAccessOrgSettingsOAuthOrApiKeys(access)
 }
 
+/**
+ * Organization settings → Single sign-on (experiment + owners). Its domains
+ * decide who joins the organization and with which roles, so only owners see
+ * it, as only owners can invite.
+ */
+export function canShowOrgSsoSettings(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return !!features.sso && whenOrgRoles(access, features, access.isOwner)
+}
+
 /** Organization key metadata stays visible to developers; only owners manage keys. */
 export function canCreateOrgApiKey(
   access: ConsoleAccess,
@@ -525,6 +537,7 @@ export function getFirstAllowedOrgSettingsPath(
   if (canShowOrgOAuthAppsSettings(access, features))
     return `${basePath}/oauth-apps`
   if (canShowOrgApiKeysSettings(access, features)) return `${basePath}/partners`
+  if (canShowOrgSsoSettings(access, features)) return `${basePath}/sso`
   return basePath
 }
 

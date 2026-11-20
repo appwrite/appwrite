@@ -70,6 +70,12 @@ export type ConsoleProfileFeatures = {
   reviews: boolean
   /** Project environments switcher in the project sidebar (`/project/environments`, Cloud only). */
   projectEnvironments: boolean
+  /**
+   * Organization settings → Single sign-on (Cloud only, owners). Its Domains
+   * section claims a domain with a DNS record so people who sign up with a
+   * verified email on it join the organization. An experiment, off by default.
+   */
+  sso: boolean
   /** An experiment, off by default; the quality team turns it on from the header Previews menu. Usage monitors and the alerts they raise: the Usage sidebar's Monitors and Alerts pages, their quick actions, budget monitors in billing, and the alert events in the webhook event picker. */
   alerts: boolean
   /** Multi-region support (region picker/labels in project UX). */
@@ -132,6 +138,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   videos: 'Videos',
   reviews: 'Review',
   projectEnvironments: 'Project environments',
+  sso: 'Single sign-on',
   alerts: 'Alerts',
   multiRegion: 'Multi-region',
   edgeNetwork: 'Edge network',
@@ -186,6 +193,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       videos: false,
       reviews: false,
       projectEnvironments: false,
+      sso: false,
       alerts: false,
       multiRegion: true,
       edgeNetwork: true,
@@ -229,6 +237,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       videos: false,
       reviews: false,
       projectEnvironments: false,
+      sso: false,
       alerts: false,
       multiRegion: false,
       edgeNetwork: false,
@@ -517,6 +526,7 @@ function applyCloudOnlyFeatureGates(
       marketing: false,
       multiTenancy: false,
       projectEnvironments: false,
+      sso: false,
     }
   }
   return features
