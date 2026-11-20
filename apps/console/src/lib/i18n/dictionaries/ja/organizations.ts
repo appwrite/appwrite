@@ -1722,12 +1722,12 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Members with an email on your verified domains can open this organization only after signing in through your identity provider. Owners can always sign in with any method, so a broken identity provider never locks your organization out. Members on other domains keep their usual sign-in too.':
     '検証済みドメインのメールアドレスを持つメンバーは、ID プロバイダー経由でサインインした後にのみこの組織を開けます。オーナーは常に任意の方法でサインインできるため、ID プロバイダーに問題が起きても組織から締め出されることはありません。他のドメインのメンバーも、これまでどおりの方法でサインインできます。',
   'Require single sign-on': 'シングルサインオンを必須にする',
-  'Paused - with no enabled identity provider, members sign in any way they like. Enable one to require single sign-on again.':
-    '一時停止中 - 有効な ID プロバイダーがないため、メンバーは任意の方法でサインインできます。シングルサインオンを再び必須にするには、プロバイダーを有効にしてください。',
-  'Paused - with no verified domain, members sign in any way they like. Verify one to require single sign-on again.':
-    '一時停止中 - 検証済みドメインがないため、メンバーは任意の方法でサインインできます。シングルサインオンを再び必須にするには、ドメインを検証してください。',
-  'Enabled - members on your verified domains must sign in through your identity provider. Owners can always sign in any way.':
-    '有効 - 検証済みドメインのメンバーは ID プロバイダー経由でサインインする必要があります。オーナーは常に任意の方法でサインインできます。',
+  'Paused - enable an identity provider to require single sign-on again.':
+    '一時停止中 - シングルサインオンを再び必須にするには、ID プロバイダーを有効にしてください。',
+  'Paused - verify a domain to require single sign-on again.':
+    '一時停止中 - シングルサインオンを再び必須にするには、ドメインを検証してください。',
+  'Enabled - members on your verified domains must use single sign-on.':
+    '有効 - 検証済みドメインのメンバーはシングルサインオンでサインインする必要があります。',
   'Disabled - members sign in any way they like.':
     '無効 - メンバーは任意の方法でサインインできます。',
   'Members on your verified domains who signed in another way lose access to this organization until they sign in through your identity provider. Their other organizations are not affected. Owners keep their usual sign-in, so a broken identity provider never locks you out.':
@@ -1805,8 +1805,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'シングルサインオンには Pro 以上のプランが必要です。',
   'Upgrade to Pro to require single sign-on.':
     'シングルサインオンを必須にするには、Pro にアップグレードしてください。',
-  'Paused - your plan does not include single sign-on, so members sign in any way they like. Turn it off, or upgrade to Pro to require it again.':
-    '一時停止中 - ご利用のプランにはシングルサインオンが含まれていないため、メンバーは任意の方法でサインインできます。オフにするか、Pro にアップグレードして再び必須にしてください。',
+  'Paused - upgrade to Pro to require single sign-on again.':
+    '一時停止中 - シングルサインオンを再び必須にするには、Pro にアップグレードしてください。',
   Later: '後で',
   'Organization photo': '組織の写真',
   'Shown next to your organization name across the Console.':

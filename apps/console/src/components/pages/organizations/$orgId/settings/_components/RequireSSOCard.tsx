@@ -154,18 +154,18 @@ export function RequireSSOCard() {
                   : paused
                     ? gate.locked
                       ? t(
-                          'Paused - your plan does not include single sign-on, so members sign in any way they like. Turn it off, or upgrade to Pro to require it again.',
+                          'Paused - upgrade to Pro to require single sign-on again.',
                         )
                       : hasVerifiedDomain
                         ? t(
-                            'Paused - with no enabled identity provider, members sign in any way they like. Enable one to require single sign-on again.',
+                            'Paused - enable an identity provider to require single sign-on again.',
                           )
                         : t(
-                            'Paused - with no verified domain, members sign in any way they like. Verify one to require single sign-on again.',
+                            'Paused - verify a domain to require single sign-on again.',
                           )
                     : draft
                       ? t(
-                          'Enabled - members on your verified domains must sign in through your identity provider. Owners can always sign in any way.',
+                          'Enabled - members on your verified domains must use single sign-on.',
                         )
                       : t('Disabled - members sign in any way they like.')}
               </p>

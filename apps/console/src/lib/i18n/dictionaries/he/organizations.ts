@@ -1700,12 +1700,12 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Members with an email on your verified domains can open this organization only after signing in through your identity provider. Owners can always sign in with any method, so a broken identity provider never locks your organization out. Members on other domains keep their usual sign-in too.':
     'חברים עם אימייל בדומיינים המאומתים שלכם יכולים לפתוח את הארגון רק אחרי התחברות דרך ספק הזהויות שלכם. בעלים תמיד יכולים להתחבר בכל שיטה, כך שספק זהויות תקול לעולם לא ינעל את הארגון שלכם. גם חברים בדומיינים אחרים ממשיכים להתחבר כרגיל.',
   'Require single sign-on': 'חיוב התחברות יחידה (SSO)',
-  'Paused - with no enabled identity provider, members sign in any way they like. Enable one to require single sign-on again.':
-    'מושהה - אין ספק זהויות פעיל, ולכן חברים מתחברים בכל דרך שירצו. הפעילו ספק כדי לחייב שוב התחברות יחידה (SSO).',
-  'Paused - with no verified domain, members sign in any way they like. Verify one to require single sign-on again.':
-    'מושהה - אין דומיין מאומת, ולכן חברים מתחברים בכל דרך שירצו. אמתו דומיין כדי לחייב שוב התחברות יחידה (SSO).',
-  'Enabled - members on your verified domains must sign in through your identity provider. Owners can always sign in any way.':
-    'מופעל - חברים בדומיינים המאומתים שלכם חייבים להתחבר דרך ספק הזהויות. בעלים תמיד יכולים להתחבר בכל דרך.',
+  'Paused - enable an identity provider to require single sign-on again.':
+    'מושהה - הפעילו ספק זהויות כדי לחייב שוב התחברות יחידה (SSO).',
+  'Paused - verify a domain to require single sign-on again.':
+    'מושהה - אמתו דומיין כדי לחייב שוב התחברות יחידה (SSO).',
+  'Enabled - members on your verified domains must use single sign-on.':
+    'מופעל - חברים בדומיינים המאומתים שלכם חייבים להשתמש בהתחברות יחידה (SSO).',
   'Disabled - members sign in any way they like.':
     'מושבת - חברים מתחברים בכל דרך שירצו.',
   'Members on your verified domains who signed in another way lose access to this organization until they sign in through your identity provider. Their other organizations are not affected. Owners keep their usual sign-in, so a broken identity provider never locks you out.':
@@ -1781,8 +1781,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'התחברות יחידה (SSO) דורשת תוכנית Pro ומעלה.',
   'Upgrade to Pro to require single sign-on.':
     'שדרגו ל-Pro כדי לחייב התחברות יחידה (SSO).',
-  'Paused - your plan does not include single sign-on, so members sign in any way they like. Turn it off, or upgrade to Pro to require it again.':
-    'מושהה - התוכנית שלכם לא כוללת התחברות יחידה (SSO), ולכן חברים מתחברים בכל דרך שירצו. כבו את האפשרות, או שדרגו ל-Pro כדי לחייב אותה שוב.',
+  'Paused - upgrade to Pro to require single sign-on again.':
+    'מושהה - שדרגו ל-Pro כדי לחייב שוב התחברות יחידה (SSO).',
   Later: 'אחר כך',
   'Organization photo': 'תמונת הארגון',
   'Shown next to your organization name across the Console.':

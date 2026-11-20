@@ -734,9 +734,14 @@ test.describe('organization single sign-on', () => {
     await expect.poll(() => mock.sent.requires).toEqual([true])
     await expect(required).toBeChecked()
     await expect(update).toBeDisabled()
-    // Owners are never locked out, and the card says so
+    // The state fits one line; that owners are never locked out is in the card's description
+    await expect(
+      page.getByText(
+        'Enabled - members on your verified domains must use single sign-on.',
+      ),
+    ).toBeVisible()
     await expect(required).toHaveAccessibleDescription(
-      /Owners can always sign in any way\..*Owners can always sign in with any method, so a broken identity provider never locks your organization out\./,
+      /Owners can always sign in with any method, so a broken identity provider never locks your organization out\./,
     )
 
     // Turning it off needs no confirmation
@@ -1170,7 +1175,7 @@ test.describe('organization single sign-on settings', () => {
     await expect(required).toBeChecked()
     await expect(page.getByText('Paused', { exact: true })).toBeVisible()
     await expect(required).toHaveAccessibleDescription(
-      /with no enabled identity provider, members sign in any way they like/,
+      /Paused - enable an identity provider to require single sign-on again\./,
     )
   })
 
