@@ -1,9 +1,10 @@
 //! Email adapters: [`Smtp`] (and [`Mock`], SMTP to a catcher), [`Ses`],
-//! [`Mailgun`], [`Sendgrid`] and [`Resend`], with [`mime`], the MIME
+//! [`Mailgun`], [`Sendgrid`], [`Resend`] and [`Bird`], with [`mime`], the MIME
 //! message SMTP and SES send.
 //!
 //! PHP: `Utopia\Messaging\Adapter\Email` and its subclasses.
 
+pub mod bird;
 mod html;
 mod mailgun;
 pub mod mime;
@@ -12,6 +13,7 @@ mod sendgrid;
 mod ses;
 mod smtp;
 
+pub use bird::Bird;
 pub use mailgun::Mailgun;
 pub use resend::Resend;
 pub use sendgrid::Sendgrid;

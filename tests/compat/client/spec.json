@@ -500,7 +500,7 @@
       ]
     },
     "client.new": {
-      "doc": "new Client(new Curl() or new Retry(new Curl(), backoff(retry), recorded sleep), destinations?), then each [setting, value] of `with`: destinations, timeout, connect_timeout, ssl_verification, custom_ca, certificate [cert, key, pass], min_tls (Tls case name), connection_reuse, follow_redirects [enabled, hops], headers, base_uri, basic_auth [user, pass], bearer_auth, trace; with `legacy`, the Curl adapter is wrapped in a fixture decorator without response streaming that counts its requests; a handle",
+      "doc": "new Client(new Curl() or new Retry(new Curl(), backoff(retry), recorded sleep), destinations?), then each [setting, value] of `with`: destinations, timeout, connect_timeout, ssl_verification, custom_ca, certificate [cert, key, pass], min_tls (Tls case name), connection_reuse, follow_redirects [enabled, hops], headers, base_uri, basic_auth [user, pass], bearer_auth, trace; with `max_file_size`, the Curl adapter takes CURLOPT_MAXFILESIZE_LARGE (Http::with_max_file_size); with `legacy`, the Curl adapter is wrapped in a fixture decorator without response streaming that counts its requests; a handle",
       "covers": [
         "Utopia\\Client\\Client::__construct",
         "Utopia\\Client\\Client::withDestinations",

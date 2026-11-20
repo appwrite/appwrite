@@ -15,6 +15,7 @@ use Utopia\Client\Destinations;
 use Utopia\Client\Destinations\Anywhere;
 use Utopia\Messaging\Adapter\Chat\Discord;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
+use Utopia\Messaging\Adapter\Email\Bird as BirdEmail;
 use Utopia\Messaging\Adapter\Email\Mailgun;
 use Utopia\Messaging\Adapter\Email\Resend;
 use Utopia\Messaging\Adapter\Email\Sendgrid;
@@ -283,6 +284,11 @@ final class RoutedSendgrid extends Sendgrid
 }
 
 final class RoutedResend extends Resend
+{
+    use Routed;
+}
+
+final class RoutedBirdEmail extends BirdEmail
 {
     use Routed;
 }

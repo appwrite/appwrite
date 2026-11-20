@@ -1,6 +1,6 @@
 [package]
 name = "utopia-messaging"
-description = "Email, SMS, push and chat messages sent through provider adapters (SMTP, SES, Mailgun, Sendgrid, Resend; Twilio, Vonage, Bird, WhatsApp and a dozen more SMS gateways with routing by calling code; FCM and APNs; Discord), with per-recipient results and send telemetry."
+description = "Email, SMS, push and chat messages sent through provider adapters (SMTP, SES, Mailgun, Sendgrid, Resend, Bird; Twilio, Vonage, Bird, WhatsApp and a dozen more SMS gateways with routing by calling code; FCM and APNs; Discord), with per-recipient results and send telemetry."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -37,4 +37,4 @@ hyper = { workspace = true, features = ["client", "server", "http2"] }
 
 [package.metadata.utopia]
 category = "integrations"
-php-sync = "dd354d119c5fe8cec9510da344834e38dea525ac"
+php-sync = "d5814e3594683a977a1f9533f1d8ca94c42a9a9c"

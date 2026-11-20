@@ -24,6 +24,7 @@ use utopia_async::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 use utopia_async::net::{TcpListener, TcpStream};
 use utopia_client::{Anywhere, Client as HttpClient, Http as Transfer};
 use utopia_messaging::chat::DiscordWebhook;
+use utopia_messaging::email::bird::Category as BirdEmailCategory;
 use utopia_messaging::email::{self, Mailgun, Resend, Sendgrid, Ses, Smtp};
 use utopia_messaging::push::{self, Apns, Fcm};
 use utopia_messaging::sms::{
@@ -1344,6 +1345,18 @@ async fn build_adapter(
         ),
         "sendgrid" => plain!(Sendgrid::new(req_str(args, "apiKey")?)),
         "resend" => plain!(Resend::new(req_str(args, "apiKey")?)),
+        "bird_email" => {
+            let category = match arg_str(args, "category")? {
+                Some(category) => {
+                    BirdEmailCategory::from_value(&category).ok_or_else(|| Fault::new("unknown category"))?
+                }
+                None => BirdEmailCategory::Transactional,
+            };
+            match email::Bird::new(req_str(args, "apiKey")?, category, arg_str(args, "endpoint")?.as_deref()) {
+                Ok(bird) => plain!(bird),
+                Err(e) => return Ok(Err(e)),
+            }
+        }
         "ses" => plain!(
             Ses::new(req_str(args, "accessKey")?, req_str(args, "secretKey")?, req_str(args, "region")?)
                 .with_session_token(arg_str(args, "sessionToken")?)
@@ -1756,6 +1769,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         "enums" => Outcome::Ok(json!({
             "priority": ([Priority::Normal, Priority::High].map(|p| json!([p.name(), p.value()]))),
             "category": (Category::ALL.map(|c| json!([c.name(), c.value()]))),
+            "email_category": (BirdEmailCategory::ALL.map(|c| json!([c.name(), c.value()]))),
             "otp_type": (OtpType::ALL.map(|o| json!([o.name(), o.value(), o.requires_apps()]))),
             "msg91": (Msg91Parameter::ALL.map(|p| json!([p.name(), p.value()]))),
             "whatsapp": (WhatsAppParameter::ALL.map(|p| json!([p.name(), p.value()]))),

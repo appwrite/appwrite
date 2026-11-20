@@ -50,6 +50,7 @@
 //! | `Adapter\Email\SMTP\NoHostAnswered` | [`email::NoHostAnswered`] |
 //! | `Adapter\Email\SES` (`sign()`) | [`email::Ses`] ([`email::Ses::sign`]) |
 //! | `Adapter\Email\Mailgun`, `Sendgrid`, `Resend` | [`email::Mailgun`], [`email::Sendgrid`], [`email::Resend`] |
+//! | `Adapter\Email\Bird`, `Email\Bird\Category` | [`email::Bird`], [`email::bird::Category`] |
 //! | `Adapter\Email\Mime` (`message()`, `addresses()`, `attachments()`, `size()`) | [`email::mime`] |
 //! | `Adapter\SMS\Twilio`, `Vonage`, `Telnyx`, `Plivo`, `Sinch`, `Seven`, `Clickatell`, `Infobip`, `Inforu`, `TextMagic`, `Telesign`, `Msg91`, `Fast2SMS`, `Mock` | [`sms::Twilio`], [`sms::Vonage`], [`sms::Telnyx`], [`sms::Plivo`], [`sms::Sinch`], [`sms::Seven`], [`sms::Clickatell`], [`sms::Infobip`], [`sms::Inforu`], [`sms::TextMagic`], [`sms::Telesign`], [`sms::Msg91`], [`sms::Fast2Sms`], [`sms::Mock`] |
 //! | `Adapter\SMS\Mock::getEndpoint()`, `setEndpoint()` | [`sms::Mock::endpoint`], [`sms::Mock::set_endpoint`] |

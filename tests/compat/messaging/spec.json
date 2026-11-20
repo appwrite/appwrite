@@ -111,7 +111,7 @@
       ]
     },
     "enums": {
-      "doc": "every case of Priority, Bird\\Category, WhatsApp\\OtpType (with requiresApps()), Msg91 and WhatsApp MetadataParameter, the InvalidArgumentException types and the WhatsApp and App constants",
+      "doc": "every case of Priority, Bird\\Category, Email\\Bird\\Category, WhatsApp\\OtpType (with requiresApps()), Msg91 and WhatsApp MetadataParameter, the InvalidArgumentException types and the WhatsApp and App constants",
       "covers": [
         "Utopia\\Messaging\\Adapter\\SMS\\WhatsApp\\OtpType::requiresApps"
       ]
@@ -445,13 +445,14 @@
       "doc": "test glue: the commands a scripted SMTP server read, with the EHLO/HELO host (the machine's name) as <host>"
     },
     "adapter.new": {
-      "doc": "an adapter (adapter: mailgun, sendgrid, resend, ses, smtp, mock_email, bird, clickatell, fast2sms, infobip, inforu, mock_sms, msg91, plivo, seven, sinch, telesign, telnyx, textmagic, twilio, vonage, whatsapp, apns, fcm, discord, geosms, scripted) built from args (the PHP constructor's parameters by name), its requests answered per `transport`: stub (captured, answered with queued replies), fixture (to the messaging-http fixture server), custom (the same through a $clientFactory) or default; telemetry: a recording telemetry handle set with setTelemetry(). A handle, or {$invalid} / an error when the constructor refuses",
+      "doc": "an adapter (adapter: mailgun, sendgrid, resend, bird_email, ses, smtp, mock_email, bird, clickatell, fast2sms, infobip, inforu, mock_sms, msg91, plivo, seven, sinch, telesign, telnyx, textmagic, twilio, vonage, whatsapp, apns, fcm, discord, geosms, scripted) built from args (the PHP constructor's parameters by name), its requests answered per `transport`: stub (captured, answered with queued replies), fixture (to the messaging-http fixture server), custom (the same through a $clientFactory) or default; telemetry: a recording telemetry handle set with setTelemetry(). A handle, or {$invalid} / an error when the constructor refuses",
       "covers": [
         "Utopia\\Messaging\\Adapter::__construct",
         "Utopia\\Messaging\\Adapter::setTelemetry",
         "Utopia\\Messaging\\Adapter\\Email\\Mailgun::__construct",
         "Utopia\\Messaging\\Adapter\\Email\\Sendgrid::__construct",
         "Utopia\\Messaging\\Adapter\\Email\\Resend::__construct",
+        "Utopia\\Messaging\\Adapter\\Email\\Bird::__construct",
         "Utopia\\Messaging\\Adapter\\Email\\SES::__construct",
         "Utopia\\Messaging\\Adapter\\Email\\SMTP::__construct",
         "Utopia\\Messaging\\Adapter\\Email\\Mock::__construct",
@@ -487,6 +488,8 @@
         "Utopia\\Messaging\\Adapter\\Chat\\Discord::getType",
         "Utopia\\Messaging\\Adapter\\Email::getMessageType",
         "Utopia\\Messaging\\Adapter\\Email::getType",
+        "Utopia\\Messaging\\Adapter\\Email\\Bird::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\Email\\Bird::getName",
         "Utopia\\Messaging\\Adapter\\Email\\Mailgun::getMaxMessagesPerRequest",
         "Utopia\\Messaging\\Adapter\\Email\\Mailgun::getName",
         "Utopia\\Messaging\\Adapter\\Email\\Resend::getMaxMessagesPerRequest",

@@ -5,7 +5,7 @@
 
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
-Email, SMS, push and chat messages sent through provider adapters (SMTP, SES, Mailgun, Sendgrid, Resend; Twilio, Vonage, Bird, WhatsApp and a dozen more SMS gateways with routing by calling code; FCM and APNs; Discord), with per-recipient results and send telemetry.
+Email, SMS, push and chat messages sent through provider adapters (SMTP, SES, Mailgun, Sendgrid, Resend, Bird; Twilio, Vonage, Bird, WhatsApp and a dozen more SMS gateways with routing by calling code; FCM and APNs; Discord), with per-recipient results and send telemetry.
 
 This library is maintained by the [Appwrite team](https://appwrite.io).
 

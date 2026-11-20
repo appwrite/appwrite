@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-19T16:16:00Z",
+  "updated": "2026-11-20T14:30:00Z",
   "tasks": [
     {
       "id": "crate-layout",
@@ -792,6 +792,14 @@
       "status": "done",
       "updated": "2026-11-20T14:10:00Z",
       "note": "Nothing left to port: main moved team photos to the Avatars service (GET, PUT and DELETE /v1/avatars/teams/:teamId/photo), which PHP serves, and dropped them from Teams, so Traefik's exclusion is gone. Before: main added GET, PUT and DELETE /v1/teams/:teamId/photo and photoId/photoSize attributes on teams. Until the Rust Teams service has them, Traefik's Rust router excludes ^/v1/teams/[^/]+/photo$ (docker-compose.override.yml), so they stay with PHP. The docs site's route list reads only Path and PathPrefix and still counts them under Rust."
+    },
+    {
+      "id": "lib-port-bird-email-client-cap",
+      "title": "messaging and client: Bird email and the decoded-size cap from main",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-11-20T14:30:00Z",
+      "note": "Nov 20, in a 2-hour box. messaging: email::Bird (and email::bird::Category) ported from utopia-php/messaging's Bird email adapter, with the body counted toward its 20 MB message limit; constructor new(api_key, category, endpoint) as PHP's. The compat drivers gain the bird_email adapter and the Email\\Bird\\Category enum; BirdEmailTest.json has 23 cases covering 21 of the PHP test's 23 tests, hand-written and replayed in Rust with 0 differences (the 20 MB send and the 100 x 600 KiB batch split are left out: their recorded requests would be tens of MB). client: Http::with_max_file_size (PHP's CURLOPT_MAXFILESIZE[_LARGE]) refuses a Content-Length above the cap and bytes received past it as curl does, and decoded bytes past it as the cURL adapter now does (NetworkException, CURLE_FILESIZE_EXCEEDED); two CurlClientTest cases, unverified until CI runs PHP (Docker was down). The adapter owning CURLOPT_WRITEFUNCTION/FILE/RETURNTRANSFER has no Rust counterpart: Rust takes no raw curl options. php-sync: messaging d5814e3594, client 4aea3b8b99."
     }
   ]
 }

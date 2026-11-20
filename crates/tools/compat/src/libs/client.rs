@@ -460,9 +460,13 @@ fn client(args: &Value, session: &Session) -> Result<Result<Handle, Error>, Faul
         },
         None => None,
     };
+    let http = match a.opt("max_file_size").and_then(Value::as_u64) {
+        Some(bytes) => Http::new().with_max_file_size(Some(bytes)),
+        None => Http::new(),
+    };
     let inner = match a.opt_bool("legacy")? {
-        Some(true) => Inner::Legacy(Http::new(), Arc::default()),
-        _ => Inner::Http(Http::new()),
+        Some(true) => Inner::Legacy(http, Arc::default()),
+        _ => Inner::Http(http),
     };
     Ok(match a.opt("retry") {
         Some(strategy) => {

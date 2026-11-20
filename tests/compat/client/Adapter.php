@@ -245,7 +245,7 @@ final class Adapter implements Base, Benchmarks
         $sleeps = new \stdClass();
         $sleeps->list = [];
         $calls = null;
-        $adapter = new Curl();
+        $adapter = isset($a['max_file_size']) ? new Curl(options: [\CURLOPT_MAXFILESIZE_LARGE => $a['max_file_size']]) : new Curl();
         if ($a['legacy'] ?? false) {
             $calls = new \stdClass();
             $calls->count = 0;

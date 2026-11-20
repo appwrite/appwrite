@@ -1,0 +1,2107 @@
+{
+  "source": "packages/messaging/tests/Adapter/Email/BirdTest.php",
+  "cases": [
+    {
+      "name": "host follows the key region",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird_email",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+            }
+          },
+          "bind": "eu1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird_email",
+            "args": {
+              "apiKey": "bk_us1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+            }
+          },
+          "bind": "us1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "eu1"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@example.com"
+              ],
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@acme.dev",
+              "reply_to_email": ""
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false,
+                  "code": 0
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/email/messages",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+                ],
+                "body": {
+                  "from": {
+                    "email": "from@acme.dev",
+                    "name": "Sender"
+                  },
+                  "to": [
+                    {
+                      "email": "a@example.com"
+                    }
+                  ],
+                  "subject": "Subject",
+                  "text": "Body",
+                  "category": "transactional"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "us1"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@example.com"
+              ],
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@acme.dev",
+              "reply_to_email": ""
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false,
+                  "code": 0
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://us1.platform.bird.com/v1/email/messages",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_us1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+                ],
+                "body": {
+                  "from": {
+                    "email": "from@acme.dev",
+                    "name": "Sender"
+                  },
+                  "to": [
+                    {
+                      "email": "a@example.com"
+                    }
+                  ],
+                  "subject": "Subject",
+                  "text": "Body",
+                  "category": "transactional"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "key without region is rejected",
+      "op": "adapter.new",
+      "args": {
+        "adapter": "bird_email",
+        "args": {
+          "apiKey": "live_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Bird API key must start with bk_{region}_, for example bk_eu1_ or bk_us1_."
+        }
+      }
+    },
+    {
+      "name": "endpoint override skips region parsing",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird_email",
+            "args": {
+              "apiKey": "not-a-bird-key",
+              "endpoint": "http://127.0.0.1:8080/"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@example.com"
+              ],
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@acme.dev",
+              "reply_to_email": ""
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false,
+                  "code": 0
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "http://127.0.0.1:8080/v1/email/messages",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer not-a-bird-key"
+                ],
+                "body": {
+                  "from": {
+                    "email": "from@acme.dev",
+                    "name": "Sender"
+                  },
+                  "to": [
+                    {
+                      "email": "a@example.com"
+                    }
+                  ],
+                  "subject": "Subject",
+                  "text": "Body",
+                  "category": "transactional"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "single recipient uses the message endpoint",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird_email",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@example.com"
+              ],
+              "subject": "Your receipt",
+              "content": "Thanks for your order.",
+              "from_name": "Acme",
+              "from_email": "billing@acme.dev",
+              "reply_to_name": "Support",
+              "reply_to_email": "support@acme.dev"
+            },
+            "replies": [
+              {
+                "statusCode": 202,
+                "response": {
+                  "id": "em_01",
+                  "status": "accepted"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false,
+                  "code": 0
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/email/messages",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+                ],
+                "body": {
+                  "from": {
+                    "email": "billing@acme.dev",
+                    "name": "Acme"
+                  },
+                  "to": [
+                    {
+                      "email": "a@example.com"
+                    }
+                  ],
+                  "subject": "Your receipt",
+                  "text": "Thanks for your order.",
+                  "category": "transactional",
+                  "reply_to": [
+                    {
+                      "email": "support@acme.dev",
+                      "name": "Support"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "several recipients use the batch endpoint",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird_email",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@example.com",
+                "b@example.com"
+              ],
+              "subject": "Subject",
+              "content": "<p>Body</p>",
+              "from_name": "Sender",
+              "from_email": "from@acme.dev",
+              "reply_to_email": "",
+              "html": true,
+              "cc": [
+                "cc@example.com"
+              ],
+              "bcc": [
+                {
+                  "email": "bcc@example.com",
+                  "name": "Audit"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 202,
+                "response": {
+                  "data": [
+                    {
+                      "id": "em_01",
+                      "status": "accepted",
+                      "category": "transactional"
+                    },
+                    {
+                      "id": "em_02",
+                      "status": "accepted",
+                      "category": "transactional"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false,
+                  "code": 0
+                },
+                {
+                  "recipient": "b@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false,
+                  "code": 0
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/email/batches",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+                ],
+                "body": {
+                  "messages": [
+                    {
+                      "from": {
+                        "email": "from@acme.dev",
+                        "name": "Sender"
+                      },
+                      "to": [
+                        {
+                          "email": "a@example.com"
+                        }
+                      ],
+                      "subject": "Subject",
+                      "html": "<p>Body</p>",
+                      "category": "transactional",
+                      "cc": [
+                        {
+                          "email": "cc@example.com"
+                        }
+                      ],
+                      "bcc": [
+                        {
+                          "email": "bcc@example.com",
+                          "name": "Audit"
+                        }
+                      ]
+                    },
+                    {
+                      "from": {
+                        "email": "from@acme.dev",
+                        "name": "Sender"
+                      },
+                      "to": [
+                        {
+                          "email": "b@example.com"
+                        }
+                      ],
+                      "subject": "Subject",
+                      "html": "<p>Body</p>",
+                      "category": "transactional",
+                      "cc": [
+                        {
+                          "email": "cc@example.com"
+                        }
+                      ],
+                      "bcc": [
+                        {
+                          "email": "bcc@example.com",
+                          "name": "Audit"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "category is sent with every message",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird_email",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ",
+              "category": "marketing"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@example.com",
+                "b@example.com"
+              ],
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@acme.dev",
+              "reply_to_email": ""
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false,
+                  "code": 0
+                },
+                {
+                  "recipient": "b@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false,
+                  "code": 0
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/email/batches",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+                ],
+                "body": {
+                  "messages": [
+                    {
+                      "from": {
+                        "email": "from@acme.dev",
+                        "name": "Sender"
+                      },
+                      "to": [
+                        {
+                          "email": "a@example.com"
+                        }
+                      ],
+                      "subject": "Subject",
+                      "text": "Body",
+                      "category": "marketing"
+                    },
+                    {
+                      "from": {
+                        "email": "from@acme.dev",
+                        "name": "Sender"
+                      },
+                      "to": [
+                        {
+                          "email": "b@example.com"
+                        }
+                      ],
+                      "subject": "Subject",
+                      "text": "Body",
+                      "category": "marketing"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "display names are sent unquoted",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird_email",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "a@example.com",
+                  "name": "Doe, John <JD>"
+                }
+              ],
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Acme \"Labs\"",
+              "from_email": "from@acme.dev",
+              "reply_to_email": ""
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false,
+                  "code": 0
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/email/messages",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+                ],
+                "body": {
+                  "from": {
+                    "email": "from@acme.dev",
+                    "name": "Acme \"Labs\""
+                  },
+                  "to": [
+                    {
+                      "email": "a@example.com",
+                      "name": "Doe, John <JD>"
+                    }
+                  ],
+                  "subject": "Subject",
+                  "text": "Body",
+                  "category": "transactional"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "message headers are sent per email",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird_email",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@example.com",
+                "b@example.com"
+              ],
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@acme.dev",
+              "reply_to_email": "",
+              "headers": {
+                "List-Unsubscribe": "<https://acme.dev/u>"
+              }
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false,
+                  "code": 0
+                },
+                {
+                  "recipient": "b@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false,
+                  "code": 0
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/email/batches",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+                ],
+                "body": {
+                  "messages": [
+                    {
+                      "from": {
+                        "email": "from@acme.dev",
+                        "name": "Sender"
+                      },
+                      "to": [
+                        {
+                          "email": "a@example.com"
+                        }
+                      ],
+                      "subject": "Subject",
+                      "text": "Body",
+                      "category": "transactional",
+                      "headers": {
+                        "List-Unsubscribe": "<https://acme.dev/u>"
+                      }
+                    },
+                    {
+                      "from": {
+                        "email": "from@acme.dev",
+                        "name": "Sender"
+                      },
+                      "to": [
+                        {
+                          "email": "b@example.com"
+                        }
+                      ],
+                      "subject": "Subject",
+                      "text": "Body",
+                      "category": "transactional",
+                      "headers": {
+                        "List-Unsubscribe": "<https://acme.dev/u>"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "attachments are sent base64 encoded",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird_email",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@example.com",
+                "b@example.com"
+              ],
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@acme.dev",
+              "reply_to_email": "",
+              "attachments": [
+                {
+                  "name": "note.txt",
+                  "path": "",
+                  "type": "text/plain",
+                  "content": "hello"
+                },
+                {
+                  "name": "es256.pub.pem",
+                  "path": "tests/compat/messaging/fixtures/keys/es256.pub.pem",
+                  "type": "application/x-pem-file"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false,
+                  "code": 0
+                },
+                {
+                  "recipient": "b@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false,
+                  "code": 0
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/email/batches",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+                ],
+                "body": {
+                  "messages": [
+                    {
+                      "from": {
+                        "email": "from@acme.dev",
+                        "name": "Sender"
+                      },
+                      "to": [
+                        {
+                          "email": "a@example.com"
+                        }
+                      ],
+                      "subject": "Subject",
+                      "text": "Body",
+                      "category": "transactional",
+                      "attachments": [
+                        {
+                          "filename": "note.txt",
+                          "content": "aGVsbG8=",
+                          "content_type": "text/plain"
+                        },
+                        {
+                          "filename": "es256.pub.pem",
+                          "content": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFQ3RFdkVqUkN3VVF4aWliMVh0RHJKb1k2QzlXNgpST1hUa0MxNTFWV3JWTWhoZEE1S2UxSlpLK1YrbHV2TlcxUllYdm1abHo2a0g1akRQR0tVWXJQN01RPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg==",
+                          "content_type": "application/x-pem-file"
+                        }
+                      ]
+                    },
+                    {
+                      "from": {
+                        "email": "from@acme.dev",
+                        "name": "Sender"
+                      },
+                      "to": [
+                        {
+                          "email": "b@example.com"
+                        }
+                      ],
+                      "subject": "Subject",
+                      "text": "Body",
+                      "category": "transactional",
+                      "attachments": [
+                        {
+                          "filename": "note.txt",
+                          "content": "aGVsbG8=",
+                          "content_type": "text/plain"
+                        },
+                        {
+                          "filename": "es256.pub.pem",
+                          "content": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFQ3RFdkVqUkN3VVF4aWliMVh0RHJKb1k2QzlXNgpST1hUa0MxNTFWV3JWTWhoZEE1S2UxSlpLK1YrbHV2TlcxUllYdm1abHo2a0g1akRQR0tVWXJQN01RPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg==",
+                          "content_type": "application/x-pem-file"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "an unreadable attachment fails the send",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird_email",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@example.com"
+              ],
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@acme.dev",
+              "reply_to_email": "",
+              "attachments": [
+                {
+                  "name": "gone.png",
+                  "path": "packages/messaging/tests/assets/gone.png",
+                  "type": "image/png"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "Failed to read attachment file: packages/messaging/tests/assets/gone.png"
+            },
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "body counts toward the size limit",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird_email",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@example.com"
+              ],
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@acme.dev",
+              "reply_to_email": "",
+              "attachments": [
+                {
+                  "name": "large.bin",
+                  "path": "",
+                  "type": "application/octet-stream",
+                  "content": {
+                    "repeat": "x",
+                    "times": 15000000
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "Message size exceeds 20000000 bytes: the body and the base64 encoded attachments take 20000004 bytes"
+            },
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "a longer body leaves less room for files",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird_email",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@example.com"
+              ],
+              "subject": "Subject",
+              "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+              "from_name": "Sender",
+              "from_email": "from@acme.dev",
+              "reply_to_email": "",
+              "attachments": [
+                {
+                  "name": "a.bin",
+                  "path": "",
+                  "type": "application/octet-stream",
+                  "content": {
+                    "repeat": "y",
+                    "times": 14999251
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "message": "Message size exceeds 20000000 bytes: the body and the base64 encoded attachments take 20000004 bytes"
+            },
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "refused recipient does not fail the rest of the batch",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird_email",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@acme.dev",
+                "b@example.com",
+                "c@acme.dev"
+              ],
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@acme.dev",
+              "reply_to_email": ""
+            },
+            "replies": [
+              {
+                "statusCode": 422,
+                "response": {
+                  "error": {
+                    "type": "validation_error",
+                    "code": "E04011",
+                    "name": "RecipientDomainNotAllowed",
+                    "message": "'b@example.com' cannot receive mail.",
+                    "param": "to"
+                  }
+                }
+              },
+              {
+                "statusCode": 202,
+                "response": {
+                  "id": "em_01"
+                }
+              },
+              {
+                "statusCode": 422,
+                "response": {
+                  "error": {
+                    "type": "validation_error",
+                    "code": "E04011",
+                    "name": "RecipientDomainNotAllowed",
+                    "message": "'b@example.com' cannot receive mail.",
+                    "param": "to"
+                  }
+                }
+              },
+              {
+                "statusCode": 202,
+                "response": {
+                  "id": "em_03"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@acme.dev",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false,
+                  "code": 0
+                },
+                {
+                  "recipient": "b@example.com",
+                  "status": "failure",
+                  "error": "E04011 'b@example.com' cannot receive mail.",
+                  "permanent": false,
+                  "code": 0
+                },
+                {
+                  "recipient": "c@acme.dev",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false,
+                  "code": 0
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/email/batches",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+                ],
+                "body": {
+                  "messages": [
+                    {
+                      "from": {
+                        "email": "from@acme.dev",
+                        "name": "Sender"
+                      },
+                      "to": [
+                        {
+                          "email": "a@acme.dev"
+                        }
+                      ],
+                      "subject": "Subject",
+                      "text": "Body",
+                      "category": "transactional"
+                    },
+                    {
+                      "from": {
+                        "email": "from@acme.dev",
+                        "name": "Sender"
+                      },
+                      "to": [
+                        {
+                          "email": "b@example.com"
+                        }
+                      ],
+                      "subject": "Subject",
+                      "text": "Body",
+                      "category": "transactional"
+                    },
+                    {
+                      "from": {
+                        "email": "from@acme.dev",
+                        "name": "Sender"
+                      },
+                      "to": [
+                        {
+                          "email": "c@acme.dev"
+                        }
+                      ],
+                      "subject": "Subject",
+                      "text": "Body",
+                      "category": "transactional"
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/email/messages",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+                ],
+                "body": {
+                  "from": {
+                    "email": "from@acme.dev",
+                    "name": "Sender"
+                  },
+                  "to": [
+                    {
+                      "email": "a@acme.dev"
+                    }
+                  ],
+                  "subject": "Subject",
+                  "text": "Body",
+                  "category": "transactional"
+                }
+              },
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/email/messages",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+                ],
+                "body": {
+                  "from": {
+                    "email": "from@acme.dev",
+                    "name": "Sender"
+                  },
+                  "to": [
+                    {
+                      "email": "b@example.com"
+                    }
+                  ],
+                  "subject": "Subject",
+                  "text": "Body",
+                  "category": "transactional"
+                }
+              },
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/email/messages",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+                ],
+                "body": {
+                  "from": {
+                    "email": "from@acme.dev",
+                    "name": "Sender"
+                  },
+                  "to": [
+                    {
+                      "email": "c@acme.dev"
+                    }
+                  ],
+                  "subject": "Subject",
+                  "text": "Body",
+                  "category": "transactional"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "refusal of what messages share fails every recipient",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird_email",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@acme.dev",
+                "b@acme.dev"
+              ],
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@acme.dev",
+              "reply_to_email": ""
+            },
+            "replies": [
+              {
+                "statusCode": 422,
+                "response": {
+                  "error": {
+                    "type": "validation_error",
+                    "code": "E04006",
+                    "name": "DomainNotVerified",
+                    "message": "The from address uses a domain that is not verified in this workspace."
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@acme.dev",
+                  "status": "failure",
+                  "error": "E04006 The from address uses a domain that is not verified in this workspace.",
+                  "permanent": false,
+                  "code": 0
+                },
+                {
+                  "recipient": "b@acme.dev",
+                  "status": "failure",
+                  "error": "E04006 The from address uses a domain that is not verified in this workspace.",
+                  "permanent": false,
+                  "code": 0
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/email/batches",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+                ],
+                "body": {
+                  "messages": [
+                    {
+                      "from": {
+                        "email": "from@acme.dev",
+                        "name": "Sender"
+                      },
+                      "to": [
+                        {
+                          "email": "a@acme.dev"
+                        }
+                      ],
+                      "subject": "Subject",
+                      "text": "Body",
+                      "category": "transactional"
+                    },
+                    {
+                      "from": {
+                        "email": "from@acme.dev",
+                        "name": "Sender"
+                      },
+                      "to": [
+                        {
+                          "email": "b@acme.dev"
+                        }
+                      ],
+                      "subject": "Subject",
+                      "text": "Body",
+                      "category": "transactional"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "refusal of the only recipient is invalid input",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird_email",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "b@example.com"
+              ],
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@acme.dev",
+              "reply_to_email": ""
+            },
+            "replies": [
+              {
+                "statusCode": 422,
+                "response": {
+                  "error": {
+                    "type": "validation_error",
+                    "code": "E04011",
+                    "name": "RecipientDomainNotAllowed",
+                    "message": "'b@example.com' cannot receive mail.",
+                    "param": "to"
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$invalid": {
+              "type": "provider_rejected",
+              "value": "b@example.com",
+              "message": "E04011 'b@example.com' cannot receive mail."
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/email/messages",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+                ],
+                "body": {
+                  "from": {
+                    "email": "from@acme.dev",
+                    "name": "Sender"
+                  },
+                  "to": [
+                    {
+                      "email": "b@example.com"
+                    }
+                  ],
+                  "subject": "Subject",
+                  "text": "Body",
+                  "category": "transactional"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "validation details are surfaced",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird_email",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@acme.dev",
+                "b@acme.dev"
+              ],
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@acme.dev",
+              "reply_to_email": ""
+            },
+            "replies": [
+              {
+                "statusCode": 422,
+                "response": {
+                  "error": {
+                    "type": "validation_error",
+                    "code": "E01001",
+                    "name": "ValidationError",
+                    "message": "Request has 1 validation error.",
+                    "details": [
+                      {
+                        "param": "headers.Received",
+                        "message": "this header is reserved"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@acme.dev",
+                  "status": "failure",
+                  "error": "E01001 Request has 1 validation error. headers.Received: this header is reserved",
+                  "permanent": false,
+                  "code": 0
+                },
+                {
+                  "recipient": "b@acme.dev",
+                  "status": "failure",
+                  "error": "E01001 Request has 1 validation error. headers.Received: this header is reserved",
+                  "permanent": false,
+                  "code": 0
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/email/batches",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+                ],
+                "body": {
+                  "messages": [
+                    {
+                      "from": {
+                        "email": "from@acme.dev",
+                        "name": "Sender"
+                      },
+                      "to": [
+                        {
+                          "email": "a@acme.dev"
+                        }
+                      ],
+                      "subject": "Subject",
+                      "text": "Body",
+                      "category": "transactional"
+                    },
+                    {
+                      "from": {
+                        "email": "from@acme.dev",
+                        "name": "Sender"
+                      },
+                      "to": [
+                        {
+                          "email": "b@acme.dev"
+                        }
+                      ],
+                      "subject": "Subject",
+                      "text": "Body",
+                      "category": "transactional"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "rate limit is reported and not thrown",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird_email",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@acme.dev"
+              ],
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@acme.dev",
+              "reply_to_email": ""
+            },
+            "replies": [
+              {
+                "statusCode": 429,
+                "response": {
+                  "error": {
+                    "type": "rate_limit_error",
+                    "code": "E01003",
+                    "name": "RateLimited",
+                    "message": "Too many requests. Please retry after the period indicated in the Retry-After header."
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@acme.dev",
+                  "status": "failure",
+                  "error": "E01003 Too many requests. Please retry after the period indicated in the Retry-After header.",
+                  "permanent": false,
+                  "code": 0
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/email/messages",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+                ],
+                "body": {
+                  "from": {
+                    "email": "from@acme.dev",
+                    "name": "Sender"
+                  },
+                  "to": [
+                    {
+                      "email": "a@acme.dev"
+                    }
+                  ],
+                  "subject": "Subject",
+                  "text": "Body",
+                  "category": "transactional"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "transport failure is reported",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird_email",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@acme.dev"
+              ],
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@acme.dev",
+              "reply_to_email": ""
+            },
+            "replies": [
+              {
+                "statusCode": 0,
+                "response": null,
+                "error": "Connection refused"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@acme.dev",
+                  "status": "failure",
+                  "error": "Connection refused",
+                  "permanent": false,
+                  "code": 0
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/email/messages",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+                ],
+                "body": {
+                  "from": {
+                    "email": "from@acme.dev",
+                    "name": "Sender"
+                  },
+                  "to": [
+                    {
+                      "email": "a@acme.dev"
+                    }
+                  ],
+                  "subject": "Subject",
+                  "text": "Body",
+                  "category": "transactional"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "answer without an envelope names the status",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird_email",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@acme.dev"
+              ],
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@acme.dev",
+              "reply_to_email": ""
+            },
+            "replies": [
+              {
+                "statusCode": 502,
+                "response": "<html>Bad Gateway</html>"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@acme.dev",
+                  "status": "failure",
+                  "error": "Bird answered with HTTP status 502.",
+                  "permanent": false,
+                  "code": 0
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://eu1.platform.bird.com/v1/email/messages",
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+                ],
+                "body": {
+                  "from": {
+                    "email": "from@acme.dev",
+                    "name": "Sender"
+                  },
+                  "to": [
+                    {
+                      "email": "a@acme.dev"
+                    }
+                  ],
+                  "subject": "Subject",
+                  "text": "Body",
+                  "category": "transactional"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "message without to recipients is refused",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird_email",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "email",
+              "to": [],
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@acme.dev",
+              "reply_to_email": "",
+              "bcc": [
+                "hidden@acme.dev"
+              ]
+            }
+          },
+          "expect": {
+            "$invalid": {
+              "type": "recipient_empty",
+              "value": null,
+              "message": "Bird needs at least one To recipient."
+            },
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "more than the batch limit is refused",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird_email",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "user0@example.com",
+                "user1@example.com",
+                "user2@example.com",
+                "user3@example.com",
+                "user4@example.com",
+                "user5@example.com",
+                "user6@example.com",
+                "user7@example.com",
+                "user8@example.com",
+                "user9@example.com",
+                "user10@example.com",
+                "user11@example.com",
+                "user12@example.com",
+                "user13@example.com",
+                "user14@example.com",
+                "user15@example.com",
+                "user16@example.com",
+                "user17@example.com",
+                "user18@example.com",
+                "user19@example.com",
+                "user20@example.com",
+                "user21@example.com",
+                "user22@example.com",
+                "user23@example.com",
+                "user24@example.com",
+                "user25@example.com",
+                "user26@example.com",
+                "user27@example.com",
+                "user28@example.com",
+                "user29@example.com",
+                "user30@example.com",
+                "user31@example.com",
+                "user32@example.com",
+                "user33@example.com",
+                "user34@example.com",
+                "user35@example.com",
+                "user36@example.com",
+                "user37@example.com",
+                "user38@example.com",
+                "user39@example.com",
+                "user40@example.com",
+                "user41@example.com",
+                "user42@example.com",
+                "user43@example.com",
+                "user44@example.com",
+                "user45@example.com",
+                "user46@example.com",
+                "user47@example.com",
+                "user48@example.com",
+                "user49@example.com",
+                "user50@example.com",
+                "user51@example.com",
+                "user52@example.com",
+                "user53@example.com",
+                "user54@example.com",
+                "user55@example.com",
+                "user56@example.com",
+                "user57@example.com",
+                "user58@example.com",
+                "user59@example.com",
+                "user60@example.com",
+                "user61@example.com",
+                "user62@example.com",
+                "user63@example.com",
+                "user64@example.com",
+                "user65@example.com",
+                "user66@example.com",
+                "user67@example.com",
+                "user68@example.com",
+                "user69@example.com",
+                "user70@example.com",
+                "user71@example.com",
+                "user72@example.com",
+                "user73@example.com",
+                "user74@example.com",
+                "user75@example.com",
+                "user76@example.com",
+                "user77@example.com",
+                "user78@example.com",
+                "user79@example.com",
+                "user80@example.com",
+                "user81@example.com",
+                "user82@example.com",
+                "user83@example.com",
+                "user84@example.com",
+                "user85@example.com",
+                "user86@example.com",
+                "user87@example.com",
+                "user88@example.com",
+                "user89@example.com",
+                "user90@example.com",
+                "user91@example.com",
+                "user92@example.com",
+                "user93@example.com",
+                "user94@example.com",
+                "user95@example.com",
+                "user96@example.com",
+                "user97@example.com",
+                "user98@example.com",
+                "user99@example.com",
+                "user100@example.com"
+              ],
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@acme.dev",
+              "reply_to_email": ""
+            }
+          },
+          "expect": {
+            "$invalid": {
+              "type": "too_many_recipients",
+              "value": null,
+              "message": "Bird can only send 100 messages per request."
+            },
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "adapter info",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "bird_email",
+            "args": {
+              "apiKey": "bk_eu1_Ab3xKq9mP2wR5tY8uI1oL4nJ"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "name": "Bird",
+            "type": "email",
+            "messageType": "Utopia\\Messaging\\Messages\\Email",
+            "maxMessagesPerRequest": 100
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -745,6 +745,16 @@
             "service"
           ]
         ],
+        "email_category": [
+          [
+            "TRANSACTIONAL",
+            "transactional"
+          ],
+          [
+            "MARKETING",
+            "marketing"
+          ]
+        ],
         "otp_type": [
           [
             "COPY_CODE",

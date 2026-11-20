@@ -81,6 +81,7 @@ const EXPECT_TIMEOUT: Duration = Duration::from_secs(1);
 pub struct Http {
     options: Options,
     pins: Arc<Vec<Pinned>>,
+    max_file_size: Option<u64>,
     kept: Arc<Mutex<Vec<Connection>>>,
 }
 
@@ -130,14 +131,44 @@ impl Http {
         S: AsRef<str>,
     {
         let pins = entries.into_iter().filter_map(|e| Pinned::parse(e.as_ref())).collect();
-        Http { options: self.options.clone(), pins: Arc::new(pins), kept: Arc::default() }
+        Http {
+            options: self.options.clone(),
+            pins: Arc::new(pins),
+            max_file_size: self.max_file_size,
+            kept: Arc::default(),
+        }
+    }
+
+    /// A copy that refuses a response body past `bytes` (`None` or `0`:
+    /// no cap) with [`Error::Network`]: a `Content-Length` above it before
+    /// the body is read (`Maximum file size exceeded`, as cURL), the bytes
+    /// received past it, and the decoded bytes past it, so a small
+    /// compressed body cannot expand past the cap in memory (`Response
+    /// body exceeds the maximum file size.`).
+    ///
+    /// PHP: the cURL adapter's `CURLOPT_MAXFILESIZE` /
+    /// `CURLOPT_MAXFILESIZE_LARGE` options (`new Curl(options:
+    /// [CURLOPT_MAXFILESIZE_LARGE => $bytes])`), which it applies to the
+    /// decoded body as well (`CURLE_FILESIZE_EXCEEDED`).
+    pub fn with_max_file_size(&self, bytes: Option<u64>) -> Http {
+        Http {
+            options: self.options.clone(),
+            pins: self.pins.clone(),
+            max_file_size: bytes.filter(|&b| b > 0),
+            kept: Arc::default(),
+        }
     }
 }
 
 impl Clone for Http {
     /// A copy with the same options and no connection of its own yet.
     fn clone(&self) -> Http {
-        Http { options: self.options.clone(), pins: self.pins.clone(), kept: Arc::default() }
+        Http {
+            options: self.options.clone(),
+            pins: self.pins.clone(),
+            max_file_size: self.max_file_size,
+            kept: Arc::default(),
+        }
     }
 }
 
@@ -177,7 +208,7 @@ impl Adapter for Http {
     }
 
     fn with_options(&self, options: Options) -> Http {
-        Http { options, pins: self.pins.clone(), kept: Arc::default() }
+        Http { options, pins: self.pins.clone(), max_file_size: self.max_file_size, kept: Arc::default() }
     }
 }
 
@@ -492,21 +523,32 @@ impl Http {
         let framing = framing(&head, request.method()).map_err(Retry::Fail)?;
         if location.is_some() {
             let mut discard = |_: &[u8]| {};
-            connection.read_body(framing, &mut discard, None, clock).await.map_err(Retry::Fail)?;
+            let mut limit = Limit::new(None);
+            connection.read_body(framing, &mut discard, None, &mut limit, clock).await.map_err(Retry::Fail)?;
         } else {
+            let mut limit = Limit::new(self.max_file_size);
+            if let (Framing::Length(length), Some(cap)) = (framing, self.max_file_size)
+                && length > cap
+            {
+                connection.open = false;
+                return Err(Retry::Fail(Error::Network(WIRE_EXCEEDED.into())));
+            }
             let decodes = decompress && !matches!(framing, Framing::None);
             let mut decoder = if decodes { Decoder::for_headers(&head.headers).map_err(Retry::Fail)? } else { None };
             // The head is told of right before the first chunk reaches the
             // sink; an empty body's, by `transfer` once the response checks out.
             let mut sink = Notifying { sink, notify, head: &head, failed: None };
-            let read = connection.read_body(framing, &mut sink, decoder.as_mut(), clock).await;
+            let read = connection.read_body(framing, &mut sink, decoder.as_mut(), &mut limit, clock).await;
             let read = read.and_then(|(trailers, bytes)| match decoder {
-                Some(decoder) => decoder.finish(&mut sink, bytes > 0).map(|()| trailers),
+                Some(decoder) => decoder.finish(&mut sink, bytes > 0, &mut limit).map(|()| trailers),
                 None => Ok(trailers),
             });
             if let Some(error) = sink.failed {
                 connection.open = false;
                 return Err(Retry::Fail(error));
+            }
+            if read.is_err() {
+                connection.open = false;
             }
             head.trailed = read.map_err(Retry::Fail)?;
         }
@@ -869,10 +911,11 @@ impl Decoder {
     }
 
     /// Decodes a chunk, passing what it yields on.
-    fn write<S: Sink + ?Sized>(&mut self, chunk: &[u8], sink: &mut S) -> Result<(), Error> {
+    fn write<S: Sink + ?Sized>(&mut self, chunk: &[u8], sink: &mut S, limit: &mut Limit) -> Result<(), Error> {
         let fail = |_| Error::Protocol("Error while processing content unencoding: incorrect header check".into());
         let out = match self {
             Decoder::Identity => {
+                limit.decode(chunk.len())?;
                 sink.write(chunk);
                 return Ok(());
             }
@@ -894,13 +937,14 @@ impl Decoder {
             }
         };
         if !out.is_empty() {
+            limit.decode(out.len())?;
             sink.write(out);
             out.clear();
         }
         Ok(())
     }
 
-    fn finish<S: Sink + ?Sized>(self, sink: &mut S, received: bool) -> Result<(), Error> {
+    fn finish<S: Sink + ?Sized>(self, sink: &mut S, received: bool, limit: &mut Limit) -> Result<(), Error> {
         if !received {
             return Ok(());
         }
@@ -918,9 +962,52 @@ impl Decoder {
             }
         };
         if !rest.is_empty() {
+            limit.decode(rest.len())?;
             sink.write(&rest);
         }
         Ok(())
+    }
+}
+
+/// cURL's message for a body past `CURLOPT_MAXFILESIZE`, as received.
+const WIRE_EXCEEDED: &str = "Maximum file size exceeded";
+
+/// The cURL adapter's message for a decoded body past the cap.
+const DECODED_EXCEEDED: &str = "Response body exceeds the maximum file size.";
+
+/// The maximum file size, counted against the body as received and as
+/// decoded.
+///
+/// PHP: cURL's own `CURLOPT_MAXFILESIZE` check, and the adapter's
+/// `Curl\DecodedSizeLimit` around its write function.
+struct Limit {
+    cap: Option<u64>,
+    received: u64,
+    decoded: u64,
+}
+
+impl Limit {
+    fn new(cap: Option<u64>) -> Limit {
+        Limit { cap, received: 0, decoded: 0 }
+    }
+
+    /// Counts body bytes as they arrive (after chunked framing, before
+    /// content decoding).
+    fn receive(&mut self, bytes: usize) -> Result<(), Error> {
+        self.received += bytes as u64;
+        match self.cap {
+            Some(cap) if self.received > cap => Err(Error::Network(WIRE_EXCEEDED.into())),
+            _ => Ok(()),
+        }
+    }
+
+    /// Counts decoded bytes before they reach the sink.
+    fn decode(&mut self, bytes: usize) -> Result<(), Error> {
+        self.decoded += bytes as u64;
+        match self.cap {
+            Some(cap) if self.decoded > cap => Err(Error::Network(DECODED_EXCEEDED.into())),
+            _ => Ok(()),
+        }
     }
 }
 
@@ -1157,12 +1244,14 @@ impl Connection {
         framing: Framing,
         sink: &mut S,
         mut decoder: Option<&mut Decoder>,
+        limit: &mut Limit,
         clock: Clock,
     ) -> Result<(bool, usize), Error> {
         let mut received = 0usize;
         let mut deliver = |chunk: &[u8], decoder: &mut Option<&mut Decoder>| -> Result<(), Error> {
+            limit.receive(chunk.len())?;
             match decoder {
-                Some(d) => d.write(chunk, sink),
+                Some(d) => d.write(chunk, sink, limit),
                 None => {
                     sink.write(chunk);
                     Ok(())
@@ -1642,6 +1731,43 @@ mod tests {
             socket.write_all(response).await.unwrap();
         });
         format!("http://{address}/")
+    }
+
+    fn gzipped(text: &[u8]) -> &'static [u8] {
+        let mut encoder = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
+        encoder.write_all(text).unwrap();
+        let body = encoder.finish().unwrap();
+        let mut response =
+            format!("HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Length: {}\r\n\r\n", body.len()).into_bytes();
+        response.extend_from_slice(&body);
+        Box::leak(response.into_boxed_slice())
+    }
+
+    #[utopia_async::test]
+    async fn the_maximum_file_size_caps_the_decoded_body() {
+        let http = Http::new().with_max_file_size(Some(10_000));
+
+        let uri = serve(gzipped(&b"utopia ".repeat(40_000))).await;
+        let error = http.send(Request::new("GET", &uri).unwrap()).await.unwrap_err();
+        assert_eq!(error, Error::Network("Response body exceeds the maximum file size.".into()));
+
+        let uri = serve(gzipped(&b"utopia ".repeat(64))).await;
+        let response = http.send(Request::new("GET", &uri).unwrap()).await.unwrap();
+        assert_eq!(response.bytes().len(), 64 * 7);
+    }
+
+    #[utopia_async::test]
+    async fn a_content_length_past_the_maximum_file_size_is_refused() {
+        let uri = serve(b"HTTP/1.1 200 OK\r\nContent-Length: 8\r\n\r\nabcdefgh").await;
+        let error = Http::new().with_max_file_size(Some(4)).send(Request::new("GET", &uri).unwrap()).await.unwrap_err();
+        assert_eq!(error, Error::Network("Maximum file size exceeded".into()));
+    }
+
+    #[utopia_async::test]
+    async fn a_body_without_a_length_is_capped_as_received() {
+        let uri = serve(b"HTTP/1.1 200 OK\r\nConnection: close\r\n\r\nabcdefgh").await;
+        let error = Http::new().with_max_file_size(Some(4)).send(Request::new("GET", &uri).unwrap()).await.unwrap_err();
+        assert_eq!(error, Error::Network("Maximum file size exceeded".into()));
     }
 
     #[utopia_async::test]

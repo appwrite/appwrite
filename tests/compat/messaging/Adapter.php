@@ -9,6 +9,7 @@ use Tests\Compat\Benchmarks;
 use Tests\Compat\Fault;
 use Tests\Compat\Session;
 use Utopia\Messaging\Adapter as MessagingAdapter;
+use Utopia\Messaging\Adapter\Email\Bird\Category as EmailCategory;
 use Utopia\Messaging\Adapter\Email\Mime;
 use Utopia\Messaging\Adapter\Email\Mock as MockEmail;
 use Utopia\Messaging\Adapter\Email\SMTP;
@@ -139,6 +140,7 @@ final class Adapter implements Base, Benchmarks
             'enums' => fn (array $a, Session $s) => [
                 'priority' => array_map(static fn (Priority $p) => [$p->name, $p->value], Priority::cases()),
                 'category' => array_map(static fn (Category $c) => [$c->name, $c->value], Category::cases()),
+                'email_category' => array_map(static fn (EmailCategory $c) => [$c->name, $c->value], EmailCategory::cases()),
                 'otp_type' => array_map(static fn (OtpType $o) => [$o->name, $o->value, $o->requiresApps()], OtpType::cases()),
                 'msg91' => array_map(static fn (Msg91Parameter $p) => [$p->name, $p->value], Msg91Parameter::cases()),
                 'whatsapp' => array_map(static fn (WhatsAppParameter $p) => [$p->name, $p->value], WhatsAppParameter::cases()),
@@ -308,7 +310,7 @@ final class Adapter implements Base, Benchmarks
             $args['serviceAccountJSON'] = (string) json_encode($account);
         }
         if (isset($args['category'])) {
-            $args['category'] = Category::from($args['category']);
+            $args['category'] = $a['adapter'] === 'bird_email' ? EmailCategory::from($args['category']) : Category::from($args['category']);
         }
         if (isset($args['host']) && \is_string($args['host'])) {
             $args['host'] = self::host($args['host'], $a['servers'] ?? [], $s, $ports);
@@ -318,6 +320,7 @@ final class Adapter implements Base, Benchmarks
             'mailgun' => new RoutedMailgun(...$args),
             'sendgrid' => new RoutedSendgrid(...$args),
             'resend' => new RoutedResend(...$args),
+            'bird_email' => new RoutedBirdEmail(...$args),
             'ses' => new RoutedSES(...$args),
             'smtp' => new SMTP(...$args),
             'mock_email' => new MockEmail(...$args),
@@ -358,7 +361,7 @@ final class Adapter implements Base, Benchmarks
     private static function parameters(string $adapter, array $args): array
     {
         $class = [
-            'mailgun' => RoutedMailgun::class, 'sendgrid' => RoutedSendgrid::class, 'resend' => RoutedResend::class, 'ses' => RoutedSES::class,
+            'mailgun' => RoutedMailgun::class, 'sendgrid' => RoutedSendgrid::class, 'resend' => RoutedResend::class, 'bird_email' => RoutedBirdEmail::class, 'ses' => RoutedSES::class,
             'bird' => RoutedBird::class, 'clickatell' => RoutedClickatell::class, 'fast2sms' => RoutedFast2SMS::class, 'infobip' => RoutedInfobip::class,
             'inforu' => RoutedInforu::class, 'mock_sms' => RoutedMockSMS::class, 'msg91' => RoutedMsg91::class, 'plivo' => RoutedPlivo::class,
             'seven' => RoutedSeven::class, 'sinch' => RoutedSinch::class, 'telesign' => RoutedTelesign::class, 'telnyx' => RoutedTelnyx::class,
