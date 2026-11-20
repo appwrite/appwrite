@@ -39,7 +39,7 @@ class Get extends Action
     {
         $this
             ->setHttpMethod(UtopiaAction::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/teams/:teamId/photo')
+            ->setHttpPath('/v1/avatars/teams/:teamId/photo')
             ->desc('Get photo')
             ->groups(['api', 'teams'])
             ->label('scope', 'teams.read')
