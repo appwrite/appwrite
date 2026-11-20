@@ -43,6 +43,8 @@ type LiveVisitorsProps = {
    * for surfaces like the properties list.
    */
   variant?: 'pill' | 'inline'
+  /** Mobile properties count users on screens, not visitors on pages. */
+  mobile?: boolean
 }
 
 const LIVE_TEXT_CLASS =
@@ -58,6 +60,7 @@ export function LiveVisitors({
   propertyId,
   enabled = true,
   variant = 'pill',
+  mobile = false,
 }: LiveVisitorsProps) {
   const t = useT()
   const isDocumentVisible = useDocumentVisible()
@@ -96,7 +99,7 @@ export function LiveVisitors({
               open && 'bg-muted/60',
               isLive ? LIVE_TEXT_CLASS : 'text-muted-foreground',
             )}
-            aria-label={t('Visitors online now')}
+            aria-label={t(mobile ? 'Users online now' : 'Visitors online now')}
           >
             {hasValue ? (
               <AnimatedCounter
@@ -118,7 +121,7 @@ export function LiveVisitors({
                 ? `${LIVE_TEXT_CLASS} hover:text-emerald-800 dark:hover:text-emerald-300`
                 : 'text-muted-foreground hover:text-foreground',
             )}
-            aria-label={t('Visitors online now')}
+            aria-label={t(mobile ? 'Users online now' : 'Visitors online now')}
           >
             {hasValue ? (
               <AnimatedCounter
@@ -138,11 +141,17 @@ export function LiveVisitors({
             <LiveDot active={isLive && polling} />
             <p className="text-[13px] font-semibold text-foreground">
               {hasValue ? formatNumber(count) : '-'}{' '}
-              {count === 1 ? t('visitor online') : t('visitors online')}
+              {count === 1
+                ? t(mobile ? 'user online' : 'visitor online')
+                : t(mobile ? 'users online' : 'visitors online')}
             </p>
           </div>
           <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
-            {t('Unique visitors active in the last')}{' '}
+            {t(
+              mobile
+                ? 'Unique users active in the last'
+                : 'Unique visitors active in the last',
+            )}{' '}
             {ANALYTICS_LIVE_WINDOW_MINUTES} {t('minutes')}.{' '}
             {polling
               ? `${t('Updates every')} ${ANALYTICS_LIVE_POLL_INTERVAL_MS / 1000}s.`
@@ -152,13 +161,17 @@ export function LiveVisitors({
             <p className="mt-1 text-[11px] text-amber-600 dark:text-amber-400">
               {error instanceof Error
                 ? error.message
-                : t('Could not load live visitors')}
+                : t(
+                    mobile
+                      ? 'Could not load live users'
+                      : 'Could not load live visitors',
+                  )}
             </p>
           ) : null}
         </div>
         <div className="px-3 py-2.5">
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {t('Active pages')}
+            {t(mobile ? 'Active screens' : 'Active pages')}
           </p>
           {pagesLoading && pages.length === 0 ? (
             <div className="space-y-1.5" aria-hidden>
@@ -171,7 +184,11 @@ export function LiveVisitors({
             </div>
           ) : pages.length === 0 ? (
             <p className="py-2 text-[12px] text-muted-foreground">
-              {t('No one is browsing right now.')}
+              {t(
+                mobile
+                  ? 'No one is using the app right now.'
+                  : 'No one is browsing right now.',
+              )}
             </p>
           ) : (
             <div className="space-y-0.5">

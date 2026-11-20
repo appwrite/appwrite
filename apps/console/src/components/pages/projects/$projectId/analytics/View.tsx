@@ -39,7 +39,7 @@ import {
 } from '@/components/ui/table'
 import { useT } from '@/lib/i18n/translate'
 import { toast } from 'sonner'
-import type { Models } from '@appwrite.io/console'
+import { AnalyticsPropertyType, type Models } from '@appwrite.io/console'
 import {
   getDefaultAnalyticsRange,
   getPreviousAnalyticsRange,
@@ -378,6 +378,10 @@ export function View() {
                             projectId={projectId as string}
                             propertyId={property.$id}
                             variant="inline"
+                            mobile={
+                              propertyType(property) ===
+                              AnalyticsPropertyType.Mobile
+                            }
                           />
                         </span>
                       )}
@@ -566,6 +570,10 @@ export function View() {
                               projectId={projectId as string}
                               propertyId={property.$id}
                               variant="inline"
+                              mobile={
+                                propertyType(property) ===
+                                AnalyticsPropertyType.Mobile
+                              }
                             />
                           ) : (
                             <span className="text-[13px] text-muted-foreground">
