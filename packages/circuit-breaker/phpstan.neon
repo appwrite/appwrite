@@ -21,3 +21,9 @@ parameters:
         -
             message: "#Call to function method_exists\\(\\) with Redis and 'getLastError' will always evaluate to true\\.#"
             path: tests/E2E/RedisAdapterTest.php
+        # The slow list is documented as Throwable class names, and the
+        # constructor still checks it at runtime for untyped callers.
+        -
+            identifier: function.alreadyNarrowedType
+            path: src/CircuitBreaker.php
+            count: 1

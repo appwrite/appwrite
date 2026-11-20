@@ -30,6 +30,7 @@ import {
 import { useT } from '@/lib/i18n/translate'
 import { useMarkExperimentsSeen } from '@/lib/react-query/hooks'
 import { parseExperimentsSeenAt, type UserPrefs } from '@/lib/user-prefs-keys'
+import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 
 const EXPERIMENT_ICONS = {
   alerts: Gauge,
@@ -37,6 +38,7 @@ const EXPERIMENT_ICONS = {
   projectEnvironments: Layers,
   vcsOrigin: GitBranch,
   sso: LockKeyhole,
+  videos: VIDEOS_PRODUCT_ICON,
 } as const satisfies Record<Experiment['flag'], LucideIcon>
 
 export function ExperimentsPopover() {

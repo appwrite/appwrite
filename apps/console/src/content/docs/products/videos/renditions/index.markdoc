@@ -1,0 +1,938 @@
+---
+layout: article
+title: Renditions
+description: Learn how Appwrite Videos encodes a rendition per profile and output, how rendition status and progress work, and how to retry a failed encode.
+---
+
+A **rendition** is one encoded copy of a [video](/docs/products/videos/videos) at the resolution and bitrate of one [profile](/docs/products/videos/profiles), packaged for one [output](/docs/products/videos/outputs). The renditions of a video make up the ladder that adaptive players switch between.
+
+# Why several renditions {% #why-several-renditions %}
+
+Viewers watch on very different connections. If you only had a 1080p copy, someone on a slow mobile network would wait for it to buffer. With a ladder of renditions, the player starts on one it can fetch quickly, then moves up or down a few seconds at a time as the connection changes. This is **adaptive bitrate streaming**, and it is why a stream keeps playing when Wi-Fi drops to cellular.
+
+Each rendition is split into short **segments** of up to 4 seconds. The player downloads them one after another and can change rendition between segments.
+
+# One per profile and output {% #one-per-profile-and-output %}
+
+Each video has at most one rendition per profile and output. You can encode the same profile for more than one output, for example `720p` as both HLS and DASH. Creating a duplicate returns the `video_rendition_already_exists` error.
+
+If you need both HLS and DASH, choose **CMAF**. It encodes once and serves both manifests from the same segments, which saves encoding time and storage.
+
+# Create renditions {% #create-renditions %}
+
+In the Console, open the video, select **Renditions**, and click **Create renditions**. Select the profiles to encode and click **Create**. The output defaults to CMAF; open **Advanced settings** to choose HLS or DASH.
+
+With a server SDK, call `createRendition` once for each profile:
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const videos = new sdk.Videos(client);
+
+const rendition = await videos.createRendition({
+    videoId: '<VIDEO_ID>',
+    profileId: '<PROFILE_ID>',
+    output: sdk.VideoOutput.Cmaf
+});
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.videos import Videos
+from appwrite.enums.video_output import VideoOutput
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+videos = Videos(client)
+
+rendition = videos.create_rendition(
+    video_id = '<VIDEO_ID>',
+    profile_id = '<PROFILE_ID>',
+    output = VideoOutput.CMAF
+)
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart' as enums;
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+Videos videos = Videos(client);
+
+final rendition = await videos.createRendition(
+    videoId: '<VIDEO_ID>',
+    profileId: '<PROFILE_ID>',
+    output: enums.VideoOutput.cmaf,
+);
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Videos;
+use Appwrite\Enums\VideoOutput;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<API_KEY>');
+
+$videos = new Videos($client);
+
+$rendition = $videos->createRendition(
+    videoId: '<VIDEO_ID>',
+    profileId: '<PROFILE_ID>',
+    output: VideoOutput::CMAF()
+);
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+include Appwrite::Enums
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<API_KEY>')
+
+videos = Videos.new(client)
+
+rendition = videos.create_rendition(
+    video_id: '<VIDEO_ID>',
+    profile_id: '<PROFILE_ID>',
+    output: VideoOutput::CMAF
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Enums;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<API_KEY>");
+
+Videos videos = new Videos(client);
+
+VideoRendition rendition = await videos.CreateRendition(
+    videoId: "<VIDEO_ID>",
+    profileId: "<PROFILE_ID>",
+    output: VideoOutput.Cmaf
+);
+```
+
+```server-deno
+import { Client, Videos, VideoOutput } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const videos = new Videos(client);
+
+const rendition = await videos.createRendition({
+    videoId: '<VIDEO_ID>',
+    profileId: '<PROFILE_ID>',
+    output: VideoOutput.Cmaf
+});
+```
+
+```server-go
+package main
+
+import (
+	"fmt"
+
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/videos"
+)
+
+func main() {
+	client := appwrite.NewClient(
+		appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+		appwrite.WithProject("<PROJECT_ID>"),
+		appwrite.WithKey("<API_KEY>"),
+	)
+
+	service := videos.New(client)
+
+	rendition, err := service.CreateRendition(
+		"<VIDEO_ID>",
+		"<PROFILE_ID>",
+		"cmaf",
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(rendition)
+}
+```
+
+```server-swift
+import Appwrite
+import AppwriteEnums
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+let videos = Videos(client)
+
+let rendition = try await videos.createRendition(
+    videoId: "<VIDEO_ID>",
+    profileId: "<PROFILE_ID>",
+    output: .cmaf
+)
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.enums.VideoOutput
+import io.appwrite.services.Videos
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+val videos = Videos(client)
+
+val rendition = videos.createRendition(
+    videoId = "<VIDEO_ID>",
+    profileId = "<PROFILE_ID>",
+    output = VideoOutput.CMAF
+)
+```
+
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.exceptions.AppwriteException;
+import io.appwrite.enums.VideoOutput;
+import io.appwrite.services.Videos;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>");
+
+Videos videos = new Videos(client);
+
+try {
+    videos.createRendition(
+        "<VIDEO_ID>", // videoId
+        "<PROFILE_ID>", // profileId
+        VideoOutput.CMAF, // output
+        new CoroutineCallback<>((result, error) -> {
+            if (error != null) {
+                error.printStackTrace();
+                return;
+            }
+
+            System.out.println(result);
+        })
+    );
+} catch (AppwriteException e) {
+    e.printStackTrace();
+}
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::enums::VideoOutput;
+use appwrite::services::Videos;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let videos = Videos::new(&client);
+
+    let rendition = videos.create_rendition(
+        "<VIDEO_ID>",
+        "<PROFILE_ID>",
+        VideoOutput::Cmaf
+    ).await?;
+
+    println!("{:?}", rendition);
+
+    Ok(())
+}
+```
+
+```http
+POST /v1/videos/<VIDEO_ID>/renditions HTTP/1.1
+Content-Type: application/json
+X-Appwrite-Project: <PROJECT_ID>
+X-Appwrite-Key: <API_KEY>
+
+{
+  "profileId": "<PROFILE_ID>",
+  "output": "cmaf"
+}
+```
+{% /multicode %}
+
+Encoding starts in the background as soon as the rendition is created. You can create renditions right after the video, before its metadata is probed.
+
+Renditions encode independently, so the video can start streaming as soon as the first one is ready. Players see more qualities as more renditions finish. To get something on screen fast, create the lower profiles first.
+
+Encoding time depends mostly on the source duration and the profile's resolution. A 2160p rendition takes many times longer than a 480p one of the same clip.
+
+You can create up to 15 renditions per video per hour. Past that, `videos.createRendition()` returns a `general_rate_limit_exceeded` error until the hour is up.
+
+The profile's codec must support the output you ask for. H.264, the only codec available today, supports all three.
+
+# Status and progress {% #status-and-progress %}
+
+A rendition reports its `status` and a `progress` percentage while it encodes.
+
+{% only_dark %}
+![Renditions tab with two renditions queued and the 360p rendition encoding, with a progress bar for each](/images/docs/videos/dark/renditions-encoding.avif)
+{% /only_dark %}
+{% only_light %}
+![Renditions tab with two renditions queued and the 360p rendition encoding, with a progress bar for each](/images/docs/videos/renditions-encoding.avif)
+{% /only_light %}
+
+| Status | Console label | Meaning |
+|--------|---------------|---------|
+| `pending` | Queued | Waiting for an encoding worker |
+| `started` | Encoding | Transcoding the source |
+| `ended` | Encoded | Transcoding finished. Segments and manifests are being stored |
+| `ready` | Ready | Included in the master manifest and ready to stream |
+| `error` | Failed | The encode failed |
+| `aborted` | Aborted | The encode made no progress for 12 hours and was stopped |
+
+Each rendition also records `startedAt` and `endedAt`, its `width`, `height`, bitrates, and `codec`, and `targetDuration`, the length of its longest segment in seconds. When a rendition fails or is aborted, `error` says why.
+
+`progress` is a percentage sent as a string, such as `"42"`. Parse it with `parseFloat` before you compare or display it.
+
+# Wait until ready {% #wait-until-ready %}
+
+The Console updates rendition progress live. In your own backend, list the video's renditions with [queries](/docs/products/databases/tablesdb/queries) on `status` and `output`. The video can stream once `total` is greater than 0:
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const videos = new sdk.Videos(client);
+
+const renditions = await videos.listRenditions({
+    videoId: '<VIDEO_ID>',
+    queries: [sdk.Query.equal('output', ['cmaf']), sdk.Query.equal('status', ['ready'])] // optional
+});
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.videos import Videos
+from appwrite.query import Query
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+videos = Videos(client)
+
+renditions = videos.list_renditions(
+    video_id = '<VIDEO_ID>',
+    queries = [Query.equal('output', ['cmaf']), Query.equal('status', ['ready'])] # optional
+)
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+Videos videos = Videos(client);
+
+final renditions = await videos.listRenditions(
+    videoId: '<VIDEO_ID>',
+    queries: [Query.equal('output', ['cmaf']), Query.equal('status', ['ready'])], // (optional)
+);
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Videos;
+use Appwrite\Query;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<API_KEY>');
+
+$videos = new Videos($client);
+
+$renditions = $videos->listRenditions(
+    videoId: '<VIDEO_ID>',
+    queries: [Query::equal('output', ['cmaf']), Query::equal('status', ['ready'])] // optional
+);
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<API_KEY>')
+
+videos = Videos.new(client)
+
+renditions = videos.list_renditions(
+    video_id: '<VIDEO_ID>',
+    queries: [Query.equal('output', ['cmaf']), Query.equal('status', ['ready'])] # optional
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<API_KEY>");
+
+Videos videos = new Videos(client);
+
+VideoRenditionList renditions = await videos.ListRenditions(
+    videoId: "<VIDEO_ID>",
+    queries: new List<string> { Query.Equal("output", new List<string> { "cmaf" }), Query.Equal("status", new List<string> { "ready" }) } // optional
+);
+```
+
+```server-deno
+import { Client, Videos, Query } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const videos = new Videos(client);
+
+const renditions = await videos.listRenditions({
+    videoId: '<VIDEO_ID>',
+    queries: [Query.equal('output', ['cmaf']), Query.equal('status', ['ready'])] // optional
+});
+```
+
+```server-go
+package main
+
+import (
+	"fmt"
+
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/query"
+	"github.com/appwrite/sdk-for-go/v7/videos"
+)
+
+func main() {
+	client := appwrite.NewClient(
+		appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+		appwrite.WithProject("<PROJECT_ID>"),
+		appwrite.WithKey("<API_KEY>"),
+	)
+
+	service := videos.New(client)
+
+	renditions, err := service.ListRenditions(
+		"<VIDEO_ID>",
+		service.WithListRenditionsQueries([]string{query.Equal("output", []string{"cmaf"}), query.Equal("status", []string{"ready"})}),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(renditions)
+}
+```
+
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+let videos = Videos(client)
+
+let renditions = try await videos.listRenditions(
+    videoId: "<VIDEO_ID>",
+    queries: [Query.equal("output", value: ["cmaf"]), Query.equal("status", value: ["ready"])] // optional
+)
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.Query
+import io.appwrite.services.Videos
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+val videos = Videos(client)
+
+val renditions = videos.listRenditions(
+    videoId = "<VIDEO_ID>",
+    queries = listOf(Query.equal("output", listOf("cmaf")), Query.equal("status", listOf("ready"))) // optional
+)
+```
+
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.exceptions.AppwriteException;
+import io.appwrite.Query;
+import io.appwrite.services.Videos;
+import java.util.List;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>");
+
+Videos videos = new Videos(client);
+
+try {
+    videos.listRenditions(
+        "<VIDEO_ID>", // videoId
+        List.of(Query.equal("output", List.of("cmaf")), Query.equal("status", List.of("ready"))), // queries (optional)
+        new CoroutineCallback<>((result, error) -> {
+            if (error != null) {
+                error.printStackTrace();
+                return;
+            }
+
+            System.out.println(result);
+        })
+    );
+} catch (AppwriteException e) {
+    e.printStackTrace();
+}
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::query::Query;
+use appwrite::services::Videos;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let videos = Videos::new(&client);
+
+    let renditions = videos.list_renditions(
+        "<VIDEO_ID>",
+        Some(vec![Query::equal("output", vec!["cmaf"]).to_string(), Query::equal("status", vec!["ready"]).to_string()]) // queries
+    ).await?;
+
+    println!("{:?}", renditions);
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+You can also filter and sort renditions on `profileId`, `name`, `codec`, `width`, `height`, `videoBitRate`, `audioBitRate`, `progress`, `targetDuration`, `startedAt`, and `endedAt`.
+
+A common pattern is to mark the video as published in your own database once `total` is greater than 0, and to show a "processing" state until then. Poll every few seconds rather than in a tight loop, since encoding takes seconds to minutes.
+
+To tell when *every* rendition has finished, list them with `Query.equal('status', ['pending', 'started', 'ended'])` instead, and check that `total` is 0.
+
+# Retry a failed rendition {% #retry-a-failed-rendition %}
+
+A failed or aborted rendition is not retried in place. In the Console, click **Retry** on the rendition in the **Renditions** tab, or select several and retry them together. Retry deletes each rendition and creates it again. With an SDK, do the same yourself:
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const videos = new sdk.Videos(client);
+
+await videos.deleteRendition({
+    videoId: '<VIDEO_ID>',
+    renditionId: '<RENDITION_ID>'
+});
+
+const rendition = await videos.createRendition({
+    videoId: '<VIDEO_ID>',
+    profileId: '<PROFILE_ID>',
+    output: sdk.VideoOutput.Cmaf
+});
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.videos import Videos
+from appwrite.enums.video_output import VideoOutput
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+videos = Videos(client)
+
+videos.delete_rendition(
+    video_id = '<VIDEO_ID>',
+    rendition_id = '<RENDITION_ID>'
+)
+
+rendition = videos.create_rendition(
+    video_id = '<VIDEO_ID>',
+    profile_id = '<PROFILE_ID>',
+    output = VideoOutput.CMAF
+)
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart' as enums;
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+Videos videos = Videos(client);
+
+await videos.deleteRendition(
+    videoId: '<VIDEO_ID>',
+    renditionId: '<RENDITION_ID>',
+);
+
+final rendition = await videos.createRendition(
+    videoId: '<VIDEO_ID>',
+    profileId: '<PROFILE_ID>',
+    output: enums.VideoOutput.cmaf,
+);
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Videos;
+use Appwrite\Enums\VideoOutput;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<API_KEY>');
+
+$videos = new Videos($client);
+
+$videos->deleteRendition(
+    videoId: '<VIDEO_ID>',
+    renditionId: '<RENDITION_ID>'
+);
+
+$rendition = $videos->createRendition(
+    videoId: '<VIDEO_ID>',
+    profileId: '<PROFILE_ID>',
+    output: VideoOutput::CMAF()
+);
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+include Appwrite::Enums
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<API_KEY>')
+
+videos = Videos.new(client)
+
+videos.delete_rendition(
+    video_id: '<VIDEO_ID>',
+    rendition_id: '<RENDITION_ID>'
+)
+
+rendition = videos.create_rendition(
+    video_id: '<VIDEO_ID>',
+    profile_id: '<PROFILE_ID>',
+    output: VideoOutput::CMAF
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Enums;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<API_KEY>");
+
+Videos videos = new Videos(client);
+
+await videos.DeleteRendition(
+    videoId: "<VIDEO_ID>",
+    renditionId: "<RENDITION_ID>"
+);
+
+VideoRendition rendition = await videos.CreateRendition(
+    videoId: "<VIDEO_ID>",
+    profileId: "<PROFILE_ID>",
+    output: VideoOutput.Cmaf
+);
+```
+
+```server-deno
+import { Client, Videos, VideoOutput } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const videos = new Videos(client);
+
+await videos.deleteRendition({
+    videoId: '<VIDEO_ID>',
+    renditionId: '<RENDITION_ID>'
+});
+
+const rendition = await videos.createRendition({
+    videoId: '<VIDEO_ID>',
+    profileId: '<PROFILE_ID>',
+    output: VideoOutput.Cmaf
+});
+```
+
+```server-go
+package main
+
+import (
+	"fmt"
+
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/videos"
+)
+
+func main() {
+	client := appwrite.NewClient(
+		appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+		appwrite.WithProject("<PROJECT_ID>"),
+		appwrite.WithKey("<API_KEY>"),
+	)
+
+	service := videos.New(client)
+
+	_, err := service.DeleteRendition(
+		"<VIDEO_ID>",
+		"<RENDITION_ID>",
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	rendition, err := service.CreateRendition(
+		"<VIDEO_ID>",
+		"<PROFILE_ID>",
+		"cmaf",
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(rendition)
+}
+```
+
+```server-swift
+import Appwrite
+import AppwriteEnums
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+let videos = Videos(client)
+
+try await videos.deleteRendition(
+    videoId: "<VIDEO_ID>",
+    renditionId: "<RENDITION_ID>"
+)
+
+let rendition = try await videos.createRendition(
+    videoId: "<VIDEO_ID>",
+    profileId: "<PROFILE_ID>",
+    output: .cmaf
+)
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.enums.VideoOutput
+import io.appwrite.services.Videos
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+val videos = Videos(client)
+
+videos.deleteRendition(
+    videoId = "<VIDEO_ID>",
+    renditionId = "<RENDITION_ID>"
+)
+
+val rendition = videos.createRendition(
+    videoId = "<VIDEO_ID>",
+    profileId = "<PROFILE_ID>",
+    output = VideoOutput.CMAF
+)
+```
+
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.exceptions.AppwriteException;
+import io.appwrite.enums.VideoOutput;
+import io.appwrite.services.Videos;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>");
+
+Videos videos = new Videos(client);
+
+try {
+    videos.deleteRendition(
+        "<VIDEO_ID>", // videoId
+        "<RENDITION_ID>", // renditionId
+        new CoroutineCallback<>((deleted, error) -> {
+            if (error != null) {
+                error.printStackTrace();
+                return;
+            }
+
+            try {
+                videos.createRendition(
+                    "<VIDEO_ID>", // videoId
+                    "<PROFILE_ID>", // profileId
+                    VideoOutput.CMAF, // output
+                    new CoroutineCallback<>((result, createError) -> {
+                        if (createError != null) {
+                            createError.printStackTrace();
+                            return;
+                        }
+
+                        System.out.println(result);
+                    })
+                );
+            } catch (AppwriteException e) {
+                e.printStackTrace();
+            }
+        })
+    );
+} catch (AppwriteException e) {
+    e.printStackTrace();
+}
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::enums::VideoOutput;
+use appwrite::services::Videos;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let videos = Videos::new(&client);
+
+    videos.delete_rendition(
+        "<VIDEO_ID>",
+        "<RENDITION_ID>"
+    ).await?;
+
+    let rendition = videos.create_rendition(
+        "<VIDEO_ID>",
+        "<PROFILE_ID>",
+        VideoOutput::Cmaf
+    ).await?;
+
+    println!("{:?}", rendition);
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+If the same profile fails again, read the rendition's `error`, then check the source. A file that is truncated, or uses a codec the encoder cannot read, fails every rendition. Playing the source file from Storage on your own machine is a quick way to rule this out.
+
+# Delete a rendition {% #delete-a-rendition %}
+
+Deleting a rendition removes its segments and drops it from the master manifest. Players stop offering that quality on their next manifest load. Other renditions of the video keep streaming.
+
+You cannot delete a rendition while it is encoding or storing segments, which is the `started` and `ended` statuses. The request returns `video_rendition_in_progress`, so wait for the job to finish. A queued rendition can be deleted at any time. A rendition that makes no progress for 12 hours is marked `aborted`, and can be deleted then.

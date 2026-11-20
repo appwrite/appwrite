@@ -64,7 +64,7 @@ export type ConsoleProfileFeatures = {
   databaseSpecifications: boolean
   /** Native MongoDB databases via the `mongo` SDK service. */
   nativeDbsMongo: boolean
-  /** Videos product (transcoding, renditions, subtitles, HLS/DASH playback) via the `videos` SDK service. */
+  /** An experiment, off by default; the quality team turns it on from the header Previews menu. Videos product (transcoding, renditions, subtitles, HLS/DASH playback) via the `videos` SDK service. */
   videos: boolean
   /**
    * Internal only, switched on from the debug menu. Review product (AI code

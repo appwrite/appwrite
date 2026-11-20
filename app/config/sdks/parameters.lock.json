@@ -249,6 +249,20 @@
             "secret"
         ],
         "avatars.deletePhoto": [],
+        "avatars.getTeamPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "avatars.updateTeamPhoto": [
+            "teamId",
+            "file"
+        ],
+        "avatars.deleteTeamPhoto": [
+            "teamId"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -805,20 +819,6 @@
             "teamId",
             "name"
         ],
-        "teams.getPhoto": [
-            "teamId",
-            "width",
-            "height",
-            "quality",
-            "output"
-        ],
-        "teams.updatePhoto": [
-            "teamId",
-            "file"
-        ],
-        "teams.deletePhoto": [
-            "teamId"
-        ],
         "teams.updatePrefs": [
             "teamId",
             "prefs"
@@ -1302,6 +1302,20 @@
             "acknowledged"
         ],
         "avatars.deletePhoto": [],
+        "avatars.getTeamPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "avatars.updateTeamPhoto": [
+            "teamId",
+            "file"
+        ],
+        "avatars.deleteTeamPhoto": [
+            "teamId"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -2479,7 +2493,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.createResendProvider": [
             "providerId",
@@ -2756,7 +2771,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.updateResendProvider": [
             "providerId",
@@ -4836,20 +4852,6 @@
             "teamId",
             "name"
         ],
-        "teams.getPhoto": [
-            "teamId",
-            "width",
-            "height",
-            "quality",
-            "output"
-        ],
-        "teams.updatePhoto": [
-            "teamId",
-            "file"
-        ],
-        "teams.deletePhoto": [
-            "teamId"
-        ],
         "teams.updatePrefs": [
             "teamId",
             "prefs"
@@ -5833,6 +5835,20 @@
             "acknowledged"
         ],
         "avatars.deletePhoto": [],
+        "avatars.getTeamPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "avatars.updateTeamPhoto": [
+            "teamId",
+            "file"
+        ],
+        "avatars.deleteTeamPhoto": [
+            "teamId"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -6986,7 +7002,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.createResendProvider": [
             "providerId",
@@ -7263,7 +7280,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.updateResendProvider": [
             "providerId",
@@ -9260,20 +9278,6 @@
         "teams.updateName": [
             "teamId",
             "name"
-        ],
-        "teams.getPhoto": [
-            "teamId",
-            "width",
-            "height",
-            "quality",
-            "output"
-        ],
-        "teams.updatePhoto": [
-            "teamId",
-            "file"
-        ],
-        "teams.deletePhoto": [
-            "teamId"
         ],
         "teams.updatePrefs": [
             "teamId",

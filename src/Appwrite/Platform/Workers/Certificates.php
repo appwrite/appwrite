@@ -201,7 +201,7 @@ class Certificates extends Action
         } catch (AppwriteException $err) {
             Console::warning('Domain verification failed: ' . $err->getMessage());
             $date = \date('H:i:s');
-            $logs = "\033[90m[{$date}] \033[31mDNS verification failed: \033[0m\n";
+            $logs = "\033[90m[{$date}] \033[31mDNS check failed: \033[0m\n";
             $logs .= \mb_strcut($err->getMessage(), 0, 500000); // Limit to 500kb
             $rule->setAttribute('logs', $logs);
         } finally {
@@ -667,11 +667,6 @@ class Certificates extends Action
 
         try {
             $this->verifyRule($rule);
-        } catch (AppwriteException $err) {
-            $msg = $err->getMessage() . "\n";
-            $msg .= "Verify your DNS records are correctly configured and try again.\n";
-            $msg .= "If they're correct and it still fails, please retry after sometime. DNS records can take up to 48 hours to propagate.\n";
-            throw new AppwriteException($err->getType(), $msg);
         } finally {
             // The checks are stored whether or not the domain passed. The rule write that
             // follows reads them back for the events.
