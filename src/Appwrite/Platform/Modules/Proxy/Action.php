@@ -558,7 +558,8 @@ class Action extends PlatformAction
 
             try {
                 if ($validator->isValid($name)) {
-                    return \array_values($validator->records);
+                    // A passing lookup across several resolvers keeps no records, yet it found the expected value
+                    return empty($validator->records) ? [$expected] : \array_values($validator->records);
                 }
             } catch (\Throwable) {
                 return null;
