@@ -262,7 +262,7 @@ export function TechnologyPanel({
       cardId="technology"
       title="Technology"
       description={
-        mobile ? 'What visitors are using' : 'What visitors are browsing with'
+        mobile ? 'What your users are on' : 'What visitors are browsing with'
       }
       tabs={mobile ? MOBILE_TECH_TABS : TECH_TABS}
       renderLeading={(entry, _index, tabId) =>

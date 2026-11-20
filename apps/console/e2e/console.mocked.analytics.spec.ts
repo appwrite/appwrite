@@ -532,23 +532,26 @@ test.describe('analytics property (mocked API)', () => {
     })
   })
 
-  test('leaves bounce rate off a mobile property', async ({ page }) => {
+  test('uses app terms and leaves bounce rate off a mobile property', async ({
+    page,
+  }) => {
     await mockAppwriteApi(page, { type: AnalyticsPropertyType.Mobile })
     await openProperty(page)
 
     const metrics = overviewMetrics(page)
-    await expect(metrics.first()).toContainText('Unique visitors', {
+    await expect(metrics.first()).toContainText('Active users', {
       timeout: 30_000,
     })
     await expect(metrics).toHaveText([
-      /^Unique visitors/,
-      /^Visits/,
-      /^Pageviews/,
+      /^Active users/,
+      /^Sessions/,
+      /^Screen views/,
       /^Events/,
-      /^Views per visit/,
-      /^Visit duration/,
+      /^Screens\/session/,
+      /^Session length/,
       /^Engagement time/,
     ])
+    await attachScreenshot(page, 'property-mobile-app-terms')
   })
 
   test('drops browser tabs from a mobile Technology card', async ({ page }) => {
@@ -556,7 +559,7 @@ test.describe('analytics property (mocked API)', () => {
     await openProperty(page)
 
     const technology = card(page, 'Technology')
-    await expect(technology.getByText('What visitors are using')).toBeVisible({
+    await expect(technology.getByText('What your users are on')).toBeVisible({
       timeout: 30_000,
     })
     await expect(technology.getByRole('tab')).toHaveText([
