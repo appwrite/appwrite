@@ -186,9 +186,9 @@ export function useSmtpQuickSetup({
         senderName: name,
         senderEmail: email,
         replyTo: project?.smtpReplyToEmail || '',
-        host: provider.smtp.host,
+        host: provider.smtp.host(selectedDomain),
         port: provider.smtp.port,
-        username: provider.smtp.username(selectedDomain.name),
+        username: provider.smtp.username(selectedDomain),
         password: created.secret,
         secure: provider.smtp.secure,
       })
@@ -228,11 +228,14 @@ export function useSmtpQuickSetup({
 
   /** Relay settings the provider will use, resolved for the selected domain. */
   const serverSettings: ReadonlyArray<{ label: string; value: string }> = [
-    { label: 'Server host', value: provider.smtp.host },
+    {
+      label: 'Server host',
+      value: selectedDomain ? provider.smtp.host(selectedDomain) : '',
+    },
     { label: 'Server port', value: String(provider.smtp.port) },
     {
       label: 'Username',
-      value: provider.smtp.username(selectedDomain?.name ?? ''),
+      value: selectedDomain ? provider.smtp.username(selectedDomain) : '',
     },
     { label: 'Secure protocol', value: provider.smtp.secure.toUpperCase() },
   ]

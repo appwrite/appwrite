@@ -30,6 +30,7 @@ const providerIconMap: Record<string, string> = {
   twilio: 'twilio.svg',
   msg91: 'msg91.svg',
   telesign: 'telesign.svg',
+  bird: 'bird.svg',
   textmagic: 'textmagic.svg',
   vonage: 'vonage.svg',
   // Email
