@@ -57,6 +57,7 @@ export const ONBOARDING_MESSAGING_PROVIDER_SDK_KEYS = [
   'messaging.createResendProvider',
   'messaging.createSmtpProvider',
   'messaging.createSMTPProvider',
+  'messaging.createBirdEmailProvider',
   'messaging.createMsg91Provider',
   'messaging.createTelesignProvider',
   'messaging.createTextmagicProvider',

@@ -45,12 +45,7 @@ import {
   getAvailableSmtpQuickSetupProvider,
   type SmtpQuickSetupProviderId,
 } from '@/lib/smtp/providers'
-import {
-  BIRD_SMTP_PORT,
-  BIRD_SMTP_USERNAME,
-  birdRegion,
-  birdSmtpHost,
-} from '@/lib/smtp/bird'
+import { birdRegion } from '@/lib/smtp/bird'
 import { AwsSesRegionSelect } from '../../_components/AwsSesRegionSelect'
 import {
   OneClickSetup,
@@ -218,13 +213,13 @@ const PROVIDERS: ProviderConfig[] = [
       }),
   },
   {
-    // Appwrite has no Bird email provider, so this sends through Bird's SMTP
-    // relay as an SMTP provider. The API key is the SMTP password, and its
-    // `bk_{region}_` prefix picks the relay host.
+    // Bird has two providers under one name: this one sends email through
+    // Bird's email API and `bird-sms` sends SMS. The key's `bk_{region}_`
+    // prefix picks the API host, so a key without one cannot send.
     id: 'bird',
     name: 'Bird',
     type: 'email',
-    description: 'Send email through the Bird SMTP relay.',
+    description: 'Send email through Bird.',
     icon: 'bird.svg',
     fields: [
       COMMON_NAME_FIELD,
@@ -253,15 +248,10 @@ const PROVIDERS: ProviderConfig[] = [
           ),
         )
       }
-      return projectSdk.messaging.createSMTPProvider({
+      return projectSdk.messaging.createBirdEmailProvider({
         providerId,
         name: String(v.name).trim(),
-        host: birdSmtpHost(region),
-        port: BIRD_SMTP_PORT,
-        username: BIRD_SMTP_USERNAME,
-        password: apiKey,
-        encryption: SmtpEncryption.Tls,
-        autoTLS: true,
+        apiKey,
         fromName: optString(v.fromName),
         fromEmail: optString(v.fromEmail),
         enabled: true,

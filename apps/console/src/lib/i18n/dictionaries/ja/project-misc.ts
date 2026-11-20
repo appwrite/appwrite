@@ -2554,8 +2554,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'SMS プロバイダーから送信元を読み込めませんでした',
   'Failed to create the API key with the SMS provider':
     'SMS プロバイダーでの API キーの作成に失敗しました',
-  'Send email through the Bird SMTP relay.':
-    'Bird の SMTP リレー経由でメールを送信します。',
+  'Send email through Bird.': 'Bird 経由でメールを送信します。',
   'A Bird API key with the emails:write scope.':
     'emails:write スコープを持つ Bird の API キー。',
   'Bird API keys start with bk_ and their region, for example bk_eu1_.':

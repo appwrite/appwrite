@@ -3041,8 +3041,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'טעינת השולחים מספק ה-SMS נכשלה',
   'Failed to create the API key with the SMS provider':
     'יצירת מפתח ה-API מול ספק ה-SMS נכשלה',
-  'Send email through the Bird SMTP relay.':
-    'שליחת אימייל דרך שרת ה-SMTP של Bird.',
+  'Send email through Bird.': 'שליחת אימייל דרך Bird.',
   'A Bird API key with the emails:write scope.':
     'מפתח API של Bird עם ההרשאה emails:write.',
   'Bird API keys start with bk_ and their region, for example bk_eu1_.':

@@ -126,9 +126,9 @@ export interface OneClickSetupHandle {
  * domain; SMS picks one of the workspace's senders.
  *
  * Same credentials and reconnect rules as the project SMTP one-click setup;
- * only the fields differ. The wizard decides how the key is used: Resend
- * sends through its API, Bird email through its SMTP relay, Bird SMS through
- * the Bird provider.
+ * only the fields differ. The wizard decides how the key is used: Resend and
+ * Bird email send through their email APIs, Bird SMS through the Bird SMS
+ * provider.
  *
  * The key exists at the provider from the moment it is minted, but nothing
  * depends on it until the messaging provider is created. Until the wizard
