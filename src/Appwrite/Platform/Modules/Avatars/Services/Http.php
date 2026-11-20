@@ -13,6 +13,7 @@ use Appwrite\Platform\Modules\Avatars\Http\Photo\Get as GetPhoto;
 use Appwrite\Platform\Modules\Avatars\Http\Photo\Update as UpdatePhoto;
 use Appwrite\Platform\Modules\Avatars\Http\QR\Get as GetQR;
 use Appwrite\Platform\Modules\Avatars\Http\Screenshots\Get as GetScreenshot;
+use Appwrite\Platform\Modules\Avatars\Http\Teams\Photo\Delete as DeleteTeamPhoto;
 use Appwrite\Platform\Modules\Avatars\Http\Teams\Photo\Get as GetTeamPhoto;
 use Appwrite\Platform\Modules\Avatars\Http\Teams\Photo\Update as UpdateTeamPhoto;
 use Utopia\Platform\Service;
@@ -36,5 +37,6 @@ class Http extends Service
         $this->addAction('deletePhoto', DeletePhoto::class);
         $this->addAction('getTeamPhoto', GetTeamPhoto::class);
         $this->addAction('updateTeamPhoto', UpdateTeamPhoto::class);
+        $this->addAction('deleteTeamPhoto', DeleteTeamPhoto::class);
     }
 }
