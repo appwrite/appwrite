@@ -314,7 +314,8 @@ export function isWaitingForDns(
 /**
  * Whether the last DNS check of a domain found a record with the wrong value:
  * a CAA record that blocks the certificate, or no pointing record verified
- * while one points elsewhere. A subdomain points with its CNAME. An apex
+ * while one points elsewhere or sits at the wrong name ('misplaced': the full
+ * domain entered as the host). A subdomain points with its CNAME. An apex
  * points with an ALIAS, which the A and AAAA checks verify, as they do for a
  * domain with no CNAME check.
  */
