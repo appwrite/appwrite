@@ -334,6 +334,16 @@ export function hasWrongDnsRecord(
     return false
   const cname =
     getRecordName(domain) !== '@' && records.some((r) => r.type === 'CNAME')
+  // An A or AAAA record where a subdomain's CNAME is missing answers in its
+  // place, such as a provider's URL redirect, so it is never just propagating.
+  if (
+    cname &&
+    records.some((r) => r.type === 'CNAME' && r.status === 'missing') &&
+    records.some(
+      (r) => (r.type === 'A' || r.type === 'AAAA') && r.status === 'mismatch',
+    )
+  )
+    return true
   return records.some(
     (r) =>
       (cname ? r.type === 'CNAME' : r.type === 'A' || r.type === 'AAAA') &&
