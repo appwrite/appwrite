@@ -1,0 +1,130 @@
+---
+layout: post
+title: "Appwrite is moving to Rust, starting with image processing"
+description: Appwrite is moving its engine from PHP to Rust. On Appwrite Cloud, Rust image processing halved slow preview times and cut preview errors to zero.
+date: 2026-11-20
+cover: /images/blog/appwrite-is-moving-to-rust/cover.avif
+timeToRead: 6
+author: eldad-fux
+category: announcements, performance
+featured: false
+unlisted: true
+faqs:
+  - question: "Is Appwrite being rewritten in Rust?"
+    answer: "Yes. Appwrite is moving its server from PHP to Rust one piece at a time. Image processing on Appwrite Cloud was the first piece to move, and several core libraries have followed."
+  - question: "Do I need to change my app, SDK, or API calls?"
+    answer: "No. Every piece keeps the same API, SDKs, and behavior. The Rust code is checked against the same tests as the PHP code it replaces before it reaches Appwrite Cloud."
+  - question: "What runs on Rust on Appwrite Cloud today?"
+    answer: "Every [image preview](/docs/products/storage/images) and [avatar](/docs/products/avatars) on Appwrite Cloud is rendered by Rust. Connection string parsing, translations, user agent parsing, domain parsing, email checks, and request validators also run on Rust in every Cloud region."
+  - question: "How much faster are image previews on Appwrite Cloud?"
+    answer: "Previews that are not cached went from a median of 390 to 530 ms to 260 to 285 ms, and their p99 went from 3.4 to 4.3 seconds to 1.1 to 1.5 seconds. Cached previews, more than 98 percent of requests, were already fast and stay at about 35 to 40 ms."
+  - question: "Does Appwrite still use ImageMagick?"
+    answer: "No. Appwrite renders images with its own Rust library, and ImageMagick has been removed from the Appwrite image, which made it 8 MB smaller."
+  - question: "When will self-hosted Appwrite run on Rust?"
+    answer: "Self-hosted Appwrite 2.7.2 still renders images with ImageMagick. The Rust image engine is on Appwrite's main branch and ships with the next self-hosted release."
+---
+
+Appwrite is moving from PHP to Rust. Appwrite has run on PHP since its first release in 2019. The next version of its engine is being written in Rust, and the first piece is already live.
+
+Since November 12, every image preview and avatar on Appwrite Cloud has been rendered by Rust. Slow previews take half as long, preview errors dropped to zero, and nothing changed for the apps that use them.
+
+# Why we are moving to Rust
+
+Appwrite's job is to be the fast, reliable part of your stack, so that your team can spend its time on the product. Rust gets us closer to that than PHP can.
+
+- **Speed where it counts:** work that runs on the CPU, such as decoding and resizing images, runs several times faster.
+- **Less memory per request:** in early tests, the Rust Storage service peaked at about a third of the PHP service's memory, so each server handles more traffic.
+- **Fewer moving parts:** Rust code replaces native tools such as ImageMagick, which removes a whole class of crashes and security updates.
+
+# How the move works
+
+Rewriting a platform in one go means freezing it until the rewrite is done. We are moving one piece at a time instead, while Appwrite keeps shipping.
+
+- **Libraries first:** each library is rebuilt in Rust and loaded into today's PHP server under the same class names. It runs against the PHP library's own tests and a corpus that compares both versions, then rolls out behind a switch, with PHP one restart away.
+- **Then whole services:** most of a request is spent waiting on the database and the network, so the biggest gains come when a whole service runs on Rust. Users, Teams, Account, and Storage already run on Rust in development, checked against the PHP services' end-to-end tests.
+
+# Faster image previews on Appwrite Cloud
+{% only_dark %}
+![Image preview response times on Appwrite Cloud before and after Rust](/images/blog/appwrite-is-moving-to-rust/latency-dark.avif)
+{% /only_dark %}
+
+{% only_light %}
+![Image preview response times on Appwrite Cloud before and after Rust](/images/blog/appwrite-is-moving-to-rust/latency.avif)
+{% /only_light %}
+
+We compared three days on PHP with three days on Rust in our Frankfurt region. Previews that are not cached are the only ones that run the image engine, and they are the ones that got faster.
+
+- **Median:** **390–530 ms** to **260–285 ms**.
+- **p95:** **1.0–2.4 s** to about **0.65 s**.
+- **p99:** **3.4–4.3 s** to **1.1–1.5 s**.
+- **Initials avatars:** median **92 ms** to **32 ms**, and p95 **230 ms** to **58 ms**.
+
+# More traffic with zero preview errors
+{% only_dark %}
+![Daily preview requests and server errors on Appwrite Cloud before and after Rust](/images/blog/appwrite-is-moving-to-rust/errors-dark.avif)
+{% /only_dark %}
+
+{% only_light %}
+![Daily preview requests and server errors on Appwrite Cloud before and after Rust](/images/blog/appwrite-is-moving-to-rust/errors.avif)
+{% /only_light %}
+
+Preview traffic grew from **1.3 million** to **2.3–2.9 million** requests a day in the same week. Over those three days, previews returned no server errors at all, down from **46–57** a day on PHP.
+
+- **CPU:** up about **12%** while handling about **60%** more traffic. Memory stayed flat.
+- **Cached previews:** more than **98%** of requests, unchanged at about **35–40 ms**, since they never reach the engine.
+- **A fair comparison:** one project started requesting far more small thumbnails that week, so the daily numbers are not a pure A/B test. For that project alone, the p95 of uncached thumbnails went from **931 ms** to **449 ms**.
+
+# How we shipped it safely
+{% only_dark %}
+![The rollout of Rust image processing, from a canary region to every Appwrite Cloud region](/images/blog/appwrite-is-moving-to-rust/rollout-dark.avif)
+{% /only_dark %}
+
+{% only_light %}
+![The rollout of Rust image processing, from a canary region to every Appwrite Cloud region](/images/blog/appwrite-is-moving-to-rust/rollout.avif)
+{% /only_light %}
+
+The Rust engine went live in our New York region first, and in all six Cloud regions the next day. PHP stayed one restart away the whole time. Once Rust had served every region, we deleted the PHP version, about **1,350** lines, and removed ImageMagick from the Appwrite image.
+
+Before any of that, both engines processed the same **1,124** test images, valid and damaged. The comparison found three bugs, fixed as part of the move. One was in the PHP version running in production: some photos with a rotation tag came out rotated twice.
+
+# What already runs on Rust
+{% only_dark %}
+![Appwrite libraries that run on Rust on Appwrite Cloud and on the conversion branch](/images/blog/appwrite-is-moving-to-rust/libraries-dark.avif)
+{% /only_dark %}
+
+{% only_light %}
+![Appwrite libraries that run on Rust on Appwrite Cloud and on the conversion branch](/images/blog/appwrite-is-moving-to-rust/libraries.avif)
+{% /only_light %}
+
+Image processing was the first library to move, not the last. Six more now serve every Appwrite Cloud region from Rust, and their PHP versions are gone. On the conversion branch, about **50** of Appwrite's libraries already have Rust versions.
+
+- **Domains:** in benchmarks, the first domain lookup in a process went from **17 ms** to **1.8 ms**.
+- **Email checks:** checking whether an address belongs to a free email provider went from **492 µs** to **1.3 µs**.
+- **And more:** connection strings, translations, user agent parsing, and request validators.
+- **Swoole:** the async runtime under Appwrite's PHP server now builds from swoole-rs, our Rust rewrite of Swoole.
+
+Not every library got faster on its own. Thin libraries that mostly call back into PHP are tens of nanoseconds slower, which is exactly why the rest of Appwrite moves as whole services.
+
+# Early numbers from Storage on Rust
+
+The Storage service already runs on Rust in development and passes the same **108** end-to-end tests, with **2,883** assertions, as the PHP service. These numbers come from a busy development machine, not production, so treat them as a direction rather than a promise.
+
+- **At 50 requests a second:** p99 went from **721 ms** to **328 ms**, CPU per request from **36.5 ms** to **12.6 ms**, and peak memory from **2.6 GB** to **0.9 GB**.
+- **At 50 concurrent users:** Rust served **487** requests a second, against **209** for PHP.
+- **At 200 requests a second:** Rust kept up with a median of **6.5 ms**, while PHP managed only **106**.
+
+# What changes for your app
+
+Nothing. Each piece keeps the same API, SDKs, and Console, and it is checked against the same tests before it reaches Appwrite Cloud. Your app gets faster without a migration.
+
+# Building the next Appwrite
+
+Moving Appwrite to Rust is the biggest engineering change in the project's history, and we are doing it in the open, one measured step at a time. We will keep sharing the numbers as more of Appwrite moves over.
+
+We would love to hear what you would like to see move to Rust next. Come and tell us on [Discord](https://appwrite.io/discord).
+
+# More resources
+
+- [Image transformations in Appwrite Storage](/docs/products/storage/images)
+- [Appwrite Avatars](/docs/products/avatars)
+- [Sign up for Appwrite Cloud](https://cloud.appwrite.io)
