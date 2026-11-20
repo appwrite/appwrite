@@ -880,15 +880,17 @@ export function VerifyDomainContent({
   const records = (rule as Models.ProxyRule & { records?: ProxyRuleRecord[] })
     .records
   const checks = records?.length ? records : null
-  const conflict = checks?.some(
-    (check) => check.type === 'CNAME' && check.status === 'missing',
-  )
-    ? checks.find(
-        (check) =>
-          (check.type === 'A' || check.type === 'AAAA') &&
-          check.status === 'mismatch',
-      )
-    : undefined
+  const conflict =
+    getRecordName(rule.domain) !== '@' &&
+    checks?.some(
+      (check) => check.type === 'CNAME' && check.status === 'missing',
+    )
+      ? checks.find(
+          (check) =>
+            (check.type === 'A' || check.type === 'AAAA') &&
+            check.status === 'mismatch',
+        )
+      : undefined
 
   const isCloud = useMemo(() => isCloudEndpoint(), [])
 
