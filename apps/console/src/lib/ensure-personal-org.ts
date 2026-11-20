@@ -86,10 +86,15 @@ async function organizationAccess(
     throw error
   }
   // On Cloud the organization comes from the organizations list, which never
-  // refuses; the team itself does (the overview needs it, so it is cached).
+  // refuses; the team itself does. Asked fresh: a team cached before the
+  // organization started requiring single sign-on would still look open. The
+  // answer is cached for the overview, which needs the team anyway.
   try {
     await (queryClient
-      ? queryClient.ensureQueryData(consoleTeamQueryOptions(orgId))
+      ? queryClient.fetchQuery({
+          ...consoleTeamQueryOptions(orgId),
+          staleTime: 0,
+        })
       : fetchConsoleTeam(orgId))
   } catch (error) {
     if (isSSORequiredError(error)) return 'refused'
