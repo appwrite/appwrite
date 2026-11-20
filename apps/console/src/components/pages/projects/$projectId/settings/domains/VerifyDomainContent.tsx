@@ -166,6 +166,8 @@ export type DnsRecord = {
   check?: ProxyRuleRecord
   /** The record type that already verifies the domain, when this one is an unused alternative. */
   notNeeded?: string
+  /** A record of another type that answers the name instead of this missing one, such as a provider's URL redirect. */
+  conflict?: ProxyRuleRecord
 }
 
 /** A section label, outlined so it never reads as a record status. */
@@ -174,6 +176,22 @@ const SECTION_BADGE =
 
 const TABLE_HEAD =
   'px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
+
+/**
+ * Where a DNS provider put a record whose full domain was entered as the
+ * host: it appends its zone, so `shop.example.com` lands at
+ * `shop.example.com.example.com`. The server looks there for a 'misplaced'
+ * check.
+ */
+function getMisplacedName(name: string): string {
+  return `${name}.${getZone(name)}`
+}
+
+/** The zone a DNS provider appends to the host: the domain after its record name. */
+function getZone(name: string): string {
+  const host = getRecordName(name)
+  return host === '@' ? name : name.slice(host.length + 1)
+}
 
 /** The type of one record, on one line. The ALIAS type reads as a phrase. */
 function RecordType({ type }: { type: string }) {
@@ -221,6 +239,17 @@ function RecordStatus({
         </Badge>
       )
     case 'missing':
+      if (record.conflict) {
+        return (
+          <Badge
+            variant="error"
+            className={pill}
+            title={record.conflict.message || undefined}
+          >
+            {t('Wrong type')}
+          </Badge>
+        )
+      }
       return (
         <Badge variant="info" className={pill} title={title}>
           {waiting ? t('Not detected yet') : t('Not detected')}
@@ -230,6 +259,12 @@ function RecordStatus({
       return (
         <Badge variant="error" className={pill} title={title}>
           {check.type === 'CAA' ? t('Blocks certificate') : t('Wrong value')}
+        </Badge>
+      )
+    case 'misplaced':
+      return (
+        <Badge variant="error" className={pill} title={title}>
+          {t('Wrong name')}
         </Badge>
       )
     default:
@@ -249,16 +284,19 @@ function RecordStatus({
 function FoundValues({
   values,
   wrong,
+  label,
 }: {
   values: string[]
   /** Underline the value as the one to change. */
   wrong: boolean
+  /** Lead-in before the values, `Found:` by default. */
+  label?: string
 }) {
   const t = useT()
   const [first, ...rest] = values
   return (
     <p className="flex min-w-0 items-baseline gap-1.5 text-[12px] text-muted-foreground">
-      <span className="shrink-0">{t('Found:')}</span>
+      <span className="shrink-0">{label ?? t('Found:')}</span>
       <span
         className={`min-w-0 truncate pb-1 font-mono text-foreground ${wrong ? 'underline decoration-wavy decoration-red-500 underline-offset-2' : ''}`}
         title={first}
@@ -340,10 +378,19 @@ function RecordSection({
           </TableHeader>
           <TableBody>
             {records.map((r) => {
+              // A misplaced record is wrong where it is, not in its value.
+              const misplaced = r.check?.status === 'misplaced' && !r.notNeeded
+              // Another record type answers where this one is missing.
+              const conflict =
+                r.check?.status === 'missing' && !r.notNeeded
+                  ? r.conflict
+                  : undefined
               const found =
                 r.check?.status === 'mismatch' && !r.notNeeded
                   ? r.check.current
-                  : []
+                  : misplaced && r.check
+                    ? [getMisplacedName(r.check.name)]
+                    : (conflict?.current ?? [])
               return (
                 <Fragment key={`${r.type}-${r.value}`}>
                   <TableRow className={found.length ? 'border-b-0' : undefined}>
@@ -384,7 +431,20 @@ function RecordSection({
                     <TableRow className="hover:bg-transparent">
                       <TableCell colSpan={2} className="px-4 pt-0 pb-3" />
                       <TableCell colSpan={3} className="px-4 pt-0 pb-3">
-                        <FoundValues values={found} wrong={r.type !== 'CAA'} />
+                        <FoundValues
+                          values={found}
+                          wrong={r.type !== 'CAA'}
+                          label={
+                            misplaced
+                              ? t('Found at:')
+                              : conflict
+                                ? t('Found {type}:').replace(
+                                    '{type}',
+                                    conflict.type,
+                                  )
+                                : undefined
+                          }
+                        />
                       </TableCell>
                     </TableRow>
                   )}
@@ -476,6 +536,7 @@ function getDnsBanners(
   rule: Models.ProxyRule,
   pointing: ProxyRuleRecord[],
   caa: ProxyRuleRecord | undefined,
+  conflict: ProxyRuleRecord | undefined,
 ): DnsBanner[] {
   const verified = pointing.find((check) => check.status === 'verified')
   const banners: DnsBanner[] = []
@@ -488,8 +549,31 @@ function getDnsBanners(
       ),
     })
   }
+  if (!verified && conflict) {
+    banners.push({
+      tone: 'error',
+      prefix: t('{type} record').replace('{type}', conflict.type),
+      text: t(
+        'Your domain has an {type} record ({found}) instead of a CNAME, often a URL redirect or parking record at your DNS provider. Delete it, then add the CNAME below.',
+      )
+        .replace('{type}', conflict.type)
+        .replace('{found}', conflict.current[0] ?? ''),
+    })
+  }
   if (!verified) {
     for (const check of pointing) {
+      if (check.status === 'misplaced') {
+        banners.push({
+          tone: 'error',
+          prefix: t('{type} record').replace('{type}', check.type),
+          text: t(
+            'It was added as {found}. In your DNS provider, enter only {name} as the host.',
+          )
+            .replace('{found}', getMisplacedName(check.name))
+            .replace('{name}', getRecordName(check.name)),
+        })
+        continue
+      }
       if (check.status !== 'mismatch') continue
       // DNS shows no ALIAS target, only the addresses it resolves to.
       if (check.type === ALIAS_TYPE) {
@@ -838,6 +922,21 @@ export function VerifyDomainContent({
   const records = (rule as Models.ProxyRule & { records?: ProxyRuleRecord[] })
     .records
   const checks = records?.length ? records : null
+  // A subdomain points with its CNAME, so an A or AAAA record found where the
+  // CNAME is missing answers in its place: a provider's URL redirect or parking
+  // record, which never reaches Appwrite.
+  const conflict =
+    getRecordName(rule.domain) !== '@' &&
+    checks?.some(
+      (check) => check.type === 'CNAME' && check.status === 'missing',
+    )
+      ? checks.find(
+          (check) =>
+            (check.type === 'A' || check.type === 'AAAA') &&
+            check.status === 'mismatch' &&
+            check.current.length > 0,
+        )
+      : undefined
 
   const isCloud = useMemo(() => isCloudEndpoint(), [])
 
@@ -917,8 +1016,13 @@ export function VerifyDomainContent({
   // The record each method asks for, with the status of its last check.
   const getPointingRecord = (method: VerificationMethod): DnsRecord | null => {
     switch (method) {
-      case 'cname':
-        return cname ? getRecord('CNAME', verifiedCname ?? cname) : null
+      case 'cname': {
+        if (!cname) return null
+        const record = getRecord('CNAME', verifiedCname ?? cname)
+        return record.check?.status === 'missing' && conflict
+          ? { ...record, conflict }
+          : record
+      }
       case 'alias':
         return cname
           ? {
@@ -984,6 +1088,19 @@ export function VerifyDomainContent({
     </p>
   )
 
+  // Providers append the zone to the host, so a full domain there lands one
+  // zone too deep. An apex is entered as @, which needs no note.
+  const recordName = getRecordName(rule.domain)
+  const hostNote = recordName !== '@' && (
+    <p className="text-[13px] text-muted-foreground">
+      {t(
+        "Enter only {name} in your DNS provider's Host or Name field. Most providers add {apex} for you.",
+      )
+        .replace('{name}', recordName)
+        .replace('{apex}', getZone(rule.domain))}
+    </p>
+  )
+
   // The CAA row: recommended from the console variables, required once the
   // server checks it.
   const caaCheck = findCheck('CAA', '')
@@ -1046,14 +1163,15 @@ export function VerifyDomainContent({
     ),
   ]
   const offersNameservers = tabOptions.some((tab) => tab.id === 'nameservers')
-  const banners = checks ? getDnsBanners(t, rule, pointingChecks, caaCheck) : []
-  // A banner that names the wrong record replaces the generic "wait and try
-  // again" alert, and "DNS is set up" already says the certificate is next.
-  // The rule updates live, so that alert also goes once its DNS has passed.
-  const wrongRecord = banners.some((banner) => banner.tone === 'error')
+  const banners = checks
+    ? getDnsBanners(t, rule, pointingChecks, caaCheck, conflict)
+    : []
+  // The banners above the records already say what to do next, so they
+  // replace the generic "wait and try again" alert. The rule updates live, so
+  // that alert also goes once its DNS has passed.
   const dnsSetUp = banners.some((banner) => banner.dnsSetUp)
   const shownError =
-    (wrongRecord || dnsSetUp || !isDnsUnverified(rule)) &&
+    (banners.length > 0 || !isDnsUnverified(rule)) &&
     typeof verificationError === 'object' &&
     verificationError?.pending
       ? null
@@ -1088,6 +1206,7 @@ export function VerifyDomainContent({
           waiting={isWaitingForDns(rule)}
         >
           {tabOptions.some((tab) => tab.id === 'alias') && aliasNote}
+          {hostNote}
         </RecordSection>
       )}
       {caaRecord && (
