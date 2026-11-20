@@ -55,7 +55,7 @@ class RuleRecord extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Check status. Possible values are "verified" when the expected value was found, "missing" when no record of the type exists yet, "mismatch" when records exist but none has the expected value, or "failed" when the lookup itself failed.',
+                'description' => 'Check status. Possible values are "verified" when the expected value was found, "missing" when no record of the type exists yet, "mismatch" when records exist but none has the expected value, "misplaced" when no record exists but one was found at the domain followed by its zone, as DNS providers do when the full domain is entered as the host, or "failed" when the lookup itself failed.',
                 'default' => '',
                 'example' => 'verified',
             ])
