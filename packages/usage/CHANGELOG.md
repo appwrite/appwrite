@@ -20,6 +20,16 @@
 
 ### Fixed
 
+- A grouped event read filtered on `teamInternalId` is served by a
+  projection. The `resourceType` event projection now carries the team and
+  is named `p_by_resourceType_teamInternalId`. `migrate()` adds it to an
+  existing table, where it covers only parts written afterwards. Run
+  `ALTER TABLE <events> MATERIALIZE PROJECTION p_by_resourceType_teamInternalId`
+  once (per partition on a large table, newest first) so older data is
+  covered. Until a partition is materialized, its older and newer parts do
+  not merge with each other. The previous `p_by_resourceType` is left in
+  place and still serves reads without a team filter. Drop it by hand once
+  the new projection is materialized.
 - The Database adapter's `setup()` (and so `migrate()`) adds the attributes
   and indexes an existing `usage` collection lacks. It used to stop at the
   existing collection, so a column added to the schema never reached a

@@ -99,7 +99,7 @@ class ClickHouseDimRoutingTest extends ClickHouseTestCase
             "'{$time}'",
             "'1'",
         ];
-        foreach (['path', 'method', 'status', 'service', 'country', 'resourceType'] as $tag) {
+        foreach (['path', 'method', 'status', 'service', 'country', 'resourceType', 'teamInternalId'] as $tag) {
             if (isset($tags[$tag])) {
                 $cols[] = $tag;
                 $vals[] = "'" . addslashes($tags[$tag]) . "'";
@@ -184,16 +184,73 @@ class ClickHouseDimRoutingTest extends ClickHouseTestCase
         $this->assertSame(7, $totals['billing.compute']['function']);
         $this->assertSame(100, $totals[$this->metric]['']);
         $this->assertCount(3, $totals);
-        $this->assertProjectionUsed($queryId, 'p_by_resourceType');
+        // An upgraded table keeps p_by_resourceType, which serves this read too.
+        $this->assertAnyProjectionUsed($queryId);
     }
 
-    public function testMaterializingResourceTypeProjectionPreservesExistingTotals(): void
+    public function testBillingWindowScopedToATeamStillRoutesAndCountsOnlyThatTeam(): void
+    {
+        $start = $this->hourAligned('-7 days');
+        $end = $this->hourAligned('-2 days');
+        $this->seedHistoricalRow('billing.events', 10, $start, ['resourceType' => 'bucket', 'teamInternalId' => '7']);
+        $this->seedHistoricalRow('billing.events', 40, $start, ['resourceType' => 'site', 'teamInternalId' => '7']);
+        $this->seedHistoricalRow('billing.events', 500, $start, ['resourceType' => 'bucket', 'teamInternalId' => '8']);
+        $this->seedHistoricalRow('billing.events', 999, $end, ['resourceType' => 'bucket', 'teamInternalId' => '7']);
+
+        $queryId = bin2hex(random_bytes(8));
+        $this->adapter->setNextQueryId($queryId);
+        $rows = $this->usage->find('1', [
+            Query::equal('teamInternalId', ['7']),
+            Query::greaterThanEqual('time', $start),
+            Query::lessThan('time', $end),
+            UsageQuery::groupBy('resourceType'),
+            Query::limit(10000),
+        ], Usage::TYPE_EVENT);
+        $totals = [];
+        foreach ($rows as $row) {
+            $resourceType = $row->getAttribute('resourceType');
+            $this->assertIsString($resourceType);
+            $totals[$resourceType] = (int) $row->getValue();
+        }
+
+        ksort($totals);
+        $this->assertSame(['bucket' => 10, 'site' => 40], $totals);
+        $this->assertProjectionUsed($queryId, 'p_by_resourceType_teamInternalId');
+    }
+
+    public function testMidHourWindowScopedToATeamSplitsSoTheInteriorRoutes(): void
+    {
+        $inside = $this->hourAligned('-4 days');
+        $this->seedHistoricalRow('billing.events', 10, $inside, ['resourceType' => 'bucket', 'teamInternalId' => '7']);
+        $this->seedHistoricalRow('billing.events', 500, $inside, ['resourceType' => 'bucket', 'teamInternalId' => '8']);
+        $start = new DateTime('-7 days', new DateTimeZone('UTC'))->setTime(13, 37, 21)->format('Y-m-d H:i:s');
+        $end = new DateTime('-2 days', new DateTimeZone('UTC'))->setTime(9, 14, 3)->format('Y-m-d H:i:s');
+
+        $queryId = bin2hex(random_bytes(8));
+        $this->adapter->setNextQueryId($queryId);
+        $rows = $this->usage->find('1', [
+            Query::equal('teamInternalId', ['7']),
+            Query::greaterThanEqual('time', $start),
+            Query::lessThanEqual('time', $end),
+            UsageQuery::groupBy('resourceType'),
+            Query::limit(10000),
+        ], Usage::TYPE_EVENT);
+
+        $this->assertSame(10, $this->totalOf($rows));
+        $this->assertProjectionUsed($queryId, 'p_by_resourceType_teamInternalId');
+    }
+
+    public function testMaterializingTeamProjectionPreservesExistingTotals(): void
     {
         $events = $this->resolveTableName($this->adapter, 'getEventsTableName');
         $database = $this->databaseName($this->adapter);
-        $this->queryRaw($this->adapter, "ALTER TABLE `{$database}`.`{$events}` DROP PROJECTION p_by_resourceType");
+        $this->seedHistoricalRow('billing.events', 10, '-5 days', ['resourceType' => 'bucket', 'teamInternalId' => '7']);
+        $this->seedHistoricalRow('billing.events', 500, '-5 days', ['resourceType' => 'bucket', 'teamInternalId' => '8']);
+        $this->queryRaw($this->adapter, "ALTER TABLE `{$database}`.`{$events}` DROP PROJECTION p_by_resourceType_teamInternalId");
         $this->usage->setup(); // Attaches the definition, but not historical parts.
+        // Scoped to a team, so a p_by_resourceType kept by an upgraded table cannot serve it.
         $queries = [
+            Query::equal('teamInternalId', ['7']),
             Query::greaterThanEqual('time', $this->hourAligned('-7 days')),
             Query::lessThan('time', $this->hourAligned('-2 days')),
             UsageQuery::groupBy('resourceType'),
@@ -201,15 +258,15 @@ class ClickHouseDimRoutingTest extends ClickHouseTestCase
         $beforeId = bin2hex(random_bytes(8));
         $this->adapter->setNextQueryId($beforeId);
         $before = $this->usage->find('1', $queries, Usage::TYPE_EVENT);
-        $this->assertSame(100, $this->totalOf($before));
+        $this->assertSame(10, $this->totalOf($before));
         $this->assertNoProjectionUsed($beforeId);
 
-        $this->queryRaw($this->adapter, "ALTER TABLE `{$database}`.`{$events}` MATERIALIZE PROJECTION p_by_resourceType SETTINGS mutations_sync = 2");
+        $this->queryRaw($this->adapter, "ALTER TABLE `{$database}`.`{$events}` MATERIALIZE PROJECTION p_by_resourceType_teamInternalId SETTINGS mutations_sync = 2");
         $afterId = bin2hex(random_bytes(8));
         $this->adapter->setNextQueryId($afterId);
         $after = $this->usage->find('1', $queries, Usage::TYPE_EVENT);
-        $this->assertSame(100, $this->totalOf($after));
-        $this->assertProjectionUsed($afterId, 'p_by_resourceType');
+        $this->assertSame(10, $this->totalOf($after));
+        $this->assertProjectionUsed($afterId, 'p_by_resourceType_teamInternalId');
     }
 
     public function testMultiDimNotInAnyProjectionFallsBackToTable(): void
