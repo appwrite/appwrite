@@ -45,11 +45,11 @@ export const DEVICE_SIZES: Record<
     bezel: 0.022,
   },
   laptop: {
-    width: 0.47,
-    depth: 0.33,
-    thickness: 0.014,
-    corner: 0.03,
-    bezel: 0.012,
+    width: 0.58,
+    depth: 0.4,
+    thickness: 0.016,
+    corner: 0.034,
+    bezel: 0.014,
   },
   desktop: {
     width: 0.81,
@@ -85,10 +85,11 @@ export const DEVICE_SIZES: Record<
 const FRAME = 0.008
 
 /**
- * The laptop's lid, hinged on the deck's back edge and open as far as the
- * hinge goes, so it stays under the arms while the stations work.
+ * The laptop's lid, hinged on the deck's back edge and laid back as far as
+ * the hinge goes (`recline`, from the deck), so it stays under the arms
+ * while the stations work.
  */
-const LID = { length: 0.3, thickness: 0.009, recline: Math.PI / 4 } as const
+const LID = { length: 0.37, thickness: 0.01, recline: 0.63 } as const
 
 /** The desktop's chin, under its screen. */
 const CHIN = 0.095
@@ -201,10 +202,10 @@ function createLaptop(): BufferGeometry {
   // Keys in the back of the deck, the space bar across the bottom row.
   const columns = 12
   const rows = 5
-  const pitch = 0.032
-  const row = 0.029
+  const pitch = 0.039
+  const row = 0.035
   const left = -(columns * pitch) / 2
-  const back = -depth / 2 + 0.045
+  const back = -depth / 2 + 0.055
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < columns; c++) {
       const space = r === rows - 1 && c >= 4 && c <= 7
@@ -225,8 +226,8 @@ function createLaptop(): BufferGeometry {
   // The trackpad, a shade apart from the deck.
   parts.push(
     place(
-      tint(new BoxGeometry(0.19, 0.0012, 0.105), 0.88),
-      translate(0, thickness, back + row * rows + 0.07),
+      tint(new BoxGeometry(0.23, 0.0012, 0.125), 0.88),
+      translate(0, thickness, back + row * rows + 0.085),
     ),
   )
 
