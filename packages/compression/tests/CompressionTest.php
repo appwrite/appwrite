@@ -29,6 +29,24 @@ final class CompressionTest extends TestCase
         $this->assertEquals(new Deflate(), Compression::fromAcceptEncoding('gzip;q=0, deflate'));
     }
 
+    /**
+     * RFC 9110 section 12.4.2 spells a weight `OWS ";" OWS "q=" qvalue`, so
+     * optional whitespace sits around the `;` and a client may legally send
+     * `gzip ; q=0.5`. The coding must still be selected.
+     */
+    public function testFromAcceptEncodingAllowsWhitespaceAroundWeight(): void
+    {
+        $supported = [Compression::GZIP, Compression::DEFLATE];
+
+        $this->assertEquals(new GZIP(), Compression::fromAcceptEncoding('gzip ;q=0.5', $supported));
+        $this->assertEquals(new GZIP(), Compression::fromAcceptEncoding('gzip ; q=0.5', $supported));
+        $this->assertEquals(new GZIP(), Compression::fromAcceptEncoding('gzip; q=0.5', $supported));
+        $this->assertEquals(new GZIP(), Compression::fromAcceptEncoding("gzip\t;\tq=0.5", $supported));
+
+        // Whitespace does not change which coding wins.
+        $this->assertEquals(new Deflate(), Compression::fromAcceptEncoding('gzip ; q=0.5, deflate ; q=0.9', $supported));
+    }
+
     public function testFromAcceptEncoding(): void
     {
         $this->assertEquals(new Brotli(), Compression::fromAcceptEncoding('br'));

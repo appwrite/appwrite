@@ -115,7 +115,9 @@ abstract class Compression
         $encodings = array_map(strtolower(...), $encodings);
 
         $encodings = array_map(function (string $encoding) use ($aliases): array {
-            $parts = explode(';', $encoding);
+            // RFC 9110 allows optional whitespace around the `;` that separates
+            // a coding from its weight, so each part is trimmed before use.
+            $parts = array_map(trim(...), explode(';', $encoding));
             $encoding = $aliases[$parts[0]] ?? $parts[0];
             $quality = 1.0;
 
