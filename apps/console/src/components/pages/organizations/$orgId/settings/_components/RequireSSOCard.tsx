@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from '@tanstack/react-router'
 import { toast } from 'sonner'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -57,6 +58,9 @@ export function RequireSSOCard() {
   const [draft, setDraft] = useSyncStateFromServer(required)
   const hasChanges = draft !== required
   const blocked = !required && hint !== null
+  // The server refuses nobody without a verified domain and an enabled
+  // provider, so say so rather than show a plain "on".
+  const paused = required && draft && hint !== null
 
   const save = (value: boolean) => {
     update.mutate(value, {
@@ -95,17 +99,28 @@ export function RequireSSOCard() {
         <div className="px-6 py-4">
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
-              <Label htmlFor="sso-required" className="text-[13px]">
-                {t('Require single sign-on')}
-              </Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="sso-required" className="text-[13px]">
+                  {t('Require single sign-on')}
+                </Label>
+                {paused ? <Badge variant="warning">{t('Paused')}</Badge> : null}
+              </div>
               <p className="mt-1 text-[12px] text-muted-foreground">
                 {blocked
                   ? hint
-                  : draft
-                    ? t(
-                        'Enabled - members on your verified domains must sign in through your identity provider.',
-                      )
-                    : t('Disabled - members sign in any way they like.')}
+                  : paused
+                    ? hasVerifiedDomain
+                      ? t(
+                          'Paused - with no enabled identity provider, members sign in any way they like. Enable one to require single sign-on again.',
+                        )
+                      : t(
+                          'Paused - with no verified domain, members sign in any way they like. Verify one to require single sign-on again.',
+                        )
+                    : draft
+                      ? t(
+                          'Enabled - members on your verified domains must sign in through your identity provider.',
+                        )
+                      : t('Disabled - members sign in any way they like.')}
               </p>
             </div>
             <Switch

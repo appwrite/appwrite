@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useParams } from '@tanstack/react-router'
 import { Globe, MailCheck, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -33,6 +34,7 @@ import { analyticsAttrs } from '@/lib/analytics-actions'
 import type { SSODomain } from '@/lib/appwrite/team-sso'
 import { useT } from '@/lib/i18n/translate'
 import {
+  organizationQueryOptions,
   useDeleteOrganizationEmailDomain,
   useOrganizationEmailDomains,
 } from '@/lib/react-query/hooks'
@@ -48,7 +50,17 @@ export function EmailDomainsCard() {
   const t = useT()
   const { orgId = '' } = useParams({ strict: false })
   const { domains } = useOrganizationEmailDomains(orgId)
+  const { data: organization } = useQuery(organizationQueryOptions(orgId))
   const remove = useDeleteOrganizationEmailDomain(orgId)
+
+  const required =
+    (organization as { ssoRequired?: boolean } | null | undefined)
+      ?.ssoRequired === true
+  /** Whether `rule` is the only verified domain while SSO is required. */
+  const isLastVerifiedWhileRequired = (rule: SSODomain) =>
+    required &&
+    rule.status === 'verified' &&
+    domains.filter((domain) => domain.status === 'verified').length === 1
 
   const [createOpen, setCreateOpen] = useState(false)
   const [verifying, setVerifying] = useState<SSODomain | null>(null)
@@ -100,7 +112,7 @@ export function EmailDomainsCard() {
               <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className={HEAD}>{t('Domain')}</TableHead>
                 <TableHead className={HEAD}>{t('Status')}</TableHead>
-                <TableHead className={`${HEAD} w-[140px] text-right`} />
+                <TableHead className={`${HEAD} sm:w-[140px] text-right`} />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -108,8 +120,11 @@ export function EmailDomainsCard() {
                 const verified = rule.status === 'verified'
                 return (
                   <TableRow key={rule.$id}>
-                    <TableCell className="px-4 py-3">
-                      <span className="font-mono text-[13px]">
+                    <TableCell className="max-w-[9rem] px-4 py-3 sm:max-w-none">
+                      <span
+                        className="block truncate font-mono text-[13px]"
+                        title={rule.domain}
+                      >
                         {rule.domain}
                       </span>
                     </TableCell>
@@ -202,6 +217,9 @@ export function EmailDomainsCard() {
               {t(
                 'Your identity providers stop signing in emails on it. People who already joined stay members.',
               )}
+              {deleting && isLastVerifiedWhileRequired(deleting)
+                ? ` ${t('Require SSO is on and this is your only verified domain: deleting it pauses Require SSO, and members can sign in any way they like.')}`
+                : null}
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col-reverse gap-2 border-t border-border bg-muted/30 px-6 py-4 sm:flex-row sm:justify-end">

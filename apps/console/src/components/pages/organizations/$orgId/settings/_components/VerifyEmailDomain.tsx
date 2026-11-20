@@ -79,7 +79,7 @@ export function VerifyEmailDomain({
 
   return (
     <Dialog open={rule !== null} onOpenChange={close}>
-      <DialogContent className="sm:max-w-2xl p-0">
+      <DialogContent className="sm:max-w-3xl p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>{t('Verify domain')}</DialogTitle>
           <p className="mt-1 font-mono text-[13px] text-foreground">
@@ -98,11 +98,14 @@ export function VerifyEmailDomain({
               <DnsRecordsTable
                 records={[getEmailDomainRecord(rule.domain, organizationId)]}
                 showTtl={true}
+                fullValues
               />
             </div>
           ) : null}
           <p className="text-[12px] text-muted-foreground">
-            {t('Until the domain is verified, nobody joins automatically.')}
+            {t(
+              'Until the domain is verified, nobody can sign in with single sign-on on it.',
+            )}
           </p>
           {error ? (
             <Alert variant="destructive">

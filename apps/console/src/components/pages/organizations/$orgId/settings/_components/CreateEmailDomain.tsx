@@ -81,7 +81,9 @@ export function CreateEmailDomain({
 
   return (
     <Dialog open={open} onOpenChange={close}>
-      <DialogContent className="sm:max-w-xl p-0">
+      <DialogContent
+        className={claimDomain ? 'sm:max-w-2xl p-0' : 'sm:max-w-xl p-0'}
+      >
         <form onSubmit={handleSubmit}>
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>{t('Add email domain')}</DialogTitle>
@@ -128,12 +130,15 @@ export function CreateEmailDomain({
                       'Another organization claimed this domain. Add this TXT record to prove it is yours, then add it again.',
                     )}
                   </p>
-                  <DnsRecordsTable
-                    records={[
-                      getEmailDomainRecord(claimDomain, organizationId),
-                    ]}
-                    showTtl={true}
-                  />
+                  <div className="w-full overflow-x-auto">
+                    <DnsRecordsTable
+                      records={[
+                        getEmailDomainRecord(claimDomain, organizationId),
+                      ]}
+                      showTtl={false}
+                      fullValues
+                    />
+                  </div>
                 </AlertDescription>
               </Alert>
             ) : null}

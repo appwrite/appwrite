@@ -23,6 +23,8 @@ export async function fetchOrganizationEmailDomains(
   return sdk.forConsole.teamSSO.listDomains(organizationId)
 }
 
+const UNVERIFIED_DOMAIN_POLL_MS = 30_000
+
 export function organizationEmailDomainsQueryOptions(
   organizationId: string | null | undefined,
 ) {
@@ -31,6 +33,12 @@ export function organizationEmailDomainsQueryOptions(
     queryFn: () => fetchOrganizationEmailDomains(organizationId!),
     enabled: !!organizationId,
     staleTime: LONG_STALE_TIME,
+    // The server keeps checking unverified domains on its own; pick that up
+    // while someone waits on the page for DNS to propagate.
+    refetchInterval: (query) =>
+      query.state.data?.domains.some((domain) => domain.status !== 'verified')
+        ? UNVERIFIED_DOMAIN_POLL_MS
+        : false,
   })
 }
 

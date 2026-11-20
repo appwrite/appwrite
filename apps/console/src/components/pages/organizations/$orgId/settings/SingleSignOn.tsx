@@ -16,7 +16,6 @@ export function SingleSignOn() {
               'single sign-on',
               'email domains',
               'domain',
-              'auto join',
               'company email',
               'members',
               'dns',

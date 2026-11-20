@@ -744,12 +744,15 @@ export function DnsRecordsTable({
   showTtl,
   showPriority = false,
   compact = false,
+  fullValues = false,
 }: {
   records: DnsRecord[]
   showTtl: boolean
   showPriority?: boolean
   /** Hide the TTL column, e.g. in modals */
   compact?: boolean
+  /** Show name and value in full, wrapping long ones, instead of cutting them with an ellipsis. */
+  fullValues?: boolean
 }) {
   const t = useT()
   const ttl = showTtl && !compact
@@ -809,6 +812,7 @@ export function DnsRecordsTable({
                     variant="inline"
                     size="md"
                     maxWidth={180}
+                    wrap={fullValues}
                     showCopyOnHover={false}
                     className="-my-1.5 -ms-2.5"
                   />
@@ -822,6 +826,7 @@ export function DnsRecordsTable({
                   variant="inline"
                   size="md"
                   maxWidth={200}
+                  wrap={fullValues}
                   showCopyOnHover={false}
                   className="-my-1.5 -ms-2.5"
                 />

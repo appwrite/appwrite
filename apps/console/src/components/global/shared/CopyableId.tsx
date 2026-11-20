@@ -23,6 +23,8 @@ interface CopyableIdProps {
   maxWidth?: number
   /** When true, size to the value and truncate if the parent is narrower. */
   constrainToContainer?: boolean
+  /** When true, show the whole value and let it wrap, however long it is. */
+  wrap?: boolean
   /** When true, the copy icon is hidden until hover. Defaults to true for inline. */
   showCopyOnHover?: boolean
   /** Shows a toast on copy, e.g. "Endpoint" → "Endpoint copied". */
@@ -61,6 +63,7 @@ export function CopyableId({
   size = 'sm',
   maxWidth = 140,
   constrainToContainer = false,
+  wrap = false,
   showCopyOnHover,
   copyToastLabel,
   copyLabel,
@@ -87,7 +90,7 @@ export function CopyableId({
   }
 
   const styles = sizeStyles[size]
-  const shouldTruncate = !copyLabel && !/\s/.test(shown)
+  const shouldTruncate = !wrap && !copyLabel && !/\s/.test(shown)
 
   return (
     <button
@@ -111,7 +114,9 @@ export function CopyableId({
           'min-w-0',
           shouldTruncate
             ? 'truncate'
-            : 'break-words whitespace-normal',
+            : wrap
+              ? 'whitespace-normal text-start [overflow-wrap:anywhere]'
+              : 'break-words whitespace-normal',
         )}
         style={
           shouldTruncate && !constrainToContainer

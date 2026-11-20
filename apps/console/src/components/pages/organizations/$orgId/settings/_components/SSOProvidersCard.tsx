@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useParams } from '@tanstack/react-router'
 import { KeyRound, Link2, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -6,6 +7,7 @@ import { CodeSnippetCopyButton } from '@/components/global/shared/CodeSnippetCop
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -38,7 +40,9 @@ import { sdk } from '@/lib/appwrite/sdk'
 import type { SSOProvider } from '@/lib/appwrite/team-sso'
 import { useT } from '@/lib/i18n/translate'
 import {
+  organizationQueryOptions,
   useDeleteOrganizationSSOProvider,
+  useOrganizationEmailDomains,
   useOrganizationSSOProviders,
   useSaveOrganizationSSOProvider,
 } from '@/lib/react-query/hooks'
@@ -55,8 +59,22 @@ export function SSOProvidersCard() {
   const t = useT()
   const { orgId = '' } = useParams({ strict: false })
   const { providers } = useOrganizationSSOProviders(orgId)
+  const { domains } = useOrganizationEmailDomains(orgId)
+  const { data: organization } = useQuery(organizationQueryOptions(orgId))
   const save = useSaveOrganizationSSOProvider(orgId)
   const remove = useDeleteOrganizationSSOProvider(orgId)
+
+  const hasVerifiedDomain = domains.some(
+    (domain) => domain.status === 'verified',
+  )
+  const required =
+    (organization as { ssoRequired?: boolean } | null | undefined)
+      ?.ssoRequired === true
+  /** Whether `provider` is the only one people can sign in through while SSO is required. */
+  const isLastEnabledWhileRequired = (provider: SSOProvider) =>
+    required &&
+    provider.enabled &&
+    providers.filter((item) => item.enabled).length === 1
 
   const [editing, setEditing] = useState<SSOProvider | 'new' | null>(null)
   const [deleting, setDeleting] = useState<SSOProvider | null>(null)
@@ -79,7 +97,13 @@ export function SSOProvidersCard() {
       {
         onSuccess: () =>
           toast.success(
-            enabled ? t('Provider enabled') : t('Provider disabled'),
+            enabled
+              ? t('Provider enabled')
+              : isLastEnabledWhileRequired(provider)
+                ? t(
+                    'Provider disabled. Require SSO is paused until you enable a provider.',
+                  )
+                : t('Provider disabled'),
           ),
         onError: (failure: Error) =>
           toast.error(
@@ -115,6 +139,17 @@ export function SSOProvidersCard() {
           </p>
         </div>
         <div className="border-t border-border" />
+        {providers.length > 0 && !hasVerifiedDomain ? (
+          <div className="border-b border-border px-6 py-4">
+            <Alert>
+              <AlertDescription className="text-[13px]">
+                {t(
+                  'Nobody can sign in through these providers yet. Verify a domain first.',
+                )}
+              </AlertDescription>
+            </Alert>
+          </div>
+        ) : null}
         {providers.length === 0 ? (
           <div className="px-6 py-4">
             <EmptyState
@@ -133,7 +168,9 @@ export function SSOProvidersCard() {
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className={HEAD}>{t('Name')}</TableHead>
-                <TableHead className={HEAD}>{t('Roles')}</TableHead>
+                <TableHead className={`${HEAD} hidden sm:table-cell`}>
+                  {t('Roles')}
+                </TableHead>
                 <TableHead className={HEAD}>{t('Enabled')}</TableHead>
                 <TableHead className={`${HEAD} w-[80px] text-right`} />
               </TableRow>
@@ -141,15 +178,21 @@ export function SSOProvidersCard() {
             <TableBody>
               {providers.map((provider) => (
                 <TableRow key={provider.$id}>
-                  <TableCell className="px-4 py-3">
-                    <div className="text-[13px] font-medium">
+                  <TableCell className="max-w-[10rem] px-4 py-3 sm:max-w-none">
+                    <div
+                      className="truncate text-[13px] font-medium"
+                      title={provider.name}
+                    >
                       {provider.name}
                     </div>
-                    <div className="font-mono text-[12px] text-muted-foreground">
+                    <div
+                      className="truncate font-mono text-[12px] text-muted-foreground"
+                      title={provider.clientId}
+                    >
                       {provider.clientId}
                     </div>
                   </TableCell>
-                  <TableCell className="px-4 py-3">
+                  <TableCell className="hidden px-4 py-3 sm:table-cell">
                     <div className="flex flex-wrap gap-1">
                       {provider.roles.map((role) => (
                         <Badge key={role} variant="outline">
@@ -238,6 +281,9 @@ export function SSOProvidersCard() {
               {t(
                 'People can no longer sign in through it. People who already joined stay members.',
               )}
+              {deleting && isLastEnabledWhileRequired(deleting)
+                ? ` ${t('Require SSO is on and this is your only enabled provider: deleting it pauses Require SSO, and members can sign in any way they like.')}`
+                : null}
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col-reverse gap-2 border-t border-border bg-muted/30 px-6 py-4 sm:flex-row sm:justify-end">
@@ -319,23 +365,56 @@ function ProviderForm({
     ),
   )
 
+  // Missing fields are named once the person tries to save.
+  const [submitted, setSubmitted] = useState(false)
+
   const redirectURL = sdk.forConsole.teamSSO.redirectURL()
   const hasEndpoints =
     wellKnownURL.trim() !== '' ||
     (authorizationURL.trim() !== '' &&
       tokenURL.trim() !== '' &&
       userInfoURL.trim() !== '')
-  const canSubmit =
+  /** The client secret travels to these, so they have to be `https://`. */
+  const urlError = (value: string): string | null => {
+    const trimmed = value.trim()
+    if (trimmed === '') return null
+    try {
+      return new URL(trimmed).protocol === 'https:'
+        ? null
+        : t('Use an https:// URL.')
+    } catch {
+      return t('Enter a full URL, starting with https://')
+    }
+  }
+  const required = (value: string) =>
+    submitted && value.trim() === '' ? t('Required') : null
+  const errors = {
+    name: required(name),
+    clientId: required(clientId),
+    clientSecret: provider === null ? required(clientSecret) : null,
+    wellKnownURL:
+      urlError(wellKnownURL) ??
+      (submitted && !hasEndpoints
+        ? t('Enter the discovery URL, or set all three endpoints manually.')
+        : null),
+    authorizationURL: urlError(authorizationURL),
+    tokenURL: urlError(tokenURL),
+    userInfoURL: urlError(userInfoURL),
+  }
+  const valid =
     name.trim() !== '' &&
     roles.length > 0 &&
     clientId.trim() !== '' &&
-    (provider !== null || clientSecret !== '') &&
+    (provider !== null || clientSecret.trim() !== '') &&
     hasEndpoints &&
-    !save.isPending
+    [wellKnownURL, authorizationURL, tokenURL, userInfoURL].every(
+      (value) => urlError(value) === null,
+    )
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
-    if (!canSubmit) return
+    setSubmitted(true)
+    if (!valid || save.isPending) return
     save.mutate(
       {
         providerId: provider?.$id,
@@ -343,7 +422,10 @@ function ProviderForm({
           name: name.trim(),
           roles,
           clientId: clientId.trim(),
-          ...(clientSecret !== '' ? { clientSecret } : {}),
+          // A pasted secret often carries a trailing space or newline.
+          ...(clientSecret.trim() !== ''
+            ? { clientSecret: clientSecret.trim() }
+            : {}),
           wellKnownURL: wellKnownURL.trim(),
           authorizationURL: authorizationURL.trim(),
           tokenURL: tokenURL.trim(),
@@ -429,12 +511,18 @@ function ProviderForm({
             id="sso-name"
             value={name}
             placeholder="Okta"
+            maxLength={128}
             onChange={(event) => setName(event.target.value)}
+            aria-invalid={!!errors.name}
             disabled={save.isPending}
           />
-          <p className="text-[12px] text-muted-foreground">
-            {t('People see the name when they choose how to sign in.')}
-          </p>
+          {errors.name ? (
+            <p className="text-[12px] text-destructive">{errors.name}</p>
+          ) : (
+            <p className="text-[12px] text-muted-foreground">
+              {t('People see the name when they choose how to sign in.')}
+            </p>
+          )}
         </div>
         <div className="space-y-2">
           <Label className="text-[13px] font-medium">{t('Roles')}</Label>
@@ -458,9 +546,14 @@ function ProviderForm({
               id="sso-client-id"
               value={clientId}
               autoComplete="off"
+              maxLength={256}
               onChange={(event) => setClientId(event.target.value)}
+              aria-invalid={!!errors.clientId}
               disabled={save.isPending}
             />
+            {errors.clientId ? (
+              <p className="text-[12px] text-destructive">{errors.clientId}</p>
+            ) : null}
           </div>
           <div className="space-y-2">
             <Label
@@ -477,9 +570,16 @@ function ProviderForm({
               placeholder={
                 provider?.clientSecretSet ? t('Unchanged') : undefined
               }
+              maxLength={512}
               onChange={(event) => setClientSecret(event.target.value)}
+              aria-invalid={!!errors.clientSecret}
               disabled={save.isPending}
             />
+            {errors.clientSecret ? (
+              <p className="text-[12px] text-destructive">
+                {errors.clientSecret}
+              </p>
+            ) : null}
           </div>
         </div>
         <div className="space-y-2">
@@ -490,9 +590,16 @@ function ProviderForm({
             id="sso-well-known"
             value={wellKnownURL}
             placeholder="https://example.okta.com/.well-known/openid-configuration"
+            maxLength={2048}
             onChange={(event) => setWellKnownURL(event.target.value)}
+            aria-invalid={!!errors.wellKnownURL}
             disabled={save.isPending}
           />
+          {errors.wellKnownURL ? (
+            <p className="text-[12px] text-destructive">
+              {errors.wellKnownURL}
+            </p>
+          ) : null}
           {!advanced ? (
             <button
               type="button"
@@ -517,16 +624,24 @@ function ProviderForm({
                   t('Authorization URL'),
                   authorizationURL,
                   setAuthorizationURL,
+                  errors.authorizationURL,
                 ],
-                ['sso-token', t('Token URL'), tokenURL, setTokenURL],
+                [
+                  'sso-token',
+                  t('Token URL'),
+                  tokenURL,
+                  setTokenURL,
+                  errors.tokenURL,
+                ],
                 [
                   'sso-user-info',
                   t('User info URL'),
                   userInfoURL,
                   setUserInfoURL,
+                  errors.userInfoURL,
                 ],
               ] as const
-            ).map(([id, label, value, setValue]) => (
+            ).map(([id, label, value, setValue, error]) => (
               <div key={id} className="space-y-2">
                 <Label htmlFor={id} className="text-[13px] font-medium">
                   {label}
@@ -534,9 +649,14 @@ function ProviderForm({
                 <Input
                   id={id}
                   value={value}
+                  maxLength={2048}
                   onChange={(event) => setValue(event.target.value)}
+                  aria-invalid={!!error}
                   disabled={save.isPending}
                 />
+                {error ? (
+                  <p className="text-[12px] text-destructive">{error}</p>
+                ) : null}
               </div>
             ))}
           </div>
@@ -547,7 +667,7 @@ function ProviderForm({
         <Button type="button" variant="outline" onClick={onDone}>
           {t('Cancel')}
         </Button>
-        <Button type="submit" disabled={!canSubmit}>
+        <Button type="submit" disabled={save.isPending}>
           {save.isPending ? t('Saving...') : provider ? t('Update') : t('Add')}
         </Button>
       </div>
