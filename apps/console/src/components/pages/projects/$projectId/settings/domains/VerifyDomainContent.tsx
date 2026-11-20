@@ -167,6 +167,8 @@ export type DnsRecord = {
   check?: ProxyRuleRecord
   /** The record type that already verifies the domain, when this one is an unused alternative. */
   notNeeded?: string
+  /** A record of another type that answers the name instead of this missing one, such as a provider's URL redirect. */
+  conflict?: ProxyRuleRecord
 }
 
 /** A section label, outlined so it never reads as a record status. */
