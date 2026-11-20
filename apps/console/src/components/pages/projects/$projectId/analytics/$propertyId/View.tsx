@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { DateRange } from 'react-day-picker'
 import { differenceInHours } from 'date-fns'
 import { AlertTriangle, Download } from 'lucide-react'
@@ -127,7 +127,8 @@ type DimensionPanel =
   | 'installs'
 
 // Overview, custom events, users and event properties apply to every type. Mobile
-// apps have no referrers or crawlers; agents only send their own events.
+// apps have no referrers, but store pre-launch devices show up as bots;
+// agents only send their own events.
 const PANELS_BY_TYPE: Record<
   AnalyticsPropertyType,
   ReadonlySet<DimensionPanel>
@@ -144,6 +145,7 @@ const PANELS_BY_TYPE: Record<
   ]),
   [AnalyticsPropertyType.Mobile]: new Set([
     'installs',
+    'split',
     'pages',
     'locations',
     'technology',
@@ -349,6 +351,15 @@ export function View({
   )
   const resolvedType = propertyType(property)
   const panels = PANELS_BY_TYPE[resolvedType]
+
+  // Mobile opens on humans only (store test devices open every build); once, never over URL filters.
+  const humansDefaulted = useRef(false)
+  useEffect(() => {
+    if (humansDefaulted.current || !property) return
+    humansDefaulted.current = true
+    if (resolvedType !== AnalyticsPropertyType.Mobile || filterQuery) return
+    filtersContext.toggleTrafficKind('human')
+  }, [property, resolvedType, filterQuery, filtersContext])
   const modelTabs = useModelTabs(
     { projectId, propertyId, range },
     filters,
