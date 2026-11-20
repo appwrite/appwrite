@@ -256,6 +256,10 @@
             "quality",
             "output"
         ],
+        "avatars.updateTeamPhoto": [
+            "teamId",
+            "file"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -1017,10 +1021,6 @@
         "account.deleteDevice": [
             "deviceId"
         ],
-        "teams.updatePhoto": [
-            "teamId",
-            "file"
-        ],
         "teams.deletePhoto": [
             "teamId"
         ]
@@ -1308,6 +1308,10 @@
             "height",
             "quality",
             "output"
+        ],
+        "avatars.updateTeamPhoto": [
+            "teamId",
+            "file"
         ],
         "avatars.getBrowser": [
             "code",
@@ -5566,10 +5570,6 @@
         "project.updateAccountDevicesPolicy": [
             "enabled"
         ],
-        "teams.updatePhoto": [
-            "teamId",
-            "file"
-        ],
         "teams.deletePhoto": [
             "teamId"
         ]
@@ -5841,6 +5841,10 @@
             "height",
             "quality",
             "output"
+        ],
+        "avatars.updateTeamPhoto": [
+            "teamId",
+            "file"
         ],
         "avatars.getBrowser": [
             "code",
@@ -9910,10 +9914,6 @@
         ],
         "project.updateAccountDevicesPolicy": [
             "enabled"
-        ],
-        "teams.updatePhoto": [
-            "teamId",
-            "file"
         ],
         "teams.deletePhoto": [
             "teamId"
