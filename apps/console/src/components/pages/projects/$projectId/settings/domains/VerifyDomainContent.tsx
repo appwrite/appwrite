@@ -518,6 +518,18 @@ function getDnsBanners(
   }
   if (!verified) {
     for (const check of pointing) {
+      if (check.status === 'misplaced') {
+        banners.push({
+          tone: 'error',
+          prefix: t('{type} record').replace('{type}', check.type),
+          text: t(
+            'It was added as {found}. In your DNS provider, enter only {name} as the host.',
+          )
+            .replace('{found}', getMisplacedName(check.name))
+            .replace('{name}', getRecordName(check.name)),
+        })
+        continue
+      }
       if (check.status !== 'mismatch') continue
       // DNS shows no ALIAS target, only the addresses it resolves to.
       if (check.type === ALIAS_TYPE) {
