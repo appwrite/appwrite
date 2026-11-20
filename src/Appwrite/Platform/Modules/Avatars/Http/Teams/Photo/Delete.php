@@ -6,7 +6,6 @@ use Appwrite\Abuse\Limit;
 use Appwrite\AvatarPhotos\Providers\Fallback;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -14,6 +13,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
+use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
 
@@ -29,7 +29,7 @@ class Delete extends Base
     public function __construct()
     {
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_DELETE)
+            ->setHttpMethod(UtopiaAction::HTTP_REQUEST_METHOD_DELETE)
             ->setHttpPath('/v1/teams/:teamId/photo')
             ->desc('Delete photo')
             ->groups(['api', 'teams'])
