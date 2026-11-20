@@ -7,7 +7,6 @@ namespace Tests\Unit\Schedule\Source;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\PermissionType;
-use Utopia\Database\Query;
 
 final class ScheduleDatabase extends Database
 {
@@ -69,7 +68,7 @@ final class ScheduleDatabase extends Database
         // Each source reads only its own resource type, as the real query does.
         $types = null;
         foreach ($queries as $query) {
-            if ($query instanceof Query && $query->getAttribute() === 'resourceType') {
+            if ($query->getAttribute() === 'resourceType') {
                 $types = $query->getValues();
             }
         }
