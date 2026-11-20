@@ -234,6 +234,13 @@ function RecordStatus({
         </Badge>
       )
     case 'missing':
+      if (record.conflict) {
+        return (
+          <Badge variant="error" className={pill}>
+            {t('Wrong type')}
+          </Badge>
+        )
+      }
       return (
         <Badge variant="info" className={pill} title={title}>
           {waiting ? t('Not detected yet') : t('Not detected')}
