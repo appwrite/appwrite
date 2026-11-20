@@ -232,6 +232,12 @@ function RecordStatus({
           {check.type === 'CAA' ? t('Blocks certificate') : t('Wrong value')}
         </Badge>
       )
+    case 'misplaced':
+      return (
+        <Badge variant="error" className={pill} title={title}>
+          {t('Wrong name')}
+        </Badge>
+      )
     default:
       return (
         <Badge variant="warning" className={pill} title={title}>
