@@ -647,6 +647,8 @@ export const heSitesDictionary: Record<string, string> = {
   'Found at:': 'נמצא ב:',
   'Wrong type': 'סוג שגוי',
   'Found {type}:': 'נמצאה רשומת {type}:',
+  'Your domain has an {type} record ({found}) instead of a CNAME, often a URL redirect or parking record at your DNS provider. Delete it, then add the CNAME below.':
+    'לדומיין יש רשומת {type} ({found}) במקום CNAME, לרוב רשומת הפניית URL או חניה אצל ספק ה-DNS. מחקו אותה, ואז הוסיפו את ה-CNAME שלמטה.',
   'Blocks certificate': 'התעודה חסומה',
   "Couldn't check": 'לא ניתן לבדוק',
   Alternative: 'חלופה',
