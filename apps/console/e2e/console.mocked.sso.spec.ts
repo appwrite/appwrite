@@ -161,6 +161,12 @@ interface Mock {
   ssoRequired: boolean
   /** The organization refuses the signed-in member until they sign in through SSO */
   refuseWithoutSSO: boolean
+  /** TXT values the "DNS" holds that are not the expected one, by domain */
+  wrongValues: Map<string, string>
+  /** The organization's billing plan, when the page asks for it */
+  plan: Record<string, unknown> | null
+  /** The domain and provider lists answer 500 */
+  listsFail: boolean
   sent: {
     creates: Array<{ domain: string }>
     verifies: string[]
@@ -200,6 +206,8 @@ async function mockAppwriteApi(
       | 'members'
       | 'ssoRequired'
       | 'refuseWithoutSSO'
+      | 'plan'
+      | 'listsFail'
     >
   > = {},
 ): Promise<Mock> {
@@ -211,6 +219,9 @@ async function mockAppwriteApi(
     members: options.members ?? [],
     ssoRequired: options.ssoRequired ?? false,
     refuseWithoutSSO: options.refuseWithoutSSO ?? false,
+    wrongValues: new Map(),
+    plan: options.plan ?? null,
+    listsFail: options.listsFail ?? false,
     sent: {
       creates: [],
       verifies: [],
@@ -295,7 +306,23 @@ async function mockAppwriteApi(
     if (apiPath === '/projects' || apiPath === '/organization/projects')
       return json(200, { total: 0, projects: [] })
 
+    if (apiPath === `/organizations/${ORGANIZATION.$id}/plan` && mock.plan) {
+      return json(200, mock.plan)
+    }
+
     const sso = `/teams/${ORGANIZATION.$id}/sso`
+    if (
+      mock.listsFail &&
+      method === 'GET' &&
+      (apiPath === `${sso}/domains` || apiPath === `${sso}/providers`)
+    ) {
+      return json(500, {
+        message: 'Server Error',
+        code: 500,
+        type: 'general_server_error',
+        version: '1.0',
+      })
+    }
     if (apiPath === `${sso}/required` && method === 'PATCH') {
       const { required } = request.postDataJSON()
       mock.sent.requires.push(required)
@@ -318,11 +345,19 @@ async function mockAppwriteApi(
     if (status && method === 'PATCH') {
       mock.sent.verifies.push(status[1])
       const found = mock.domains.find((item) => item.$id === status[1])
-      if (!found || !mock.published.has(found.domain)) {
-        // The server's detail names its resolver; the dialog shows its own copy
+      const wrong = found && mock.wrongValues.get(found.domain)
+      if (found && wrong !== undefined) {
+        // An organization's domain gets the server's own, owner-facing words
         return json(400, {
-          message:
-            'DNS TXT query to 172.16.238.100 failed. (region: Frankfurt)',
+          message: `The TXT record at _appwrite.${found.domain} holds "${wrong}", but it must be exactly "team:${ORGANIZATION.$id}".`,
+          code: 400,
+          type: 'rule_verification_failed',
+          version: '1.0',
+        })
+      }
+      if (!found || !mock.published.has(found.domain)) {
+        return json(400, {
+          message: `No TXT record was found at _appwrite.${found?.domain} yet. Add one with the value team:${ORGANIZATION.$id}. DNS changes can take a few minutes to propagate.`,
           code: 400,
           type: 'rule_verification_failed',
           version: '1.0',
@@ -495,11 +530,21 @@ test.describe('organization single sign-on', () => {
     await expect(verify).not.toContainText('_appwrite.devs.acme.io')
     await expect(verify).toContainText(`team:${ORGANIZATION.$id}`)
 
-    // Not out yet: a plain message, not the resolver's details
+    // Not out yet: the server says so, and what to add
     await verify.getByRole('button', { name: 'Verify', exact: true }).click()
-    await expect(verify).toContainText('The TXT record was not found yet.')
-    await expect(verify).not.toContainText('172.16.238.100')
+    await expect(verify).toContainText(
+      'No TXT record was found at _appwrite.devs.acme.io yet.',
+    )
 
+    // A record with the wrong value is named as such, with the value found
+    mock.wrongValues.set('devs.acme.io', ORGANIZATION.$id)
+    await verify.getByRole('button', { name: 'Verify', exact: true }).click()
+    await expect(verify).toContainText(
+      `holds "${ORGANIZATION.$id}", but it must be exactly "team:${ORGANIZATION.$id}".`,
+    )
+    await expect(verify).not.toContainText('No TXT record was found')
+
+    mock.wrongValues.delete('devs.acme.io')
     mock.published.add('devs.acme.io')
     await verify.getByRole('button', { name: 'Verify', exact: true }).click()
     await expect(verify).toBeHidden()
@@ -508,7 +553,11 @@ test.describe('organization single sign-on', () => {
     ).toContainText('Verified')
     await expect
       .poll(() => mock.sent.verifies)
-      .toEqual(['domain-devs.acme.io', 'domain-devs.acme.io'])
+      .toEqual([
+        'domain-devs.acme.io',
+        'domain-devs.acme.io',
+        'domain-devs.acme.io',
+      ])
   })
 
   test('deletes a domain', async ({ page }) => {
@@ -537,12 +586,19 @@ test.describe('organization single sign-on', () => {
     await enableSso(page)
     await openSso(page)
 
-    const required = page.getByRole('switch', { name: 'Require SSO' })
+    const required = page.getByRole('switch', {
+      name: 'Require single sign-on',
+    })
+    const update = page.getByRole('button', { name: 'Update', exact: true })
     await expect(required).toBeEnabled()
     await expect(required).not.toBeChecked()
+    await expect(update).toBeDisabled()
 
-    // Turning it on asks first, and says owners keep their sign-in
+    // The switch is a draft: nothing is sent until Update, which asks first
+    // and says owners keep their sign-in
     await required.click()
+    expect(mock.sent.requires).toEqual([])
+    await update.click()
     const confirm = page.getByRole('dialog', { name: 'Require single sign-on' })
     await expect(confirm).toContainText('Owners keep their usual sign-in')
     await expect(confirm).toContainText(
@@ -550,15 +606,21 @@ test.describe('organization single sign-on', () => {
     )
     await confirm.getByRole('button', { name: 'Cancel' }).click()
     expect(mock.sent.requires).toEqual([])
-    await expect(required).not.toBeChecked()
 
-    await required.click()
+    await update.click()
     await confirm.getByRole('button', { name: 'Require SSO' }).click()
     await expect.poll(() => mock.sent.requires).toEqual([true])
     await expect(required).toBeChecked()
+    await expect(update).toBeDisabled()
+    // Owners are never locked out, and the card says so
+    await expect(required).toHaveAccessibleDescription(
+      /Owners can always sign in any way\..*Owners can always sign in with any method, so a broken provider never locks your organization out\./,
+    )
 
     // Turning it off needs no confirmation
     await required.click()
+    await update.click()
+    await expect(confirm).toBeHidden()
     await expect.poll(() => mock.sent.requires).toEqual([true, false])
     await expect(required).not.toBeChecked()
   })
@@ -573,11 +635,17 @@ test.describe('organization single sign-on', () => {
     await enableSso(page)
     await openSso(page)
 
-    const required = page.getByRole('switch', { name: 'Require SSO' })
+    // The precondition is the switch's state text
+    const required = page.getByRole('switch', {
+      name: 'Require single sign-on',
+    })
     await expect(required).toBeDisabled()
     await expect(
       page.getByText('Verify a domain to require single sign-on.'),
     ).toBeVisible()
+    await expect(required).toHaveAccessibleDescription(
+      /Verify a domain to require single sign-on\./,
+    )
 
     mock.domains = [domain('acme.com', 'verified')]
     mock.providers = [provider('Okta', ['developer'], false)]
@@ -677,15 +745,36 @@ test.describe('organization single sign-on', () => {
     await add
       .getByLabel('Authorization URL')
       .fill('https://kc.example.com/auth')
-    await add.getByLabel('Token URL').fill('https://kc.example.com/token')
+    await add.getByLabel('Token URL').fill('http://kc.example.com/token')
+    // Add stays enabled and says what is missing once it is pressed
     const submit = add.getByRole('button', { name: 'Add', exact: true })
-    await expect(submit).toBeDisabled()
+    await expect(submit).toBeEnabled()
+    await submit.click()
+    await expect(
+      add.getByText(
+        'Enter the discovery URL, or set all three endpoints manually.',
+      ),
+    ).toBeVisible()
+    await expect(add.getByLabel('Discovery URL')).toHaveAccessibleDescription(
+      'Enter the discovery URL, or set all three endpoints manually.',
+    )
+    // The client secret travels to the endpoints, so they are https:// only
+    await expect(add.getByLabel('Token URL')).toHaveAccessibleDescription(
+      'Use an https:// URL.',
+    )
+    expect(mock.sent.providerCreates).toHaveLength(0)
 
+    await add.getByLabel('Token URL').fill('https://kc.example.com/token')
     await add
       .getByLabel('User info URL')
       .fill('https://kc.example.com/userinfo')
-    await expect(submit).toBeEnabled()
-    expect(mock.sent.providerCreates).toHaveLength(0)
+    await expect(
+      add.getByText(
+        'Enter the discovery URL, or set all three endpoints manually.',
+      ),
+    ).toHaveCount(0)
+    await submit.click()
+    await expect.poll(() => mock.sent.providerCreates).toHaveLength(1)
   })
 
   test('updates a provider without resending its secret, disables and deletes it', async ({
@@ -858,5 +947,315 @@ test.describe('organization single sign-on', () => {
     ).toBeVisible({ timeout: 45_000 })
     await expect(page.getByText('External', { exact: true })).toHaveCount(0)
     await expect(page.getByText('Internal', { exact: true })).toHaveCount(0)
+  })
+})
+
+/** What the page wrote to the clipboard, without asking the browser for permission. */
+async function captureClipboard(page: Page) {
+  await page.addInitScript(() => {
+    const copied: string[] = []
+    ;(window as unknown as { __copied: string[] }).__copied = copied
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: async (text: string) => {
+          copied.push(text)
+        },
+        readText: async () => copied.at(-1) ?? '',
+      },
+    })
+  })
+  return () =>
+    page.evaluate(() => (window as unknown as { __copied: string[] }).__copied)
+}
+
+const focused = (page: Page) =>
+  page.evaluate(() => {
+    const element = document.activeElement
+    return element
+      ? (element.getAttribute('aria-label') ?? element.textContent ?? '').trim()
+      : null
+  })
+
+test.describe('organization single sign-on settings', () => {
+  test("offers DNS records only for a domain that isn't verified yet", async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, {
+      domains: [
+        domain('acme.com', 'verified'),
+        domain('acme.dev', 'unverified'),
+      ],
+    })
+    await enableSso(page)
+    await openSso(page)
+
+    await page.getByRole('button', { name: 'Actions for acme.com' }).click()
+    await expect(page.getByRole('menuitem', { name: 'Delete' })).toBeVisible()
+    await expect(
+      page.getByRole('menuitem', { name: 'DNS records' }),
+    ).toHaveCount(0)
+    await page.keyboard.press('Escape')
+
+    await page.getByRole('button', { name: 'Actions for acme.dev' }).click()
+    await expect(
+      page.getByRole('menuitem', { name: 'DNS records' }),
+    ).toBeVisible()
+    await page.keyboard.press('Escape')
+    // The row's own Verify button says which domain it verifies
+    await expect(
+      page.getByRole('button', { name: 'Verify acme.dev' }),
+    ).toBeVisible()
+  })
+
+  test("copies a provider's SSO URL", async ({ page }) => {
+    const copied = await captureClipboard(page)
+    await mockAppwriteApi(page, {
+      providers: [provider('Okta', ['developer'])],
+    })
+    await enableSso(page)
+    await openSso(page)
+
+    await page.getByRole('button', { name: 'Actions for Okta' }).click()
+    await page.getByRole('menuitem', { name: 'Copy SSO URL' }).click()
+    await expect
+      .poll(copied)
+      .toEqual([new URL('/sso?provider=provider-okta', page.url()).href])
+  })
+
+  test('shows Require SSO as paused while no provider is enabled', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, {
+      ssoRequired: true,
+      providers: [provider('Okta', ['developer'], false)],
+    })
+    await enableSso(page)
+    await openSso(page)
+
+    const required = page.getByRole('switch', {
+      name: 'Require single sign-on',
+    })
+    await expect(required).toBeChecked()
+    await expect(page.getByText('Paused', { exact: true })).toBeVisible()
+    await expect(required).toHaveAccessibleDescription(
+      /with no enabled identity provider, members sign in any way they like/,
+    )
+  })
+
+  test('warns that deleting the last domain or provider pauses Require SSO', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, {
+      ssoRequired: true,
+      providers: [provider('Okta', ['developer'])],
+    })
+    await enableSso(page)
+    await openSso(page)
+
+    await page.getByRole('button', { name: 'Actions for acme.com' }).click()
+    await page.getByRole('menuitem', { name: 'Delete' }).click()
+    const deleteDomain = page.getByRole('dialog', {
+      name: 'Delete email domain',
+    })
+    await expect(deleteDomain).toContainText(
+      'Are you sure you want to delete "acme.com"? People with an email on it can no longer sign in through your identity providers.',
+    )
+    await expect(deleteDomain).toContainText(
+      'this is your only verified domain: deleting it pauses Require SSO',
+    )
+    await deleteDomain.getByRole('button', { name: 'Cancel' }).click()
+
+    await page.getByRole('button', { name: 'Actions for Okta' }).click()
+    await page.getByRole('menuitem', { name: 'Delete' }).click()
+    const deleteProvider = page.getByRole('dialog', {
+      name: 'Delete identity provider',
+    })
+    await expect(deleteProvider).toContainText(
+      'Are you sure you want to delete "Okta"?',
+    )
+    await expect(deleteProvider).toContainText(
+      'this is your only enabled provider: deleting it pauses Require SSO',
+    )
+  })
+
+  test('names what is missing and trims a pasted client secret', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page)
+    await enableSso(page)
+    await openSso(page)
+
+    await page.getByRole('button', { name: 'Add provider' }).click()
+    const add = page.getByRole('dialog', { name: 'Add identity provider' })
+    await add.getByRole('button', { name: 'Add', exact: true }).click()
+    await expect(add.getByLabel('Name')).toHaveAccessibleDescription('Required')
+    await expect(add.getByLabel('Client ID')).toHaveAccessibleDescription(
+      'Required',
+    )
+    await expect(add.getByLabel('Client secret')).toHaveAccessibleDescription(
+      'Required',
+    )
+    await expect(add.getByRole('group', { name: 'Roles' })).toBeVisible()
+    expect(mock.sent.providerCreates).toHaveLength(0)
+
+    await add.getByLabel('Name').fill('Okta')
+    await add.getByLabel('Client ID').fill('okta-client')
+    await add.getByLabel('Client secret').fill('  okta-secret\n')
+    await add
+      .getByLabel('Discovery URL')
+      .fill('https://acme.okta.com/.well-known/openid-configuration')
+    await add.getByRole('button', { name: 'Add', exact: true }).click()
+    await expect
+      .poll(() => mock.sent.providerCreates.map((sent) => sent.clientSecret))
+      .toEqual(['okta-secret'])
+  })
+
+  test('adds a provider once when Add is double-clicked', async ({ page }) => {
+    const mock = await mockAppwriteApi(page)
+    await enableSso(page)
+    await openSso(page)
+
+    await page.getByRole('button', { name: 'Add provider' }).click()
+    const add = page.getByRole('dialog', { name: 'Add identity provider' })
+    await add.getByLabel('Name').fill('Okta')
+    await add.getByLabel('Client ID').fill('okta-client')
+    await add.getByLabel('Client secret').fill('okta-secret')
+    await add
+      .getByLabel('Discovery URL')
+      .fill('https://acme.okta.com/.well-known/openid-configuration')
+    await add.getByRole('button', { name: 'Add', exact: true }).dblclick()
+    await expect(add).toBeHidden()
+    await expect(page.getByRole('row', { name: /Okta/ })).toHaveCount(1)
+    expect(mock.sent.providerCreates).toHaveLength(1)
+
+    // Enter twice in a field does the same
+    await page.getByRole('button', { name: 'Add domain' }).click()
+    const addDomain = page.getByRole('dialog', { name: 'Add email domain' })
+    await addDomain.getByLabel('Domain').fill('acme.dev')
+    await addDomain.getByLabel('Domain').press('Enter')
+    await addDomain
+      .getByLabel('Domain')
+      .press('Enter')
+      .catch(() => {})
+    await expect.poll(() => mock.sent.creates).toEqual([{ domain: 'acme.dev' }])
+  })
+
+  test('says when the lists failed to load, and tries again', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page, {
+      listsFail: true,
+      providers: [provider('Okta', ['developer'])],
+    })
+    await enableSso(page)
+    await openSso(page)
+
+    await expect(page.getByText('Failed to load email domains')).toBeVisible()
+    await expect(
+      page.getByText('Failed to load identity providers'),
+    ).toBeVisible()
+    // Not mistaken for an organization with nothing set up
+    await expect(page.getByText('No email domains yet')).toHaveCount(0)
+    await expect(page.getByText('No identity providers yet')).toHaveCount(0)
+    await expect(
+      page.getByText('Verify a domain to require single sign-on.'),
+    ).toHaveCount(0)
+
+    mock.listsFail = false
+    const retry = page.getByRole('button', { name: 'Try again' })
+    await retry.first().click()
+    await expect(retry).toHaveCount(1)
+    await retry.click()
+    await expect(retry).toHaveCount(0)
+    await expect(page.getByRole('row', { name: /acme\.com/ })).toBeVisible()
+    await expect(page.getByRole('row', { name: /Okta/ })).toBeVisible()
+  })
+
+  test('moves focus into confirmations and back to what opened them', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page, {
+      domains: [domain('acme.com', 'verified'), domain('acme.dev', 'verified')],
+      providers: [provider('Okta', ['developer'])],
+    })
+    await enableSso(page)
+    await openSso(page)
+
+    // From the keyboard: the row menu, then Delete
+    await page.getByRole('button', { name: 'Actions for acme.com' }).focus()
+    await page.keyboard.press('Enter')
+    await page.getByRole('menuitem', { name: 'Delete' }).focus()
+    await page.keyboard.press('Enter')
+    const deleteDomain = page.getByRole('dialog', {
+      name: 'Delete email domain',
+    })
+    await expect(deleteDomain).toBeVisible()
+    await expect.poll(() => focused(page)).toBe('Cancel')
+    await page.keyboard.press('Escape')
+    await expect.poll(() => focused(page)).toBe('Actions for acme.com')
+
+    // After a delete, focus moves to the next row
+    await page.keyboard.press('Enter')
+    await page.getByRole('menuitem', { name: 'Delete' }).focus()
+    await page.keyboard.press('Enter')
+    await deleteDomain
+      .getByRole('button', { name: 'Delete', exact: true })
+      .click()
+    await expect.poll(() => mock.sent.deletes).toEqual(['domain-acme.com'])
+    await expect.poll(() => focused(page)).toBe('Actions for acme.dev')
+
+    // Add provider returns focus to its button
+    await page.getByRole('button', { name: 'Add provider' }).click()
+    await page.keyboard.press('Escape')
+    await expect.poll(() => focused(page)).toBe('Add provider')
+
+    // A provider's switch keeps focus after a toggle, so Space works twice
+    const enable = page.getByRole('switch', { name: 'Enable Okta' })
+    await enable.focus()
+    await page.keyboard.press('Space')
+    await expect
+      .poll(() => mock.sent.providerUpdates.map((sent) => sent.body.enabled))
+      .toEqual([false])
+    await expect(enable).toBeFocused()
+    await expect(enable).not.toBeChecked()
+    await page.keyboard.press('Space')
+    await expect
+      .poll(() => mock.sent.providerUpdates.map((sent) => sent.body.enabled))
+      .toEqual([false, true])
+    await expect(enable).toBeFocused()
+
+    // Require SSO's confirmation starts on Cancel and returns to Update
+    await page.getByRole('switch', { name: 'Require single sign-on' }).click()
+    await page.getByRole('button', { name: 'Update', exact: true }).click()
+    await expect(
+      page.getByRole('dialog', { name: 'Require single sign-on' }),
+    ).toBeVisible()
+    await expect.poll(() => focused(page)).toBe('Cancel')
+    await page.keyboard.press('Escape')
+    await expect.poll(() => focused(page)).toBe('Update')
+  })
+
+  test('says when the plan adds nobody through single sign-on', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, {
+      plan: {
+        $id: 'tier-0',
+        name: 'Free',
+        addons: { seats: { supported: false } },
+      },
+    })
+    await enableSso(page)
+    await openSso(page)
+
+    await expect(
+      page.getByText(
+        "This plan can't add members, so people who sign in with single sign-on don't join this organization.",
+      ),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('link', { name: 'Upgrade your plan' }),
+    ).toHaveAttribute('href', /\/upgrade\?orgId=acme/)
   })
 })
