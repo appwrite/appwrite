@@ -1661,49 +1661,130 @@ export const heOrganizationsDictionary: Record<string, string> = {
   // Single sign-on
   'Single sign-on': 'התחברות יחידה (SSO)',
   'Email not on a verified domain': 'אימייל שאינו בדומיין מאומת',
-  'Verify your company domain so teammates join on sign-up.':
-    'אמתו את הדומיין של החברה כדי שחברי הצוות יצטרפו בהרשמה.',
-  'People who sign up with a verified email on these domains join this organization automatically, with the roles you choose.':
-    'מי שנרשם עם אימייל מאומת באחד הדומיינים האלה מצטרף לארגון אוטומטית, עם התפקידים שבחרתם.',
   'No email domains yet': 'אין עדיין דומייני אימייל',
-  'Add your company domain so teammates join this organization when they sign up.':
-    'הוסיפו את הדומיין של החברה כדי שחברי הצוות יצטרפו לארגון כשהם נרשמים.',
-  'Roles for new members': 'תפקידים לחברים חדשים',
   'Email domain added': 'דומיין האימייל נוסף',
-  'Email domain updated': 'דומיין האימייל עודכן',
   'Email domain deleted': 'דומיין האימייל נמחק',
-  'Failed to update email domain': 'עדכון דומיין האימייל נכשל',
   'Failed to delete email domain': 'מחיקת דומיין האימייל נכשלה',
   'Delete email domain': 'מחיקת דומיין אימייל',
-  'New people stop joining through it. People who already joined stay members.':
-    'אנשים חדשים יפסיקו להצטרף דרכו. מי שכבר הצטרף יישאר חבר בארגון.',
-  'People who sign up with a verified email on this domain join this organization.':
-    'מי שנרשם עם אימייל מאומת בדומיין הזה מצטרף לארגון.',
   'Only the domain, without @. Subdomains need their own entry.':
     'רק הדומיין, בלי @. כל תת-דומיין מוסיפים בנפרד.',
   'Pick at least one role.': 'בחרו לפחות תפקיד אחד.',
-  'Roles people get when they join. Same roles as Invite Members.':
-    'התפקידים שמצטרפים חדשים מקבלים. אותם תפקידים כמו בהזמנת חברים.',
   'Another organization claimed this domain. Add this TXT record to prove it is yours, then add it again.':
     'ארגון אחר כבר הוסיף את הדומיין הזה. הוסיפו את רשומת ה-TXT הזו כדי להוכיח שהוא שלכם, ואז הוסיפו אותו שוב.',
   'Update roles': 'עדכון תפקידים',
-  'Applies to people who join from now on. People who already joined keep their roles; change those in Members.':
-    'חל על מי שמצטרף מעכשיו. מי שכבר הצטרף שומר על התפקידים שלו, ואפשר לשנות אותם בחברים.',
   'Add this TXT record at your DNS provider, then verify. It can take a few minutes to propagate.':
     'הוסיפו את רשומת ה-TXT הזו אצל ספק ה-DNS ולאחר מכן אמתו. העדכון עשוי להימשך כמה דקות.',
-  'Until the domain is verified, nobody joins automatically.':
-    'עד שהדומיין יאומת, אף אחד לא מצטרף אוטומטית.',
   'The TXT record was not found yet. DNS changes can take a few minutes to propagate.':
     'רשומת ה-TXT עדיין לא נמצאה. עדכון שינויי DNS עשוי להימשך כמה דקות.',
+  'Payment authentication is required': 'נדרש אימות תשלום',
+  'They can join again by signing in with single sign-on. To keep them out, remove them at your identity provider too.':
+    'הם יוכלו להצטרף שוב בהתחברות יחידה (SSO). כדי למנוע זאת, הסירו אותם גם אצל ספק הזהויות.',
+  "This plan can't add members, so people who sign in with single sign-on don't join this organization.":
+    'בתוכנית הזו אי אפשר להוסיף חברים, ולכן מי שמתחבר בהתחברות יחידה (SSO) לא מצטרף לארגון.',
+  'Prove your organization owns this domain with a DNS record. Your identity providers then sign in people with an email on it.':
+    'הוכיחו באמצעות רשומת DNS שהדומיין הזה שייך לארגון שלכם. לאחר מכן ספקי הזהויות שלכם יאפשרו התחברות למי שיש לו אימייל בדומיין.',
+  'Prove the email domains your organization owns. Your identity providers sign in only people with an email on a verified domain.':
+    'הוכיחו אילו דומייני אימייל שייכים לארגון שלכם. ספקי הזהויות שלכם מאפשרים התחברות רק למי שיש לו אימייל בדומיין מאומת.',
+  'Failed to load email domains': 'טעינת דומייני האימייל נכשלה',
+  'Add your company domain, then connect an identity provider so teammates sign in with your company login.':
+    'הוסיפו את הדומיין של החברה, ואז חברו ספק זהויות כדי שחברי הצוות יתחברו עם חשבון החברה.',
+  'Verify {domain}': 'אימות {domain}',
+  'Are you sure you want to delete "{name}"?':
+    'האם אתם בטוחים שברצונכם למחוק את "{name}"?',
+  'People with an email on it can no longer sign in through your identity providers. People who already joined stay members.':
+    'מי שיש לו אימייל בדומיין הזה לא יוכל עוד להתחבר דרך ספקי הזהויות שלכם. מי שכבר הצטרף יישאר חבר בארגון.',
+  'Require SSO is on and this is your only verified domain: deleting it pauses Require SSO, and members can sign in any way they like.':
+    'חיוב SSO פעיל וזה הדומיין המאומת היחיד שלכם: מחיקתו תשהה את חיוב ה-SSO, וחברים יוכלו להתחבר בכל דרך שירצו.',
+  'Verify a domain to require single sign-on.':
+    'אמתו דומיין כדי לחייב התחברות יחידה (SSO).',
+  'Enable an identity provider to require single sign-on.':
+    'הפעילו ספק זהויות כדי לחייב התחברות יחידה (SSO).',
+  'Single sign-on is now required': 'התחברות יחידה (SSO) נדרשת מעכשיו',
+  'Single sign-on is no longer required': 'התחברות יחידה (SSO) כבר לא נדרשת',
+  'Failed to update single sign-on': 'עדכון ההתחברות היחידה (SSO) נכשל',
+  'Require SSO': 'חיוב SSO',
+  'Members with an email on your verified domains can open this organization only after signing in through your identity provider. Owners can always sign in with any method, so a broken provider never locks your organization out. Members on other domains keep their usual sign-in too.':
+    'חברים עם אימייל בדומיינים המאומתים שלכם יכולים לפתוח את הארגון רק אחרי התחברות דרך ספק הזהויות שלכם. בעלים תמיד יכולים להתחבר בכל שיטה, כך שספק תקול לעולם לא ינעל את הארגון שלכם. גם חברים בדומיינים אחרים ממשיכים להתחבר כרגיל.',
+  'Require single sign-on': 'חיוב התחברות יחידה (SSO)',
+  'Paused - with no enabled identity provider, members sign in any way they like. Enable one to require single sign-on again.':
+    'מושהה - אין ספק זהויות פעיל, ולכן חברים מתחברים בכל דרך שירצו. הפעילו ספק כדי לחייב שוב התחברות יחידה (SSO).',
+  'Paused - with no verified domain, members sign in any way they like. Verify one to require single sign-on again.':
+    'מושהה - אין דומיין מאומת, ולכן חברים מתחברים בכל דרך שירצו. אמתו דומיין כדי לחייב שוב התחברות יחידה (SSO).',
+  'Enabled - members on your verified domains must sign in through your identity provider. Owners can always sign in any way.':
+    'מופעל - חברים בדומיינים המאומתים שלכם חייבים להתחבר דרך ספק הזהויות. בעלים תמיד יכולים להתחבר בכל דרך.',
+  'Disabled - members sign in any way they like.':
+    'מושבת - חברים מתחברים בכל דרך שירצו.',
+  'Members on your verified domains who signed in another way lose access to this organization until they sign in through your identity provider. Their other organizations are not affected. Owners keep their usual sign-in, so a broken provider never locks you out.':
+    'חברים בדומיינים המאומתים שלכם שהתחברו בדרך אחרת יאבדו את הגישה לארגון עד שיתחברו דרך ספק הזהויות. הארגונים האחרים שלהם לא מושפעים. בעלים ממשיכים להתחבר כרגיל, כך שספק תקול לעולם לא ינעל אתכם בחוץ.',
+  'Check your connection and try again.': 'בדקו את החיבור ונסו שוב.',
+  'Provider enabled': 'הספק הופעל',
+  'Provider disabled. Require SSO is paused until you enable a provider.':
+    'הספק הושבת. חיוב ה-SSO מושהה עד שתפעילו ספק.',
+  'Provider disabled': 'הספק הושבת',
+  'Failed to update provider': 'עדכון הספק נכשל',
+  'Identity provider deleted': 'ספק הזהויות נמחק',
+  'Identity providers': 'ספקי זהויות',
+  'People on your verified domains sign in with your company login, like Okta, Microsoft Entra ID, Google Workspace or Keycloak, and join with the provider’s roles.':
+    'אנשים בדומיינים המאומתים שלכם מתחברים עם חשבון החברה, למשל Okta,‏ Microsoft Entra ID,‏ Google Workspace או Keycloak, ומצטרפים עם התפקידים של הספק.',
+  'Nobody can sign in through these providers yet. Verify a domain first.':
+    'עדיין אף אחד לא יכול להתחבר דרך הספקים האלה. קודם אמתו דומיין.',
+  'Failed to load identity providers': 'טעינת ספקי הזהויות נכשלה',
+  'No identity providers yet': 'אין עדיין ספקי זהויות',
+  'Connect your company login so people on your domains sign in with it.':
+    'חברו את מערכת ההתחברות של החברה כדי שאנשים בדומיינים שלכם יתחברו דרכה.',
+  'SSO URL': 'כתובת SSO',
+  'Copy SSO URL': 'העתקת כתובת SSO',
+  'Delete identity provider': 'מחיקת ספק זהויות',
+  'People can no longer sign in through it. People who already joined stay members.':
+    'לא תהיה עוד אפשרות להתחבר דרכו. מי שכבר הצטרף יישאר חבר בארגון.',
+  'Require SSO is on and this is your only enabled provider: deleting it pauses Require SSO, and members can sign in any way they like.':
+    'חיוב SSO פעיל וזה הספק הפעיל היחיד שלכם: מחיקתו תשהה את חיוב ה-SSO, וחברים יוכלו להתחבר בכל דרך שירצו.',
+  'Use an https:// URL.': 'השתמשו בכתובת שמתחילה ב-https://.',
+  'Enter a full URL, starting with https://':
+    'הזינו כתובת מלאה שמתחילה ב-https://',
+  'Enter the discovery URL, or set all three endpoints manually.':
+    'הזינו את כתובת ה-discovery, או הגדירו ידנית את שלוש נקודות הקצה.',
+  'Identity provider updated': 'ספק הזהויות עודכן',
+  'Identity provider added': 'ספק הזהויות נוסף',
+  'Failed to save provider': 'שמירת הספק נכשלה',
+  'People can sign in through this provider.': 'אפשר להתחבר דרך הספק הזה.',
+  'Update identity provider': 'עדכון ספק זהויות',
+  'Add identity provider': 'הוספת ספק זהויות',
+  'Change how people sign in through this provider. Leave the client secret empty to keep the stored one.':
+    'שנו את אופן ההתחברות דרך הספק הזה. כדי לשמור את סוד הלקוח הקיים, השאירו את השדה ריק.',
+  'Create an OpenID Connect application at your provider, add the redirect URL there, then fill in its details.':
+    'צרו אפליקציית OpenID Connect אצל הספק, הוסיפו שם את כתובת ההפניה, ואז מלאו כאן את הפרטים שלה.',
+  'People see the name when they choose how to sign in.':
+    'השם מוצג לאנשים כשהם בוחרים איך להתחבר.',
+  'Roles people get when they join through this provider.':
+    'התפקידים שאנשים מקבלים כשהם מצטרפים דרך הספק הזה.',
+  'Client secret': 'סוד לקוח',
+  Unchanged: 'ללא שינוי',
+  'Discovery URL': 'כתובת discovery',
+  'Set the endpoints manually': 'הגדרת נקודות הקצה ידנית',
+  'Override what the discovery URL publishes, or set all three when your provider has none.':
+    'עקפו את מה שכתובת ה-discovery מפרסמת, או הגדירו את שלושתן אם לספק שלכם אין כתובת כזו.',
+  'Token URL': 'כתובת הטוקן',
+  'User info URL': 'כתובת פרטי המשתמש',
+  'Until the domain is verified, nobody can sign in with single sign-on on it.':
+    'עד שהדומיין יאומת, אף אחד לא יוכל להתחבר דרכו בהתחברות יחידה (SSO).',
+  'Enter only the part after @:': 'הזינו רק את החלק שאחרי ה-@:',
+  'Enter only the domain, the part after @.':
+    'הזינו רק את הדומיין, החלק שאחרי ה-@.',
+  'A domain can be at most 253 characters, and each part between dots at most 63.':
+    'דומיין יכול להכיל עד 253 תווים, וכל חלק בין הנקודות עד 63 תווים.',
   Later: 'אחר כך',
   'Organization photo': 'תמונת הארגון',
-  'Shown next to your organization name across the Console.': 'מוצגת לצד שם הארגון שלך בכל הקונסולה.',
+  'Shown next to your organization name across the Console.':
+    'מוצגת לצד שם הארגון שלך בכל הקונסולה.',
   'PNG, JPEG, or WebP up to 5MB.': 'PNG,\u200f JPEG או WebP עד 5MB.',
-  'Only organization owners can change the photo.': 'רק בעלי הארגון יכולים לשנות את התמונה.',
+  'Only organization owners can change the photo.':
+    'רק בעלי הארגון יכולים לשנות את התמונה.',
   'Organization photo updated': 'תמונת הארגון עודכנה',
   'Failed to update organization photo': 'עדכון תמונת הארגון נכשל',
   'Organization photo removed': 'תמונת הארגון הוסרה',
   'Failed to remove organization photo': 'הסרת תמונת הארגון נכשלה',
   'Remove organization photo': 'הסרת תמונת הארגון',
-  'The photo is replaced with a placeholder. You can upload a new photo at any time.': 'התמונה תוחלף בתמונת ברירת מחדל. אפשר להעלות תמונה חדשה בכל עת.',
+  'The photo is replaced with a placeholder. You can upload a new photo at any time.':
+    'התמונה תוחלף בתמונת ברירת מחדל. אפשר להעלות תמונה חדשה בכל עת.',
 }

@@ -1682,49 +1682,133 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   // Single sign-on
   'Single sign-on': 'シングルサインオン',
   'Email not on a verified domain': '検証済みドメイン外のメール',
-  'Verify your company domain so teammates join on sign-up.':
-    '会社のドメインを検証すると、チームメンバーがサインアップ時に参加します。',
-  'People who sign up with a verified email on these domains join this organization automatically, with the roles you choose.':
-    'これらのドメインの確認済みメールアドレスでサインアップしたユーザーは、選択したロールでこの組織に自動的に参加します。',
   'No email domains yet': 'メールドメインはまだありません',
-  'Add your company domain so teammates join this organization when they sign up.':
-    '会社のドメインを追加すると、チームメンバーはサインアップ時にこの組織に参加します。',
-  'Roles for new members': '新しいメンバーのロール',
   'Email domain added': 'メールドメインを追加しました',
-  'Email domain updated': 'メールドメインを更新しました',
   'Email domain deleted': 'メールドメインを削除しました',
-  'Failed to update email domain': 'メールドメインの更新に失敗しました',
   'Failed to delete email domain': 'メールドメインの削除に失敗しました',
   'Delete email domain': 'メールドメインを削除',
-  'New people stop joining through it. People who already joined stay members.':
-    '新しいユーザーはこのドメインから参加しなくなります。参加済みのユーザーはメンバーのままです。',
-  'People who sign up with a verified email on this domain join this organization.':
-    'このドメインの確認済みメールアドレスでサインアップしたユーザーは、この組織に参加します。',
   'Only the domain, without @. Subdomains need their own entry.':
     '@を付けずにドメインのみを入力してください。サブドメインは個別に追加します。',
   'Pick at least one role.': 'ロールを1つ以上選択してください。',
-  'Roles people get when they join. Same roles as Invite Members.':
-    '参加時に付与されるロールです。メンバー招待と同じロールを使用します。',
   'Another organization claimed this domain. Add this TXT record to prove it is yours, then add it again.':
     'このドメインは別の組織が登録しています。このTXTレコードを追加して所有権を証明してから、もう一度追加してください。',
   'Update roles': 'ロールを更新',
-  'Applies to people who join from now on. People who already joined keep their roles; change those in Members.':
-    'これから参加するユーザーに適用されます。参加済みのユーザーは現在のロールのままです。変更はメンバーから行ってください。',
   'Add this TXT record at your DNS provider, then verify. It can take a few minutes to propagate.':
     'このTXTレコードをDNSプロバイダーに追加してから検証してください。反映まで数分かかる場合があります。',
-  'Until the domain is verified, nobody joins automatically.':
-    'ドメインが検証されるまで、自動的に参加するユーザーはいません。',
   'The TXT record was not found yet. DNS changes can take a few minutes to propagate.':
     'TXTレコードがまだ見つかりません。DNSの変更が反映されるまで数分かかる場合があります。',
+  'Payment authentication is required': '支払いの認証が必要です',
+  'They can join again by signing in with single sign-on. To keep them out, remove them at your identity provider too.':
+    'シングルサインオンでサインインすると、再び参加できます。参加させないようにするには、ID プロバイダーでも削除してください。',
+  "This plan can't add members, so people who sign in with single sign-on don't join this organization.":
+    'このプランではメンバーを追加できないため、シングルサインオンでサインインしたユーザーはこの組織に参加しません。',
+  'Prove your organization owns this domain with a DNS record. Your identity providers then sign in people with an email on it.':
+    'DNS レコードで、このドメインが組織のものであることを証明します。その後、ID プロバイダーはこのドメインのメールアドレスを持つユーザーをサインインさせます。',
+  'Prove the email domains your organization owns. Your identity providers sign in only people with an email on a verified domain.':
+    '組織が所有するメールドメインを証明します。ID プロバイダーは、検証済みドメインのメールアドレスを持つユーザーのみをサインインさせます。',
+  'Failed to load email domains': 'メールドメインを読み込めませんでした',
+  'Add your company domain, then connect an identity provider so teammates sign in with your company login.':
+    '会社のドメインを追加してから ID プロバイダーを接続すると、チームメンバーが会社のアカウントでサインインできます。',
+  'Verify {domain}': '{domain} を検証',
+  'Are you sure you want to delete "{name}"?':
+    '"{name}" を削除してもよろしいですか?',
+  'People with an email on it can no longer sign in through your identity providers. People who already joined stay members.':
+    'このドメインのメールアドレスを持つユーザーは、ID プロバイダー経由でサインインできなくなります。参加済みのユーザーはメンバーのままです。',
+  'Require SSO is on and this is your only verified domain: deleting it pauses Require SSO, and members can sign in any way they like.':
+    'SSO の必須化が有効で、これが唯一の検証済みドメインです。削除すると SSO の必須化が一時停止され、メンバーは任意の方法でサインインできるようになります。',
+  'Verify a domain to require single sign-on.':
+    'シングルサインオンを必須にするには、ドメインを検証してください。',
+  'Enable an identity provider to require single sign-on.':
+    'シングルサインオンを必須にするには、ID プロバイダーを有効にしてください。',
+  'Single sign-on is now required': 'シングルサインオンが必須になりました',
+  'Single sign-on is no longer required':
+    'シングルサインオンは必須ではなくなりました',
+  'Failed to update single sign-on': 'シングルサインオンの更新に失敗しました',
+  'Require SSO': 'SSO の必須化',
+  'Members with an email on your verified domains can open this organization only after signing in through your identity provider. Owners can always sign in with any method, so a broken provider never locks your organization out. Members on other domains keep their usual sign-in too.':
+    '検証済みドメインのメールアドレスを持つメンバーは、ID プロバイダー経由でサインインした後にのみこの組織を開けます。オーナーは常に任意の方法でサインインできるため、プロバイダーに問題が起きても組織から締め出されることはありません。他のドメインのメンバーも、これまでどおりの方法でサインインできます。',
+  'Require single sign-on': 'シングルサインオンを必須にする',
+  'Paused - with no enabled identity provider, members sign in any way they like. Enable one to require single sign-on again.':
+    '一時停止中 - 有効な ID プロバイダーがないため、メンバーは任意の方法でサインインできます。シングルサインオンを再び必須にするには、プロバイダーを有効にしてください。',
+  'Paused - with no verified domain, members sign in any way they like. Verify one to require single sign-on again.':
+    '一時停止中 - 検証済みドメインがないため、メンバーは任意の方法でサインインできます。シングルサインオンを再び必須にするには、ドメインを検証してください。',
+  'Enabled - members on your verified domains must sign in through your identity provider. Owners can always sign in any way.':
+    '有効 - 検証済みドメインのメンバーは ID プロバイダー経由でサインインする必要があります。オーナーは常に任意の方法でサインインできます。',
+  'Disabled - members sign in any way they like.':
+    '無効 - メンバーは任意の方法でサインインできます。',
+  'Members on your verified domains who signed in another way lose access to this organization until they sign in through your identity provider. Their other organizations are not affected. Owners keep their usual sign-in, so a broken provider never locks you out.':
+    '別の方法でサインインした検証済みドメインのメンバーは、ID プロバイダー経由でサインインするまでこの組織にアクセスできなくなります。他の組織には影響しません。オーナーはこれまでどおりサインインできるため、プロバイダーに問題が起きても締め出されることはありません。',
+  'Check your connection and try again.':
+    '接続を確認して、もう一度お試しください。',
+  'Provider enabled': 'プロバイダーを有効にしました',
+  'Provider disabled. Require SSO is paused until you enable a provider.':
+    'プロバイダーを無効にしました。プロバイダーを有効にするまで、SSO の必須化は一時停止されます。',
+  'Provider disabled': 'プロバイダーを無効にしました',
+  'Failed to update provider': 'プロバイダーの更新に失敗しました',
+  'Identity provider deleted': 'ID プロバイダーを削除しました',
+  'Identity providers': 'ID プロバイダー',
+  'People on your verified domains sign in with your company login, like Okta, Microsoft Entra ID, Google Workspace or Keycloak, and join with the provider’s roles.':
+    '検証済みドメインのユーザーは、Okta、Microsoft Entra ID、Google Workspace、Keycloak などの会社のアカウントでサインインし、プロバイダーのロールで参加します。',
+  'Nobody can sign in through these providers yet. Verify a domain first.':
+    'これらのプロバイダーでは、まだ誰もサインインできません。先にドメインを検証してください。',
+  'Failed to load identity providers': 'ID プロバイダーを読み込めませんでした',
+  'No identity providers yet': 'ID プロバイダーはまだありません',
+  'Connect your company login so people on your domains sign in with it.':
+    '会社のログインを接続すると、ドメインのユーザーがそれを使ってサインインできます。',
+  'SSO URL': 'SSO URL',
+  'Copy SSO URL': 'SSO URL をコピー',
+  'Delete identity provider': 'ID プロバイダーを削除',
+  'People can no longer sign in through it. People who already joined stay members.':
+    'このプロバイダーではサインインできなくなります。参加済みのユーザーはメンバーのままです。',
+  'Require SSO is on and this is your only enabled provider: deleting it pauses Require SSO, and members can sign in any way they like.':
+    'SSO の必須化が有効で、これが唯一の有効なプロバイダーです。削除すると SSO の必須化が一時停止され、メンバーは任意の方法でサインインできるようになります。',
+  'Use an https:// URL.': 'https:// で始まる URL を使用してください。',
+  'Enter a full URL, starting with https://':
+    'https:// で始まる完全な URL を入力してください',
+  'Enter the discovery URL, or set all three endpoints manually.':
+    'ディスカバリー URL を入力するか、3 つのエンドポイントをすべて手動で設定してください。',
+  'Identity provider updated': 'ID プロバイダーを更新しました',
+  'Identity provider added': 'ID プロバイダーを追加しました',
+  'Failed to save provider': 'プロバイダーの保存に失敗しました',
+  'People can sign in through this provider.':
+    'このプロバイダーでサインインできます。',
+  'Update identity provider': 'ID プロバイダーを更新',
+  'Add identity provider': 'ID プロバイダーを追加',
+  'Change how people sign in through this provider. Leave the client secret empty to keep the stored one.':
+    'このプロバイダーでのサインイン方法を変更します。保存済みのクライアントシークレットを使い続けるには、空欄のままにしてください。',
+  'Create an OpenID Connect application at your provider, add the redirect URL there, then fill in its details.':
+    'プロバイダーで OpenID Connect アプリケーションを作成し、そこにリダイレクト URL を追加してから、詳細を入力してください。',
+  'People see the name when they choose how to sign in.':
+    'サインイン方法を選ぶときに、この名前が表示されます。',
+  'Roles people get when they join through this provider.':
+    'このプロバイダー経由で参加したユーザーに付与されるロールです。',
+  'Client secret': 'クライアントシークレット',
+  Unchanged: '変更なし',
+  'Discovery URL': 'ディスカバリー URL',
+  'Set the endpoints manually': 'エンドポイントを手動で設定',
+  'Override what the discovery URL publishes, or set all three when your provider has none.':
+    'ディスカバリー URL の内容を上書きするか、プロバイダーにディスカバリー URL がない場合は 3 つすべてを設定してください。',
+  'Token URL': 'トークン URL',
+  'User info URL': 'ユーザー情報 URL',
+  'Until the domain is verified, nobody can sign in with single sign-on on it.':
+    'ドメインが検証されるまで、このドメインでは誰もシングルサインオンでサインインできません。',
+  'Enter only the part after @:': '@ より後ろの部分だけを入力してください:',
+  'Enter only the domain, the part after @.':
+    'ドメイン(@ より後ろの部分)だけを入力してください。',
+  'A domain can be at most 253 characters, and each part between dots at most 63.':
+    'ドメインは最大 253 文字、ドット間の各部分は最大 63 文字です。',
   Later: '後で',
   'Organization photo': '組織の写真',
-  'Shown next to your organization name across the Console.': 'コンソール全体で組織名の横に表示されます。',
+  'Shown next to your organization name across the Console.':
+    'コンソール全体で組織名の横に表示されます。',
   'PNG, JPEG, or WebP up to 5MB.': 'PNG、JPEG、WebP(5MBまで)。',
-  'Only organization owners can change the photo.': '写真を変更できるのは組織のオーナーのみです。',
+  'Only organization owners can change the photo.':
+    '写真を変更できるのは組織のオーナーのみです。',
   'Organization photo updated': '組織の写真を更新しました',
   'Failed to update organization photo': '組織の写真の更新に失敗しました',
   'Organization photo removed': '組織の写真を削除しました',
   'Failed to remove organization photo': '組織の写真の削除に失敗しました',
   'Remove organization photo': '組織の写真を削除',
-  'The photo is replaced with a placeholder. You can upload a new photo at any time.': '写真はプレースホルダーに置き換えられます。新しい写真はいつでもアップロードできます。',
+  'The photo is replaced with a placeholder. You can upload a new photo at any time.':
+    '写真はプレースホルダーに置き換えられます。新しい写真はいつでもアップロードできます。',
 }
