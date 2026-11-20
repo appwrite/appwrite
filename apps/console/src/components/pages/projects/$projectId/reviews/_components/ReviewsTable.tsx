@@ -23,6 +23,13 @@ import {
   useReviewTriggerLabel,
 } from './ReviewBadges'
 
+declare module '@tanstack/history' {
+  interface HistoryState {
+    /** Set when a review is opened from the list, so its Back button returns to the list as it was. */
+    fromReviews?: boolean
+  }
+}
+
 const HEAD_CLASS =
   'px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
 
@@ -88,6 +95,7 @@ export function ReviewsTable({
                     navigate({
                       to: '/projects/$projectId/reviews/$reviewId',
                       params: { projectId, reviewId: review.$id },
+                      state: { fromReviews: true },
                     })
                   }}
                 >
@@ -95,6 +103,7 @@ export function ReviewsTable({
                     <Link
                       to="/projects/$projectId/reviews/$reviewId"
                       params={{ projectId, reviewId: review.$id }}
+                      state={{ fromReviews: true }}
                       className="flex min-w-0 items-start gap-2"
                     >
                       <GitPullRequest className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />

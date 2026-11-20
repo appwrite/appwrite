@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   useCanGoBack,
+  useLocation,
   useNavigate,
   useParams,
   useRouter,
@@ -59,6 +60,9 @@ export function View({ initialReview }: ViewProps = {}) {
   const navigate = useNavigate()
   const router = useRouter()
   const canGoBack = useCanGoBack()
+  const openedFromList = useLocation({
+    select: (location) => location.state.fromReviews === true,
+  })
   const { projectId, reviewId } = useParams({ strict: false }) as {
     projectId: string
     reviewId: string
@@ -92,10 +96,10 @@ export function View({ initialReview }: ViewProps = {}) {
     ? findings.filter((finding) => finding.severity === severity)
     : findings
 
-  // Back to the list as it was left (page and filters), or to the list itself
-  // when the review was opened from a link.
+  // Back to the list as it was left (page and filters) when the review was
+  // opened from it, otherwise to the list itself.
   const back = () => {
-    if (canGoBack) {
+    if (openedFromList && canGoBack) {
       router.history.back()
       return
     }

@@ -258,6 +258,23 @@ test.describe('reviews', () => {
     await expect(row(page, 490)).toBeVisible()
   })
 
+  test('Back from a review opened by link goes to the list', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page)
+    await page.goto(`/projects/${PROJECT.$id}/reviews/${REVIEWS[10]!.$id}`, {
+      waitUntil: 'domcontentloaded',
+    })
+
+    await expect(page.getByRole('heading', { name: /acme\/api/ })).toBeVisible({
+      timeout: 30_000,
+    })
+    await page.getByRole('button', { name: 'Back to reviews' }).click()
+
+    await expect(page).toHaveURL(/\/reviews\/?$/)
+    await expect(row(page, 500)).toBeVisible()
+  })
+
   test('opens a filtered link filtered', async ({ page }) => {
     await mockAppwriteApi(page)
     // The router stores the encoded filter keys as a string.
