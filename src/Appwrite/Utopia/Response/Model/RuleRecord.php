@@ -36,7 +36,7 @@ class RuleRecord extends Model
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Hostname the record was looked up for.',
+                'description' => 'Hostname the record was looked up for. A CAA record that blocks the certificate names the parent it was found on.',
                 'default' => '',
                 'example' => 'appwrite.company.com',
             ])

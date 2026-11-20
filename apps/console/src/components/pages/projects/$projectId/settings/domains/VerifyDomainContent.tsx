@@ -1108,7 +1108,12 @@ export function VerifyDomainContent({
     hasCaa || caaCheck
       ? {
           type: 'CAA',
-          name: '@',
+          // A blocking CAA record can sit on a parent of the domain, and the
+          // new one goes next to it.
+          name:
+            caaCheck?.status === 'mismatch'
+              ? getRecordName(caaCheck.name)
+              : '@',
           value: hasCaa
             ? caa!
             : caaCheck!.expected.includes(' ')
