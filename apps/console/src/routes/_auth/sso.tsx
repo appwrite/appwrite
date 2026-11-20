@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { useEffect, useRef, useState } from 'react'
+import { AppwriteException } from '@appwrite.io/console'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
 import { ArrowLeft, KeyRound } from 'lucide-react'
 import { z } from 'zod'
@@ -11,7 +12,9 @@ import {
 import {
   AuthFlowIllustrationColumn,
   AuthFlowShell,
+  authFlowShellFooterClassName,
 } from '@/components/global/auth/AuthFlowShell'
+import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,16 +22,29 @@ import { Label } from '@/components/ui/label'
 import { sdk } from '@/lib/appwrite/sdk'
 import type { SSOSignInProvider } from '@/lib/appwrite/team-sso'
 import { useT } from '@/lib/i18n/translate'
+import { parseOrganizationIdFromPath } from '@/lib/organization-overview-prefetch'
+import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
+import { organizationsQueryOptions } from '@/lib/react-query/hooks/organizations'
+import {
+  isValidWorkEmail,
+  SSO_EMAIL_MAX_LENGTH,
+  ssoFailureMessage,
+  ssoReturnPath,
+  ssoSignInURLs,
+} from '@/lib/sso-sign-in'
+import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { pageTitle } from '@/lib/utils/page-title'
 
 const searchSchema = z.object({
   /**
-   * Set by the server when a sign-in fails: `{"message": …}` as JSON, which the
-   * router already parses into an object.
+   * Set by the server when a sign-in fails: `{"message": …, "type": …}` as JSON,
+   * which the router already parses into an object. Only its type picks what
+   * the page says (see `ssoFailureMessage`).
    */
   error: z.unknown().optional(),
-  redirect: z.string().optional(),
+  /** Console path to return to after signing in; checked by `ssoReturnPath`. */
+  redirect: z.string().optional().catch(undefined),
   /**
    * A provider's shared SSO URL (Settings → Single sign-on → Copy SSO URL):
    * the sign-in starts at once, with no email to type and nothing to pick.
@@ -44,30 +60,29 @@ export const Route = createFileRoute('/_auth/sso')({
   head: () => ({ meta: [{ title: pageTitle('Sign in with SSO') }] }),
 })
 
-/** The message of the error the sign-in returned in `?error=`, if any. */
-function failureMessage(error: unknown): string | null {
-  const message = rawFailureMessage(error)
-  // The identity provider vouched for an email outside the organization's
-  // verified domains: retrying the same login cannot help.
-  if (message?.includes('email_domain_not_verified')) {
-    return "Your company login returned an email that isn't on a domain your organization verified. Sign in with your work email account."
+/** The work email, kept across the trip to the identity provider and back. */
+const EMAIL_STORAGE_KEY = 'console.sso.email'
+
+function readSavedEmail(): string {
+  try {
+    return sessionStorage.getItem(EMAIL_STORAGE_KEY) ?? ''
+  } catch {
+    return ''
   }
-  return message
 }
 
-function rawFailureMessage(error: unknown): string | null {
-  if (error === undefined || error === null || error === '') return null
-  if (typeof error === 'object') {
-    const message = (error as { message?: unknown }).message
-    return typeof message === 'string' ? message : null
-  }
+function saveEmail(value: string): void {
   try {
-    const parsed = JSON.parse(String(error)) as { message?: string }
-    return parsed.message ?? null
+    if (value) sessionStorage.setItem(EMAIL_STORAGE_KEY, value)
   } catch {
-    return String(error)
+    // Storage is unavailable: the person types it again.
   }
 }
+
+// `--destructive` is a background shade in the dark theme; its text red is
+// `--destructive-foreground` (other themes keep `text-destructive`).
+const errorTextClassName =
+  'text-destructive [.dark_&]:text-destructive-foreground'
 
 /**
  * Console sign-in through an organization's identity provider: the work email
@@ -76,14 +91,38 @@ function rawFailureMessage(error: unknown): string | null {
 function SingleSignOnPage() {
   const t = useT()
   const search = useSearch({ from: '/_auth/sso' })
-  const [email, setEmail] = useState('')
+  const failure = ssoFailureMessage(search.error)
+  const returnPath = ssoReturnPath(search.redirect)
+  const [email, setEmail] = useState(() => (failure ? readSavedEmail() : ''))
   const [providers, setProviders] = useState<SSOSignInProvider[] | null>(null)
-  const failure = failureMessage(search.error)
+  const [invalidEmail, setInvalidEmail] = useState(false)
+  const emailRef = useRef<HTMLInputElement>(null)
+  const firstProviderRef = useRef<HTMLButtonElement>(null)
+  const choosing = !!providers && providers.length > 1
+  const wasChoosing = useRef(false)
+
+  // Someone an organization sent here is already signed in: they need ways
+  // back to the Console, not to the sign-in page.
+  const { data: account } = useQuery(consoleAccountQueryOptions())
+  const signedIn = !!account?.$id
+  const { data: organizations } = useQuery({
+    ...organizationsQueryOptions(),
+    enabled: signedIn,
+  })
+  const refusedOrgId = returnPath
+    ? parseOrganizationIdFromPath(returnPath)
+    : undefined
+  const teams = organizations?.teams ?? []
+  const hasOtherOrganization = refusedOrgId
+    ? teams.some((team) => team.$id !== refusedOrgId)
+    : teams.length > 1
 
   const start = (providerId: string) => {
-    const origin = window.location.origin
-    const success = `${origin}${search.redirect ?? '/'}`
-    const back = `${origin}/sso`
+    const { success, failure: back } = ssoSignInURLs(
+      window.location.origin,
+      search.redirect,
+    )
+    saveEmail(email.trim())
     window.location.href = sdk.forConsole.teamSSO.signInURL(
       providerId,
       success,
@@ -104,7 +143,7 @@ function SingleSignOnPage() {
     },
   })
 
-  const domain = email.includes('@') ? email.split('@').pop() : ''
+  const domain = email.includes('@') ? email.trim().split('@').pop() : ''
 
   // A failed sign-in comes back without `provider`, so this never loops.
   const direct = !failure && !!search.provider
@@ -113,18 +152,99 @@ function SingleSignOnPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- start once per provider
   }, [direct, search.provider])
 
+  // The chooser replaces the form: move focus to the first way in, and back to
+  // the email field when the person leaves it.
+  useEffect(() => {
+    if (choosing) {
+      firstProviderRef.current?.focus()
+    } else if (wasChoosing.current) {
+      emailRef.current?.focus()
+    }
+    wasChoosing.current = choosing
+  }, [choosing])
+
+  const lookupInvalid =
+    lookup.error instanceof AppwriteException &&
+    lookup.error.type === 'general_argument_invalid'
+  const fieldMessage =
+    invalidEmail || lookupInvalid ? (
+      t('Please enter a valid email address')
+    ) : providers?.length === 0 ? (
+      <>
+        {t("Single sign-on isn't set up for {domain}.").replace(
+          '{domain}',
+          domain ?? '',
+        )}
+        {signedIn ? null : (
+          <>
+            {' '}
+            <Link
+              to="/sign-in"
+              search={returnPath ? { redirect: returnPath } : undefined}
+              className="underline underline-offset-2"
+            >
+              {t('Sign in with email and password')}
+            </Link>
+          </>
+        )}
+      </>
+    ) : lookup.isError ? (
+      getErrorMessage(lookup.error) || t('Failed to find your company login')
+    ) : null
+
+  const backLink = signedIn ? (
+    hasOtherOrganization ? (
+      <Link to="/" className={backLinkClassName}>
+        <ArrowLeft className="size-3.5" />
+        {t('Back to the Console')}
+      </Link>
+    ) : (
+      <Link to="/account" className={backLinkClassName}>
+        <ArrowLeft className="size-3.5" />
+        {t('Go to your account')}
+      </Link>
+    )
+  ) : (
+    <Link
+      to="/sign-in"
+      search={returnPath ? { redirect: returnPath } : undefined}
+      className={backLinkClassName}
+    >
+      <ArrowLeft className="size-3.5" />
+      {t('Back to sign in')}
+    </Link>
+  )
+
+  const footer = signedIn ? (
+    <>
+      <span>
+        {t('Signed in as {email}.').replace('{email}', account?.email ?? '')}
+      </span>
+      <Link to="/sign-out" preload={false} className="link-neutral">
+        {t('Sign out')}
+      </Link>
+    </>
+  ) : choosing ? (
+    // The chooser has no Continue button to click.
+    <p className={cn(authFlowShellFooterClassName, 'mt-0')}>
+      {t('By continuing, you agree to our')}{' '}
+      <MarketingSiteLink className="link-neutral" href="/terms">
+        {t('Terms of Service')}
+      </MarketingSiteLink>{' '}
+      {t('and')}{' '}
+      <MarketingSiteLink className="link-neutral" href="/privacy">
+        {t('Privacy Policy')}
+      </MarketingSiteLink>
+      .
+    </p>
+  ) : undefined
+
   return (
-    <AuthFlowShell width="illustration">
+    <AuthFlowShell width="illustration" footer={footer}>
       <AuthFlowIllustrationCard illustration={<AuthFlowIllustrationColumn />}>
         <div className="space-y-6">
           <div className="space-y-2">
-            <Link
-              to="/sign-in"
-              className="inline-flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="size-3.5" />
-              {t('Back to sign in')}
-            </Link>
+            {backLink}
             <AuthFlowTitle>{t('Sign in with SSO')}</AuthFlowTitle>
             <AuthFlowDescription>
               {t(
@@ -144,9 +264,12 @@ function SingleSignOnPage() {
           ) : null}
 
           {failure ? (
-            <Alert variant="destructive">
-              <AlertDescription className="text-[13px] text-pretty break-words">
-                {failure}
+            <Alert
+              variant="destructive"
+              className="[.dark_&]:text-destructive-foreground"
+            >
+              <AlertDescription className="text-[13px] text-pretty break-words [.dark_&]:!text-destructive-foreground">
+                {t(failure)}
               </AlertDescription>
             </Alert>
           ) : null}
@@ -159,14 +282,22 @@ function SingleSignOnPage() {
             >
               {t('Taking you to your company login...')}
             </p>
-          ) : providers && providers.length > 1 ? (
-            <div className="space-y-3">
-              <p className="text-[13px] text-muted-foreground">
+          ) : choosing ? (
+            <div
+              role="group"
+              aria-labelledby="sso-choose-label"
+              className="space-y-3"
+            >
+              <p
+                id="sso-choose-label"
+                className="text-[13px] text-muted-foreground"
+              >
                 {t('Choose how to sign in')}
               </p>
-              {providers.map((provider) => (
+              {providers.map((provider, index) => (
                 <Button
                   key={provider.$id}
+                  ref={index === 0 ? firstProviderRef : undefined}
                   type="button"
                   variant="outline"
                   className="h-9 w-full"
@@ -188,36 +319,50 @@ function SingleSignOnPage() {
           ) : (
             <form
               className="space-y-4"
+              noValidate
               onSubmit={(event) => {
                 event.preventDefault()
-                if (email.trim() === '') return
+                if (email.trim() === '' || lookup.isPending) return
                 setProviders(null)
+                if (!isValidWorkEmail(email)) {
+                  lookup.reset()
+                  setInvalidEmail(true)
+                  return
+                }
                 lookup.mutate(email)
               }}
             >
               <div className="space-y-2">
                 <Label htmlFor="sso-email">{t('Work email')}</Label>
                 <Input
+                  ref={emailRef}
                   id="sso-email"
                   type="email"
                   autoComplete="email"
                   placeholder="you@company.com"
+                  maxLength={SSO_EMAIL_MAX_LENGTH}
                   value={email}
                   onChange={(event) => {
                     setEmail(event.target.value)
                     setProviders(null)
+                    setInvalidEmail(false)
+                    lookup.reset()
                   }}
-                  aria-invalid={providers?.length === 0}
+                  aria-invalid={!!fieldMessage}
+                  aria-describedby={
+                    fieldMessage ? 'sso-email-message' : undefined
+                  }
                 />
-                {providers?.length === 0 ? (
-                  <p className="text-[12px] text-pretty break-words text-destructive">
-                    {t("Single sign-on isn't set up for")} {domain}.
-                  </p>
-                ) : null}
-                {lookup.isError ? (
-                  <p className="text-[12px] text-pretty break-words text-destructive">
-                    {getErrorMessage(lookup.error) ||
-                      t('Failed to find your company login')}
+                {fieldMessage ? (
+                  <p
+                    id="sso-email-message"
+                    role="alert"
+                    className={cn(
+                      'text-[12px] text-pretty break-words',
+                      errorTextClassName,
+                    )}
+                  >
+                    {fieldMessage}
                   </p>
                 ) : null}
               </div>
@@ -236,3 +381,6 @@ function SingleSignOnPage() {
     </AuthFlowShell>
   )
 }
+
+const backLinkClassName =
+  'inline-flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground'

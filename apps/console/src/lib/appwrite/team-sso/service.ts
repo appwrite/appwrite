@@ -108,12 +108,19 @@ export class TeamSSO {
     return `${this.client.config.endpoint}/account/sessions/oauth2/callback/sso/${this.client.config.project}`
   }
 
-  /** Where the browser goes to sign in through `providerId`. */
-  signInURL(providerId: string, success: string, failure: string): string {
+  /**
+   * Where the browser goes to sign in through `providerId`. Without `success`,
+   * the API lands the person in the provider's organization.
+   */
+  signInURL(
+    providerId: string,
+    success: string | undefined,
+    failure: string,
+  ): string {
     const url = new URL(this.client.config.endpoint + '/account/sessions/sso')
     url.searchParams.set('project', this.client.config.project)
     url.searchParams.set('providerId', providerId)
-    url.searchParams.set('success', success)
+    if (success) url.searchParams.set('success', success)
     url.searchParams.set('failure', failure)
     return url.toString()
   }
