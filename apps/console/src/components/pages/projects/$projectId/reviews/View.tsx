@@ -17,6 +17,7 @@ import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
 import { useT } from '@/lib/i18n/translate'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
+import { Credits } from './_components/Credits'
 import { Learnings } from './_components/Learnings'
 import { Performance } from './_components/Performance'
 import { Repositories } from './_components/Repositories'
@@ -149,6 +150,9 @@ export function View() {
       />
 
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
+        {activeTab === 'reviews' && !noRepositories && (
+          <Credits projectId={projectId} organizationId={project?.teamId} />
+        )}
         {noRepositories ? (
           <EmptyState
             icon={GitPullRequest}

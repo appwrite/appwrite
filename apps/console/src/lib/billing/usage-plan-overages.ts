@@ -37,6 +37,13 @@ function sumMetricValues(metrics: Models.Metric[] | null | undefined): number {
   return metrics.reduce((total, metric) => total + toTotal(metric?.value), 0)
 }
 
+/** Cloud added `reviewCreditsTotal` after the SDK model was generated. */
+function getReviewCreditsTotal(
+  usage: Models.UsageOrganization,
+): number | undefined {
+  return (usage as { reviewCreditsTotal?: number }).reviewCreditsTotal
+}
+
 const USAGE_PLAN_OVERAGE_DEFINITIONS: UsagePlanOverageDefinition[] = [
   {
     id: 'bandwidth',
@@ -111,6 +118,13 @@ const USAGE_PLAN_OVERAGE_DEFINITIONS: UsagePlanOverageDefinition[] = [
     planKey: 'authPhone',
     format: 'sms',
     getUsage: (usage) => toTotal(usage.authPhoneTotal),
+  },
+  {
+    id: 'reviewCredits',
+    name: 'Code review credits',
+    planKey: 'reviewCredits',
+    format: 'number',
+    getUsage: (usage) => toTotal(getReviewCreditsTotal(usage)),
   },
   {
     id: 'realtime',
