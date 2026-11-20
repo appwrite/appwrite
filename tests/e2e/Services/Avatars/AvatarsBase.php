@@ -2066,6 +2066,40 @@ trait AvatarsBase
         $this->assertEquals(404, $response['headers']['status-code']);
     }
 
+    public function testUpdateTeamPhoto(): void
+    {
+        $teamId = $this->createPhotoTeam();
+        $headers = $this->getTeamPhotoHeaders();
+        $logo = (string) \file_get_contents(__DIR__ . '/../../../resources/logo.png');
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->uploadTeamPhoto($teamId, $logo, 'logo.png');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($teamId, $response['body']['$id']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/teams/' . $teamId . '/photo', $headers, [
+            'width' => 0,
+            'height' => 0,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSame(\getimagesizefromstring($logo)[0], \getimagesizefromstring($response['body'])[0]);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->uploadTeamPhoto($teamId, 'not an image', 'photo.txt');
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->uploadTeamPhoto(Id::unique(), $logo, 'logo.png');
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+    }
+
     /**
      * @return array<string, string>
      */

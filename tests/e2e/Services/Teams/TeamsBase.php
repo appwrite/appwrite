@@ -528,40 +528,6 @@ trait TeamsBase
         $this->assertEquals(404, $response['headers']['status-code']);
     }
 
-    public function testUpdateTeamPhoto(): void
-    {
-        $team = $this->createTeamHelper('Photo Team');
-        $headers = $this->getTeamPhotoHeaders();
-        $logo = (string) \file_get_contents(__DIR__ . '/../../../resources/logo.png');
-
-        /**
-         * Test for SUCCESS
-         */
-        $response = $this->uploadTeamPhoto($team['teamUid'], $logo, 'logo.png');
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals($team['teamUid'], $response['body']['$id']);
-
-        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $team['teamUid'] . '/photo', $headers, [
-            'width' => 0,
-            'height' => 0,
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertSame(\getimagesizefromstring($logo)[0], \getimagesizefromstring($response['body'])[0]);
-
-        /**
-         * Test for FAILURE
-         */
-        $response = $this->uploadTeamPhoto($team['teamUid'], 'not an image', 'photo.txt');
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-
-        $response = $this->uploadTeamPhoto(Id::unique(), $logo, 'logo.png');
-
-        $this->assertEquals(404, $response['headers']['status-code']);
-    }
-
     public function testDeleteTeamPhoto(): void
     {
         $team = $this->createTeamHelper('Photo Team');
