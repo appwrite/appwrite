@@ -542,6 +542,7 @@ class Action extends PlatformAction
 
         foreach ($missing as $key) {
             $records[$key]['status'] = 'misplaced';
+            $records[$key]['current'] = $found;
         }
 
         return $records;
