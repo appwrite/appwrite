@@ -252,6 +252,7 @@ export function Domains({
                         <DateTooltip
                           date={rule.$createdAt}
                           className="text-[12px] text-muted-foreground"
+                          live
                         />
                       </TableCell>
                       <TableCell className="px-4 py-3 text-end">

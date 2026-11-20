@@ -637,7 +637,7 @@ function DnsCheckMeta({
       <div className="min-w-0">
         <dt className={label}>{t('Added')}</dt>
         <dd className={value}>
-          <DateTooltip date={rule.$createdAt} />
+          <DateTooltip date={rule.$createdAt} live />
         </dd>
       </div>
       <div className="min-w-0">

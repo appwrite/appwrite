@@ -235,7 +235,7 @@ export function SiteDomainsView() {
                           </div>
                         </TableCell>
                         <TableCell className="px-4 py-3">
-                          <DateTooltip date={ruleData.$createdAt} />
+                          <DateTooltip date={ruleData.$createdAt} live />
                         </TableCell>
                         <TableCell className="px-4 py-3 text-end">
                           <div className="flex justify-end">
