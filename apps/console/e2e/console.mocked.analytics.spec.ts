@@ -551,6 +551,12 @@ test.describe('analytics property (mocked API)', () => {
       /^Session length/,
       /^Engagement time/,
     ])
+    await expect(
+      page.locator('main').getByText('Mobile', { exact: true }).first(),
+    ).toBeVisible()
+    await expect(
+      card(page, 'Locations').getByText('Where your users are'),
+    ).toBeVisible()
     await attachScreenshot(page, 'property-mobile-app-terms')
   })
 
