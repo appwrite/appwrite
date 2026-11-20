@@ -49,6 +49,13 @@ const ORGANIZATION = {
   status: 'active',
 } satisfies Partial<Models.Organization<Models.Preferences>>
 
+/** Another organization of the signed-in account, which never refuses it. */
+const PERSONAL = {
+  ...ORGANIZATION,
+  $id: 'personal',
+  name: 'Personal Projects',
+} satisfies Partial<Models.Organization<Models.Preferences>>
+
 const SETTINGS = `/organizations/${ORGANIZATION.$id}/settings`
 const SSO = `${SETTINGS}/sso`
 
@@ -167,6 +174,14 @@ interface Mock {
   plan: Record<string, unknown> | null
   /** The domain and provider lists answer 500 */
   listsFail: boolean
+  /** Whether a session exists; a guest's `account.get` answers 401 */
+  signedIn: boolean
+  /** The account also belongs to `PERSONAL` */
+  personal: boolean
+  /** The account's prefs, such as the organization it last opened */
+  prefs: Record<string, unknown>
+  /** The account's sessions */
+  sessions: Array<Record<string, unknown>>
   sent: {
     creates: Array<{ domain: string }>
     verifies: string[]
@@ -183,6 +198,10 @@ interface Mock {
     lookups: string[]
     /** Provider IDs the browser was sent to sign in through */
     signIns: string[]
+    /** The full addresses of those sign-ins, with their success and failure URLs */
+    signInURLs: URL[]
+    /** Account prefs saved */
+    prefs: Array<Record<string, unknown>>
   }
 }
 
@@ -208,6 +227,10 @@ async function mockAppwriteApi(
       | 'refuseWithoutSSO'
       | 'plan'
       | 'listsFail'
+      | 'signedIn'
+      | 'personal'
+      | 'prefs'
+      | 'sessions'
     >
   > = {},
 ): Promise<Mock> {
@@ -222,6 +245,10 @@ async function mockAppwriteApi(
     wrongValues: new Map(),
     plan: options.plan ?? null,
     listsFail: options.listsFail ?? false,
+    signedIn: options.signedIn ?? true,
+    personal: options.personal ?? false,
+    prefs: options.prefs ?? {},
+    sessions: options.sessions ?? [],
     sent: {
       creates: [],
       verifies: [],
@@ -232,6 +259,8 @@ async function mockAppwriteApi(
       requires: [],
       lookups: [],
       signIns: [],
+      signInURLs: [],
+      prefs: [],
     },
   }
   const localOrigin = new URL(String(test.info().project.use.baseURL)).origin
@@ -258,11 +287,14 @@ async function mockAppwriteApi(
       ssoRequired: mock.ssoRequired,
     })
     // An organization that requires SSO refuses its own routes and its projects.
+    const projectsOrganization =
+      request.headers()['x-appwrite-organization'] ?? ORGANIZATION.$id
     if (
       mock.refuseWithoutSSO &&
       (apiPath.startsWith(`/teams/${ORGANIZATION.$id}`) ||
         apiPath.startsWith(`/organizations/${ORGANIZATION.$id}`) ||
-        apiPath === '/organization/projects')
+        (apiPath === '/organization/projects' &&
+          projectsOrganization === ORGANIZATION.$id))
     ) {
       return json(403, {
         message:
@@ -273,31 +305,66 @@ async function mockAppwriteApi(
       })
     }
 
-    if (apiPath === '/account') return json(200, ACCOUNT)
+    if (apiPath.startsWith('/account') && !mock.signedIn) {
+      if (apiPath === '/account/sessions/sso/providers') {
+        // Answered below: looking providers up needs no session
+      } else if (apiPath !== '/account/sessions/sso') {
+        return json(401, {
+          message: 'User (role: guests) missing scopes (["account"])',
+          code: 401,
+          type: 'general_unauthorized_scope',
+          version: '1.0',
+        })
+      }
+    }
+    if (apiPath === '/account')
+      return json(200, { ...ACCOUNT, prefs: mock.prefs })
     if (apiPath === '/account/prefs') {
+      if (method === 'PATCH') {
+        mock.prefs = request.postDataJSON().prefs
+        mock.sent.prefs.push(mock.prefs)
+      }
       return method === 'PATCH'
-        ? json(200, { ...ACCOUNT, prefs: request.postDataJSON().prefs })
-        : json(200, {})
+        ? json(200, { ...ACCOUNT, prefs: mock.prefs })
+        : json(200, mock.prefs)
     }
     if (apiPath === '/account/sessions')
-      return json(200, { total: 0, sessions: [] })
+      return json(200, { total: mock.sessions.length, sessions: mock.sessions })
     if (apiPath === '/health/version') return json(200, { version: '2.0.0' })
     if (apiPath === '/console/variables') return json(200, {})
     if (
       apiPath === '/console/scopes/project' ||
-      apiPath === `/organizations/${ORGANIZATION.$id}/roles`
+      apiPath === `/organizations/${ORGANIZATION.$id}/roles` ||
+      apiPath === `/organizations/${PERSONAL.$id}/roles`
     )
       return json(200, {
         roles: [mock.role],
         scopes: ['teams.read', 'teams.write', 'projects.read'],
       })
-    if (apiPath === '/organizations' || apiPath === '/teams')
-      return json(200, { total: 1, teams: [organization()] })
+    if (apiPath === '/organizations' || apiPath === '/teams') {
+      // `fetchOrganizationById` lists with `Query.equal('$id', [id])`
+      const ids = url.searchParams
+        .getAll('queries[]')
+        .map((query) => JSON.parse(query))
+        .find((query) => query.method === 'equal' && query.attribute === '$id')
+        ?.values as string[] | undefined
+      const teams = [organization(), ...(mock.personal ? [PERSONAL] : [])]
+      const listed = ids
+        ? teams.filter((team) => ids.includes(team.$id))
+        : teams
+      return json(200, { total: listed.length, teams: listed })
+    }
     if (
       apiPath === `/organizations/${ORGANIZATION.$id}` ||
       apiPath === `/teams/${ORGANIZATION.$id}`
     )
       return json(200, organization())
+    if (
+      mock.personal &&
+      (apiPath === `/organizations/${PERSONAL.$id}` ||
+        apiPath === `/teams/${PERSONAL.$id}`)
+    )
+      return json(200, PERSONAL)
     if (apiPath.endsWith('/memberships'))
       return json(200, {
         total: mock.members.length,
@@ -424,6 +491,7 @@ async function mockAppwriteApi(
     }
     if (apiPath === '/account/sessions/sso') {
       mock.sent.signIns.push(url.searchParams.get('providerId') ?? '')
+      mock.sent.signInURLs.push(url)
       return route.fulfill({
         status: 200,
         headers: { ...headers, 'content-type': 'text/html' },
@@ -826,6 +894,7 @@ test.describe('organization single sign-on', () => {
     page,
   }) => {
     const mock = await mockAppwriteApi(page, {
+      signedIn: false,
       providers: [provider('Okta', ['developer'])],
     })
     await page.goto('/sso', { waitUntil: 'domcontentloaded' })
@@ -834,8 +903,13 @@ test.describe('organization single sign-on', () => {
     await page.getByLabel('Work email').fill('erin@gmail.com')
     await page.getByRole('button', { name: 'Continue', exact: true }).click()
     await expect(
-      page.getByText('Single sign-on is not set up for gmail.com.'),
+      page.getByText("Single sign-on isn't set up for gmail.com."),
     ).toBeVisible({ timeout: 45_000 })
+    // Another way in, keeping the typed email
+    await expect(
+      page.getByRole('link', { name: 'Sign in with email and password' }),
+    ).toBeVisible()
+    await expect(page.getByLabel('Work email')).toHaveValue('erin@gmail.com')
     expect(mock.sent.signIns).toHaveLength(0)
 
     // One provider: straight to the company login
@@ -850,6 +924,7 @@ test.describe('organization single sign-on', () => {
     page,
   }) => {
     const mock = await mockAppwriteApi(page, {
+      signedIn: false,
       providers: [
         provider('Okta', ['developer']),
         provider('For billing', ['billing']),
@@ -872,7 +947,7 @@ test.describe('organization single sign-on', () => {
   })
 
   test('shows why a single sign-on failed', async ({ page }) => {
-    await mockAppwriteApi(page)
+    await mockAppwriteApi(page, { signedIn: false })
     const error = JSON.stringify({
       message:
         "Single sign-on couldn't complete sign-in (email_domain_not_verified). Please try again.",
@@ -888,7 +963,7 @@ test.describe('organization single sign-on', () => {
     ).toBeVisible({ timeout: 45_000 })
     await expect(page.getByText(/email_domain_not_verified/)).toHaveCount(0)
 
-    // Any other reason is shown as the server gave it
+    // Any other text in the link is not shown (see the failure messages test)
     const other = JSON.stringify({
       message: 'Single sign-on could not finish.',
     })
@@ -896,7 +971,9 @@ test.describe('organization single sign-on', () => {
       waitUntil: 'domcontentloaded',
     })
     await expect(
-      page.getByText('Single sign-on could not finish.'),
+      page.getByText(
+        'Single sign-on could not finish. Start again, or contact your administrator if it keeps happening.',
+      ),
     ).toBeVisible()
   })
 
@@ -1257,5 +1334,344 @@ test.describe('organization single sign-on settings', () => {
     await expect(
       page.getByRole('link', { name: 'Upgrade your plan' }),
     ).toHaveAttribute('href', /\/upgrade\?orgId=acme/)
+  })
+})
+
+test.describe('single sign-on sign-in', () => {
+  test('offers Sign in with SSO on the sign-in page without the preview', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, { signedIn: false })
+    await page.goto('/sign-in', { waitUntil: 'domcontentloaded' })
+
+    const sso = page.getByRole('link', { name: 'Sign in with SSO' })
+    await expect(sso).toBeVisible({ timeout: 45_000 })
+    await sso.click()
+    await expect(page).toHaveURL(/\/sso/)
+    await expect(page.getByLabel('Work email')).toBeVisible()
+  })
+
+  test('starts the sign-in from a shared SSO URL without typing', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page, {
+      signedIn: false,
+      providers: [provider('Okta', ['developer'])],
+    })
+    await page.goto('/sso?provider=provider-okta', {
+      waitUntil: 'domcontentloaded',
+    })
+
+    await expect(page.getByText('Company login')).toBeVisible({
+      timeout: 45_000,
+    })
+    expect(mock.sent.signIns).toEqual(['provider-okta'])
+    expect(mock.sent.lookups).toHaveLength(0)
+    // Without a page to return to, the API picks the provider's organization
+    const started = mock.sent.signInURLs[0]
+    expect(started.searchParams.has('success')).toBe(false)
+    expect(new URL(started.searchParams.get('failure') ?? '').pathname).toBe(
+      '/sso',
+    )
+  })
+
+  test('returns only to pages inside the Console, also after a failed try', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page, {
+      signedIn: false,
+      providers: [provider('Okta', ['developer'])],
+    })
+    for (const redirect of [
+      '@evil.example',
+      'https://evil.example',
+      '//evil.example',
+      '/\\evil.example',
+      'javascript:alert(1)',
+    ]) {
+      await page.goto(
+        `/sso?provider=provider-okta&redirect=${encodeURIComponent(redirect)}`,
+        { waitUntil: 'domcontentloaded' },
+      )
+      await expect(page.getByText('Company login')).toBeVisible({
+        timeout: 45_000,
+      })
+      const started = mock.sent.signInURLs.at(-1)!
+      expect(started.searchParams.has('success'), redirect).toBe(false)
+      expect(started.searchParams.get('failure'), redirect).not.toContain(
+        'evil',
+      )
+    }
+
+    const back = `/organizations/${ORGANIZATION.$id}/settings`
+    await page.goto(
+      `/sso?provider=provider-okta&redirect=${encodeURIComponent(back)}`,
+      { waitUntil: 'domcontentloaded' },
+    )
+    await expect(page.getByText('Company login')).toBeVisible()
+    const started = mock.sent.signInURLs.at(-1)!
+    const success = new URL(started.searchParams.get('success') ?? '')
+    expect(success.pathname).toBe(back)
+    const failure = new URL(started.searchParams.get('failure') ?? '')
+    expect(failure.pathname).toBe('/sso')
+    expect(failure.searchParams.get('redirect')).toBe(back)
+  })
+
+  test('checks the work email before asking the server', async ({ page }) => {
+    const mock = await mockAppwriteApi(page, { signedIn: false })
+    await page.goto('/sso', { waitUntil: 'domcontentloaded' })
+
+    const field = page.getByLabel('Work email')
+    for (const value of ['erin@acme', 'erin']) {
+      await field.fill(value)
+      await page.getByRole('button', { name: 'Continue', exact: true }).click()
+      await expect(page.getByRole('alert')).toHaveText(
+        'Please enter a valid email address',
+        { timeout: 45_000 },
+      )
+      await expect(field).toHaveAttribute(
+        'aria-describedby',
+        'sso-email-message',
+      )
+    }
+    await expect(field).toHaveAttribute('maxlength', '254')
+    expect(mock.sent.lookups).toHaveLength(0)
+  })
+
+  test('chooses failure messages by type and never shows text from the URL', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, { signedIn: false })
+    const open = (error: Record<string, unknown>) =>
+      page.goto(`/sso?error=${encodeURIComponent(JSON.stringify(error))}`, {
+        waitUntil: 'domcontentloaded',
+      })
+    const alert = () => page.getByRole('alert')
+
+    await open({
+      type: 'user_oauth2_provider_failure',
+      message:
+        "Single sign-on couldn't complete sign-in (invalid_client). Please try again.",
+      code: 424,
+    })
+    await expect(alert()).toHaveText(
+      "Single sign-on for your organization isn't set up correctly. Contact your administrator.",
+      { timeout: 45_000 },
+    )
+
+    await open({
+      type: 'user_oauth2_provider_failure',
+      message:
+        "Single sign-on couldn't complete sign-in (email_missing). Please try again.",
+    })
+    await expect(alert()).toHaveText(
+      "Your company login didn't share your email address. Ask your administrator to release the email to Appwrite.",
+    )
+
+    await open({ type: 'user_oauth2_state_invalid', message: 'Anything' })
+    await expect(alert()).toHaveText(
+      'This sign-in was started in another browser or took too long. Start again.',
+    )
+
+    // Cloud's own refusals are shown as they are
+    await open({
+      type: 'user_oauth2_provider_error',
+      message:
+        'Single sign-on for your organization is not working right now. Contact your administrator.',
+    })
+    await expect(alert()).toHaveText(
+      'Single sign-on for your organization is not working right now. Contact your administrator.',
+    )
+
+    // Anything else, in particular words someone put in the link
+    await open({
+      type: 'user_oauth2_provider_error',
+      message: 'Your account is locked. Call +1 555 0100 to unlock.',
+    })
+    await expect(alert()).toHaveText(
+      'Single sign-on could not finish. Start again, or contact your administrator if it keeps happening.',
+    )
+    await expect(page.getByText(/555 0100/)).toHaveCount(0)
+  })
+})
+
+test.describe('organizations that require single sign-on', () => {
+  test('opens another organization for a member whose last one refuses them', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page, {
+      role: 'developer',
+      ssoRequired: true,
+      refuseWithoutSSO: true,
+      personal: true,
+      prefs: { organization: ORGANIZATION.$id },
+    })
+    await enableSso(page)
+
+    await page.goto('/', { waitUntil: 'domcontentloaded' })
+    await expect(page).toHaveURL(new RegExp(`/organizations/${PERSONAL.$id}`), {
+      timeout: 45_000,
+    })
+    await expect(page).not.toHaveURL(/\/sso/)
+    // The preference keeps naming the organization they left, for after SSO
+    for (const prefs of mock.sent.prefs) {
+      expect(prefs.organization).toBe(ORGANIZATION.$id)
+    }
+
+    // Opening the refusing organization itself still asks for SSO, with a
+    // way back to the Console instead of to the sign-in page
+    await page.goto(`/organizations/${ORGANIZATION.$id}`, {
+      waitUntil: 'domcontentloaded',
+    })
+    await expect(page).toHaveURL(/\/sso\?/, { timeout: 45_000 })
+    await expect(
+      page.getByRole('link', { name: 'Back to sign in' }),
+    ).toHaveCount(0)
+    await expect(
+      page.getByText('Signed in as owner@example.com.'),
+    ).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Sign out' })).toBeVisible()
+    await page.getByRole('link', { name: 'Back to the Console' }).click()
+    await expect(page).toHaveURL(new RegExp(`/organizations/${PERSONAL.$id}`), {
+      timeout: 45_000,
+    })
+  })
+
+  test('gives a member whose only organization refuses them their account and sign out', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, {
+      role: 'developer',
+      ssoRequired: true,
+      refuseWithoutSSO: true,
+    })
+    await enableSso(page)
+
+    await page.goto('/', { waitUntil: 'domcontentloaded' })
+    await expect(page).toHaveURL(/\/sso\?/, { timeout: 45_000 })
+    expect(new URL(page.url()).searchParams.get('redirect')).toBe(
+      `/organizations/${ORGANIZATION.$id}`,
+    )
+    await expect(page.getByRole('link', { name: 'Sign out' })).toBeVisible()
+    await expect(
+      page.getByRole('link', { name: 'Back to the Console' }),
+    ).toHaveCount(0)
+    await page.getByRole('link', { name: 'Go to your account' }).click()
+    await expect(page).toHaveURL(/\/account/, { timeout: 45_000 })
+  })
+
+  test('returns a member to the organization they picked in the switcher', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page, {
+      role: 'developer',
+      ssoRequired: true,
+      refuseWithoutSSO: true,
+      personal: true,
+      prefs: { organization: PERSONAL.$id },
+    })
+    await enableSso(page)
+
+    await page.goto(`/organizations/${PERSONAL.$id}`, {
+      waitUntil: 'domcontentloaded',
+    })
+    await page
+      .locator('[data-analytics="organization-switcher"]')
+      .first()
+      .click({ timeout: 45_000 })
+    await page
+      .locator('[data-slot="popover-content"]')
+      .getByText(ORGANIZATION.name, { exact: true })
+      .first()
+      .click()
+
+    await expect(page).toHaveURL(/\/sso\?/, { timeout: 45_000 })
+    expect(new URL(page.url()).searchParams.get('redirect')).toBe(
+      `/organizations/${ORGANIZATION.$id}`,
+    )
+    // A refused switch is not remembered
+    expect(
+      mock.sent.prefs.some((prefs) => prefs.organization === ORGANIZATION.$id),
+    ).toBe(false)
+  })
+
+  test('tells the owner a removed member on a verified domain can rejoin through SSO', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, {
+      providers: [provider('Okta', ['developer'])],
+      members: [
+        member('Demo Owner', 'owner@acme.com', ['owner']),
+        member('Sara Lee', 'sara@acme.com', ['developer']),
+        member('Alex Contractor', 'alex@gmail.com', ['developer']),
+      ],
+    })
+    await enableSso(page)
+    await page.goto(`${SETTINGS}/members`, { waitUntil: 'domcontentloaded' })
+
+    const rejoin =
+      'They can join again by signing in with single sign-on. To keep them out, remove them at your identity provider too.'
+    const removeDialog = async (name: string) => {
+      const row = page.getByRole('row', { name })
+      await row.getByRole('button').last().click({ timeout: 45_000 })
+      await page
+        .getByRole('menuitem', { name: /remove/i })
+        .first()
+        .click()
+      return page.getByRole('dialog')
+    }
+
+    const sara = await removeDialog('Sara Lee')
+    await expect(sara).toContainText(rejoin)
+    await page.keyboard.press('Escape')
+    await expect(sara).toBeHidden()
+
+    const alex = await removeDialog('Alex Contractor')
+    await expect(alex).toContainText('They will lose access')
+    await expect(alex).not.toContainText(rejoin)
+  })
+
+  test('names single sign-on sessions on the account page', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, {
+      sessions: [
+        {
+          $id: 'session-sso',
+          $createdAt: NOW,
+          $updatedAt: NOW,
+          userId: ACCOUNT.$id,
+          expire: NOW,
+          provider: 'sso',
+          providerUid: 'owner@example.com',
+          providerAccessToken: '',
+          providerAccessTokenExpiry: '',
+          providerRefreshToken: '',
+          ip: '127.0.0.1',
+          osCode: 'MAC',
+          osName: 'Mac',
+          osVersion: '15',
+          clientType: 'browser',
+          clientCode: 'CH',
+          clientName: 'Chrome',
+          clientVersion: '142',
+          clientEngine: 'Blink',
+          clientEngineVersion: '142',
+          deviceName: 'desktop',
+          deviceBrand: '',
+          deviceModel: '',
+          countryCode: 'de',
+          countryName: 'Germany',
+          current: true,
+          factors: ['email'],
+          secret: '',
+          mfaUpdatedAt: '',
+        },
+      ],
+    })
+    await page.goto('/account/sessions', { waitUntil: 'domcontentloaded' })
+    await expect(page.getByText('Single sign-on', { exact: true })).toBeVisible(
+      { timeout: 45_000 },
+    )
   })
 })
