@@ -88,6 +88,7 @@ import {
   resolveFallbackOrganizationIdFromList,
 } from '@/lib/organization-overview-prefetch'
 import { USER_PREFS_KEY_ORGANIZATION } from '@/lib/user-prefs-keys'
+import { isSSORequiredError, redirectToRequiredSSO } from '@/lib/sso-required'
 import {
   canSeeProjects,
   canShowProjectSettings,
@@ -2193,6 +2194,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     try {
       await prefetchOrganizationSwitchData(org.$id)
     } catch (error) {
+      // The organization requires single sign-on: sign in through it and come
+      // back to it. Stay here, and keep the preference, until then.
+      if (isSSORequiredError(error)) {
+        redirectToRequiredSSO(route.replace('$orgId', org.$id))
+        return
+      }
       console.warn('Failed to prefetch organization switch data:', error)
     }
 
