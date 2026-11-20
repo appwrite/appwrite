@@ -67,19 +67,18 @@ export function VerifyEmailDomain({
         )
       },
       onError: (failure: Error) => {
-        // A missing record is the expected case; the server's DNS detail names
-        // internal resolvers, so it is not shown.
-        const notFound =
-          getAppwriteErrorInfo(failure).type === 'rule_verification_failed'
+        // For an organization's domain the server says what it found: no
+        // record yet, a record with the wrong value (and which), or one it
+        // could not confirm. Its words are meant for the owner, so they are
+        // shown as they are; the sentence below is only for when it gives none.
+        const info = getAppwriteErrorInfo(failure)
         setError(
-          notFound
-            ? t(
-                'The TXT record was not found yet. DNS changes can take a few minutes to propagate.',
-              )
-            : getErrorMessage(failure) ||
-                t(
-                  'The TXT record was not found yet. DNS changes can take a few minutes to propagate.',
-                ),
+          (info.type === 'rule_verification_failed'
+            ? info.message
+            : getErrorMessage(failure)) ||
+            t(
+              'The TXT record was not found yet. DNS changes can take a few minutes to propagate.',
+            ),
         )
       },
     })
