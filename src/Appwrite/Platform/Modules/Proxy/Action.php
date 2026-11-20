@@ -360,8 +360,8 @@ class Action extends PlatformAction
         }
         $main ??= $apex;
 
-        // Explain the record the domain has, such as an A record with the wrong address, rather than
-        // a CNAME it was never meant to have. An apex cannot hold a CNAME, so it is told about A or AAAA.
+        // Explain the record the domain has, such as an A record with the wrong address or a CNAME at
+        // the wrong name, rather than a CNAME it was never meant to have. An apex cannot hold a CNAME, so it is told about A or AAAA.
         $explained = $domain->get() === $domain->getApex() ? ($apex ?? $main) : $main;
         foreach ($targets as $target) {
             if ($target['status'] !== 'missing') {
