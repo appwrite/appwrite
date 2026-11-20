@@ -11,6 +11,7 @@ use Tests\Unit\Network\FixedLookup;
 use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
+use Utopia\Messaging\Adapter\Email\Bird as BirdEmail;
 use Utopia\Messaging\Adapter\SMS\Bird;
 use Utopia\Telemetry\Adapter\None as NoneTelemetry;
 
@@ -60,5 +61,39 @@ final class ProviderTest extends TestCase
         $adapter = $this->providerFactory->sms($providerDoc);
 
         $this->assertNull($adapter);
+    }
+
+    public function testProviderFactoryInstantiatesBirdEmailAdapter(): void
+    {
+        $providerDoc = new Document([
+            'provider' => 'bird',
+            'credentials' => [
+                'apiKey' => 'bk_eu1_mock_payload_checksum',
+            ],
+            'options' => [
+                'fromName' => 'Sender',
+                'fromEmail' => 'sender@my-domain.com',
+            ],
+        ]);
+
+        $adapter = $this->providerFactory->email($providerDoc);
+
+        $this->assertInstanceOf(BirdEmail::class, $adapter);
+        $this->assertSame('Bird', $adapter->getName());
+        $this->assertSame('email', $adapter->getType());
+        $this->assertSame(100, $adapter->getMaxMessagesPerRequest());
+    }
+
+    public function testProviderFactoryReturnsNullWhenBirdEmailApiKeyMissing(): void
+    {
+        $providerDoc = new Document([
+            'provider' => 'bird',
+            'credentials' => [],
+            'options' => [
+                'fromEmail' => 'sender@my-domain.com',
+            ],
+        ]);
+
+        $this->assertNull($this->providerFactory->email($providerDoc));
     }
 }

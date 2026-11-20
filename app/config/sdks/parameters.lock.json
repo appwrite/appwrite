@@ -2410,6 +2410,16 @@
             "qos",
             "expiry"
         ],
+        "messaging.createBirdEmailProvider": [
+            "providerId",
+            "name",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail",
+            "enabled"
+        ],
         "messaging.createBirdProvider": [
             "providerId",
             "name",
@@ -2693,6 +2703,16 @@
             "enabled",
             "qos",
             "expiry"
+        ],
+        "messaging.updateBirdEmailProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail"
         ],
         "messaging.updateBirdProvider": [
             "providerId",
@@ -6936,6 +6956,16 @@
             "qos",
             "expiry"
         ],
+        "messaging.createBirdEmailProvider": [
+            "providerId",
+            "name",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail",
+            "enabled"
+        ],
         "messaging.createBirdProvider": [
             "providerId",
             "name",
@@ -7219,6 +7249,16 @@
             "enabled",
             "qos",
             "expiry"
+        ],
+        "messaging.updateBirdEmailProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail"
         ],
         "messaging.updateBirdProvider": [
             "providerId",
