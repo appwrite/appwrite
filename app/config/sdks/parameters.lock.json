@@ -249,6 +249,20 @@
             "secret"
         ],
         "avatars.deletePhoto": [],
+        "avatars.getTeamPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "avatars.updateTeamPhoto": [
+            "teamId",
+            "file"
+        ],
+        "avatars.deleteTeamPhoto": [
+            "teamId"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -805,20 +819,6 @@
             "teamId",
             "name"
         ],
-        "teams.getPhoto": [
-            "teamId",
-            "width",
-            "height",
-            "quality",
-            "output"
-        ],
-        "teams.updatePhoto": [
-            "teamId",
-            "file"
-        ],
-        "teams.deletePhoto": [
-            "teamId"
-        ],
         "teams.updatePrefs": [
             "teamId",
             "prefs"
@@ -1302,6 +1302,20 @@
             "acknowledged"
         ],
         "avatars.deletePhoto": [],
+        "avatars.getTeamPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "avatars.updateTeamPhoto": [
+            "teamId",
+            "file"
+        ],
+        "avatars.deleteTeamPhoto": [
+            "teamId"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -4838,20 +4852,6 @@
             "teamId",
             "name"
         ],
-        "teams.getPhoto": [
-            "teamId",
-            "width",
-            "height",
-            "quality",
-            "output"
-        ],
-        "teams.updatePhoto": [
-            "teamId",
-            "file"
-        ],
-        "teams.deletePhoto": [
-            "teamId"
-        ],
         "teams.updatePrefs": [
             "teamId",
             "prefs"
@@ -5835,6 +5835,20 @@
             "acknowledged"
         ],
         "avatars.deletePhoto": [],
+        "avatars.getTeamPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "avatars.updateTeamPhoto": [
+            "teamId",
+            "file"
+        ],
+        "avatars.deleteTeamPhoto": [
+            "teamId"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -9264,20 +9278,6 @@
         "teams.updateName": [
             "teamId",
             "name"
-        ],
-        "teams.getPhoto": [
-            "teamId",
-            "width",
-            "height",
-            "quality",
-            "output"
-        ],
-        "teams.updatePhoto": [
-            "teamId",
-            "file"
-        ],
-        "teams.deletePhoto": [
-            "teamId"
         ],
         "teams.updatePrefs": [
             "teamId",
