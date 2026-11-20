@@ -813,6 +813,7 @@ export function DnsRecordsTable({
                     size="md"
                     maxWidth={180}
                     wrap={fullValues}
+                    dir="ltr"
                     showCopyOnHover={false}
                     className="-my-1.5 -ms-2.5"
                   />
@@ -827,6 +828,7 @@ export function DnsRecordsTable({
                   size="md"
                   maxWidth={200}
                   wrap={fullValues}
+                  dir="ltr"
                   showCopyOnHover={false}
                   className="-my-1.5 -ms-2.5"
                 />

@@ -11,9 +11,9 @@ import {
 import { useT } from '@/lib/i18n/translate'
 
 /**
- * Roles people get when they join through an email domain. Owner is left out:
- * a domain must never hand full control of the organization to everyone with a
- * company email.
+ * Roles people get when they join through an identity provider. Owner is left
+ * out: a provider must never hand full control of the organization to everyone
+ * who can sign in through it.
  */
 export const EMAIL_DOMAIN_ROLE_OPTIONS = ROLE_OPTIONS.filter(
   (role) => role.value !== 'owner',
@@ -28,10 +28,15 @@ export function EmailDomainRoles({
   value,
   onChange,
   disabled,
+  labelledBy,
+  describedBy,
 }: {
   value: string[]
   onChange: (roles: string[]) => void
   disabled?: boolean
+  /** Id of the visible label: the chips and the picker are one named group. */
+  labelledBy?: string
+  describedBy?: string
 }) {
   const t = useT()
   const available = EMAIL_DOMAIN_ROLE_OPTIONS.filter(
@@ -39,7 +44,12 @@ export function EmailDomainRoles({
   )
 
   return (
-    <div className="flex min-h-[36px] flex-wrap items-center gap-1.5 rounded-md border bg-transparent px-3 py-1.5">
+    <div
+      role="group"
+      aria-labelledby={labelledBy}
+      aria-describedby={describedBy}
+      className="flex min-h-[36px] flex-wrap items-center gap-1.5 rounded-md border bg-transparent px-3 py-1.5"
+    >
       {value.map((role) => {
         return (
           <Badge

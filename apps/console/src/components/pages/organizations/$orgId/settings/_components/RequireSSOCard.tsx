@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from '@tanstack/react-router'
 import { toast } from 'sonner'
@@ -24,6 +24,11 @@ import {
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
+import {
+  focusOnOpen,
+  useDialogFocusReturn,
+  useSingleSubmit,
+} from './SSOCardHelpers'
 
 /**
  * Require SSO for the whole organization: members on its verified domains reach
@@ -34,8 +39,10 @@ export function RequireSSOCard() {
   const t = useT()
   const { orgId = '' } = useParams({ strict: false })
   const { data: organization } = useQuery(organizationQueryOptions(orgId))
-  const { domains } = useOrganizationEmailDomains(orgId)
-  const { providers } = useOrganizationSSOProviders(orgId)
+  const { domains, isSuccess: domainsLoaded } =
+    useOrganizationEmailDomains(orgId)
+  const { providers, isSuccess: providersLoaded } =
+    useOrganizationSSOProviders(orgId)
   const update = useRequireOrganizationSSO(orgId)
   const [confirming, setConfirming] = useState(false)
 
@@ -47,12 +54,15 @@ export function RequireSSOCard() {
   )
   const hasEnabledProvider = providers.some((provider) => provider.enabled)
   // Turning it off always works; turning it on needs someone it applies to and a
-  // way for them to get in.
-  const hint = !hasVerifiedDomain
-    ? t('Verify a domain to require single sign-on.')
-    : !hasEnabledProvider
-      ? t('Enable an identity provider to require single sign-on.')
-      : null
+  // way for them to get in. Until both lists are in (or when one failed to
+  // load), nothing is claimed either way: the server still checks.
+  const hint = !(domainsLoaded && providersLoaded)
+    ? null
+    : !hasVerifiedDomain
+      ? t('Verify a domain to require single sign-on.')
+      : !hasEnabledProvider
+        ? t('Enable an identity provider to require single sign-on.')
+        : null
 
   // The switch is a draft until Update, like the other settings toggles.
   const [draft, setDraft] = useSyncStateFromServer(required)
@@ -62,22 +72,40 @@ export function RequireSSOCard() {
   // provider, so say so rather than show a plain "on".
   const paused = required && draft && hint !== null
 
-  const save = (value: boolean) => {
-    update.mutate(value, {
-      onSuccess: () =>
-        toast.success(
-          value
-            ? t('Single sign-on is now required')
-            : t('Single sign-on is no longer required'),
-        ),
-      onError: (failure: Error) =>
-        toast.error(
-          getErrorMessage(failure) || t('Failed to update single sign-on'),
-        ),
-    })
+  const switchRef = useRef<HTMLButtonElement>(null)
+  const updateButton = useRef<HTMLButtonElement>(null)
+  const confirmCancel = useRef<HTMLButtonElement>(null)
+  const confirmFocus = useDialogFocusReturn()
+
+  const submitOnce = useSingleSubmit()
+  const save = (value: boolean) =>
+    submitOnce((settle) =>
+      update.mutate(value, {
+        onSettled: settle,
+        onSuccess: () =>
+          toast.success(
+            value
+              ? t('Single sign-on is now required')
+              : t('Single sign-on is no longer required'),
+          ),
+        onError: (failure: Error) =>
+          toast.error(
+            getErrorMessage(failure) || t('Failed to update single sign-on'),
+          ),
+      }),
+    )
+
+  const openConfirm = () => {
+    // Update has nothing left to save once it is confirmed: then the switch.
+    confirmFocus.returnTo(
+      () => (update.isPending ? null : updateButton.current),
+      () => switchRef.current,
+    )
+    setConfirming(true)
   }
 
   const confirm = () => {
+    confirmFocus.returnTo(() => switchRef.current)
     closeDialogBeforeOverlayUnmount(() => setConfirming(false))
     save(true)
   }
@@ -89,7 +117,10 @@ export function RequireSSOCard() {
           <h3 className="text-[15px] font-semibold text-foreground">
             {t('Require SSO')}
           </h3>
-          <p className="mt-2 text-[13px] text-muted-foreground">
+          <p
+            id="sso-required-description"
+            className="mt-2 text-[13px] text-muted-foreground"
+          >
             {t(
               'Members with an email on your verified domains can open this organization only after signing in through your identity provider. Owners and members on other domains keep their usual sign-in.',
             )}
@@ -105,7 +136,10 @@ export function RequireSSOCard() {
                 </Label>
                 {paused ? <Badge variant="warning">{t('Paused')}</Badge> : null}
               </div>
-              <p className="mt-1 text-[12px] text-muted-foreground">
+              <p
+                id="sso-required-state"
+                className="mt-1 text-[12px] text-muted-foreground"
+              >
                 {blocked
                   ? hint
                   : paused
@@ -124,20 +158,26 @@ export function RequireSSOCard() {
               </p>
             </div>
             <Switch
+              ref={switchRef}
               id="sso-required"
               checked={draft}
-              onCheckedChange={setDraft}
-              disabled={update.isPending || blocked}
-              className="shrink-0"
+              // Stays focusable while saving: a focused control that turns
+              // disabled drops focus to the page.
+              onCheckedChange={(value) => !update.isPending && setDraft(value)}
+              aria-disabled={update.isPending || undefined}
+              aria-describedby="sso-required-state sso-required-description"
+              disabled={blocked}
+              className="shrink-0 aria-disabled:cursor-wait aria-disabled:opacity-50"
             />
           </div>
         </div>
         <div className="border-t border-border bg-muted/30 px-6 py-4">
           <Button
+            ref={updateButton}
             size="sm"
             className="h-9 text-[13px]"
             disabled={!hasChanges || update.isPending}
-            onClick={() => (draft ? setConfirming(true) : save(false))}
+            onClick={() => (draft ? openConfirm() : save(false))}
           >
             {t('Update')}
           </Button>
@@ -148,7 +188,11 @@ export function RequireSSOCard() {
         open={confirming}
         onOpenChange={(open) => !open && setConfirming(false)}
       >
-        <DialogContent className="sm:max-w-md p-0">
+        <DialogContent
+          className="sm:max-w-md p-0"
+          onOpenAutoFocus={focusOnOpen(() => confirmCancel.current)}
+          onCloseAutoFocus={confirmFocus.onCloseAutoFocus}
+        >
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>{t('Require single sign-on')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -159,6 +203,7 @@ export function RequireSSOCard() {
           </DialogHeader>
           <div className="flex flex-col-reverse gap-2 border-t border-border bg-muted/30 px-6 py-4 sm:flex-row sm:justify-end">
             <Button
+              ref={confirmCancel}
               variant="outline"
               onClick={() => setConfirming(false)}
               disabled={update.isPending}

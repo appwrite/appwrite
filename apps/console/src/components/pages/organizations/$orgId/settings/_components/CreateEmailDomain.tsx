@@ -20,6 +20,7 @@ import {
   domainFieldError,
   getDomainClaimReason,
 } from '@/lib/utils/proxy-domains'
+import { SSO_ERROR_TEXT, useSingleSubmit } from './SSOCardHelpers'
 import { getEmailDomainRecord } from './VerifyEmailDomain'
 
 export function CreateEmailDomain({
@@ -27,11 +28,14 @@ export function CreateEmailDomain({
   onOpenChange,
   organizationId,
   onCreated,
+  onCloseAutoFocus,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   organizationId: string
   onCreated: (rule: SSODomain) => void
+  /** Where focus goes on close: the dialog opens from state, not a trigger. */
+  onCloseAutoFocus?: (event: Event) => void
 }) {
   const t = useT()
   const [domain, setDomain] = useState('')
@@ -39,6 +43,7 @@ export function CreateEmailDomain({
   // Another organization holds the domain: the TXT record takes it over.
   const [claimDomain, setClaimDomain] = useState<string | null>(null)
   const create = useCreateOrganizationEmailDomain(organizationId)
+  const submitOnce = useSingleSubmit()
 
   const domainError = domainFieldError(domain, touched, t)
   const canSubmit = domain.trim() !== '' && !domainError && !create.isPending
@@ -58,24 +63,27 @@ export function CreateEmailDomain({
     event.preventDefault()
     setTouched(true)
     if (!canSubmit) return
-    create.mutate(
-      { domain },
-      {
-        onSuccess: (rule) => {
-          toast.success(t('Email domain added'))
-          close(false)
-          onCreated(rule)
+    submitOnce((settle) =>
+      create.mutate(
+        { domain },
+        {
+          onSettled: settle,
+          onSuccess: (rule) => {
+            toast.success(t('Email domain added'))
+            close(false)
+            onCreated(rule)
+          },
+          onError: (failure: Error) => {
+            if (getDomainClaimReason(failure) === 'held') {
+              setClaimDomain(domain.trim().toLowerCase())
+              return
+            }
+            toast.error(
+              getErrorMessage(failure) || t('Failed to add email domain'),
+            )
+          },
         },
-        onError: (failure: Error) => {
-          if (getDomainClaimReason(failure) === 'held') {
-            setClaimDomain(domain.trim().toLowerCase())
-            return
-          }
-          toast.error(
-            getErrorMessage(failure) || t('Failed to add email domain'),
-          )
-        },
-      },
+      ),
     )
   }
 
@@ -83,6 +91,7 @@ export function CreateEmailDomain({
     <Dialog open={open} onOpenChange={close}>
       <DialogContent
         className={claimDomain ? 'sm:max-w-2xl p-0' : 'sm:max-w-xl p-0'}
+        onCloseAutoFocus={onCloseAutoFocus}
       >
         <form onSubmit={handleSubmit}>
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
@@ -110,12 +119,21 @@ export function CreateEmailDomain({
                 }}
                 onBlur={() => setTouched(true)}
                 aria-invalid={!!domainError}
+                aria-describedby="email-domain-message"
                 disabled={create.isPending}
               />
               {domainError ? (
-                <p className="text-[12px] text-destructive">{domainError}</p>
+                <p
+                  id="email-domain-message"
+                  className={`text-[12px] ${SSO_ERROR_TEXT}`}
+                >
+                  {domainError}
+                </p>
               ) : (
-                <p className="text-[12px] text-muted-foreground">
+                <p
+                  id="email-domain-message"
+                  className="text-[12px] text-muted-foreground"
+                >
                   {t(
                     'Only the domain, without @. Subdomains need their own entry.',
                   )}

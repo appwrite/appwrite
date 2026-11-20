@@ -45,10 +45,18 @@ export function organizationEmailDomainsQueryOptions(
 export function useOrganizationEmailDomains(
   organizationId: string | null | undefined,
 ) {
-  const { data, isLoading } = useQuery(
+  const { data, isLoading, isError, isSuccess, refetch, isFetching } = useQuery(
     organizationEmailDomainsQueryOptions(organizationId),
   )
-  return { domains: data?.domains ?? [], isLoading }
+  // `isSuccess` tells an empty list from one that has not loaded or failed.
+  return {
+    domains: data?.domains ?? [],
+    isLoading,
+    isError,
+    isSuccess,
+    isFetching,
+    refetch,
+  }
 }
 
 function useRefreshEmailDomains(organizationId: string | null | undefined) {
@@ -125,10 +133,18 @@ export function organizationSSOProvidersQueryOptions(
 export function useOrganizationSSOProviders(
   organizationId: string | null | undefined,
 ) {
-  const { data, isLoading } = useQuery(
+  const { data, isLoading, isError, isSuccess, refetch, isFetching } = useQuery(
     organizationSSOProvidersQueryOptions(organizationId),
   )
-  return { providers: data?.providers ?? [], isLoading }
+  // `isSuccess` tells an empty list from one that has not loaded or failed.
+  return {
+    providers: data?.providers ?? [],
+    isLoading,
+    isError,
+    isSuccess,
+    isFetching,
+    refetch,
+  }
 }
 
 function useRefreshSSOProviders(organizationId: string | null | undefined) {

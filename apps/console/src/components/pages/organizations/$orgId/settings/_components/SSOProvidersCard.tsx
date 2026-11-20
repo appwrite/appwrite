@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from '@tanstack/react-router'
 import { KeyRound, Link2, Pencil, Trash2 } from 'lucide-react'
@@ -50,6 +50,13 @@ import { buildConsoleUrl, copyToClipboard } from '@/lib/utils/context-menu'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
 import { EmailDomainRoles, emailDomainRoleLabel } from './EmailDomainRoles'
+import {
+  focusOnOpen,
+  SSO_ERROR_TEXT,
+  SSOListLoadError,
+  useDialogFocusReturn,
+  useSingleSubmit,
+} from './SSOCardHelpers'
 
 const HEAD =
   'px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
@@ -58,8 +65,14 @@ const HEAD =
 export function SSOProvidersCard() {
   const t = useT()
   const { orgId = '' } = useParams({ strict: false })
-  const { providers } = useOrganizationSSOProviders(orgId)
-  const { domains } = useOrganizationEmailDomains(orgId)
+  const {
+    providers,
+    isError: loadFailed,
+    isFetching,
+    refetch,
+  } = useOrganizationSSOProviders(orgId)
+  const { domains, isSuccess: domainsLoaded } =
+    useOrganizationEmailDomains(orgId)
   const { data: organization } = useQuery(organizationQueryOptions(orgId))
   const save = useSaveOrganizationSSOProvider(orgId)
   const remove = useDeleteOrganizationSSOProvider(orgId)
@@ -79,7 +92,48 @@ export function SSOProvidersCard() {
   const [editing, setEditing] = useState<SSOProvider | 'new' | null>(null)
   const [deleting, setDeleting] = useState<SSOProvider | null>(null)
 
+  // Focus goes back to what opened a dialog: the dialogs open from state, so
+  // Radix has no trigger to return it to.
+  const addButton = useRef<HTMLButtonElement>(null)
+  const rowMenus = useRef(new Map<string, HTMLButtonElement>())
+  const deleteCancel = useRef<HTMLButtonElement>(null)
+  const formFocus = useDialogFocusReturn()
+  const deleteFocus = useDialogFocusReturn()
+  const rowMenuRef = (id: string) => (element: HTMLButtonElement | null) => {
+    if (element) rowMenus.current.set(id, element)
+    else rowMenus.current.delete(id)
+  }
+  const openForm = (provider: SSOProvider | 'new') => {
+    formFocus.returnTo(
+      () =>
+        provider === 'new'
+          ? addButton.current
+          : rowMenus.current.get(provider.$id),
+      () => addButton.current,
+    )
+    setEditing(provider)
+  }
+  const openDelete = (provider: SSOProvider) => {
+    deleteFocus.returnTo(
+      () => rowMenus.current.get(provider.$id),
+      () => addButton.current,
+    )
+    setDeleting(provider)
+  }
+
+  // Only the row being saved waits. Its switch stays focusable (a focused
+  // control that turns disabled drops focus to the page) and ignores input
+  // until the save settles.
+  const [toggling, setToggling] = useState<ReadonlySet<string>>(new Set())
+  const togglingNow = useRef(new Set<string>())
   const toggle = (provider: SSOProvider, enabled: boolean) => {
+    if (togglingNow.current.has(provider.$id)) return
+    togglingNow.current.add(provider.$id)
+    setToggling(new Set(togglingNow.current))
+    const settle = () => {
+      togglingNow.current.delete(provider.$id)
+      setToggling(new Set(togglingNow.current))
+    }
     save.mutate(
       {
         providerId: provider.$id,
@@ -109,18 +163,32 @@ export function SSOProvidersCard() {
           toast.error(
             getErrorMessage(failure) || t('Failed to update provider'),
           ),
+        onSettled: settle,
       },
     )
   }
 
+  const submitOnce = useSingleSubmit()
   const confirmDelete = () => {
     if (!deleting) return
     const provider = deleting
-    closeDialogBeforeOverlayUnmount(() => setDeleting(null))
-    remove.mutate(provider.$id, {
-      onSuccess: () => toast.success(t('Identity provider deleted')),
-      onError: (failure: Error) =>
-        toast.error(getErrorMessage(failure) || t('Failed to delete provider')),
+    submitOnce((settle) => {
+      // The row goes away: focus its neighbour, or Add provider.
+      const index = providers.findIndex((item) => item.$id === provider.$id)
+      const neighbour = providers[index + 1] ?? providers[index - 1]
+      deleteFocus.returnTo(
+        () => (neighbour ? rowMenus.current.get(neighbour.$id) : null),
+        () => addButton.current,
+      )
+      closeDialogBeforeOverlayUnmount(() => setDeleting(null))
+      remove.mutate(provider.$id, {
+        onSuccess: () => toast.success(t('Identity provider deleted')),
+        onError: (failure: Error) =>
+          toast.error(
+            getErrorMessage(failure) || t('Failed to delete provider'),
+          ),
+        onSettled: settle,
+      })
     })
   }
 
@@ -139,7 +207,7 @@ export function SSOProvidersCard() {
           </p>
         </div>
         <div className="border-t border-border" />
-        {providers.length > 0 && !hasVerifiedDomain ? (
+        {providers.length > 0 && domainsLoaded && !hasVerifiedDomain ? (
           <div className="border-b border-border px-6 py-4">
             <Alert>
               <AlertDescription className="text-[13px]">
@@ -150,7 +218,13 @@ export function SSOProvidersCard() {
             </Alert>
           </div>
         ) : null}
-        {providers.length === 0 ? (
+        {loadFailed ? (
+          <SSOListLoadError
+            title={t('Failed to load identity providers')}
+            onRetry={() => void refetch()}
+            retrying={isFetching}
+          />
+        ) : providers.length === 0 ? (
           <div className="px-6 py-4">
             <EmptyState
               icon={KeyRound}
@@ -186,7 +260,8 @@ export function SSOProvidersCard() {
                       {provider.name}
                     </div>
                     <div
-                      className="truncate font-mono text-[12px] text-muted-foreground"
+                      dir="ltr"
+                      className="w-fit max-w-full truncate font-mono text-[12px] text-muted-foreground"
                       title={provider.clientId}
                     >
                       {provider.clientId}
@@ -206,13 +281,15 @@ export function SSOProvidersCard() {
                       checked={provider.enabled}
                       onCheckedChange={(enabled) => toggle(provider, enabled)}
                       aria-label={`${t('Enable')} ${provider.name}`}
-                      disabled={save.isPending}
+                      aria-disabled={toggling.has(provider.$id) || undefined}
+                      className="aria-disabled:cursor-wait aria-disabled:opacity-50"
                     />
                   </TableCell>
                   <TableCell className="px-4 py-3 text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <RowActionsMenuTrigger
+                          ref={rowMenuRef(provider.$id)}
                           aria-label={`${t('Actions for')} ${provider.name}`}
                         />
                       </DropdownMenuTrigger>
@@ -232,13 +309,13 @@ export function SSOProvidersCard() {
                             {t('Copy SSO URL')}
                           </MenuItemContent>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setEditing(provider)}>
+                        <DropdownMenuItem onClick={() => openForm(provider)}>
                           <MenuItemContent icon={Pencil}>
                             {t('Update')}
                           </MenuItemContent>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => setDeleting(provider)}>
+                        <DropdownMenuItem onClick={() => openDelete(provider)}>
                           <MenuItemContent icon={Trash2}>
                             {t('Delete')}
                           </MenuItemContent>
@@ -253,9 +330,10 @@ export function SSOProvidersCard() {
         )}
         <div className="border-t border-border bg-muted/30 px-6 py-4">
           <Button
+            ref={addButton}
             size="sm"
             className="h-9 text-[13px]"
-            onClick={() => setEditing('new')}
+            onClick={() => openForm('new')}
             {...analyticsAttrs('create-sso-provider')}
           >
             {t('Add provider')}
@@ -267,17 +345,25 @@ export function SSOProvidersCard() {
         provider={editing}
         organizationId={orgId}
         onOpenChange={(open) => !open && setEditing(null)}
+        onCloseAutoFocus={formFocus.onCloseAutoFocus}
       />
 
       <Dialog
         open={deleting !== null}
         onOpenChange={(open) => !open && setDeleting(null)}
       >
-        <DialogContent className="sm:max-w-md p-0">
+        <DialogContent
+          className="sm:max-w-md p-0"
+          onOpenAutoFocus={focusOnOpen(() => deleteCancel.current)}
+          onCloseAutoFocus={deleteFocus.onCloseAutoFocus}
+        >
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>{t('Delete identity provider')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              {t('Are you sure you want to delete')} "{deleting?.name}"?{' '}
+              {t('Are you sure you want to delete "{name}"?').replace(
+                '{name}',
+                deleting?.name ?? '',
+              )}{' '}
               {t(
                 'People can no longer sign in through it. People who already joined stay members.',
               )}
@@ -288,6 +374,7 @@ export function SSOProvidersCard() {
           </DialogHeader>
           <div className="flex flex-col-reverse gap-2 border-t border-border bg-muted/30 px-6 py-4 sm:flex-row sm:justify-end">
             <Button
+              ref={deleteCancel}
               variant="outline"
               onClick={() => setDeleting(null)}
               disabled={remove.isPending}
@@ -313,15 +400,20 @@ function ProviderDialog({
   provider,
   organizationId,
   onOpenChange,
+  onCloseAutoFocus,
 }: {
   provider: SSOProvider | 'new' | null
   organizationId: string
   onOpenChange: (open: boolean) => void
+  onCloseAutoFocus: (event: Event) => void
 }) {
   const open = provider !== null
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl p-0">
+      <DialogContent
+        className="sm:max-w-xl p-0"
+        onCloseAutoFocus={onCloseAutoFocus}
+      >
         {open ? (
           <ProviderForm
             key={provider === 'new' ? 'new' : provider.$id}
@@ -346,6 +438,7 @@ function ProviderForm({
 }) {
   const t = useT()
   const save = useSaveOrganizationSSOProvider(organizationId)
+  const submitOnce = useSingleSubmit()
   const [name, setName] = useState(provider?.name ?? '')
   const [roles, setRoles] = useState<string[]>(provider?.roles ?? ['developer'])
   const [clientId, setClientId] = useState(provider?.clientId ?? '')
@@ -414,37 +507,42 @@ function ProviderForm({
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
     setSubmitted(true)
-    if (!valid || save.isPending) return
-    save.mutate(
-      {
-        providerId: provider?.$id,
-        params: {
-          name: name.trim(),
-          roles,
-          clientId: clientId.trim(),
-          // A pasted secret often carries a trailing space or newline.
-          ...(clientSecret.trim() !== ''
-            ? { clientSecret: clientSecret.trim() }
-            : {}),
-          wellKnownURL: wellKnownURL.trim(),
-          authorizationURL: authorizationURL.trim(),
-          tokenURL: tokenURL.trim(),
-          userInfoURL: userInfoURL.trim(),
-          enabled,
+    if (!valid) return
+    submitOnce((settle) =>
+      save.mutate(
+        {
+          providerId: provider?.$id,
+          params: {
+            name: name.trim(),
+            roles,
+            clientId: clientId.trim(),
+            // A pasted secret often carries a trailing space or newline.
+            ...(clientSecret.trim() !== ''
+              ? { clientSecret: clientSecret.trim() }
+              : {}),
+            wellKnownURL: wellKnownURL.trim(),
+            authorizationURL: authorizationURL.trim(),
+            tokenURL: tokenURL.trim(),
+            userInfoURL: userInfoURL.trim(),
+            enabled,
+          },
         },
-      },
-      {
-        onSuccess: () => {
-          toast.success(
-            provider
-              ? t('Identity provider updated')
-              : t('Identity provider added'),
-          )
-          onDone()
+        {
+          onSuccess: () => {
+            toast.success(
+              provider
+                ? t('Identity provider updated')
+                : t('Identity provider added'),
+            )
+            onDone()
+          },
+          onError: (failure: Error) =>
+            toast.error(
+              getErrorMessage(failure) || t('Failed to save provider'),
+            ),
+          onSettled: settle,
         },
-        onError: (failure: Error) =>
-          toast.error(getErrorMessage(failure) || t('Failed to save provider')),
-      },
+      ),
     )
   }
 
@@ -454,12 +552,13 @@ function ProviderForm({
         <Label htmlFor="sso-enabled" className="text-[13px] font-medium">
           {t('Enabled')}
         </Label>
-        <p className="text-[12px] text-muted-foreground">
+        <p id="sso-enabled-hint" className="text-[12px] text-muted-foreground">
           {t('People can sign in through this provider.')}
         </p>
       </div>
       <Switch
         id="sso-enabled"
+        aria-describedby="sso-enabled-hint"
         checked={enabled}
         onCheckedChange={setEnabled}
         disabled={save.isPending}
@@ -496,6 +595,7 @@ function ProviderForm({
           <div className="flex items-center gap-2">
             <Input
               id="sso-redirect"
+              dir="ltr"
               value={redirectURL}
               readOnly
               className="font-mono text-[12px]"
@@ -514,24 +614,44 @@ function ProviderForm({
             maxLength={128}
             onChange={(event) => setName(event.target.value)}
             aria-invalid={!!errors.name}
+            aria-describedby="sso-name-message"
             disabled={save.isPending}
           />
           {errors.name ? (
-            <p className="text-[12px] text-destructive">{errors.name}</p>
+            <p
+              id="sso-name-message"
+              className={`text-[12px] ${SSO_ERROR_TEXT}`}
+            >
+              {errors.name}
+            </p>
           ) : (
-            <p className="text-[12px] text-muted-foreground">
+            <p
+              id="sso-name-message"
+              className="text-[12px] text-muted-foreground"
+            >
               {t('People see the name when they choose how to sign in.')}
             </p>
           )}
         </div>
         <div className="space-y-2">
-          <Label className="text-[13px] font-medium">{t('Roles')}</Label>
+          <Label id="sso-roles-label" className="text-[13px] font-medium">
+            {t('Roles')}
+          </Label>
           <EmailDomainRoles
             value={roles}
             onChange={setRoles}
             disabled={save.isPending}
+            labelledBy="sso-roles-label"
+            describedBy="sso-roles-message"
           />
-          <p className="text-[12px] text-muted-foreground">
+          <p
+            id="sso-roles-message"
+            className={`text-[12px] ${
+              submitted && roles.length === 0
+                ? SSO_ERROR_TEXT
+                : 'text-muted-foreground'
+            }`}
+          >
             {roles.length === 0
               ? t('Pick at least one role.')
               : t('Roles people get when they join through this provider.')}
@@ -544,15 +664,24 @@ function ProviderForm({
             </Label>
             <Input
               id="sso-client-id"
+              dir="ltr"
               value={clientId}
               autoComplete="off"
               maxLength={256}
               onChange={(event) => setClientId(event.target.value)}
               aria-invalid={!!errors.clientId}
+              aria-describedby={
+                errors.clientId ? 'sso-client-id-message' : undefined
+              }
               disabled={save.isPending}
             />
             {errors.clientId ? (
-              <p className="text-[12px] text-destructive">{errors.clientId}</p>
+              <p
+                id="sso-client-id-message"
+                className={`text-[12px] ${SSO_ERROR_TEXT}`}
+              >
+                {errors.clientId}
+              </p>
             ) : null}
           </div>
           <div className="space-y-2">
@@ -564,6 +693,7 @@ function ProviderForm({
             </Label>
             <Input
               id="sso-client-secret"
+              dir="ltr"
               type="password"
               value={clientSecret}
               autoComplete="new-password"
@@ -573,10 +703,16 @@ function ProviderForm({
               maxLength={512}
               onChange={(event) => setClientSecret(event.target.value)}
               aria-invalid={!!errors.clientSecret}
+              aria-describedby={
+                errors.clientSecret ? 'sso-client-secret-message' : undefined
+              }
               disabled={save.isPending}
             />
             {errors.clientSecret ? (
-              <p className="text-[12px] text-destructive">
+              <p
+                id="sso-client-secret-message"
+                className={`text-[12px] ${SSO_ERROR_TEXT}`}
+              >
                 {errors.clientSecret}
               </p>
             ) : null}
@@ -588,15 +724,22 @@ function ProviderForm({
           </Label>
           <Input
             id="sso-well-known"
+            dir="ltr"
             value={wellKnownURL}
             placeholder="https://example.okta.com/.well-known/openid-configuration"
             maxLength={2048}
             onChange={(event) => setWellKnownURL(event.target.value)}
             aria-invalid={!!errors.wellKnownURL}
+            aria-describedby={
+              errors.wellKnownURL ? 'sso-well-known-message' : undefined
+            }
             disabled={save.isPending}
           />
           {errors.wellKnownURL ? (
-            <p className="text-[12px] text-destructive">
+            <p
+              id="sso-well-known-message"
+              className={`text-[12px] ${SSO_ERROR_TEXT}`}
+            >
               {errors.wellKnownURL}
             </p>
           ) : null}
@@ -648,14 +791,21 @@ function ProviderForm({
                 </Label>
                 <Input
                   id={id}
+                  dir="ltr"
                   value={value}
                   maxLength={2048}
                   onChange={(event) => setValue(event.target.value)}
                   aria-invalid={!!error}
+                  aria-describedby={error ? `${id}-message` : undefined}
                   disabled={save.isPending}
                 />
                 {error ? (
-                  <p className="text-[12px] text-destructive">{error}</p>
+                  <p
+                    id={`${id}-message`}
+                    className={`text-[12px] ${SSO_ERROR_TEXT}`}
+                  >
+                    {error}
+                  </p>
                 ) : null}
               </div>
             ))}

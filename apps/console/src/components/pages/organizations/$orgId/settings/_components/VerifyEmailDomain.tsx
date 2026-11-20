@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { DnsRecordsTable } from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -18,6 +18,7 @@ import {
   getErrorMessage,
 } from '@/lib/utils/error-formatting'
 import { getClaimRecord } from '@/lib/utils/proxy-domains'
+import { focusOnOpen, SSO_ALERT_ERROR_TEXT } from './SSOCardHelpers'
 
 /** TXT record that proves an organization owns an email domain: `team:<orgId>` at `_appwrite`. */
 export function getEmailDomainRecord(domain: string, organizationId: string) {
@@ -28,12 +29,18 @@ export function VerifyEmailDomain({
   rule,
   organizationId,
   onOpenChange,
+  onVerified,
+  onCloseAutoFocus,
 }: {
   rule: SSODomain | null
   organizationId: string
   onOpenChange: (open: boolean) => void
+  onVerified?: (rule: SSODomain) => void
+  /** Where focus goes on close: the dialog opens from state, not a trigger. */
+  onCloseAutoFocus?: (event: Event) => void
 }) {
   const t = useT()
+  const later = useRef<HTMLButtonElement>(null)
   const [error, setError] = useState<string | null>(null)
   const verify = useVerifyOrganizationEmailDomain(organizationId)
 
@@ -49,6 +56,7 @@ export function VerifyEmailDomain({
       onSuccess: (updated) => {
         if (updated.status === 'verified') {
           toast.success(t('Domain verified'))
+          onVerified?.(rule)
           close(false)
           return
         }
@@ -79,10 +87,14 @@ export function VerifyEmailDomain({
 
   return (
     <Dialog open={rule !== null} onOpenChange={close}>
-      <DialogContent className="sm:max-w-3xl p-0">
+      <DialogContent
+        className="sm:max-w-3xl p-0"
+        onOpenAutoFocus={focusOnOpen(() => later.current)}
+        onCloseAutoFocus={onCloseAutoFocus}
+      >
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>{t('Verify domain')}</DialogTitle>
-          <p className="mt-1 font-mono text-[13px] text-foreground">
+          <p dir="ltr" className="mt-1 font-mono text-[13px] text-foreground">
             {rule?.domain}
           </p>
           <DialogDescription className="text-[13px] mt-2">
@@ -109,14 +121,16 @@ export function VerifyEmailDomain({
           </p>
           {error ? (
             <Alert variant="destructive">
-              <AlertDescription className="text-[13px]">
+              <AlertDescription
+                className={`text-[13px] ${SSO_ALERT_ERROR_TEXT}`}
+              >
                 {error}
               </AlertDescription>
             </Alert>
           ) : null}
         </div>
         <div className="flex flex-col-reverse gap-2 border-t border-border bg-muted/30 px-6 py-4 sm:flex-row sm:justify-end">
-          <Button variant="outline" onClick={() => close(false)}>
+          <Button ref={later} variant="outline" onClick={() => close(false)}>
             {t('Later')}
           </Button>
           <Button onClick={handleVerify} disabled={verify.isPending}>
