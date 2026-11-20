@@ -15,7 +15,6 @@ use Appwrite\Platform\Modules\Teams\Http\Teams\Delete as DeleteTeam;
 use Appwrite\Platform\Modules\Teams\Http\Teams\Get as GetTeam;
 use Appwrite\Platform\Modules\Teams\Http\Teams\Name\Update as UpdateTeamName;
 use Appwrite\Platform\Modules\Avatars\Http\Teams\Photo\Delete as DeleteTeamPhoto;
-use Appwrite\Platform\Modules\Avatars\Http\Teams\Photo\Update as UpdateTeamPhoto;
 use Appwrite\Platform\Modules\Teams\Http\Teams\XList as ListTeams;
 use Utopia\Platform\Service;
 
@@ -31,7 +30,6 @@ class Http extends Service
         $this->addAction('listTeams', ListTeams::class);
         $this->addAction('deleteTeam', DeleteTeam::class);
         $this->addAction('updateTeamName', UpdateTeamName::class);
-        $this->addAction('updateTeamPhoto', UpdateTeamPhoto::class);
         $this->addAction('deleteTeamPhoto', DeleteTeamPhoto::class);
 
         // Preferences
