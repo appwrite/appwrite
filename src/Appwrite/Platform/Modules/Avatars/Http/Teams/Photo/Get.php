@@ -42,7 +42,7 @@ class Get extends Action
             ->setHttpPath('/v1/avatars/teams/:teamId/photo')
             ->httpAlias('/v1/teams/:teamId/photo')
             ->desc('Get photo')
-            ->groups(['api', 'teams'])
+            ->groups(['api', 'avatars'])
             ->label('scope', 'teams.read')
             ->label('sdk', new Method(
                 namespace: 'teams',
