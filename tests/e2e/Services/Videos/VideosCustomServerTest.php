@@ -14,6 +14,7 @@ use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Scopes\VideoCustom;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
+use Utopia\Database\Document;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
@@ -798,6 +799,58 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(200, $uncounted['headers']['status-code']);
         $this->assertCount(1, $uncounted['body']['captions']);
         $this->assertEquals(0, $uncounted['body']['total']);
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function childListsProvider(): iterable
+    {
+        yield 'captions' => ['captions'];
+        yield 'renditions' => ['renditions'];
+    }
+
+    /**
+     * A cursor must name a row of the video being listed. A row of another video
+     * is rejected the same way as an ID that does not exist, so the list cannot
+     * reveal whether that row exists or how it sorts against the caller's rows.
+     */
+    #[DataProvider('childListsProvider')]
+    public function testListRejectsACursorFromAnotherVideo(string $children): void
+    {
+        $videoId = $this->createVideo();
+        $otherVideoId = $this->createVideo();
+
+        $createChild = fn (string $id): string => $children === 'captions'
+            ? $this->createCaption($id)
+            : $this->createRendition($id, 'hls');
+
+        $ownId = $createChild($videoId);
+        $otherId = $createChild($otherVideoId);
+
+        $own = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/' . $children, $this->headers(), [
+            'queries' => [Query::cursorAfter(new Document(['$id' => $ownId]))->toString()],
+        ]);
+        $this->assertEquals(200, $own['headers']['status-code']);
+
+        $foreign = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/' . $children, $this->headers(), [
+            'queries' => [Query::cursorAfter(new Document(['$id' => $otherId]))->toString()],
+        ]);
+        $this->assertEquals(400, $foreign['headers']['status-code']);
+        $this->assertEquals('general_cursor_not_found', $foreign['body']['type']);
+    }
+
+    private function createCaption(string $videoId): string
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getCaptionFile()['$id'],
+            'name' => 'English',
+            'code' => 'eng',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        return $response['body']['$id'];
     }
 
     public function testUpdateCaption(): void
