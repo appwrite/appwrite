@@ -528,9 +528,17 @@ class Action extends PlatformAction
         }
 
         // A subdomain whose full name was entered as the host, which the DNS provider then extended with its zone.
+        // Only looked up when no target already points the domain to Appwrite, as it could not change the outcome.
         $registerable = $domain->getRegisterable();
+        $pointed = false;
+        foreach ($records as $record) {
+            if (!$record['required'] && $record['status'] === 'verified') {
+                $pointed = true;
+                break;
+            }
+        }
         $missing = \array_keys(\array_filter($records, fn (array $record) => $record['type'] === 'CNAME' && $record['status'] === 'missing'));
-        if (empty($missing) || $registerable === '' || $domain->get() === $registerable) {
+        if ($pointed || empty($missing) || $registerable === '' || $domain->get() === $registerable) {
             return $records;
         }
 
