@@ -530,7 +530,7 @@ class Action extends PlatformAction
         // A subdomain whose full name was entered as the host, which the DNS provider then extended with its zone.
         $registerable = $domain->getRegisterable();
         $missing = \array_keys(\array_filter($records, fn (array $record) => $record['type'] === 'CNAME' && $record['status'] === 'missing'));
-        if (empty($missing) || $registerable === '') {
+        if (empty($missing) || $registerable === '' || $domain->get() === $registerable) {
             return $records;
         }
 
