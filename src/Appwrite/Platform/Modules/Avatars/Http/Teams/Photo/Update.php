@@ -48,7 +48,7 @@ class Update extends Base
             ->setHttpPath('/v1/avatars/teams/:teamId/photo')
             ->httpAlias('/v1/teams/:teamId/photo')
             ->desc('Update photo')
-            ->groups(['api', 'avatars'])
+            ->groups(['api', 'avatars', 'teams'])
             ->label('event', 'teams.[teamId].update')
             ->label('scope', 'teams.write')
             ->label('audits.event', 'team.update')
