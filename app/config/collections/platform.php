@@ -264,6 +264,8 @@ $platformCollections = [
             Attribute::string(key: 'acknowledgedBy', default: ''),
             Attribute::string(key: 'acknowledgedByName', size: 128, default: ''),
             Attribute::string(key: 'escalationPolicyId', default: ''),
+            Attribute::string(key: 'escalationSteps', size: 65535, default: [], filters: [Filter::Json]),
+            Attribute::integer(key: 'escalationRepeat', default: 0, signed: false),
             Attribute::integer(key: 'escalationStep', default: 0, signed: false),
             Attribute::integer(key: 'escalationRound', default: 0, signed: false),
             Attribute::datetime(key: 'escalatesAt'),

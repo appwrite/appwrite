@@ -16,6 +16,9 @@ use Utopia\System\System;
  */
 readonly class Escalations
 {
+    /** Seconds until a step the scheduler failed to enqueue is tried again. */
+    private const int RETRY = 10;
+
     public function __construct(private Database $dbForPlatform)
     {
     }
@@ -36,9 +39,10 @@ readonly class Escalations
     }
 
     /**
-     * Starts escalating a firing alert through the policy: the first step is
-     * due its delay from now. An alert already escalating is left as it is, so
-     * a retried evaluation goes on from where the first one got to.
+     * Starts escalating a firing alert through the policy, whose steps and
+     * repeats the alert keeps: the first step is due its delay from now. An
+     * alert already escalating is left as it is, so a retried evaluation goes
+     * on from where the first one got to.
      */
     public function start(Document $alert, Document $policy, \DateTimeImmutable $now): Document
     {
@@ -46,13 +50,16 @@ readonly class Escalations
             return $alert;
         }
 
-        $steps = Policy::fromDocument($policy)->steps;
+        $parsed = Policy::fromDocument($policy);
+        $steps = $parsed->steps;
         if ($steps === []) {
             return $alert;
         }
 
         return $this->write($alert, [
             'escalationPolicyId' => $policy->getId(),
+            'escalationSteps' => $parsed->toArray(),
+            'escalationRepeat' => $parsed->repeat,
             'escalationStep' => 0,
             'escalationRound' => 0,
             'escalatesAt' => self::format($now->modify('+' . $steps[0]->delay . ' seconds')),
@@ -104,14 +111,34 @@ readonly class Escalations
             return $alert;
         }
 
-        $policy = $this->policy((string) $alert->getAttribute('escalationPolicyId'), (string) $alert->getAttribute('teamInternalId'));
-        $steps = $policy->isEmpty() ? [] : Policy::fromDocument($policy)->steps;
-        $step = $steps[(int) $alert->getAttribute('escalationStep', 0)] ?? null;
+        $step = Policy::fromAlert($alert)->steps[(int) $alert->getAttribute('escalationStep', 0)] ?? null;
         if ($step === null) {
             return $alert;
         }
 
         return $this->write($alert, ['escalatesAt' => self::format($now->modify('+' . $step->delay . ' seconds'))]);
+    }
+
+    /**
+     * Fires the alert's timer again a few seconds from now, for a due step the
+     * scheduler could not hand to the worker. The alert keeps its due time, so
+     * the worker finds the step due.
+     */
+    public function retry(string $alertId): void
+    {
+        $schedule = $this->dbForPlatform->getAuthorization()->skip(fn () => $this->dbForPlatform->findOne('schedules', [
+            Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+            Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_ESCALATION]),
+            Query::equal('resourceId', [$alertId]),
+        ]));
+        if ($schedule->isEmpty() || !$schedule->getAttribute('active', false)) {
+            return;
+        }
+
+        $this->dbForPlatform->getAuthorization()->skip(fn () => $this->dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
+            'schedule' => self::format(new \DateTimeImmutable('+' . self::RETRY . ' seconds')),
+            'resourceUpdatedAt' => DateTime::now(),
+        ])));
     }
 
     /**

@@ -249,8 +249,7 @@ class Alerts extends Action
                 $this->escalate($monitor, $alert, $project, $value, $now, $dbForPlatform, $publisherForNotifications, $platform, $dbForProject);
             } elseif ($alert->getAttribute('escalationPolicyId', '') !== '') {
                 // The resolution goes to everyone the escalation reached, who may be nobody yet.
-                $escalated = $escalations->policy((string) $alert->getAttribute('escalationPolicyId'), (string) $alert->getAttribute('teamInternalId', ''));
-                $audience = $escalated->isEmpty() ? new Audience([]) : Policy::fromDocument($escalated)->reached((int) $alert->getAttribute('escalationStep', 0), (int) $alert->getAttribute('escalationRound', 0));
+                $audience = Policy::fromAlert($alert)->reached((int) $alert->getAttribute('escalationStep', 0), (int) $alert->getAttribute('escalationRound', 0));
                 if (!$audience->isEmpty()) {
                     $this->notify($monitor, $alert, $project, $status, $value, $evaluatedAt, $dbForPlatform, $publisherForNotifications, $platform, $dbForProject, $audience);
                 }
@@ -592,7 +591,7 @@ class Alerts extends Action
 
     /**
      * One due step of an alert's escalation, fired by the alert's timer. An
-     * alert that resolved, was acknowledged, or lost its monitor or policy
+     * alert that resolved, was acknowledged, or lost its monitor
      * escalates no further.
      *
      * @param array<string, mixed> $platform
@@ -644,14 +643,8 @@ class Alerts extends Action
         ?Database $dbForProject = null,
     ): void {
         $escalations = new Escalations($dbForPlatform);
-        $document = $escalations->policy((string) $alert->getAttribute('escalationPolicyId', ''), (string) $project->getAttribute('teamInternalId', ''));
-        if ($document->isEmpty()) {
-            $escalations->stop($alert);
-
-            return;
-        }
-
-        $policy = Policy::fromDocument($document);
+        // The steps the alert started with, whatever its policy holds now.
+        $policy = Policy::fromAlert($alert);
         // The scheduler's clock may run slightly ahead of this worker's.
         $horizon = $now->modify('+' . self::ESCALATION_SKEW . ' seconds');
         $notified = false;

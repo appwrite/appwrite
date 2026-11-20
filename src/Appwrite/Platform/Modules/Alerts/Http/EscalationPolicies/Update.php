@@ -42,7 +42,7 @@ class Update extends Base
                 group: 'escalationPolicies',
                 name: 'updateEscalationPolicy',
                 description: <<<EOT
-                Update an escalation policy's name, steps or repeats; what you leave out stays as it is. Alerts already escalating go on with the new steps from the step they reached.
+                Update an escalation policy's name, steps or repeats; what you leave out stays as it is. Alerts already escalating keep the steps they started with; the next alert uses the new ones.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::ORGANIZATION],
                 responses: [

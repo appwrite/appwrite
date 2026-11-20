@@ -564,6 +564,13 @@ final class EvaluationCustomServerTest extends Scope
         }, 30_000, 1_000);
         $this->assertSame([], $this->emailSubjects($last, $name));
 
+        // Editing the policy changes the next alert, not this one: it keeps the steps it started with.
+        $edited = $this->client->call(Client::METHOD_PUT, '/organization/escalation-policies/' . $policy['body']['$id'], $this->organizationHeaders($teamId), [
+            'steps' => [['delay' => 0, 'roles' => ['owner']]],
+        ]);
+        $this->assertSame(200, $edited['headers']['status-code']);
+        $this->assertCount(1, $edited['body']['steps']);
+
         // Acknowledging stops the escalation before step 3: the named member is never told.
         $acknowledged = $this->updateAlert($firing['alertId'], true);
         $this->assertNull($acknowledged['escalatesAt']);

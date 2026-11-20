@@ -77,6 +77,18 @@ readonly class Policy
         return new self($parsed, $repeat);
     }
 
+    /**
+     * The steps and repeats an escalating alert started with, which it keeps
+     * however its policy is edited later, as it keeps its monitor's rules.
+     */
+    public static function fromAlert(Document $alert): self
+    {
+        return self::fromDocument(new Document([
+            'steps' => $alert->getAttribute('escalationSteps', []),
+            'repeat' => $alert->getAttribute('escalationRepeat', 0),
+        ]));
+    }
+
     public static function fromDocument(Document $policy): self
     {
         return new self(

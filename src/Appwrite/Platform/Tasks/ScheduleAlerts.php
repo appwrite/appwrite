@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Alert\Escalations;
 use Appwrite\Event\Message\Alert as AlertMessage;
 use Appwrite\Event\Publisher\Alert as AlertPublisher;
 use Appwrite\Schedule\Source;
@@ -48,7 +49,7 @@ class ScheduleAlerts extends Action
         );
 
         // A Redis failure ends the loop that holds the connection; the pool drops it.
-        $pools->get('lock')->use(function (\Redis $redis) use ($source, $telemetry, $publisherForAlerts): void {
+        $pools->get('lock')->use(function (\Redis $redis) use ($source, $telemetry, $publisherForAlerts, $dbForPlatform): void {
             $scheduler = new Scheduler(
                 source: $source,
                 store: new ClaimStore($redis, self::getName() . ':' . System::getEnv('_APP_REGION', 'default')),
@@ -60,7 +61,7 @@ class ScheduleAlerts extends Action
                 },
             );
 
-            $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForAlerts));
+            $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForAlerts, $dbForPlatform));
         });
 
         Span::init('schedule.alerts.stopped');
@@ -99,11 +100,11 @@ class ScheduleAlerts extends Action
 
     /**
      * Nothing here may throw: an exception ends the scheduler loop. A failed
-     * enqueue costs that rule one evaluation.
+     * enqueue costs that rule one evaluation, and re-arms an escalation step.
      *
      * @param list<Occurrence> $occurrences
      */
-    private function dispatch(array $occurrences, AlertPublisher $publisherForAlerts): null
+    private function dispatch(array $occurrences, AlertPublisher $publisherForAlerts, Database $dbForPlatform): null
     {
         foreach ($occurrences as $occurrence) {
             Span::init('schedule.alerts.enqueue');
@@ -124,9 +125,19 @@ class ScheduleAlerts extends Action
                 }
             } catch (\Throwable $th) {
                 $error = $th;
-            } finally {
-                Span::current()?->finish(error: $error);
             }
+
+            // A monitor is evaluated again on its next interval, but an escalation step
+            // fires once: one that was not enqueued is armed to fire again.
+            if ($error !== null && ($occurrence->payload['alertId'] ?? '') !== '') {
+                try {
+                    (new Escalations($dbForPlatform))->retry($occurrence->payload['alertId']);
+                } catch (\Throwable) {
+                    // Nothing here may throw; the error above is what the span records.
+                }
+            }
+
+            Span::current()?->finish(error: $error);
         }
 
         return null;

@@ -631,7 +631,7 @@ class V25 extends Migration
                     $this->createCollection($id);
                     // Created before monitors had a severity or an escalation policy, or alerts were acknowledged or escalated.
                     $attributes = match ($id) {
-                        'monitorAlerts' => ['severity', 'acknowledgedAt', 'acknowledgedBy', 'acknowledgedByName', 'escalationPolicyId', 'escalationStep', 'escalationRound', 'escalatesAt'],
+                        'monitorAlerts' => ['severity', 'acknowledgedAt', 'acknowledgedBy', 'acknowledgedByName', 'escalationPolicyId', 'escalationSteps', 'escalationRepeat', 'escalationStep', 'escalationRound', 'escalatesAt'],
                         'monitors' => ['severity', 'escalationPolicyId'],
                         default => [],
                     };
