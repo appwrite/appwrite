@@ -608,6 +608,8 @@ export const jaSitesDictionary: Record<string, string> = {
   'Found at:': '検出場所:',
   'Wrong type': '種類が正しくありません',
   'Found {type}:': '検出された {type}:',
+  'Your domain has an {type} record ({found}) instead of a CNAME, often a URL redirect or parking record at your DNS provider. Delete it, then add the CNAME below.':
+    'ドメインには CNAME ではなく {type} レコード ({found}) があります。多くの場合、DNS プロバイダーの URL リダイレクトまたはパーキングのレコードです。これを削除してから、下の CNAME を追加してください。',
   'Blocks certificate': '証明書の発行を妨げる',
   "Couldn't check": '確認できません',
   Alternative: '代替手段',
