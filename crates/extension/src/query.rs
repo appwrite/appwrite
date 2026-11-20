@@ -187,12 +187,28 @@ fn initialize(this: &mut ZendObject, case: Zval, method: Method, attribute: Zval
     let defaulted = method.is_join()
         && alias.zend_str().is_some_and(|a| !a.as_bytes().is_empty())
         && alias.zend_str().map(ZendStr::as_bytes) == attribute.zend_str().map(ZendStr::as_bytes);
+    let mut flag = Zval::new();
+    flag.set_bool(defaulted);
+    // One check of the object's class for the five slots, rather than one per property.
+    if slot(this, &METHOD).is_some() {
+        let base = std::ptr::from_mut(this).cast::<u8>();
+        let assignments =
+            [(&METHOD, case), (&ATTRIBUTE, attribute), (&VALUES, values), (&ALIAS, alias), (&ALIAS_DEFAULTED, flag)];
+        for (property, value) in assignments {
+            // SAFETY: a plain object's declared slot, alive as long as the object.
+            let slot = unsafe { &mut *base.add(property.offset() as usize).cast::<Zval>() };
+            if slot.is_reference() {
+                put(this, property, value);
+            } else {
+                drop(std::mem::replace(slot, value));
+            }
+        }
+        return;
+    }
     put(this, &METHOD, case);
     put(this, &ATTRIBUTE, attribute);
     put(this, &VALUES, values);
     put(this, &ALIAS, alias);
-    let mut flag = Zval::new();
-    flag.set_bool(defaulted);
     put(this, &ALIAS_DEFAULTED, flag);
 }
 
@@ -531,6 +547,7 @@ fn register_class(class: &'static mut ClassEntry, tables: ArgInfoTables) {
         callee.intern();
     }
     lists::intern();
+    engine::intern(&[&KEY_METHOD, &KEY_ATTRIBUTE, &KEY_ALIAS, &KEY_VALUES]);
     deprecate(class, "contains", factories::CONTAINS_DEPRECATED);
     CLASS.store(class, Ordering::Release);
     Box::leak(tables);
@@ -799,22 +816,55 @@ extern "C" fn is_nested(ex: &mut ExecuteData, retval: &mut Zval) {
     method_predicate(ex, retval, Method::is_nested);
 }
 
+// The keys `toArray()` writes, interned in MINIT.
+static KEY_METHOD: engine::Literal = engine::Literal::new("method");
+static KEY_ATTRIBUTE: engine::Literal = engine::Literal::new("attribute");
+static KEY_ALIAS: engine::Literal = engine::Literal::new("alias");
+static KEY_VALUES: engine::Literal = engine::Literal::new("values");
+
+unsafe extern "C" {
+    fn zend_hash_add_new(
+        ht: *mut ext_php_rs::ffi::HashTable,
+        key: *mut ext_php_rs::ffi::zend_string,
+        value: *mut ext_php_rs::ffi::zval,
+    ) -> *mut ext_php_rs::ffi::zval;
+}
+
+/// `$array[$key] = $value` for a key not in `array` yet.
+fn add(array: &mut ext_php_rs::types::ZendHashTable, key: &engine::Literal, mut value: Zval) {
+    let key = key.zval();
+    // SAFETY: a live table, an interned key, and a value the table takes over.
+    unsafe {
+        zend_hash_add_new(std::ptr::from_mut(array), key.value.str_, std::ptr::from_mut(&mut value).cast());
+    }
+    std::mem::forget(value);
+}
+
 /// `toArray()` of an object of the class, natively.
 fn to_array(this: &mut ZendObject) -> Option<Zval> {
     let case = get(this, &METHOD)?;
-    let method = case.object().and_then(zend::case_value).map(|s| s.as_bytes().to_vec()).unwrap_or_default();
+    // `$this->method->value`: the case's own string, shared.
+    let method = match case.object() {
+        // SAFETY: an enum case holds its value in its second slot.
+        Some(object) => unsafe {
+            let table = std::ptr::from_ref(object)
+                .cast::<u8>()
+                .add(std::mem::offset_of!(ext_php_rs::ffi::zend_object, properties_table));
+            (*table.cast::<Zval>().add(1)).shallow_clone()
+        },
+        None => engine::string(b""),
+    };
     // `! empty($this->attribute)`: an uninitialized attribute is empty, without an error.
     let attribute = get_quietly(this, &ATTRIBUTE);
     let alias = get(this, &ALIAS)?;
     let values = get(this, &VALUES)?;
     let mut array = ext_php_rs::types::ZendHashTable::with_capacity(4);
-    let _ = array.insert("method", engine::string(&method));
-    // `! empty($this->attribute)`.
+    add(&mut array, &KEY_METHOD, method);
     if attribute.zend_str().is_some_and(|a| !matches!(a.as_bytes(), b"" | b"0")) {
-        let _ = array.insert("attribute", attribute);
+        add(&mut array, &KEY_ATTRIBUTE, attribute);
     }
     if alias.zend_str().is_some_and(|a| !a.as_bytes().is_empty()) {
-        let _ = array.insert("alias", alias);
+        add(&mut array, &KEY_ALIAS, alias);
     }
     let mut list = Vec::new();
     if let Some(values) = values.array() {
@@ -827,7 +877,7 @@ fn to_array(this: &mut ZendObject) -> Option<Zval> {
             }
         }
     }
-    let _ = array.insert("values", zend::list(list));
+    add(&mut array, &KEY_VALUES, zend::list(list));
     let mut zval = Zval::new();
     zval.set_hashtable(array);
     Some(zval)
@@ -841,26 +891,86 @@ extern "C" fn to_array_method(ex: &mut ExecuteData, retval: &mut Zval) {
     }
 }
 
-/// `JSON_THROW_ON_ERROR`.
-const JSON_THROW_ON_ERROR: i64 = 1 << 22;
+/// `smart_str`.
+#[repr(C)]
+struct SmartStr {
+    s: *mut ext_php_rs::ffi::zend_string,
+    a: usize,
+}
+
+/// ext/json's globals (`JSON_G`), in a PHP built without ZTS.
+#[repr(C)]
+struct JsonGlobals {
+    encoder_depth: i32,
+    encode_max_depth: i32,
+    error_code: i32,
+}
+
+unsafe extern "C" {
+    fn php_json_encode_ex(buf: *mut SmartStr, value: *mut ext_php_rs::ffi::zval, options: i32, depth: i64) -> i32;
+    static mut json_globals: JsonGlobals;
+}
+
+/// `json_encode($value, flags: JSON_THROW_ON_ERROR)` as `toString()` calls it: the JSON, or the
+/// `Utopia\Query\Exception` of `Invalid Json: ...` (or an exception `jsonSerialize()` threw) pending.
+/// ext/json's encoder is called directly; `json_last_error()` is left as it was, as
+/// `JSON_THROW_ON_ERROR` leaves it.
+fn json_encode(value: &Zval) -> Option<Zval> {
+    let mut buffer = SmartStr { s: std::ptr::null_mut(), a: 0 };
+    let mut value = value.shallow_clone();
+    // SAFETY: the engine's encoder over a live value; the globals are the process's (NTS).
+    let (result, code) = unsafe {
+        let saved = json_globals.error_code;
+        let result = php_json_encode_ex(&raw mut buffer, std::ptr::from_mut(&mut value).cast(), 0, 512);
+        let code = json_globals.error_code;
+        json_globals.error_code = saved;
+        (result, code)
+    };
+    let json = if buffer.s.is_null() {
+        engine::string(b"")
+    } else {
+        // SAFETY: the buffer's string, terminated as `smart_str_0()` does (a smart_str always
+        // has room for it; PHP's string functions read the NUL), then owned by the zval.
+        let mut zval = Zval::new();
+        unsafe {
+            let string = &mut *buffer.s;
+            *string.val.as_mut_ptr().add(string.len) = 0;
+            zval.set_zend_string(ext_php_rs::boxed::ZBox::from_raw(buffer.s.cast::<ZendStr>()));
+        }
+        zval
+    };
+    if engine::has_exception() {
+        return None;
+    }
+    if result != 0 || code != 0 {
+        use php_std::json::ErrorCode as C;
+        let message = [
+            C::None,
+            C::Depth,
+            C::StateMismatch,
+            C::CtrlChar,
+            C::Syntax,
+            C::Utf8,
+            C::Recursion,
+            C::InfOrNan,
+            C::UnsupportedType,
+            C::InvalidPropertyName,
+            C::Utf16,
+            C::NonBackedEnum,
+        ]
+        .into_iter()
+        .find(|c| c.code() == i64::from(code))
+        .map_or("Unknown error", C::message);
+        fail(concat(&[b"Invalid Json: ", message.as_bytes()]));
+        return None;
+    }
+    Some(json)
+}
 
 extern "C" fn to_string(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(this) = this(ex) else { return };
     let Some(array) = to_array_of(this) else { return };
-    // `toArray(): array`: an override returning something else is PHP's `TypeError`, raised there.
-    let mut flags = Zval::new();
-    flags.set_long(JSON_THROW_ON_ERROR);
-    match engine::call("json_encode", &[&array, &flags]) {
-        Some(json) => *retval = json,
-        None => {
-            let Some(json) = Class::Json.get() else { return };
-            if let Some(mut caught) = zend::catch(json)
-                && let Some(object) = caught.object_mut()
-            {
-                let message =
-                    engine::read(json, object, "message").and_then(|m| engine::to_string(&m)).unwrap_or_default();
-                fail(concat(&[b"Invalid Json: ", &message]));
-            }
-        }
+    if let Some(json) = json_encode(&array) {
+        *retval = json;
     }
 }

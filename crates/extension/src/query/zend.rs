@@ -18,13 +18,14 @@ use utopia_query::Method;
 use crate::classes::engine::{self, has_exception};
 
 unsafe extern "C" {
+    fn zend_hash_real_init_packed(ht: *mut ext_php_rs::ffi::HashTable);
+    fn zend_hash_next_index_insert_new(ht: *mut ext_php_rs::ffi::HashTable, value: *mut zval) -> *mut zval;
     fn zend_get_called_scope(ex: *mut zend_execute_data) -> *mut zend_class_entry;
     fn object_init_ex(arg: *mut zval, ce: *mut zend_class_entry) -> i32;
     fn zend_check_user_type_slow(ty: *const zend_type, arg: *mut zval, reference: *const c_void, ret: bool) -> bool;
     fn zend_verify_arg_error(zf: *const zend_function, info: *const zend_arg_info, num: u32, value: *const zval);
     fn zend_lookup_class(name: *mut zend_string) -> *mut zend_class_entry;
     fn zend_throw_exception_object(exception: *mut zval);
-    fn zend_clear_exception();
     fn instanceof_function_slow(instance: *const zend_class_entry, ce: *const zend_class_entry) -> bool;
     fn zend_enum_get_case_by_value(
         result: *mut *mut zend_object,
@@ -36,6 +37,10 @@ unsafe extern "C" {
     fn zend_enum_get_case_cstr(ce: *mut zend_class_entry, name: *const std::ffi::c_char) -> *mut zend_object;
 }
 
+/// `IS_OBJECT`.
+const IS_OBJECT: u32 = 8;
+/// `_ZEND_TYPE_NAME_BIT`: a type naming one class.
+const NAME_BIT: u32 = 1 << 24;
 /// `GC_ADD_FLAGS(obj, IS_OBJ_DESTRUCTOR_CALLED)`: what `zend_object_store_ctor_failed()` sets.
 const IS_OBJ_DESTRUCTOR_CALLED: u32 = 1 << 8;
 /// `ZEND_INTERNAL_FUNCTION`.
@@ -157,22 +162,6 @@ pub fn throw_new(class: Class, message: &[u8]) {
     std::mem::forget(exception);
 }
 
-/// The pending exception, if it is an instance of `class`: taken off (cleared) and returned.
-pub fn catch(class: &ClassEntry) -> Option<Zval> {
-    // SAFETY: the engine's globals, on the thread running PHP.
-    unsafe {
-        let globals = ext_php_rs::ffi::ext_php_rs_executor_globals();
-        let exception = (*globals).exception;
-        if exception.is_null() || !extends((*exception).ce, class) {
-            return None;
-        }
-        let mut caught = Zval::new();
-        caught.set_object(&mut *exception.cast::<ZendObject>());
-        zend_clear_exception();
-        Some(caught)
-    }
-}
-
 /// The classes the binding refers to by name, looked up (autoloaded) once per request.
 #[derive(Clone, Copy)]
 pub enum Class {
@@ -180,7 +169,6 @@ pub enum Class {
     Exception,
     Validation,
     ParsedQuery,
-    Json,
 }
 
 impl Class {
@@ -190,7 +178,6 @@ impl Class {
             Class::Exception => "Utopia\\Query\\Exception",
             Class::Validation => "Utopia\\Query\\Exception\\ValidationException",
             Class::ParsedQuery => "Utopia\\Query\\Builder\\ParsedQuery",
-            Class::Json => "JsonException",
         }
     }
 
@@ -266,17 +253,24 @@ const NAMES: [&str; DISPATCH] = [
     "validate",
 ];
 
-const CLASSES: usize = 5;
+const CLASSES: usize = 4;
 
 struct Cache {
     classes: [*const ClassEntry; CLASSES],
     infos: Vec<(*const ClassEntry, Info)>,
     cases: Vec<*mut zend_object>,
+    /// The case objects met, and their method.
+    methods: Vec<(*const zend_object, Method)>,
 }
 
 thread_local! {
     static CACHE: RefCell<Cache> = const {
-        RefCell::new(Cache { classes: [std::ptr::null(); CLASSES], infos: Vec::new(), cases: Vec::new() })
+        RefCell::new(Cache {
+            classes: [std::ptr::null(); CLASSES],
+            infos: Vec::new(),
+            cases: Vec::new(),
+            methods: Vec::new(),
+        })
     };
 }
 
@@ -287,6 +281,7 @@ pub fn request_shutdown() {
         cache.classes = [std::ptr::null(); CLASSES];
         cache.infos.clear();
         cache.cases.clear();
+        cache.methods.clear();
     });
 }
 
@@ -409,7 +404,14 @@ pub fn case_value(case: &ZendObject) -> Option<&ZendStr> {
 #[inline]
 pub fn method_of(case: &Zval) -> Option<Method> {
     let object = case.object()?;
-    case_value(object).and_then(|s| s.as_str().ok()).and_then(Method::try_from_value)
+    let key = std::ptr::from_ref(object).cast::<zend_object>();
+    // The cases are a request's objects: each one is matched by its value once.
+    if let Some(method) = CACHE.with(|cache| cache.borrow().methods.iter().find(|(o, _)| *o == key).map(|(_, m)| *m)) {
+        return Some(method);
+    }
+    let method = case_value(object).and_then(|s| s.as_str().ok()).and_then(Method::try_from_value)?;
+    CACHE.with(|cache| cache.borrow_mut().methods.push((key, method)));
+    Some(method)
 }
 
 /// The executing function.
@@ -477,6 +479,15 @@ fn accepts(ty: &zend_type, arg: &mut Zval) -> bool {
     if mask & (1 << code) != 0 {
         return true;
     }
+    // An object of exactly the class the type names (`Method` for `Method|string`): the slow
+    // path would look the class up by name.
+    if u32::from(code) == IS_OBJECT && mask & NAME_BIT != 0 {
+        // SAFETY: an object zval's object and class are live; the type's pointer is its name.
+        let same = unsafe { std::ptr::eq((*(*arg.value.obj).ce).name.cast::<c_void>(), ty.ptr.cast_const()) };
+        if same {
+            return true;
+        }
+    }
     // SAFETY: a live type and zval; the engine coerces scalars in place.
     unsafe { zend_check_user_type_slow(ty, std::ptr::from_mut(arg).cast(), std::ptr::null(), false) }
 }
@@ -518,8 +529,16 @@ impl Args {
 /// A PHP list of `values` (`[$a, $b]`).
 pub fn list(values: Vec<Zval>) -> Zval {
     let mut array = ZendHashTable::with_capacity(u32::try_from(values.len()).unwrap_or(u32::MAX));
-    for value in values {
-        let _ = array.push(value);
+    if !values.is_empty() {
+        // SAFETY: a new table, made packed, each value moved in (the table owns it after).
+        unsafe {
+            let table = std::ptr::from_mut(&mut *array);
+            zend_hash_real_init_packed(table);
+            for mut value in values {
+                zend_hash_next_index_insert_new(table, std::ptr::from_mut(&mut value).cast());
+                std::mem::forget(value);
+            }
+        }
     }
     let mut zval = Zval::new();
     zval.set_hashtable(array);

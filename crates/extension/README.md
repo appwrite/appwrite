@@ -409,7 +409,8 @@ of values JSON cannot hold; `getByType()`, `getCursorQueries()`, `groupByType()`
 strings and floats), `merge()`, `diff()`, `validate()`, `page()` and `fingerprint()`; and what a list
 request does through `Utopia\Database\Query` (`parseQueries()`, `getCursorQueries()`,
 `groupByType()`, a `Document` cursor), `RuntimeQuery`, `Utopia\Audit\Query` and `UsageQuery`. The
-package's unit tests (5,650) and utopia-php/database's unit tests pass on it unchanged.
+package's unit suite (5,626 tests) passes on it, and utopia-php/database 10.1.4's unit suite (13,156
+tests) has the same outcome test for test on both.
 
 Known differences, which no caller depends on:
 

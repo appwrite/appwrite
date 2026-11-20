@@ -19,7 +19,6 @@ require __DIR__ . '/../../../vendor/autoload.php';
 require __DIR__ . '/fixtures/query/strict.php';
 
 use Utopia\Query\Compiler;
-use Utopia\Query\Exception as QueryException;
 use Utopia\Query\Method;
 use Utopia\Query\NullsPosition;
 use Utopia\Query\Query;
@@ -288,15 +287,42 @@ class Hooked extends Query
 /** Records the compile calls it gets. */
 class RecordingCompiler implements Compiler
 {
-    public function compileFilter(Query $query): string { return 'filter:' . $query->getMethod()->value; }
-    public function compileOrder(Query $query): string { return 'order:' . $query->getMethod()->value; }
-    public function compileLimit(Query $query): string { return 'limit'; }
-    public function compileOffset(Query $query): string { return 'offset'; }
-    public function compileSelect(Query $query): string { return 'select'; }
-    public function compileCursor(Query $query): string { return 'cursor'; }
-    public function compileAggregate(Query $query): string { return 'aggregate:' . $query->getMethod()->value; }
-    public function compileGroupBy(Query $query): string { return 'groupBy'; }
-    public function compileJoin(Query $query): string { return 'join:' . $query->getAttribute(); }
+    public function compileFilter(Query $query): string
+    {
+        return 'filter:' . $query->getMethod()->value;
+    }
+    public function compileOrder(Query $query): string
+    {
+        return 'order:' . $query->getMethod()->value;
+    }
+    public function compileLimit(Query $query): string
+    {
+        return 'limit';
+    }
+    public function compileOffset(Query $query): string
+    {
+        return 'offset';
+    }
+    public function compileSelect(Query $query): string
+    {
+        return 'select';
+    }
+    public function compileCursor(Query $query): string
+    {
+        return 'cursor';
+    }
+    public function compileAggregate(Query $query): string
+    {
+        return 'aggregate:' . $query->getMethod()->value;
+    }
+    public function compileGroupBy(Query $query): string
+    {
+        return 'groupBy';
+    }
+    public function compileJoin(Query $query): string
+    {
+        return 'join:' . $query->getAttribute();
+    }
 }
 
 $database = class_exists(\Utopia\Database\Query::class);
