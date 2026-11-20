@@ -1,6 +1,5 @@
 //! The text leaf validators of `packages/validators`: `Text`, `Identifier` (a `Text`),
-//! `WhiteList`, `Contains` and `Label`, over [`utopia_validators`], behind `validators-text`
-//! (and `validators`, whose base they extend).
+//! `WhiteList`, `Contains` and `Label`, over [`utopia_validators`], extending the base.
 //!
 //! Built by hand like the scalar batch ([`super::scalar`]): the state each PHP constructor
 //! keeps lives in real typed protected properties, declared as `packages/validators` declares
@@ -18,12 +17,16 @@ use ext_php_rs::types::{ZendHashTable, ZendObject, Zval};
 use ext_php_rs::zend::{ClassEntry, ExecuteData};
 
 use super::engine::{
-    self, MAY_BE_ARRAY, MAY_BE_BOOL, MAY_BE_LONG, MAY_BE_STRING, Property, array_arg, bool_arg, get, long_arg, set,
-    str_arg, string, too_few,
+    self, Literal, MAY_BE_ARRAY, MAY_BE_BOOL, MAY_BE_LONG, MAY_BE_STRING, Property, array_arg, bool_arg, get, long_arg,
+    set, str_zval_arg, string, too_few,
 };
 use super::leaf::{
-    self, Method, PUBLIC, VALUE, VALUE_MIXED, build, is_array, set_bool, set_str, stored, this, type_string, value_arg,
+    self, Method, PUBLIC, TYPE_STRING, VALUE, VALUE_MIXED, build, is_array, set_bool, set_built, set_literal, stored,
+    this, type_string, value_arg,
 };
+
+/// `Label::getDescription()`.
+static LABEL_DESCRIPTION: Literal = Literal::new(utopia_validators::LABEL_DESCRIPTION);
 
 /// The base's constants, which the classes inherit as they are registered, and which PHP
 /// lists after a class's own.
@@ -155,17 +158,17 @@ extern "C" fn text_description(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(min) = get(scope, this, &TEXT_MIN) else { return };
     let Some(length) = get(scope, this, &TEXT_LENGTH) else { return };
     let Some(allow_list) = get(scope, this, &TEXT_ALLOW_LIST) else { return };
-    let joined = if allow_list.array().is_some_and(|list| !list.is_empty()) {
-        match engine::implode(&allow_list) {
-            Some(joined) => Some(joined),
-            None => return,
+    set_built(retval, |out, joined| {
+        let listed = allow_list.array().is_some_and(|list| !list.is_empty());
+        if listed {
+            engine::implode(&allow_list, joined)?;
         }
-    } else {
-        None
-    };
-    let Some(non_blank) = get(scope, this, &TEXT_NON_BLANK) else { return };
-    let (min, length) = (min.long().unwrap_or(0), length.long().unwrap_or(0));
-    set_str(retval, &utopia_validators::text_description(length, min, joined.as_deref(), engine::truthy(&non_blank)));
+        let non_blank = get(scope, this, &TEXT_NON_BLANK)?;
+        let (min, length) = (min.long().unwrap_or(0), length.long().unwrap_or(0));
+        let joined = listed.then_some(&joined[..]);
+        utopia_validators::text_description(length, min, joined, engine::truthy(&non_blank), out);
+        Some(())
+    });
 }
 
 /// `Text::isValid()` on `this`, from `scope` (`Text`, or `Identifier` for its own objects:
@@ -283,7 +286,10 @@ extern "C" fn identifier_construct(ex: &mut ExecuteData, _: &mut Zval) {
 extern "C" fn identifier_description(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(this) = this(ex) else { return };
     let Some(length) = get(stored(&IDENTIFIER), this, &TEXT_LENGTH) else { return };
-    set_str(retval, &utopia_validators::identifier_description(length.long().unwrap_or(0)));
+    set_built(retval, |out, _| {
+        utopia_validators::identifier_description(length.long().unwrap_or(0), out);
+        Some(())
+    });
 }
 
 extern "C" fn identifier_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
@@ -368,17 +374,17 @@ extern "C" fn white_list_construct(ex: &mut ExecuteData, _: &mut Zval) {
         None => false,
     };
     let kind = match engine::arg(ex, 2) {
-        Some(arg) => match str_arg(ex, 3, arg) {
+        Some(arg) => match str_zval_arg(ex, 3, arg) {
             Some(kind) => kind,
             None => return,
         },
-        None => b"string".to_vec(),
+        None => TYPE_STRING.zval(),
     };
     let Some(this) = this(ex) else { return };
     // The promoted properties first, then the body.
     set(scope, this, &WHITE_LIST_LIST, list.shallow_clone());
     set(scope, this, &WHITE_LIST_STRICT, bool_zval(strict));
-    set(scope, this, &WHITE_LIST_TYPE, string(&kind));
+    set(scope, this, &WHITE_LIST_TYPE, kind);
     if !strict {
         set(scope, this, &WHITE_LIST_LIST, lowered(&list));
     }
@@ -401,9 +407,20 @@ extern "C" fn white_list_type(ex: &mut ExecuteData, retval: &mut Zval) {
 extern "C" fn white_list_description(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(this) = this(ex) else { return };
     let Some(list) = get(stored(&WHITE_LIST), this, &WHITE_LIST_LIST) else { return };
-    if let Some(joined) = engine::implode(&list) {
-        set_str(retval, &utopia_validators::white_list_description(&joined));
+    // Built at its exact size when every item is a string, as most lists are.
+    if engine::implode_between(
+        retval,
+        utopia_validators::WHITE_LIST_DESCRIPTION.0.as_bytes(),
+        &list,
+        utopia_validators::WHITE_LIST_DESCRIPTION.1.as_bytes(),
+    ) {
+        return;
     }
+    set_built(retval, |out, joined| {
+        engine::implode(&list, joined)?;
+        utopia_validators::white_list_description(joined, out);
+        Some(())
+    });
 }
 
 extern "C" fn white_list_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
@@ -511,9 +528,12 @@ extern "C" fn contains_description(ex: &mut ExecuteData, retval: &mut Zval) {
     let scope = stored(&CONTAINS);
     let Some(this) = this(ex) else { return };
     let Some(patterns) = get(scope, this, &CONTAINS_PATTERNS) else { return };
-    let Some(joined) = engine::implode(&patterns) else { return };
-    let Some(strict) = get(scope, this, &CONTAINS_STRICT) else { return };
-    set_str(retval, &utopia_validators::contains_description(&joined, engine::truthy(&strict)));
+    set_built(retval, |out, joined| {
+        engine::implode(&patterns, joined)?;
+        let strict = get(scope, this, &CONTAINS_STRICT)?;
+        utopia_validators::contains_description(joined, engine::truthy(&strict), out);
+        Some(())
+    });
 }
 
 extern "C" fn contains_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
@@ -557,7 +577,7 @@ fn label_register(class: &'static mut ClassEntry, tables: ArgInfoTables) {
 }
 
 extern "C" fn label_description(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, &utopia_validators::label_description());
+    set_literal(retval, &LABEL_DESCRIPTION);
 }
 extern "C" fn label_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(value) = value_arg(ex, "Utopia\\Validator\\Label::isValid") else { return };
@@ -566,6 +586,7 @@ extern "C" fn label_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
 
 /// Registers the batch's classes. Called from the module's startup (MINIT), after the base.
 pub fn register() -> ext_php_rs::error::Result<()> {
+    LABEL_DESCRIPTION.intern();
     let base = (super::base_class as fn() -> &'static ClassEntry, super::BASE);
     build("Utopia\\Validator\\Text", base, TEXT_METHODS, text_register)?;
     build(

@@ -127,7 +127,7 @@ final class GitAction
 
             $comment = new Comment($platform, $vcs->supportsCommentImages());
             $comment->parseComment($vcs->getComment($owner, $repositoryName, $commentId));
-            $comment->addBuild($project, $resource, $isSite ? 'site' : 'function', $status, $deployment->getId(), ['type' => 'logs'], $previewUrl);
+            $comment->addBuild($project, $resource, $isSite ? 'site' : 'function', $status, $deployment->getId(), ['type' => 'logs'], $previewUrl, $commitHash);
             $vcs->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
         } finally {
             $dbForPlatform->deleteDocument('vcsCommentLocks', $commentId);

@@ -35,6 +35,7 @@ final class OAuth2Provider extends Resource
         'auth0' => ['clientId' => ['target' => self::TARGET_APP_ID], 'endpoint' => ['target' => self::TARGET_SECRET]],
         'authentik' => ['clientId' => ['target' => self::TARGET_APP_ID], 'endpoint' => ['target' => self::TARGET_SECRET]],
         'autodesk' => ['clientId' => ['target' => self::TARGET_APP_ID]],
+        'bird' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'bitbucket' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'bitly' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'box' => ['clientId' => ['target' => self::TARGET_APP_ID]],

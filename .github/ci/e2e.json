@@ -27,6 +27,7 @@
       ".cargo/",
       "rustfmt.toml",
       "packages/image/",
+      "packages/validators/",
       "Dockerfile",
       ".dockerignore"
     ],

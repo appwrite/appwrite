@@ -188,7 +188,9 @@ export function getApexDomain(domain: string): string | null {
  */
 export function getRecordName(domain: string): string {
   const normalized = domain.trim().toLowerCase()
-  const apex = getApexDomain(normalized)
+  // The zone a user manages can sit under a private suffix (foo.eu.org), the
+  // same way the server reads the registrable domain.
+  const apex = parse(normalized, { allowPrivateDomains: true }).domain
   if (!apex || apex === normalized) return '@'
   return normalized.slice(0, -(apex.length + 1))
 }

@@ -3916,6 +3916,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'נשלחו {count} התראות, אחת לכל תקופת המתנה',
   'Its alerts stay in the history.': 'ההתראות שלו נשארות בהיסטוריה.',
   'Send alerts to a webhook': 'שליחת התראות ל-Webhook',
+  'Deploy an alert function': 'פריסת פונקציית התראות',
   Owners: 'בעלים',
   Editors: 'עורכים',
   Analysts: 'אנליסטים',

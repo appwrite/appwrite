@@ -59,6 +59,8 @@ export function RetryDomainDialog({
         updatedRule.status === 'unverified'
       ) {
         setVerificationError(dnsPendingVerificationError(t))
+        // The content hides that alert under a failure banner, which leaves only "Last check" changing
+        toast.error(t('Verification failed. Check DNS and retry.'))
       } else if (updatedRule.status === 'verified') {
         toast.success(
           rule.status === 'verified'

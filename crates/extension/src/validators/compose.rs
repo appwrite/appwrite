@@ -3,7 +3,7 @@
 //! `JSON\ArrayValidator`, `JSON\ObjectValidator`, `JSON\FCM`) and `Globstar`.
 //!
 //! What these classes mostly do is ask other validators, which may be PHP classes (Appwrite's,
-//! utopia-php/database's, a leaf whose batch is switched off) or the extension's. They ask
+//! utopia-php/database's, a subclass) or the extension's. They ask
 //! through the engine ([`engine::call_method`]), as the PHP classes' `$rule->isValid($value)`
 //! does: the same method resolution (a subclass's override, `__call()`), the same calls in the
 //! same order and number, the same short-circuits, the same exceptions passing through. The
@@ -20,13 +20,13 @@ use ext_php_rs::types::{ArrayKey, ZendObject, Zval};
 use ext_php_rs::zend::{ClassEntry, ExecuteData, ce};
 
 use super::engine::{
-    self, Callee, Declared, MAY_BE_ARRAY, MAY_BE_BOOL, MAY_BE_FALSE, MAY_BE_LONG, MAY_BE_NULL, MAY_BE_STATIC,
-    MAY_BE_STRING, Property, PropertyType, array_arg, call, call_method, get, long_arg, set, str_arg, string, too_few,
-    type_error,
+    self, Callee, Declared, KeyRef, Literal, MAY_BE_ARRAY, MAY_BE_BOOL, MAY_BE_FALSE, MAY_BE_LONG, MAY_BE_NULL,
+    MAY_BE_STATIC, MAY_BE_STRING, Property, PropertyType, array_arg, call, call_method, get, long_arg, set,
+    str_zval_arg, string, too_few, type_error,
 };
 use super::leaf::{
-    self, Method, PRIVATE, PUBLIC, VALIDATOR, VALUE, VALUE_MIXED, build, is_array, set_bool, set_str, stored, this,
-    value_arg,
+    self, Method, PRIVATE, PUBLIC, TYPE_ARRAY, TYPE_MIXED, TYPE_OBJECT, VALIDATOR, VALUE, VALUE_MIXED, build, is_array,
+    set_bool, set_built, set_literal, stored, this, value_arg,
 };
 
 /// `FILTER_VALIDATE_URL`.
@@ -35,6 +35,12 @@ const FILTER_VALIDATE_URL: i64 = 273;
 const FILTER_VALIDATE_EMAIL: i64 = 274;
 /// `PHP_URL_SCHEME`.
 const PHP_URL_SCHEME: i64 = 0;
+
+/// The descriptions the classes return as they are.
+static ASSOC_DESCRIPTION: Literal = Literal::new(utopia_validators::ASSOC_DESCRIPTION);
+static JSON_DESCRIPTION: Literal = Literal::new(utopia_validators::JSON_DESCRIPTION);
+static GLOBSTAR_DESCRIPTION: Literal = Literal::new(utopia_validators::GLOBSTAR_DESCRIPTION);
+static FCM_DESCRIPTION: Literal = Literal::new(utopia_validators::FCM_DESCRIPTION);
 
 /// The base's constants, which a class lists after its own.
 const INHERITED: [&str; 7] =
@@ -160,9 +166,11 @@ extern "C" fn nullable_description(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(this) = this(ex) else { return };
     let Some(validator) = get(stored(&NULLABLE), this, &NULLABLE_VALIDATOR) else { return };
     let Some(description) = call_method(&validator, &GET_DESCRIPTION, &[]) else { return };
-    let Some(mut description) = engine::to_string(&description) else { return };
-    description.extend_from_slice(b" or null");
-    set_str(retval, &description);
+    set_built(retval, |out, _| {
+        engine::append_string(&description, out)?;
+        out.extend_from_slice(b" or null");
+        Some(())
+    });
 }
 
 extern "C" fn nullable_type(ex: &mut ExecuteData, retval: &mut Zval) {
@@ -265,10 +273,15 @@ extern "C" fn array_list_description(ex: &mut ExecuteData, retval: &mut Zval) {
     } else {
         let Some(validator) = get(scope, this, &ARRAY_LIST_VALIDATOR) else { return };
         let Some(second) = call_method(&validator, &GET_DESCRIPTION, &[]) else { return };
-        let Some(second) = engine::to_string(&second) else { return };
         Some(second)
     };
-    set_str(retval, &utopia_validators::array_list_description(length, item.as_deref()));
+    set_built(retval, |out, text| {
+        if let Some(item) = &item {
+            engine::append_string(item, text)?;
+        }
+        utopia_validators::array_list_description(length, item.is_some().then_some(&text[..]), out);
+        Some(())
+    });
 }
 
 extern "C" fn array_list_type(ex: &mut ExecuteData, retval: &mut Zval) {
@@ -407,16 +420,16 @@ fn of_construct(of: Of, ex: &mut ExecuteData) {
     };
     let Some(validators) = array_arg(ex, 1, arg) else { return };
     let kind = match engine::arg(ex, 1) {
-        Some(arg) => match str_arg(ex, 2, arg) {
+        Some(arg) => match str_zval_arg(ex, 2, arg) {
             Some(kind) => kind,
             None => return,
         },
-        None => b"mixed".to_vec(),
+        None => TYPE_MIXED.zval(),
     };
     if let Some(this) = this(ex) {
         let scope = of.class();
         set(scope, this, &OF_VALIDATORS, validators);
-        set(scope, this, &OF_TYPE, string(&kind));
+        set(scope, this, &OF_TYPE, kind);
     }
 }
 
@@ -461,7 +474,7 @@ fn of_is_valid(of: Of, ex: &mut ExecuteData, retval: &mut Zval) {
                 return true;
             }
             engine::write(scope, this, "failedRule", rule);
-            !ext_php_rs::zend::ExecutorGlobals::has_exception()
+            !engine::has_exception()
         };
         match of {
             Of::All => {
@@ -595,19 +608,31 @@ extern "C" fn multiple_construct(ex: &mut ExecuteData, _: &mut Zval) {
             Some(kind) => kind,
             None => return,
         },
-        None => string(b"mixed"),
+        None => TYPE_MIXED.zval(),
     };
     let Some(this) = this(ex) else { return };
     set(stored(&MULTIPLE), this, &MULTIPLE_TYPE, kind);
-    // `$this->addRule($rule)`: a subclass's own `addRule()`, if it has one.
+    // `$this->addRule($rule)`: a subclass's own `addRule()`, if it has one. On a `Multiple`
+    // itself, that is this class's, and a rule it takes without an error is appended here
+    // rather than through a call into the engine, which is most of the constructor's cost.
     let object = object_zval(this);
     if let Some(rules) = rules.array() {
         for rule in engine::values(rules) {
+            if instance_of(rule, super::base_class()) && multiple_append(this, rule) {
+                continue;
+            }
             if call_method(&object, &ADD_RULE, &[rule]).is_none() {
                 return;
             }
         }
     }
+}
+
+/// `$this->rules[] = $rule` straight into the array a `Multiple` itself (not a subclass) holds,
+/// as PHP appends it; `false` when the engine's way must be taken.
+fn multiple_append(this: &mut ZendObject, rule: &Zval) -> bool {
+    engine::array_slot(stored(&MULTIPLE), this, &MULTIPLE_RULES)
+        .is_some_and(|rules| rules.push(rule.dereference().shallow_clone()).is_ok())
 }
 
 extern "C" fn multiple_add_rule(ex: &mut ExecuteData, retval: &mut Zval) {
@@ -618,6 +643,10 @@ extern "C" fn multiple_add_rule(ex: &mut ExecuteData, retval: &mut Zval) {
     };
     let Some(rule) = validator_arg(ex, 1, arg) else { return };
     let Some(this) = this(ex) else { return };
+    if multiple_append(this, &rule) {
+        retval.set_object(this);
+        return;
+    }
     let scope = stored(&MULTIPLE);
     // `$this->rules[] = $rule`, on whatever `$rules` holds.
     let Some(rules) = get(scope, this, &MULTIPLE_RULES) else { return };
@@ -653,10 +682,10 @@ extern "C" fn multiple_add_rule(ex: &mut ExecuteData, retval: &mut Zval) {
     };
     if let Some(appended) = appended {
         engine::write(scope, this, "rules", appended);
-        if ext_php_rs::zend::ExecutorGlobals::has_exception() {
+        if engine::has_exception() {
             return;
         }
-    } else if ext_php_rs::zend::ExecutorGlobals::has_exception() {
+    } else if engine::has_exception() {
         return;
     }
     retval.set_object(this);
@@ -666,27 +695,25 @@ extern "C" fn multiple_description(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(this) = this(ex) else { return };
     let Some(rules) = get(stored(&MULTIPLE), this, &MULTIPLE_RULES) else { return };
     let Some(items) = engine::foreach_items(&rules) else { return };
-    let mut description = Vec::new();
-    if let Some(items) = items.array() {
-        for (key, rule) in items.iter() {
-            // `++$key . '. ' . $rule->getDescription() . " \n"`.
-            let key = match key {
-                ArrayKey::Long(i) => long_zval(i),
-                ArrayKey::String(s) => string(s.as_bytes()),
-                ArrayKey::Str(s) => string(s.as_bytes()),
-                ArrayKey::ZendString(s) => string(s.as_bytes()),
-            };
-            let Some(key) = engine::increment(&key) else { return };
-            let Some(text) = call_method(rule, &GET_DESCRIPTION, &[]) else { return };
-            let Some(key) = engine::to_string(&key) else { return };
-            let Some(text) = engine::to_string(&text) else { return };
-            description.extend_from_slice(&key);
-            description.extend_from_slice(b". ");
-            description.extend_from_slice(&text);
-            description.extend_from_slice(b" \n");
+    set_built(retval, |description, _| {
+        if let Some(items) = items.array() {
+            for (key, rule) in engine::keyed_values(items) {
+                // `++$key . '. ' . $rule->getDescription() . " \n"`; an int key short of
+                // `PHP_INT_MAX` (past which `++` makes a float) needs no engine.
+                let key = match key {
+                    KeyRef::Index(i) if i < i64::MAX => long_zval(i + 1),
+                    KeyRef::Index(i) => engine::increment(&long_zval(i))?,
+                    KeyRef::Name(name) => engine::increment(&string(name.as_bytes()))?,
+                };
+                let text = call_method(rule, &GET_DESCRIPTION, &[])?;
+                engine::append_string(&key, description)?;
+                description.extend_from_slice(b". ");
+                engine::append_string(&text, description)?;
+                description.extend_from_slice(b" \n");
+            }
         }
-    }
-    set_str(retval, &description);
+        Some(())
+    });
 }
 
 extern "C" fn multiple_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
@@ -742,7 +769,7 @@ fn assoc_register(class: &'static mut ClassEntry, tables: ArgInfoTables) {
 }
 
 extern "C" fn type_object(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, b"object");
+    set_literal(retval, &TYPE_OBJECT);
 }
 
 /// A constructor taking only `int $length = $default`, into `property`.
@@ -764,7 +791,7 @@ extern "C" fn assoc_construct(ex: &mut ExecuteData, _: &mut Zval) {
 }
 
 extern "C" fn assoc_description(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, utopia_validators::ASSOC_DESCRIPTION.as_bytes());
+    set_literal(retval, &ASSOC_DESCRIPTION);
 }
 
 extern "C" fn assoc_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
@@ -802,7 +829,7 @@ fn json_register(class: &'static mut ClassEntry, tables: ArgInfoTables) {
 }
 
 extern "C" fn json_description(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, utopia_validators::JSON_DESCRIPTION.as_bytes());
+    set_literal(retval, &JSON_DESCRIPTION);
 }
 
 extern "C" fn json_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
@@ -886,7 +913,7 @@ fn json_object_register(class: &'static mut ClassEntry, tables: ArgInfoTables) {
 }
 
 extern "C" fn type_array(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, b"array");
+    set_literal(retval, &TYPE_ARRAY);
 }
 
 extern "C" fn json_array_construct(ex: &mut ExecuteData, _: &mut Zval) {
@@ -905,14 +932,20 @@ fn json_length_of(scope: &AtomicPtr<ClassEntry>, this: &mut ZendObject) -> Optio
 extern "C" fn json_array_description(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(this) = this(ex) else { return };
     if let Some(length) = json_length_of(&JSON_ARRAY, this) {
-        set_str(retval, &utopia_validators::json_array_description(length));
+        set_built(retval, |out, _| {
+            utopia_validators::json_array_description(length, out);
+            Some(())
+        });
     }
 }
 
 extern "C" fn json_object_description(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(this) = this(ex) else { return };
     if let Some(length) = json_length_of(&JSON_OBJECT, this) {
-        set_str(retval, &utopia_validators::json_object_description(length));
+        set_built(retval, |out, _| {
+            utopia_validators::json_object_description(length, out);
+            Some(())
+        });
     }
 }
 
@@ -1051,7 +1084,7 @@ extern "C" fn fcm_description(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(this) = this(ex) else { return };
     let Some(error) = get(stored(&FCM), this, &FCM_ERROR) else { return };
     if error.is_null() {
-        set_str(retval, utopia_validators::FCM_DESCRIPTION.as_bytes());
+        set_literal(retval, &FCM_DESCRIPTION);
     } else {
         *retval = error;
     }
@@ -1211,13 +1244,14 @@ extern "C" fn globstar_construct(ex: &mut ExecuteData, _: &mut Zval) {
     };
     let Some(patterns) = array_arg(ex, 1, arg) else { return };
     if let Some(this) = this(ex) {
-        // Through the engine, which refuses a second initialization of a readonly property.
-        engine::write(stored(&GLOBSTAR), this, "patterns", patterns);
+        // A second initialization of the readonly property goes through the engine, which
+        // refuses it.
+        engine::initialize(stored(&GLOBSTAR), this, &GLOBSTAR_PATTERNS, patterns);
     }
 }
 
 extern "C" fn globstar_description(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, utopia_validators::GLOBSTAR_DESCRIPTION.as_bytes());
+    set_literal(retval, &GLOBSTAR_DESCRIPTION);
 }
 
 /// `preg_match('~^' . $regex . '$~', $subject)` for the glob `pattern`, as a bool: the
@@ -1359,7 +1393,7 @@ extern "C" fn globstar_match_globstar(ex: &mut ExecuteData, retval: &mut Zval) {
 }
 
 /// Registers the batch's classes, each extending `Utopia\Validator\Validator`. Called from
-/// the module's startup (MINIT), with `validators-compose` on.
+/// the module's startup (MINIT), after the base.
 /// The methods these classes call on the validators they wrap (and on `$rules`).
 static IS_VALID: Callee = Callee::new("isValid");
 static GET_DESCRIPTION: Callee = Callee::new("getDescription");
@@ -1371,6 +1405,7 @@ pub fn register() -> ext_php_rs::error::Result<()> {
     for method in [&IS_VALID, &GET_DESCRIPTION, &GET_TYPE, &ADD_RULE, &OFFSET_SET] {
         method.intern();
     }
+    engine::intern(&[&ASSOC_DESCRIPTION, &JSON_DESCRIPTION, &GLOBSTAR_DESCRIPTION, &FCM_DESCRIPTION]);
     let base = (super::base_class as fn() -> &'static ClassEntry, super::BASE);
     build("Utopia\\Validator\\Nullable", base, NULLABLE_METHODS, nullable_register)?;
     build("Utopia\\Validator\\ArrayList", base, ARRAY_LIST_METHODS, array_list_register)?;

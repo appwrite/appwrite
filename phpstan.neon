@@ -15,6 +15,7 @@ parameters:
     - packages/user-agent/stubs/UserAgent.php
     - packages/domains/stubs/Domain.php
     - packages/emails/stubs/Email.php
+    - packages/validators/stubs/Validators.php
   scanDirectories:
     - vendor/swoole/ide-helper
   excludePaths:

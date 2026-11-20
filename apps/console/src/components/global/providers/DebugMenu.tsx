@@ -1771,14 +1771,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
-                'Analytics humans/bots filter',
-                'Clicking Humans or Bots in analytics filters the page (via an empty vs non-empty bot category).',
-                'analyticsTrafficFilter',
-                profileId,
-                features.analyticsTrafficFilter,
-                { category: 'Products' },
-              ),
-              createProfileFeatureFlagItem(
                 'Appwrite push',
                 'Show the Appwrite push provider in messaging (create wizard and QoS/expiry settings).',
                 'appwritePush',
@@ -2124,7 +2116,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.analytics,
     features.alerts,
     features.reviews,
-    features.analyticsTrafficFilter,
     features.appwritePush,
     features.nativeDbsMongo,
     features.databasePitrRestore,
