@@ -89,16 +89,8 @@ class Get extends Base
         Client $clientForOAuth2,
         User $user,
     ): void {
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $port = $request->getPort();
-        $callbackBase = $protocol . '://' . $request->getHostname();
-        if ($protocol === 'https' && $port !== '443') {
-            $callbackBase .= ':' . $port;
-        } elseif ($protocol === 'http' && $port !== '80') {
-            $callbackBase .= ':' . $port;
-        }
-
-        $callback = $callbackBase . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+        $protocol = self::resolveRequestProtocol($request);
+        $callback = self::resolveRequestOrigin($request) . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
 
         if (!$providerEnabled) {
@@ -123,11 +115,7 @@ class Get extends Base
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
-        $redirectBase = $platform['consoleUrl'] ?? '';
-        // Only the derived console URL follows the request port; an explicit one carries its own
-        if (empty(System::getEnv('_APP_CONSOLE_URL')) && $port !== ($protocol === 'https' ? '443' : '80')) {
-            $redirectBase .= ':' . $port;
-        }
+        $redirectBase = self::resolveConsoleRedirectBase($request, $platform);
 
         if (empty($success)) {
             $success = $redirectBase . self::OAUTH_DEFAULT_SUCCESS;

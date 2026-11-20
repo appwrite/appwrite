@@ -279,14 +279,7 @@ class Create extends Action
         }
 
         if (empty($url)) {
-            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-            $port = $request->getPort();
-            $callbackBase = $platform['consoleUrl'] ?? '';
-            // Only the derived console URL follows the request port; an explicit one carries its own
-            if (empty(System::getEnv('_APP_CONSOLE_URL')) && $port !== ($protocol === 'https' ? '443' : '80')) {
-                $callbackBase .= ':' . $port;
-            }
-            $url = "{$callbackBase}/auth/magic-url";
+            $url = self::resolveConsoleRedirectBase($request, $platform) . '/auth/magic-url';
         }
 
         $url = Template::parseURL($url);
