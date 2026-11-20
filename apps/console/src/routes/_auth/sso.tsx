@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
 import { ArrowLeft, KeyRound } from 'lucide-react'
@@ -29,6 +29,11 @@ const searchSchema = z.object({
    */
   error: z.unknown().optional(),
   redirect: z.string().optional(),
+  /**
+   * A provider's shared SSO URL (Settings → Single sign-on → Copy SSO URL):
+   * the sign-in starts at once, with no email to type and nothing to pick.
+   */
+  provider: z.coerce.string().optional(),
   /** Set when an organization that requires single sign-on sent the member here. */
   required: z.stringbool().optional(),
 })
@@ -101,6 +106,13 @@ function SingleSignOnPage() {
 
   const domain = email.includes('@') ? email.split('@').pop() : ''
 
+  // A failed sign-in comes back without `provider`, so this never loops.
+  const direct = !failure && !!search.provider
+  useEffect(() => {
+    if (direct && search.provider) start(search.provider)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- start once per provider
+  }, [direct, search.provider])
+
   return (
     <AuthFlowShell width="illustration">
       <AuthFlowIllustrationCard illustration={<AuthFlowIllustrationColumn />}>
@@ -123,7 +135,7 @@ function SingleSignOnPage() {
 
           {search.required && !failure ? (
             <Alert>
-              <AlertDescription className="text-[13px]">
+              <AlertDescription className="text-[13px] text-pretty">
                 {t(
                   'This organization requires single sign-on. Sign in with your company login to continue.',
                 )}
@@ -133,13 +145,21 @@ function SingleSignOnPage() {
 
           {failure ? (
             <Alert variant="destructive">
-              <AlertDescription className="text-[13px]">
+              <AlertDescription className="text-[13px] text-pretty break-words">
                 {failure}
               </AlertDescription>
             </Alert>
           ) : null}
 
-          {providers && providers.length > 1 ? (
+          {direct ? (
+            <p
+              className="text-[13px] text-muted-foreground"
+              role="status"
+              aria-live="polite"
+            >
+              {t('Taking you to your company login...')}
+            </p>
+          ) : providers && providers.length > 1 ? (
             <div className="space-y-3">
               <p className="text-[13px] text-muted-foreground">
                 {t('Choose how to sign in')}
@@ -190,13 +210,12 @@ function SingleSignOnPage() {
                   aria-invalid={providers?.length === 0}
                 />
                 {providers?.length === 0 ? (
-                  <p className="text-[12px] text-destructive">
-                    {t('Single sign-on is not set up for')} {domain}.{' '}
-                    {t('Sign in another way.')}
+                  <p className="text-[12px] text-pretty break-words text-destructive">
+                    {t("Single sign-on isn't set up for")} {domain}.
                   </p>
                 ) : null}
                 {lookup.isError ? (
-                  <p className="text-[12px] text-destructive">
+                  <p className="text-[12px] text-pretty break-words text-destructive">
                     {getErrorMessage(lookup.error) ||
                       t('Failed to find your company login')}
                   </p>

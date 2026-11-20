@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 import {
@@ -52,6 +53,11 @@ export function RequireSSOCard() {
       ? t('Enable an identity provider to require single sign-on.')
       : null
 
+  // The switch is a draft until Update, like the other settings toggles.
+  const [draft, setDraft] = useSyncStateFromServer(required)
+  const hasChanges = draft !== required
+  const blocked = !required && hint !== null
+
   const save = (value: boolean) => {
     update.mutate(value, {
       onSuccess: () =>
@@ -75,31 +81,51 @@ export function RequireSSOCard() {
   return (
     <>
       <div className="overflow-hidden rounded-xl border border-border bg-card/50">
-        <div className="flex items-start justify-between gap-6 px-6 py-4">
-          <div>
-            <Label
-              htmlFor="sso-required"
-              className="text-[15px] font-semibold text-foreground"
-            >
-              {t('Require SSO')}
-            </Label>
-            <p className="mt-2 text-[13px] text-muted-foreground">
-              {t(
-                'Members with an email on your verified domains can open this organization only after signing in through your identity provider. Owners and members on other domains keep their usual sign-in.',
-              )}
-            </p>
-            {!required && hint ? (
-              <p className="mt-2 text-[13px] text-muted-foreground">{hint}</p>
-            ) : null}
+        <div className="px-6 py-4">
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Require SSO')}
+          </h3>
+          <p className="mt-2 text-[13px] text-muted-foreground">
+            {t(
+              'Members with an email on your verified domains can open this organization only after signing in through your identity provider. Owners and members on other domains keep their usual sign-in.',
+            )}
+          </p>
+        </div>
+        <div className="border-t border-border" />
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              <Label htmlFor="sso-required" className="text-[13px]">
+                {t('Require single sign-on')}
+              </Label>
+              <p className="mt-1 text-[12px] text-muted-foreground">
+                {blocked
+                  ? hint
+                  : draft
+                    ? t(
+                        'Enabled - members on your verified domains must sign in through your identity provider.',
+                      )
+                    : t('Disabled - members sign in any way they like.')}
+              </p>
+            </div>
+            <Switch
+              id="sso-required"
+              checked={draft}
+              onCheckedChange={setDraft}
+              disabled={update.isPending || blocked}
+              className="shrink-0"
+            />
           </div>
-          <Switch
-            id="sso-required"
-            checked={required}
-            onCheckedChange={(value) =>
-              value ? setConfirming(true) : save(false)
-            }
-            disabled={update.isPending || (!required && hint !== null)}
-          />
+        </div>
+        <div className="border-t border-border bg-muted/30 px-6 py-4">
+          <Button
+            size="sm"
+            className="h-9 text-[13px]"
+            disabled={!hasChanges || update.isPending}
+            onClick={() => (draft ? setConfirming(true) : save(false))}
+          >
+            {t('Update')}
+          </Button>
         </div>
       </div>
 

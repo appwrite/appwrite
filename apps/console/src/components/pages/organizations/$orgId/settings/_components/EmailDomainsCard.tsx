@@ -47,7 +47,7 @@ const HEAD =
 export function EmailDomainsCard() {
   const t = useT()
   const { orgId = '' } = useParams({ strict: false })
-  const { domains, isLoading } = useOrganizationEmailDomains(orgId)
+  const { domains } = useOrganizationEmailDomains(orgId)
   const remove = useDeleteOrganizationEmailDomain(orgId)
 
   const [createOpen, setCreateOpen] = useState(false)
@@ -81,16 +81,7 @@ export function EmailDomainsCard() {
           </p>
         </div>
         <div className="border-t border-border" />
-        {isLoading && domains.length === 0 ? (
-          <div className="space-y-3 px-6 py-4">
-            {Array.from({ length: 2 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-4 w-48 animate-pulse rounded bg-muted"
-              />
-            ))}
-          </div>
-        ) : domains.length === 0 ? (
+        {domains.length === 0 ? (
           <div className="px-6 py-4">
             <EmptyState
               icon={MailCheck}
@@ -146,14 +137,18 @@ export function EmailDomainsCard() {
                             />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-56">
-                            <DropdownMenuItem
-                              onClick={() => setVerifying(rule)}
-                            >
-                              <MenuItemContent icon={Globe}>
-                                {t('DNS records')}
-                              </MenuItemContent>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
+                            {!verified ? (
+                              <>
+                                <DropdownMenuItem
+                                  onClick={() => setVerifying(rule)}
+                                >
+                                  <MenuItemContent icon={Globe}>
+                                    {t('DNS records')}
+                                  </MenuItemContent>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                              </>
+                            ) : null}
                             <DropdownMenuItem onClick={() => setDeleting(rule)}>
                               <MenuItemContent icon={Trash2}>
                                 {t('Delete')}

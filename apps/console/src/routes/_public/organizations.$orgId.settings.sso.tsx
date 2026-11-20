@@ -4,6 +4,8 @@ import {
   consoleOrganizationScopesQueryOptions,
   fetchOrganizations,
   organizationEmailDomainsQueryOptions,
+  organizationQueryOptions,
+  organizationSSOProvidersQueryOptions,
 } from '@/lib/react-query/hooks'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { canAccessOrganizationSso } from '@/lib/console-rbac-loader'
@@ -46,6 +48,12 @@ export const Route = createFileRoute(
     await Promise.all([
       queryClient
         .ensureQueryData(organizationEmailDomainsQueryOptions(orgId))
+        .catch(() => undefined),
+      queryClient
+        .ensureQueryData(organizationSSOProvidersQueryOptions(orgId))
+        .catch(() => undefined),
+      queryClient
+        .ensureQueryData(organizationQueryOptions(orgId))
         .catch(() => undefined),
       queryClient
         .ensureQueryData(consoleOrganizationScopesQueryOptions())

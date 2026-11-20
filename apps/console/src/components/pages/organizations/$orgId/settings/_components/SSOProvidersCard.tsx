@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams } from '@tanstack/react-router'
-import { KeyRound, Pencil, Trash2 } from 'lucide-react'
+import { KeyRound, Link2, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { CodeSnippetCopyButton } from '@/components/global/shared/CodeSnippetCopyButton'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
@@ -42,6 +42,7 @@ import {
   useOrganizationSSOProviders,
   useSaveOrganizationSSOProvider,
 } from '@/lib/react-query/hooks'
+import { buildConsoleUrl, copyToClipboard } from '@/lib/utils/context-menu'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
 import { EmailDomainRoles, emailDomainRoleLabel } from './EmailDomainRoles'
@@ -53,7 +54,7 @@ const HEAD =
 export function SSOProvidersCard() {
   const t = useT()
   const { orgId = '' } = useParams({ strict: false })
-  const { providers, isLoading } = useOrganizationSSOProviders(orgId)
+  const { providers } = useOrganizationSSOProviders(orgId)
   const save = useSaveOrganizationSSOProvider(orgId)
   const remove = useDeleteOrganizationSSOProvider(orgId)
 
@@ -114,16 +115,7 @@ export function SSOProvidersCard() {
           </p>
         </div>
         <div className="border-t border-border" />
-        {isLoading && providers.length === 0 ? (
-          <div className="space-y-3 px-6 py-4">
-            {Array.from({ length: 2 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-4 w-48 animate-pulse rounded bg-muted"
-              />
-            ))}
-          </div>
-        ) : providers.length === 0 ? (
+        {providers.length === 0 ? (
           <div className="px-6 py-4">
             <EmptyState
               icon={KeyRound}
@@ -182,6 +174,21 @@ export function SSOProvidersCard() {
                         />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-56">
+                        {/* The link to share with the team: it opens this provider's sign-in directly. */}
+                        <DropdownMenuItem
+                          onClick={() =>
+                            copyToClipboard(
+                              t('SSO URL'),
+                              buildConsoleUrl(
+                                `/sso?provider=${encodeURIComponent(provider.$id)}`,
+                              ),
+                            )
+                          }
+                        >
+                          <MenuItemContent icon={Link2}>
+                            {t('Copy SSO URL')}
+                          </MenuItemContent>
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setEditing(provider)}>
                           <MenuItemContent icon={Pencil}>
                             {t('Update')}
@@ -359,6 +366,25 @@ function ProviderForm({
     )
   }
 
+  const enabledRow = (
+    <div className="flex items-center justify-between gap-4">
+      <div>
+        <Label htmlFor="sso-enabled" className="text-[13px] font-medium">
+          {t('Enabled')}
+        </Label>
+        <p className="text-[12px] text-muted-foreground">
+          {t('People can sign in through this provider.')}
+        </p>
+      </div>
+      <Switch
+        id="sso-enabled"
+        checked={enabled}
+        onCheckedChange={setEnabled}
+        disabled={save.isPending}
+      />
+    </div>
+  )
+
   return (
     <form onSubmit={handleSubmit}>
       <DialogHeader className="px-6 pt-6 pb-4 text-start">
@@ -368,13 +394,19 @@ function ProviderForm({
             : t('Add identity provider')}
         </DialogTitle>
         <DialogDescription className="text-[13px] mt-2">
-          {t(
-            'Create an OpenID Connect application at your provider, add the redirect URL there, then fill in its details.',
-          )}
+          {provider
+            ? t(
+                'Change how people sign in through this provider. Leave the client secret empty to keep the stored one.',
+              )
+            : t(
+                'Create an OpenID Connect application at your provider, add the redirect URL there, then fill in its details.',
+              )}
         </DialogDescription>
       </DialogHeader>
       <div className="border-t border-border" />
       <div className="max-h-[60vh] space-y-4 overflow-y-auto px-6 py-4">
+        {/* Turning a provider on or off is the usual reason to update one. */}
+        {provider ? enabledRow : null}
         <div className="space-y-2">
           <Label htmlFor="sso-redirect" className="text-[13px] font-medium">
             {t('Redirect URL')}
@@ -509,22 +541,7 @@ function ProviderForm({
             ))}
           </div>
         ) : null}
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <Label htmlFor="sso-enabled" className="text-[13px] font-medium">
-              {t('Enabled')}
-            </Label>
-            <p className="text-[12px] text-muted-foreground">
-              {t('People can sign in through this provider.')}
-            </p>
-          </div>
-          <Switch
-            id="sso-enabled"
-            checked={enabled}
-            onCheckedChange={setEnabled}
-            disabled={save.isPending}
-          />
-        </div>
+        {provider ? null : enabledRow}
       </div>
       <div className="flex flex-col-reverse gap-2 border-t border-border bg-muted/30 px-6 py-4 sm:flex-row sm:justify-end">
         <Button type="button" variant="outline" onClick={onDone}>
