@@ -29,6 +29,8 @@ const searchSchema = z.object({
    */
   error: z.unknown().optional(),
   redirect: z.string().optional(),
+  /** Set when an organization that requires single sign-on sent the member here. */
+  required: z.stringbool().optional(),
 })
 
 export const Route = createFileRoute('/_auth/sso')({
@@ -39,6 +41,16 @@ export const Route = createFileRoute('/_auth/sso')({
 
 /** The message of the error the sign-in returned in `?error=`, if any. */
 function failureMessage(error: unknown): string | null {
+  const message = rawFailureMessage(error)
+  // The identity provider vouched for an email outside the organization's
+  // verified domains: retrying the same login cannot help.
+  if (message?.includes('email_domain_not_verified')) {
+    return "Your company login returned an email that isn't on a domain your organization verified. Sign in with your work email account."
+  }
+  return message
+}
+
+function rawFailureMessage(error: unknown): string | null {
   if (error === undefined || error === null || error === '') return null
   if (typeof error === 'object') {
     const message = (error as { message?: unknown }).message
@@ -108,6 +120,16 @@ function SingleSignOnPage() {
               )}
             </AuthFlowDescription>
           </div>
+
+          {search.required && !failure ? (
+            <Alert>
+              <AlertDescription className="text-[13px]">
+                {t(
+                  'This organization requires single sign-on. Sign in with your company login to continue.',
+                )}
+              </AlertDescription>
+            </Alert>
+          ) : null}
 
           {failure ? (
             <Alert variant="destructive">

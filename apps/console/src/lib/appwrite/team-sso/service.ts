@@ -42,6 +42,21 @@ export class TeamSSO {
     )
   }
 
+  /**
+   * Require single sign-on for the organization, or stop requiring it. Members on
+   * its verified domains then reach it only on a session from single sign-on;
+   * owners are exempt. Requiring it needs a verified domain and an enabled
+   * provider. Resolves with the organization.
+   */
+  updateRequired(
+    teamId: string,
+    required: boolean,
+  ): Promise<{ $id: string; ssoRequired: boolean }> {
+    return this.call('patch', `/teams/${this.id(teamId)}/sso/required`, {
+      required,
+    })
+  }
+
   deleteDomain(teamId: string, domainId: string): Promise<unknown> {
     return this.call(
       'delete',

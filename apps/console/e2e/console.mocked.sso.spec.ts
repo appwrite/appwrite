@@ -9,7 +9,9 @@ import { expect, test } from './fixtures'
  * (`teams.listSSODomains`), claims one (`teams.createSSODomain`), checks its TXT
  * record (`teams.updateSSODomainStatus`) and deletes it; its identity providers
  * are listed, added, updated and deleted the same way, each with the role people
- * join with. The sign-in page looks up the providers for a work email
+ * join with. The organization can require single sign-on
+ * (`teams.updateSSORequired`); a member it refuses is sent to sign in with SSO.
+ * The sign-in page looks up the providers for a work email
  * (`account.listSSOProviders`) and starts at the chosen one. The API is mocked at
  * the network layer, so the real pages run; what the page asks the server to do
  * is asserted on the requests it sends.
@@ -155,6 +157,10 @@ interface Mock {
   role: 'owner' | 'developer'
   /** The organization's members */
   members: Member[]
+  /** Whether the organization requires single sign-on */
+  ssoRequired: boolean
+  /** The organization refuses the signed-in member until they sign in through SSO */
+  refuseWithoutSSO: boolean
   sent: {
     creates: Array<{ domain: string }>
     verifies: string[]
@@ -165,6 +171,8 @@ interface Mock {
       body: Record<string, unknown>
     }>
     providerDeletes: string[]
+    /** Require SSO switches sent */
+    requires: boolean[]
     /** Emails the sign-in page looked providers up for */
     lookups: string[]
     /** Provider IDs the browser was sent to sign in through */
@@ -184,7 +192,15 @@ function corsHeaders(route: Route): Record<string, string> {
 async function mockAppwriteApi(
   page: Page,
   options: Partial<
-    Pick<Mock, 'role' | 'domains' | 'providers' | 'members'>
+    Pick<
+      Mock,
+      | 'role'
+      | 'domains'
+      | 'providers'
+      | 'members'
+      | 'ssoRequired'
+      | 'refuseWithoutSSO'
+    >
   > = {},
 ): Promise<Mock> {
   const mock: Mock = {
@@ -193,6 +209,8 @@ async function mockAppwriteApi(
     providers: options.providers ?? [],
     role: options.role ?? 'owner',
     members: options.members ?? [],
+    ssoRequired: options.ssoRequired ?? false,
+    refuseWithoutSSO: options.refuseWithoutSSO ?? false,
     sent: {
       creates: [],
       verifies: [],
@@ -200,6 +218,7 @@ async function mockAppwriteApi(
       providerCreates: [],
       providerUpdates: [],
       providerDeletes: [],
+      requires: [],
       lookups: [],
       signIns: [],
     },
@@ -223,6 +242,25 @@ async function mockAppwriteApi(
         body: JSON.stringify(body),
       })
     const method = request.method()
+    const organization = () => ({
+      ...ORGANIZATION,
+      ssoRequired: mock.ssoRequired,
+    })
+    // An organization that requires SSO refuses its own routes and its projects.
+    if (
+      mock.refuseWithoutSSO &&
+      (apiPath.startsWith(`/teams/${ORGANIZATION.$id}`) ||
+        apiPath.startsWith(`/organizations/${ORGANIZATION.$id}`) ||
+        apiPath === '/organization/projects')
+    ) {
+      return json(403, {
+        message:
+          'This organization requires single sign-on. Sign in with SSO to continue.',
+        code: 403,
+        type: 'sso_required',
+        version: '1.0',
+      })
+    }
 
     if (apiPath === '/account') return json(200, ACCOUNT)
     if (apiPath === '/account/prefs') {
@@ -243,12 +281,12 @@ async function mockAppwriteApi(
         scopes: ['teams.read', 'teams.write', 'projects.read'],
       })
     if (apiPath === '/organizations' || apiPath === '/teams')
-      return json(200, { total: 1, teams: [ORGANIZATION] })
+      return json(200, { total: 1, teams: [organization()] })
     if (
       apiPath === `/organizations/${ORGANIZATION.$id}` ||
       apiPath === `/teams/${ORGANIZATION.$id}`
     )
-      return json(200, ORGANIZATION)
+      return json(200, organization())
     if (apiPath.endsWith('/memberships'))
       return json(200, {
         total: mock.members.length,
@@ -258,6 +296,12 @@ async function mockAppwriteApi(
       return json(200, { total: 0, projects: [] })
 
     const sso = `/teams/${ORGANIZATION.$id}/sso`
+    if (apiPath === `${sso}/required` && method === 'PATCH') {
+      const { required } = request.postDataJSON()
+      mock.sent.requires.push(required)
+      mock.ssoRequired = required
+      return json(200, organization())
+    }
     if (apiPath === `${sso}/domains` && method === 'GET') {
       return json(200, { total: mock.domains.length, domains: mock.domains })
     }
@@ -484,6 +528,92 @@ test.describe('organization single sign-on', () => {
     await expect(page.getByText('No email domains yet')).toBeVisible()
   })
 
+  test('requires single sign-on for the organization after confirming, and stops requiring it', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page, {
+      providers: [provider('Okta', ['developer'])],
+    })
+    await enableSso(page)
+    await openSso(page)
+
+    const required = page.getByRole('switch', { name: 'Require SSO' })
+    await expect(required).toBeEnabled()
+    await expect(required).not.toBeChecked()
+
+    // Turning it on asks first, and says owners keep their sign-in
+    await required.click()
+    const confirm = page.getByRole('dialog', { name: 'Require single sign-on' })
+    await expect(confirm).toContainText('Owners keep their usual sign-in')
+    await expect(confirm).toContainText(
+      'Their other organizations are not affected',
+    )
+    await confirm.getByRole('button', { name: 'Cancel' }).click()
+    expect(mock.sent.requires).toEqual([])
+    await expect(required).not.toBeChecked()
+
+    await required.click()
+    await confirm.getByRole('button', { name: 'Require SSO' }).click()
+    await expect.poll(() => mock.sent.requires).toEqual([true])
+    await expect(required).toBeChecked()
+
+    // Turning it off needs no confirmation
+    await required.click()
+    await expect.poll(() => mock.sent.requires).toEqual([true, false])
+    await expect(required).not.toBeChecked()
+  })
+
+  test('cannot require single sign-on without a verified domain and an enabled provider', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page, {
+      domains: [domain('acme.com', 'unverified')],
+      providers: [provider('Okta', ['developer'])],
+    })
+    await enableSso(page)
+    await openSso(page)
+
+    const required = page.getByRole('switch', { name: 'Require SSO' })
+    await expect(required).toBeDisabled()
+    await expect(
+      page.getByText('Verify a domain to require single sign-on.'),
+    ).toBeVisible()
+
+    mock.domains = [domain('acme.com', 'verified')]
+    mock.providers = [provider('Okta', ['developer'], false)]
+    await page.reload()
+    await expect(required).toBeDisabled()
+    await expect(
+      page.getByText('Enable an identity provider to require single sign-on.'),
+    ).toBeVisible()
+    expect(mock.sent.requires).toEqual([])
+  })
+
+  test('sends a member the organization refuses to sign in with SSO, and back', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, {
+      role: 'developer',
+      ssoRequired: true,
+      refuseWithoutSSO: true,
+      providers: [provider('Okta', ['developer'])],
+    })
+    await enableSso(page)
+
+    await page.goto(`/organizations/${ORGANIZATION.$id}`, {
+      waitUntil: 'domcontentloaded',
+    })
+    await expect(page).toHaveURL(/\/sso\?/, { timeout: 45_000 })
+    const url = new URL(page.url())
+    expect(url.searchParams.get('required')).toBe('true')
+    expect(url.searchParams.get('redirect')).toBe(
+      `/organizations/${ORGANIZATION.$id}`,
+    )
+    await expect(
+      page.getByText('This organization requires single sign-on.'),
+    ).toBeVisible()
+  })
+
   test('connects an identity provider with the roles people join with', async ({
     page,
   }) => {
@@ -663,9 +793,22 @@ test.describe('organization single sign-on', () => {
     await page.goto(`/sso?error=${encodeURIComponent(error)}`, {
       waitUntil: 'domcontentloaded',
     })
-    await expect(page.getByText(/email_domain_not_verified/)).toBeVisible({
-      timeout: 45_000,
+    // In plain words, without the internal code or a retry that cannot help
+    await expect(
+      page.getByText("isn't on a domain your organization verified"),
+    ).toBeVisible({ timeout: 45_000 })
+    await expect(page.getByText(/email_domain_not_verified/)).toHaveCount(0)
+
+    // Any other reason is shown as the server gave it
+    const other = JSON.stringify({
+      message: 'Single sign-on could not finish.',
     })
+    await page.goto(`/sso?error=${encodeURIComponent(other)}`, {
+      waitUntil: 'domcontentloaded',
+    })
+    await expect(
+      page.getByText('Single sign-on could not finish.'),
+    ).toBeVisible()
   })
 
   test('flags External members by the verified domains', async ({ page }) => {

@@ -171,3 +171,33 @@ export function useDeleteOrganizationSSOProvider(
     onSuccess: refresh,
   })
 }
+
+/**
+ * Turns Require SSO on or off for an organization. The organization query carries
+ * `ssoRequired`, so it is updated in place and refetched.
+ */
+export function useRequireOrganizationSSO(
+  organizationId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (required: boolean) =>
+      sdk.forConsole.teamSSO.updateRequired(
+        requireOrganization(organizationId),
+        required,
+      ),
+    onSuccess: (organization) => {
+      queryClient.setQueryData(
+        ['organization', organizationId],
+        (current: object | null | undefined) =>
+          current
+            ? { ...current, ssoRequired: organization.ssoRequired }
+            : current,
+      )
+    },
+    onSettled: () =>
+      queryClient.invalidateQueries({
+        queryKey: ['organization', organizationId],
+      }),
+  })
+}
