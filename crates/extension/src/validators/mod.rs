@@ -64,6 +64,7 @@ fn register_base(class: &'static mut ClassEntry, tables: ArgInfoTables) {
         engine::set_type(value, 0);
     }
     BASE_CLASS.store(class, Ordering::Release);
+    leaf::intern();
     Box::leak(tables);
 }
 
