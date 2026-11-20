@@ -305,6 +305,15 @@ async function mockAppwriteApi(
       })
     }
 
+    if (apiPath === '/account/sessions/email' && method === 'POST') {
+      mock.signedIn = true
+      return json(201, {
+        $id: 'session-password',
+        userId: ACCOUNT.$id,
+        provider: 'email',
+        current: true,
+      })
+    }
     if (apiPath.startsWith('/account') && !mock.signedIn) {
       if (apiPath === '/account/sessions/sso/providers') {
         // Answered below: looking providers up needs no session
@@ -1535,6 +1544,34 @@ test.describe('organizations that require single sign-on', () => {
     await expect(page).toHaveURL(new RegExp(`/organizations/${PERSONAL.$id}`), {
       timeout: 45_000,
     })
+  })
+
+  test('sends a member who signs in with a password from a link to that organization to SSO', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, {
+      signedIn: false,
+      role: 'developer',
+      ssoRequired: true,
+      refuseWithoutSSO: true,
+    })
+    await enableSso(page)
+    const target = `/organizations/${ORGANIZATION.$id}/settings/members`
+
+    await page.goto(target, { waitUntil: 'domcontentloaded' })
+    await expect(page).toHaveURL(/\/sign-in/, { timeout: 45_000 })
+    await page.getByLabel('Email').fill(ACCOUNT.email)
+    const password = page.locator('input[type=password]')
+    if (!(await password.isVisible())) {
+      await page.getByRole('button', { name: 'Continue', exact: true }).click()
+    }
+    await password.fill('a-password')
+    await password.press('Enter')
+
+    await expect(page).toHaveURL(/\/sso\?/, { timeout: 45_000 })
+    const url = new URL(page.url())
+    expect(url.searchParams.get('required')).toBe('true')
+    expect(url.searchParams.get('redirect')).toBe(target)
   })
 
   test('gives a member whose only organization refuses them their account and sign out', async ({
