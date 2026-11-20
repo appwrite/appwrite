@@ -11,7 +11,6 @@ import {
   Wrench,
   type LucideIcon,
 } from 'lucide-react'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   Select,
   SelectContent,
@@ -44,7 +43,7 @@ import {
 import { DEFAULT_STALE_TIME } from '@/lib/react-query/hooks/constants'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
-import { ReviewTierBadge } from './ReviewBadges'
+import { ReviewAuthorLink, ReviewTierBadge } from './ReviewBadges'
 
 const HEAD_CLASS =
   'px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
@@ -154,38 +153,6 @@ function StatCard({
         <p className="truncate text-[11px] text-muted-foreground">{hint}</p>
       </div>
     </div>
-  )
-}
-
-function AuthorCell({ author }: { author: string }) {
-  const t = useT()
-  if (!author) {
-    return (
-      <span className="text-[13px] text-muted-foreground">
-        {t('Unknown author')}
-      </span>
-    )
-  }
-  return (
-    <a
-      href={`https://github.com/${encodeURIComponent(author)}`}
-      target="_blank"
-      rel="noreferrer"
-      className="flex min-w-0 items-center gap-2 hover:underline"
-    >
-      <Avatar className="h-6 w-6">
-        <AvatarImage
-          src={`https://github.com/${encodeURIComponent(author)}.png?size=48`}
-          alt=""
-        />
-        <AvatarFallback className="text-[10px]">
-          {author.slice(0, 2).toUpperCase()}
-        </AvatarFallback>
-      </Avatar>
-      <span className="truncate text-[13px] font-medium text-foreground">
-        @{author}
-      </span>
-    </a>
   )
 }
 
@@ -453,7 +420,7 @@ export function Performance({ projectId }: { projectId: string }) {
                     className="border-b border-border/50"
                   >
                     <TableCell className="px-4 py-3 max-w-[240px]">
-                      <AuthorCell author={author.author} />
+                      <ReviewAuthorLink author={author.author} />
                     </TableCell>
                     <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums">
                       {author.pulls}
