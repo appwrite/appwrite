@@ -715,7 +715,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               label: t('Single sign-on'),
               to: '/organizations/$orgId/settings/sso',
               icon: LockKeyhole,
-              keywords: ['sso', 'single sign-on', 'domains', 'email domains', 'auto join', 'company email']},
+              keywords: ['sso', 'single sign-on', 'domains', 'email domains', 'identity providers', 'company email']},
           ]
         : []),
     ]
