@@ -59,14 +59,14 @@ import { installPower, stationPower, type FrameState } from './frame'
 const REST = ARM_REST - HEAD_GAP
 const ARM_LENGTH = ARM.front - ARM.back
 
-type Track = <T extends BufferGeometry>(geometry: T) => T
+export type Track = <T extends BufferGeometry>(geometry: T) => T
 type PartKey = Extract<
   Finish,
   'aluminum' | 'steel' | 'graphite' | 'matte' | 'accent'
 >
 
 /** Collects parts by finish and merges them all into one mesh (one draw). */
-class Assembly {
+export class Assembly {
   private readonly parts: Partial<Record<PartKey, BufferGeometry[]>> = {}
 
   add(key: PartKey, geometry: BufferGeometry, x = 0, y = 0, z = 0) {
