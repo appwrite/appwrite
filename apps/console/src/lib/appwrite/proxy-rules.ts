@@ -18,6 +18,7 @@ export interface ProxyRuleRecord {
   expected: string
   /** The values DNS returned for this type */
   current: string[]
+  /** `misplaced`: no record at `name`, but one at `name` followed by its zone */
   status: 'verified' | 'missing' | 'mismatch' | 'misplaced' | 'failed'
   /** Why the check did not pass, empty when verified */
   message: string
