@@ -135,7 +135,7 @@ function dispatchIdentityOnly(
     case 'telesign':
       return messaging.updateTelesignProvider(identity)
     case 'bird':
-      return messaging.updateBirdProvider(identity)
+      return messaging.updateBirdSMSProvider(identity)
     case 'textmagic':
       return messaging.updateTextmagicProvider(identity)
     case 'fcm':
@@ -269,7 +269,7 @@ function dispatchWithMerged(
         from: optStr(merged.from),
       })
     case 'bird':
-      return messaging.updateBirdProvider({
+      return messaging.updateBirdSMSProvider({
         providerId,
         name,
         enabled,
