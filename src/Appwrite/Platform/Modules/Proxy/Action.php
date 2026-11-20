@@ -535,7 +535,7 @@ class Action extends PlatformAction
         }
 
         $misplaced = $domain->get() . '.' . $registerable;
-        $found = $this->findMisplaced($misplaced, $records[$missing[0]]['expected']);
+        $found = $this->findMisplaced($misplaced, $registerable, $records[$missing[0]]['expected']);
         if (empty($found)) {
             return $records;
         }
@@ -547,7 +547,7 @@ class Action extends PlatformAction
         return $records;
     }
 
-    private function findMisplaced(string $name, string $expected): array
+    private function findMisplaced(string $name, string $registerable, string $expected): array
     {
         $dnsValidatorClass = $this->dnsValidatorClass;
         $dnsServers = $this->dnsServers();
@@ -570,6 +570,11 @@ class Action extends PlatformAction
 
         $found = $lookup($name);
         if (empty($found)) {
+            return [];
+        }
+
+        $wildcard = $lookup('*.' . $registerable);
+        if (\is_null($wildcard) || \array_diff($found, $wildcard) === []) {
             return [];
         }
 
