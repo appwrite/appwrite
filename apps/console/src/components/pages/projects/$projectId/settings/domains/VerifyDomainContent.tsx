@@ -4,6 +4,7 @@ import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
 import type { ProxyRuleRecord } from '@/lib/appwrite/proxy-rules'
 import { isDnsUnverified, isWaitingForDns } from '@/lib/utils/status-badge'
 import {
+  getApexDomain,
   getRecordName,
   getVerificationMethods,
   isCloud as isCloudEndpoint,
@@ -174,6 +175,16 @@ const SECTION_BADGE =
 
 const TABLE_HEAD =
   'px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
+
+/**
+ * Where a DNS provider put a record whose full domain was entered as the
+ * host: it appends its zone, so `shop.example.com` lands at
+ * `shop.example.com.example.com`. The server looks there for a 'misplaced'
+ * check.
+ */
+function getMisplacedName(name: string): string {
+  return `${name}.${getApexDomain(name) ?? ''}`
+}
 
 /** The type of one record, on one line. The ALIAS type reads as a phrase. */
 function RecordType({ type }: { type: string }) {
@@ -349,10 +360,14 @@ function RecordSection({
           </TableHeader>
           <TableBody>
             {records.map((r) => {
+              // A misplaced record is wrong where it is, not in its value.
+              const misplaced = r.check?.status === 'misplaced' && !r.notNeeded
               const found =
                 r.check?.status === 'mismatch' && !r.notNeeded
                   ? r.check.current
-                  : []
+                  : misplaced && r.check
+                    ? [getMisplacedName(r.check.name)]
+                    : []
               return (
                 <Fragment key={`${r.type}-${r.value}`}>
                   <TableRow className={found.length ? 'border-b-0' : undefined}>
