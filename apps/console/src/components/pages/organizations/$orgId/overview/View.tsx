@@ -71,6 +71,7 @@ import {
   useUpdateMembershipRole,
   useRemoveTeamMember,
   useOrganizationEmailDomains,
+  useOrganizationSSOProviders,
   syncConsoleAccountAfterMutation,
   updateAccountPrefs,
   mapProjectToListItem,
@@ -1851,6 +1852,15 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     () => getVerifiedEmailDomains(emailDomains),
     [emailDomains],
   )
+  // A member on a verified domain joins again through an enabled provider:
+  // removing them here does not keep them out.
+  const { providers: ssoProviders } = useOrganizationSSOProviders(
+    canShowOrgSsoSettings(access, features) ? orgId : null,
+  )
+  const ssoRejoinsSelectedMember =
+    selectedMember?.status !== 'pending' &&
+    ssoProviders.some((provider) => provider.enabled) &&
+    isInternalEmail(selectedMember?.userEmail, verifiedEmailDomains)
   // Projects named by any member's project-specific roles on this page.
   // Resolved by id rather than read off the org's project list, which is
   // paginated and searched and so will not contain most of them.
@@ -4799,6 +4809,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   {t(
                     'from the team? They will lose access to all organization resources.',
                   )}
+                  {ssoRejoinsSelectedMember ? (
+                    <span className="mt-2 block">
+                      {t(
+                        'They can join again by signing in with single sign-on. To keep them out, remove them at your identity provider too.',
+                      )}
+                    </span>
+                  ) : null}
                 </>
               )}
             </DialogDescription>
