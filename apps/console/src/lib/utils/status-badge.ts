@@ -446,7 +446,7 @@ export function getRuleStatusBadgeConfig(
       return {
         variant: 'error',
         label: 'Action needed',
-        hint: 'A DNS record has the wrong value. Open Records to see which one and what to change it to.',
+        hint: 'A DNS record has the wrong value or name. Open Records to see which one and what to change it to.',
       }
     }
     return {
