@@ -511,7 +511,8 @@ class Action extends PlatformAction
 
             $records[] = [
                 'type' => $type,
-                'name' => $domain->get(),
+                // A blocking CAA record can sit on a parent of the domain, so it names where it was found
+                'name' => $type === 'CAA' && $status === 'mismatch' && $validator->value !== '' ? $validator->value : $domain->get(),
                 'expected' => $expected,
                 'current' => \array_values($current),
                 'status' => $status,
