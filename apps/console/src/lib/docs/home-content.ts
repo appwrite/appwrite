@@ -11,6 +11,7 @@ import {
   Share2,
   UserCircle,
   Users,
+  Video,
   Zap,
 } from 'lucide-react'
 
@@ -90,6 +91,12 @@ export const DOCS_HOME_PRODUCTS: DocsHomeProductCard[] = [
     description: 'Store images, videos, documents, and files.',
     href: '/docs/products/storage',
     icon: Folder,
+  },
+  {
+    title: 'Videos',
+    description: 'Stream video and audio with adaptive HLS, DASH, and CMAF.',
+    href: '/docs/products/videos',
+    icon: Video,
   },
   {
     title: 'Avatars',

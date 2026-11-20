@@ -3148,6 +3148,7 @@ name = "php-std"
 version = "0.1.0"
 dependencies = [
  "argon2",
+ "blake2",
  "blowfish",
  "bytes",
  "cc",
@@ -3170,6 +3171,7 @@ dependencies = [
  "unsafe-libyaml",
  "whirlpool",
  "xxhash-rust",
+ "zeroize",
 ]
 
 [[package]]

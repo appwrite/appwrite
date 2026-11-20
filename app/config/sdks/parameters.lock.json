@@ -2479,7 +2479,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.createResendProvider": [
             "providerId",
@@ -2756,7 +2757,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.updateResendProvider": [
             "providerId",
@@ -6986,7 +6988,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.createResendProvider": [
             "providerId",
@@ -7263,7 +7266,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.updateResendProvider": [
             "providerId",

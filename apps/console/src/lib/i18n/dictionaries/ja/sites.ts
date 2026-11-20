@@ -84,17 +84,19 @@ export const jaSitesDictionary: Record<string, string> = {
   'Deployed from': 'デプロイ元',
   'View logs': 'ログを表示',
   'Update domain': 'ドメインを更新',
-  'Its DNS records and certificate stay the same.': 'DNS レコードと証明書は変更されません。',
+  'Its DNS records and certificate stay the same.':
+    'DNS レコードと証明書は変更されません。',
   'Domain has been updated': 'ドメインを更新しました',
   'Failed to update domain': 'ドメインの更新に失敗しました',
-  'A domain cannot switch between serving a deployment and redirecting. Delete it and add it again.': 'ドメインをデプロイの配信とリダイレクトの間で切り替えることはできません。削除してから追加し直してください。',
+  'A domain cannot switch between serving a deployment and redirecting. Delete it and add it again.':
+    'ドメインをデプロイの配信とリダイレクトの間で切り替えることはできません。削除してから追加し直してください。',
   'Domain has been deleted': 'ドメインを削除しました',
   'Loading domains...': 'ドメインを読み込み中...',
   'Generating certificate': '証明書を発行中',
   'Verification failed': '検証に失敗しました',
   'Certificate generation failed': '証明書の発行に失敗しました',
-  'A DNS record has the wrong value. Open Records to see which one and what to change it to.':
-    'DNS レコードの値が正しくありません。「レコード」を開いて、どのレコードを何に変更するかを確認してください。',
+  'A DNS record has the wrong value or name. Open Records to see which one and what to change it to.':
+    'DNS レコードの値または名前が正しくありません。「レコード」を開いて、どのレコードを何に変更するかを確認してください。',
   'Waiting for DNS': 'DNS を待機中',
   'Appwrite checks the DNS records every few minutes for 3 days after the domain is added. Use Check now to look again right away.':
     'Appwrite はドメインの追加後 3 日間、数分ごとに DNS レコードを確認します。すぐに確認するには「今すぐ確認」を使用してください。',
@@ -110,6 +112,10 @@ export const jaSitesDictionary: Record<string, string> = {
     'Cloudflare では CNAME flattening（DNS only に設定）、Route 53 では Alias と呼ばれます。ANAME と呼ぶプロバイダーもあります。',
   'It points to {found}. Change it to {value}.':
     '現在は {found} を指しています。{value} に変更してください。',
+  'It was added as {found}. In your DNS provider, enter only {name} as the host.':
+    '{found} として追加されています。DNS プロバイダーではホストに {name} だけを入力してください。',
+  "Enter only {name} in your DNS provider's Host or Name field. Most providers add {apex} for you.":
+    'DNS プロバイダーのホストまたは名前の欄には {name} だけを入力してください。ほとんどのプロバイダーは {apex} を自動で付け加えます。',
   'Your domain points somewhere else. Set this record to {value}.':
     'ドメインは別の宛先を指しています。このレコードを {value} に設定してください。',
   'and {n} more': 'ほか {n} 件',
@@ -598,6 +604,12 @@ export const jaSitesDictionary: Record<string, string> = {
   'Action needed': '対応が必要',
   'Found:': '検出値:',
   'Wrong value': '値が正しくありません',
+  'Wrong name': '名前が正しくありません',
+  'Found at:': '検出場所:',
+  'Wrong type': '種類が正しくありません',
+  'Found {type}:': '検出された {type}:',
+  'Your domain has an {type} record ({found}) instead of a CNAME, often a URL redirect or parking record at your DNS provider. Delete it, then add the CNAME below.':
+    'ドメインには CNAME ではなく {type} レコード ({found}) があります。多くの場合、DNS プロバイダーの URL リダイレクトまたはパーキングのレコードです。これを削除してから、下の CNAME を追加してください。',
   'Blocks certificate': '証明書の発行を妨げる',
   "Couldn't check": '確認できません',
   Alternative: '代替手段',

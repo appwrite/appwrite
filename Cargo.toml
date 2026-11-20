@@ -115,6 +115,9 @@ argon2 = { version = "0.5", features = ["std"] }
 # pure-Rust client from the NATS maintainers, on tokio.
 async-nats = { version = "0.50", default-features = false, features = ["ring", "server_2_10", "jetstream"] }
 base64 = "0.22"
+# BLAKE2b for php-std's Argon2, which fills lanes on scoped threads (the `argon2` crate, a test
+# reference, fills them one after the other).
+blake2 = "0.10"
 # EksBlowfish (php-std crypt()); RustCrypto, pure Rust.
 blowfish = { version = "0.9", features = ["bcrypt"] }
 # Brotli (utopia-compression; utopia-http through it); Dropbox's pure-Rust port of

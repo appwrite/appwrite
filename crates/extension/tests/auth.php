@@ -566,6 +566,14 @@ const VECTORS = [
     ['70617373776f7264', '$2y$04$8n6PNKo/cRpZauwhCOHruOE8GgxYfp835LikPEPH1in38SLbi/8xm'],
     ['70617373776f7264', '$argon2id$v=19$m=1024,t=1,p=1$dk10UjluNVZtdjdzNU8yRw$Xo04kO+emLi04h+cTOcpybaS96X9VynadDs3VfB1gYg'],
     ['70617373776f7264', '$argon2i$v=19$m=1024,t=2,p=2$MldtVVZ6SUhKVnF4SFhmZw$yLgAZV73jDTFpZSHeR/NOwRknV3yACmPNd8npJCDO/c'],
+    // Lanes filled in parallel: Appwrite's default costs, an odd lane count, memory that is not a
+    // multiple of 4 blocks per lane, and more lanes than threads.
+    ['70617373776f7264', '$argon2id$v=19$m=65536,t=4,p=3$Y2x5Lk9PRm4xbVlsS1docw$lfyQwlDTvTGW2eV6gZpJ/0iP72sSWO6mGu2g93hUkcQ'],
+    ['70617373776f7264', '$argon2id$v=19$m=4096,t=3,p=5$NVowWEl2NXBhSlJiQTlnUQ$5OYS1UWWPRLFiEA5RevuAJdJ5nPUckjyu2QbqNOivvc'],
+    ['70617373776f7264', '$argon2i$v=19$m=2048,t=2,p=3$Sm1jUEVrbFBrRUtEZmRVUw$PuDOavza743xIhzMWvwgvTvrmJn2X6LeEBId6CXeorI'],
+    ['70617373776f7264', '$argon2id$v=19$m=1000,t=2,p=6$Rkg1eHRUU05KcVEvLy5oYw$0yLUHIsEpYF+GRwgp4Lp3a/zd+fUS2KJGoFx/eLCrhg'],
+    ['70617373776f7264', '$argon2id$v=19$m=4096,t=1,p=16$VWJ3Vnc3QTBSeWZrTTJHYQ$HAu65kmgnPqKB6GPnI8jQMokZn3UcssnpGeqm68jAbo'],
+    ['70617373776f7264', '$argon2id$v=19$m=4096,t=2,p=20$L3dVS3RxSFlxcVdMUTgzTQ$A2wOy99B7J5zVAS37pE6Wbj/KVeego5Fz7TTyGD3nGs'],
     ['70617373776f7264', '$2a$05$abcdefghijklmnopqrstuuWG29KuyeAicPCJODk1zjyGvyQUU2awu'],
     ['70617373776f7264', '$2b$05$abcdefghijklmnopqrstuuWG29KuyeAicPCJODk1zjyGvyQUU2awu'],
     ['70617373776f7264', '$2x$05$abcdefghijklmnopqrstuuWG29KuyeAicPCJODk1zjyGvyQUU2awu'],

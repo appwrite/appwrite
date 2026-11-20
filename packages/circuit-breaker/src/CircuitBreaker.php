@@ -27,6 +27,13 @@ class CircuitBreaker
      * timeout to survive a crashed holder, and would still be a guess.
      */
     private int $halfOpenInFlight = 0;
+
+    /**
+     * Slow probes this process has seen in the current half-open period. Per
+     * process like $halfOpenInFlight, and cleared when the period ends or another
+     * process starts a new one, so it never carries into the next period.
+     */
+    private int $halfOpenSlow = 0;
     private int $activeCalls = 0;
 
     private ?Telemetry $telemetry = null;
@@ -58,8 +65,10 @@ class CircuitBreaker
      */
     private int $windowSlot = 0;
     private int $windowFailures = 0;
+    private int $windowSlow = 0;
     private int $windowCalls = 0;
     private int $windowPreviousFailures = 0;
+    private int $windowPreviousSlow = 0;
     private int $windowPreviousCalls = 0;
     private ?Counter $calls = null;
     private ?Counter $callbackFailures = null;
@@ -92,6 +101,19 @@ class CircuitBreaker
      *                                      and sending a thousand concurrent
      *                                      callers to find out is how a recovering
      *                                      dependency is knocked over again.
+     * @param  list<class-string<\Throwable>>  $slow exceptions, matched with instanceof, that
+     *                                              mean the dependency answered too slowly
+     *                                              rather than failed.
+     * @param  float  $slowRatio share of calls in the window that must have been
+     *                           slow or failed to open the circuit, greater than 0
+     *                           and at most 1. Ignored when $slow is empty.
+     * @param  int|null  $slowMinimumThroughput calls required in the window before
+     *                                         the slow ratio is trusted; null uses
+     *                                         $minimumThroughput. A few slow tail
+     *                                         calls should not open the circuit
+     *                                         even where a few failures should. A
+     *                                         window with no success opens at
+     *                                         $minimumThroughput regardless.
      */
     public function __construct(
         private readonly int $timeout = 30,
@@ -104,6 +126,9 @@ class CircuitBreaker
         private readonly float $failureRatio = 0.5,
         private readonly int $minimumThroughput = 20,
         private readonly int $halfOpenPermittedCalls = 1,
+        private readonly array $slow = [],
+        private readonly float $slowRatio = 1.0,
+        private readonly ?int $slowMinimumThroughput = null,
     ) {
         if ($this->cache instanceof \Utopia\CircuitBreaker\Adapter && $this->key === '') {
             throw new \InvalidArgumentException('Key must not be empty when a cache adapter is configured.');
@@ -123,6 +148,20 @@ class CircuitBreaker
 
         if ($this->halfOpenPermittedCalls < 1) {
             throw new \InvalidArgumentException('Half-open permitted calls must be at least 1.');
+        }
+
+        foreach ($this->slow as $class) {
+            if (! is_a($class, \Throwable::class, true)) {
+                throw new \InvalidArgumentException('Slow exceptions must be Throwable class names.');
+            }
+        }
+
+        if ($this->slowRatio <= 0 || $this->slowRatio > 1) {
+            throw new \InvalidArgumentException('Slow ratio must be greater than 0 and at most 1.');
+        }
+
+        if ($this->slowMinimumThroughput !== null && $this->slowMinimumThroughput < 1) {
+            throw new \InvalidArgumentException('Slow minimum throughput must be at least 1.');
         }
 
         if ($telemetry instanceof \Utopia\Telemetry\Adapter) {
@@ -216,6 +255,17 @@ class CircuitBreaker
                 return $result;
             } catch (\Throwable $e) {
                 $exceptionType = $e::class;
+
+                if ($this->isSlow($e)) {
+                    $this->onSlow();
+                    $this->fallbacks?->add(1, $this->telemetryAttributes([
+                        'circuit_breaker.reason' => 'slow',
+                        'circuit_breaker.state' => $this->state->value,
+                    ]));
+                    $outcome = 'slow';
+                    return $open();
+                }
+
                 $this->callbackFailures?->add(1, $this->telemetryAttributes([
                     'exception.type' => $exceptionType,
                     'circuit_breaker.state' => $this->state->value,
@@ -287,7 +337,7 @@ class CircuitBreaker
         // A data point, not an all-clear. The window decides what is stale; wiping
         // the tally on every success is what would let a steady trickle of failures
         // hide behind the successes interleaved with it.
-        $this->recordWindowOutcome(failed: false);
+        $this->recordWindowOutcome();
     }
 
     private function onFailure(): void
@@ -300,26 +350,98 @@ class CircuitBreaker
             return;
         }
 
-        [$failures, $calls] = $this->recordWindowOutcome(failed: true);
+        $this->recordWindowOutcome(failed: true);
 
-        if ($calls >= $this->minimumThroughput && ($failures / $calls) >= $this->failureRatio) {
+        if ($this->exceedsRatio($this->windowFailureCount(), $this->failureRatio, $this->minimumThroughput) || $this->exceedsSlowRule()) {
             $this->transitionToOpen();
         }
     }
 
     /**
-     * Add one outcome to the rolling window and return the failure and call totals
-     * it now holds.
+     * A slow call is not a failure, so it only dilutes the failure ratio. The
+     * slow ratio counts every call that did not succeed, so a dependency that
+     * never answers in time cannot stay closed by splitting its calls between
+     * the two rules.
+     *
+     * A slow probe answers nothing: the dependency neither failed nor proved it is
+     * back. Re-opening on one would hold the circuit open on a slow spell that is
+     * well below the slow ratio, so it neither reopens nor counts as a success.
+     * Only once the period has seen the slow minimum of them does the circuit
+     * reopen and back off for the timeout, instead of probing back to back.
+     */
+    private function onSlow(): void
+    {
+        if ($this->state === CircuitState::HALF_OPEN) {
+            if (++$this->halfOpenSlow >= ($this->slowMinimumThroughput ?? $this->minimumThroughput)) {
+                $this->transitionToOpen();
+            }
+
+            return;
+        }
+
+        if ($this->state !== CircuitState::CLOSED) {
+            return;
+        }
+
+        $this->recordWindowOutcome(slow: true);
+
+        if ($this->exceedsSlowRule()) {
+            $this->transitionToOpen();
+        }
+    }
+
+    private function exceedsSlowRule(): bool
+    {
+        if ($this->slow === []) {
+            return false;
+        }
+
+        $unsuccessful = $this->windowSlowCount() + $this->windowFailureCount();
+
+        return $this->exceedsRatio($unsuccessful, $this->slowRatio, $this->slowMinimumThroughput ?? $this->minimumThroughput)
+            || $this->neverSucceeded($unsuccessful);
+    }
+
+    /**
+     * Judged on the failure floor, not the slow one: a window with no success is
+     * unambiguous however sparse, and a low-traffic caller may never reach the
+     * slow minimum.
+     */
+    private function neverSucceeded(int $unsuccessful): bool
+    {
+        $calls = $this->windowCallCount();
+
+        return $calls >= $this->minimumThroughput && $unsuccessful === $calls;
+    }
+
+    private function isSlow(\Throwable $error): bool
+    {
+        foreach ($this->slow as $class) {
+            if ($error instanceof $class) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function exceedsRatio(int $count, float $ratio, int $minimum): bool
+    {
+        $calls = $this->windowCallCount();
+
+        return $calls >= $minimum && ($count / $calls) >= $ratio;
+    }
+
+    /**
+     * Add one outcome to the rolling window.
      *
      * Two buckets, each $window wide: the one being filled and the one before it.
      * Totalling both covers somewhere between one and two windows depending on
      * where the current bucket started, which is the usual trade for not keeping a
      * timestamp per call — and it only ever errs by remembering slightly too much,
      * never by forgetting a failure early.
-     *
-     * @return array{int, int} failures and total calls now in the window
      */
-    private function recordWindowOutcome(bool $failed): array
+    private function recordWindowOutcome(bool $failed = false, bool $slow = false): void
     {
         $slot = intdiv(time(), $this->window);
 
@@ -330,8 +452,10 @@ class CircuitBreaker
             // that and both buckets predate the window entirely.
             $this->setWindowCounts(
                 previousFailures: $elapsed === 1 ? $this->windowFailures : 0,
+                previousSlow: $elapsed === 1 ? $this->windowSlow : 0,
                 previousCalls: $elapsed === 1 ? $this->windowCalls : 0,
                 failures: 0,
+                slow: 0,
                 calls: 0,
                 slot: $slot,
             );
@@ -339,16 +463,13 @@ class CircuitBreaker
 
         $this->setWindowCounts(
             previousFailures: $this->windowPreviousFailures,
+            previousSlow: $this->windowPreviousSlow,
             previousCalls: $this->windowPreviousCalls,
             failures: $this->windowFailures + ($failed ? 1 : 0),
+            slow: $this->windowSlow + ($slow ? 1 : 0),
             calls: $this->windowCalls + 1,
             slot: $slot,
         );
-
-        return [
-            $this->windowFailureCount(),
-            $this->windowCalls + $this->windowPreviousCalls,
-        ];
     }
 
     /**
@@ -359,16 +480,30 @@ class CircuitBreaker
         return $this->windowFailures + $this->windowPreviousFailures;
     }
 
+    private function windowSlowCount(): int
+    {
+        return $this->windowSlow + $this->windowPreviousSlow;
+    }
+
+    private function windowCallCount(): int
+    {
+        return $this->windowCalls + $this->windowPreviousCalls;
+    }
+
     private function setWindowCounts(
         int $previousFailures,
+        int $previousSlow,
         int $previousCalls,
         int $failures,
+        int $slow,
         int $calls,
         int $slot,
     ): void {
         $this->windowPreviousFailures = $previousFailures;
+        $this->windowPreviousSlow = $previousSlow;
         $this->windowPreviousCalls = $previousCalls;
         $this->windowFailures = $failures;
+        $this->windowSlow = $slow;
         $this->windowCalls = $calls;
         $this->windowSlot = $slot;
     }
@@ -377,8 +512,10 @@ class CircuitBreaker
     {
         $this->setWindowCounts(
             previousFailures: 0,
+            previousSlow: 0,
             previousCalls: 0,
             failures: 0,
+            slow: 0,
             calls: 0,
             slot: intdiv(time(), $this->window),
         );
@@ -394,6 +531,7 @@ class CircuitBreaker
         $from = $this->state;
         $this->setOpenedAt(time());
         $this->setSuccesses(0);
+        $this->halfOpenSlow = 0;
         $this->setState(CircuitState::OPEN);
         $this->recordTransition($from, CircuitState::OPEN);
     }
@@ -408,6 +546,7 @@ class CircuitBreaker
         // half open is the only way out of open, so no probe can ever re-open on
         // the evidence that opened it the first time.
         $this->resetWindow();
+        $this->halfOpenSlow = 0;
         $this->setState(CircuitState::HALF_OPEN);
         $this->recordTransition($from, CircuitState::HALF_OPEN);
     }
@@ -418,6 +557,7 @@ class CircuitBreaker
         $this->setFailures(0);
         $this->setSuccesses(0);
         $this->resetWindow();
+        $this->halfOpenSlow = 0;
         $this->setOpenedAt(null);
         $this->setState(CircuitState::CLOSED);
         $this->recordTransition($from, CircuitState::CLOSED);
@@ -429,10 +569,17 @@ class CircuitBreaker
             return;
         }
 
-        $this->state = $this->loadState();
+        $state = $this->loadState();
+        $openedAt = $this->loadNullableInteger(self::OPENED_AT_FIELD);
+
+        if ($state !== CircuitState::HALF_OPEN || $openedAt !== $this->openedAt) {
+            $this->halfOpenSlow = 0;
+        }
+
+        $this->state = $state;
         $this->failures = $this->loadInteger(self::FAILURES_FIELD);
         $this->successes = $this->loadInteger(self::SUCCESSES_FIELD);
-        $this->openedAt = $this->loadNullableInteger(self::OPENED_AT_FIELD);
+        $this->openedAt = $openedAt;
     }
 
     private function setState(CircuitState $state): void
@@ -574,6 +721,7 @@ class CircuitBreaker
 
             return $breaker->successes;
         });
+        $gauge('breaker.slow', '{call}', static fn (self $breaker): int => $breaker->windowSlowCount());
     }
 
     /**
@@ -639,6 +787,13 @@ class CircuitBreaker
         return $this->state === CircuitState::HALF_OPEN
             ? $this->failures
             : $this->windowFailureCount();
+    }
+
+    public function getSlowCount(): int
+    {
+        $this->syncFromCache();
+
+        return $this->windowSlowCount();
     }
 
     public function getSuccessCount(): int

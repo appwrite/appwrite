@@ -44,6 +44,7 @@ const CAPTION_STATUS: Record<
   started: { label: 'Processing', variant: 'processing' },
   ready: { label: 'Ready', variant: 'success' },
   error: { label: 'Failed', variant: 'error' },
+  aborted: { label: 'Aborted', variant: 'warning' },
 }
 
 const STATUS_MAPS = {
@@ -60,7 +61,7 @@ export function VideoStatusBadge({
 }: {
   status: string | undefined
   kind?: keyof typeof STATUS_MAPS
-  /** Worker error message, shown on hover when the status is a failure. */
+  /** Worker error message, shown on hover when the job failed or was aborted. */
   error?: string
   className?: string
 }) {
@@ -80,7 +81,10 @@ export function VideoStatusBadge({
       {t(entry.label)}
     </Badge>
   )
-  if (entry.variant !== 'error' || !error?.trim()) return badge
+  // Failed and aborted jobs both record why they stopped.
+  const explainsFailure =
+    entry.variant === 'error' || status === 'aborted'
+  if (!explainsFailure || !error?.trim()) return badge
   return (
     <Tooltip>
       <TooltipTrigger asChild>
