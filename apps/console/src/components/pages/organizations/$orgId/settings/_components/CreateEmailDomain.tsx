@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import type { TeamRule } from '@/lib/appwrite/team-rules'
+import type { SSODomain } from '@/lib/appwrite/team-sso'
 import { useT } from '@/lib/i18n/translate'
 import { useCreateOrganizationEmailDomain } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -20,7 +20,6 @@ import {
   domainFieldError,
   getDomainClaimReason,
 } from '@/lib/utils/proxy-domains'
-import { EmailDomainRoles } from './EmailDomainRoles'
 import { getEmailDomainRecord } from './VerifyEmailDomain'
 
 export function CreateEmailDomain({
@@ -32,27 +31,21 @@ export function CreateEmailDomain({
   open: boolean
   onOpenChange: (open: boolean) => void
   organizationId: string
-  onCreated: (rule: TeamRule) => void
+  onCreated: (rule: SSODomain) => void
 }) {
   const t = useT()
   const [domain, setDomain] = useState('')
   const [touched, setTouched] = useState(false)
-  const [roles, setRoles] = useState<string[]>(['developer'])
   // Another organization holds the domain: the TXT record takes it over.
   const [claimDomain, setClaimDomain] = useState<string | null>(null)
   const create = useCreateOrganizationEmailDomain(organizationId)
 
   const domainError = domainFieldError(domain, touched, t)
-  const canSubmit =
-    domain.trim() !== '' &&
-    !domainError &&
-    roles.length > 0 &&
-    !create.isPending
+  const canSubmit = domain.trim() !== '' && !domainError && !create.isPending
 
   const reset = () => {
     setDomain('')
     setTouched(false)
-    setRoles(['developer'])
     setClaimDomain(null)
   }
 
@@ -66,7 +59,7 @@ export function CreateEmailDomain({
     setTouched(true)
     if (!canSubmit) return
     create.mutate(
-      { domain, roles },
+      { domain },
       {
         onSuccess: (rule) => {
           toast.success(t('Email domain added'))
@@ -94,7 +87,7 @@ export function CreateEmailDomain({
             <DialogTitle>{t('Add email domain')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {t(
-                'People who sign up with a verified email on this domain join this organization.',
+                'Prove your organization owns this domain with a DNS record. Your identity providers then sign in people with an email on it.',
               )}
             </DialogDescription>
           </DialogHeader>
@@ -126,21 +119,6 @@ export function CreateEmailDomain({
                   )}
                 </p>
               )}
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[13px] font-medium">{t('Roles')}</Label>
-              <EmailDomainRoles
-                value={roles}
-                onChange={setRoles}
-                disabled={create.isPending}
-              />
-              <p className="text-[12px] text-muted-foreground">
-                {roles.length === 0
-                  ? t('Pick at least one role.')
-                  : t(
-                      'Roles people get when they join. Same roles as Invite Members.',
-                    )}
-              </p>
             </div>
             {claimDomain ? (
               <Alert>

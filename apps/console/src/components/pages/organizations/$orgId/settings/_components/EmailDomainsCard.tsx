@@ -1,11 +1,10 @@
 import { useState } from 'react'
 import { useParams } from '@tanstack/react-router'
-import { Globe, MailCheck, Pencil, Trash2 } from 'lucide-react'
+import { Globe, MailCheck, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
-import { ROLE_OPTIONS } from '@/components/pages/organizations/$orgId/overview/InviteMembersDialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -31,7 +30,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { analyticsAttrs } from '@/lib/analytics-actions'
-import type { TeamRule } from '@/lib/appwrite/team-rules'
+import type { SSODomain } from '@/lib/appwrite/team-sso'
 import { useT } from '@/lib/i18n/translate'
 import {
   useDeleteOrganizationEmailDomain,
@@ -40,8 +39,6 @@ import {
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
 import { CreateEmailDomain } from './CreateEmailDomain'
-import { emailDomainRoleLabel } from './EmailDomainRoles'
-import { UpdateEmailDomain } from './UpdateEmailDomain'
 import { VerifyEmailDomain } from './VerifyEmailDomain'
 
 const HEAD =
@@ -54,9 +51,8 @@ export function EmailDomainsCard() {
   const remove = useDeleteOrganizationEmailDomain(orgId)
 
   const [createOpen, setCreateOpen] = useState(false)
-  const [verifying, setVerifying] = useState<TeamRule | null>(null)
-  const [updating, setUpdating] = useState<TeamRule | null>(null)
-  const [deleting, setDeleting] = useState<TeamRule | null>(null)
+  const [verifying, setVerifying] = useState<SSODomain | null>(null)
+  const [deleting, setDeleting] = useState<SSODomain | null>(null)
 
   const confirmDelete = () => {
     if (!deleting) return
@@ -80,7 +76,7 @@ export function EmailDomainsCard() {
           </h3>
           <p className="mt-2 text-[13px] text-muted-foreground">
             {t(
-              'People who sign up with a verified email on these domains join this organization automatically, with the roles you choose.',
+              'Prove the email domains your organization owns. Your identity providers sign in only people with an email on a verified domain.',
             )}
           </p>
         </div>
@@ -100,7 +96,7 @@ export function EmailDomainsCard() {
               icon={MailCheck}
               title={t('No email domains yet')}
               description={t(
-                'Add your company domain so teammates join this organization when they sign up.',
+                'Add your company domain, then connect an identity provider so teammates sign in with your company login.',
               )}
               isEmpty
               variant="default"
@@ -112,9 +108,6 @@ export function EmailDomainsCard() {
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className={HEAD}>{t('Domain')}</TableHead>
-                <TableHead className={HEAD}>
-                  {t('Roles for new members')}
-                </TableHead>
                 <TableHead className={HEAD}>{t('Status')}</TableHead>
                 <TableHead className={`${HEAD} w-[140px] text-right`} />
               </TableRow>
@@ -128,25 +121,6 @@ export function EmailDomainsCard() {
                       <span className="font-mono text-[13px]">
                         {rule.domain}
                       </span>
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <div className="flex flex-wrap gap-1">
-                        {rule.teamRoles.map((role) => {
-                          const Icon = ROLE_OPTIONS.find(
-                            (option) => option.value === role,
-                          )?.icon
-                          return (
-                            <Badge
-                              key={role}
-                              variant="outline"
-                              className="gap-1"
-                            >
-                              {Icon ? <Icon className="h-3 w-3" /> : null}
-                              {t(emailDomainRoleLabel(role))}
-                            </Badge>
-                          )
-                        })}
-                      </div>
                     </TableCell>
                     <TableCell className="px-4 py-3">
                       <Badge variant={verified ? 'success' : 'warning'}>
@@ -172,11 +146,6 @@ export function EmailDomainsCard() {
                             />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-56">
-                            <DropdownMenuItem onClick={() => setUpdating(rule)}>
-                              <MenuItemContent icon={Pencil}>
-                                {t('Update')}
-                              </MenuItemContent>
-                            </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => setVerifying(rule)}
                             >
@@ -225,11 +194,6 @@ export function EmailDomainsCard() {
         organizationId={orgId}
         onOpenChange={(open) => !open && setVerifying(null)}
       />
-      <UpdateEmailDomain
-        rule={updating}
-        organizationId={orgId}
-        onOpenChange={(open) => !open && setUpdating(null)}
-      />
 
       <Dialog
         open={deleting !== null}
@@ -241,7 +205,7 @@ export function EmailDomainsCard() {
             <DialogDescription className="text-[13px] mt-2">
               {t('Are you sure you want to delete')} "{deleting?.domain}"?{' '}
               {t(
-                'New people stop joining through it. People who already joined stay members.',
+                'Your identity providers stop signing in emails on it. People who already joined stay members.',
               )}
             </DialogDescription>
           </DialogHeader>

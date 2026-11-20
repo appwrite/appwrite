@@ -44,6 +44,7 @@ const AUTH_PAGE_PATHS = [
   '/sign-in',
   '/sign-up',
   '/recovery',
+  '/sso',
   '/reset',
   '/mfa',
   '/verify-email',

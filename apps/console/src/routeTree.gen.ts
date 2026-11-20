@@ -43,6 +43,7 @@ import { Route as AuthRecoveryRouteImport } from './routes/_auth/recovery'
 import { Route as AuthSignInRouteImport } from './routes/_auth/sign-in'
 import { Route as AuthSignOutRouteImport } from './routes/_auth/sign-out'
 import { Route as AuthSignUpRouteImport } from './routes/_auth/sign-up'
+import { Route as AuthSsoRouteImport } from './routes/_auth/sso'
 import { Route as AuthVerifyEmailRouteImport } from './routes/_auth/verify-email'
 import { Route as MarketingIndexRouteImport } from './routes/_marketing/index'
 import { Route as MarketingAffiliatesRouteImport } from './routes/_marketing/affiliates'
@@ -682,6 +683,11 @@ const AuthSignOutRoute = AuthSignOutRouteImport.update({
 const AuthSignUpRoute = AuthSignUpRouteImport.update({
   id: '/sign-up',
   path: '/sign-up',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthSsoRoute = AuthSsoRouteImport.update({
+  id: '/sso',
+  path: '/sso',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
@@ -3696,6 +3702,7 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof AuthSignInRoute
   '/sign-out': typeof AuthSignOutRoute
   '/sign-up': typeof AuthSignUpRoute
+  '/sso': typeof AuthSsoRoute
   '/verify-email': typeof AuthVerifyEmailRoute
   '/affiliates': typeof MarketingAffiliatesRoute
   '/agencies': typeof MarketingAgenciesRoute
@@ -4200,6 +4207,7 @@ export interface FileRoutesByTo {
   '/sign-in': typeof AuthSignInRoute
   '/sign-out': typeof AuthSignOutRoute
   '/sign-up': typeof AuthSignUpRoute
+  '/sso': typeof AuthSsoRoute
   '/verify-email': typeof AuthVerifyEmailRoute
   '/affiliates': typeof MarketingAffiliatesRoute
   '/agencies': typeof MarketingAgenciesRoute
@@ -4656,6 +4664,7 @@ export interface FileRoutesById {
   '/_auth/sign-in': typeof AuthSignInRoute
   '/_auth/sign-out': typeof AuthSignOutRoute
   '/_auth/sign-up': typeof AuthSignUpRoute
+  '/_auth/sso': typeof AuthSsoRoute
   '/_auth/verify-email': typeof AuthVerifyEmailRoute
   '/_marketing/affiliates': typeof MarketingAffiliatesRoute
   '/_marketing/agencies': typeof MarketingAgenciesRoute
@@ -5165,6 +5174,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-out'
     | '/sign-up'
+    | '/sso'
     | '/verify-email'
     | '/affiliates'
     | '/agencies'
@@ -5669,6 +5679,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-out'
     | '/sign-up'
+    | '/sso'
     | '/verify-email'
     | '/affiliates'
     | '/agencies'
@@ -6124,6 +6135,7 @@ export interface FileRouteTypes {
     | '/_auth/sign-in'
     | '/_auth/sign-out'
     | '/_auth/sign-up'
+    | '/_auth/sso'
     | '/_auth/verify-email'
     | '/_marketing/affiliates'
     | '/_marketing/agencies'
@@ -6896,6 +6908,13 @@ declare module '@tanstack/react-router' {
       path: '/sign-up'
       fullPath: '/sign-up'
       preLoaderRoute: typeof AuthSignUpRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/sso': {
+      id: '/_auth/sso'
+      path: '/sso'
+      fullPath: '/sso'
+      preLoaderRoute: typeof AuthSsoRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/verify-email': {
@@ -10226,6 +10245,7 @@ interface AuthRouteChildren {
   AuthSignInRoute: typeof AuthSignInRoute
   AuthSignOutRoute: typeof AuthSignOutRoute
   AuthSignUpRoute: typeof AuthSignUpRoute
+  AuthSsoRoute: typeof AuthSsoRoute
   AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
   AuthAuthMagicUrlRoute: typeof AuthAuthMagicUrlRoute
   AuthEducationJoinRoute: typeof AuthEducationJoinRoute
@@ -10245,6 +10265,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthSignInRoute: AuthSignInRoute,
   AuthSignOutRoute: AuthSignOutRoute,
   AuthSignUpRoute: AuthSignUpRoute,
+  AuthSsoRoute: AuthSsoRoute,
   AuthVerifyEmailRoute: AuthVerifyEmailRoute,
   AuthAuthMagicUrlRoute: AuthAuthMagicUrlRoute,
   AuthEducationJoinRoute: AuthEducationJoinRoute,

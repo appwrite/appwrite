@@ -43,7 +43,7 @@ export const EXPERIMENTS: readonly Experiment[] = [
   {
     flag: 'sso',
     name: 'Single sign-on',
-    description: 'Verify your company domain so teammates join on sign-up.',
+    description: 'Verify your company domains and sign in with your company login.',
     introducedAt: '2026-11-18',
   },
   {

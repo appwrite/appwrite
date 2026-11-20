@@ -37,6 +37,7 @@ function isAuthPage(pathname: string): boolean {
     pathname === '/sign-in' ||
     pathname === '/sign-up' ||
     pathname === '/recovery' ||
+    pathname === '/sso' ||
     pathname === '/reset' ||
     pathname === '/join' ||
     pathname === '/mfa' ||

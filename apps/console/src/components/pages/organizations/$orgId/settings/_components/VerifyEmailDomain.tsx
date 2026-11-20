@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import type { TeamRule } from '@/lib/appwrite/team-rules'
+import type { SSODomain } from '@/lib/appwrite/team-sso'
 import { useT } from '@/lib/i18n/translate'
 import { useVerifyOrganizationEmailDomain } from '@/lib/react-query/hooks'
 import {
@@ -29,7 +29,7 @@ export function VerifyEmailDomain({
   organizationId,
   onOpenChange,
 }: {
-  rule: TeamRule | null
+  rule: SSODomain | null
   organizationId: string
   onOpenChange: (open: boolean) => void
 }) {
