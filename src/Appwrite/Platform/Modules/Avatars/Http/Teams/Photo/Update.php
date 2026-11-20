@@ -46,6 +46,7 @@ class Update extends Base
         $this
             ->setHttpMethod(UtopiaAction::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/avatars/teams/:teamId/photo')
+            ->httpAlias('/v1/teams/:teamId/photo')
             ->desc('Update photo')
             ->groups(['api', 'teams'])
             ->label('event', 'teams.[teamId].update')
