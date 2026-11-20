@@ -122,7 +122,7 @@ export function RequireSSOCard() {
             className="mt-2 text-[13px] text-muted-foreground"
           >
             {t(
-              'Members with an email on your verified domains can open this organization only after signing in through your identity provider. Owners and members on other domains keep their usual sign-in.',
+              'Members with an email on your verified domains can open this organization only after signing in through your identity provider. Owners can always sign in with any method, so a broken provider never locks your organization out. Members on other domains keep their usual sign-in too.',
             )}
           </p>
         </div>
@@ -152,7 +152,7 @@ export function RequireSSOCard() {
                         )
                     : draft
                       ? t(
-                          'Enabled - members on your verified domains must sign in through your identity provider.',
+                          'Enabled - members on your verified domains must sign in through your identity provider. Owners can always sign in any way.',
                         )
                       : t('Disabled - members sign in any way they like.')}
               </p>
