@@ -55,8 +55,8 @@ class Update extends Base
             ->label('audits.resource', 'team/{request.teamId}')
             ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
-                namespace: 'teams',
-                group: 'teams',
+                namespace: 'avatars',
+                group: null,
                 name: 'updatePhoto',
                 description: <<<'EOT'
                 Update the photo of a team. Updating an already customized photo replaces it. The image must be at most 5MB and is sent in a single request.
