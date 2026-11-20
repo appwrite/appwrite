@@ -16,23 +16,24 @@ class QueueRetry extends Action
         return 'queue-retry';
     }
 
-
     public function __construct()
     {
         $this
             ->desc('Retry failed jobs from a specific queue identified by the name parameter')
             ->param('name', '', new Text(100), 'Queue name')
             ->param('limit', '', new Wildcard(), 'Maximum number of failed jobs to retry. Retries all of them when omitted.', true)
+            ->param('newer-than', '', new Wildcard(), 'Only retry failed jobs published within this many seconds. Retries all failed jobs when omitted.', true)
             ->inject('publisher')
             ->callback($this->action(...));
     }
 
     /**
      * @param string $name The name of the queue to retry jobs from
-     * @param  mixed $limit
+     * @param mixed $limit
+     * @param mixed $newerThan
      * @param Publisher $publisher
      */
-    public function action(string $name, mixed $limit, Publisher $publisher): void
+    public function action(string $name, mixed $limit, mixed $newerThan, Publisher $publisher): void
     {
         if (!$name) {
             Console::error('Missing required parameter $name');
@@ -51,7 +52,17 @@ class QueueRetry extends Action
             return;
         }
 
+        if ($newerThan === null || $newerThan === '') {
+            $newerThan = null;
+        } elseif (\ctype_digit((string) $newerThan) && (int) $newerThan > 0) {
+            $newerThan = (int) $newerThan;
+        } else {
+            Console::error('Parameter --newer-than must be a positive whole number of seconds.');
+            Console::exit(1);
+            return;
+        }
+
         Console::log('Retrying failed jobs...');
-        $publisher->retry(new Queue($name), $limit);
+        $publisher->retry(new Queue($name), $limit, newerThan: $newerThan);
     }
 }

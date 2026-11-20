@@ -1735,7 +1735,7 @@ class Nats implements Synchronous, Consumer\Streaming, Bounded
      * the broker with Provisioning::Require and ensure() adopts instead, so the sweep
      * moves messages and changes nothing else.
      */
-    public function retry(Queue $queue, ?int $limit = null, ?int $maxAttempts = null, ?int $newerThan = null): void
+    public function retry(Queue $queue, ?int $limit = null, ?int $newerThan = null): void
     {
         $this->synchronize(function () use ($queue, $limit): void {
             $this->ensure($queue);
@@ -1781,6 +1781,11 @@ class Nats implements Synchronous, Consumer\Streaming, Bounded
         });
     }
 
+    public function purge(Queue $queue, ?int $olderThan = null, ?int $limit = null): int
+    {
+        throw new \LogicException('Purging failed jobs is not supported by the NATS broker.');
+    }
+    
     /**
      * Delete the work-stream message a dead letter was copied from, if it is still there.
      *
