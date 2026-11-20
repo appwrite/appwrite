@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Modules\Avatars\Http\Teams\Photo;
 use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -16,6 +15,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
+use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Storage\Device;
 use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
@@ -44,7 +44,7 @@ class Update extends Base
     public function __construct()
     {
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
+            ->setHttpMethod(UtopiaAction::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/teams/:teamId/photo')
             ->desc('Update photo')
             ->groups(['api', 'teams'])
