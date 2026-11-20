@@ -1,12 +1,16 @@
 import { Link } from '@tanstack/react-router'
 import { Coins } from 'lucide-react'
+import { toast } from 'sonner'
 import { Progress } from '@/components/ui/progress'
+import { Switch } from '@/components/ui/switch'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { allowsReviewCreditsOverage } from '@/lib/appwrite/organization-review-credits'
 import { isReviewCreditsLimitReached } from '@/lib/billing/billing-limits'
 import {
   useOrganizationById,
   useOrganizationPlan,
   useOrganizationUsage,
+  useUpdateOrganizationReviewCredits,
 } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -34,7 +38,8 @@ type ReviewCreditsPlan = {
  * project its own allowance; the rest share one across the organization.
  *
  * Past the allowance, budgeting plans keep reviewing and pay for the extra
- * credits up to the budget cap; other plans stop reviewing until they upgrade.
+ * credits up to the budget cap, unless the organization turned extra credits
+ * off; other plans stop reviewing until they upgrade.
  */
 export function Credits({ projectId, organizationId }: CreditsProps) {
   const t = useT()
@@ -43,6 +48,7 @@ export function Credits({ projectId, organizationId }: CreditsProps) {
   const { organization } = useOrganizationById(orgId)
   const { plan: rawPlan } = useOrganizationPlan(orgId)
   const { usage: rawUsage } = useOrganizationUsage(orgId)
+  const updateReviewCredits = useUpdateOrganizationReviewCredits()
 
   const plan = rawPlan as ReviewCreditsPlan | undefined
   const usage = rawUsage as ReviewCreditsUsage | undefined
@@ -64,13 +70,34 @@ export function Credits({ projectId, organizationId }: CreditsProps) {
     pricing?.price && pricing.value
       ? (extra / pricing.value) * pricing.price
       : 0
-  const canBuyMore = plan.budgeting === true
+  const budgeting = plan.budgeting === true
+  const canBuyMore = budgeting && allowsReviewCreditsOverage(organization)
   const blocked =
     !canBuyMore &&
     (spent >= allowance ||
       isReviewCreditsLimitReached(organization?.billingLimits))
   const percent = Math.min(100, (spent / allowance) * 100)
   const format = (n: number) => n.toLocaleString()
+
+  const setExtraCredits = async (enabled: boolean) => {
+    try {
+      await updateReviewCredits.mutateAsync({
+        organizationId: orgId,
+        overage: enabled,
+      })
+      toast.success(
+        enabled
+          ? t('Extra review credits turned on')
+          : t('Extra review credits turned off'),
+      )
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t('Failed to update extra review credits'),
+      )
+    }
+  }
 
   return (
     <div
@@ -100,9 +127,13 @@ export function Credits({ projectId, organizationId }: CreditsProps) {
           />
           <p className="mt-1.5 text-[11px] text-muted-foreground">
             {blocked
-              ? t(
-                  'All included credits are used. New pull requests are not reviewed until the next billing cycle or an upgrade.',
-                )
+              ? budgeting
+                ? t(
+                    'All included credits are used. New pull requests are not reviewed until the next billing cycle, or until you turn on extra credits.',
+                  )
+                : t(
+                    'All included credits are used. New pull requests are not reviewed until the next billing cycle or an upgrade.',
+                  )
               : extra > 0
                 ? t(
                     '{extra} extra credits so far, about ${cost} on your next invoice.',
@@ -113,14 +144,29 @@ export function Credits({ projectId, organizationId }: CreditsProps) {
                   ? t(
                       'Extra credits past the allowance are billed with your usage, up to your budget cap.',
                     )
-                  : t(
-                      'A normal review costs 50 credits. Answers to comments are free.',
-                    )}
+                  : budgeting
+                    ? t(
+                        'Reviews stop when the included credits are used, so you are never billed for extra credits.',
+                      )
+                    : t(
+                        'A normal review costs 50 credits. Answers to comments are free.',
+                      )}
           </p>
         </div>
       </div>
-      <div className="flex shrink-0 gap-2">
-        {canBuyMore ? (
+      <div className="flex shrink-0 flex-wrap items-center gap-2">
+        {budgeting && (
+          <label className="inline-flex h-8 items-center gap-2 px-1 text-[13px] font-medium text-foreground">
+            <Switch
+              checked={canBuyMore}
+              onCheckedChange={setExtraCredits}
+              disabled={updateReviewCredits.isPending}
+              aria-label={t('Buy extra credits')}
+            />
+            {t('Buy extra credits')}
+          </label>
+        )}
+        {budgeting ? (
           <Link
             to="/organizations/$orgId/settings/billing"
             params={{ orgId }}

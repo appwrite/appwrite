@@ -8,6 +8,7 @@ import {
 } from '@/lib/billing/billing-limits'
 import { getUsagePlanOverages } from '@/lib/billing/usage-plan-overages'
 import { buildOrganizationUsageCategoriesFromAggregation } from '@/lib/billing/project-breakdown-resources'
+import { allowsReviewCreditsOverage } from '@/lib/appwrite/organization-review-credits'
 
 describe('review credits billing limits', () => {
   test('spent review credits never suspend the project', () => {
@@ -92,5 +93,21 @@ describe('review credits usage', () => {
         cost: 0.05,
       }),
     ])
+  })
+})
+
+describe('extra review credits switch', () => {
+  test('organizations that never chose keep buying extra credits', () => {
+    expect(allowsReviewCreditsOverage({})).toBe(true)
+    expect(allowsReviewCreditsOverage(null)).toBe(true)
+    expect(allowsReviewCreditsOverage({ reviewCreditsOverage: true })).toBe(
+      true,
+    )
+  })
+
+  test('turned off stops at the included credits', () => {
+    expect(allowsReviewCreditsOverage({ reviewCreditsOverage: false })).toBe(
+      false,
+    )
   })
 })
