@@ -600,6 +600,7 @@ export const jaSitesDictionary: Record<string, string> = {
   'Action needed': '対応が必要',
   'Found:': '検出値:',
   'Wrong value': '値が正しくありません',
+  'Wrong name': '名前が正しくありません',
   'Blocks certificate': '証明書の発行を妨げる',
   "Couldn't check": '確認できません',
   Alternative: '代替手段',
