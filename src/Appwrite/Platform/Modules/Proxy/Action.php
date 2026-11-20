@@ -377,7 +377,8 @@ class Action extends PlatformAction
      * Look up every DNS record a rule's domain is checked against, without failing on any of them
      *
      * The CAA record is required. CNAME, A and AAAA records are alternatives: the domain
-     * points to Appwrite when any one of them is verified.
+     * points to Appwrite when any one of them is verified. A missing CNAME of a subdomain is
+     * 'misplaced' when it was found one zone too deep, at the domain followed by its zone.
      *
      * @param Document $rule Rule to check
      * @return array<array{type: string, name: string, expected: string, current: array<string>, status: string, message: string, required: bool, error: ?\Throwable}>
