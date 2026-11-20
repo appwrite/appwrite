@@ -9,7 +9,12 @@ import type { Alert } from '@/lib/appwrite/monitors'
 import { RESOURCE_TYPES, formatLength } from '@/lib/alerts/metrics'
 import { PROBE_TYPES } from '@/lib/alerts/probes'
 import { useT } from '@/lib/i18n/translate'
-import { useUpdateAlert } from '@/lib/react-query/hooks'
+import {
+  useEscalationPolicies,
+  useProject,
+  useUpdateAlert,
+} from '@/lib/react-query/hooks'
+import { escalationState } from '@/lib/alerts/escalation'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { StatusPill } from '../StatusPill'
@@ -127,9 +132,13 @@ function Acknowledgement({
               {t('Nobody has acknowledged this alert')}
             </p>
             <p className="text-[12px] text-muted-foreground">
-              {t(
-                'Let your team know someone is on it. It keeps firing until its monitor recovers.',
-              )}
+              {alert.escalatesAt
+                ? t(
+                    'Acknowledging stops the escalation. It keeps firing until its monitor recovers.',
+                  )
+                : t(
+                    'Let your team know someone is on it. It keeps firing until its monitor recovers.',
+                  )}
             </p>
           </>
         )}
@@ -145,6 +154,71 @@ function Acknowledgement({
         {acknowledged ? t('Undo') : t('Acknowledge')}
       </Button>
     </div>
+  )
+}
+
+/** Where an escalating alert's policy has got to, and what happens next. */
+function Escalation({ projectId, alert }: { projectId: string; alert: Alert }) {
+  const t = useT()
+  const { project } = useProject(projectId)
+  const { policies } = useEscalationPolicies(
+    alert.escalationPolicyId ? project?.teamId : null,
+  )
+  const state = escalationState(alert)
+  if (!state) return null
+  const policy = policies.find(
+    (entry) => entry.$id === alert.escalationPolicyId,
+  )
+  const total = policy?.steps.length
+  const step =
+    alert.escalationStep === 0
+      ? t('No step notified yet')
+      : total
+        ? t('Step {step} of {total}')
+            .replace('{step}', String(Math.min(alert.escalationStep, total)))
+            .replace('{total}', String(total))
+        : t('Step {step}').replace('{step}', String(alert.escalationStep))
+  const round =
+    alert.escalationRound > 0
+      ? t('round {round}').replace('{round}', String(alert.escalationRound + 1))
+      : null
+
+  return (
+    <dl className="grid grid-cols-[120px_minmax(0,1fr)] gap-y-2 text-[13px]">
+      <dt className="text-muted-foreground">{t('Escalation')}</dt>
+      <dd className="min-w-0 truncate text-foreground">
+        {project?.teamId ? (
+          <Link
+            to="/organizations/$orgId/settings/escalation-policies"
+            params={{ orgId: project.teamId }}
+            className="underline underline-offset-2"
+          >
+            {policy?.name ?? t('Escalation policy')}
+          </Link>
+        ) : (
+          (policy?.name ?? t('Escalation policy'))
+        )}
+      </dd>
+      <dt className="text-muted-foreground">{t('Notified')}</dt>
+      <dd className="text-foreground">
+        {step}
+        {round && (
+          <span className="text-muted-foreground">{` · ${round}`}</span>
+        )}
+      </dd>
+      <dt className="text-muted-foreground">{t('Next')}</dt>
+      <dd className="text-foreground">
+        {state === 'waiting' ? (
+          <DateTooltip date={alert.escalatesAt!} />
+        ) : state === 'acknowledged' ? (
+          t('Stopped, acknowledged')
+        ) : state === 'resolved' ? (
+          t('Stopped, resolved')
+        ) : (
+          t('All steps notified')
+        )}
+      </dd>
+    </dl>
   )
 }
 
@@ -253,6 +327,8 @@ export function AlertDrawer({
               alert={alert}
               onAlertChange={onAlertChange}
             />
+
+            <Escalation projectId={projectId} alert={alert} />
 
             <dl className="grid grid-cols-[120px_minmax(0,1fr)] gap-y-2 text-[13px]">
               <dt className="text-muted-foreground">

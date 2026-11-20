@@ -2,6 +2,7 @@
  * React Query hooks for monitors and the alerts they raise.
  */
 
+import { useCallback, useMemo } from 'react'
 import {
   infiniteQueryOptions,
   queryOptions,
@@ -13,11 +14,16 @@ import {
 import { ID, Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
+  createEscalationPolicy,
+  deleteEscalationPolicy,
+  listEscalationPolicies,
   listOrganizationMonitors,
   parseMonitor,
+  updateEscalationPolicy,
   type Alert,
   type AlertMetric,
   type AlertResourceType,
+  type EscalationPolicyInput,
   type MonitorInput,
   type MonitorType,
   type ParsedMonitor,
@@ -27,6 +33,7 @@ import {
 import { fetchAlertSeries, hasSeries } from '@/lib/alerts/series'
 import { DEFAULT_STALE_TIME } from './constants'
 import { nextCursorAfter } from './cursor'
+import { useOrganizationMemberships } from './teams'
 
 /** The API caps a page at 100; the tabs list them all client-side like webhooks. */
 const PAGE_LIMIT = 100
@@ -345,4 +352,138 @@ export function organizationBudgetMonitorsQueryOptions(
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
   })
+}
+
+function organizationClient(organizationId: string | null | undefined) {
+  if (!organizationId) throw new Error('Organization ID is required')
+  return sdk.forConsole.organization(organizationId).client
+}
+
+/** An organization's escalation policies, by name. */
+export function escalationPoliciesQueryOptions(
+  organizationId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['escalation-policies', organizationId],
+    queryFn: async () => {
+      const response = await listEscalationPolicies(
+        organizationClient(organizationId),
+        { queries: [Query.orderAsc('name'), Query.limit(PAGE_LIMIT)] },
+      )
+      return response.escalationPolicies ?? []
+    },
+    enabled: !!organizationId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+  })
+}
+
+export function useEscalationPolicies(
+  organizationId: string | null | undefined,
+) {
+  const { data, isLoading, error, refetch } = useQuery(
+    escalationPoliciesQueryOptions(organizationId),
+  )
+  return { policies: data ?? [], isLoading, error, refetch }
+}
+
+export function useCreateEscalationPolicy(
+  organizationId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (input: EscalationPolicyInput) =>
+      createEscalationPolicy(organizationClient(organizationId), {
+        escalationPolicyId: ID.unique(),
+        ...input,
+      }),
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['escalation-policies', organizationId],
+      })
+    },
+  })
+}
+
+/** Sends only the fields passed in `changes`. */
+export function useUpdateEscalationPolicy(
+  organizationId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      escalationPolicyId,
+      changes,
+    }: {
+      escalationPolicyId: string
+      changes: Partial<EscalationPolicyInput>
+    }) =>
+      updateEscalationPolicy(
+        organizationClient(organizationId),
+        escalationPolicyId,
+        changes,
+      ),
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['escalation-policies', organizationId],
+      })
+    },
+  })
+}
+
+/** Refused with `escalation_policy_in_use` while a monitor uses the policy. */
+export function useDeleteEscalationPolicy(
+  organizationId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (escalationPolicyId: string) =>
+      deleteEscalationPolicy(
+        organizationClient(organizationId),
+        escalationPolicyId,
+      ),
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['escalation-policies', organizationId],
+      })
+    },
+  })
+}
+
+/**
+ * The confirmed members an escalation step can name, and how a step names
+ * one: a member who left reads as their user ID.
+ */
+export function useEscalationMembers(
+  organizationId: string | null | undefined,
+) {
+  const { memberships, isLoading } = useOrganizationMemberships(
+    organizationId,
+    0,
+    PAGE_LIMIT,
+  )
+  const members = useMemo(
+    () =>
+      memberships.flatMap((membership) =>
+        membership.userId && membership.status !== 'pending'
+          ? [
+              {
+                userId: membership.userId,
+                name: membership.userName || membership.userEmail,
+                email: membership.userEmail,
+              },
+            ]
+          : [],
+      ),
+    [memberships],
+  )
+  const memberName = useCallback(
+    (userId: string) =>
+      members.find((member) => member.userId === userId)?.name ?? userId,
+    [members],
+  )
+  return { members, memberName, isLoading }
 }

@@ -4295,4 +4295,69 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Launched the new pricing page': '新しい料金ページを公開',
   'The note is removed from the chart for everyone.': 'このメモは全員のグラフから削除されます。',
   'Former member': '元メンバー',
+  'Escalation policies': 'エスカレーションポリシー',
+  'Escalation policy': 'エスカレーションポリシー',
+  Escalation: 'エスカレーション',
+  Escalating: 'エスカレーション中',
+  'Notify roles once': 'ロールに 1 回通知',
+  'Select an escalation policy.':
+    'エスカレーションポリシーを選択してください。',
+  'Each step of the policy is notified in turn until someone acknowledges the alert.':
+    '誰かがアラートを確認するまで、ポリシーの各ステップに順番に通知します。',
+  'Create a policy': 'ポリシーを作成',
+  'Manage policies': 'ポリシーを管理',
+  'Could not load escalation policies.':
+    'エスカレーションポリシーを読み込めませんでした。',
+  'Your organization has no escalation policies yet.':
+    'この組織にはまだエスカレーションポリシーがありません。',
+  'Select a policy': 'ポリシーを選択',
+  'repeats {count}×': '{count} 回繰り返し',
+  'Acknowledging stops the escalation. It keeps firing until its monitor recovers.':
+    '確認するとエスカレーションが止まります。アラートはモニターが回復するまで発生し続けます。',
+  'No step notified yet': 'まだ通知されたステップはありません',
+  'Step {step} of {total}': 'ステップ {step}/{total}',
+  'Notified': '通知済み',
+  'Step {step}': 'ステップ {step}',
+  'round {round}': '{round} 巡目',
+  'Stopped, acknowledged': '停止済み（確認済み）',
+  'Stopped, resolved': '停止済み（解決済み）',
+  'All steps notified': 'すべてのステップに通知済み',
+  'Escalation policy has been deleted':
+    'エスカレーションポリシーを削除しました',
+  'Monitors use this policy. Move them to another policy or to roles first.':
+    'モニターがこのポリシーを使用しています。先に別のポリシーまたはロールに切り替えてください。',
+  'Failed to delete escalation policy':
+    'エスカレーションポリシーを削除できませんでした',
+  'Notify your team step by step until someone acknowledges the alert. Pick a policy on any monitor.':
+    '誰かがアラートを確認するまで、チームに段階的に通知します。ポリシーは任意のモニターで選択できます。',
+  'No escalation policies yet.': 'エスカレーションポリシーはまだありません。',
+  'Delete escalation policy': 'エスカレーションポリシーを削除',
+  'Add members': 'メンバーを追加',
+  'Enter a name.': '名前を入力してください。',
+  'Each step needs a role or a member.':
+    '各ステップにはロールまたはメンバーが必要です。',
+  'Escalation policy has been updated':
+    'エスカレーションポリシーを更新しました',
+  'Escalation policy has been created':
+    'エスカレーションポリシーを作成しました',
+  'Failed to update escalation policy':
+    'エスカレーションポリシーを更新できませんでした',
+  'Failed to create escalation policy':
+    'エスカレーションポリシーを作成できませんでした',
+  'Edit escalation policy': 'エスカレーションポリシーを編集',
+  'Create escalation policy': 'エスカレーションポリシーを作成',
+  'Steps are notified in turn until someone acknowledges the alert.':
+    '誰かがアラートを確認するまで、ステップに順番に通知します。',
+  'On-call': 'オンコール',
+  'Remove step {step}': 'ステップ {step} を削除',
+  'Minutes to wait': '待機する分数',
+  'minutes after the alert fires': '分後（アラート発生から）',
+  'minutes after the previous step': '分後（前のステップから）',
+  'Add step': 'ステップを追加',
+  Once: '1 回',
+  '{count} times': '{count} 回',
+  "Starts again from the first step, a monitor's cooldown after the last one.":
+    '最後のステップからモニターのクールダウン後に、最初のステップから再開します。',
+  now: '今すぐ',
+  'after {delay}': '{delay} 後',
 }
