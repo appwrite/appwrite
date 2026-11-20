@@ -547,6 +547,19 @@ class Action extends PlatformAction
         return $records;
     }
 
+    /**
+     * Find the CNAME of a subdomain whose full name was entered as the host at the DNS provider
+     *
+     * Providers append their zone to the host, so a host of shop.example.com lands at
+     * shop.example.com.example.com. A wildcard in the zone answers that name too, even when it
+     * does not answer the domain itself, such as when the domain only holds an ownership proof
+     * below it. So a CNAME only counts when the wildcard would not give it.
+     *
+     * @param string $name Name the provider put the record at
+     * @param string $registerable Zone holding the wildcard, if any
+     * @param string $expected Value the record is expected to have
+     * @return array<string> CNAME values found at the name, empty when none or when DNS cannot tell
+     */
     private function findMisplaced(string $name, string $registerable, string $expected): array
     {
         $dnsValidatorClass = $this->dnsValidatorClass;
