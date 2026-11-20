@@ -645,6 +645,7 @@ export const heSitesDictionary: Record<string, string> = {
   'Wrong value': 'ערך שגוי',
   'Wrong name': 'שם שגוי',
   'Found at:': 'נמצא ב:',
+  'Wrong type': 'סוג שגוי',
   'Blocks certificate': 'התעודה חסומה',
   "Couldn't check": 'לא ניתן לבדוק',
   Alternative: 'חלופה',
