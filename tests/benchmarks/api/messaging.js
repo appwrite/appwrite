@@ -290,6 +290,10 @@ const bench = define({
                 api.prep('DELETE', `/messaging/topics/${id}`, null, [204]);
             },
         },
+        { skipped: 'POST /v1/messaging/providers/bird-email', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'PATCH /v1/messaging/providers/bird-email/:providerId', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'POST /v1/messaging/providers/bird-sms', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'PATCH /v1/messaging/providers/bird-sms/:providerId', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
     ],
 });
 

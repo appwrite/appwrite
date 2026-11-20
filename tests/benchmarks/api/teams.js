@@ -164,9 +164,6 @@ const bench = define({
         },
     ],
     skipped: [
-        { skipped: 'GET /v1/teams/:teamId/photo', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
-        { skipped: 'PUT /v1/teams/:teamId/photo', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
-        { skipped: 'DELETE /v1/teams/:teamId/photo', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
     ],
 });
 

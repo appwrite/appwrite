@@ -108,6 +108,9 @@ const bench = define({
             name: 'avatars.photo.delete', route: 'DELETE /v1/avatars/photo', note: 'replaces the photo with the rendered placeholder',
             run: (api, d) => api.call('DELETE', '/avatars/photo', null, [204], api.session(pick(d.users).secret)),
         },
+        { skipped: 'GET /v1/avatars/teams/:teamId/photo', reason: 'added on main after the Nov 16 merge (moved from /v1/teams/:teamId/photo); its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'PUT /v1/avatars/teams/:teamId/photo', reason: 'added on main after the Nov 16 merge (moved from /v1/teams/:teamId/photo); its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'DELETE /v1/avatars/teams/:teamId/photo', reason: 'added on main after the Nov 16 merge (moved from /v1/teams/:teamId/photo); its scenario is pending (task main-nov16-benchmarks)' },
     ],
 });
 

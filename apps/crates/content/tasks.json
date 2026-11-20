@@ -789,9 +789,9 @@
       "id": "teams-photo",
       "title": "Teams: port the team photo endpoints to Rust",
       "area": "Services",
-      "status": "todo",
-      "updated": "2026-11-18T11:58:00Z",
-      "note": "Main added GET, PUT and DELETE /v1/teams/:teamId/photo and photoId/photoSize attributes on teams. Until the Rust Teams service has them, Traefik's Rust router excludes ^/v1/teams/[^/]+/photo$ (docker-compose.override.yml), so they stay with PHP. The docs site's route list reads only Path and PathPrefix and still counts them under Rust."
+      "status": "done",
+      "updated": "2026-11-20T14:10:00Z",
+      "note": "Nothing left to port: main moved team photos to the Avatars service (GET, PUT and DELETE /v1/avatars/teams/:teamId/photo), which PHP serves, and dropped them from Teams, so Traefik's exclusion is gone. Before: main added GET, PUT and DELETE /v1/teams/:teamId/photo and photoId/photoSize attributes on teams. Until the Rust Teams service has them, Traefik's Rust router excludes ^/v1/teams/[^/]+/photo$ (docker-compose.override.yml), so they stay with PHP. The docs site's route list reads only Path and PathPrefix and still counts them under Rust."
     }
   ]
 }
