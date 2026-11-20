@@ -527,7 +527,52 @@ class Action extends PlatformAction
             ];
         }
 
+        // A subdomain whose full name was entered as the host, which the DNS provider then extended with its zone.
+        $registerable = $domain->getRegisterable();
+        $missing = \array_keys(\array_filter($records, fn (array $record) => $record['type'] === 'CNAME' && $record['status'] === 'missing'));
+        if (empty($missing) || $registerable === '') {
+            return $records;
+        }
+
+        $misplaced = $domain->get() . '.' . $registerable;
+        $found = $this->findMisplaced($misplaced, $records[$missing[0]]['expected']);
+        if (empty($found)) {
+            return $records;
+        }
+
+        foreach ($missing as $key) {
+            $records[$key]['status'] = 'misplaced';
+        }
+
         return $records;
+    }
+
+    private function findMisplaced(string $name, string $expected): array
+    {
+        $dnsValidatorClass = $this->dnsValidatorClass;
+        $dnsServers = $this->dnsServers();
+
+        // Values a name has, or null when the lookup failed
+        $lookup = function (string $name) use ($dnsValidatorClass, $dnsServers, $expected): ?array {
+            $validator = new $dnsValidatorClass($expected, Record::TYPE_CNAME, $dnsServers);
+
+            try {
+                if ($validator->isValid($name)) {
+                    return \array_values($validator->records);
+                }
+            } catch (\Throwable) {
+                return null;
+            }
+
+            return $validator->reason === '' ? \array_values($validator->records) : null;
+        };
+
+        $found = $lookup($name);
+        if (empty($found)) {
+            return [];
+        }
+
+        return $found;
     }
 
     /**
