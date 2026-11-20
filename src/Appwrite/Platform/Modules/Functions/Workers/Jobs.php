@@ -417,22 +417,35 @@ class Jobs extends Action
             }
         }
 
-        $deployment = $dbForProject->withTransaction(function () use ($dbForProject, $project, $deployment, $update, $cache, $events): Document {
-            if ($update !== []) {
-                $dbForProject->updateDocuments('deployments', new Document($update), [
-                    Query::equal('$id', [$deployment->getId()]),
-                    Query::notEqual('status', 'canceled'),
-                ]);
-                $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
-            }
-            // A refused marker rolls back the append. Realtime runs after commit.
-            foreach ($events as $id) {
-                if ($cache->save('jobs-event-' . $project->getSequence() . '-' . $id, true) === false) {
-                    throw new \RuntimeException('Failed to record build log callback.');
+        $marked = [];
+        try {
+            $deployment = $dbForProject->withTransaction(function () use ($dbForProject, $project, $deployment, $update, $cache, $events, &$marked): Document {
+                $marked = [];
+                if ($update !== []) {
+                    $dbForProject->updateDocuments('deployments', new Document($update), [
+                        Query::equal('$id', [$deployment->getId()]),
+                        Query::notEqual('status', 'canceled'),
+                    ]);
+                    $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
                 }
+                // A refused marker rolls back the append. Realtime runs after commit.
+                foreach ($events as $id) {
+                    $marker = 'jobs-event-' . $project->getSequence() . '-' . $id;
+                    if ($cache->save($marker, true) === false) {
+                        throw new \RuntimeException('Failed to record build log callback.');
+                    }
+                    $marked[] = $marker;
+                }
+                return $deployment;
+            });
+        } catch (\Throwable $error) {
+            // The markers are outside the transaction. Take back the ones this
+            // batch wrote, or the rolled-back lines would be skipped on redelivery.
+            foreach ($marked as $marker) {
+                $cache->purge($marker);
             }
-            return $deployment;
-        });
+            throw $error;
+        }
 
         if (($update['status'] ?? '') === 'building' && $deployment->getAttribute('status') === 'building') {
             GitAction::report('processing', $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
