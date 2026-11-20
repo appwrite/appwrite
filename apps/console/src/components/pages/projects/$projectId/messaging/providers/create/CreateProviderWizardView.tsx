@@ -387,7 +387,7 @@ const PROVIDERS: ProviderConfig[] = [
       analyticsAction: 'messaging-quick-setup-bird-sms',
     },
     submit: (projectSdk, providerId, v) =>
-      projectSdk.messaging.createBirdProvider({
+      projectSdk.messaging.createBirdSMSProvider({
         providerId,
         name: String(v.name).trim(),
         apiKey: optString(v.apiKey),

@@ -63,6 +63,7 @@ export const ONBOARDING_MESSAGING_PROVIDER_SDK_KEYS = [
   'messaging.createTextmagicProvider',
   'messaging.createTwilioProvider',
   'messaging.createVonageProvider',
+  'messaging.createBirdSMSProvider',
   'messaging.createFcmProvider',
   'messaging.createFCMProvider',
   'messaging.createApnsProvider',

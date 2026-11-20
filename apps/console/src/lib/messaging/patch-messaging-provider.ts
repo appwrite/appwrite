@@ -138,7 +138,7 @@ function dispatchIdentityOnly(
       // Bird's email and SMS providers share the name and differ by type.
       return provider.type === 'email'
         ? messaging.updateBirdEmailProvider(identity)
-        : messaging.updateBirdProvider(identity)
+        : messaging.updateBirdSMSProvider(identity)
     case 'textmagic':
       return messaging.updateTextmagicProvider(identity)
     case 'fcm':
@@ -284,7 +284,7 @@ function dispatchWithMerged(
           replyToEmail: optStr(merged.replyToEmail),
         })
       }
-      return messaging.updateBirdProvider({
+      return messaging.updateBirdSMSProvider({
         providerId,
         name,
         enabled,

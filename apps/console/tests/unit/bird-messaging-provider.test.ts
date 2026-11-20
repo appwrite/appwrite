@@ -11,7 +11,7 @@ function makeMessaging() {
     return Promise.resolve({ $id: args.providerId } as Models.Provider)
   }
   const messaging = {
-    updateBirdProvider: record('updateBirdProvider'),
+    updateBirdSMSProvider: record('updateBirdSMSProvider'),
     updateBirdEmailProvider: record('updateBirdEmailProvider'),
   } as unknown as Messaging
 
@@ -61,7 +61,7 @@ describe('patchMessagingProvider (Bird)', () => {
       { providerId: 'provider1', options: { from: 'Acme' } },
     )
     expect(calls).toHaveLength(1)
-    expect(calls[0].method).toBe('updateBirdProvider')
+    expect(calls[0].method).toBe('updateBirdSMSProvider')
     expect(calls[0].args.from).toBe('Acme')
     expect(calls[0].args).not.toHaveProperty('fromEmail')
   })
@@ -78,7 +78,7 @@ describe('patchMessagingProvider (Bird)', () => {
     })
     expect(calls.map((call) => call.method)).toEqual([
       'updateBirdEmailProvider',
-      'updateBirdProvider',
+      'updateBirdSMSProvider',
     ])
     expect(calls[0].args).toEqual({ providerId: 'provider1', enabled: false })
     expect(calls[1].args).toEqual({ providerId: 'provider1', name: 'Bird SMS' })
