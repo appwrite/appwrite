@@ -186,9 +186,7 @@ export function SmtpQuickSetupWizard({
                 {t('Sending domain')}
               </h3>
               <p className="text-[13px] text-muted-foreground mt-1">
-                {t(
-                  'The credential is restricted to this domain and can only send email.',
-                )}
+                {t(provider.credentialDescription)}
               </p>
             </div>
             <div className="space-y-2">

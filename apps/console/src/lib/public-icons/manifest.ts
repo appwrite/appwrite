@@ -26,6 +26,7 @@ export const PUBLIC_ICON_FILENAMES = [
   'backblaze.svg',
   'behance.svg',
   'better-auth.svg',
+  'bird.svg',
   'bitbucket.svg',
   'bitly.svg',
   'bolt.svg',

@@ -647,6 +647,7 @@ export function IdentitiesSection({
       gitlab: 'gitlab.svg',
       bitbucket: 'bitbucket.svg',
       resend: 'resend.svg',
+      bird: 'bird.svg',
     }
     return providerMap[provider.toLowerCase()] || 'empty.svg'
   }
@@ -661,6 +662,7 @@ export function IdentitiesSection({
       gitlab: 'GitLab',
       bitbucket: 'Bitbucket',
       resend: 'Resend',
+      bird: 'Bird',
       sso: t('Single sign-on'),
     }
     return nameMap[provider.toLowerCase()] || provider
