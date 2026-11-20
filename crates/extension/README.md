@@ -119,15 +119,17 @@ region (appwrite-labs/cloud#7503), the PHP parser (`UserAgent.php` and `Detectio
 from `packages/user-agent`, which now requires `ext-utopia` like `packages/image`; 0.1.x on
 Packagist is the last release that parses in PHP. What `UserAgent` returns are the package's own
 `OperatingSystem`, `Client`, `Device` and `Bot` objects, built by their PHP constructors once per
-agent and returned as the same object on every call, as in PHP. The class is final with a private constructor
-and the PHP class's private properties, so `==`, `var_dump()` and `(array)` see what they see in PHP.
+agent and returned as the same object on every call, as in PHP. The class is built by hand, like
+`Locale`: it is final with a private constructor, and its state is the PHP class's own private
+typed properties (the promoted `readonly string $value` last), so `==`, `var_dump()`, `(array)`,
+`isset()`, `clone` and `serialize()` behave as in PHP, and arguments are coerced and refused with
+PHP's own `TypeError` and `ArgumentCountError` messages.
 
 `packages/user-agent/tests` run on the extension. Known differences from the PHP class it replaced:
 
-- A `null`, array or object argument and a missing argument raise the same `TypeError` and
-  `ArgumentCountError` with ext-php-rs's message.
-- `isset()` on a private property from outside the class is `true`.
-- `serialize()` refuses the object, as it does every class with Rust state.
+- A closure bound to the class's scope (`Closure::bind($fn, $agent, UserAgent::class)`) cannot
+  read or write its private properties: PHP refuses to bind to an internal class's scope, with a
+  deprecation warning.
 
 ## Utopia\Domains\Domain
 

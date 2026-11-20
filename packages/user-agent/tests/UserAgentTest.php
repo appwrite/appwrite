@@ -214,4 +214,43 @@ final class UserAgentTest extends TestCase
         $this->assertSame('desktop', $data['device']['type']);
         $this->assertNull($data['bot']);
     }
+
+    public function testPrivatePropertiesAreNotSetFromOutside(): void
+    {
+        $agent = UserAgent::parse('Mozilla/5.0 (X11; Linux x86_64) Firefox/120.0');
+        $agent->toArray();
+
+        $this->assertFalse(isset($agent->value)); // @phpstan-ignore property.notFound
+        $this->assertFalse(isset($agent->client)); // @phpstan-ignore property.notFound
+        $this->assertSame([], get_object_vars($agent));
+    }
+
+    public function testSerializationRoundTrip(): void
+    {
+        $agent = UserAgent::parse('Mozilla/5.0 (X11; Linux x86_64) Firefox/120.0');
+        $agent->client();
+
+        $copy = unserialize(serialize($agent));
+
+        $this->assertInstanceOf(UserAgent::class, $copy);
+        $this->assertEquals($agent, $copy);
+        $this->assertSame($agent->raw(), $copy->raw());
+        $this->assertSame($agent->toArray(), $copy->toArray());
+    }
+
+    public function testInvalidArgumentNamesTheParameter(): void
+    {
+        $this->expectException(\TypeError::class);
+        $this->expectExceptionMessage('Utopia\\UserAgent\\UserAgent::parse(): Argument #1 ($value) must be of type string, array given');
+
+        UserAgent::parse([]); // @phpstan-ignore argument.type
+    }
+
+    public function testMissingArgument(): void
+    {
+        $this->expectException(\ArgumentCountError::class);
+        $this->expectExceptionMessage('Too few arguments to function Utopia\\UserAgent\\UserAgent::parse(), 0 passed');
+
+        UserAgent::parse(); // @phpstan-ignore arguments.count
+    }
 }
