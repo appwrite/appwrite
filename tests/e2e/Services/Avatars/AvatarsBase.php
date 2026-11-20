@@ -2044,6 +2044,28 @@ trait AvatarsBase
         }
     }
 
+    public function testGetTeamPhoto(): void
+    {
+        $teamId = $this->createPhotoTeam();
+        $headers = $this->getTeamPhotoHeaders();
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/teams/' . $teamId . '/photo', $headers);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertNotFalse(\imagecreatefromstring($response['body']));
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/teams/' . Id::unique() . '/photo', $headers);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+    }
+
     /**
      * @return array<string, string>
      */
