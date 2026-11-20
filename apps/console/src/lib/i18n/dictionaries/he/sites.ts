@@ -198,6 +198,8 @@ export const heSitesDictionary: Record<string, string> = {
     'ב-Cloudflare זה נקרא CNAME flattening (הגדירו DNS only), וב-Route 53 זה נקרא Alias. יש ספקים שקוראים לזה ANAME.',
   'It points to {found}. Change it to {value}.':
     'היא מפנה אל {found}. שנו אותה ל-{value}.',
+  'It was added as {found}. In your DNS provider, enter only {name} as the host.':
+    'היא נוספה בשם {found}. אצל ספק ה-DNS, הזינו רק {name} בתור ה-Host.',
   'Your domain points somewhere else. Set this record to {value}.':
     'הדומיין שלכם מפנה למקום אחר. הגדירו את הרשומה הזו ל-{value}.',
   'and {n} more': 'ועוד {n}',
