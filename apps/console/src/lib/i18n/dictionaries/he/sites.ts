@@ -200,6 +200,8 @@ export const heSitesDictionary: Record<string, string> = {
     'היא מפנה אל {found}. שנו אותה ל-{value}.',
   'It was added as {found}. In your DNS provider, enter only {name} as the host.':
     'היא נוספה בשם {found}. אצל ספק ה-DNS, הזינו רק {name} בתור ה-Host.',
+  "Enter only {name} in your DNS provider's Host or Name field. Most providers add {apex} for you.":
+    'הזינו רק {name} בשדה Host או Name אצל ספק ה-DNS. רוב הספקים מוסיפים את {apex} בעצמם.',
   'Your domain points somewhere else. Set this record to {value}.':
     'הדומיין שלכם מפנה למקום אחר. הגדירו את הרשומה הזו ל-{value}.',
   'and {n} more': 'ועוד {n}',
