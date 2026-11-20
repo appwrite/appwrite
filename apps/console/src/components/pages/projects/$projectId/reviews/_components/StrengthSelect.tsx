@@ -38,7 +38,7 @@ const STRENGTHS: {
     value: 'expert',
     label: 'Expert',
     description: 'Stronger models that split the work across subagents',
-    credits: 250,
+    credits: 500,
   },
 ]
 
