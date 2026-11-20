@@ -4,7 +4,6 @@ import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
 import type { ProxyRuleRecord } from '@/lib/appwrite/proxy-rules'
 import { isDnsUnverified, isWaitingForDns } from '@/lib/utils/status-badge'
 import {
-  getApexDomain,
   getRecordName,
   getVerificationMethods,
   isCloud as isCloudEndpoint,
@@ -185,7 +184,13 @@ const TABLE_HEAD =
  * check.
  */
 function getMisplacedName(name: string): string {
-  return `${name}.${getApexDomain(name) ?? ''}`
+  return `${name}.${getZone(name)}`
+}
+
+/** The zone a DNS provider appends to the host: the domain after its record name. */
+function getZone(name: string): string {
+  const host = getRecordName(name)
+  return host === '@' ? name : name.slice(host.length + 1)
 }
 
 /** The type of one record, on one line. The ALIAS type reads as a phrase. */
@@ -1092,7 +1097,7 @@ export function VerifyDomainContent({
         "Enter only {name} in your DNS provider's Host or Name field. Most providers add {apex} for you.",
       )
         .replace('{name}', recordName)
-        .replace('{apex}', getApexDomain(rule.domain) ?? '')}
+        .replace('{apex}', getZone(rule.domain))}
     </p>
   )
 
