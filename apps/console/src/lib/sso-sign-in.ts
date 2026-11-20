@@ -45,9 +45,9 @@ export const SSO_FAILURE_MESSAGES = {
   misconfigured:
     "Single sign-on for your organization isn't set up correctly. Contact your administrator.",
   domainNotVerified:
-    "Your company login returned an email that isn't on a domain your organization verified. Sign in with your work email account.",
+    "Your identity provider returned an email that isn't on a domain your organization verified. Sign in with your work email account.",
   emailMissing:
-    "Your company login didn't share your email address. Ask your administrator to release the email to Appwrite.",
+    "Your identity provider didn't share your email address. Ask your administrator to release the email to Appwrite.",
   stateInvalid:
     'This sign-in was started in another browser or took too long. Start again.',
   generic:
@@ -59,7 +59,7 @@ export const SSO_FAILURE_MESSAGES = {
  * are already written for the person signing in.
  */
 const KNOWN_SERVER_MESSAGES = [
-  'This single sign-on provider is not available.',
+  'This identity provider is not available.',
   'Single sign-on could not finish. Start again from the sign-in page.',
   'Single sign-on for your organization is not working right now. Contact your administrator.',
 ] as const
@@ -108,7 +108,7 @@ export function ssoFailureMessage(error: unknown): string | null {
       return SSO_FAILURE_MESSAGES.domainNotVerified
     }
     if (code('email_missing')) return SSO_FAILURE_MESSAGES.emailMissing
-    // The person turned the sign-in down at their company login.
+    // The person turned the sign-in down at their identity provider.
     if (code('access_denied')) {
       return SSO_FAILURE_MESSAGES.generic
     }

@@ -152,16 +152,16 @@ export function SSOProvidersCard() {
         onSuccess: () =>
           toast.success(
             enabled
-              ? t('Provider enabled')
+              ? t('Identity provider enabled')
               : isLastEnabledWhileRequired(provider)
                 ? t(
-                    'Provider disabled. Require SSO is paused until you enable a provider.',
+                    'Identity provider disabled. Require SSO is paused until you enable an identity provider.',
                   )
-                : t('Provider disabled'),
+                : t('Identity provider disabled'),
           ),
         onError: (failure: Error) =>
           toast.error(
-            getErrorMessage(failure) || t('Failed to update provider'),
+            getErrorMessage(failure) || t('Failed to update identity provider'),
           ),
         onSettled: settle,
       },
@@ -185,7 +185,7 @@ export function SSOProvidersCard() {
         onSuccess: () => toast.success(t('Identity provider deleted')),
         onError: (failure: Error) =>
           toast.error(
-            getErrorMessage(failure) || t('Failed to delete provider'),
+            getErrorMessage(failure) || t('Failed to delete identity provider'),
           ),
         onSettled: settle,
       })
@@ -202,7 +202,7 @@ export function SSOProvidersCard() {
           </h3>
           <p className="mt-2 text-[13px] text-muted-foreground">
             {t(
-              'People on your verified domains sign in with your company login, like Okta, Microsoft Entra ID, Google Workspace or Keycloak, and join with the provider’s roles.',
+              'People on your verified domains sign in through your identity provider, like Okta, Microsoft Entra ID, Google Workspace or Keycloak, and join with its roles.',
             )}
           </p>
         </div>
@@ -212,7 +212,7 @@ export function SSOProvidersCard() {
             <Alert>
               <AlertDescription className="text-[13px]">
                 {t(
-                  'Nobody can sign in through these providers yet. Verify a domain first.',
+                  'Nobody can sign in through these identity providers yet. Verify a domain first.',
                 )}
               </AlertDescription>
             </Alert>
@@ -230,7 +230,7 @@ export function SSOProvidersCard() {
               icon={KeyRound}
               title={t('No identity providers yet')}
               description={t(
-                'Connect your company login so people on your domains sign in with it.',
+                'Connect your identity provider so people on your domains sign in with single sign-on.',
               )}
               isEmpty
               variant="default"
@@ -336,7 +336,7 @@ export function SSOProvidersCard() {
             onClick={() => openForm('new')}
             {...analyticsAttrs('create-sso-provider')}
           >
-            {t('Add provider')}
+            {t('Add identity provider')}
           </Button>
         </div>
       </div>
@@ -368,7 +368,7 @@ export function SSOProvidersCard() {
                 'People can no longer sign in through it. People who already joined stay members.',
               )}
               {deleting && isLastEnabledWhileRequired(deleting)
-                ? ` ${t('Require SSO is on and this is your only enabled provider: deleting it pauses Require SSO, and members can sign in any way they like.')}`
+                ? ` ${t('Require SSO is on and this is your only enabled identity provider: deleting it pauses Require SSO, and members can sign in any way they like.')}`
                 : null}
             </DialogDescription>
           </DialogHeader>
@@ -538,7 +538,7 @@ function ProviderForm({
           },
           onError: (failure: Error) =>
             toast.error(
-              getErrorMessage(failure) || t('Failed to save provider'),
+              getErrorMessage(failure) || t('Failed to save identity provider'),
             ),
           onSettled: settle,
         },
@@ -553,7 +553,7 @@ function ProviderForm({
           {t('Enabled')}
         </Label>
         <p id="sso-enabled-hint" className="text-[12px] text-muted-foreground">
-          {t('People can sign in through this provider.')}
+          {t('People can sign in through this identity provider.')}
         </p>
       </div>
       <Switch
@@ -577,10 +577,10 @@ function ProviderForm({
         <DialogDescription className="text-[13px] mt-2">
           {provider
             ? t(
-                'Change how people sign in through this provider. Leave the client secret empty to keep the stored one.',
+                'Change how people sign in through this identity provider. Leave the client secret empty to keep the stored one.',
               )
             : t(
-                'Create an OpenID Connect application at your provider, add the redirect URL there, then fill in its details.',
+                'Create an OpenID Connect application at your identity provider, add the redirect URL there, then fill in its details.',
               )}
         </DialogDescription>
       </DialogHeader>
@@ -654,7 +654,9 @@ function ProviderForm({
           >
             {roles.length === 0
               ? t('Pick at least one role.')
-              : t('Roles people get when they join through this provider.')}
+              : t(
+                  'Roles people get when they join through this identity provider.',
+                )}
           </p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -757,7 +759,7 @@ function ProviderForm({
           <div className="space-y-4 rounded-md border border-border p-4">
             <p className="text-[12px] text-muted-foreground">
               {t(
-                'Override what the discovery URL publishes, or set all three when your provider has none.',
+                'Override what the discovery URL publishes, or set all three when your identity provider has none.',
               )}
             </p>
             {(

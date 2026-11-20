@@ -69,7 +69,7 @@ export function CreateEmailDomain({
         {
           onSettled: settle,
           onSuccess: (rule) => {
-            toast.success(t('Email domain added'))
+            toast.success(t('Domain added'))
             close(false)
             onCreated(rule)
           },
@@ -78,9 +78,7 @@ export function CreateEmailDomain({
               setClaimDomain(domain.trim().toLowerCase())
               return
             }
-            toast.error(
-              getErrorMessage(failure) || t('Failed to add email domain'),
-            )
+            toast.error(getErrorMessage(failure) || t('Failed to add domain'))
           },
         },
       ),
@@ -95,7 +93,7 @@ export function CreateEmailDomain({
       >
         <form onSubmit={handleSubmit}>
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>{t('Add email domain')}</DialogTitle>
+            <DialogTitle>{t('Add domain')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {t(
                 'Prove your organization owns this domain with a DNS record. Your identity providers then sign in people with an email on it.',

@@ -122,11 +122,9 @@ export function EmailDomainsCard() {
       )
       closeDialogBeforeOverlayUnmount(() => setDeleting(null))
       remove.mutate(rule.$id, {
-        onSuccess: () => toast.success(t('Email domain deleted')),
+        onSuccess: () => toast.success(t('Domain deleted')),
         onError: (failure: Error) =>
-          toast.error(
-            getErrorMessage(failure) || t('Failed to delete email domain'),
-          ),
+          toast.error(getErrorMessage(failure) || t('Failed to delete domain')),
         onSettled: settle,
       })
     })
@@ -141,14 +139,14 @@ export function EmailDomainsCard() {
           </h3>
           <p className="mt-2 text-[13px] text-muted-foreground">
             {t(
-              'Prove the email domains your organization owns. Your identity providers sign in only people with an email on a verified domain.',
+              'Prove the domains your organization owns. Your identity providers sign in only people with an email on a verified domain.',
             )}
           </p>
         </div>
         <div className="border-t border-border" />
         {loadFailed ? (
           <SSOListLoadError
-            title={t('Failed to load email domains')}
+            title={t('Failed to load domains')}
             onRetry={() => void refetch()}
             retrying={isFetching}
           />
@@ -156,9 +154,9 @@ export function EmailDomainsCard() {
           <div className="px-6 py-4">
             <EmptyState
               icon={MailCheck}
-              title={t('No email domains yet')}
+              title={t('No domains yet')}
               description={t(
-                'Add your company domain, then connect an identity provider so teammates sign in with your company login.',
+                'Add your company domain, then connect an identity provider so teammates sign in with single sign-on.',
               )}
               isEmpty
               variant="default"
@@ -294,7 +292,7 @@ export function EmailDomainsCard() {
           onCloseAutoFocus={deleteFocus.onCloseAutoFocus}
         >
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>{t('Delete email domain')}</DialogTitle>
+            <DialogTitle>{t('Delete domain')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {t('Are you sure you want to delete "{name}"?').replace(
                 '{name}',

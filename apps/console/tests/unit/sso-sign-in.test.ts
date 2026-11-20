@@ -90,7 +90,7 @@ describe('ssoFailureMessage', () => {
     expect(ssoFailureMessage('')).toBeNull()
   })
 
-  test('tells an employee to contact their administrator when the provider is set up wrong', () => {
+  test('tells an employee to contact their administrator when the identity provider is set up wrong', () => {
     for (const code of ['invalid_client', '404 Not Found', 'server_error']) {
       expect(
         ssoFailureMessage({
@@ -101,7 +101,7 @@ describe('ssoFailureMessage', () => {
     }
   })
 
-  test('names a company login email outside the verified domains, or no email at all', () => {
+  test('names an identity provider email outside the verified domains, or no email at all', () => {
     expect(
       ssoFailureMessage(
         failure(
@@ -120,7 +120,7 @@ describe('ssoFailureMessage', () => {
     ).toBe(SSO_FAILURE_MESSAGES.emailMissing)
   })
 
-  test('a sign-in cancelled at the company login is not called a broken setup', () => {
+  test('a sign-in cancelled at the identity provider is not called a broken setup', () => {
     expect(
       ssoFailureMessage(
         failure(
@@ -144,7 +144,7 @@ describe('ssoFailureMessage', () => {
 
   test("keeps Cloud's own refusals as they are", () => {
     for (const message of [
-      'This single sign-on provider is not available.',
+      'This identity provider is not available.',
       'Single sign-on could not finish. Start again from the sign-in page.',
       'Single sign-on for your organization is not working right now. Contact your administrator.',
     ]) {
@@ -173,8 +173,7 @@ describe('ssoFailureMessage', () => {
     // A known message with extra words is not the known message.
     expect(
       ssoFailureMessage({
-        message:
-          'This single sign-on provider is not available. Call +1 555 0100.',
+        message: 'This identity provider is not available. Call +1 555 0100.',
       }),
     ).toBe(SSO_FAILURE_MESSAGES.generic)
   })

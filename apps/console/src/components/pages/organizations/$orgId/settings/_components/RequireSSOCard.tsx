@@ -122,7 +122,7 @@ export function RequireSSOCard() {
             className="mt-2 text-[13px] text-muted-foreground"
           >
             {t(
-              'Members with an email on your verified domains can open this organization only after signing in through your identity provider. Owners can always sign in with any method, so a broken provider never locks your organization out. Members on other domains keep their usual sign-in too.',
+              'Members with an email on your verified domains can open this organization only after signing in through your identity provider. Owners can always sign in with any method, so a broken identity provider never locks your organization out. Members on other domains keep their usual sign-in too.',
             )}
           </p>
         </div>
@@ -197,7 +197,7 @@ export function RequireSSOCard() {
             <DialogTitle>{t('Require single sign-on')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {t(
-                'Members on your verified domains who signed in another way lose access to this organization until they sign in through your identity provider. Their other organizations are not affected. Owners keep their usual sign-in, so a broken provider never locks you out.',
+                'Members on your verified domains who signed in another way lose access to this organization until they sign in through your identity provider. Their other organizations are not affected. Owners keep their usual sign-in, so a broken identity provider never locks you out.',
               )}
             </DialogDescription>
           </DialogHeader>

@@ -72,8 +72,8 @@ export type ConsoleProfileFeatures = {
   projectEnvironments: boolean
   /**
    * Organization settings → Single sign-on (Cloud only, owners). Owners verify
-   * email domains with a DNS record and connect identity providers, so people
-   * on those domains sign in with their company login. An experiment, off by
+   * domains with a DNS record and connect identity providers, so people on
+   * those domains sign in with single sign-on. An experiment, off by
    * default.
    */
   sso: boolean

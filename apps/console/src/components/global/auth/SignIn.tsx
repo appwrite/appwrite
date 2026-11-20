@@ -280,7 +280,7 @@ interface SignInProps {
   onPasskeyAutofill?: () => void
   /** Shows a "Sign in with a passkey" button that opens the browser's passkey prompt. */
   onPasskeySignIn?: () => void
-  /** Shows a "Sign in with SSO" button that opens the company sign-in page. */
+  /** Shows a "Sign in with SSO" button that opens /sso. */
   showSSO?: boolean
   redirect?: string // Optional redirect URL to preserve when switching between sign-in/sign-up
   /** Debug preview routes: cross-links stay on /debug/*-preview; demo user is fill-only. */

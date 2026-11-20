@@ -1682,17 +1682,13 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   // Single sign-on
   'Single sign-on': 'シングルサインオン',
   'Email not on a verified domain': '検証済みドメイン外のメール',
-  'No email domains yet': 'メールドメインはまだありません',
-  'Email domain added': 'メールドメインを追加しました',
-  'Email domain deleted': 'メールドメインを削除しました',
-  'Failed to delete email domain': 'メールドメインの削除に失敗しました',
-  'Delete email domain': 'メールドメインを削除',
+  'Domain added': 'ドメインを追加しました',
+  'Domain deleted': 'ドメインを削除しました',
   'Only the domain, without @. Subdomains need their own entry.':
     '@を付けずにドメインのみを入力してください。サブドメインは個別に追加します。',
   'Pick at least one role.': 'ロールを1つ以上選択してください。',
   'Another organization claimed this domain. Add this TXT record to prove it is yours, then add it again.':
     'このドメインは別の組織が登録しています。このTXTレコードを追加して所有権を証明してから、もう一度追加してください。',
-  'Update roles': 'ロールを更新',
   'Add this TXT record at your DNS provider, then verify. It can take a few minutes to propagate.':
     'このTXTレコードをDNSプロバイダーに追加してから検証してください。反映まで数分かかる場合があります。',
   'The TXT record was not found yet. DNS changes can take a few minutes to propagate.':
@@ -1704,11 +1700,11 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'このプランではメンバーを追加できないため、シングルサインオンでサインインしたユーザーはこの組織に参加しません。',
   'Prove your organization owns this domain with a DNS record. Your identity providers then sign in people with an email on it.':
     'DNS レコードで、このドメインが組織のものであることを証明します。その後、ID プロバイダーはこのドメインのメールアドレスを持つユーザーをサインインさせます。',
-  'Prove the email domains your organization owns. Your identity providers sign in only people with an email on a verified domain.':
-    '組織が所有するメールドメインを証明します。ID プロバイダーは、検証済みドメインのメールアドレスを持つユーザーのみをサインインさせます。',
-  'Failed to load email domains': 'メールドメインを読み込めませんでした',
-  'Add your company domain, then connect an identity provider so teammates sign in with your company login.':
-    '会社のドメインを追加してから ID プロバイダーを接続すると、チームメンバーが会社のアカウントでサインインできます。',
+  'Prove the domains your organization owns. Your identity providers sign in only people with an email on a verified domain.':
+    '組織が所有するドメインを証明します。ID プロバイダーは、検証済みドメインのメールアドレスを持つユーザーのみをサインインさせます。',
+  'Failed to load domains': 'ドメインを読み込めませんでした',
+  'Add your company domain, then connect an identity provider so teammates sign in with single sign-on.':
+    '会社のドメインを追加してから ID プロバイダーを接続すると、チームメンバーがシングルサインオンでサインインできます。',
   'Verify {domain}': '{domain} を検証',
   'Are you sure you want to delete "{name}"?':
     '"{name}" を削除してもよろしいですか?',
@@ -1725,8 +1721,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'シングルサインオンは必須ではなくなりました',
   'Failed to update single sign-on': 'シングルサインオンの更新に失敗しました',
   'Require SSO': 'SSO の必須化',
-  'Members with an email on your verified domains can open this organization only after signing in through your identity provider. Owners can always sign in with any method, so a broken provider never locks your organization out. Members on other domains keep their usual sign-in too.':
-    '検証済みドメインのメールアドレスを持つメンバーは、ID プロバイダー経由でサインインした後にのみこの組織を開けます。オーナーは常に任意の方法でサインインできるため、プロバイダーに問題が起きても組織から締め出されることはありません。他のドメインのメンバーも、これまでどおりの方法でサインインできます。',
+  'Members with an email on your verified domains can open this organization only after signing in through your identity provider. Owners can always sign in with any method, so a broken identity provider never locks your organization out. Members on other domains keep their usual sign-in too.':
+    '検証済みドメインのメールアドレスを持つメンバーは、ID プロバイダー経由でサインインした後にのみこの組織を開けます。オーナーは常に任意の方法でサインインできるため、ID プロバイダーに問題が起きても組織から締め出されることはありません。他のドメインのメンバーも、これまでどおりの方法でサインインできます。',
   'Require single sign-on': 'シングルサインオンを必須にする',
   'Paused - with no enabled identity provider, members sign in any way they like. Enable one to require single sign-on again.':
     '一時停止中 - 有効な ID プロバイダーがないため、メンバーは任意の方法でサインインできます。シングルサインオンを再び必須にするには、プロバイダーを有効にしてください。',
@@ -1736,32 +1732,32 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     '有効 - 検証済みドメインのメンバーは ID プロバイダー経由でサインインする必要があります。オーナーは常に任意の方法でサインインできます。',
   'Disabled - members sign in any way they like.':
     '無効 - メンバーは任意の方法でサインインできます。',
-  'Members on your verified domains who signed in another way lose access to this organization until they sign in through your identity provider. Their other organizations are not affected. Owners keep their usual sign-in, so a broken provider never locks you out.':
-    '別の方法でサインインした検証済みドメインのメンバーは、ID プロバイダー経由でサインインするまでこの組織にアクセスできなくなります。他の組織には影響しません。オーナーはこれまでどおりサインインできるため、プロバイダーに問題が起きても締め出されることはありません。',
+  'Members on your verified domains who signed in another way lose access to this organization until they sign in through your identity provider. Their other organizations are not affected. Owners keep their usual sign-in, so a broken identity provider never locks you out.':
+    '別の方法でサインインした検証済みドメインのメンバーは、ID プロバイダー経由でサインインするまでこの組織にアクセスできなくなります。他の組織には影響しません。オーナーはこれまでどおりサインインできるため、ID プロバイダーに問題が起きても締め出されることはありません。',
   'Check your connection and try again.':
     '接続を確認して、もう一度お試しください。',
-  'Provider enabled': 'プロバイダーを有効にしました',
-  'Provider disabled. Require SSO is paused until you enable a provider.':
-    'プロバイダーを無効にしました。プロバイダーを有効にするまで、SSO の必須化は一時停止されます。',
-  'Provider disabled': 'プロバイダーを無効にしました',
-  'Failed to update provider': 'プロバイダーの更新に失敗しました',
+  'Identity provider enabled': 'ID プロバイダーを有効にしました',
+  'Identity provider disabled. Require SSO is paused until you enable an identity provider.':
+    'ID プロバイダーを無効にしました。ID プロバイダーを有効にするまで、SSO の必須化は一時停止されます。',
+  'Identity provider disabled': 'ID プロバイダーを無効にしました',
+  'Failed to update identity provider': 'ID プロバイダーの更新に失敗しました',
   'Identity provider deleted': 'ID プロバイダーを削除しました',
   'Identity providers': 'ID プロバイダー',
-  'People on your verified domains sign in with your company login, like Okta, Microsoft Entra ID, Google Workspace or Keycloak, and join with the provider’s roles.':
-    '検証済みドメインのユーザーは、Okta、Microsoft Entra ID、Google Workspace、Keycloak などの会社のアカウントでサインインし、プロバイダーのロールで参加します。',
-  'Nobody can sign in through these providers yet. Verify a domain first.':
-    'これらのプロバイダーでは、まだ誰もサインインできません。先にドメインを検証してください。',
+  'People on your verified domains sign in through your identity provider, like Okta, Microsoft Entra ID, Google Workspace or Keycloak, and join with its roles.':
+    '検証済みドメインのユーザーは、Okta、Microsoft Entra ID、Google Workspace、Keycloak などの ID プロバイダー経由でサインインし、そのロールで参加します。',
+  'Nobody can sign in through these identity providers yet. Verify a domain first.':
+    'これらの ID プロバイダーでは、まだ誰もサインインできません。先にドメインを検証してください。',
   'Failed to load identity providers': 'ID プロバイダーを読み込めませんでした',
   'No identity providers yet': 'ID プロバイダーはまだありません',
-  'Connect your company login so people on your domains sign in with it.':
-    '会社のログインを接続すると、ドメインのユーザーがそれを使ってサインインできます。',
+  'Connect your identity provider so people on your domains sign in with single sign-on.':
+    'ID プロバイダーを接続すると、ドメインのユーザーがシングルサインオンでサインインできます。',
   'SSO URL': 'SSO URL',
   'Copy SSO URL': 'SSO URL をコピー',
   'Delete identity provider': 'ID プロバイダーを削除',
   'People can no longer sign in through it. People who already joined stay members.':
     'このプロバイダーではサインインできなくなります。参加済みのユーザーはメンバーのままです。',
-  'Require SSO is on and this is your only enabled provider: deleting it pauses Require SSO, and members can sign in any way they like.':
-    'SSO の必須化が有効で、これが唯一の有効なプロバイダーです。削除すると SSO の必須化が一時停止され、メンバーは任意の方法でサインインできるようになります。',
+  'Require SSO is on and this is your only enabled identity provider: deleting it pauses Require SSO, and members can sign in any way they like.':
+    'SSO の必須化が有効で、これが唯一の有効な ID プロバイダーです。削除すると SSO の必須化が一時停止され、メンバーは任意の方法でサインインできるようになります。',
   'Use an https:// URL.': 'https:// で始まる URL を使用してください。',
   'Enter a full URL, starting with https://':
     'https:// で始まる完全な URL を入力してください',
@@ -1769,25 +1765,25 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'ディスカバリー URL を入力するか、3 つのエンドポイントをすべて手動で設定してください。',
   'Identity provider updated': 'ID プロバイダーを更新しました',
   'Identity provider added': 'ID プロバイダーを追加しました',
-  'Failed to save provider': 'プロバイダーの保存に失敗しました',
-  'People can sign in through this provider.':
-    'このプロバイダーでサインインできます。',
+  'Failed to save identity provider': 'ID プロバイダーの保存に失敗しました',
+  'People can sign in through this identity provider.':
+    'この ID プロバイダーでサインインできます。',
   'Update identity provider': 'ID プロバイダーを更新',
   'Add identity provider': 'ID プロバイダーを追加',
-  'Change how people sign in through this provider. Leave the client secret empty to keep the stored one.':
-    'このプロバイダーでのサインイン方法を変更します。保存済みのクライアントシークレットを使い続けるには、空欄のままにしてください。',
-  'Create an OpenID Connect application at your provider, add the redirect URL there, then fill in its details.':
-    'プロバイダーで OpenID Connect アプリケーションを作成し、そこにリダイレクト URL を追加してから、詳細を入力してください。',
+  'Change how people sign in through this identity provider. Leave the client secret empty to keep the stored one.':
+    'この ID プロバイダーでのサインイン方法を変更します。保存済みのクライアントシークレットを使い続けるには、空欄のままにしてください。',
+  'Create an OpenID Connect application at your identity provider, add the redirect URL there, then fill in its details.':
+    'ID プロバイダーで OpenID Connect アプリケーションを作成し、そこにリダイレクト URL を追加してから、詳細を入力してください。',
   'People see the name when they choose how to sign in.':
     'サインイン方法を選ぶときに、この名前が表示されます。',
-  'Roles people get when they join through this provider.':
-    'このプロバイダー経由で参加したユーザーに付与されるロールです。',
+  'Roles people get when they join through this identity provider.':
+    'この ID プロバイダー経由で参加したユーザーに付与されるロールです。',
   'Client secret': 'クライアントシークレット',
   Unchanged: '変更なし',
   'Discovery URL': 'ディスカバリー URL',
   'Set the endpoints manually': 'エンドポイントを手動で設定',
-  'Override what the discovery URL publishes, or set all three when your provider has none.':
-    'ディスカバリー URL の内容を上書きするか、プロバイダーにディスカバリー URL がない場合は 3 つすべてを設定してください。',
+  'Override what the discovery URL publishes, or set all three when your identity provider has none.':
+    'ディスカバリー URL の内容を上書きするか、ID プロバイダーにディスカバリー URL がない場合は 3 つすべてを設定してください。',
   'Token URL': 'トークン URL',
   'User info URL': 'ユーザー情報 URL',
   'Until the domain is verified, nobody can sign in with single sign-on on it.':
@@ -1797,6 +1793,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'ドメイン(@ より後ろの部分)だけを入力してください。',
   'A domain can be at most 253 characters, and each part between dots at most 63.':
     'ドメインは最大 253 文字、ドット間の各部分は最大 63 文字です。',
+  'Verify your domains and connect identity providers so people sign in with single sign-on.':
+    'ドメインを検証して ID プロバイダーを接続すると、ユーザーがシングルサインオンでサインインできます。',
+  'Failed to delete identity provider': 'ID プロバイダーの削除に失敗しました',
   Later: '後で',
   'Organization photo': '組織の写真',
   'Shown next to your organization name across the Console.':

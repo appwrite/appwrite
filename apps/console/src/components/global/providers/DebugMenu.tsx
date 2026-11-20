@@ -1796,7 +1796,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               ),
               createProfileFeatureFlagItem(
                 'Single sign-on',
-                'Org settings Single sign-on tab (/settings/sso): owners verify email domains and connect identity providers so people sign in with their company login.',
+                'Org settings Single sign-on tab (/settings/sso): owners verify domains and connect identity providers so people sign in with single sign-on.',
                 'sso',
                 profileId,
                 features.sso,

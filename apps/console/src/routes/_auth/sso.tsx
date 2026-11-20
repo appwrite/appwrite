@@ -189,7 +189,8 @@ function SingleSignOnPage() {
         )}
       </>
     ) : lookup.isError ? (
-      getErrorMessage(lookup.error) || t('Failed to find your company login')
+      getErrorMessage(lookup.error) ||
+      t('Failed to look up single sign-on for this email')
     ) : null
 
   const backLink = signedIn ? (
@@ -247,9 +248,7 @@ function SingleSignOnPage() {
             {backLink}
             <AuthFlowTitle>{t('Sign in with SSO')}</AuthFlowTitle>
             <AuthFlowDescription>
-              {t(
-                "Enter your work email. We'll take you to your company's login page.",
-              )}
+              {t('Enter your work email to continue with single sign-on.')}
             </AuthFlowDescription>
           </div>
 
@@ -257,7 +256,7 @@ function SingleSignOnPage() {
             <Alert>
               <AlertDescription className="text-[13px] text-pretty">
                 {t(
-                  'This organization requires single sign-on. Sign in with your company login to continue.',
+                  'This organization requires single sign-on. Sign in with SSO to continue.',
                 )}
               </AlertDescription>
             </Alert>
@@ -280,7 +279,7 @@ function SingleSignOnPage() {
               role="status"
               aria-live="polite"
             >
-              {t('Taking you to your company login...')}
+              {t('Taking you to your identity provider...')}
             </p>
           ) : choosing ? (
             <div

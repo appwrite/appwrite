@@ -495,7 +495,7 @@ async function mockAppwriteApi(
       return route.fulfill({
         status: 200,
         headers: { ...headers, 'content-type': 'text/html' },
-        body: '<p>Company login</p>',
+        body: '<p>Identity provider login page</p>',
       })
     }
 
@@ -583,7 +583,7 @@ test.describe('organization single sign-on', () => {
     await openSso(page)
 
     await page.getByRole('button', { name: 'Add domain' }).click()
-    const add = page.getByRole('dialog', { name: 'Add email domain' })
+    const add = page.getByRole('dialog', { name: 'Add domain' })
     await add.getByLabel('Domain').fill('devs.acme.io')
     await add.getByRole('button', { name: 'Add', exact: true }).click()
 
@@ -636,13 +636,13 @@ test.describe('organization single sign-on', () => {
     await page.getByRole('button', { name: 'Actions for acme.com' }).click()
     await page.getByRole('menuitem', { name: 'Delete' }).click()
     await page
-      .getByRole('dialog', { name: 'Delete email domain' })
+      .getByRole('dialog', { name: 'Delete domain' })
       .getByRole('button', { name: 'Delete', exact: true })
       .click()
 
     await expect.poll(() => mock.sent.deletes).toEqual(['domain-acme.com'])
     await expect(page.getByRole('row', { name: /acme\.com/ })).toHaveCount(0)
-    await expect(page.getByText('No email domains yet')).toBeVisible()
+    await expect(page.getByText('No domains yet')).toBeVisible()
   })
 
   test('requires single sign-on for the organization after confirming, and stops requiring it', async ({
@@ -758,7 +758,7 @@ test.describe('organization single sign-on', () => {
     await openSso(page)
     await expect(page.getByText('No identity providers yet')).toBeVisible()
 
-    await page.getByRole('button', { name: 'Add provider' }).click()
+    await page.getByRole('button', { name: 'Add identity provider' }).click()
     const add = page.getByRole('dialog', { name: 'Add identity provider' })
     // The redirect URL to register at the provider: CE's OAuth2 callback for `sso`
     await expect(add.getByLabel('Redirect URL')).toHaveValue(
@@ -802,7 +802,7 @@ test.describe('organization single sign-on', () => {
     await enableSso(page)
     await openSso(page)
 
-    await page.getByRole('button', { name: 'Add provider' }).click()
+    await page.getByRole('button', { name: 'Add identity provider' }).click()
     const add = page.getByRole('dialog', { name: 'Add identity provider' })
     await add.getByLabel('Name').fill('Keycloak')
     await add.getByLabel('Client ID').fill('kc-client')
@@ -915,7 +915,7 @@ test.describe('organization single sign-on', () => {
     // One provider: straight to the company login
     await page.getByLabel('Work email').fill('erin@acme.com')
     await page.getByRole('button', { name: 'Continue', exact: true }).click()
-    await expect(page.getByText('Company login')).toBeVisible()
+    await expect(page.getByText('Identity provider login page')).toBeVisible()
     expect(mock.sent.signIns).toEqual(['provider-okta'])
     expect(mock.sent.lookups).toEqual(['erin@gmail.com', 'erin@acme.com'])
   })
@@ -942,7 +942,7 @@ test.describe('organization single sign-on', () => {
     await expect(page.getByRole('button', { name: 'Old IdP' })).toHaveCount(0)
 
     await page.getByRole('button', { name: 'For billing' }).click()
-    await expect(page.getByText('Company login')).toBeVisible()
+    await expect(page.getByText('Identity provider login page')).toBeVisible()
     expect(mock.sent.signIns).toEqual(['provider-for-billing'])
   })
 
@@ -1133,7 +1133,7 @@ test.describe('organization single sign-on settings', () => {
     await page.getByRole('button', { name: 'Actions for acme.com' }).click()
     await page.getByRole('menuitem', { name: 'Delete' }).click()
     const deleteDomain = page.getByRole('dialog', {
-      name: 'Delete email domain',
+      name: 'Delete domain',
     })
     await expect(deleteDomain).toContainText(
       'Are you sure you want to delete "acme.com"? People with an email on it can no longer sign in through your identity providers.',
@@ -1152,7 +1152,7 @@ test.describe('organization single sign-on settings', () => {
       'Are you sure you want to delete "Okta"?',
     )
     await expect(deleteProvider).toContainText(
-      'this is your only enabled provider: deleting it pauses Require SSO',
+      'this is your only enabled identity provider: deleting it pauses Require SSO',
     )
   })
 
@@ -1163,7 +1163,7 @@ test.describe('organization single sign-on settings', () => {
     await enableSso(page)
     await openSso(page)
 
-    await page.getByRole('button', { name: 'Add provider' }).click()
+    await page.getByRole('button', { name: 'Add identity provider' }).click()
     const add = page.getByRole('dialog', { name: 'Add identity provider' })
     await add.getByRole('button', { name: 'Add', exact: true }).click()
     await expect(add.getByLabel('Name')).toHaveAccessibleDescription('Required')
@@ -1193,7 +1193,7 @@ test.describe('organization single sign-on settings', () => {
     await enableSso(page)
     await openSso(page)
 
-    await page.getByRole('button', { name: 'Add provider' }).click()
+    await page.getByRole('button', { name: 'Add identity provider' }).click()
     const add = page.getByRole('dialog', { name: 'Add identity provider' })
     await add.getByLabel('Name').fill('Okta')
     await add.getByLabel('Client ID').fill('okta-client')
@@ -1208,7 +1208,7 @@ test.describe('organization single sign-on settings', () => {
 
     // Enter twice in a field does the same
     await page.getByRole('button', { name: 'Add domain' }).click()
-    const addDomain = page.getByRole('dialog', { name: 'Add email domain' })
+    const addDomain = page.getByRole('dialog', { name: 'Add domain' })
     await addDomain.getByLabel('Domain').fill('acme.dev')
     await addDomain.getByLabel('Domain').press('Enter')
     await addDomain
@@ -1228,12 +1228,12 @@ test.describe('organization single sign-on settings', () => {
     await enableSso(page)
     await openSso(page)
 
-    await expect(page.getByText('Failed to load email domains')).toBeVisible()
+    await expect(page.getByText('Failed to load domains')).toBeVisible()
     await expect(
       page.getByText('Failed to load identity providers'),
     ).toBeVisible()
     // Not mistaken for an organization with nothing set up
-    await expect(page.getByText('No email domains yet')).toHaveCount(0)
+    await expect(page.getByText('No domains yet')).toHaveCount(0)
     await expect(page.getByText('No identity providers yet')).toHaveCount(0)
     await expect(
       page.getByText('Verify a domain to require single sign-on.'),
@@ -1265,7 +1265,7 @@ test.describe('organization single sign-on settings', () => {
     await page.getByRole('menuitem', { name: 'Delete' }).focus()
     await page.keyboard.press('Enter')
     const deleteDomain = page.getByRole('dialog', {
-      name: 'Delete email domain',
+      name: 'Delete domain',
     })
     await expect(deleteDomain).toBeVisible()
     await expect.poll(() => focused(page)).toBe('Cancel')
@@ -1283,9 +1283,9 @@ test.describe('organization single sign-on settings', () => {
     await expect.poll(() => focused(page)).toBe('Actions for acme.dev')
 
     // Add provider returns focus to its button
-    await page.getByRole('button', { name: 'Add provider' }).click()
+    await page.getByRole('button', { name: 'Add identity provider' }).click()
     await page.keyboard.press('Escape')
-    await expect.poll(() => focused(page)).toBe('Add provider')
+    await expect.poll(() => focused(page)).toBe('Add identity provider')
 
     // A provider's switch keeps focus after a toggle, so Space works twice
     const enable = page.getByRole('switch', { name: 'Enable Okta' })
@@ -1362,7 +1362,7 @@ test.describe('single sign-on sign-in', () => {
       waitUntil: 'domcontentloaded',
     })
 
-    await expect(page.getByText('Company login')).toBeVisible({
+    await expect(page.getByText('Identity provider login page')).toBeVisible({
       timeout: 45_000,
     })
     expect(mock.sent.signIns).toEqual(['provider-okta'])
@@ -1393,7 +1393,7 @@ test.describe('single sign-on sign-in', () => {
         `/sso?provider=provider-okta&redirect=${encodeURIComponent(redirect)}`,
         { waitUntil: 'domcontentloaded' },
       )
-      await expect(page.getByText('Company login')).toBeVisible({
+      await expect(page.getByText('Identity provider login page')).toBeVisible({
         timeout: 45_000,
       })
       const started = mock.sent.signInURLs.at(-1)!
@@ -1408,7 +1408,7 @@ test.describe('single sign-on sign-in', () => {
       `/sso?provider=provider-okta&redirect=${encodeURIComponent(back)}`,
       { waitUntil: 'domcontentloaded' },
     )
-    await expect(page.getByText('Company login')).toBeVisible()
+    await expect(page.getByText('Identity provider login page')).toBeVisible()
     const started = mock.sent.signInURLs.at(-1)!
     const success = new URL(started.searchParams.get('success') ?? '')
     expect(success.pathname).toBe(back)
@@ -1465,7 +1465,7 @@ test.describe('single sign-on sign-in', () => {
         "Single sign-on couldn't complete sign-in (email_missing). Please try again.",
     })
     await expect(alert()).toHaveText(
-      "Your company login didn't share your email address. Ask your administrator to release the email to Appwrite.",
+      "Your identity provider didn't share your email address. Ask your administrator to release the email to Appwrite.",
     )
 
     await open({ type: 'user_oauth2_state_invalid', message: 'Anything' })
