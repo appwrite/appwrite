@@ -6,7 +6,7 @@ use Appwrite\AvatarPhotos\Providers\Custom;
 use Appwrite\AvatarPhotos\Providers\Fallback;
 use Appwrite\AvatarPhotos\Providers\Initials;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Action;
+use Appwrite\Platform\Modules\Avatars\Http\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -20,6 +20,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Image\Canvas;
 use Utopia\Image\Format;
 use Utopia\Image\Transform;
+use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
 use Utopia\Validator\Range;
@@ -37,7 +38,7 @@ class Get extends Action
     public function __construct()
     {
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
+            ->setHttpMethod(UtopiaAction::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/teams/:teamId/photo')
             ->desc('Get photo')
             ->groups(['api', 'teams'])
