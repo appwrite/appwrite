@@ -252,7 +252,7 @@ class Jobs extends Action
                 $failure = new PermanentFailure("Build artifact '{$artifact->artifactId}' failed: " . ($artifact->error->message ?? 'no error reported'), 500);
             }
 
-            if ($event->id !== '' && $callback !== CallbackEvent::Log && $cache->save($key, true) === false) {
+            if ($event->id !== '' && $callback !== CallbackEvent::Log && $cache->save($key, true, ttl: self::DEDUPE_TTL) === false) {
                 throw new \RuntimeException('Failed to record processed build callback.');
             }
         }, self::LOCK_TIMEOUT);
@@ -293,7 +293,7 @@ class Jobs extends Action
                 $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
             }
             // A refused marker rolls back the append. Realtime runs after commit.
-            if ($eventId !== '' && $cache->save('jobs-event-' . $project->getSequence() . '-' . $eventId, true) === false) {
+            if ($eventId !== '' && $cache->save('jobs-event-' . $project->getSequence() . '-' . $eventId, true, ttl: self::DEDUPE_TTL) === false) {
                 throw new \RuntimeException('Failed to record build log callback.');
             }
             return $deployment;
