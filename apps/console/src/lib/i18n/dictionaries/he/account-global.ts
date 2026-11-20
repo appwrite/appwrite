@@ -1461,4 +1461,39 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'רק בעלים של הארגון יכולים לתבוע בעלות על פרויקט לתוכו. צרו ארגון בבעלותכם כדי לקבל אותו.',
   'Until the project is claimed, the site only opens on a device that has opened its owner link. Use Visit on that device first.':
     'עד שתיתבע בעלות על הפרויקט, האתר נפתח רק במכשיר שפתח את קישור הבעלים שלו. השתמשו קודם ב-Visit באותו מכשיר.',
+  // Single sign-on (/sso)
+  'Sign in with SSO': 'התחברות עם SSO',
+  "Enter your work email. We'll take you to your company's login page.":
+    'הזינו את האימייל שלכם בעבודה, ונעביר אתכם לדף ההתחברות של החברה.',
+  'This organization requires single sign-on. Sign in with your company login to continue.':
+    'הארגון הזה מחייב התחברות יחידה (SSO). כדי להמשיך, התחברו עם חשבון החברה.',
+  'Taking you to your company login...': 'מעבירים אתכם להתחברות של החברה...',
+  'Choose how to sign in': 'בחרו איך להתחבר',
+  'Use a different email': 'שימוש באימייל אחר',
+  'Work email': 'אימייל בעבודה',
+  'Continuing...': 'ממשיכים...',
+  "Single sign-on isn't set up for {domain}.":
+    'התחברות יחידה (SSO) לא מוגדרת עבור {domain}.',
+  'Sign in with email and password': 'התחברות עם אימייל וסיסמה',
+  'Failed to find your company login':
+    'לא הצלחנו למצוא את ההתחברות של החברה שלכם',
+  'Back to the Console': 'חזרה לקונסולה',
+  'Go to your account': 'מעבר לחשבון שלכם',
+  'Signed in as {email}.': 'מחוברים בתור {email}.',
+  "Single sign-on for your organization isn't set up correctly. Contact your administrator.":
+    'ההתחברות היחידה (SSO) של הארגון שלכם לא מוגדרת נכון. פנו למנהל המערכת.',
+  "Your company login returned an email that isn't on a domain your organization verified. Sign in with your work email account.":
+    'ההתחברות של החברה החזירה אימייל שאינו בדומיין שהארגון שלכם אימת. התחברו עם חשבון האימייל שלכם בעבודה.',
+  "Your company login didn't share your email address. Ask your administrator to release the email to Appwrite.":
+    'ההתחברות של החברה לא שיתפה את כתובת האימייל שלכם. בקשו ממנהל המערכת לאפשר את שיתוף האימייל עם Appwrite.',
+  'This sign-in was started in another browser or took too long. Start again.':
+    'ההתחברות הזו התחילה בדפדפן אחר או נמשכה זמן רב מדי. התחילו מחדש.',
+  'Single sign-on could not finish. Start again, or contact your administrator if it keeps happening.':
+    'ההתחברות היחידה (SSO) לא הושלמה. התחילו מחדש, ואם זה חוזר על עצמו, פנו למנהל המערכת.',
+  'This single sign-on provider is not available.':
+    'ספק ההתחברות היחידה (SSO) הזה אינו זמין.',
+  'Single sign-on could not finish. Start again from the sign-in page.':
+    'ההתחברות היחידה (SSO) לא הושלמה. התחילו מחדש מדף ההתחברות.',
+  'Single sign-on for your organization is not working right now. Contact your administrator.':
+    'ההתחברות היחידה (SSO) של הארגון שלכם לא עובדת כרגע. פנו למנהל המערכת.',
 }

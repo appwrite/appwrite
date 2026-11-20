@@ -1461,4 +1461,39 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
     'プロジェクトを組織に引き継げるのは、その組織のオーナーだけです。受け取るには、あなたがオーナーとなる組織を作成してください。',
   'Until the project is claimed, the site only opens on a device that has opened its owner link. Use Visit on that device first.':
     'プロジェクトが引き継がれるまでは、オーナーリンクを開いたデバイスでのみサイトが開きます。先にそのデバイスで「Visit」を使用してください。',
+  // Single sign-on (/sso)
+  'Sign in with SSO': 'SSO でサインイン',
+  "Enter your work email. We'll take you to your company's login page.":
+    '勤務先のメールアドレスを入力してください。会社のログインページに移動します。',
+  'This organization requires single sign-on. Sign in with your company login to continue.':
+    'この組織ではシングルサインオンが必須です。続行するには会社のアカウントでサインインしてください。',
+  'Taking you to your company login...':
+    '会社のログインページに移動しています...',
+  'Choose how to sign in': 'サインイン方法を選択',
+  'Use a different email': '別のメールアドレスを使用',
+  'Work email': '勤務先のメールアドレス',
+  'Continuing...': '続行しています...',
+  "Single sign-on isn't set up for {domain}.":
+    '{domain} ではシングルサインオンが設定されていません。',
+  'Sign in with email and password': 'メールアドレスとパスワードでサインイン',
+  'Failed to find your company login': '会社のログインが見つかりませんでした',
+  'Back to the Console': 'コンソールに戻る',
+  'Go to your account': 'アカウントに移動',
+  'Signed in as {email}.': '{email} でサインインしています。',
+  "Single sign-on for your organization isn't set up correctly. Contact your administrator.":
+    '組織のシングルサインオンが正しく設定されていません。管理者に連絡してください。',
+  "Your company login returned an email that isn't on a domain your organization verified. Sign in with your work email account.":
+    '会社のログインから返されたメールアドレスは、組織が検証したドメインのものではありません。勤務先のメールアカウントでサインインしてください。',
+  "Your company login didn't share your email address. Ask your administrator to release the email to Appwrite.":
+    '会社のログインからメールアドレスが共有されませんでした。メールアドレスを Appwrite に提供するよう管理者に依頼してください。',
+  'This sign-in was started in another browser or took too long. Start again.':
+    'このサインインは別のブラウザーで開始されたか、時間がかかりすぎました。最初からやり直してください。',
+  'Single sign-on could not finish. Start again, or contact your administrator if it keeps happening.':
+    'シングルサインオンを完了できませんでした。最初からやり直してください。繰り返し発生する場合は管理者に連絡してください。',
+  'This single sign-on provider is not available.':
+    'このシングルサインオンプロバイダーは利用できません。',
+  'Single sign-on could not finish. Start again from the sign-in page.':
+    'シングルサインオンを完了できませんでした。サインインページから最初からやり直してください。',
+  'Single sign-on for your organization is not working right now. Contact your administrator.':
+    '組織のシングルサインオンは現在利用できません。管理者に連絡してください。',
 }
