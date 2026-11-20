@@ -429,7 +429,16 @@ function RecordSection({
                         <FoundValues
                           values={found}
                           wrong={r.type !== 'CAA'}
-                          label={misplaced ? t('Found at:') : undefined}
+                          label={
+                            misplaced
+                              ? t('Found at:')
+                              : conflict
+                                ? t('Found {type}:').replace(
+                                    '{type}',
+                                    conflict.type,
+                                  )
+                                : undefined
+                          }
                         />
                       </TableCell>
                     </TableRow>
