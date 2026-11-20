@@ -90,10 +90,10 @@ export type InvoiceStatus =
   | 'pending'
   | 'due'
   | 'overdue'
-    | 'failed'
-    | 'cancelled'
-    | 'abandoned'
-    | 'requires_authentication'
+  | 'failed'
+  | 'cancelled'
+  | 'abandoned'
+  | 'requires_authentication'
 
 /**
  * Map billing API invoice status strings to UI statuses.
@@ -337,7 +337,7 @@ export function hasWrongDnsRecord(
   return records.some(
     (r) =>
       (cname ? r.type === 'CNAME' : r.type === 'A' || r.type === 'AAAA') &&
-      r.status === 'mismatch',
+      (r.status === 'mismatch' || r.status === 'misplaced'),
   )
 }
 
