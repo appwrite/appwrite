@@ -249,6 +249,13 @@
             "secret"
         ],
         "avatars.deletePhoto": [],
+        "avatars.getTeamPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -805,20 +812,6 @@
             "teamId",
             "name"
         ],
-        "teams.getPhoto": [
-            "teamId",
-            "width",
-            "height",
-            "quality",
-            "output"
-        ],
-        "teams.updatePhoto": [
-            "teamId",
-            "file"
-        ],
-        "teams.deletePhoto": [
-            "teamId"
-        ],
         "teams.updatePrefs": [
             "teamId",
             "prefs"
@@ -1023,6 +1016,13 @@
         ],
         "account.deleteDevice": [
             "deviceId"
+        ],
+        "teams.updatePhoto": [
+            "teamId",
+            "file"
+        ],
+        "teams.deletePhoto": [
+            "teamId"
         ]
     },
     "console": {
@@ -1302,6 +1302,13 @@
             "acknowledged"
         ],
         "avatars.deletePhoto": [],
+        "avatars.getTeamPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -4838,20 +4845,6 @@
             "teamId",
             "name"
         ],
-        "teams.getPhoto": [
-            "teamId",
-            "width",
-            "height",
-            "quality",
-            "output"
-        ],
-        "teams.updatePhoto": [
-            "teamId",
-            "file"
-        ],
-        "teams.deletePhoto": [
-            "teamId"
-        ],
         "teams.updatePrefs": [
             "teamId",
             "prefs"
@@ -5572,6 +5565,13 @@
         ],
         "project.updateAccountDevicesPolicy": [
             "enabled"
+        ],
+        "teams.updatePhoto": [
+            "teamId",
+            "file"
+        ],
+        "teams.deletePhoto": [
+            "teamId"
         ]
     },
     "server": {
@@ -5835,6 +5835,13 @@
             "acknowledged"
         ],
         "avatars.deletePhoto": [],
+        "avatars.getTeamPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -9265,20 +9272,6 @@
             "teamId",
             "name"
         ],
-        "teams.getPhoto": [
-            "teamId",
-            "width",
-            "height",
-            "quality",
-            "output"
-        ],
-        "teams.updatePhoto": [
-            "teamId",
-            "file"
-        ],
-        "teams.deletePhoto": [
-            "teamId"
-        ],
         "teams.updatePrefs": [
             "teamId",
             "prefs"
@@ -9917,6 +9910,13 @@
         ],
         "project.updateAccountDevicesPolicy": [
             "enabled"
+        ],
+        "teams.updatePhoto": [
+            "teamId",
+            "file"
+        ],
+        "teams.deletePhoto": [
+            "teamId"
         ]
     }
 }
