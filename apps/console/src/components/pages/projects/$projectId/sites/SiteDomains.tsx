@@ -176,7 +176,14 @@ export function SiteDomainsView() {
                         onRecords={handleRecords}
                         onDelete={handleDelete}
                       >
-                      <TableRow>
+                      <TableRow
+                        className="cursor-pointer"
+                        // The row opens its DNS records; its links and buttons keep their own action.
+                        onClick={(event) => {
+                          if ((event.target as HTMLElement).closest('a, button')) return
+                          handleRecords(ruleData)
+                        }}
+                      >
                         <TableCell className="px-4 py-3">
                           <a
                             href={visitUrl(ruleData.domain)}
@@ -237,7 +244,11 @@ export function SiteDomainsView() {
                         <TableCell className="px-4 py-3">
                           <DateTooltip date={ruleData.$createdAt} live />
                         </TableCell>
-                        <TableCell className="px-4 py-3 text-end">
+                        <TableCell
+                          className="px-4 py-3 text-end"
+                          // Its menu renders in a portal, whose clicks still bubble to the row.
+                          onClick={(event) => event.stopPropagation()}
+                        >
                           <div className="flex justify-end">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
