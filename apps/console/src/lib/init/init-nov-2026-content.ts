@@ -101,11 +101,6 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
       imageAlt: 'Appwrite Zero placeholder mock',
     },
     sessionCount: 1,
-    headerNavCta: {
-      label: 'Explore Appwrite Zero',
-      href: '/init',
-      external: false,
-    },
     resources: [
       {
         id: 'init5-day3-announce',
@@ -173,11 +168,6 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
       imageAlt: 'Appwrite Monitors & Beep placeholder mock',
     },
     sessionCount: 1,
-    headerNavCta: {
-      label: 'Explore Monitors & Beep',
-      href: '/init',
-      external: false,
-    },
     resources: [
       {
         id: 'init5-day5-announce',

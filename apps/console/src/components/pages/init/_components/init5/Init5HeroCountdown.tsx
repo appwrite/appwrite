@@ -21,7 +21,7 @@ function RollingDigits({
   return (
     // Clip the roll vertically with a soft fade, and leave room around the
     // digits so their glow is never cut into a box.
-    <span className="-mx-4 -my-3 inline-flex overflow-hidden px-4 py-3 [mask-image:linear-gradient(to_bottom,transparent,#000_12px,#000_calc(100%-12px),transparent)]">
+    <span className="-mx-4 -my-3 inline-flex overflow-hidden px-4 py-3 [mask-image:linear-gradient(to_bottom,transparent,#000_12px,#000_calc(100%_-_12px),transparent)]">
       {value.split('').map((digit, index) => (
         <span
           key={`${value.length}-${index}`}

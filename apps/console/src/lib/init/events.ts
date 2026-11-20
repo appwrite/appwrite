@@ -212,7 +212,8 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
       'Init is back, and this one is electric: five days, a new reveal every day, live streams, and giveaways. November 30 - December 4.',
     startDate: '2026-11-30',
     endDate: '2026-12-04',
-    status: 'upcoming',
+    // 'active' lets the status follow the dates: upcoming, then live, then past.
+    status: 'active',
     tickets: INIT_NOV_2026_TICKET_CONFIG,
     primaryCta: {
       label: 'Claim your ticket',

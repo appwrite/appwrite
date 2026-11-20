@@ -1,4 +1,5 @@
 import type { LaunchEvent, LaunchEventScheduleItem } from '@/lib/init/types'
+import { useT } from '@/lib/i18n/translate'
 import { InitScheduleRow, INIT_SCHEDULE_PLATFORM_META } from './InitScheduleRow'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
@@ -28,6 +29,7 @@ export function InitAmaCard({
   items: LaunchEventScheduleItem[]
   isRecapMode?: boolean
 }) {
+  const t = useT()
   const first = items[0]
   if (!first) return null
   const reddit = INIT_SCHEDULE_PLATFORM_META.reddit
@@ -55,13 +57,17 @@ export function InitAmaCard({
         </span>
         <div className="min-w-0">
           <h3 className="font-aeonik-pro text-[clamp(28px,4vw,36px)] font-normal leading-none tracking-tight text-foreground">
-            Ask us anything
+            {t('Ask us anything')}
             <span className="text-[var(--brand-cta)]">_</span>
           </h3>
           <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground">
             {isRecapMode
-              ? 'The team answered your questions about every Init 5 launch on r/appwrite.'
-              : 'Bring your questions about every Init 5 launch. The team answers live on r/appwrite.'}
+              ? t(
+                  'The team answered your questions about every Init 5 launch on r/appwrite.',
+                )
+              : t(
+                  'Bring your questions about every Init 5 launch. The team answers live on r/appwrite.',
+                )}
           </p>
         </div>
       </div>
