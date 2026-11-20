@@ -18,7 +18,7 @@ export interface ProxyRuleRecord {
   expected: string
   /** The values DNS returned for this type */
   current: string[]
-  status: 'verified' | 'missing' | 'mismatch' | 'failed'
+  status: 'verified' | 'missing' | 'mismatch' | 'misplaced' | 'failed'
   /** Why the check did not pass, empty when verified */
   message: string
   /** CAA must pass; CNAME, A and AAAA are alternatives, any one is enough */
