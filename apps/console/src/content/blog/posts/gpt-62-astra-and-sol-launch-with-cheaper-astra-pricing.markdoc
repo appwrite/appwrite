@@ -138,9 +138,6 @@ If you build with Codex, the [Appwrite plugin for Codex](/blog/post/appwrite-cod
 
 # Resources
 
-* [OpenAI's GPT-6.2 Astra and Sol announcement](https://openai.com/index/introducing-gpt-6-2-astra-sol/)
-* [GPT-6.2 system card](https://deploymentsafety.openai.com/gpt-6-2-astra-sol)
-* [GPT-6 Sol and Luna breakdown](/blog/post/gpt-6-sol-and-luna-launch-at-50-lower-api-prices)
 * [Appwrite plugin for Codex](/blog/post/appwrite-codex-plugin-hosted-mcp)
 * [Codex integration docs](/docs/tooling/ai/agents/codex)
 * [AI in Appwrite Functions](/docs/tooling/ai/ai-in-functions)
