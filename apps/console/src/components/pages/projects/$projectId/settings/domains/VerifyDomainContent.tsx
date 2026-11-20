@@ -255,16 +255,19 @@ function RecordStatus({
 function FoundValues({
   values,
   wrong,
+  label,
 }: {
   values: string[]
   /** Underline the value as the one to change. */
   wrong: boolean
+  /** Lead-in before the values, `Found:` by default. */
+  label?: string
 }) {
   const t = useT()
   const [first, ...rest] = values
   return (
     <p className="flex min-w-0 items-baseline gap-1.5 text-[12px] text-muted-foreground">
-      <span className="shrink-0">{t('Found:')}</span>
+      <span className="shrink-0">{label ?? t('Found:')}</span>
       <span
         className={`min-w-0 truncate pb-1 font-mono text-foreground ${wrong ? 'underline decoration-wavy decoration-red-500 underline-offset-2' : ''}`}
         title={first}
