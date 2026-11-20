@@ -243,19 +243,43 @@ final class BirdTest extends TestCase
         $this->assertSame(2, $response['deliveredTo']);
     }
 
-    public function testAttachmentsExceedingMaxSizeThrow(): void
+    public function testMessageThatFillsTheSizeLimitIsSent(): void
     {
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Total attachment size exceeds');
-
         $stub = new BirdStub(self::KEY);
 
-        $stub->send($this->email(['a@example.com'], attachments: [new Attachment(
+        // 14,999,997 bytes encode to 19,999,996, which leaves room for the 4 byte body and nothing else.
+        $response = $stub->send($this->email(['a@example.com'], content: 'Body', attachments: [new Attachment(
             name: 'large.bin',
             path: '',
             type: 'application/octet-stream',
-            content: str_repeat('x', 15 * 1024 * 1024 + 1),
+            content: str_repeat('x', 14_999_997),
         )]));
+
+        $this->assertSame(1, $response['deliveredTo']);
+        $this->assertCount(1, $stub->capturedRequests);
+    }
+
+    public function testBodyCountsTowardTheSizeLimit(): void
+    {
+        $stub = new BirdStub(self::KEY);
+
+        try {
+            // 15 MB of files encode to exactly 20 MB, so the body no longer fits.
+            $stub->send($this->email(['a@example.com'], content: 'Body', attachments: [new Attachment(
+                name: 'large.bin',
+                path: '',
+                type: 'application/octet-stream',
+                content: str_repeat('x', 15_000_000),
+            )]));
+            $this->fail('A message above the size limit was sent.');
+        } catch (\Exception $error) {
+            $this->assertSame(
+                'Message size exceeds 20000000 bytes: the body and the base64 encoded attachments take 20000004 bytes',
+                $error->getMessage(),
+            );
+        }
+
+        $this->assertSame([], $stub->capturedRequests);
     }
 
     public function testBatchesAreSplitToFitTheBodyCap(): void
@@ -263,20 +287,20 @@ final class BirdTest extends TestCase
         $stub = new BirdStub(self::KEY);
         $recipients = array_map(fn (int $i): string => "user{$i}@example.com", range(1, 100));
 
-        // 100 messages of 600 KB are 60 MB, and 34 of them are the most that fit in 20 MB.
+        // 100 messages of 600 KiB are 61 MB, and 32 of them are the most that fit in 20 MB.
         $response = $stub->send($this->email($recipients, content: str_repeat('x', 600 * 1024)));
 
         $sent = [];
         foreach ($stub->capturedRequests as $request) {
             $this->assertSame('https://eu1.platform.bird.com/v1/email/batches', $request['url']);
-            $this->assertLessThanOrEqual(20 * 1024 * 1024, \strlen(json_encode($request['body'], JSON_THROW_ON_ERROR)));
+            $this->assertLessThanOrEqual(20 * 1000 * 1000, \strlen(json_encode($request['body'], JSON_THROW_ON_ERROR)));
 
             foreach ($request['body']['messages'] as $email) {
                 $sent[] = $email['to'][0]['email'];
             }
         }
 
-        $this->assertSame([34, 34, 32], array_map(
+        $this->assertSame([32, 32, 32, 4], array_map(
             fn (array $request): int => \count($request['body']['messages']),
             $stub->capturedRequests,
         ));

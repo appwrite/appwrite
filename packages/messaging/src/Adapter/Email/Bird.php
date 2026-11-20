@@ -21,10 +21,12 @@ class Bird extends EmailAdapter
     protected const NAME = 'Bird';
 
     /**
-     * Bird refuses a message above 20 MB, counted after base64 encoding grows
-     * the files by a third, so 15 MB of files is the most that fits.
+     * Bird refuses a message above 20 MB. It counts the body and every file
+     * after base64 encoding, which grows a file by a third, so 15 MB of files
+     * fill a message on their own. Bird does not say whether it means 20 MB
+     * or 20 MiB, so this is the smaller of the two.
      */
-    protected const MAX_ATTACHMENT_BYTES = 15 * 1024 * 1024;
+    private const int MAX_MESSAGE_BYTES = 20 * 1000 * 1000;
 
     private const string PATH_MESSAGE = '/v1/email/messages';
 
@@ -38,7 +40,7 @@ class Bird extends EmailAdapter
     /**
      * Bird refuses a batch whose JSON body is above 20 MB.
      */
-    private const int MAX_BATCH_BYTES = 20 * 1024 * 1024;
+    private const int MAX_BATCH_BYTES = 20 * 1000 * 1000;
 
     /**
      * Room kept per message for a recipient longer than the first one.
@@ -258,12 +260,12 @@ class Bird extends EmailAdapter
     /**
      * @return array<array{filename: string, content: string, content_type: string}>
      *
-     * @throws \Exception When a file cannot be read or the files exceed what Bird accepts.
+     * @throws \Exception When a file cannot be read or the message exceeds what Bird accepts.
      */
     private function attachments(EmailMessage $message): array
     {
         $files = $message->getAttachments() ?? [];
-        $size = 0;
+        $size = \strlen($message->getContent());
 
         foreach ($files as $file) {
             $bytes = $file->getContent() !== null
@@ -274,11 +276,12 @@ class Bird extends EmailAdapter
                 throw new \Exception('Failed to read attachment file: ' . $file->getPath());
             }
 
-            $size += $bytes;
+            // What the file takes once it is base64 encoded.
+            $size += 4 * intdiv($bytes + 2, 3);
         }
 
-        if ($size > self::MAX_ATTACHMENT_BYTES) {
-            throw new \Exception('Total attachment size exceeds ' . self::MAX_ATTACHMENT_BYTES . ' bytes');
+        if ($size > self::MAX_MESSAGE_BYTES) {
+            throw new \Exception('Message size exceeds ' . self::MAX_MESSAGE_BYTES . ' bytes: the body and the base64 encoded attachments take ' . $size . ' bytes');
         }
 
         $attachments = [];
