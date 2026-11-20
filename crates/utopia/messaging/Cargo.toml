@@ -37,4 +37,4 @@ hyper = { workspace = true, features = ["client", "server", "http2"] }
 
 [package.metadata.utopia]
 category = "integrations"
-php-sync = "d82627598d4fd0d139655b58729cbe6948c26a4e"
+php-sync = "dd354d119c5fe8cec9510da344834e38dea525ac"

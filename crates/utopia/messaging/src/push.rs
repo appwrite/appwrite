@@ -112,6 +112,12 @@ impl Apns {
         if let Some(mutable) = message.mutable_content() {
             set(&mut payload, &["aps", "mutable-content"], Value::Int(i64::from(mutable)));
         }
+        // APNs has no image field: the URL goes beside `aps`, and mutable-content runs the app's notification
+        // service extension so it can download and attach it. Without it iOS could never show the image.
+        if let Some(image) = message.image() {
+            set(&mut payload, &["image"], Value::from(image));
+            set(&mut payload, &["aps", "mutable-content"], Value::Int(1));
+        }
         let mut priority = message.priority().map(|p| if p == Priority::High { "10" } else { "5" });
         let background = message.is_background();
         if background {
@@ -150,7 +156,7 @@ impl Apns {
                 let error = reason.unwrap_or_else(|| {
                     text(if result.error.is_empty() || result.error == "0" { "Unknown error" } else { &result.error })
                 });
-                result_text(&error, Site { argument: 2, file: "Adapter/Push/APNS.php", line: 167 })?
+                result_text(&error, Site { argument: 2, file: "Adapter/Push/APNS.php", line: 173 })?
             };
             locked(&response).add_failure(device, error);
             Ok(())
