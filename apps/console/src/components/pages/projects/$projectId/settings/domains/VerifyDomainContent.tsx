@@ -880,6 +880,9 @@ export function VerifyDomainContent({
   const records = (rule as Models.ProxyRule & { records?: ProxyRuleRecord[] })
     .records
   const checks = records?.length ? records : null
+  // A subdomain points with its CNAME, so an A or AAAA record found where the
+  // CNAME is missing answers in its place: a provider's URL redirect or parking
+  // record, which never reaches Appwrite.
   const conflict =
     getRecordName(rule.domain) !== '@' &&
     checks?.some(
