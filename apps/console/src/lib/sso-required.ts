@@ -30,7 +30,13 @@ export function redirectToRequiredSSO(returnPath?: string): void {
 
 /** The organization or project a Console path belongs to, if any. */
 export function pageResourceId(pathname: string): string | undefined {
-  return pathname.match(/^\/(?:organizations|projects)\/([^/?#]+)/)?.[1]
+  const prefix = ['/organizations/', '/projects/'].find((start) =>
+    pathname.startsWith(start),
+  )
+  if (!prefix) return undefined
+  let id = pathname.slice(prefix.length)
+  for (const end of ['/', '?', '#']) id = id.split(end)[0]
+  return id || undefined
 }
 
 function keyMentions(value: unknown, id: string): boolean {

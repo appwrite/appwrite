@@ -102,8 +102,8 @@ export function ssoFailureMessage(error: unknown): string | null {
     return SSO_FAILURE_MESSAGES.stateInvalid
   }
   if (type === 'user_oauth2_provider_failure') {
-    // CE puts the identity provider's error code in the message.
-    const code = (name: string) => new RegExp(`\\b${name}\\b`).test(message)
+    // CE puts the identity provider's error code in parentheses.
+    const code = (name: string) => message.includes(`(${name})`)
     if (code('email_domain_not_verified')) {
       return SSO_FAILURE_MESSAGES.domainNotVerified
     }

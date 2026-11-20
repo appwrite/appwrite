@@ -190,6 +190,10 @@ describe('required single sign-on redirect', () => {
   test('reads the organization or project a page belongs to', () => {
     expect(pageResourceId('/organizations/org1/settings')).toBe('org1')
     expect(pageResourceId('/projects/p1/overview')).toBe('p1')
+    expect(pageResourceId('/organizations/org1?tab=members')).toBe('org1')
+    expect(pageResourceId('/projects/p1#top')).toBe('p1')
+    expect(pageResourceId('/organizations/')).toBeUndefined()
+    expect(pageResourceId('/organizationsx/org1')).toBeUndefined()
     expect(pageResourceId('/account')).toBeUndefined()
     expect(pageResourceId('/')).toBeUndefined()
   })
