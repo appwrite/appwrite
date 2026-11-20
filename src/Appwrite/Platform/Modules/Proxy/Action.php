@@ -543,6 +543,7 @@ class Action extends PlatformAction
         foreach ($missing as $key) {
             $records[$key]['status'] = 'misplaced';
             $records[$key]['current'] = $found;
+            $records[$key]['message'] = 'Domain ' . $domain->get() . ' has no CNAME record, but one was found at ' . $misplaced . '. Your DNS provider added the domain to the host you entered: enter only ' . $domain->getSub() . ' as the host.';
         }
 
         return $records;
