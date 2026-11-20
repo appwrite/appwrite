@@ -114,6 +114,8 @@ export const jaSitesDictionary: Record<string, string> = {
     '現在は {found} を指しています。{value} に変更してください。',
   'It was added as {found}. In your DNS provider, enter only {name} as the host.':
     '{found} として追加されています。DNS プロバイダーではホストに {name} だけを入力してください。',
+  "Enter only {name} in your DNS provider's Host or Name field. Most providers add {apex} for you.":
+    'DNS プロバイダーのホストまたは名前の欄には {name} だけを入力してください。ほとんどのプロバイダーは {apex} を自動で付け加えます。',
   'Your domain points somewhere else. Set this record to {value}.':
     'ドメインは別の宛先を指しています。このレコードを {value} に設定してください。',
   'and {n} more': 'ほか {n} 件',
