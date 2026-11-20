@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Teams\Http\Teams\Photo;
+namespace Appwrite\Platform\Modules\Avatars\Http\Teams\Photo;
 
 use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
