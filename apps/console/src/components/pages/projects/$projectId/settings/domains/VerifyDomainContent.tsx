@@ -375,12 +375,17 @@ function RecordSection({
             {records.map((r) => {
               // A misplaced record is wrong where it is, not in its value.
               const misplaced = r.check?.status === 'misplaced' && !r.notNeeded
+              // Another record type answers where this one is missing.
+              const conflict =
+                r.check?.status === 'missing' && !r.notNeeded
+                  ? r.conflict
+                  : undefined
               const found =
                 r.check?.status === 'mismatch' && !r.notNeeded
                   ? r.check.current
                   : misplaced && r.check
                     ? [getMisplacedName(r.check.name)]
-                    : []
+                    : (conflict?.current ?? [])
               return (
                 <Fragment key={`${r.type}-${r.value}`}>
                   <TableRow className={found.length ? 'border-b-0' : undefined}>
