@@ -84,17 +84,19 @@ export const jaSitesDictionary: Record<string, string> = {
   'Deployed from': 'デプロイ元',
   'View logs': 'ログを表示',
   'Update domain': 'ドメインを更新',
-  'Its DNS records and certificate stay the same.': 'DNS レコードと証明書は変更されません。',
+  'Its DNS records and certificate stay the same.':
+    'DNS レコードと証明書は変更されません。',
   'Domain has been updated': 'ドメインを更新しました',
   'Failed to update domain': 'ドメインの更新に失敗しました',
-  'A domain cannot switch between serving a deployment and redirecting. Delete it and add it again.': 'ドメインをデプロイの配信とリダイレクトの間で切り替えることはできません。削除してから追加し直してください。',
+  'A domain cannot switch between serving a deployment and redirecting. Delete it and add it again.':
+    'ドメインをデプロイの配信とリダイレクトの間で切り替えることはできません。削除してから追加し直してください。',
   'Domain has been deleted': 'ドメインを削除しました',
   'Loading domains...': 'ドメインを読み込み中...',
   'Generating certificate': '証明書を発行中',
   'Verification failed': '検証に失敗しました',
   'Certificate generation failed': '証明書の発行に失敗しました',
-  'A DNS record has the wrong value. Open Records to see which one and what to change it to.':
-    'DNS レコードの値が正しくありません。「レコード」を開いて、どのレコードを何に変更するかを確認してください。',
+  'A DNS record has the wrong value or name. Open Records to see which one and what to change it to.':
+    'DNS レコードの値または名前が正しくありません。「レコード」を開いて、どのレコードを何に変更するかを確認してください。',
   'Waiting for DNS': 'DNS を待機中',
   'Appwrite checks the DNS records every few minutes for 3 days after the domain is added. Use Check now to look again right away.':
     'Appwrite はドメインの追加後 3 日間、数分ごとに DNS レコードを確認します。すぐに確認するには「今すぐ確認」を使用してください。',
