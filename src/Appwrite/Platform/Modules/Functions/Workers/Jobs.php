@@ -337,7 +337,7 @@ class Jobs extends Action
             }
 
             try {
-                if (!isset($this->logs[$key][$entry])) {
+                if (!$this->pending($key, $entry)) {
                     return; // appended along with another callback's lines
                 }
 
@@ -382,6 +382,15 @@ class Jobs extends Action
                 unset($this->gates[$key]);
             }
         }
+    }
+
+    /**
+     * Whether a log callback's lines still wait to be appended. Another coroutine
+     * holding the lock removes them once it has, while this one waits at the gate.
+     */
+    private function pending(string $key, int $entry): bool
+    {
+        return isset($this->logs[$key][$entry]);
     }
 
     /**
