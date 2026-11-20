@@ -57,7 +57,7 @@ class Update extends Base
             ->label('sdk', new Method(
                 namespace: 'avatars',
                 group: null,
-                name: 'updatePhoto',
+                name: 'updateTeamPhoto',
                 description: <<<'EOT'
                 Update the photo of a team. Updating an already customized photo replaces it. The image must be at most 5MB and is sent in a single request.
                 EOT,
