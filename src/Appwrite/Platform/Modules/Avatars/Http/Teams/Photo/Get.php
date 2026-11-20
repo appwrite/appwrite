@@ -45,8 +45,8 @@ class Get extends Action
             ->groups(['api', 'avatars'])
             ->label('scope', 'teams.read')
             ->label('sdk', new Method(
-                namespace: 'teams',
-                group: 'teams',
+                namespace: 'avatars',
+                group: null,
                 name: 'getPhoto',
                 description: <<<'EOT'
                 Returns the photo of a team: the uploaded photo (see teams.updatePhoto), else the initials of the team name, else a built-in static placeholder.
