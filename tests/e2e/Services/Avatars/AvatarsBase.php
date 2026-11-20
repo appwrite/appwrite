@@ -2100,6 +2100,41 @@ trait AvatarsBase
         $this->assertEquals(404, $response['headers']['status-code']);
     }
 
+    public function testDeleteTeamPhoto(): void
+    {
+        $teamId = $this->createPhotoTeam();
+        $headers = $this->getTeamPhotoHeaders();
+        $logo = (string) \file_get_contents(__DIR__ . '/../../../resources/logo.png');
+
+        $initials = $this->client->call(Client::METHOD_GET, '/avatars/teams/' . $teamId . '/photo', $headers)['body'];
+
+        $response = $this->uploadTeamPhoto($teamId, $logo, 'logo.png');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $uploaded = $this->client->call(Client::METHOD_GET, '/avatars/teams/' . $teamId . '/photo', $headers)['body'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/teams/' . $teamId . '/photo', $headers);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/teams/' . $teamId . '/photo', $headers);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotSame($initials, $response['body']);
+        $this->assertNotSame($uploaded, $response['body']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/teams/' . Id::unique() . '/photo', $headers);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+    }
+
     /**
      * @return array<string, string>
      */
