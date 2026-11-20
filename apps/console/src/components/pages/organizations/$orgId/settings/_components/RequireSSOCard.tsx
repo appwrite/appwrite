@@ -28,6 +28,8 @@ import {
   focusOnOpen,
   useDialogFocusReturn,
   useSingleSubmit,
+  useSSOPlanErrorHandler,
+  useSSOPlanGate,
 } from './SSOCardHelpers'
 
 /**
@@ -44,6 +46,9 @@ export function RequireSSOCard() {
   const { providers, isSuccess: providersLoaded } =
     useOrganizationSSOProviders(orgId)
   const update = useRequireOrganizationSSO(orgId)
+  // Turning it on needs a plan with single sign-on; turning it off works on any.
+  const gate = useSSOPlanGate(orgId)
+  const onPlanError = useSSOPlanErrorHandler(orgId)
   const [confirming, setConfirming] = useState(false)
 
   const required =
@@ -56,13 +61,15 @@ export function RequireSSOCard() {
   // Turning it off always works; turning it on needs someone it applies to and a
   // way for them to get in. Until both lists are in (or when one failed to
   // load), nothing is claimed either way: the server still checks.
-  const hint = !(domainsLoaded && providersLoaded)
-    ? null
-    : !hasVerifiedDomain
-      ? t('Verify a domain to require single sign-on.')
-      : !hasEnabledProvider
-        ? t('Enable an identity provider to require single sign-on.')
-        : null
+  const hint = gate.locked
+    ? t('Upgrade to Pro to require single sign-on.')
+    : !(domainsLoaded && providersLoaded)
+      ? null
+      : !hasVerifiedDomain
+        ? t('Verify a domain to require single sign-on.')
+        : !hasEnabledProvider
+          ? t('Enable an identity provider to require single sign-on.')
+          : null
 
   // The switch is a draft until Update, like the other settings toggles.
   const [draft, setDraft] = useSyncStateFromServer(required)
@@ -88,10 +95,12 @@ export function RequireSSOCard() {
               ? t('Single sign-on is now required')
               : t('Single sign-on is no longer required'),
           ),
-        onError: (failure: Error) =>
+        onError: (failure: Error) => {
+          if (onPlanError(failure)) return
           toast.error(
             getErrorMessage(failure) || t('Failed to update single sign-on'),
-          ),
+          )
+        },
       }),
     )
 
@@ -143,13 +152,17 @@ export function RequireSSOCard() {
                 {blocked
                   ? hint
                   : paused
-                    ? hasVerifiedDomain
+                    ? gate.locked
                       ? t(
-                          'Paused - with no enabled identity provider, members sign in any way they like. Enable one to require single sign-on again.',
+                          'Paused - your plan does not include single sign-on, so members sign in any way they like. Turn it off, or upgrade to Pro to require it again.',
                         )
-                      : t(
-                          'Paused - with no verified domain, members sign in any way they like. Verify one to require single sign-on again.',
-                        )
+                      : hasVerifiedDomain
+                        ? t(
+                            'Paused - with no enabled identity provider, members sign in any way they like. Enable one to require single sign-on again.',
+                          )
+                        : t(
+                            'Paused - with no verified domain, members sign in any way they like. Verify one to require single sign-on again.',
+                          )
                     : draft
                       ? t(
                           'Enabled - members on your verified domains must sign in through your identity provider. Owners can always sign in any way.',

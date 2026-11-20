@@ -89,6 +89,7 @@ import {
   resolveFallbackOrganizationIdFromList,
 } from '@/lib/organization-overview-prefetch'
 import { USER_PREFS_KEY_ORGANIZATION } from '@/lib/user-prefs-keys'
+import { planSupportsSSO } from '@/lib/sso-plan'
 import { isSSORequiredError, redirectToRequiredSSO } from '@/lib/sso-required'
 import {
   canSeeProjects,
@@ -1852,6 +1853,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     () => getVerifiedEmailDomains(emailDomains),
     [emailDomains],
   )
+  // Single sign-on is set up on Pro and above: its settings tab says so.
+  const ssoNotOnPlan =
+    !!organizationPlan && !planSupportsSSO(organizationPlan)
   // A member on a verified domain joins again through an enabled provider:
   // removing them here does not keep them out.
   const { providers: ssoProviders } = useOrganizationSSOProviders(
@@ -3520,7 +3524,20 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 {activeTab === 'settings' && (
                   <SettingsLayoutShell
                     navItems={orgSettingsNavItems.map((item) =>
-                      item.id === 'billing' &&
+                      item.id === 'sso' && ssoNotOnPlan
+                        ? {
+                            ...item,
+                            // Set up on Pro and above, as project environments
+                            endAdornment: (
+                              <Badge
+                                variant="processing"
+                                className="px-1.5 py-0 text-[10px]"
+                              >
+                                {t('Pro')}
+                              </Badge>
+                            ),
+                          }
+                        : item.id === 'billing' &&
                       (showProjectsLockedAlert || showFailedInvoiceOrgAlert)
                         ? {
                             ...item,

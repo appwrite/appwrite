@@ -1675,8 +1675,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Payment authentication is required': 'נדרש אימות תשלום',
   'They can join again by signing in with single sign-on. To keep them out, remove them at your identity provider too.':
     'הם יוכלו להצטרף שוב בהתחברות יחידה (SSO). כדי למנוע זאת, הסירו אותם גם אצל ספק הזהויות.',
-  "This plan can't add members, so people who sign in with single sign-on don't join this organization.":
-    'בתוכנית הזו אי אפשר להוסיף חברים, ולכן מי שמתחבר בהתחברות יחידה (SSO) לא מצטרף לארגון.',
   'Prove your organization owns this domain with a DNS record. Your identity providers then sign in people with an email on it.':
     'הוכיחו באמצעות רשומת DNS שהדומיין הזה שייך לארגון שלכם. לאחר מכן ספקי הזהויות שלכם יאפשרו התחברות למי שיש לו אימייל בדומיין.',
   'Prove the domains your organization owns. Your identity providers sign in only people with an email on a verified domain.':
@@ -1773,6 +1771,18 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Verify your domains and connect identity providers so people sign in with single sign-on.':
     'אמתו את הדומיינים שלכם וחברו ספקי זהויות כדי שאנשים יתחברו בהתחברות יחידה (SSO).',
   'Failed to delete identity provider': 'מחיקת ספק הזהויות נכשלה',
+  'Single sign-on is available on Pro': 'התחברות יחידה (SSO) זמינה בתוכנית Pro',
+  'Single sign-on is paused': 'ההתחברות היחידה (SSO) מושהית',
+  'Your plan ({plan}) does not include single sign-on. Upgrade to verify your domains and connect identity providers, so people on your domains sign in with SSO.':
+    'התוכנית שלכם ({plan}) לא כוללת התחברות יחידה (SSO). שדרגו כדי לאמת את הדומיינים שלכם ולחבר ספקי זהויות, כך שאנשים בדומיינים שלכם יתחברו עם SSO.',
+  'Your plan ({plan}) does not include single sign-on, so nobody signs in through your identity providers and Require SSO has no effect until the organization is back on Pro. You can still delete domains and identity providers, and turn Require SSO off.':
+    'התוכנית שלכם ({plan}) לא כוללת התחברות יחידה (SSO), ולכן אף אחד לא מתחבר דרך ספקי הזהויות שלכם וחיוב SSO לא חל עד שהארגון יחזור לתוכנית Pro. עדיין אפשר למחוק דומיינים וספקי זהויות, ולכבות את חיוב ה-SSO.',
+  'Single sign-on requires a Pro plan or higher.':
+    'התחברות יחידה (SSO) דורשת תוכנית Pro ומעלה.',
+  'Upgrade to Pro to require single sign-on.':
+    'שדרגו ל-Pro כדי לחייב התחברות יחידה (SSO).',
+  'Paused - your plan does not include single sign-on, so members sign in any way they like. Turn it off, or upgrade to Pro to require it again.':
+    'מושהה - התוכנית שלכם לא כוללת התחברות יחידה (SSO), ולכן חברים מתחברים בכל דרך שירצו. כבו את האפשרות, או שדרגו ל-Pro כדי לחייב אותה שוב.',
   Later: 'אחר כך',
   'Organization photo': 'תמונת הארגון',
   'Shown next to your organization name across the Console.':

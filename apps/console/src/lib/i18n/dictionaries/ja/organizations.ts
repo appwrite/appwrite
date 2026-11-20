@@ -1696,8 +1696,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Payment authentication is required': '支払いの認証が必要です',
   'They can join again by signing in with single sign-on. To keep them out, remove them at your identity provider too.':
     'シングルサインオンでサインインすると、再び参加できます。参加させないようにするには、ID プロバイダーでも削除してください。',
-  "This plan can't add members, so people who sign in with single sign-on don't join this organization.":
-    'このプランではメンバーを追加できないため、シングルサインオンでサインインしたユーザーはこの組織に参加しません。',
   'Prove your organization owns this domain with a DNS record. Your identity providers then sign in people with an email on it.':
     'DNS レコードで、このドメインが組織のものであることを証明します。その後、ID プロバイダーはこのドメインのメールアドレスを持つユーザーをサインインさせます。',
   'Prove the domains your organization owns. Your identity providers sign in only people with an email on a verified domain.':
@@ -1796,6 +1794,19 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Verify your domains and connect identity providers so people sign in with single sign-on.':
     'ドメインを検証して ID プロバイダーを接続すると、ユーザーがシングルサインオンでサインインできます。',
   'Failed to delete identity provider': 'ID プロバイダーの削除に失敗しました',
+  'Single sign-on is available on Pro':
+    'シングルサインオンは Pro で利用できます',
+  'Single sign-on is paused': 'シングルサインオンは一時停止中です',
+  'Your plan ({plan}) does not include single sign-on. Upgrade to verify your domains and connect identity providers, so people on your domains sign in with SSO.':
+    'ご利用のプラン ({plan}) にはシングルサインオンが含まれていません。アップグレードすると、ドメインを検証して ID プロバイダーを接続し、ドメインのユーザーが SSO でサインインできるようになります。',
+  'Your plan ({plan}) does not include single sign-on, so nobody signs in through your identity providers and Require SSO has no effect until the organization is back on Pro. You can still delete domains and identity providers, and turn Require SSO off.':
+    'ご利用のプラン ({plan}) にはシングルサインオンが含まれていないため、組織が Pro に戻るまで、ID プロバイダー経由でサインインするユーザーはおらず、SSO の必須化も適用されません。ドメインと ID プロバイダーの削除、および SSO の必須化をオフにすることは引き続き可能です。',
+  'Single sign-on requires a Pro plan or higher.':
+    'シングルサインオンには Pro 以上のプランが必要です。',
+  'Upgrade to Pro to require single sign-on.':
+    'シングルサインオンを必須にするには、Pro にアップグレードしてください。',
+  'Paused - your plan does not include single sign-on, so members sign in any way they like. Turn it off, or upgrade to Pro to require it again.':
+    '一時停止中 - ご利用のプランにはシングルサインオンが含まれていないため、メンバーは任意の方法でサインインできます。オフにするか、Pro にアップグレードして再び必須にしてください。',
   Later: '後で',
   'Organization photo': '組織の写真',
   'Shown next to your organization name across the Console.':

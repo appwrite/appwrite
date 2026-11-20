@@ -20,7 +20,11 @@ import {
   domainFieldError,
   getDomainClaimReason,
 } from '@/lib/utils/proxy-domains'
-import { SSO_ERROR_TEXT, useSingleSubmit } from './SSOCardHelpers'
+import {
+  SSO_ERROR_TEXT,
+  useSingleSubmit,
+  useSSOPlanErrorHandler,
+} from './SSOCardHelpers'
 import { getEmailDomainRecord } from './VerifyEmailDomain'
 
 export function CreateEmailDomain({
@@ -43,6 +47,7 @@ export function CreateEmailDomain({
   // Another organization holds the domain: the TXT record takes it over.
   const [claimDomain, setClaimDomain] = useState<string | null>(null)
   const create = useCreateOrganizationEmailDomain(organizationId)
+  const onPlanError = useSSOPlanErrorHandler(organizationId)
   const submitOnce = useSingleSubmit()
 
   const domainError = domainFieldError(domain, touched, t)
@@ -74,6 +79,10 @@ export function CreateEmailDomain({
             onCreated(rule)
           },
           onError: (failure: Error) => {
+            if (onPlanError(failure)) {
+              close(false)
+              return
+            }
             if (getDomainClaimReason(failure) === 'held') {
               setClaimDomain(domain.trim().toLowerCase())
               return

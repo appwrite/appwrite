@@ -18,7 +18,13 @@ import {
   getErrorMessage,
 } from '@/lib/utils/error-formatting'
 import { getClaimRecord } from '@/lib/utils/proxy-domains'
-import { focusOnOpen, SSO_ALERT_ERROR_TEXT } from './SSOCardHelpers'
+import {
+  focusOnOpen,
+  PlanLockedTooltip,
+  SSO_ALERT_ERROR_TEXT,
+  useSSOPlanErrorHandler,
+  useSSOPlanGate,
+} from './SSOCardHelpers'
 
 /** TXT record that proves an organization owns an email domain: `team:<orgId>` at `_appwrite`. */
 export function getEmailDomainRecord(domain: string, organizationId: string) {
@@ -43,6 +49,9 @@ export function VerifyEmailDomain({
   const later = useRef<HTMLButtonElement>(null)
   const [error, setError] = useState<string | null>(null)
   const verify = useVerifyOrganizationEmailDomain(organizationId)
+  // Checking the record needs a plan with single sign-on.
+  const gate = useSSOPlanGate(organizationId)
+  const onPlanError = useSSOPlanErrorHandler(organizationId)
 
   const close = (open: boolean) => {
     if (!open) setError(null)
@@ -67,6 +76,7 @@ export function VerifyEmailDomain({
         )
       },
       onError: (failure: Error) => {
+        if (onPlanError(failure)) return
         // For an organization's domain the server says what it found: no
         // record yet, a record with the wrong value (and which), or one it
         // could not confirm. Its words are meant for the owner, so they are
@@ -132,9 +142,14 @@ export function VerifyEmailDomain({
           <Button ref={later} variant="outline" onClick={() => close(false)}>
             {t('Later')}
           </Button>
-          <Button onClick={handleVerify} disabled={verify.isPending}>
-            {verify.isPending ? t('Verifying...') : t('Verify')}
-          </Button>
+          <PlanLockedTooltip locked={gate.locked}>
+            <Button
+              onClick={handleVerify}
+              disabled={verify.isPending || gate.locked}
+            >
+              {verify.isPending ? t('Verifying...') : t('Verify')}
+            </Button>
+          </PlanLockedTooltip>
         </div>
       </DialogContent>
     </Dialog>

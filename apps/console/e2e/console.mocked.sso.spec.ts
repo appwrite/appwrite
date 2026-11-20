@@ -56,6 +56,19 @@ const PERSONAL = {
   name: 'Personal Projects',
 } satisfies Partial<Models.Organization<Models.Preferences>>
 
+/** Single sign-on is set up on Pro and above: the plan says `supportsSSO`. */
+const PRO_PLAN = {
+  $id: 'tier-1',
+  name: 'Pro',
+  supportsSSO: true,
+  addons: { seats: { supported: true } },
+}
+const FREE_PLAN = {
+  $id: 'tier-0',
+  name: 'Free',
+  addons: { seats: { supported: false } },
+}
+
 const SETTINGS = `/organizations/${ORGANIZATION.$id}/settings`
 const SSO = `${SETTINGS}/sso`
 
@@ -170,8 +183,13 @@ interface Mock {
   refuseWithoutSSO: boolean
   /** TXT values the "DNS" holds that are not the expected one, by domain */
   wrongValues: Map<string, string>
-  /** The organization's billing plan, when the page asks for it */
-  plan: Record<string, unknown> | null
+  /** The organization's billing plan (Pro, with single sign-on, by default) */
+  plan: Record<string, unknown>
+  /**
+   * The API refuses single sign-on setup with `billing_plan_not_allowed`, and
+   * the plan turns Free, as when it changed while the page was open
+   */
+  planRefuses: boolean
   /** The domain and provider lists answer 500 */
   listsFail: boolean
   /** Whether a session exists; a guest's `account.get` answers 401 */
@@ -202,6 +220,8 @@ interface Mock {
     signInURLs: URL[]
     /** Account prefs saved */
     prefs: Array<Record<string, unknown>>
+    /** Setup requests refused for the plan */
+    planRefusals: number
   }
 }
 
@@ -226,6 +246,7 @@ async function mockAppwriteApi(
       | 'ssoRequired'
       | 'refuseWithoutSSO'
       | 'plan'
+      | 'planRefuses'
       | 'listsFail'
       | 'signedIn'
       | 'personal'
@@ -243,7 +264,8 @@ async function mockAppwriteApi(
     ssoRequired: options.ssoRequired ?? false,
     refuseWithoutSSO: options.refuseWithoutSSO ?? false,
     wrongValues: new Map(),
-    plan: options.plan ?? null,
+    plan: options.plan ?? PRO_PLAN,
+    planRefuses: options.planRefuses ?? false,
     listsFail: options.listsFail ?? false,
     signedIn: options.signedIn ?? true,
     personal: options.personal ?? false,
@@ -261,6 +283,7 @@ async function mockAppwriteApi(
       signIns: [],
       signInURLs: [],
       prefs: [],
+      planRefusals: 0,
     },
   }
   const localOrigin = new URL(String(test.info().project.use.baseURL)).origin
@@ -382,8 +405,30 @@ async function mockAppwriteApi(
     if (apiPath === '/projects' || apiPath === '/organization/projects')
       return json(200, { total: 0, projects: [] })
 
-    if (apiPath === `/organizations/${ORGANIZATION.$id}/plan` && mock.plan) {
+    if (apiPath === `/organizations/${ORGANIZATION.$id}/plan`) {
       return json(200, mock.plan)
+    }
+
+    // Setup a plan without single sign-on refuses; listing, deleting and
+    // turning Require SSO off work on any plan.
+    const setup =
+      apiPath.startsWith(`/teams/${ORGANIZATION.$id}/sso/`) &&
+      ((method === 'POST' && apiPath.endsWith('/sso/domains')) ||
+        (method === 'PATCH' && apiPath.endsWith('/status')) ||
+        (method === 'POST' && apiPath.endsWith('/providers/oidc')) ||
+        method === 'PUT' ||
+        (method === 'PATCH' &&
+          apiPath.endsWith('/sso/required') &&
+          request.postDataJSON()?.required === true))
+    if (setup && (mock.planRefuses || mock.plan.supportsSSO !== true)) {
+      mock.sent.planRefusals += 1
+      mock.plan = FREE_PLAN
+      return json(403, {
+        message: 'Single sign-on requires a Pro plan or higher.',
+        code: 403,
+        type: 'billing_plan_not_allowed',
+        version: '1.0',
+      })
     }
 
     const sso = `/teams/${ORGANIZATION.$id}/sso`
@@ -1321,28 +1366,151 @@ test.describe('organization single sign-on settings', () => {
     await page.keyboard.press('Escape')
     await expect.poll(() => focused(page)).toBe('Update')
   })
+})
 
-  test('says when the plan adds nobody through single sign-on', async ({
+test.describe('single sign-on and the plan', () => {
+  test('offers the upgrade on Free, and still shows Sign in with SSO', async ({
     page,
   }) => {
-    await mockAppwriteApi(page, {
-      plan: {
-        $id: 'tier-0',
-        name: 'Free',
-        addons: { seats: { supported: false } },
-      },
+    const mock = await mockAppwriteApi(page, {
+      plan: FREE_PLAN,
+      domains: [],
+    })
+    await enableSso(page)
+    await page.goto(SSO, { waitUntil: 'domcontentloaded' })
+
+    await expect(
+      page.getByText('Single sign-on is available on Pro'),
+    ).toBeVisible({ timeout: 45_000 })
+    await expect(
+      page.getByText(
+        'Your plan (Free) does not include single sign-on. Upgrade to verify your domains and connect identity providers, so people on your domains sign in with SSO.',
+      ),
+    ).toBeVisible()
+    await expect(
+      page
+        .getByRole('alert')
+        .filter({ hasText: 'Single sign-on is available on Pro' })
+        .getByRole('link', { name: 'Upgrade' }),
+    ).toHaveAttribute('href', /\/upgrade\?orgId=acme/)
+    // Only the upgrade: no empty cards, nothing to set up
+    await expect(page.getByRole('heading', { name: 'Domains' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Add domain' })).toHaveCount(
+      0,
+    )
+    await expect(
+      page.getByRole('button', { name: 'Add identity provider' }),
+    ).toHaveCount(0)
+    // The settings tab stays, marked Pro
+    await expect(settingsNav(page)).toContainText('Pro')
+
+    // Everyone still sees the way in
+    mock.signedIn = false
+    await page.goto('/sign-in', { waitUntil: 'domcontentloaded' })
+    await expect(
+      page.getByRole('link', { name: 'Sign in with SSO' }),
+    ).toBeVisible({ timeout: 45_000 })
+  })
+
+  test('keeps what a downgraded organization set up, to delete and turn off', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page, {
+      plan: FREE_PLAN,
+      ssoRequired: true,
+      domains: [
+        domain('acme.com', 'verified'),
+        domain('acme.dev', 'unverified'),
+      ],
+      providers: [provider('Okta', ['developer'])],
     })
     await enableSso(page)
     await openSso(page)
 
+    await expect(page.getByText('Single sign-on is paused')).toBeVisible()
+    // Setup is off: add, verify, update, enable
     await expect(
-      page.getByText(
-        "This plan can't add members, so people who sign in with single sign-on don't join this organization.",
-      ),
-    ).toBeVisible()
+      page.getByRole('button', { name: 'Add domain' }),
+    ).toBeDisabled()
     await expect(
-      page.getByRole('link', { name: 'Upgrade your plan' }),
-    ).toHaveAttribute('href', /\/upgrade\?orgId=acme/)
+      page.getByRole('button', { name: 'Verify acme.dev' }),
+    ).toBeDisabled()
+    await expect(
+      page.getByRole('button', { name: 'Add identity provider' }),
+    ).toBeDisabled()
+    await expect(
+      page.getByRole('switch', { name: 'Enable Okta' }),
+    ).toBeDisabled()
+    await page.getByRole('button', { name: 'Actions for Okta' }).click()
+    await expect(page.getByRole('menuitem', { name: 'Update' })).toBeDisabled()
+    await page.keyboard.press('Escape')
+
+    // Require SSO is paused, and can be turned off
+    const required = page.getByRole('switch', {
+      name: 'Require single sign-on',
+    })
+    await expect(required).toBeChecked()
+    await expect(page.getByText('Paused', { exact: true })).toBeVisible()
+    await required.click()
+    await page.getByRole('button', { name: 'Update', exact: true }).click()
+    await expect.poll(() => mock.sent.requires).toEqual([false])
+    await expect(required).not.toBeChecked()
+    await expect(required).toBeDisabled()
+
+    // Deleting still works
+    await page.getByRole('button', { name: 'Actions for Okta' }).click()
+    await page.getByRole('menuitem', { name: 'Delete' }).click()
+    await page
+      .getByRole('dialog', { name: 'Delete identity provider' })
+      .getByRole('button', { name: 'Delete', exact: true })
+      .click()
+    await expect
+      .poll(() => mock.sent.providerDeletes)
+      .toEqual(['provider-okta'])
+    expect(mock.sent.planRefusals).toBe(0)
+  })
+
+  test('sets single sign-on up on Pro, with no plan notice', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page)
+    await enableSso(page)
+    await openSso(page)
+
+    await expect(page.getByRole('button', { name: 'Add domain' })).toBeEnabled()
+    await expect(
+      page.getByRole('button', { name: 'Add identity provider' }),
+    ).toBeEnabled()
+    await expect(page.getByText('Single sign-on is paused')).toHaveCount(0)
+    await expect(
+      page.getByText('Single sign-on is available on Pro'),
+    ).toHaveCount(0)
+    await expect(settingsNav(page)).not.toContainText('Pro')
+  })
+
+  test('explains a refusal for the plan with the upgrade, then locks setup', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page, { planRefuses: true })
+    await enableSso(page)
+    await openSso(page)
+
+    await page.getByRole('button', { name: 'Add domain' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Add domain' })
+    await dialog.getByLabel('Domain').fill('acme.io')
+    await dialog.getByRole('button', { name: 'Add', exact: true }).click()
+
+    const toast = page.locator('[data-sonner-toast]', {
+      hasText: 'Single sign-on requires a Pro plan or higher.',
+    })
+    await expect(toast).toBeVisible({ timeout: 45_000 })
+    await expect(toast.getByRole('button', { name: 'Upgrade' })).toBeVisible()
+    expect(mock.sent.planRefusals).toBe(1)
+    // The plan is read again: the page shows it is paused
+    await expect(page.getByText('Single sign-on is paused')).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: 'Add domain' }),
+    ).toBeDisabled()
   })
 })
 

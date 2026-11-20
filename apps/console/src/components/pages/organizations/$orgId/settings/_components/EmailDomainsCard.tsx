@@ -46,6 +46,8 @@ import {
   SSOListLoadError,
   useDialogFocusReturn,
   useSingleSubmit,
+  PlanLockedTooltip,
+  useSSOPlanGate,
 } from './SSOCardHelpers'
 import { VerifyEmailDomain } from './VerifyEmailDomain'
 
@@ -63,6 +65,8 @@ export function EmailDomainsCard() {
   } = useOrganizationEmailDomains(orgId)
   const { data: organization } = useQuery(organizationQueryOptions(orgId))
   const remove = useDeleteOrganizationEmailDomain(orgId)
+  // Setup needs a plan with single sign-on; deleting works on any plan.
+  const gate = useSSOPlanGate(orgId)
 
   const required =
     (organization as { ssoRequired?: boolean } | null | undefined)
@@ -194,19 +198,22 @@ export function EmailDomainsCard() {
                     <TableCell className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-2">
                         {!verified ? (
-                          <Button
-                            ref={rowRef(rowVerifyButtons.current, rule.$id)}
-                            variant="outline"
-                            size="sm"
-                            className="h-8 text-[13px]"
-                            onClick={() => openVerify(rule)}
-                            aria-label={t('Verify {domain}').replace(
-                              '{domain}',
-                              rule.domain,
-                            )}
-                          >
-                            {t('Verify')}
-                          </Button>
+                          <PlanLockedTooltip locked={gate.locked}>
+                            <Button
+                              ref={rowRef(rowVerifyButtons.current, rule.$id)}
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-[13px]"
+                              onClick={() => openVerify(rule)}
+                              disabled={gate.locked}
+                              aria-label={t('Verify {domain}').replace(
+                                '{domain}',
+                                rule.domain,
+                              )}
+                            >
+                              {t('Verify')}
+                            </Button>
+                          </PlanLockedTooltip>
                         ) : null}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -244,18 +251,21 @@ export function EmailDomainsCard() {
           </Table>
         )}
         <div className="border-t border-border bg-muted/30 px-6 py-4">
-          <Button
-            ref={addButton}
-            size="sm"
-            className="h-9 text-[13px]"
-            onClick={() => {
-              createFocus.returnTo(() => addButton.current)
-              setCreateOpen(true)
-            }}
-            {...analyticsAttrs('create-email-domain')}
-          >
-            {t('Add domain')}
-          </Button>
+          <PlanLockedTooltip locked={gate.locked}>
+            <Button
+              ref={addButton}
+              size="sm"
+              className="h-9 text-[13px]"
+              disabled={gate.locked}
+              onClick={() => {
+                createFocus.returnTo(() => addButton.current)
+                setCreateOpen(true)
+              }}
+              {...analyticsAttrs('create-email-domain')}
+            >
+              {t('Add domain')}
+            </Button>
+          </PlanLockedTooltip>
         </div>
       </div>
 

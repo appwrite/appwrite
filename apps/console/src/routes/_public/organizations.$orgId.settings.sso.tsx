@@ -4,6 +4,7 @@ import {
   consoleOrganizationScopesQueryOptions,
   fetchOrganizations,
   organizationEmailDomainsQueryOptions,
+  organizationPlanQueryOptions,
   organizationQueryOptions,
   organizationSSOProvidersQueryOptions,
 } from '@/lib/react-query/hooks'
@@ -54,6 +55,10 @@ export const Route = createFileRoute(
         .catch(() => undefined),
       queryClient
         .ensureQueryData(organizationQueryOptions(orgId))
+        .catch(() => undefined),
+      // Single sign-on is set up on Pro and above: the page shows which.
+      queryClient
+        .ensureQueryData(organizationPlanQueryOptions(orgId))
         .catch(() => undefined),
       queryClient
         .ensureQueryData(consoleOrganizationScopesQueryOptions())
