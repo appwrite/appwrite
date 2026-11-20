@@ -112,6 +112,8 @@ export const jaSitesDictionary: Record<string, string> = {
     'Cloudflare では CNAME flattening（DNS only に設定）、Route 53 では Alias と呼ばれます。ANAME と呼ぶプロバイダーもあります。',
   'It points to {found}. Change it to {value}.':
     '現在は {found} を指しています。{value} に変更してください。',
+  'It was added as {found}. In your DNS provider, enter only {name} as the host.':
+    '{found} として追加されています。DNS プロバイダーではホストに {name} だけを入力してください。',
   'Your domain points somewhere else. Set this record to {value}.':
     'ドメインは別の宛先を指しています。このレコードを {value} に設定してください。',
   'and {n} more': 'ほか {n} 件',
