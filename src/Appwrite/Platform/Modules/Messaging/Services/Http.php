@@ -17,6 +17,8 @@ use Appwrite\Platform\Modules\Messaging\Http\Providers\Apns\Update as UpdateApns
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Appwrite\Create as CreateAppwriteProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Appwrite\Update as UpdateAppwriteProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Bird\Create as CreateBirdProvider;
+use Appwrite\Platform\Modules\Messaging\Http\Providers\Bird\Email\Create as CreateBirdEmailProvider;
+use Appwrite\Platform\Modules\Messaging\Http\Providers\Bird\Email\Update as UpdateBirdEmailProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Bird\Update as UpdateBirdProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Delete as DeleteProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Fcm\Create as CreateFcmProvider;
@@ -71,6 +73,8 @@ class Http extends Service
         $this->addAction('updateResendProvider', UpdateResendProvider::class);
         $this->addAction('createSmtpProvider', CreateSmtpProvider::class);
         $this->addAction('updateSmtpProvider', UpdateSmtpProvider::class);
+        $this->addAction('createBirdEmailProvider', CreateBirdEmailProvider::class);
+        $this->addAction('updateBirdEmailProvider', UpdateBirdEmailProvider::class);
         $this->addAction('createMsg91Provider', CreateMsg91Provider::class);
         $this->addAction('updateMsg91Provider', UpdateMsg91Provider::class);
         $this->addAction('createTelesignProvider', CreateTelesignProvider::class);

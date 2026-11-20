@@ -8,6 +8,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Id;
 use Utopia\DSN\DSN;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
+use Utopia\Messaging\Adapter\Email\Bird as BirdEmail;
 use Utopia\Messaging\Adapter\Email\Mailgun;
 use Utopia\Messaging\Adapter\Email\Resend;
 use Utopia\Messaging\Adapter\Email\Sendgrid;
@@ -130,6 +131,7 @@ class Provider
             ),
             'sendgrid' => new Sendgrid($apiKey),
             'resend' => new Resend($apiKey),
+            'bird' => !empty($apiKey) ? new BirdEmail($apiKey) : null,
             'ses' => new SES(
                 $credentials['accessKey'] ?? '',
                 $credentials['secretKey'] ?? '',

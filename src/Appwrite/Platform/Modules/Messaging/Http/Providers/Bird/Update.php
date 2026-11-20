@@ -73,7 +73,8 @@ class Update extends Action
         }
         $providerAttr = $provider->getAttribute('provider');
 
-        if ($providerAttr !== 'bird') {
+        // Bird has an email provider under the same name, which the Bird email provider endpoints update.
+        if ($providerAttr !== 'bird' || $provider->getAttribute('type') !== MESSAGE_TYPE_SMS) {
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 

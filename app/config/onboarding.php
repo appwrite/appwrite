@@ -68,6 +68,7 @@ return [
     'messaging.createResendProvider' => true,
     'messaging.createSmtpProvider' => true,
     'messaging.createSMTPProvider' => true,
+    'messaging.createBirdEmailProvider' => true,
     'messaging.createMsg91Provider' => true,
     'messaging.createTelesignProvider' => true,
     'messaging.createTextmagicProvider' => true,
