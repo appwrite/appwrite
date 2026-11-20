@@ -26,13 +26,13 @@ const STRENGTHS: {
     value: 'basic',
     label: 'Basic',
     description: 'Cheaper models that read the code without running it',
-    credits: 5,
+    credits: 10,
   },
   {
     value: 'normal',
     label: 'Normal',
     description: 'The default models, running commands in a sandbox',
-    credits: 20,
+    credits: 50,
   },
   {
     value: 'expert',

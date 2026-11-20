@@ -22,7 +22,10 @@ type UsagePlanOverageDefinition = {
   name: string
   planKey: string
   format: UsagePlanOverageFormat
-  getUsage: (usage: Models.UsageOrganization) => number
+  getUsage: (
+    usage: Models.UsageOrganization,
+    plan: Models.BillingPlan,
+  ) => number
 }
 
 /** Newer totals can be absent on older API responses. */
@@ -37,11 +40,28 @@ function sumMetricValues(metrics: Models.Metric[] | null | undefined): number {
   return metrics.reduce((total, metric) => total + toTotal(metric?.value), 0)
 }
 
-/** Cloud added `reviewCreditsTotal` after the SDK model was generated. */
-function getReviewCreditsTotal(
+/** Cloud added these after the SDK models were generated. */
+type ReviewCreditsUsage = {
+  reviewCreditsTotal?: number
+  projects?: { reviewCredits?: number }[]
+}
+
+/**
+ * Plans that bill usage per project give every project its own allowance, so
+ * the busiest project is what can go over it, not the organization's total.
+ */
+function getReviewCredits(
   usage: Models.UsageOrganization,
-): number | undefined {
-  return (usage as { reviewCreditsTotal?: number }).reviewCreditsTotal
+  plan: Models.BillingPlan,
+): number {
+  const credits = usage as ReviewCreditsUsage
+  if ((plan as { usagePerProject?: boolean }).usagePerProject !== true) {
+    return toTotal(credits.reviewCreditsTotal)
+  }
+  return (credits.projects ?? []).reduce(
+    (max, project) => Math.max(max, toTotal(project?.reviewCredits)),
+    0,
+  )
 }
 
 const USAGE_PLAN_OVERAGE_DEFINITIONS: UsagePlanOverageDefinition[] = [
@@ -124,7 +144,7 @@ const USAGE_PLAN_OVERAGE_DEFINITIONS: UsagePlanOverageDefinition[] = [
     name: 'Code review credits',
     planKey: 'reviewCredits',
     format: 'number',
-    getUsage: (usage) => toTotal(getReviewCreditsTotal(usage)),
+    getUsage: getReviewCredits,
   },
   {
     id: 'realtime',
@@ -158,7 +178,7 @@ export function getUsagePlanOverages(
     const limit = getBillingPlanResourceLimit(plan, definition.planKey)
     if (limit === null) continue
 
-    const value = definition.getUsage(usage)
+    const value = definition.getUsage(usage, plan)
     if (value <= limit) continue
 
     rows.push({

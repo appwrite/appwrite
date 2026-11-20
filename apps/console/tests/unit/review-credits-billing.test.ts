@@ -51,6 +51,26 @@ describe('review credits usage', () => {
     ])
   })
 
+  test('per-project plans compare the busiest project, not the total', () => {
+    const perProjectPlan = {
+      reviewCredits: 20,
+      usagePerProject: true,
+    } as unknown as Models.BillingPlan
+    const within = {
+      reviewCreditsTotal: 40,
+      projects: [{ reviewCredits: 20 }, { reviewCredits: 20 }],
+    } as unknown as Models.UsageOrganization
+    const over = {
+      reviewCreditsTotal: 40,
+      projects: [{ reviewCredits: 30 }, { reviewCredits: 10 }],
+    } as unknown as Models.UsageOrganization
+
+    expect(getUsagePlanOverages(within, perProjectPlan)).toEqual([])
+    expect(getUsagePlanOverages(over, perProjectPlan)).toEqual([
+      expect.objectContaining({ id: 'reviewCredits', usage: 30, limit: 20 }),
+    ])
+  })
+
   test('older responses without the total count as zero', () => {
     const usage = {} as unknown as Models.UsageOrganization
 

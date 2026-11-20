@@ -114,7 +114,7 @@ export function Credits({ projectId, organizationId }: CreditsProps) {
                       'Extra credits past the allowance are billed with your usage, up to your budget cap.',
                     )
                   : t(
-                      'A normal review costs 20 credits. Answers to comments are free.',
+                      'A normal review costs 50 credits. Answers to comments are free.',
                     )}
           </p>
         </div>
