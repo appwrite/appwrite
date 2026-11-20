@@ -18,8 +18,9 @@ use Utopia\Telemetry\Adapter as Telemetry;
 
 /**
  * Enqueues every enabled monitor in the region for evaluation on its
- * interval, from the rules' rows in `schedules`. The rule is measured and
- * compared in the `alerts` worker.
+ * interval, from the rules' rows in `schedules`, and every escalating alert's
+ * next step when it is due. The `alerts` worker measures and compares the
+ * rule, and notifies the step.
  */
 class ScheduleAlerts extends Action
 {
@@ -109,13 +110,15 @@ class ScheduleAlerts extends Action
             $error = null;
 
             try {
-                Span::add('monitor.id', $occurrence->id);
+                Span::add('monitor.id', $occurrence->payload['monitorId']);
+                Span::add('alert.id', $occurrence->payload['alertId'] ?? '');
                 Span::add('project.id', $occurrence->payload['project']->getId());
                 Span::add('occurrence.due', $occurrence->due->format('c'));
 
                 if ($publisherForAlerts->enqueue(new AlertMessage(
                     project: $occurrence->payload['project'],
                     monitorId: $occurrence->payload['monitorId'],
+                    alertId: $occurrence->payload['alertId'] ?? '',
                 )) === false) {
                     $error = new \RuntimeException('Failed to enqueue');
                 }

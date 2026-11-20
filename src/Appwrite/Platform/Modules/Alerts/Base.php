@@ -64,8 +64,10 @@ class Base extends Action
         Database $dbForProject,
         Authorization $authorization,
         Severity $severity = Severity::Warning,
+        string $escalationPolicyId = '',
     ): void {
         $parsed = $this->parseRules($rules);
+        $this->checkPolicy($dbForPlatform, $authorization, $project, $escalationPolicyId);
 
         [$resourceId, $resourceInternalId] = $this->resolveResource($parsed, $project, $dbForProject, $authorization);
 
@@ -85,6 +87,7 @@ class Base extends Action
             'window' => $window,
             'cooldown' => $cooldown,
             'notify' => \array_values(\array_unique($notify)),
+            'escalationPolicyId' => $escalationPolicyId,
             'severity' => $severity->value,
             'enabled' => $enabled,
             'status' => Status::Ok->value,
@@ -125,8 +128,12 @@ class Base extends Action
         Database $dbForProject,
         Authorization $authorization,
         ?Severity $severity = null,
+        ?string $escalationPolicyId = null,
     ): void {
         $monitor = $this->getMonitor($dbForPlatform, $authorization, $project, $monitorId);
+        if ($escalationPolicyId !== null) {
+            $this->checkPolicy($dbForPlatform, $authorization, $project, $escalationPolicyId);
+        }
 
         if ($monitor->getAttribute('type') !== $type) {
             throw new Exception(Exception::MONITOR_TYPE_MISMATCH, "Monitor '{$monitorId}' is a {$monitor->getAttribute('type')} monitor, not a {$type} monitor.");
@@ -149,6 +156,7 @@ class Base extends Action
             'enabled' => $enabled,
             'notify' => $notify === null ? null : \array_values(\array_unique($notify)),
             'severity' => $severity?->value,
+            'escalationPolicyId' => $escalationPolicyId,
         ] as $key => $value) {
             if ($value !== null) {
                 $changes->setAttribute($key, $value);
@@ -169,6 +177,21 @@ class Base extends Action
         }
 
         $response->dynamic($monitor, Response::MODEL_MONITOR);
+    }
+
+    /**
+     * A monitor may only use an escalation policy of its project's organization.
+     */
+    protected function checkPolicy(Database $dbForPlatform, Authorization $authorization, Document $project, string $escalationPolicyId): void
+    {
+        if ($escalationPolicyId === '') {
+            return;
+        }
+
+        $policy = $authorization->skip(fn () => $dbForPlatform->getDocument('escalationPolicies', $escalationPolicyId));
+        if ($policy->isEmpty() || $policy->getAttribute('teamInternalId') !== (string) $project->getAttribute('teamInternalId', '')) {
+            throw new Exception(Exception::ESCALATION_POLICY_NOT_FOUND);
+        }
     }
 
     /**

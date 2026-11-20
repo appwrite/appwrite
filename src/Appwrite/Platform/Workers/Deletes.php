@@ -562,6 +562,13 @@ class Deletes extends Action
 
                 // Monitors live in the platform database, and a monitor need not
                 // belong to a project, so their rows go once the monitor is gone.
+                // An alert's escalation timer is stopped once it has nothing left to fire.
+                if ($resourceType === SCHEDULE_RESOURCE_TYPE_ESCALATION) {
+                    $dbForPlatform->deleteDocument('schedules', $document->getId());
+                    Console::success('Deleting escalation schedule for alert ' . $resourceId);
+                    return;
+                }
+
                 if ($resourceType === SCHEDULE_RESOURCE_TYPE_MONITOR) {
                     if ($dbForPlatform->getDocument('monitors', $resourceId)->isEmpty()) {
                         $dbForPlatform->deleteDocument('schedules', $document->getId());
@@ -1235,6 +1242,16 @@ class Deletes extends Action
         foreach ($projects as $project) {
             $this->deleteProject($dbForPlatform, $getProjectDB, $getDatabasesDB, $telemetry, $certificates, $project, $bus, $executionStore, $logs);
             $dbForPlatform->deleteDocument('projects', $project->getId());
+        }
+
+        // The organization's escalation policies go with it.
+        try {
+            $this->deleteByGroup('escalationPolicies', [
+                Query::equal('teamInternalId', [$document->getSequence()]),
+                Query::orderAsc(),
+            ], $dbForPlatform);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete escalation policies: ' . $th->getMessage());
         }
     }
 
