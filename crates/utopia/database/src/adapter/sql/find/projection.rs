@@ -312,7 +312,8 @@ impl Sql {
 /// no scalar: a list or object in the first string function that reads it
 /// (`str_ends_with()` in `applySelectionProjection()` for `find()`, given
 /// as `first`, else `strpos()` in `mapSelectionsToColumns()`), and `null`
-/// in `filter()` (`Adapter/SQL.php` line 4246 at 10.0.0).
+/// in `filter()` (`Adapter/SQL.php` line 4246 at 10.0.0), unless `find()`'s
+/// `array_unique()` dropped it as a repeat of an earlier text.
 pub(crate) fn php_selections(
     values: &[utopia_query::Value],
     first: Option<&str>,
@@ -334,14 +335,19 @@ pub(crate) fn php_selections(
             format!("{function}(): Argument #1 ($haystack) must be of type string, {} given", given(v)),
         ));
     }
-    for v in values {
+    // `find()` passes the selections through `array_unique()` first, which compares them as
+    // strings and keeps the first: a `null` after an equal text (`''`, `false`) is dropped.
+    let mut seen: Vec<&[u8]> = Vec::new();
+    for (v, text) in values.iter().zip(&texts) {
         if not_scalar(v) {
             return Err(Error::new(
                 Kind::TypeError,
                 format!("strpos(): Argument #1 ($haystack) must be of type string, {} given", given(v)),
             ));
         }
-        if matches!(v, Q::Null) {
+        let duplicate = first.is_some() && seen.contains(&text.as_bytes());
+        seen.push(text.as_bytes());
+        if matches!(v, Q::Null) && !duplicate {
             return Err(Error::new(
                 Kind::TypeError,
                 "Utopia\\Database\\Adapter::filter(): Argument #1 ($value) must be of type string, null given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 4246",
@@ -397,5 +403,18 @@ mod tests {
         assert!(error.message().starts_with(
             "Utopia\\Database\\Adapter::filter(): Argument #1 ($value) must be of type string, null given"
         ));
+    }
+
+    #[test]
+    fn find_drops_a_null_that_repeats_an_earlier_text() {
+        // `array_unique(['', null])` keeps `''`: the null never reaches `filter()`.
+        let (texts, _) = php_selections(&[Q::Str("".into()), Q::Null], Some("str_ends_with")).unwrap();
+        assert_eq!(texts, ["", ""]);
+        let (_, _) = php_selections(&[Q::Bool(false), Q::Null], Some("str_ends_with")).unwrap();
+        // The first of equal texts is the one kept, so a leading null still fails.
+        let error = php_selections(&[Q::Null, Q::Str("".into())], Some("str_ends_with")).unwrap_err();
+        assert_eq!(error.kind(), Kind::TypeError);
+        // Without `find()`'s `array_unique()`, every null fails.
+        assert!(php_selections(&[Q::Str("".into()), Q::Null], None).is_err());
     }
 }
