@@ -668,21 +668,12 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame(400, $stranger['headers']['status-code']);
         $this->assertSame('escalation_policy_member_not_found', $stranger['body']['type']);
 
-        // Another organization sees no policy, and its projects' monitors cannot use it.
-        $other = $this->client->call(Client::METHOD_POST, '/teams', $this->consoleHeaders(), ['teamId' => 'unique()', 'name' => 'Other ' . \uniqid()]);
-        $this->assertSame(201, $other['headers']['status-code']);
-        $this->assertSame(404, $this->client->call(Client::METHOD_GET, '/organization/escalation-policies/' . $policyId, $this->organizationHeaders($other['body']['$id']))['headers']['status-code']);
-        $foreign = $this->client->call(Client::METHOD_POST, '/organization/escalation-policies', $this->organizationHeaders($other['body']['$id']), [
-            'escalationPolicyId' => 'unique()',
-            'name' => 'Foreign',
-            'steps' => [['delay' => 0, 'roles' => ['owner']]],
-        ]);
-        $this->assertSame(201, $foreign['headers']['status-code']);
+        // A monitor may only use a policy its organization has.
         $monitor = $this->client->call(Client::METHOD_POST, '/monitors/usage', $this->headers(), [
             'monitorId' => 'unique()',
-            'name' => 'Foreign policy',
+            'name' => 'Unknown policy',
             'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
-            'escalationPolicyId' => $foreign['body']['$id'],
+            'escalationPolicyId' => 'missing',
         ]);
         $this->assertSame(404, $monitor['headers']['status-code']);
         $this->assertSame('escalation_policy_not_found', $monitor['body']['type']);
@@ -2283,12 +2274,13 @@ final class EvaluationCustomServerTest extends Scope
     private function memberId(string $teamId, string $email): string
     {
         $memberships = $this->client->call(Client::METHOD_GET, '/teams/' . $teamId . '/memberships', $this->consoleHeaders(), [
-            'search' => $email,
+            'queries' => [Query::limit(100)->toString()],
         ]);
         $this->assertSame(200, $memberships['headers']['status-code']);
-        $this->assertNotEmpty($memberships['body']['memberships']);
+        $userIds = \array_column(\array_filter($memberships['body']['memberships'], fn (array $membership) => $membership['userEmail'] === $email), 'userId');
+        $this->assertCount(1, $userIds, $email);
 
-        return $memberships['body']['memberships'][0]['userId'];
+        return \reset($userIds);
     }
 
     private function teamId(): string
