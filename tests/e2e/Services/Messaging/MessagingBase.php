@@ -109,7 +109,7 @@ trait MessagingBase
                 'apiSecret' => 'my-apisecret',
                 'from' => '+123456789',
             ],
-            'bird' => [
+            'bird-sms' => [
                 'providerId' => Id::unique(),
                 'name' => 'Bird1',
                 'apiKey' => 'my-apikey',
@@ -218,7 +218,7 @@ trait MessagingBase
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
             ],
-            'bird' => [
+            'bird-sms' => [
                 'name' => 'Bird2',
                 'apiKey' => 'my-apikey',
             ],
@@ -843,7 +843,7 @@ trait MessagingBase
                 'apiSecret' => 'my-apisecret',
                 'from' => '+123456789',
             ],
-            'bird' => [
+            'bird-sms' => [
                 'providerId' => Id::unique(),
                 'name' => 'Bird1',
                 'apiKey' => 'my-apikey',
@@ -1299,7 +1299,7 @@ trait MessagingBase
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
             ],
-            'bird' => [
+            'bird-sms' => [
                 'name' => 'Bird2',
                 'apiKey' => 'my-apikey',
             ],
@@ -1597,7 +1597,7 @@ trait MessagingBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Create new Bird provider with no credentials
-        $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/bird', [
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/bird-sms', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -1610,7 +1610,7 @@ trait MessagingBase
         $this->assertFalse($response['body']['enabled']);
 
         // Enable Bird provider with no credentials
-        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/bird/' . $response['body']['$id'], [
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/bird-sms/' . $response['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -1843,7 +1843,7 @@ trait MessagingBase
         $this->assertEquals(true, $updateResponse['body']['enabled']);
 
         // Bird's SMS provider shares the provider name, so each route must refuse the other's providers.
-        $smsResponse = $this->client->call(Client::METHOD_POST, '/messaging/providers/bird', $headers, [
+        $smsResponse = $this->client->call(Client::METHOD_POST, '/messaging/providers/bird-sms', $headers, [
             'providerId' => Id::unique(),
             'name' => 'BirdSms',
             'apiKey' => 'bk_eu1_my-apikey',
@@ -1854,7 +1854,7 @@ trait MessagingBase
         $this->assertEquals('bird', $smsResponse['body']['provider']);
         $this->assertEquals('sms', $smsResponse['body']['type']);
 
-        $emailThroughSms = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/bird/' . $providerId, $headers, [
+        $emailThroughSms = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/bird-sms/' . $providerId, $headers, [
             'from' => '+123456789',
         ]);
 

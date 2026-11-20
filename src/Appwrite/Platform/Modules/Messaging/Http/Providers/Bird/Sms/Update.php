@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Messaging\Http\Providers\Bird;
+namespace Appwrite\Platform\Modules\Messaging\Http\Providers\Bird\Sms;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -23,15 +23,15 @@ class Update extends Action
 
     public static function getName(): string
     {
-        return 'updateBirdProvider';
+        return 'updateBirdSMSProvider';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
-            ->setHttpPath('/v1/messaging/providers/bird/:providerId')
-            ->desc('Update Bird provider')
+            ->setHttpPath('/v1/messaging/providers/bird-sms/:providerId')
+            ->desc('Update Bird SMS provider')
             ->groups(['api', 'messaging'])
             ->label('audits.event', 'provider.update')
             ->label('audits.resource', 'provider/{response.$id}')
@@ -41,9 +41,9 @@ class Update extends Action
             ->label('sdk', new Method(
                 namespace: 'messaging',
                 group: 'providers',
-                name: 'updateBirdProvider',
+                name: 'updateBirdSMSProvider',
                 description: <<<EOT
-                Update a Bird provider by its unique ID.
+                Update a Bird SMS provider by its unique ID.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [

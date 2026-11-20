@@ -74,6 +74,7 @@ return [
     'messaging.createTextmagicProvider' => true,
     'messaging.createTwilioProvider' => true,
     'messaging.createVonageProvider' => true,
+    'messaging.createBirdSMSProvider' => true,
     'messaging.createFcmProvider' => true,
     'messaging.createFCMProvider' => true,
     'messaging.createApnsProvider' => true,

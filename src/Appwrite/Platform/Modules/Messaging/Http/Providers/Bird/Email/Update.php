@@ -76,7 +76,7 @@ class Update extends Action
             throw new Exception(Exception::PROVIDER_NOT_FOUND);
         }
 
-        // Bird has an SMS provider under the same name, which the Bird provider endpoints update.
+        // Bird has an SMS provider under the same name, which the Bird SMS provider endpoints update.
         if ($provider->getAttribute('provider') !== 'bird' || $provider->getAttribute('type') !== MESSAGE_TYPE_EMAIL) {
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
