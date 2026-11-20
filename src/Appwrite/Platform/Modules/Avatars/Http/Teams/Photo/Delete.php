@@ -30,7 +30,7 @@ class Delete extends Base
     {
         $this
             ->setHttpMethod(UtopiaAction::HTTP_REQUEST_METHOD_DELETE)
-            ->setHttpPath('/v1/teams/:teamId/photo')
+            ->setHttpPath('/v1/avatars/teams/:teamId/photo')
             ->desc('Delete photo')
             ->groups(['api', 'teams'])
             ->label('event', 'teams.[teamId].update')
