@@ -49,7 +49,7 @@ class Get extends Action
                 group: null,
                 name: 'getTeamPhoto',
                 description: <<<'EOT'
-                Returns the photo of a team: the uploaded photo (see teams.updatePhoto), else the initials of the team name, else a built-in static placeholder.
+                Returns the photo of a team: the uploaded photo (see avatars.updateTeamPhoto), else the initials of the team name, else a built-in static placeholder.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 type: MethodType::LOCATION,
