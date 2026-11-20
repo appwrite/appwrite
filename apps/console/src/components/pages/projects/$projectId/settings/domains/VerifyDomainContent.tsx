@@ -408,7 +408,11 @@ function RecordSection({
                     <TableRow className="hover:bg-transparent">
                       <TableCell colSpan={2} className="px-4 pt-0 pb-3" />
                       <TableCell colSpan={3} className="px-4 pt-0 pb-3">
-                        <FoundValues values={found} wrong={r.type !== 'CAA'} />
+                        <FoundValues
+                          values={found}
+                          wrong={r.type !== 'CAA'}
+                          label={misplaced ? t('Found at:') : undefined}
+                        />
                       </TableCell>
                     </TableRow>
                   )}
