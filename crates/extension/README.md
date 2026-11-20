@@ -34,7 +34,7 @@ _APP_EXTENSION_LIBRARIES=<package>,<package>   # those packages' classes from th
 ```
 
 `auth` registers the password hashes of `packages/auth` (`Utopia\Auth\Hash` and
-`Utopia\Auth\Hashes\*`).
+`Utopia\Auth\Hashes\*`). `query` registers `Utopia\Query\Query` of `packages/query`.
 
 The extension reads it once, when PHP loads the module, so changing it takes a restart and no
 deploy. Each library is canaried on Cloud this way before it becomes the default.
@@ -366,6 +366,73 @@ and dumps, clones, comparisons and serialization. Its known differences, which n
 - `PHPass::getRandomBytes()` reads `/dev/urandom` without consulting `open_basedir`.
 - `Argon2` fills at most 16 lanes at once, where libargon2 starts a thread for every lane; the
   hash is the same.
+
+## Utopia\Query\Query
+
+`_APP_EXTENSION_LIBRARIES=query` registers `Utopia\Query\Query`, the base of utopia-php/database's
+`Query` (and so of every list endpoint's `queries[]`), `Utopia\Audit\Query` and `UsageQuery`. The
+rest of `packages/query` stays PHP: the `Method`, `OrderDirection`, `CursorDirection` and
+`NullsPosition` enums, the exceptions, `Builder\ParsedQuery`, and the builders, schema, AST,
+tokenizer and classifier, which take the native `Query` through its public methods.
+
+`src/query.rs` builds it by hand like the validators (`src/classes/`): no Rust object behind it,
+its state in the seven typed protected properties `Query.php` declares (`Method $method` among
+them, typed with the PHP enum), so subclasses read and write them as they do today, and
+`var_dump()`, `==`, `(array)`, `clone` and `serialize()` see what they see in PHP. `$values` stays a
+PHP array, so a cursor's `Document`, a subclass's nested queries and ints against floats keep their
+identity. Query methods come from `crates/utopia/query` (`Method`, its cases and predicates); the
+JSON `parse()` takes is decoded by `php-std`, as the crate decodes it.
+
+`Query.php` reaches its own methods through late static binding and `$this`: `new static`,
+`static::parseQuery()` for nested queries, `static::parse()`, `static::isMethod()`, `static::on()`,
+`static::lessThan()`/`greaterThan()`/`between()` (the `created*`/`updated*` helpers),
+`static::limit()`/`offset()` (`page()`), `static::validate()`, `$this->toArray()` (`toString()`),
+`$query->shape()` (`fingerprint()`), `$node->isNestedJoin()` and `$query->getMethod()`,
+`getValues()`, `getAttribute()`, `toArray()` in the list helpers. Each of those calls the called
+class's (or the object's) own method when a subclass overrides it, and stays native otherwise; a
+class's overrides are looked up once per request. So `Utopia\Database\Query::parseQueries()`
+builds `Utopia\Database\Query` children through its own `parseQuery()` and constructor, as in PHP.
+Every method checks its arguments against the types it declares as a userland method does
+(weak-mode coercions, `TypeError` and `ArgumentCountError` messages, in the same order).
+
+`crates/extension/tests/query.php` prints a corpus that must be identical on both implementations
+(17,687 lines): the class's reflection; `parse()` of the 68 inputs of the compat suite and 90 edge
+cases (JSON syntax, depth, big and negative-zero numbers, escapes, invalid UTF-8, every field of the
+wrong type, nested children given as strings or of the wrong type, `raw`, `distinct`, aggregates'
+legacy alias, every join layout) and every method with 16 kinds of values and 3 kinds of alias,
+each through `Query`, two PHP subclasses and `Utopia\Database\Query`, with the tree, `toArray()`,
+`toString()`, `shape()` and a deep clone of each result, or the exception's class, message, code and
+previous; the same for `parseQuery()`, `parseQueries()` and `isMethod()`; every factory with 44
+argument lists, from a subclass, by name and under `strict_types`; the constructor; every getter
+and setter (with a property hook on `$values`, an uninitialized `$method`, references); `toString()`
+of values JSON cannot hold; `getByType()`, `getCursorQueries()`, `groupByType()` (limits given as
+strings and floats), `merge()`, `diff()`, `validate()`, `page()` and `fingerprint()`; and what a list
+request does through `Utopia\Database\Query` (`parseQueries()`, `getCursorQueries()`,
+`groupByType()`, a `Document` cursor), `RuntimeQuery`, `Utopia\Audit\Query` and `UsageQuery`. The
+package's unit tests (5,650) and utopia-php/database's unit tests pass on it unchanged.
+
+Known differences, which no caller depends on:
+
+- The protected constant `LOGICAL_TYPES` (a list of `Method` cases) is not declared: an internal
+  class cannot hold enum objects in a constant. Only `Query.php` read it (`self::`);
+  utopia-php/database's `Query` declares its own.
+- The private helpers `parseJoin()`, `createJoin()`, `assertJoinCondition()` and `toInteger()` are
+  not methods of the class (a subclass could not call them).
+- A `TypeError` raised by the class's own call of one of its methods (`parseQueries()` given a
+  non-string) lacks PHP's `, called in .../Query.php on line N`, and the `merge()`/`diff()`
+  closures' `TypeError` names them `{closure}` rather than `{closure:...Query::merge():1662}`.
+- Exceptions are thrown from the caller's file and line, as from any internal class.
+- `contains()` carries `#[\Deprecated]` and raises the same `E_USER_DEPRECATED`, but
+  `ReflectionMethod::isDeprecated()` is false (flagging it would make the engine raise
+  `E_DEPRECATED` instead).
+- A closure bound to the scope of `Utopia\Query\Query` itself (`Closure::bind($f, $q, Query::class)`)
+  gets PHP's warning and no access, as for any internal class; bound to a subclass, it reads the
+  protected properties as before.
+
+The compat suite's differences for this class (`fingerprint()` with an element that is neither a
+string nor a query, `cursorAfter()` with a scalar) do not apply: the binding takes PHP values, so
+both throw PHP's exception and message. The AST parser's 1,024-operator nesting limit does not
+either, since `AST\Parser` stays PHP.
 
 ## Benchmarks
 

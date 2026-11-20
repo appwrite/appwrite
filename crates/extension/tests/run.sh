@@ -16,7 +16,12 @@ vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/i
 for library in $libraries; do
     echo "== $library" >&2
     [ -f "$tests/$library.php" ] || { echo "missing parity corpus $tests/$library.php" >&2; exit 1; }
-    _APP_EXTENSION_LIBRARIES=$library vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php "packages/$library/tests"
+    # A package whose phpunit.xml splits off a database-backed suite (query's E2E) runs its unit suite.
+    if grep -q '<testsuite name="unit">' "packages/$library/phpunit.xml" 2>/dev/null; then
+        _APP_EXTENSION_LIBRARIES=$library vendor/bin/phpunit --configuration "packages/$library/phpunit.xml" --bootstrap vendor/autoload.php --testsuite unit --do-not-cache-result
+    else
+        _APP_EXTENSION_LIBRARIES=$library vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php "packages/$library/tests"
+    fi
     _APP_EXTENSION_LIBRARIES= php "$tests/$library.php" > "$output/$library.php.jsonl"
     _APP_EXTENSION_LIBRARIES=$library php "$tests/$library.php" > "$output/$library.rust.jsonl"
     diff "$output/$library.php.jsonl" "$output/$library.rust.jsonl"

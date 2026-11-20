@@ -18,6 +18,7 @@ mod domains;
 mod dsn;
 mod emails;
 mod locale;
+mod query;
 mod string;
 mod user_agent;
 mod validators;
@@ -62,6 +63,9 @@ fn startup(_kind: i32, _module: i32) -> i32 {
         if enabled("auth") {
             auth::register()?;
         }
+        if enabled("query") {
+            query::register()?;
+        }
         Ok(())
     })
 }
@@ -69,5 +73,6 @@ fn startup(_kind: i32, _module: i32) -> i32 {
 /// Forgets what the classes hold for the request when it ends, as PHP frees its static state.
 extern "C" fn request_shutdown(kind: i32, module: i32) -> i32 {
     user_agent::request_shutdown();
+    query::request_shutdown();
     locale::request_shutdown(kind, module)
 }

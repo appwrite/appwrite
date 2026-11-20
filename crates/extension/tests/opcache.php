@@ -244,6 +244,12 @@ if (class_exists(\Utopia\Emails\Email::class)) {
     }
 }
 
+if (class_exists(\Utopia\Query\Query::class)) {
+    class ExtendsUtopiaQueryQuery extends \Utopia\Query\Query
+    {
+    }
+}
+
 $extended = [];
 foreach ((new ReflectionExtension('utopia'))->getClassNames() as $name) {
     $class = new ReflectionClass($name);

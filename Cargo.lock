@@ -2580,6 +2580,7 @@ name = "utopia-extension"
 version = "0.1.0"
 dependencies = [
  "ext-php-rs",
+ "md-5",
  "php-std",
  "utopia-auth",
  "utopia-domains",
@@ -2587,6 +2588,7 @@ dependencies = [
  "utopia-emails",
  "utopia-image",
  "utopia-locale",
+ "utopia-query",
  "utopia-user-agent",
  "utopia-validators",
 ]

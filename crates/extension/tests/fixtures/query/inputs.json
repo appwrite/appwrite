@@ -1,0 +1,659 @@
+{
+ "_source": "Inputs of Query::parse()/parseQueries()/fingerprint() and Query::parseQuery() in the recorded compat cases of utopia-php/query (tests/compat/query/cases on appwrite/appwrite#14308).",
+ "parse": [
+  "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"John\"]}",
+  "not json",
+  "{\"method\":\"foobar\",\"attribute\":\"x\",\"values\":[]}",
+  "{\"method\":123,\"attribute\":\"x\",\"values\":[]}",
+  "{\"method\":\"equal\",\"attribute\":123,\"values\":[\"x\"]}",
+  "{\"method\":\"equal\",\"attribute\":\"x\",\"values\":\"bad\"}",
+  "{\"method\":\"isNull\"}",
+  "{\"method\":\"or\",\"attribute\":\"\",\"values\":[{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"John\"]},{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"Jane\"]}]}",
+  "{\"method\":\"limit\",\"values\":[25]}",
+  "{\"method\":\"or\",\"values\":[{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"John\"]},{\"method\":\"greaterThan\",\"attribute\":\"age\",\"values\":[18]}]}",
+  "{\"method\":\"count\",\"attribute\":\"id\",\"alias\":\"total\",\"values\":[]}",
+  "{\"method\":\"sum\",\"attribute\":\"price\",\"values\":[]}",
+  "{\"method\":\"groupBy\",\"values\":[\"status\",\"country\"]}",
+  "{\"method\":\"having\",\"values\":[{\"method\":\"greaterThan\",\"attribute\":\"total\",\"values\":[5]}]}",
+  "{\"method\":\"distinct\",\"values\":[]}",
+  "{\"method\":\"distinct\",\"values\":[\"status\"]}",
+  "{\"method\":\"distinct\",\"attribute\":\"status\",\"values\":[]}",
+  "{\"method\":\"join\",\"attribute\":\"orders\",\"alias\":\"o\",\"values\":[{\"method\":\"on\",\"values\":[\"users.id\",\"=\",\"o.user_id\"]}]}",
+  "{\"method\":\"leftJoin\",\"attribute\":\"orders\",\"alias\":\"ord\",\"values\":[{\"method\":\"on\",\"values\":[\"$id\",\"=\",\"customerId\"]},{\"method\":\"equal\",\"attribute\":\"ord.status\",\"values\":[\"paid\"]}]}",
+  "{\"method\":\"on\",\"values\":[\"$id\",\"!=\",\"customerId\"]}",
+  "{\"method\":\"crossJoin\",\"attribute\":\"colors\",\"alias\":\"c\",\"values\":[]}",
+  "{\"method\":\"union\",\"values\":[{\"method\":\"equal\",\"attribute\":\"x\",\"values\":[1]}]}",
+  "{\"method\":\"avg\",\"attribute\":\"score\",\"alias\":\"avg_score\",\"values\":[]}",
+  "{\"method\":\"min\",\"attribute\":\"price\",\"values\":[]}",
+  "{\"method\":\"max\",\"attribute\":\"age\",\"alias\":\"oldest\",\"values\":[]}",
+  "{\"method\":\"count\",\"attribute\":\"id\",\"values\":[]}",
+  "{\"method\":\"groupBy\",\"values\":[]}",
+  "{\"method\":\"having\",\"values\":[{\"method\":\"greaterThan\",\"attribute\":\"total\",\"values\":[5]},{\"method\":\"lessThan\",\"attribute\":\"total\",\"values\":[100]}]}",
+  "{\"method\":\"leftJoin\",\"attribute\":\"profiles\",\"alias\":\"p\",\"values\":[{\"method\":\"on\",\"values\":[\"u.id\",\"=\",\"p.uid\"]}]}",
+  "{\"method\":\"rightJoin\",\"attribute\":\"orders\",\"alias\":\"o\",\"values\":[{\"method\":\"on\",\"values\":[\"u.id\",\"=\",\"o.uid\"]}]}",
+  "{\"method\":\"join\",\"attribute\":\"t\",\"alias\":\"b\",\"values\":[{\"method\":\"on\",\"values\":[\"a.val\",\"!=\",\"b.val\"]}]}",
+  "{\"method\":\"unionAll\",\"values\":[{\"method\":\"equal\",\"attribute\":\"y\",\"values\":[2]}]}",
+  "{\"method\":\"raw\",\"attribute\":\"DROP TABLE users;--\",\"values\":[]}",
+  "{\"method\":\"raw\",\"attribute\":\"1=1\",\"values\":[]}",
+  "{\"method\":\"or\",\"attribute\":\"\",\"values\":[{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"John\"]},{\"method\":\"raw\",\"attribute\":\"1=1\",\"values\":[]}]}",
+  "{\"method\":\"or\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[1]},{\"method\":\"or\",\"values\":[{\"method\":\"equal\",\"attribute\":\"b\",\"values\":[2]},{\"method\":\"equal\",\"attribute\":\"c\",\"values\":[3]}]}]}]}",
+  "",
+  "   ",
+  "{\"attribute\":\"x\",\"values\":[]}",
+  "{\"method\":\"isNull\",\"values\":[]}",
+  "{\"method\":\"equal\",\"attribute\":\"x\",\"values\":[1],\"extra\":\"ignored\"}",
+  "\"just a string\"",
+  "[1,2,3]",
+  "{\"method\":\"count\",\"attribute\":\"*\",\"values\":[\"total\"]}",
+  "{\"method\":\"join\",\"attribute\":\"orders\",\"alias\":\"o\",\"values\":[{\"method\":\"on\",\"values\":[\"u.id\",\"=\",\"o.uid\"]}]}",
+  "{\"method\":\"relationship\",\"attribute\":\"comments\",\"values\":[{\"method\":\"equal\",\"attribute\":\"approved\",\"values\":[true]},{\"method\":\"orderDesc\",\"attribute\":\"$createdAt\",\"values\":[]},{\"method\":\"limit\",\"values\":[5]}]}",
+  "{\"method\":\"naturalJoin\",\"attribute\":\"colors\",\"alias\":\"c\",\"values\":[]}",
+  "{\"method\":\"join\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[{\"method\":\"on\",\"values\":[\"users.id\",\"=\",\"orders.user_id\"]}]}",
+  "{\"method\":\"leftJoin\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[{\"method\":\"on\",\"values\":[\"users.id\",\"=\",\"orders.user_id\"]}]}",
+  "{\"method\":\"rightJoin\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[{\"method\":\"on\",\"values\":[\"users.id\",\"=\",\"orders.user_id\"]}]}",
+  "{\"method\":\"fullOuterJoin\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[{\"method\":\"on\",\"values\":[\"users.id\",\"=\",\"orders.user_id\"]}]}",
+  "{\"method\":\"crossJoin\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[]}",
+  "{\"method\":\"naturalJoin\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[]}",
+  "{\"method\":\"join\",\"attribute\":\"orders\",\"alias\":\"ord\",\"values\":[{\"method\":\"on\",\"values\":[\"users.id\",\"=\",\"ord.user_id\"]}]}",
+  "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"Alice\"]}",
+  "{\"method\":\"greaterThan\",\"attribute\":\"age\",\"values\":[18]}",
+  "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"Bob\"]}",
+  "{\"method\":\"greaterThan\",\"attribute\":\"age\",\"values\":[42]}",
+  "{\"method\":\"equal\",\"attribute\":\"email\",\"values\":[\"a@b.c\"]}",
+  "{\"method\":\"notEqual\",\"attribute\":\"name\",\"values\":[\"Alice\"]}",
+  "{\"method\":\"cursorAfter\",\"values\":[\"abc\"]}",
+  "{\"method\":\"equal\",\"attribute\":\"status\",\"values\":[\"active\",1,1.5,null]}",
+  "{\"method\":\"raw\",\"attribute\":\"1 = 1\"}",
+  "{\"method\":\"raw\",\"attribute\":\"1 = ?\",\"values\":[1]}",
+  "{\"method\":",
+  "42",
+  "{\"method\":\"or\",\"values\":[{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[1]},{\"method\":\"isNull\",\"attribute\":\"b\"}]}",
+  "{\"method\":\"join\",\"attribute\":\"orders\",\"values\":[\"users.id\",\"=\",\"orders.user_id\",\"o\"]}"
+ ],
+ "parseQuery": [
+  {
+   "method": "equal",
+   "attribute": "name",
+   "values": [
+    "John"
+   ]
+  },
+  {
+   "method": "sum",
+   "attribute": "price",
+   "values": [
+    "revenue"
+   ]
+  },
+  {
+   "method": "count",
+   "attribute": "*",
+   "alias": "total",
+   "values": [
+    "legacy"
+   ]
+  },
+  {
+   "method": "leftJoin",
+   "attribute": "orders",
+   "values": [
+    "ord",
+    {
+     "method": "on",
+     "values": [
+      "$id",
+      "=",
+      "customerId"
+     ]
+    },
+    {
+     "method": "equal",
+     "attribute": "ord.status",
+     "values": [
+      "paid"
+     ]
+    }
+   ]
+  },
+  {
+   "method": "raw",
+   "attribute": "SELECT 1",
+   "values": []
+  },
+  {
+   "method": "cursorAfter",
+   "values": [
+    null
+   ]
+  },
+  {
+   "method": "raw",
+   "values": [
+    "SELECT * FROM users; DROP TABLE users"
+   ]
+  },
+  {
+   "method": "or",
+   "values": [
+    {
+     "method": "equal",
+     "attribute": "a",
+     "values": [
+      1
+     ]
+    },
+    {
+     "method": "raw",
+     "values": [
+      "DROP TABLE users"
+     ]
+    }
+   ]
+  },
+  {
+   "method": "join",
+   "attribute": "database_1_collection_7",
+   "alias": "orders",
+   "values": [
+    {
+     "method": "on",
+     "values": [
+      "users.id",
+      "=",
+      "orders.user_id"
+     ]
+    }
+   ]
+  },
+  {
+   "method": "join",
+   "attribute": "orders",
+   "values": [
+    {
+     "method": "on",
+     "values": [
+      "users.id",
+      "=",
+      "orders.user_id"
+     ]
+    }
+   ]
+  },
+  {
+   "method": "crossJoin",
+   "attribute": "colors",
+   "alias": "c",
+   "values": [
+    {
+     "method": "on",
+     "values": [
+      "a",
+      "=",
+      "b"
+     ]
+    }
+   ]
+  },
+  {
+   "method": "join",
+   "attribute": "orders",
+   "alias": "ord",
+   "values": [
+    {
+     "method": "on",
+     "values": [
+      "users.id",
+      "=",
+      "ord.user_id"
+     ]
+    },
+    {
+     "method": "equal",
+     "attribute": "ord.status",
+     "values": [
+      "paid"
+     ]
+    }
+   ]
+  },
+  {
+   "method": "leftJoin",
+   "attribute": "orders",
+   "alias": "ord",
+   "values": [
+    {
+     "method": "on",
+     "values": [
+      "users.id",
+      "=",
+      "ord.user_id"
+     ]
+    },
+    {
+     "method": "equal",
+     "attribute": "ord.status",
+     "values": [
+      "paid"
+     ]
+    }
+   ]
+  },
+  {
+   "method": "rightJoin",
+   "attribute": "orders",
+   "alias": "ord",
+   "values": [
+    {
+     "method": "on",
+     "values": [
+      "users.id",
+      "=",
+      "ord.user_id"
+     ]
+    },
+    {
+     "method": "equal",
+     "attribute": "ord.status",
+     "values": [
+      "paid"
+     ]
+    }
+   ]
+  },
+  {
+   "method": "fullOuterJoin",
+   "attribute": "orders",
+   "alias": "ord",
+   "values": [
+    {
+     "method": "on",
+     "values": [
+      "users.id",
+      "=",
+      "ord.user_id"
+     ]
+    },
+    {
+     "method": "equal",
+     "attribute": "ord.status",
+     "values": [
+      "paid"
+     ]
+    }
+   ]
+  },
+  {
+   "method": "leftJoin",
+   "attribute": "orders",
+   "values": [
+    "users.id",
+    "!=",
+    "ord.user_id",
+    "ord"
+   ]
+  },
+  {
+   "method": "join",
+   "attribute": "orders",
+   "values": [
+    "ord",
+    {
+     "method": "on",
+     "values": [
+      "users.id",
+      "=",
+      "ord.user_id"
+     ]
+    }
+   ]
+  },
+  {
+   "method": "crossJoin",
+   "attribute": "colors",
+   "values": [
+    "c"
+   ]
+  },
+  {
+   "method": "naturalJoin",
+   "attribute": "colors",
+   "values": [
+    "c"
+   ]
+  },
+  {
+   "method": "crossJoin",
+   "attribute": "colors",
+   "alias": "c",
+   "values": [
+    "legacy"
+   ]
+  },
+  {
+   "method": "join",
+   "attribute": "orders",
+   "values": [
+    {
+     "method": "on",
+     "values": [
+      "users.id",
+      "=",
+      "orders.user_id"
+     ]
+    }
+   ]
+  },
+  {
+   "method": "leftJoin",
+   "attribute": "orders",
+   "alias": "",
+   "values": [
+    {
+     "method": "on",
+     "values": [
+      "users.id",
+      "=",
+      "orders.user_id"
+     ]
+    }
+   ]
+  },
+  {
+   "method": "rightJoin",
+   "attribute": "orders",
+   "values": [
+    "",
+    {
+     "method": "on",
+     "values": [
+      "users.id",
+      "=",
+      "orders.user_id"
+     ]
+    }
+   ]
+  },
+  {
+   "method": "join",
+   "attribute": "orders",
+   "values": [
+    "users.id",
+    "=",
+    "orders.user_id"
+   ]
+  },
+  {
+   "method": "fullOuterJoin",
+   "attribute": "orders",
+   "values": [
+    "users.id",
+    "=",
+    "orders.user_id",
+    ""
+   ]
+  },
+  {
+   "method": "crossJoin",
+   "attribute": "orders",
+   "values": []
+  },
+  {
+   "method": "crossJoin",
+   "attribute": "orders",
+   "values": [
+    ""
+   ]
+  },
+  {
+   "method": "naturalJoin",
+   "attribute": "orders"
+  },
+  {
+   "method": "join",
+   "attribute": "orders",
+   "values": [
+    {
+     "method": "on",
+     "values": [
+      "users.id",
+      "=",
+      "orders.user_id"
+     ]
+    }
+   ]
+  },
+  {
+   "method": "join",
+   "attribute": "orders",
+   "alias": "orders",
+   "values": [
+    {
+     "method": "on",
+     "values": [
+      "users.id",
+      "=",
+      "orders.user_id"
+     ]
+    }
+   ]
+  },
+  {
+   "method": "leftJoin",
+   "attribute": "orders",
+   "alias": "",
+   "values": [
+    {
+     "method": "on",
+     "values": [
+      "users.id",
+      "=",
+      "orders.user_id"
+     ]
+    }
+   ]
+  },
+  {
+   "method": "leftJoin",
+   "attribute": "orders",
+   "alias": "orders",
+   "values": [
+    {
+     "method": "on",
+     "values": [
+      "users.id",
+      "=",
+      "orders.user_id"
+     ]
+    }
+   ]
+  },
+  {
+   "method": "rightJoin",
+   "attribute": "orders",
+   "values": [
+    "",
+    {
+     "method": "on",
+     "values": [
+      "users.id",
+      "=",
+      "orders.user_id"
+     ]
+    }
+   ]
+  },
+  {
+   "method": "rightJoin",
+   "attribute": "orders",
+   "alias": "orders",
+   "values": [
+    {
+     "method": "on",
+     "values": [
+      "users.id",
+      "=",
+      "orders.user_id"
+     ]
+    }
+   ]
+  },
+  {
+   "method": "join",
+   "attribute": "orders",
+   "values": [
+    "users.id",
+    "=",
+    "orders.user_id"
+   ]
+  },
+  {
+   "method": "join",
+   "attribute": "orders",
+   "alias": "orders",
+   "values": [
+    {
+     "method": "on",
+     "values": [
+      "users.id",
+      "=",
+      "orders.user_id"
+     ]
+    }
+   ]
+  },
+  {
+   "method": "fullOuterJoin",
+   "attribute": "orders",
+   "values": [
+    "users.id",
+    "=",
+    "orders.user_id",
+    ""
+   ]
+  },
+  {
+   "method": "fullOuterJoin",
+   "attribute": "orders",
+   "alias": "orders",
+   "values": [
+    {
+     "method": "on",
+     "values": [
+      "users.id",
+      "=",
+      "orders.user_id"
+     ]
+    }
+   ]
+  },
+  {
+   "method": "crossJoin",
+   "attribute": "orders",
+   "values": []
+  },
+  {
+   "method": "crossJoin",
+   "attribute": "orders",
+   "alias": "orders",
+   "values": []
+  },
+  {
+   "method": "crossJoin",
+   "attribute": "orders",
+   "values": [
+    ""
+   ]
+  },
+  {
+   "method": "crossJoin",
+   "attribute": "orders",
+   "alias": "orders",
+   "values": []
+  },
+  {
+   "method": "naturalJoin",
+   "attribute": "orders"
+  },
+  {
+   "method": "naturalJoin",
+   "attribute": "orders",
+   "alias": "orders",
+   "values": []
+  },
+  {
+   "method": "join",
+   "values": [
+    "users.id",
+    "=",
+    "orders.user_id"
+   ]
+  },
+  {
+   "method": "join",
+   "attribute": "orders",
+   "alias": "ord",
+   "values": [
+    {
+     "method": "on",
+     "values": [
+      "users.id",
+      "=",
+      "ord.user_id"
+     ]
+    },
+    {
+     "method": "limit",
+     "values": [
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "method": "join",
+   "attribute": "orders",
+   "alias": 5,
+   "values": []
+  },
+  {
+   "method": "join",
+   "attribute": "orders",
+   "alias": "ord",
+   "values": [
+    5
+   ]
+  },
+  {
+   "method": "join",
+   "attribute": "orders",
+   "values": [
+    "ord",
+    "extra",
+    {
+     "method": "on",
+     "values": [
+      "users.id",
+      "=",
+      "ord.user_id"
+     ]
+    }
+   ]
+  },
+  {
+   "method": "cursorAfter",
+   "values": [
+    null
+   ]
+  },
+  {
+   "method": 5
+  },
+  {
+   "method": "count",
+   "attribute": "*",
+   "values": [
+    "total"
+   ]
+  }
+ ]
+}
