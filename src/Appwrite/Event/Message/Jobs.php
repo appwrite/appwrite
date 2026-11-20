@@ -9,6 +9,10 @@ use Utopia\Database\Document;
  * worker. `project` provides the DI context so the worker can resolve
  * `dbForProject`; `event` is the CloudEvent `type`; `data` is the event `data`
  * payload; `id` is the CloudEvent id used for de-duplication.
+ *
+ * `attempts` counts requeues of this callback after losing the race for the
+ * deployment lock. It starts at zero, is raised only by the worker requeueing
+ * its own message, and never by the jobs-service.
  */
 final class Jobs extends Base
 {
@@ -17,6 +21,7 @@ final class Jobs extends Base
         public readonly string $id,
         public readonly string $event,
         public readonly array $data = [],
+        public readonly int $attempts = 0,
     ) {
     }
 
@@ -28,6 +33,7 @@ final class Jobs extends Base
             'id' => $this->id,
             'event' => $this->event,
             'data' => $this->data,
+            'attempts' => $this->attempts,
         ];
     }
 
@@ -39,6 +45,7 @@ final class Jobs extends Base
             id: $data['id'] ?? '',
             event: $data['event'] ?? '',
             data: $data['data'] ?? [],
+            attempts: (int) ($data['attempts'] ?? 0),
         );
     }
 }
