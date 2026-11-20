@@ -2043,4 +2043,43 @@ trait AvatarsBase
             }
         }
     }
+
+    /**
+     * @return array<string, string>
+     */
+    private function getTeamPhotoHeaders(): array
+    {
+        return \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function uploadTeamPhoto(string $teamId, string $contents, string $filename): array
+    {
+        return $this->client->call(Client::METHOD_PUT, '/avatars/teams/' . $teamId . '/photo', \array_merge($this->getTeamPhotoHeaders(), [
+            'content-type' => 'multipart/form-data',
+        ]), [
+            'file' => new \CURLFile('data://application/octet-stream;base64,' . \base64_encode($contents), 'application/octet-stream', $filename),
+        ]);
+    }
+
+    /**
+     * Create a team to hold a photo, returning its ID.
+     */
+    private function createPhotoTeam(): string
+    {
+        $response = $this->createTeamFixture(\array_merge([
+            'content-type' => 'application/json',
+        ], $this->getTeamPhotoHeaders()), [
+            'teamId' => Id::unique(),
+            'name' => 'Photo Team',
+        ]);
+
+        $this->assertContains($response['headers']['status-code'], [200, 201]);
+
+        return $response['body']['$id'];
+    }
 }
