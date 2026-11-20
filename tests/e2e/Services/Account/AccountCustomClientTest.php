@@ -9347,6 +9347,10 @@ final class AccountCustomClientTest extends Scope
      * address claims it. Whichever commits first, nothing the registrant wrote may survive on the claimed account:
      * a link that ran before the claim is revoked by it, and one that read the account before the claim is
      * refused under the lock.
+     *
+     * The requests run concurrently, so a run is not guaranteed to hit the read-before-claim, write-after
+     * interleaving; this checks the end state holds in every order. The ordering itself is covered
+     * deterministically by the User::lockUnchanged() unit tests.
      */
     public function testCreateIdTokenSessionLinkRacingAClaimLeavesNothingBehind(): void
     {
