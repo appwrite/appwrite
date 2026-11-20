@@ -4,7 +4,7 @@ import type {
   LaunchEventPrizes,
   LaunchEventScheduleItem,
 } from './types'
-import { INIT_YOUTUBE_CHANNEL_HREF } from './links'
+import { INIT_5_YOUTUBE_PLAYLIST_HREF } from './links'
 
 export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
   {
@@ -206,7 +206,7 @@ export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     title: 'Appwrite Analytics launch stream',
     startsAt: '2026-11-30T09:00:00-08:00',
     isLive: true,
-    href: INIT_YOUTUBE_CHANNEL_HREF,
+    href: INIT_5_YOUTUBE_PLAYLIST_HREF,
   },
   {
     id: 'sched-nov5-videos',
@@ -215,7 +215,7 @@ export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     title: 'Appwrite Videos launch stream',
     startsAt: '2026-12-01T09:00:00-08:00',
     isLive: true,
-    href: INIT_YOUTUBE_CHANNEL_HREF,
+    href: INIT_5_YOUTUBE_PLAYLIST_HREF,
   },
   {
     id: 'sched-nov5-zero',
@@ -224,7 +224,7 @@ export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     title: 'Appwrite Zero launch stream',
     startsAt: '2026-12-02T09:00:00-08:00',
     isLive: true,
-    href: INIT_YOUTUBE_CHANNEL_HREF,
+    href: INIT_5_YOUTUBE_PLAYLIST_HREF,
   },
   {
     id: 'sched-nov5-tablesdb',
@@ -233,7 +233,7 @@ export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     title: 'TablesDB upgrade stream',
     startsAt: '2026-12-03T09:00:00-08:00',
     isLive: true,
-    href: INIT_YOUTUBE_CHANNEL_HREF,
+    href: INIT_5_YOUTUBE_PLAYLIST_HREF,
   },
   {
     id: 'sched-nov5-finale',
@@ -242,7 +242,7 @@ export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     title: 'Monitors & Beep launch, plus the finale',
     startsAt: '2026-12-04T09:00:00-08:00',
     isLive: true,
-    href: INIT_YOUTUBE_CHANNEL_HREF,
+    href: INIT_5_YOUTUBE_PLAYLIST_HREF,
   },
   {
     id: 'sched-nov5-discord-closing',
@@ -276,7 +276,7 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
       scheduleItemId: 'sched-nov5-analytics',
       sessionTitle: 'Appwrite Analytics launch stream',
       platform: 'youtube',
-      href: INIT_YOUTUBE_CHANNEL_HREF,
+      href: INIT_5_YOUTUBE_PLAYLIST_HREF,
       prizeDescription: 'Appwrite hoodie and cap',
       visual: {
         imageAlt: 'Day 1 giveaway including an Appwrite hoodie and cap',
@@ -290,7 +290,7 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
       scheduleItemId: 'sched-nov5-videos',
       sessionTitle: 'Appwrite Videos launch stream',
       platform: 'youtube',
-      href: INIT_YOUTUBE_CHANNEL_HREF,
+      href: INIT_5_YOUTUBE_PLAYLIST_HREF,
       prizeDescription: 'Light Appwriter keyboard',
       visual: {
         imageAlt: 'Day 2 giveaway including a light Appwriter keyboard',
@@ -304,7 +304,7 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
       scheduleItemId: 'sched-nov5-zero',
       sessionTitle: 'Appwrite Zero launch stream',
       platform: 'youtube',
-      href: INIT_YOUTUBE_CHANNEL_HREF,
+      href: INIT_5_YOUTUBE_PLAYLIST_HREF,
       prizeDescription: 'Dark Appwriter keyboard',
       visual: {
         imageAlt: 'Day 3 giveaway including a dark Appwriter keyboard',
@@ -318,7 +318,7 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
       scheduleItemId: 'sched-nov5-tablesdb',
       sessionTitle: 'TablesDB upgrade stream',
       platform: 'youtube',
-      href: INIT_YOUTUBE_CHANNEL_HREF,
+      href: INIT_5_YOUTUBE_PLAYLIST_HREF,
       prizeDescription: 'RUNTIME bottle and Appwrite tee',
       visual: {
         imageAlt:
@@ -334,7 +334,7 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
     scheduleItemId: 'sched-nov5-finale',
     sessionTitle: 'Monitors & Beep launch, plus the finale',
     platform: 'youtube',
-    href: INIT_YOUTUBE_CHANNEL_HREF,
+    href: INIT_5_YOUTUBE_PLAYLIST_HREF,
     title: 'Grand prize · details coming soon',
     description: 'Full prize details will be announced before Init 5.',
     eligibility: 'Share Init on social during the week to enter.',

@@ -15,6 +15,10 @@ export const INIT_TICKET_SECTION_HASH = '#ticket'
 /** Where Init YouTube sessions land when no per-session link is set. */
 export const INIT_YOUTUBE_CHANNEL_HREF = 'https://www.youtube.com/@Appwrite'
 
+/** Init 5's own playlist on the Appwrite channel: every launch stream and video of the week. */
+export const INIT_5_YOUTUBE_PLAYLIST_HREF =
+  'https://www.youtube.com/playlist?list=PLaEavp1w84qI'
+
 /**
  * Per-day stream URLs, keyed by Init day. Days left out fall back to the
  * channel, so links can land one at a time as streams get scheduled.

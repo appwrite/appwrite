@@ -12,7 +12,10 @@ import {
 } from './ticket-config'
 import { INIT_JULY_2026_PRIZES } from './prizes'
 import { isKnownLaunchEventId } from './init-event-catalog'
-import { INIT_YOUTUBE_CHANNEL_HREF } from './links'
+import {
+  INIT_5_YOUTUBE_PLAYLIST_HREF,
+  INIT_YOUTUBE_CHANNEL_HREF,
+} from './links'
 import { parseDateOnly } from './dates'
 import { resolveInitCurrentDay } from './event-visibility'
 import {
@@ -230,7 +233,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     },
     liveBanner: {
       title: 'Init 5 launch stream',
-      href: INIT_YOUTUBE_CHANNEL_HREF,
+      href: INIT_5_YOUTUBE_PLAYLIST_HREF,
     },
     onlineCount: 0,
     hiddenOnlineCount: 0,
