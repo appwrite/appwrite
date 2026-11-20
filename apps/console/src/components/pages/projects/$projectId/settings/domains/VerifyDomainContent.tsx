@@ -1024,6 +1024,19 @@ export function VerifyDomainContent({
     </p>
   )
 
+  // Providers append the zone to the host, so a full domain there lands one
+  // zone too deep. An apex is entered as @, which needs no note.
+  const recordName = getRecordName(rule.domain)
+  const hostNote = recordName !== '@' && (
+    <p className="text-[13px] text-muted-foreground">
+      {t(
+        "Enter only {name} in your DNS provider's Host or Name field. Most providers add {apex} for you.",
+      )
+        .replace('{name}', recordName)
+        .replace('{apex}', getApexDomain(rule.domain) ?? '')}
+    </p>
+  )
+
   // The CAA row: recommended from the console variables, required once the
   // server checks it.
   const caaCheck = findCheck('CAA', '')
@@ -1128,6 +1141,7 @@ export function VerifyDomainContent({
           waiting={isWaitingForDns(rule)}
         >
           {tabOptions.some((tab) => tab.id === 'alias') && aliasNote}
+          {hostNote}
         </RecordSection>
       )}
       {caaRecord && (
