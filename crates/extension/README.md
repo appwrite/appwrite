@@ -332,14 +332,20 @@ makes blowfish (`$2a$`) and portable (`$P$`, with `$H$` accepted) hashes, and ve
 SHA-crypt, DES and extended DES through `crypt()`. `MD5`, `Sha`, `Plaintext`, `Scrypt`,
 `ScryptModified` and `PHPass`'s portable hash compare with `hash_equals()`'s constant time.
 
+Argon2 is `php-std`'s own (`src/argon2.rs`), not the `argon2` crate's, which fills lanes one after
+the other unless rayon's process-wide pool fills them: like libargon2, it fills each slice's lanes
+on threads of their own (`std::thread::scope`), joined before the next slice, so a hash or verify
+with the default 3 threads takes PHP's wall-clock time rather than twice it. Its unit tests check
+it against the `argon2` crate and the reference implementation's example.
+
 `crates/extension/tests/auth.php` prints a corpus that must be identical on both implementations
-(1,356 lines): each class's reflection; the option API over keys PHP converts (`'1'`, `'01'`, `'-0'`,
+(1,374 lines): each class's reflection; the option API over keys PHP converts (`'1'`, `'01'`, `'-0'`,
 binary) and values of every type; arguments of the wrong kind; `MD5`, all nine `Sha` versions and
 `Plaintext` over passwords that are empty, UTF-8, not UTF-8, with NUL bytes and past 72 bytes;
 `Sha` with versions only `setOption()` stores; `Scrypt` over its parameters and every PECL failure
 (`Error`, warning, `false`); `ScryptModified` with Firebase's vector, other options and missing ones;
 `Argon2` and `Bcrypt` over every `password_hash()` option error, each hash checked by the class and
-by PHP's own `password_verify()` and `crypt()`; 84 hashes PHP made (`password_hash()`, every
+by PHP's own `password_verify()` and `crypt()`; 90 hashes PHP made (`password_hash()`, every
 `crypt()` scheme, portable phpass) and 39 malformed ones through every `verify()`; `PHPass` made
 deterministic by a subclass's `getRandomBytes()`, over its options, alphabet and helpers; subclasses
 overriding `setOption()`, `getOption()`, `getOptions()`, `getName()`, `hash()` and `encode64()`;
@@ -353,9 +359,8 @@ and dumps, clones, comparisons and serialization. Its known differences, which n
 - `Argon2` refuses more than 4 GiB of memory with `ValueError('Memory allocation error')`, where
   libargon2 tries to allocate it.
 - `PHPass::getRandomBytes()` reads `/dev/urandom` without consulting `open_basedir`.
-- `Argon2` hashes run their lanes one after the other, where libargon2 runs `threads` of them in
-  parallel: the default (3 threads, 64 MiB, 4 passes) takes about twice the wall-clock time,
-  for the same CPU time.
+- `Argon2` fills at most 16 lanes at once, where libargon2 starts a thread for every lane; the
+  hash is the same.
 
 ## Benchmarks
 
@@ -411,7 +416,9 @@ How it behaves inside a Swoole worker:
 - **Panics.** A panic in a Rust codec is caught and thrown as a PHP `Error` whose message
   starts with `Rust panic:`; the worker keeps running. The release profile must not set
   `panic = "abort"`.
-- **Threads and forks.** The extension starts no thread pool. The pure-Rust AVIF encoder
+- **Threads and forks.** The extension starts no thread pool. `Argon2` fills its lanes on scoped
+  threads that are joined before the call returns, as libargon2's are, so none is left when the
+  worker forks. The pure-Rust AVIF encoder
   (the crate's default `ravif` feature) is left out: with its pool, a process that had
   encoded an AVIF and then forked left the child waiting forever on its next encode.
 
