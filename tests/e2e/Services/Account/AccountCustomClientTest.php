@@ -9405,7 +9405,9 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $account['headers']['status-code']);
 
         foreach ($responses as $response) {
-            if ($response['headers']['status-code'] !== 201) {
+            // A request that read the account after the claim found its session revoked and signed in as a new
+            // user of its own provider email, which is not the claimed account
+            if ($response['headers']['status-code'] !== 201 || $response['body']['userId'] !== $registrant['id']) {
                 continue;
             }
             $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
