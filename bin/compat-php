@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# The PHP side of bin/compat: runs tests/compat/php/driver.php (or the script
+# and arguments given, such as tests/compat/php/examples.php) in a throwaway
+# container of the dev image, with this checkout's tests/ and packages/
+# mounted, on the dev stack's network (so `redis`, `postgresql` resolve).
+# Works from any git worktree, not only the checkout the stack runs from.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+# Shared with the Rust driver and the runner: files cases create live under
+# /tmp/compat-fs/${ns} on both sides (the `files` snapshot kind).
+mkdir -p /tmp/compat-fs
+# As the invoking user, so files on the shared /tmp/compat-fs mount belong to
+# the same user as the runner's and the Rust driver's (as root, a directory
+# PHP created first was not writable for them on a Linux host), and with
+# host.docker.internal defined on Linux as Docker Desktop defines it on macOS
+# (cases reach the host's published ports through it).
+exec docker run --rm -i \
+    --user "$(id -u):$(id -g)" \
+    --add-host=host.docker.internal:host-gateway \
+    --network "${COMPAT_NETWORK:-appwrite}" \
+    -v "$PWD/tests:/usr/src/code/tests" \
+    -v "$PWD/packages:/usr/src/code/packages" \
+    -v /tmp/compat-fs:/tmp/compat-fs \
+    -w /usr/src/code \
+    --entrypoint php \
+    "${COMPAT_IMAGE:-appwrite-dev}" \
+    -d display_errors=stderr -d memory_limit=1G "${@:-tests/compat/php/driver.php}"

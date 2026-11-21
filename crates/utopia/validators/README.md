@@ -1,18 +1,292 @@
-# utopia-validators
+# Utopia Validators
 
-The checks of [`utopia-php/validators`](../../../packages/validators) as PHP runs them: booleans,
-integers, floats, numbers, ranges, ports, hex colors, text, identifiers, white lists, substrings,
-DNS labels, hostnames, domains, hosts, IP addresses, URLs and phone numbers (over `php-std`'s ports of
-`filter_var()`, `parse_url()` and `Uri\Rfc3986\Uri`). Each function is the body of a PHP
-validator's method, over a value as PHP sees it (`Input`), with the same coercions
-(`is_numeric()`, `$value + 0`), comparisons and messages. The validator classes, and the state
-their constructors keep, live in the PHP extension (`crates/extension`), which passes it in.
+> [!IMPORTANT]
+> This repository is a read-only mirror of [`crates/utopia/validators`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/validators) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+
+[![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
+
+Request parameter validators with their user-facing messages, and the checks they share with the utopia PHP extension: scalars, text, identifiers, white lists, substrings and DNS labels.
+
+This library is maintained by the [Appwrite team](https://appwrite.io).
+
+## Getting started
+
+```toml
+[dependencies]
+utopia-validators = { git = "https://github.com/utopia-rs/validators" }
+```
+
+Validators check request parameters before an action runs: a name is a short string, a limit is a number in range, a URL uses https. Each validator answers two questions: is this value valid, and what rule does it follow. The rule is a human-readable description that becomes the error message a client sees, so it is part of the API. Values are `serde_json::Value`, the form a decoded request body takes. This guide covers the common tasks.
+
+## Validate a text field
+
+`Text` accepts a string between a minimum and a maximum number of characters. A maximum of 0 means no limit, and the minimum defaults to 1.
 
 ```rust
-use utopia_validators::{Input, Integer, Number, range};
+use serde_json::json;
+use utopia_validators::{Text, Validator};
+
+let username = Text::with_min(20, 3);
+
+assert!(username.is_valid(&json!("eldad")));
+assert!(!username.is_valid(&json!("ab")));
+assert!(!username.is_valid(&json!(42)));
+assert_eq!(username.description(), "Value must be a valid string and at least 3 chars and no longer than 20 chars");
+
+let name = Text::new(128).non_blank();
+assert!(!name.is_valid(&json!("   ")));
+assert_eq!(name.description(), "Value must be a valid string and at least 1 chars and no longer than 128 chars and not be blank");
+```
+
+## Validate numbers in a range
+
+`Range` accepts an integer between two bounds, inclusive. `Integer` accepts any integer that fits a number of bits. `Range` also accepts numeric strings, as query strings carry them. `Integer` accepts them only when loose.
+
+```rust
+use serde_json::json;
+use utopia_validators::{Integer, Range, Validator};
+
+let limit = Range::new(1, 5000);
+
+assert!(limit.is_valid(&json!(25)));
+assert!(!limit.is_valid(&json!(0)));
+assert!(limit.is_valid(&json!("25")));
+assert!(!limit.is_valid(&json!(2.5)));
+assert_eq!(limit.description(), "Value must be a valid range between 1 and 5,000");
+
+let offset = Integer::new(true, 32, true)?;
+assert!(offset.is_valid(&json!("25")));
+assert!(!offset.is_valid(&json!(-1)));
+assert_eq!(offset.description(), "Value must be a valid unsigned 32-bit integer between 0 and 4,294,967,295");
+```
+
+## Accept one of a fixed set of values
+
+`WhiteList` accepts a value from a list. By default it ignores case. A strict list needs an exact match.
+
+```rust
+use serde_json::json;
+use utopia_validators::{Validator, WhiteList};
+
+let order = WhiteList::new(&["ASC", "DESC"]);
+
+assert!(order.is_valid(&json!("asc")));
+assert!(!order.is_valid(&json!("random")));
+assert_eq!(order.description(), "Value must be one of (asc, desc)");
+
+let region = WhiteList::strict(&["fra", "nyc"]);
+assert!(region.is_valid(&json!("fra")));
+assert!(!region.is_valid(&json!("FRA")));
+assert_eq!(region.description(), "Value must be one of (fra, nyc)");
+```
+
+## Validate a list of values
+
+`ArrayList` accepts an array whose items all pass another validator. Its second argument caps the number of items; 0 means no cap. The description includes the item rule.
+
+```rust
+use serde_json::json;
+use utopia_validators::{ArrayList, Text, Validator};
+
+let tags = ArrayList::new(Text::new(32), 3);
+
+assert!(tags.is_valid(&json!(["php", "rust"])));
+assert!(!tags.is_valid(&json!(["a", "b", "c", "d"])));
+assert!(!tags.is_valid(&json!(["php", 7])));
+assert!(!tags.is_valid(&json!("php")));
+assert_eq!(
+    tags.description(),
+    "Value must a valid array no longer than 3 items and Value must be a valid string and at least 1 chars and no longer than 32 chars"
+);
+```
+
+## Validate URLs, hosts and IPs
+
+`Url` accepts a URL, optionally only with some schemes. `Host` accepts a URL whose host is on an allow list. `Ip` accepts an IPv4 or IPv6 address, or only one of them.
+
+```rust
+use serde_json::json;
+use utopia_validators::{Host, Ip, IpVersion, Url, Validator};
+
+let webhook = Url { allowed_schemes: vec!["https".into()], ..Url::default() };
+assert!(webhook.is_valid(&json!("https://example.com/hook")));
+assert!(!webhook.is_valid(&json!("http://example.com/hook")));
+assert_eq!(webhook.description(), "Value must be a valid URL with following schemes (https)");
+
+let redirect = Host::new(vec!["appwrite.io".into(), "*.appwrite.io".into()]);
+assert!(redirect.is_valid(&json!("https://cloud.appwrite.io/console")));
+assert!(!redirect.is_valid(&json!("https://example.com")));
+assert_eq!(redirect.description(), "URL host must be one of: appwrite.io, *.appwrite.io");
+
+let ip = Ip::new(IpVersion::V4);
+assert!(ip.is_valid(&json!("192.168.1.10")));
+assert!(!ip.is_valid(&json!("::1")));
+assert_eq!(ip.description(), "Value must be a valid IP address");
+```
+
+## Accept null for an optional value
+
+`Nullable` wraps a validator so `null` passes too. Use it when a client may clear a field by sending `null`.
+
+```rust
+use serde_json::json;
+use utopia_validators::{Nullable, Text, Validator};
+
+let bio = Nullable(Text::new(256));
+
+assert!(bio.is_valid(&json!(null)));
+assert!(bio.is_valid(&json!("Hello")));
+assert!(!bio.is_valid(&json!("")));
+assert_eq!(bio.description(), "Value must be a valid string and at least 1 chars and no longer than 256 chars or null");
+```
+
+## Combine validators
+
+`AnyOf` passes when one rule passes, and `AllOf` when every rule does. After a failure, the description names the rule that decided. In Rust, `check` returns that description, because validators keep no state between calls.
+
+```rust
+use serde_json::json;
+use utopia_validators::{AllOf, AnyOf, Ip, Text, Url, Validator};
+
+let target = AnyOf::new(vec![Box::new(Url::default()), Box::new(Ip::default())]);
+assert!(target.is_valid(&json!("10.0.0.1")));
+assert_eq!(target.check(&json!("nope")), Err("Value must be a valid IP address".to_owned()));
+
+let path = AllOf::new(vec![Box::new(Text::new(64)), Box::new(Url::default())]);
+assert_eq!(
+    path.check(&json!("https://example.com/a-very-long-path-that-goes-past-the-sixty-four-char-limit")),
+    Err("Value must be a valid string and at least 1 chars and no longer than 64 chars".to_owned())
+);
+assert_eq!(path.check(&json!("not a url")), Err("Value must be a valid URL".to_owned()));
+```
+
+## Show the error message a user sees
+
+A request handler validates each parameter and, on failure, reports the description. `check` returns `Err` with the message to show.
+
+```rust
+use serde_json::json;
+use utopia_validators::{Range, Validator};
+
+let limit = Range::new(1, 100);
+let message = match limit.check(&json!(500)) {
+    Ok(()) => String::new(),
+    Err(description) => format!("Invalid `limit` param: {description}"),
+};
+assert_eq!(message, "Invalid `limit` param: Value must be a valid range between 1 and 100");
+```
+
+## Validate JSON objects
+
+`json::Object` accepts a JSON object, either decoded or still encoded as a string. `Json` accepts any valid JSON, including scalars, so prefer the shape-specific validator when the value must be an object.
+
+```rust
+use serde_json::json;
+use utopia_validators::json::Object;
+use utopia_validators::{Json, Validator};
+
+let data = Object::default();
+
+assert!(data.is_valid(&json!({"event": "login"})));
+assert!(data.is_valid(&json!(r#"{"event": "login"}"#)));
+assert!(!data.is_valid(&json!(r#""login""#)));
+assert!(!data.is_valid(&json!("[]")));
+assert_eq!(data.description(), "Value must be a valid JSON object");
+
+assert!(Json.is_valid(&json!(r#""login""#)));
+```
+
+## Write your own validator
+
+Implement `description` and `is_valid`, and the validator works everywhere the built-in ones do, including inside `AnyOf` and `ArrayList`.
+
+```rust
+use serde_json::{Value, json};
+use utopia_validators::{ArrayList, Validator};
+
+struct Even;
+
+impl Validator for Even {
+    fn description(&self) -> String {
+        "Value must be an even integer".to_owned()
+    }
+
+    fn is_valid(&self, value: &Value) -> bool {
+        value.as_i64().is_some_and(|n| n % 2 == 0)
+    }
+}
+
+let sizes = ArrayList::new(Even, 0);
+assert!(sizes.is_valid(&json!([2, 4, 8])));
+assert!(!sizes.is_valid(&json!([2, 3])));
+assert_eq!(sizes.description(), "Value must a valid array and Value must be an even integer");
+```
+
+## Contributing
+
+Development happens in [appwrite/appwrite](https://github.com/appwrite/appwrite), where this crate lives at [`crates/utopia/validators`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/validators). Run these commands from a checkout of it. The [contributing guide](https://utopia-docs.appwrite.network/contributing) covers each step.
+
+### Test
+
+```bash
+cargo test -p utopia-validators
+cargo clippy -p utopia-validators --all-targets -- -D warnings
+cargo fmt --all --check
+```
+
+### Compare with PHP
+
+Replay the results PHP recorded for every case against Rust, without PHP:
+
+```bash
+COMPAT_LIB=validators cargo test -p compat
+```
+
+Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
+
+```bash
+bin/compat run validators
+bin/compat fuzz validators
+bin/compat check validators
+```
+
+The utopia PHP extension (`crates/extension`) serves the scalar leaf validators of `packages/validators` (`Boolean`, `Integer`, `FloatValidator`, `Numeric`, `Range`, `Port`, `HexColor`) from this crate's `scalar` module when `_APP_EXTENSION_LIBRARIES` names `validators,validators-scalar`. Each function there is the body of a PHP validator's method over a value as PHP sees it (`scalar::Input`), with the same coercions (`is_numeric()`, `$value + 0`), comparisons and messages; the extension's classes keep their constructors' state and pass it in, and this crate's validators run the same functions. `crates/extension/tests/run.sh` diffs the parity corpus `crates/extension/tests/validators-scalar.php` between the PHP classes and the extension's, and runs `packages/validators/tests` on the extension, in the development image.
+
+The extension serves the text leaf validators (`Text`, `Identifier`, `WhiteList`, `Contains`, `Label`) the same way, from this crate's `text` module, when `_APP_EXTENSION_LIBRARIES` names `validators,validators-text`. Those functions work on bytes, as the PHP methods do once they have a string: the blank check, character counts, identifiers, case folding, substrings, DNS labels and every description. Comparing a value with the PHP values a validator holds (the loose `in_array()` of `Text`'s allow list and of `WhiteList`, `(string)` of a pattern) is left to the PHP engine there; this crate's `Text`, `Identifier`, `WhiteList`, `Contains` and `Label` run the same functions. Its parity corpus is `crates/extension/tests/validators-text.php`.
+
+The extension serves the network leaf validators (`Hostname`, `Domain`, `Host`, `IP`, `URL`, `Phone`) from this crate's `network` module when `_APP_EXTENSION_LIBRARIES` names `validators,validators-network`. Those functions run `php-std`'s ports of `filter_var()`, `parse_url()` and `Uri\Rfc3986\Uri`, so a value is accepted exactly when PHP accepts it: hostname shape and allow-list wildcards, domain format and label counts, IP versions, URL encoding, components and private-use schemes, loopback hosts, E.164 phone numbers and their normalization, and every description. `Domain`'s restrictions are left to the PHP engine there; this crate's `Hostname`, `Domain`, `Host`, `Ip`, `Url` and `Phone` run the same functions. Its parity corpus is `crates/extension/tests/validators-network.php`.
+
+The extension serves the composing validators (`Nullable`, `ArrayList`, `AllOf`, `AnyOf`, `NoneOf`, `Multiple`, `Assoc`, `JSON`, `JSON\ArrayValidator`, `JSON\ObjectValidator`, `JSON\FCM`, `Globstar`) when `_APP_EXTENSION_LIBRARIES` names `validators,validators-compose`, with what they decide by themselves from this crate's `compose` module: the `ArrayList`, `Assoc`, `JSON` and `Globstar` descriptions, the JSON validators' descriptions and length limit, `FCM`'s fields, errors, PEM and HTTPS checks, and the regular expression `Globstar` hands `preg_match()` (a port of `matchGlobstar()` and of `preg_quote()`). Asking the validators they wrap, and the PHP functions whose state is observable (`json_decode()`, `json_last_error()`, `preg_match()` and its warnings, `filter_var()`), is left to the PHP engine there; this crate's `ArrayList`, `Assoc`, `Json`, `json::Array`, `json::Object`, `json::Fcm` and `Globstar` run the same functions, and its `AllOf`, `AnyOf`, `NoneOf` and `Multiple` ask their rules themselves. Its parity corpus is `crates/extension/tests/validators-compose.php`.
+
+```rust
+use utopia_validators::scalar::{Input, Integer};
+use utopia_validators::{Number, range};
 
 let int8 = Integer::new(8, false).unwrap();
 assert!(int8.accepts(true, Input::Str(b" 127 ")));
 assert!(!int8.accepts(true, Input::Float(1.0)));
 assert!(range(Number::Int(1), Number::Int(10), b"integer", Input::Str(b"5")));
+
+use utopia_validators::text::{identifier, label, text_description};
+
+assert!(identifier(b"_user1"));
+assert!(!label(b"-api"));
+assert_eq!(text_description(10, 1, None, true), b"Value must be a valid string and at least 1 chars and no longer than 10 chars and not be blank");
+
+use utopia_validators::compose::{globstar_regex, json_length};
+
+assert_eq!(globstar_regex(b"src/**/*.rs"), b"~^src/(?:.+/)?[^/]*\\.rs$~");
+assert!(!json_length(2, Some(b"[1]")));
 ```
+
+### Benchmark
+
+```bash
+bin/compat bench validators
+```
+
+This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/validators/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/validators/bench.json). Run it on a quiet machine, one library at a time.
+
+## License
+
+BSD-3-Clause. See [LICENSE](LICENSE).

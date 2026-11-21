@@ -1,0 +1,3199 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Hook/JoinAliasQuotingTest.php"
+  ],
+  "cases": [
+    {
+      "name": "JoinAliasQuotingTest::testTenantFilterQuotesTheTableItQualifies#PostgreSQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "metadataCollection": "_metadata",
+              "collection": "authors",
+              "quoteCharacter": "\""
+            },
+            "as": "o10798"
+          },
+          "bind": "s63043",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10798"
+            },
+            "method": "filter",
+            "args": {
+              "table": "Main"
+            },
+            "as": "o10799"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "\"Main\"._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10798"
+            },
+            "method": "joined",
+            "args": {
+              "table": "Book"
+            },
+            "as": "o10800"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "\"Book\"._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10798"
+            },
+            "method": "joined",
+            "args": {
+              "table": "Book"
+            },
+            "as": "o10801"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "\"Book\"._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testTenantFilterQuotesTheTableItQualifies#MariaDB and MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "metadataCollection": "_metadata",
+              "collection": "authors",
+              "quoteCharacter": "`"
+            },
+            "as": "o10802"
+          },
+          "bind": "s63047",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10802"
+            },
+            "method": "filter",
+            "args": {
+              "table": "Main"
+            },
+            "as": "o10803"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`Main`._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10802"
+            },
+            "method": "joined",
+            "args": {
+              "table": "Book"
+            },
+            "as": "o10804"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`Book`._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10802"
+            },
+            "method": "joined",
+            "args": {
+              "table": "Book"
+            },
+            "as": "o10805"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`Book`._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testTenantFilterQuotesTheTableOfATenantlessMetadataRow#PostgreSQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "metadataCollection": "_metadata",
+              "collection": "_metadata",
+              "quoteCharacter": "\""
+            },
+            "as": "o10806"
+          },
+          "bind": "s63051",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10806"
+            },
+            "method": "filter",
+            "args": {
+              "table": "Main"
+            },
+            "as": "o10807"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "(\"Main\"._tenant IN (?) OR \"Main\"._tenant IS NULL)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testTenantFilterQuotesTheTableOfATenantlessMetadataRow#MariaDB and MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "metadataCollection": "_metadata",
+              "collection": "_metadata",
+              "quoteCharacter": "`"
+            },
+            "as": "o10808"
+          },
+          "bind": "s63053",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10808"
+            },
+            "method": "filter",
+            "args": {
+              "table": "Main"
+            },
+            "as": "o10809"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "(`Main`._tenant IN (?) OR `Main`._tenant IS NULL)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testTenantFilterDoesNotQualifyWithARawTableName#PostgreSQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "metadataCollection": "_metadata",
+              "collection": "authors",
+              "quoteCharacter": "\""
+            },
+            "as": "o10810"
+          },
+          "bind": "s63055",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10810"
+            },
+            "method": "filter",
+            "args": {
+              "table": "database.namespace_authors"
+            },
+            "as": "o10811"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "_tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10810"
+            },
+            "method": "filter",
+            "args": {
+              "table": "\"namespace_authors\""
+            },
+            "as": "o10812"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "_tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testTenantFilterDoesNotQualifyWithARawTableName#MariaDB and MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "metadataCollection": "_metadata",
+              "collection": "authors",
+              "quoteCharacter": "`"
+            },
+            "as": "o10813"
+          },
+          "bind": "s63058",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10813"
+            },
+            "method": "filter",
+            "args": {
+              "table": "database.namespace_authors"
+            },
+            "as": "o10814"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "_tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10813"
+            },
+            "method": "filter",
+            "args": {
+              "table": "`namespace_authors`"
+            },
+            "as": "o10815"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "_tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testTenantFilterQuotesTheAliasOfEveryJoin#JOIN, PostgreSQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "allowNullColumn": "Main._uid",
+              "quoteCharacter": "\""
+            },
+            "as": "o10816"
+          },
+          "bind": "s63061",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10816"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Inner"
+              }
+            },
+            "as": "o10817"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "\"Book\"._tenant IN (?)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testTenantFilterQuotesTheAliasOfEveryJoin#LEFT JOIN, PostgreSQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "allowNullColumn": "Main._uid",
+              "quoteCharacter": "\""
+            },
+            "as": "o10818"
+          },
+          "bind": "s63063",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10818"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Left"
+              }
+            },
+            "as": "o10819"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "\"Book\"._tenant IN (?)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testTenantFilterQuotesTheAliasOfEveryJoin#RIGHT JOIN, PostgreSQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "allowNullColumn": "Main._uid",
+              "quoteCharacter": "\""
+            },
+            "as": "o10820"
+          },
+          "bind": "s63065",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10820"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o10821"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(\"Book\"._tenant IN (?) OR \"Book\".\"_uid\" IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testTenantFilterQuotesTheAliasOfEveryJoin#FULL OUTER JOIN, PostgreSQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "allowNullColumn": "Main._uid",
+              "quoteCharacter": "\""
+            },
+            "as": "o10822"
+          },
+          "bind": "s63067",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10822"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::FullOuter"
+              }
+            },
+            "as": "o10823"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(\"Book\"._tenant IN (?) OR \"Book\".\"_uid\" IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testTenantFilterQuotesTheAliasOfEveryJoin#CROSS JOIN, PostgreSQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "allowNullColumn": "Main._uid",
+              "quoteCharacter": "\""
+            },
+            "as": "o10824"
+          },
+          "bind": "s63069",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10824"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Cross"
+              }
+            },
+            "as": "o10825"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(\"Book\"._tenant IN (?) OR \"Book\".\"_uid\" IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testTenantFilterQuotesTheAliasOfEveryJoin#JOIN, MariaDB and MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "allowNullColumn": "Main._uid",
+              "quoteCharacter": "`"
+            },
+            "as": "o10826"
+          },
+          "bind": "s63071",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10826"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Inner"
+              }
+            },
+            "as": "o10827"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "`Book`._tenant IN (?)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testTenantFilterQuotesTheAliasOfEveryJoin#LEFT JOIN, MariaDB and MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "allowNullColumn": "Main._uid",
+              "quoteCharacter": "`"
+            },
+            "as": "o10828"
+          },
+          "bind": "s63073",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10828"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Left"
+              }
+            },
+            "as": "o10829"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "`Book`._tenant IN (?)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testTenantFilterQuotesTheAliasOfEveryJoin#RIGHT JOIN, MariaDB and MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "allowNullColumn": "Main._uid",
+              "quoteCharacter": "`"
+            },
+            "as": "o10830"
+          },
+          "bind": "s63075",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10830"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o10831"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`Book`._tenant IN (?) OR `Book`.`_uid` IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testTenantFilterQuotesTheAliasOfEveryJoin#FULL OUTER JOIN, MariaDB and MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "allowNullColumn": "Main._uid",
+              "quoteCharacter": "`"
+            },
+            "as": "o10832"
+          },
+          "bind": "s63077",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10832"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::FullOuter"
+              }
+            },
+            "as": "o10833"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`Book`._tenant IN (?) OR `Book`.`_uid` IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testTenantFilterQuotesTheAliasOfEveryJoin#CROSS JOIN, MariaDB and MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "allowNullColumn": "Main._uid",
+              "quoteCharacter": "`"
+            },
+            "as": "o10834"
+          },
+          "bind": "s63079",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10834"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Cross"
+              }
+            },
+            "as": "o10835"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`Book`._tenant IN (?) OR `Book`.`_uid` IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testOuterJoinTenantFilterQuotesBothTables#PostgreSQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "metadataCollection": "_metadata",
+              "collection": "authors",
+              "allowNullColumn": "Main._uid",
+              "quoteCharacter": "\""
+            },
+            "as": "o10836"
+          },
+          "bind": "s63081",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\OuterJoin",
+            "args": {
+              "filter": {
+                "$obj": "o10836"
+              },
+              "source": "Main"
+            },
+            "as": "o10837"
+          },
+          "bind": "s63082",
+          "expect": {
+            "$hook": "OuterJoin"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10837"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o10838"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(\"Main\"._tenant IN (?) OR \"Main\".\"_uid\" IS NULL) AND \"Book\"._tenant IN (?)",
+                  "bindings": [
+                    7,
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testOuterJoinTenantFilterQuotesBothTables#MariaDB and MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "metadataCollection": "_metadata",
+              "collection": "authors",
+              "allowNullColumn": "Main._uid",
+              "quoteCharacter": "`"
+            },
+            "as": "o10839"
+          },
+          "bind": "s63084",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\OuterJoin",
+            "args": {
+              "filter": {
+                "$obj": "o10839"
+              },
+              "source": "Main"
+            },
+            "as": "o10840"
+          },
+          "bind": "s63085",
+          "expect": {
+            "$hook": "OuterJoin"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10840"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o10841"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`Main`._tenant IN (?) OR `Main`.`_uid` IS NULL) AND `Book`._tenant IN (?)",
+                  "bindings": [
+                    7,
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testOuterJoinChainFilterQuotesEveryEarlierTable#PostgreSQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "args": {
+              "joins": {
+                "Extra": {
+                  "$enum": "Query\\Builder\\JoinType::Cross"
+                },
+                "Book": {
+                  "$enum": "Query\\Builder\\JoinType::Right"
+                }
+              }
+            },
+            "as": "o10842"
+          },
+          "bind": "s63087",
+          "expect": {
+            "$value": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "quoteCharacter": "\""
+            },
+            "as": "o10843"
+          },
+          "bind": "s63088",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "database.namespace_books_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "Extra._uid",
+              "permissionDocumentColumn": "_document",
+              "permissionRoleColumn": "_permission",
+              "permissionTypeColumn": "_type",
+              "quoteCharacter": "\""
+            },
+            "as": "o10844"
+          },
+          "bind": "s63089",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10843"
+            },
+            "method": "joined",
+            "args": {
+              "table": "Extra"
+            },
+            "as": "o10845"
+          },
+          "bind": "s63090",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "\"Extra\"._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\OuterChain",
+            "args": {
+              "chain": {
+                "$obj": "o10842"
+              },
+              "conditions": {
+                "Extra": {
+                  "$obj": "o10845"
+                }
+              },
+              "quoteCharacter": "\""
+            },
+            "as": "o10846"
+          },
+          "bind": "s63091",
+          "expect": {
+            "$hook": "OuterChain"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10846"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o10847"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(\"Extra\"._tenant IN (?) OR \"Extra\".\"_uid\" IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10844"
+            },
+            "method": "filter",
+            "args": {
+              "table": "Extra"
+            },
+            "as": "o10848"
+          },
+          "bind": "s63093",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "\"Extra\".\"_uid\" IN (SELECT _document FROM \"database\".\"namespace_books_perms\" WHERE _permission IN (?) AND _type = ?)",
+              "bindings": [
+                "any",
+                "read"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\OuterChain",
+            "args": {
+              "chain": {
+                "$obj": "o10842"
+              },
+              "conditions": {
+                "Extra": {
+                  "$obj": "o10848"
+                }
+              },
+              "quoteCharacter": "\""
+            },
+            "as": "o10849"
+          },
+          "bind": "s63094",
+          "expect": {
+            "$hook": "OuterChain"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10849"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o10850"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(\"Extra\".\"_uid\" IN (SELECT _document FROM \"database\".\"namespace_books_perms\" WHERE _permission IN (?) AND _type = ?) OR \"Extra\".\"_uid\" IS NULL)",
+                  "bindings": [
+                    "any",
+                    "read"
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testOuterJoinChainFilterQuotesEveryEarlierTable#MariaDB and MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "args": {
+              "joins": {
+                "Extra": {
+                  "$enum": "Query\\Builder\\JoinType::Cross"
+                },
+                "Book": {
+                  "$enum": "Query\\Builder\\JoinType::Right"
+                }
+              }
+            },
+            "as": "o10851"
+          },
+          "bind": "s63096",
+          "expect": {
+            "$value": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "quoteCharacter": "`"
+            },
+            "as": "o10852"
+          },
+          "bind": "s63097",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "database.namespace_books_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "Extra._uid",
+              "permissionDocumentColumn": "_document",
+              "permissionRoleColumn": "_permission",
+              "permissionTypeColumn": "_type",
+              "quoteCharacter": "`"
+            },
+            "as": "o10853"
+          },
+          "bind": "s63098",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10852"
+            },
+            "method": "joined",
+            "args": {
+              "table": "Extra"
+            },
+            "as": "o10854"
+          },
+          "bind": "s63099",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`Extra`._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\OuterChain",
+            "args": {
+              "chain": {
+                "$obj": "o10851"
+              },
+              "conditions": {
+                "Extra": {
+                  "$obj": "o10854"
+                }
+              },
+              "quoteCharacter": "`"
+            },
+            "as": "o10855"
+          },
+          "bind": "s63100",
+          "expect": {
+            "$hook": "OuterChain"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10855"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o10856"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`Extra`._tenant IN (?) OR `Extra`.`_uid` IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10853"
+            },
+            "method": "filter",
+            "args": {
+              "table": "Extra"
+            },
+            "as": "o10857"
+          },
+          "bind": "s63102",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`Extra`.`_uid` IN (SELECT _document FROM `database`.`namespace_books_perms` WHERE _permission IN (?) AND _type = ?)",
+              "bindings": [
+                "any",
+                "read"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\OuterChain",
+            "args": {
+              "chain": {
+                "$obj": "o10851"
+              },
+              "conditions": {
+                "Extra": {
+                  "$obj": "o10857"
+                }
+              },
+              "quoteCharacter": "`"
+            },
+            "as": "o10858"
+          },
+          "bind": "s63103",
+          "expect": {
+            "$hook": "OuterChain"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10858"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o10859"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`Extra`.`_uid` IN (SELECT _document FROM `database`.`namespace_books_perms` WHERE _permission IN (?) AND _type = ?) OR `Extra`.`_uid` IS NULL)",
+                  "bindings": [
+                    "any",
+                    "read"
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testPermissionFilterQuotesItsDocumentColumn#PostgreSQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "database.namespace_books_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "Book._uid",
+              "permissionDocumentColumn": "_document",
+              "permissionRoleColumn": "_permission",
+              "permissionTypeColumn": "_type",
+              "quoteCharacter": "\""
+            },
+            "as": "o10860"
+          },
+          "bind": "s63105",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10860"
+            },
+            "method": "filter",
+            "args": {
+              "table": "Book"
+            },
+            "as": "o10861"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "\"Book\".\"_uid\" IN (SELECT _document FROM \"database\".\"namespace_books_perms\" WHERE _permission IN (?) AND _type = ?)",
+              "bindings": [
+                "any",
+                "read"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testPermissionFilterQuotesItsDocumentColumn#MariaDB and MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "database.namespace_books_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "Book._uid",
+              "permissionDocumentColumn": "_document",
+              "permissionRoleColumn": "_permission",
+              "permissionTypeColumn": "_type",
+              "quoteCharacter": "`"
+            },
+            "as": "o10862"
+          },
+          "bind": "s63107",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10862"
+            },
+            "method": "filter",
+            "args": {
+              "table": "Book"
+            },
+            "as": "o10863"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`Book`.`_uid` IN (SELECT _document FROM `database`.`namespace_books_perms` WHERE _permission IN (?) AND _type = ?)",
+              "bindings": [
+                "any",
+                "read"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testPermissionJoinFilterQuotesTheAliasOfEveryJoin#JOIN, PostgreSQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "database.namespace_books_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "Book._uid",
+              "permissionDocumentColumn": "_document",
+              "permissionRoleColumn": "_permission",
+              "permissionTypeColumn": "_type",
+              "quoteCharacter": "\""
+            },
+            "as": "o10864"
+          },
+          "bind": "s63109",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Join",
+            "args": {
+              "filter": {
+                "$obj": "o10864"
+              },
+              "alias": "Book",
+              "quoteCharacter": "\"",
+              "preservingOuterJoin": true
+            },
+            "as": "o10865"
+          },
+          "bind": "s63110",
+          "expect": {
+            "$hook": "Join"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10865"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Inner"
+              }
+            },
+            "as": "o10866"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "\"Book\".\"_uid\" IN (SELECT _document FROM \"database\".\"namespace_books_perms\" WHERE _permission IN (?) AND _type = ?)",
+                  "bindings": [
+                    "any",
+                    "read"
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testPermissionJoinFilterQuotesTheAliasOfEveryJoin#LEFT JOIN, PostgreSQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "database.namespace_books_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "Book._uid",
+              "permissionDocumentColumn": "_document",
+              "permissionRoleColumn": "_permission",
+              "permissionTypeColumn": "_type",
+              "quoteCharacter": "\""
+            },
+            "as": "o10867"
+          },
+          "bind": "s63112",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Join",
+            "args": {
+              "filter": {
+                "$obj": "o10867"
+              },
+              "alias": "Book",
+              "quoteCharacter": "\"",
+              "preservingOuterJoin": true
+            },
+            "as": "o10868"
+          },
+          "bind": "s63113",
+          "expect": {
+            "$hook": "Join"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10868"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Left"
+              }
+            },
+            "as": "o10869"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "\"Book\".\"_uid\" IN (SELECT _document FROM \"database\".\"namespace_books_perms\" WHERE _permission IN (?) AND _type = ?)",
+                  "bindings": [
+                    "any",
+                    "read"
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testPermissionJoinFilterQuotesTheAliasOfEveryJoin#RIGHT JOIN, PostgreSQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "database.namespace_books_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "Book._uid",
+              "permissionDocumentColumn": "_document",
+              "permissionRoleColumn": "_permission",
+              "permissionTypeColumn": "_type",
+              "quoteCharacter": "\""
+            },
+            "as": "o10870"
+          },
+          "bind": "s63115",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Join",
+            "args": {
+              "filter": {
+                "$obj": "o10870"
+              },
+              "alias": "Book",
+              "quoteCharacter": "\"",
+              "preservingOuterJoin": true
+            },
+            "as": "o10871"
+          },
+          "bind": "s63116",
+          "expect": {
+            "$hook": "Join"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10871"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o10872"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(\"Book\".\"_uid\" IN (SELECT _document FROM \"database\".\"namespace_books_perms\" WHERE _permission IN (?) AND _type = ?) OR \"Book\".\"_uid\" IS NULL)",
+                  "bindings": [
+                    "any",
+                    "read"
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testPermissionJoinFilterQuotesTheAliasOfEveryJoin#FULL OUTER JOIN, PostgreSQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "database.namespace_books_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "Book._uid",
+              "permissionDocumentColumn": "_document",
+              "permissionRoleColumn": "_permission",
+              "permissionTypeColumn": "_type",
+              "quoteCharacter": "\""
+            },
+            "as": "o10873"
+          },
+          "bind": "s63118",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Join",
+            "args": {
+              "filter": {
+                "$obj": "o10873"
+              },
+              "alias": "Book",
+              "quoteCharacter": "\"",
+              "preservingOuterJoin": true
+            },
+            "as": "o10874"
+          },
+          "bind": "s63119",
+          "expect": {
+            "$hook": "Join"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10874"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::FullOuter"
+              }
+            },
+            "as": "o10875"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(\"Book\".\"_uid\" IN (SELECT _document FROM \"database\".\"namespace_books_perms\" WHERE _permission IN (?) AND _type = ?) OR \"Book\".\"_uid\" IS NULL)",
+                  "bindings": [
+                    "any",
+                    "read"
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testPermissionJoinFilterQuotesTheAliasOfEveryJoin#CROSS JOIN, PostgreSQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "database.namespace_books_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "Book._uid",
+              "permissionDocumentColumn": "_document",
+              "permissionRoleColumn": "_permission",
+              "permissionTypeColumn": "_type",
+              "quoteCharacter": "\""
+            },
+            "as": "o10876"
+          },
+          "bind": "s63121",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Join",
+            "args": {
+              "filter": {
+                "$obj": "o10876"
+              },
+              "alias": "Book",
+              "quoteCharacter": "\"",
+              "preservingOuterJoin": true
+            },
+            "as": "o10877"
+          },
+          "bind": "s63122",
+          "expect": {
+            "$hook": "Join"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10877"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Cross"
+              }
+            },
+            "as": "o10878"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(\"Book\".\"_uid\" IN (SELECT _document FROM \"database\".\"namespace_books_perms\" WHERE _permission IN (?) AND _type = ?) OR \"Book\".\"_uid\" IS NULL)",
+                  "bindings": [
+                    "any",
+                    "read"
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testPermissionJoinFilterQuotesTheAliasOfEveryJoin#JOIN, MariaDB and MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "database.namespace_books_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "Book._uid",
+              "permissionDocumentColumn": "_document",
+              "permissionRoleColumn": "_permission",
+              "permissionTypeColumn": "_type",
+              "quoteCharacter": "`"
+            },
+            "as": "o10879"
+          },
+          "bind": "s63124",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Join",
+            "args": {
+              "filter": {
+                "$obj": "o10879"
+              },
+              "alias": "Book",
+              "quoteCharacter": "`",
+              "preservingOuterJoin": true
+            },
+            "as": "o10880"
+          },
+          "bind": "s63125",
+          "expect": {
+            "$hook": "Join"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10880"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Inner"
+              }
+            },
+            "as": "o10881"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "`Book`.`_uid` IN (SELECT _document FROM `database`.`namespace_books_perms` WHERE _permission IN (?) AND _type = ?)",
+                  "bindings": [
+                    "any",
+                    "read"
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testPermissionJoinFilterQuotesTheAliasOfEveryJoin#LEFT JOIN, MariaDB and MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "database.namespace_books_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "Book._uid",
+              "permissionDocumentColumn": "_document",
+              "permissionRoleColumn": "_permission",
+              "permissionTypeColumn": "_type",
+              "quoteCharacter": "`"
+            },
+            "as": "o10882"
+          },
+          "bind": "s63127",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Join",
+            "args": {
+              "filter": {
+                "$obj": "o10882"
+              },
+              "alias": "Book",
+              "quoteCharacter": "`",
+              "preservingOuterJoin": true
+            },
+            "as": "o10883"
+          },
+          "bind": "s63128",
+          "expect": {
+            "$hook": "Join"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10883"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Left"
+              }
+            },
+            "as": "o10884"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "`Book`.`_uid` IN (SELECT _document FROM `database`.`namespace_books_perms` WHERE _permission IN (?) AND _type = ?)",
+                  "bindings": [
+                    "any",
+                    "read"
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testPermissionJoinFilterQuotesTheAliasOfEveryJoin#RIGHT JOIN, MariaDB and MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "database.namespace_books_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "Book._uid",
+              "permissionDocumentColumn": "_document",
+              "permissionRoleColumn": "_permission",
+              "permissionTypeColumn": "_type",
+              "quoteCharacter": "`"
+            },
+            "as": "o10885"
+          },
+          "bind": "s63130",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Join",
+            "args": {
+              "filter": {
+                "$obj": "o10885"
+              },
+              "alias": "Book",
+              "quoteCharacter": "`",
+              "preservingOuterJoin": true
+            },
+            "as": "o10886"
+          },
+          "bind": "s63131",
+          "expect": {
+            "$hook": "Join"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10886"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o10887"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`Book`.`_uid` IN (SELECT _document FROM `database`.`namespace_books_perms` WHERE _permission IN (?) AND _type = ?) OR `Book`.`_uid` IS NULL)",
+                  "bindings": [
+                    "any",
+                    "read"
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testPermissionJoinFilterQuotesTheAliasOfEveryJoin#FULL OUTER JOIN, MariaDB and MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "database.namespace_books_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "Book._uid",
+              "permissionDocumentColumn": "_document",
+              "permissionRoleColumn": "_permission",
+              "permissionTypeColumn": "_type",
+              "quoteCharacter": "`"
+            },
+            "as": "o10888"
+          },
+          "bind": "s63133",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Join",
+            "args": {
+              "filter": {
+                "$obj": "o10888"
+              },
+              "alias": "Book",
+              "quoteCharacter": "`",
+              "preservingOuterJoin": true
+            },
+            "as": "o10889"
+          },
+          "bind": "s63134",
+          "expect": {
+            "$hook": "Join"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10889"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::FullOuter"
+              }
+            },
+            "as": "o10890"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`Book`.`_uid` IN (SELECT _document FROM `database`.`namespace_books_perms` WHERE _permission IN (?) AND _type = ?) OR `Book`.`_uid` IS NULL)",
+                  "bindings": [
+                    "any",
+                    "read"
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testPermissionJoinFilterQuotesTheAliasOfEveryJoin#CROSS JOIN, MariaDB and MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "database.namespace_books_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "Book._uid",
+              "permissionDocumentColumn": "_document",
+              "permissionRoleColumn": "_permission",
+              "permissionTypeColumn": "_type",
+              "quoteCharacter": "`"
+            },
+            "as": "o10891"
+          },
+          "bind": "s63136",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Join",
+            "args": {
+              "filter": {
+                "$obj": "o10891"
+              },
+              "alias": "Book",
+              "quoteCharacter": "`",
+              "preservingOuterJoin": true
+            },
+            "as": "o10892"
+          },
+          "bind": "s63137",
+          "expect": {
+            "$hook": "Join"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10892"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Cross"
+              }
+            },
+            "as": "o10893"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`Book`.`_uid` IN (SELECT _document FROM `database`.`namespace_books_perms` WHERE _permission IN (?) AND _type = ?) OR `Book`.`_uid` IS NULL)",
+                  "bindings": [
+                    "any",
+                    "read"
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testAllowNullPermissionQuotesTheMainTableOnBothSides#PostgreSQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "database.namespace_books_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "Main._uid",
+              "permissionDocumentColumn": "_document",
+              "permissionRoleColumn": "_permission",
+              "permissionTypeColumn": "_type",
+              "quoteCharacter": "\""
+            },
+            "as": "o10894"
+          },
+          "bind": "s63139",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Column\\AllowNull",
+            "args": {
+              "filter": {
+                "$obj": "o10894"
+              },
+              "column": "Main._uid",
+              "quoteCharacter": "\""
+            },
+            "as": "o10895"
+          },
+          "bind": "s63140",
+          "expect": {
+            "$hook": "AllowNull"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10895"
+            },
+            "method": "filter",
+            "args": {
+              "table": "Main"
+            },
+            "as": "o10896"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "(\"Main\".\"_uid\" IN (SELECT _document FROM \"database\".\"namespace_books_perms\" WHERE _permission IN (?) AND _type = ?) OR \"Main\".\"_uid\" IS NULL)",
+              "bindings": [
+                "any",
+                "read"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testAllowNullPermissionQuotesTheMainTableOnBothSides#MariaDB and MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "database.namespace_books_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "Main._uid",
+              "permissionDocumentColumn": "_document",
+              "permissionRoleColumn": "_permission",
+              "permissionTypeColumn": "_type",
+              "quoteCharacter": "`"
+            },
+            "as": "o10897"
+          },
+          "bind": "s63142",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Column\\AllowNull",
+            "args": {
+              "filter": {
+                "$obj": "o10897"
+              },
+              "column": "Main._uid",
+              "quoteCharacter": "`"
+            },
+            "as": "o10898"
+          },
+          "bind": "s63143",
+          "expect": {
+            "$hook": "AllowNull"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10898"
+            },
+            "method": "filter",
+            "args": {
+              "table": "Main"
+            },
+            "as": "o10899"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "(`Main`.`_uid` IN (SELECT _document FROM `database`.`namespace_books_perms` WHERE _permission IN (?) AND _type = ?) OR `Main`.`_uid` IS NULL)",
+              "bindings": [
+                "any",
+                "read"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testOuterJoinPermissionFilterQuotesBothTables#PostgreSQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "database.namespace_books_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "Main._uid",
+              "permissionDocumentColumn": "_document",
+              "permissionRoleColumn": "_permission",
+              "permissionTypeColumn": "_type",
+              "quoteCharacter": "\""
+            },
+            "as": "o10900"
+          },
+          "bind": "s63145",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10900"
+            },
+            "method": "filter",
+            "args": {
+              "table": "Main"
+            },
+            "as": "o10901"
+          },
+          "bind": "s63146",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "\"Main\".\"_uid\" IN (SELECT _document FROM \"database\".\"namespace_books_perms\" WHERE _permission IN (?) AND _type = ?)",
+              "bindings": [
+                "any",
+                "read"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "database.namespace_books_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "Book._uid",
+              "permissionDocumentColumn": "_document",
+              "permissionRoleColumn": "_permission",
+              "permissionTypeColumn": "_type",
+              "quoteCharacter": "\""
+            },
+            "as": "o10902"
+          },
+          "bind": "s63147",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10902"
+            },
+            "method": "filter",
+            "args": {
+              "table": "Book"
+            },
+            "as": "o10903"
+          },
+          "bind": "s63148",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "\"Book\".\"_uid\" IN (SELECT _document FROM \"database\".\"namespace_books_perms\" WHERE _permission IN (?) AND _type = ?)",
+              "bindings": [
+                "any",
+                "read"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\OuterJoin",
+            "args": {
+              "source": "Main",
+              "conditions": {
+                "Main": {
+                  "$obj": "o10901"
+                },
+                "Book": {
+                  "$obj": "o10903"
+                }
+              },
+              "quoteCharacter": "\""
+            },
+            "as": "o10904"
+          },
+          "bind": "s63149",
+          "expect": {
+            "$hook": "OuterJoin"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10904"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::FullOuter"
+              }
+            },
+            "as": "o10905"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(\"Main\".\"_uid\" IN (SELECT _document FROM \"database\".\"namespace_books_perms\" WHERE _permission IN (?) AND _type = ?) OR \"Main\".\"_uid\" IS NULL) AND \"Book\".\"_uid\" IN (SELECT _document FROM \"database\".\"namespace_books_perms\" WHERE _permission IN (?) AND _type = ?)",
+                  "bindings": [
+                    "any",
+                    "read",
+                    "any",
+                    "read"
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasQuotingTest::testOuterJoinPermissionFilterQuotesBothTables#MariaDB and MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "database.namespace_books_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "Main._uid",
+              "permissionDocumentColumn": "_document",
+              "permissionRoleColumn": "_permission",
+              "permissionTypeColumn": "_type",
+              "quoteCharacter": "`"
+            },
+            "as": "o10906"
+          },
+          "bind": "s63151",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10906"
+            },
+            "method": "filter",
+            "args": {
+              "table": "Main"
+            },
+            "as": "o10907"
+          },
+          "bind": "s63152",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`Main`.`_uid` IN (SELECT _document FROM `database`.`namespace_books_perms` WHERE _permission IN (?) AND _type = ?)",
+              "bindings": [
+                "any",
+                "read"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "database.namespace_books_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "Book._uid",
+              "permissionDocumentColumn": "_document",
+              "permissionRoleColumn": "_permission",
+              "permissionTypeColumn": "_type",
+              "quoteCharacter": "`"
+            },
+            "as": "o10908"
+          },
+          "bind": "s63153",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10908"
+            },
+            "method": "filter",
+            "args": {
+              "table": "Book"
+            },
+            "as": "o10909"
+          },
+          "bind": "s63154",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`Book`.`_uid` IN (SELECT _document FROM `database`.`namespace_books_perms` WHERE _permission IN (?) AND _type = ?)",
+              "bindings": [
+                "any",
+                "read"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\OuterJoin",
+            "args": {
+              "source": "Main",
+              "conditions": {
+                "Main": {
+                  "$obj": "o10907"
+                },
+                "Book": {
+                  "$obj": "o10909"
+                }
+              },
+              "quoteCharacter": "`"
+            },
+            "as": "o10910"
+          },
+          "bind": "s63155",
+          "expect": {
+            "$hook": "OuterJoin"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10910"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::FullOuter"
+              }
+            },
+            "as": "o10911"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`Main`.`_uid` IN (SELECT _document FROM `database`.`namespace_books_perms` WHERE _permission IN (?) AND _type = ?) OR `Main`.`_uid` IS NULL) AND `Book`.`_uid` IN (SELECT _document FROM `database`.`namespace_books_perms` WHERE _permission IN (?) AND _type = ?)",
+                  "bindings": [
+                    "any",
+                    "read",
+                    "any",
+                    "read"
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

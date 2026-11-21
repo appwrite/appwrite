@@ -1,0 +1,184 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/SQLiteStatementPreparationTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SQLiteStatementPreparationTest::testAStrayDriverTransactionIsRolledBackBeforeTheNextOne",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o621"
+          },
+          "bind": "s1145",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o621"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "main"
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o621"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "preparation"
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o621"
+            },
+            "method": "startTransaction",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o621"
+            },
+            "method": "commitTransaction",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SQLiteStatementPreparationTest::testABusyDatabaseFailsToStartATransaction",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite:/tmp/sqlite-busy-110el8rs4dov7ODiGjE",
+                  "options": {
+                    "2": 0
+                  }
+                }
+              }
+            },
+            "as": "o622"
+          },
+          "bind": "s1150",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o622"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "main"
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o622"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "preparation"
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o622"
+            },
+            "method": "startTransaction",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o622"
+            },
+            "method": "inTransaction",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o622"
+            },
+            "method": "startTransaction",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o622"
+            },
+            "method": "commitTransaction",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

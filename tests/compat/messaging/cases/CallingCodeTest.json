@@ -1,0 +1,371 @@
+{
+  "source": "packages/messaging/tests/Adapter/SMS/GEOSMS/CallingCodeTest.php",
+  "cases": [
+    {
+      "name": "from phone number",
+      "steps": [
+        {
+          "op": "calling_code.from_phone_number",
+          "args": {
+            "number": "+11234567890"
+          },
+          "expect": "1"
+        },
+        {
+          "op": "calling_code.from_phone_number",
+          "args": {
+            "number": "+911234567890"
+          },
+          "expect": "91"
+        },
+        {
+          "op": "calling_code.from_phone_number",
+          "args": {
+            "number": "9721234567890"
+          },
+          "expect": "972"
+        },
+        {
+          "op": "calling_code.from_phone_number",
+          "args": {
+            "number": "009711234567890"
+          },
+          "expect": "971"
+        },
+        {
+          "op": "calling_code.from_phone_number",
+          "args": {
+            "number": "011441234567890"
+          },
+          "expect": "44"
+        },
+        {
+          "op": "calling_code.from_phone_number",
+          "args": {
+            "number": "2"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "neighbouring prefix: Swiss mobile",
+      "op": "calling_code.from_phone_number",
+      "args": {
+        "number": "+41791234567"
+      },
+      "expect": "41"
+    },
+    {
+      "name": "neighbouring prefix: Liechtenstein",
+      "op": "calling_code.from_phone_number",
+      "args": {
+        "number": "+4237891234"
+      },
+      "expect": "423"
+    },
+    {
+      "name": "neighbouring prefix: Czech Republic",
+      "op": "calling_code.from_phone_number",
+      "args": {
+        "number": "+420601234567"
+      },
+      "expect": "420"
+    },
+    {
+      "name": "neighbouring prefix: Slovak Republic",
+      "op": "calling_code.from_phone_number",
+      "args": {
+        "number": "+421901234567"
+      },
+      "expect": "421"
+    },
+    {
+      "name": "neighbouring prefix: Egypt",
+      "op": "calling_code.from_phone_number",
+      "args": {
+        "number": "+201001234567"
+      },
+      "expect": "20"
+    },
+    {
+      "name": "neighbouring prefix: Morocco",
+      "op": "calling_code.from_phone_number",
+      "args": {
+        "number": "+212612345678"
+      },
+      "expect": "212"
+    },
+    {
+      "name": "neighbouring prefix: South Africa",
+      "op": "calling_code.from_phone_number",
+      "args": {
+        "number": "+27821234567"
+      },
+      "expect": "27"
+    },
+    {
+      "name": "neighbouring prefix: Kazakhstan",
+      "op": "calling_code.from_phone_number",
+      "args": {
+        "number": "+77011234567"
+      },
+      "expect": "7"
+    },
+    {
+      "name": "every constant",
+      "op": "calling_code.constants",
+      "args": {},
+      "expect": {
+        "ALGERIA": "213",
+        "ANDORRA": "376",
+        "ANGOLA": "244",
+        "ARGENTINA": "54",
+        "ARMENIA": "374",
+        "ARUBA": "297",
+        "AUSTRALIA": "61",
+        "AUSTRIA": "43",
+        "AZERBAIJAN": "994",
+        "BAHRAIN": "973",
+        "BANGLADESH": "880",
+        "BELARUS": "375",
+        "BELGIUM": "32",
+        "BELIZE": "501",
+        "BENIN": "229",
+        "BHUTAN": "975",
+        "BOLIVIA": "591",
+        "BOSNIA_HERZEGOVINA": "387",
+        "BOTSWANA": "267",
+        "BRAZIL": "55",
+        "BRUNEI": "673",
+        "BULGARIA": "359",
+        "BURKINA_FASO": "226",
+        "BURUNDI": "257",
+        "CAMBODIA": "855",
+        "CAMEROON": "237",
+        "CAPE_VERDE_ISLANDS": "238",
+        "CENTRAL_AFRICAN_REPUBLIC": "236",
+        "CHILE": "56",
+        "CHINA": "86",
+        "COLOMBIA": "57",
+        "COMOROS_AND_MAYOTTE": "269",
+        "CONGO": "242",
+        "COOK_ISLANDS": "682",
+        "COSTA_RICA": "506",
+        "CROATIA": "385",
+        "CUBA": "53",
+        "CYPRUS": "357",
+        "CZECH_REPUBLIC": "420",
+        "DENMARK": "45",
+        "DJIBOUTI": "253",
+        "ECUADOR": "593",
+        "EGYPT": "20",
+        "EL_SALVADOR": "503",
+        "EQUATORIAL_GUINEA": "240",
+        "ERITREA": "291",
+        "ESTONIA": "372",
+        "ETHIOPIA": "251",
+        "FALKLAND_ISLANDS": "500",
+        "FAROE_ISLANDS": "298",
+        "FIJI": "679",
+        "FINLAND": "358",
+        "FRANCE": "33",
+        "FRENCH_GUIANA": "594",
+        "FRENCH_POLYNESIA": "689",
+        "GABON": "241",
+        "GAMBIA": "220",
+        "GEORGIA": "995",
+        "GERMANY": "49",
+        "GHANA": "233",
+        "GIBRALTAR": "350",
+        "GREECE": "30",
+        "GREENLAND": "299",
+        "GUADELOUPE": "590",
+        "GUAM": "671",
+        "GUATEMALA": "502",
+        "GUINEA": "224",
+        "GUINEA_BISSAU": "245",
+        "GUYANA": "592",
+        "HAITI": "509",
+        "HONDURAS": "504",
+        "HONG_KONG": "852",
+        "HUNGARY": "36",
+        "ICELAND": "354",
+        "INDIA": "91",
+        "INDONESIA": "62",
+        "IRAN": "98",
+        "IRAQ": "964",
+        "IRELAND": "353",
+        "ISRAEL": "972",
+        "ITALY": "39",
+        "JAPAN": "81",
+        "JORDAN": "962",
+        "KENYA": "254",
+        "KIRIBATI": "686",
+        "NORTH_KOREA": "850",
+        "SOUTH_KOREA": "82",
+        "KUWAIT": "965",
+        "KYRGYZSTAN": "996",
+        "LAOS": "856",
+        "LATVIA": "371",
+        "LEBANON": "961",
+        "LESOTHO": "266",
+        "LIBERIA": "231",
+        "LIBYA": "218",
+        "LIECHTENSTEIN": "423",
+        "LITHUANIA": "370",
+        "LUXEMBOURG": "352",
+        "MACAO": "853",
+        "MACEDONIA": "389",
+        "MADAGASCAR": "261",
+        "MALAWI": "265",
+        "MALAYSIA": "60",
+        "MALDIVES": "960",
+        "MALI": "223",
+        "MALTA": "356",
+        "MARSHALL_ISLANDS": "692",
+        "MARTINIQUE": "596",
+        "MAURITANIA": "222",
+        "MEXICO": "52",
+        "MICRONESIA": "691",
+        "MOLDOVA": "373",
+        "MONACO": "377",
+        "MONGOLIA": "976",
+        "MOROCCO": "212",
+        "MOZAMBIQUE": "258",
+        "MYANMAR": "95",
+        "NAMIBIA": "264",
+        "NAURU": "674",
+        "NEPAL": "977",
+        "NETHERLANDS": "31",
+        "NEW_CALEDONIA": "687",
+        "NEW_ZEALAND": "64",
+        "NICARAGUA": "505",
+        "NIGER": "227",
+        "NIGERIA": "234",
+        "NIUE": "683",
+        "NORFOLK_ISLANDS": "672",
+        "NORTH_AMERICA": "1",
+        "NORTHERN_MARIANA_ISLANDS": "670",
+        "NORWAY": "47",
+        "OMAN": "968",
+        "PALAU": "680",
+        "PANAMA": "507",
+        "PAPUA_NEW_GUINEA": "675",
+        "PARAGUAY": "595",
+        "PERU": "51",
+        "PHILIPPINES": "63",
+        "POLAND": "48",
+        "PORTUGAL": "351",
+        "QATAR": "974",
+        "REUNION": "262",
+        "ROMANIA": "40",
+        "RUSSIA_KAZAKHSTAN_UZBEKISTAN_TURKMENISTAN_AND_TAJIKSTAN": "7",
+        "RWANDA": "250",
+        "SAN_MARINO": "378",
+        "SAO_TOME_AND_PRINCIPE": "239",
+        "SAUDI_ARABIA": "966",
+        "SENEGAL": "221",
+        "SERBIA": "381",
+        "SEYCHELLES": "248",
+        "SIERRA_LEONE": "232",
+        "SINGAPORE": "65",
+        "SLOVAK_REPUBLIC": "421",
+        "SLOVENIA": "386",
+        "SOLOMON_ISLANDS": "677",
+        "SOMALIA": "252",
+        "SOUTH_AFRICA": "27",
+        "SPAIN": "34",
+        "SRI_LANKA": "94",
+        "ST_HELENA": "290",
+        "SUDAN": "249",
+        "SURINAME": "597",
+        "SWAZILAND": "268",
+        "SWEDEN": "46",
+        "SWITZERLAND": "41",
+        "SYRIA": "963",
+        "TAIWAN": "886",
+        "THAILAND": "66",
+        "TOGO": "228",
+        "TONGA": "676",
+        "TUNISIA": "216",
+        "TURKEY": "90",
+        "TUVALU": "688",
+        "UGANDA": "256",
+        "UKRAINE": "380",
+        "UNITED_ARAB_EMIRATES": "971",
+        "UNITED_KINGDOM": "44",
+        "URUGUAY": "598",
+        "VANUATU": "678",
+        "VENEZUELA": "58",
+        "VIETNAM": "84",
+        "WALLIS_AND_FUTUNA": "681",
+        "YEMEN": "967",
+        "ZAMBIA": "260",
+        "ZANZIBAR": "255",
+        "ZIMBABWE": "263"
+      }
+    },
+    {
+      "name": "separators and prefixes",
+      "steps": [
+        {
+          "op": "calling_code.from_phone_number",
+          "args": {
+            "number": "+44 (20) 7946-0958"
+          },
+          "expect": "44"
+        },
+        {
+          "op": "calling_code.from_phone_number",
+          "args": {
+            "number": "0011234"
+          },
+          "expect": "1"
+        },
+        {
+          "op": "calling_code.from_phone_number",
+          "args": {
+            "number": "000"
+          },
+          "expect": null
+        },
+        {
+          "op": "calling_code.from_phone_number",
+          "args": {
+            "number": ""
+          },
+          "expect": null
+        },
+        {
+          "op": "calling_code.from_phone_number",
+          "args": {
+            "number": "+"
+          },
+          "expect": null
+        },
+        {
+          "op": "calling_code.from_phone_number",
+          "args": {
+            "number": "x1"
+          },
+          "expect": null
+        },
+        {
+          "op": "calling_code.from_phone_number",
+          "args": {
+            "number": "1x"
+          },
+          "expect": "1"
+        },
+        {
+          "op": "calling_code.from_phone_number",
+          "args": {
+            "number": "٩٧١"
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

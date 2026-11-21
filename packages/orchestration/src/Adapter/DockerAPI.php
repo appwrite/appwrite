@@ -513,7 +513,8 @@ class DockerAPI extends Adapter
 
         $body = [
             'Hostname' => $hostname,
-            'Entrypoint' => $entrypoint,
+            // A list: Engine 29 (API 1.52) decodes Entrypoint into []string only, earlier daemons accept both.
+            'Entrypoint' => empty($entrypoint) ? [] : [$entrypoint],
             'Image' => $image,
             'Cmd' => $command,
             'WorkingDir' => $workdir,

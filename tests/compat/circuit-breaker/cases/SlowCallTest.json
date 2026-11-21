@@ -1,0 +1,3207 @@
+{
+  "source": "packages/circuit-breaker/tests/SlowCallTest.php",
+  "cases": [
+    {
+      "name": "mostly slow traffic below the slow ratio stays closed",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 20,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": null
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed"
+            ]
+          },
+          "expect": {
+            "ok": 5
+          }
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              }
+            ]
+          },
+          "expect": {
+            "fallback": 20
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "breaker.slow",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 20
+        }
+      ]
+    },
+    {
+      "name": "all slow traffic opens once minimum throughput is reached",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 20,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": null
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              }
+            ]
+          },
+          "expect": {
+            "fallback": 19
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "read deadline expired"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "open"
+        }
+      ]
+    },
+    {
+      "name": "slow calls do not count toward the failure ratio",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 20,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 1.0,
+            "slow_minimum_throughput": null
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "ok"
+            }
+          },
+          "expect": "ok"
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              }
+            ]
+          },
+          "expect": {
+            "fallback": 19
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "breaker.slow",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 19
+        }
+      ]
+    },
+    {
+      "name": "mostly slow or failed traffic opens when its last call fails",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 3,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": 20
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              "succeed",
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "LogicException"
+              },
+              {
+                "throw": "LogicException"
+              },
+              {
+                "throw": "LogicException"
+              },
+              {
+                "throw": "LogicException"
+              },
+              {
+                "throw": "LogicException"
+              }
+            ]
+          },
+          "expect": {
+            "ok": 1,
+            "fallback": 18
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "failed",
+              "class": "LogicException"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "open"
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 6
+        },
+        {
+          "op": "breaker.slow",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 13
+        }
+      ]
+    },
+    {
+      "name": "mostly slow or failed traffic opens when its last call is slow",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 3,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": 20
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              "succeed",
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "LogicException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "LogicException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "LogicException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "LogicException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "LogicException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "LogicException"
+              }
+            ]
+          },
+          "expect": {
+            "ok": 1,
+            "fallback": 18
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "read deadline expired"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "open"
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 6
+        },
+        {
+          "op": "breaker.slow",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 13
+        }
+      ]
+    },
+    {
+      "name": "a dependency that never succeeds opens on the failure minimum when all slow",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 3,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": 20
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              }
+            ]
+          },
+          "expect": {
+            "fallback": 2
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "read deadline expired"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "open"
+        },
+        {
+          "op": "breaker.slow",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 3
+        }
+      ]
+    },
+    {
+      "name": "a dependency that never succeeds opens on the failure minimum when its last call fails",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 3,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": 20
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              }
+            ]
+          },
+          "expect": {
+            "fallback": 2
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "failed",
+              "class": "LogicException"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "open"
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "breaker.slow",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 2
+        }
+      ]
+    },
+    {
+      "name": "one success among slow calls keeps a sparse window closed",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 3,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": 20
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              }
+            ]
+          },
+          "expect": {
+            "fallback": 2
+          }
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "ok"
+            }
+          },
+          "expect": "ok"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.slow",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 2
+        }
+      ]
+    },
+    {
+      "name": "one success keeps a sparse window below both rules",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 3,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": 20
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              "succeed",
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "LogicException"
+              },
+              {
+                "throw": "LogicException"
+              },
+              {
+                "throw": "LogicException"
+              }
+            ]
+          },
+          "expect": {
+            "ok": 1,
+            "fallback": 18
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 3
+        },
+        {
+          "op": "breaker.slow",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 15
+        }
+      ]
+    },
+    {
+      "name": "partly slow traffic below the slow ratio stays closed with failures",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 3,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": 20
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              "succeed",
+              "succeed",
+              "succeed",
+              "succeed",
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "LogicException"
+              },
+              {
+                "throw": "LogicException"
+              }
+            ]
+          },
+          "expect": {
+            "ok": 4,
+            "fallback": 16
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "breaker.slow",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 14
+        }
+      ]
+    },
+    {
+      "name": "slow options without slow exceptions leave the failure rule alone",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 3,
+            "slow_ratio": 0.3,
+            "slow_minimum_throughput": 3
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "ok"
+            }
+          },
+          "expect": "ok"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "ok"
+            }
+          },
+          "expect": "ok"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "failed",
+              "class": "LogicException"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "the failure rule opens on failures over all calls including slow ones",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.6,
+            "minimum_throughput": 5,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 1.0,
+            "slow_minimum_throughput": null
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "LogicException"
+              },
+              {
+                "throw": "LogicException"
+              }
+            ]
+          },
+          "expect": {
+            "fallback": 4
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "failed",
+              "class": "LogicException"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "open"
+        }
+      ]
+    },
+    {
+      "name": "the failure rule ignores the slow count",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.6,
+            "minimum_throughput": 5,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 1.0,
+            "slow_minimum_throughput": null
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              "succeed",
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "LogicException"
+              }
+            ]
+          },
+          "expect": {
+            "ok": 1,
+            "fallback": 4
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "breaker.slow",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 3
+        }
+      ]
+    },
+    {
+      "name": "subclasses of a slow exception are slow",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 20,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": null
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "read deadline expired",
+              "class": "UnexpectedValueException"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.slow",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "other exceptions still open through the failure rule",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 1,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": null
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "failed",
+              "class": "LogicException"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "open"
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "breaker.slow",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "failures open on their own minimum below the slow minimum",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 3,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": 20
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              {
+                "throw": "LogicException"
+              },
+              {
+                "throw": "LogicException"
+              },
+              {
+                "throw": "LogicException"
+              }
+            ]
+          },
+          "expect": {
+            "fallback": 3
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "open"
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 3
+        }
+      ]
+    },
+    {
+      "name": "slow calls wait for the slow minimum",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 3,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": 20
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "ok"
+            }
+          },
+          "expect": "ok"
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              }
+            ]
+          },
+          "expect": {
+            "fallback": 18
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.slow",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 18
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "read deadline expired"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "open"
+        },
+        {
+          "op": "breaker.slow",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 19
+        }
+      ]
+    },
+    {
+      "name": "a slow minimum below the failure minimum opens on slow calls sooner",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 20,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": 3
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              }
+            ]
+          },
+          "expect": {
+            "fallback": 2
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "read deadline expired"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "open"
+        }
+      ]
+    },
+    {
+      "name": "a slow probe leaves the circuit half open and releases its slot",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 2,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 20,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": null
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.trip",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "sleep",
+          "args": {
+            "ms": 3000
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "half_open"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "read deadline expired"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "half_open"
+        },
+        {
+          "op": "breaker.successes",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "ok"
+            }
+          },
+          "expect": "ok"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "half_open"
+        },
+        {
+          "op": "breaker.successes",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "two successes close the circuit after slow probes",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 2,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 20,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": null
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.trip",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "sleep",
+          "args": {
+            "ms": 3000
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "half_open"
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              }
+            ]
+          },
+          "expect": {
+            "fallback": 3
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "half_open"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "ok"
+            }
+          },
+          "expect": "ok"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "half_open"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "ok"
+            }
+          },
+          "expect": "ok"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        }
+      ]
+    },
+    {
+      "name": "a failing probe still reopens after slow probes",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 2,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 20,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": null
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.trip",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "sleep",
+          "args": {
+            "ms": 3000
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "half_open"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "read deadline expired"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "failed",
+              "class": "LogicException"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "open"
+        }
+      ]
+    },
+    {
+      "name": "the slow minimum of slow probes reopens the circuit",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 2,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 20,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": 3
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.trip",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "sleep",
+          "args": {
+            "ms": 3000
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "half_open"
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              }
+            ]
+          },
+          "expect": {
+            "fallback": 2
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "half_open"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "read deadline expired"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "open"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "ok"
+            }
+          },
+          "expect": "fallback"
+        }
+      ]
+    },
+    {
+      "name": "the slow probe count resets each half open period",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 2,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 20,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": 3
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.trip",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "sleep",
+          "args": {
+            "ms": 3000
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "half_open"
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              }
+            ]
+          },
+          "expect": {
+            "fallback": 2
+          }
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "failed",
+              "class": "LogicException"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "open"
+        },
+        {
+          "op": "sleep",
+          "args": {
+            "ms": 3000
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "half_open"
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              }
+            ]
+          },
+          "expect": {
+            "fallback": 2
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "half_open"
+        }
+      ]
+    },
+    {
+      "name": "the slow probe count resets when another process starts the next period",
+      "steps": [
+        {
+          "op": "store.array",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 2,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 20,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": 3,
+            "store": {
+              "$ref": "c"
+            }
+          },
+          "bind": "prober",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 2,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 20,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": 3,
+            "store": {
+              "$ref": "c"
+            }
+          },
+          "bind": "other",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.trip",
+          "args": {
+            "breaker": {
+              "$ref": "prober"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "sleep",
+          "args": {
+            "ms": 3000
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "prober"
+            }
+          },
+          "expect": "half_open"
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "prober"
+            },
+            "outcomes": [
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              }
+            ]
+          },
+          "expect": {
+            "fallback": 2
+          }
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "other"
+            },
+            "close": {
+              "throw": "failed",
+              "class": "LogicException"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "other"
+            }
+          },
+          "expect": "open"
+        },
+        {
+          "op": "sleep",
+          "args": {
+            "ms": 3000
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "other"
+            }
+          },
+          "expect": "half_open"
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "prober"
+            },
+            "outcomes": [
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              }
+            ]
+          },
+          "expect": {
+            "fallback": 2
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "prober"
+            }
+          },
+          "expect": "half_open"
+        }
+      ]
+    },
+    {
+      "name": "a slow tail below the slow minimum still closes",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 2,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 20,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": 3
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.trip",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "sleep",
+          "args": {
+            "ms": 3000
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "half_open"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "read deadline expired"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "ok"
+            }
+          },
+          "expect": "ok"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "read deadline expired"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "half_open"
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "ok"
+            }
+          },
+          "expect": "ok"
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        }
+      ]
+    },
+    {
+      "name": "slow calls from the previous slot still count",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 2,
+            "window": 2,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 20,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": null
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "sleep",
+          "args": {
+            "slot": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              }
+            ]
+          },
+          "expect": {
+            "fallback": 18
+          }
+        },
+        {
+          "op": "sleep",
+          "args": {
+            "ms": 2000
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              }
+            ]
+          },
+          "expect": {
+            "fallback": 2
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "open"
+        },
+        {
+          "op": "breaker.slow",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 20
+        }
+      ]
+    },
+    {
+      "name": "slow calls older than the window are forgotten",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 2,
+            "window": 1,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 20,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": null
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              }
+            ]
+          },
+          "expect": {
+            "fallback": 19
+          }
+        },
+        {
+          "op": "sleep",
+          "args": {
+            "ms": 3000
+          },
+          "expect": null
+        },
+        {
+          "op": "breaker.calls",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "outcomes": [
+              {
+                "throw": "RuntimeException"
+              },
+              {
+                "throw": "RuntimeException"
+              }
+            ]
+          },
+          "expect": {
+            "fallback": 2
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        },
+        {
+          "op": "breaker.slow",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 2
+        }
+      ]
+    },
+    {
+      "name": "a slow call is a fallback and not a callback failure",
+      "steps": [
+        {
+          "op": "telemetry.new",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "success_threshold": 2,
+            "window": 60,
+            "failure_ratio": 0.5,
+            "minimum_throughput": 20,
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 0.9,
+            "slow_minimum_throughput": null,
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "throw": "read deadline expired"
+            }
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "telemetry.log",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "breaker.fallbacks",
+              1,
+              [
+                [
+                  "circuit_breaker.name",
+                  "default"
+                ],
+                [
+                  "circuit_breaker.reason",
+                  "slow"
+                ],
+                [
+                  "circuit_breaker.state",
+                  "closed"
+                ]
+              ]
+            ],
+            [
+              "counter",
+              "breaker.calls",
+              1,
+              [
+                [
+                  "circuit_breaker.name",
+                  "default"
+                ],
+                [
+                  "circuit_breaker.initial_state",
+                  "closed"
+                ],
+                [
+                  "circuit_breaker.state",
+                  "closed"
+                ],
+                [
+                  "circuit_breaker.outcome",
+                  "slow"
+                ],
+                [
+                  "exception.type",
+                  "RuntimeException"
+                ]
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "telemetry.observe",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              "breaker.active_calls",
+              [
+                [
+                  "default",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.state",
+              [
+                [
+                  "default",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.failures",
+              [
+                [
+                  "default",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.successes",
+              [
+                [
+                  "default",
+                  0
+                ]
+              ]
+            ],
+            [
+              "breaker.slow",
+              [
+                [
+                  "default",
+                  1
+                ]
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "slow ratio must be a proportion (zero)",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "slow_ratio": 0.0
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Slow ratio must be greater than 0 and at most 1."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "slow ratio must be a proportion (negative)",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "slow_ratio": -0.1
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Slow ratio must be greater than 0 and at most 1."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "slow ratio must be a proportion (above one)",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "slow_ratio": 1.01
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Slow ratio must be greater than 0 and at most 1."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "slow minimum throughput must be at least one (zero)",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "slow_minimum_throughput": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Slow minimum throughput must be at least 1."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "slow minimum throughput must be at least one (negative)",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "slow_minimum_throughput": -1
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Slow minimum throughput must be at least 1."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a slow ratio of one is accepted",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "slow": [
+              "RuntimeException"
+            ],
+            "slow_ratio": 1.0
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.state",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": "closed"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,572 @@
+{
+  "source": "packages/query/tests/E2E/Schema/MongoDBIntegrationTest.php",
+  "cases": [
+    {
+      "name": "testCreateCollection",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "schema_create_6acc000000001"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "name",
+              100
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "age"
+            ]
+          },
+          {
+            "call": "nullable",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "{\"command\":\"createCollection\",\"collection\":\"schema_create_6acc000000001\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"},\"name\":{\"bsonType\":\"string\"},\"age\":{\"bsonType\":\"int\"}},\"required\":[\"id\",\"name\"]}}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createCollection\",\"collection\":\"schema_create_6acc000000001\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"},\"name\":{\"bsonType\":\"string\"},\"age\":{\"bsonType\":\"int\"}},\"required\":[\"id\",\"name\"]}}}"
+      ]
+    },
+    {
+      "name": "testCreateIndexSingleField",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "schema_idx_single_6acc000000001"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "email",
+              255
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "call": "createIndex",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "schema_idx_single_6acc000000001",
+              "idx_email",
+              [
+                "email"
+              ]
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "{\"command\":\"createCollection\",\"collection\":\"schema_idx_single_6acc000000001\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"},\"email\":{\"bsonType\":\"string\"}},\"required\":[\"id\",\"email\"]}}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createCollection\",\"collection\":\"schema_idx_single_6acc000000001\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"},\"email\":{\"bsonType\":\"string\"}},\"required\":[\"id\",\"email\"]}}}",
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "{\"command\":\"createIndex\",\"collection\":\"schema_idx_single_6acc000000001\",\"index\":{\"key\":{\"email\":1},\"name\":\"idx_email\"}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createIndex\",\"collection\":\"schema_idx_single_6acc000000001\",\"index\":{\"key\":{\"email\":1},\"name\":\"idx_email\"}}"
+      ]
+    },
+    {
+      "name": "testCreateIndexCompound",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "schema_idx_compound_6acc000000001"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "country",
+              32
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "city",
+              64
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "call": "createIndex",
+            "on": {
+              "$o": 1
+            },
+            "args": {
+              "0": "schema_idx_compound_6acc000000001",
+              "1": "idx_country_city",
+              "2": [
+                "country",
+                "city"
+              ],
+              "orders": {
+                "country": "asc",
+                "city": "desc"
+              }
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 7
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "{\"command\":\"createCollection\",\"collection\":\"schema_idx_compound_6acc000000001\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"},\"country\":{\"bsonType\":\"string\"},\"city\":{\"bsonType\":\"string\"}},\"required\":[\"id\",\"country\",\"city\"]}}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createCollection\",\"collection\":\"schema_idx_compound_6acc000000001\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"},\"country\":{\"bsonType\":\"string\"},\"city\":{\"bsonType\":\"string\"}},\"required\":[\"id\",\"country\",\"city\"]}}}",
+        {
+          "$value": "Builder\\Statement",
+          "id": 7,
+          "props": {
+            "query": "{\"command\":\"createIndex\",\"collection\":\"schema_idx_compound_6acc000000001\",\"index\":{\"key\":{\"country\":1,\"city\":-1},\"name\":\"idx_country_city\"}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createIndex\",\"collection\":\"schema_idx_compound_6acc000000001\",\"index\":{\"key\":{\"country\":1,\"city\":-1},\"name\":\"idx_country_city\"}}"
+      ]
+    },
+    {
+      "name": "testCreateIndexUnique",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "schema_idx_unique_6acc000000001"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "email",
+              255
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "call": "createIndex",
+            "on": {
+              "$o": 1
+            },
+            "args": {
+              "0": "schema_idx_unique_6acc000000001",
+              "1": "idx_email_unique",
+              "2": [
+                "email"
+              ],
+              "unique": true
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "{\"command\":\"createCollection\",\"collection\":\"schema_idx_unique_6acc000000001\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"},\"email\":{\"bsonType\":\"string\"}},\"required\":[\"id\",\"email\"]}}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createCollection\",\"collection\":\"schema_idx_unique_6acc000000001\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"},\"email\":{\"bsonType\":\"string\"}},\"required\":[\"id\",\"email\"]}}}",
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "{\"command\":\"createIndex\",\"collection\":\"schema_idx_unique_6acc000000001\",\"index\":{\"key\":{\"email\":1},\"name\":\"idx_email_unique\",\"unique\":true}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createIndex\",\"collection\":\"schema_idx_unique_6acc000000001\",\"index\":{\"key\":{\"email\":1},\"name\":\"idx_email_unique\",\"unique\":true}}"
+      ]
+    },
+    {
+      "name": "testDropCollection",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "schema_drop_6acc000000001"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "schema_drop_6acc000000001"
+            ]
+          },
+          {
+            "call": "drop",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "{\"command\":\"createCollection\",\"collection\":\"schema_drop_6acc000000001\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"}},\"required\":[\"id\"]}}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createCollection\",\"collection\":\"schema_drop_6acc000000001\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"}},\"required\":[\"id\"]}}}",
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "{\"command\":\"drop\",\"collection\":\"schema_drop_6acc000000001\"}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"drop\",\"collection\":\"schema_drop_6acc000000001\"}"
+      ]
+    }
+  ]
+}

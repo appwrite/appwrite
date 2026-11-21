@@ -1,0 +1,5503 @@
+{
+  "cases": [
+    {
+      "name": "installation, repositories, refs and contents",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "origin": {
+                "ed25519": "7UkoxijRwsbq6QM4kFmVYSlZJzpcY_k2NsFGFKyHN9E"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "POST",
+                "path": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/access-tokens",
+                "times": 1,
+                "status": 400,
+                "headers": {
+                  "Content-Type": "application/problem+json"
+                },
+                "body": {
+                  "code": "unsupported_permission",
+                  "title": "Bad Request"
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/access-tokens",
+                "body": {
+                  "token": "tok_fixture",
+                  "expires_at": "2100-01-01T00:00:00Z"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/repositories?cursor=c2",
+                "body": {
+                  "repositories": [
+                    {
+                      "id": "repo_3",
+                      "full_name": "gh/other-owner/lib.git",
+                      "entire_clone_url": "entire://cell.entire.test/gh/other-owner/lib",
+                      "placements": [
+                        {
+                          "api_base_url": "${base}/entire-cell"
+                        }
+                      ]
+                    },
+                    "skip me"
+                  ],
+                  "next_cursor": ""
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/repositories",
+                "body": {
+                  "repositories": [
+                    {
+                      "id": "repo_1",
+                      "full_name": "et/test-project/app",
+                      "clone_url": "https://cell.entire.test/et/test-project/app.git",
+                      "entire_clone_url": "",
+                      "placements": [
+                        {
+                          "api_base_url": "https://replica.entire.test/",
+                          "role": "replica"
+                        },
+                        {
+                          "api_base_url": "${base}/entire-cell/",
+                          "role": "processing_primary"
+                        },
+                        "not a placement"
+                      ]
+                    },
+                    {
+                      "id": "repo_2",
+                      "full_name": "et/test-project/website",
+                      "clone_url": "ssh://cell.entire.test/et/test-project/website",
+                      "placements": []
+                    }
+                  ],
+                  "next_cursor": "c2"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1",
+                "body": {
+                  "id": "grepo_1",
+                  "default_branch": "main"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_3",
+                "status": 404,
+                "headers": {
+                  "Content-Type": "application/problem+json"
+                },
+                "body": {
+                  "code": "not_found"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/branches?pageSize=100&pageToken=p2",
+                "body": {
+                  "branches": [
+                    {
+                      "name": "refs/heads/dev"
+                    },
+                    "refs/heads/raw",
+                    7
+                  ],
+                  "nextPageToken": ""
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/branches",
+                "body": {
+                  "branches": [
+                    {
+                      "name": "refs/heads/main"
+                    },
+                    {
+                      "name": "feature"
+                    }
+                  ],
+                  "nextPageToken": "p2"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/tags?pageSize=100&pageToken=same",
+                "body": {
+                  "tags": [],
+                  "nextPageToken": "same"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/tags",
+                "body": {
+                  "tags": [
+                    {
+                      "name": "refs/tags/v1.0.0"
+                    },
+                    {
+                      "name": "v1.1.0"
+                    },
+                    {
+                      "name": "v2.0.0"
+                    }
+                  ],
+                  "nextPageToken": "same"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/tree?ref=missing",
+                "status": 404,
+                "body": {
+                  "code": "not_found"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/tree",
+                "body": {
+                  "entries": [
+                    {
+                      "path": "README.md",
+                      "type": "blob",
+                      "size": 12
+                    },
+                    {
+                      "path": "src",
+                      "type": "tree"
+                    },
+                    {
+                      "path": "src/index.js",
+                      "size": "20"
+                    },
+                    {
+                      "path": ""
+                    },
+                    "x"
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/raw?ref=main&path=README.md",
+                "headers": {
+                  "Content-Type": "text/plain"
+                },
+                "body": "# App\n"
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/raw?ref=v1&path=docs%2Fguide.md",
+                "headers": {
+                  "Content-Type": "application/octet-stream"
+                },
+                "body": "# Guide\n"
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/raw",
+                "status": 404,
+                "body": {
+                  "code": "not_found"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/commits?ref=missing&pageSize=1",
+                "status": 404,
+                "headers": {
+                  "Content-Type": "application/problem+json"
+                },
+                "body": {
+                  "code": "not_found",
+                  "detail": "no such ref"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/commits?ref=empty&pageSize=1",
+                "body": {
+                  "commits": []
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/commits?ref=broken&pageSize=1",
+                "status": 502,
+                "body": {
+                  "code": "bad_gateway"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/commits?ref=anon&pageSize=1",
+                "body": {
+                  "commits": [
+                    {
+                      "sha": "",
+                      "author": "nobody"
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/commits",
+                "body": {
+                  "commits": [
+                    {
+                      "sha": "def4567890def4567890def4567890def4567890",
+                      "message": "Initial commit",
+                      "author": {
+                        "name": "Ada",
+                        "email": "ada@example.com"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/compare?base=bad&head=worse",
+                "status": 422,
+                "headers": {
+                  "Content-Type": "application/problem+json"
+                },
+                "body": {
+                  "code": "invalid_ref",
+                  "title": "Unprocessable"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/compare",
+                "body": {
+                  "files": [
+                    {
+                      "path": "a.txt",
+                      "status": "added"
+                    },
+                    {
+                      "path": "b.txt",
+                      "status": "renamed",
+                      "previousPath": "old.txt"
+                    },
+                    "x"
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails?status=open&per_page=100&cursor=n2",
+                "body": {
+                  "items": [
+                    {
+                      "id": "trl_2",
+                      "number": 2,
+                      "title": "Feature",
+                      "status": "draft",
+                      "branch": "feature",
+                      "head_sha": "h2",
+                      "base": "main",
+                      "base_sha": "b2",
+                      "merge_base_sha": "m2"
+                    }
+                  ],
+                  "next_cursor": ""
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails",
+                "body": {
+                  "items": [
+                    {
+                      "branch": "other",
+                      "number": 1
+                    },
+                    "x"
+                  ],
+                  "next_cursor": "n2"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails/2",
+                "body": {
+                  "id": "trl_2",
+                  "number": "2",
+                  "title": "Feature",
+                  "status": "open",
+                  "branch": "feature",
+                  "head_sha": "h2",
+                  "base": "main",
+                  "base_sha": "b2",
+                  "merge_base_sha": "m2"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails/3",
+                "body": {
+                  "id": "trl_3",
+                  "number": 3,
+                  "status": "closed",
+                  "branch": "gone",
+                  "head_sha": "h3",
+                  "base": "main",
+                  "merged_at": "2026-01-01T00:00:00Z"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails/4",
+                "body": {
+                  "id": "trl_4",
+                  "number": 4,
+                  "status": "open",
+                  "branch": "x"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails/99",
+                "status": 404,
+                "headers": {
+                  "Content-Type": "application/problem+json"
+                },
+                "body": {
+                  "code": "not_found",
+                  "title": "Not Found"
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails",
+                "times": 1,
+                "status": 201,
+                "body": {
+                  "trail": {
+                    "id": "trl_5",
+                    "number": 5,
+                    "title": "Add feature",
+                    "status": "open",
+                    "branch": "feature",
+                    "base": "main"
+                  }
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails",
+                "times": 1,
+                "status": 201,
+                "body": {
+                  "id": "trl_6",
+                  "number": 6,
+                  "title": "Flat",
+                  "status": "open"
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails",
+                "status": 409,
+                "body": {
+                  "code": "conflict",
+                  "detail": "branch is linked"
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails/2/discussions",
+                "status": 201,
+                "body": {
+                  "discussion": {
+                    "id": "dsc_1"
+                  }
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails/3/discussions",
+                "status": 403,
+                "body": {
+                  "code": "forbidden"
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails/4/discussions",
+                "status": 201,
+                "body": {
+                  "discussion": []
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails/5/discussions",
+                "status": 503,
+                "body": {
+                  "title": "Unavailable"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails/2/discussions/dsc_1",
+                "body": {
+                  "messages": [
+                    {
+                      "id": "msg_1",
+                      "body": "Looks good"
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails/2/discussions/dsc_empty",
+                "body": {
+                  "messages": []
+                }
+              },
+              {
+                "method": "PATCH",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails/2/discussions/dsc_1/messages/msg_1",
+                "body": {
+                  "message": {
+                    "id": "msg_1"
+                  }
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/branches-containing",
+                "body": {
+                  "def4567890def4567890def4567890def4567890": [
+                    "refs/heads/main"
+                  ],
+                  "abc": []
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-cell/api/v1/repos/repo_1/commits/def4567890def4567890def4567890def4567890/check-runs",
+                "status": 201,
+                "body": {
+                  "check_runs": []
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1/commits/def4567890def4567890def4567890def4567890/check-runs",
+                "body": {
+                  "check_runs": [
+                    {
+                      "status": "completed",
+                      "conclusion": "success",
+                      "key": "build",
+                      "name": "Build",
+                      "output": {
+                        "title": "Built"
+                      },
+                      "details_url": "https://x.example.com"
+                    },
+                    {
+                      "status": "in_progress",
+                      "name": "lint"
+                    },
+                    {
+                      "status": "completed",
+                      "conclusion": "neutral",
+                      "key": "",
+                      "name": "n"
+                    },
+                    {
+                      "status": "completed",
+                      "conclusion": "skipped",
+                      "key": "s"
+                    },
+                    {
+                      "status": "completed",
+                      "conclusion": "failure",
+                      "key": "t"
+                    },
+                    "x"
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1/commits/abc/check-runs",
+                "status": 403,
+                "body": {
+                  "code": "forbidden",
+                  "detail": "checks:read"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test",
+            "endpoint": "${vcs}/~${ns}/origin/entire-core"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "ins_fixture",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIAMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD\n-----END PRIVATE KEY-----\n"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Entire requires the plugin slug to sign the plugin JWT.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "ins_fixture",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIAMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD\n-----END PRIVATE KEY-----\n",
+            "appId": "appwrite"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_owner_name",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "ins_fixture"
+          },
+          "expect": "test-project"
+        },
+        {
+          "op": "vcs.search_repositories",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "page": 1,
+            "per_page": 10
+          },
+          "expect": {
+            "items": [
+              {
+                "id": "repo_1",
+                "name": "app",
+                "full_name": "et/test-project/app",
+                "organization": "test-project",
+                "clone_url": "https://cell.entire.test/et/test-project/app.git",
+                "entire_clone_url": "",
+                "private": true,
+                "pushed_at": ""
+              },
+              {
+                "id": "repo_2",
+                "name": "website",
+                "full_name": "et/test-project/website",
+                "organization": "test-project",
+                "clone_url": "ssh://cell.entire.test/et/test-project/website",
+                "entire_clone_url": "",
+                "private": true,
+                "pushed_at": ""
+              },
+              {
+                "id": "repo_3",
+                "name": "lib",
+                "full_name": "gh/other-owner/lib.git",
+                "organization": "gh/other-owner",
+                "clone_url": "",
+                "entire_clone_url": "entire://cell.entire.test/gh/other-owner/lib",
+                "private": true,
+                "pushed_at": ""
+              }
+            ],
+            "total": 3
+          }
+        },
+        {
+          "op": "vcs.search_repositories",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "TEST-PROJECT",
+            "page": 1,
+            "per_page": 10,
+            "search": "WEB"
+          },
+          "expect": {
+            "items": [
+              {
+                "id": "repo_2",
+                "name": "website",
+                "full_name": "et/test-project/website",
+                "organization": "test-project",
+                "clone_url": "ssh://cell.entire.test/et/test-project/website",
+                "entire_clone_url": "",
+                "private": true,
+                "pushed_at": ""
+              }
+            ],
+            "total": 1
+          }
+        },
+        {
+          "op": "vcs.search_repositories",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "",
+            "page": 2,
+            "per_page": 1
+          },
+          "expect": {
+            "items": [
+              {
+                "id": "repo_2",
+                "name": "website",
+                "full_name": "et/test-project/website",
+                "organization": "test-project",
+                "clone_url": "ssh://cell.entire.test/et/test-project/website",
+                "entire_clone_url": "",
+                "private": true,
+                "pushed_at": ""
+              }
+            ],
+            "total": 3
+          }
+        },
+        {
+          "op": "vcs.search_repositories",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "nobody",
+            "page": 1,
+            "per_page": 10
+          },
+          "expect": {
+            "items": [
+              {
+                "id": "repo_1",
+                "name": "app",
+                "full_name": "et/test-project/app",
+                "organization": "test-project",
+                "clone_url": "https://cell.entire.test/et/test-project/app.git",
+                "entire_clone_url": "",
+                "private": true,
+                "pushed_at": ""
+              },
+              {
+                "id": "repo_2",
+                "name": "website",
+                "full_name": "et/test-project/website",
+                "organization": "test-project",
+                "clone_url": "ssh://cell.entire.test/et/test-project/website",
+                "entire_clone_url": "",
+                "private": true,
+                "pushed_at": ""
+              },
+              {
+                "id": "repo_3",
+                "name": "lib",
+                "full_name": "gh/other-owner/lib.git",
+                "organization": "gh/other-owner",
+                "clone_url": "",
+                "entire_clone_url": "entire://cell.entire.test/gh/other-owner/lib",
+                "private": true,
+                "pushed_at": ""
+              }
+            ],
+            "total": 3
+          }
+        },
+        {
+          "op": "vcs.get_installation_repository",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "repositoryName": "App"
+          },
+          "expect": {
+            "id": "repo_1",
+            "name": "app",
+            "full_name": "et/test-project/app",
+            "organization": "test-project",
+            "clone_url": "https://cell.entire.test/et/test-project/app.git",
+            "entire_clone_url": "",
+            "private": true,
+            "pushed_at": ""
+          }
+        },
+        {
+          "op": "vcs.get_installation_repository",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "repositoryName": "missing"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\VCS\\Exception\\RepositoryNotFound",
+              "message": "Repository not found.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.get_repository_name",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "repositoryId": "repo_2"
+          },
+          "expect": "website"
+        },
+        {
+          "op": "vcs.get_repository_name",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "repositoryId": "repo_missing"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\VCS\\Exception\\RepositoryNotFound",
+              "message": "Repository not found.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.get_repository",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app"
+          },
+          "expect": {
+            "id": "repo_1",
+            "name": "app",
+            "full_name": "et/test-project/app",
+            "organization": "test-project",
+            "clone_url": "https://cell.entire.test/et/test-project/app.git",
+            "entire_clone_url": "",
+            "private": true,
+            "pushed_at": "",
+            "default_branch": "main"
+          }
+        },
+        {
+          "op": "vcs.get_repository",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "other-owner",
+            "repositoryName": "lib"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\VCS\\Exception\\RepositoryNotFound",
+              "message": "Repository not found.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.get_repository",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "website"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\VCS\\Exception\\RepositoryNotFound",
+              "message": "Repository has no reachable placement.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.get_repository",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "missing"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\VCS\\Exception\\RepositoryNotFound",
+              "message": "Repository not found.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.list_branches",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app"
+          },
+          "expect": [
+            "main",
+            "feature",
+            "dev",
+            "raw"
+          ]
+        },
+        {
+          "op": "vcs.list_branches",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "missing"
+          },
+          "expect": []
+        },
+        {
+          "op": "vcs.list_tags",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app"
+          },
+          "expect": [
+            "v1.0.0",
+            "v1.1.0",
+            "v2.0.0"
+          ]
+        },
+        {
+          "op": "vcs.list_tags",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "search": "v1.*"
+          },
+          "expect": [
+            "v1.0.0",
+            "v1.1.0"
+          ]
+        },
+        {
+          "op": "vcs.list_tags",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "other-owner",
+            "repositoryName": "lib"
+          },
+          "expect": []
+        },
+        {
+          "op": "vcs.get_repository_tree",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "branch": "main"
+          },
+          "expect": [
+            "README.md",
+            "src",
+            "src/index.js"
+          ]
+        },
+        {
+          "op": "vcs.get_repository_tree",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "branch": "main",
+            "recursive": true
+          },
+          "expect": [
+            "README.md",
+            "src",
+            "src/index.js"
+          ]
+        },
+        {
+          "op": "vcs.get_repository_tree",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "branch": "missing"
+          },
+          "expect": []
+        },
+        {
+          "op": "vcs.get_repository_tree",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "missing",
+            "branch": "main"
+          },
+          "expect": []
+        },
+        {
+          "op": "vcs.list_repository_contents",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app"
+          },
+          "expect": [
+            {
+              "name": "README.md",
+              "size": 12,
+              "type": "file"
+            },
+            {
+              "name": "src",
+              "size": 0,
+              "type": "dir"
+            },
+            {
+              "name": "index.js",
+              "size": 20,
+              "type": "file"
+            },
+            {
+              "name": "",
+              "size": 0,
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "op": "vcs.list_repository_contents",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "path": "./src/",
+            "ref": "v1"
+          },
+          "expect": [
+            {
+              "name": "README.md",
+              "size": 12,
+              "type": "file"
+            },
+            {
+              "name": "src",
+              "size": 0,
+              "type": "dir"
+            },
+            {
+              "name": "index.js",
+              "size": 20,
+              "type": "file"
+            },
+            {
+              "name": "",
+              "size": 0,
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "op": "vcs.list_repository_contents",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "missing"
+          },
+          "expect": []
+        },
+        {
+          "op": "vcs.get_repository_content",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "path": "README.md"
+          },
+          "expect": {
+            "sha": "",
+            "size": 6,
+            "content": "# App\n"
+          }
+        },
+        {
+          "op": "vcs.get_repository_content",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "path": "/docs/guide.md",
+            "ref": "v1"
+          },
+          "expect": {
+            "sha": "",
+            "size": 8,
+            "content": "# Guide\n"
+          }
+        },
+        {
+          "op": "vcs.get_repository_content",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "path": "missing.md"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\VCS\\Exception\\FileNotFound",
+              "message": "",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.get_repository_content",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "missing",
+            "path": "README.md"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\VCS\\Exception\\FileNotFound",
+              "message": "",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.get_commit",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "commitHash": "def4567890def4567890def4567890def4567890"
+          },
+          "expect": {
+            "commitAuthor": "Ada",
+            "commitAuthorEmail": "ada@example.com",
+            "commitMessage": "Initial commit",
+            "commitAuthorAvatar": "",
+            "commitAuthorUrl": "",
+            "commitHash": "def4567890def4567890def4567890def4567890",
+            "commitUrl": "https://entire.com/et/test-project/app/commit/def4567890def4567890def4567890def4567890"
+          }
+        },
+        {
+          "op": "vcs.get_commit",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "commitHash": "missing"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\VCS\\Exception\\RepositoryNotFound",
+              "message": "Commit not found.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.get_commit",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "commitHash": "empty"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\VCS\\Exception\\RepositoryNotFound",
+              "message": "Commit not found.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.get_commit",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "commitHash": "broken"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Commit not found or inaccessible.",
+              "code": 502
+            }
+          }
+        },
+        {
+          "op": "vcs.get_commit",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "commitHash": "anon"
+          },
+          "expect": {
+            "commitAuthor": "Unknown",
+            "commitAuthorEmail": "",
+            "commitMessage": "No message",
+            "commitAuthorAvatar": "",
+            "commitAuthorUrl": "",
+            "commitHash": "",
+            "commitUrl": ""
+          }
+        },
+        {
+          "op": "vcs.get_commit",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "missing",
+            "commitHash": "def4567890def4567890def4567890def4567890"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\VCS\\Exception\\RepositoryNotFound",
+              "message": "Repository not found.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.get_latest_commit",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "branch": "main"
+          },
+          "expect": {
+            "commitAuthor": "Ada",
+            "commitAuthorEmail": "ada@example.com",
+            "commitMessage": "Initial commit",
+            "commitAuthorAvatar": "",
+            "commitAuthorUrl": "",
+            "commitHash": "def4567890def4567890def4567890def4567890",
+            "commitUrl": "https://entire.com/et/test-project/app/commit/def4567890def4567890def4567890def4567890"
+          }
+        },
+        {
+          "op": "vcs.get_latest_commit",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "branch": "missing"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\VCS\\Exception\\RepositoryNotFound",
+              "message": "Branch not found: missing",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.get_latest_commit",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "branch": "broken"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Commit not found or inaccessible.",
+              "code": 502
+            }
+          }
+        },
+        {
+          "op": "vcs.compare_files",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "base": "main",
+            "head": "feature"
+          },
+          "expect": [
+            {
+              "filename": "a.txt",
+              "status": "added",
+              "previous_filename": ""
+            },
+            {
+              "filename": "b.txt",
+              "status": "renamed",
+              "previous_filename": "old.txt"
+            }
+          ]
+        },
+        {
+          "op": "vcs.compare_files",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "base": "bad",
+            "head": "worse"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Failed to compare commits: HTTP 422 (invalid_ref Unprocessable)",
+              "code": 422
+            }
+          }
+        },
+        {
+          "op": "vcs.get_repository_clone_url",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app"
+          },
+          "expect": "entire://cell.entire.test/et/test-project/app"
+        },
+        {
+          "op": "vcs.get_repository_clone_url",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "other-owner",
+            "repositoryName": "lib"
+          },
+          "expect": "entire://cell.entire.test/gh/other-owner/lib"
+        },
+        {
+          "op": "vcs.get_repository_clone_url",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "website"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Repository reports no clone URL.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.generate_clone_command",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "version": "main",
+            "versionType": "branch",
+            "directory": "/tmp/compat-fs/${ns}/clone",
+            "rootDirectory": "src"
+          },
+          "expect": "'export' 'ENTIRE_TOKEN=tok_fixture' && 'mkdir' '-p' '/tmp/compat-fs/${ns}/clone' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' '-c' 'init.defaultBranch=main' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'remote' 'add' 'origin' 'entire://cell.entire.test/et/test-project/app' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'src' >> '/tmp/compat-fs/${ns}/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/clone' 'main'"
+        },
+        {
+          "op": "vcs.generate_clone_command",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "website",
+            "version": "main",
+            "versionType": "branch",
+            "directory": "/tmp/x",
+            "rootDirectory": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Repository reports no clone URL.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.generate_push_command",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "directory": "/tmp/compat-fs/${ns}/clone",
+            "branch": "main"
+          },
+          "expect": "'export' 'ENTIRE_TOKEN=tok_fixture' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'push' 'origin' 'main'"
+        },
+        {
+          "op": "vcs.get_user",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "username": "someone"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "getUser() is not supported by Entire",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.create_repository",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "private": true
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "This Entire installation cannot create repositories yet. Connect an existing repository, or accept the plugin's updated permissions in Entire if it asks for them.",
+              "code": 403
+            }
+          }
+        },
+        {
+          "op": "vcs.delete_repository",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "deleteRepository() is not supported by entire",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.create_webhook",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "url": "https://appwrite.test/hook",
+            "secret": "secret"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "createWebhook() is not supported by Entire. Configure the webhook URL on the Entire plugin.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/access-tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"https://appwrite.test\",\"aud\":\"${vcs}/~${ns}/origin/entire-core/api/authz/sts\",\"plugin_id\":\"appwrite\",\"installation_id\":\"ins_fixture\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"permissions\":{\"contents\":\"write\",\"checks\":\"write\",\"deployments\":\"write\",\"discussions\":\"write\",\"repositories\":\"create\"}}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/access-tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"https://appwrite.test\",\"aud\":\"${vcs}/~${ns}/origin/entire-core/api/authz/sts\",\"plugin_id\":\"appwrite\",\"installation_id\":\"ins_fixture\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"permissions\":{\"contents\":\"write\",\"checks\":\"write\",\"deployments\":\"write\",\"repositories\":\"create\"}}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/repositories",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"https://appwrite.test\",\"aud\":\"${vcs}/~${ns}/origin/entire-core/api/authz/sts\",\"plugin_id\":\"appwrite\",\"installation_id\":\"ins_fixture\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/repositories?cursor=c2",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"https://appwrite.test\",\"aud\":\"${vcs}/~${ns}/origin/entire-core/api/authz/sts\",\"plugin_id\":\"appwrite\",\"installation_id\":\"ins_fixture\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/repos/repo_1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/repos/repo_3",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/branches?pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/branches?pageSize=100&pageToken=p2",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/tags?pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/tags?pageSize=100&pageToken=same",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/tags?pageSize=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/tags?pageSize=100&pageToken=same",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/repos/repo_3",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/tree?ref=main",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/tree?ref=main&recursive=true",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/tree?ref=missing",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/tree?ref=main",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/tree?ref=v1&path=src",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/raw?ref=main&path=README.md",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/raw?ref=v1&path=docs%2Fguide.md",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/raw?ref=main&path=missing.md",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/commits?ref=def4567890def4567890def4567890def4567890&pageSize=1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/commits?ref=missing&pageSize=1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/commits?ref=empty&pageSize=1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/commits?ref=broken&pageSize=1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/commits?ref=anon&pageSize=1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/commits?ref=main&pageSize=1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/commits?ref=missing&pageSize=1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/commits?ref=broken&pageSize=1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/compare?base=main&head=feature",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/compare?base=bad&head=worse",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "trails, discussions and check runs",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "origin": {
+                "ed25519": "7UkoxijRwsbq6QM4kFmVYSlZJzpcY_k2NsFGFKyHN9E"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "POST",
+                "path": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/access-tokens",
+                "times": 1,
+                "status": 400,
+                "headers": {
+                  "Content-Type": "application/problem+json"
+                },
+                "body": {
+                  "code": "unsupported_permission",
+                  "title": "Bad Request"
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/access-tokens",
+                "body": {
+                  "token": "tok_fixture",
+                  "expires_at": "2100-01-01T00:00:00Z"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/repositories?cursor=c2",
+                "body": {
+                  "repositories": [
+                    {
+                      "id": "repo_3",
+                      "full_name": "gh/other-owner/lib.git",
+                      "entire_clone_url": "entire://cell.entire.test/gh/other-owner/lib",
+                      "placements": [
+                        {
+                          "api_base_url": "${base}/entire-cell"
+                        }
+                      ]
+                    },
+                    "skip me"
+                  ],
+                  "next_cursor": ""
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/repositories",
+                "body": {
+                  "repositories": [
+                    {
+                      "id": "repo_1",
+                      "full_name": "et/test-project/app",
+                      "clone_url": "https://cell.entire.test/et/test-project/app.git",
+                      "entire_clone_url": "",
+                      "placements": [
+                        {
+                          "api_base_url": "https://replica.entire.test/",
+                          "role": "replica"
+                        },
+                        {
+                          "api_base_url": "${base}/entire-cell/",
+                          "role": "processing_primary"
+                        },
+                        "not a placement"
+                      ]
+                    },
+                    {
+                      "id": "repo_2",
+                      "full_name": "et/test-project/website",
+                      "clone_url": "ssh://cell.entire.test/et/test-project/website",
+                      "placements": []
+                    }
+                  ],
+                  "next_cursor": "c2"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1",
+                "body": {
+                  "id": "grepo_1",
+                  "default_branch": "main"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_3",
+                "status": 404,
+                "headers": {
+                  "Content-Type": "application/problem+json"
+                },
+                "body": {
+                  "code": "not_found"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/branches?pageSize=100&pageToken=p2",
+                "body": {
+                  "branches": [
+                    {
+                      "name": "refs/heads/dev"
+                    },
+                    "refs/heads/raw",
+                    7
+                  ],
+                  "nextPageToken": ""
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/branches",
+                "body": {
+                  "branches": [
+                    {
+                      "name": "refs/heads/main"
+                    },
+                    {
+                      "name": "feature"
+                    }
+                  ],
+                  "nextPageToken": "p2"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/tags?pageSize=100&pageToken=same",
+                "body": {
+                  "tags": [],
+                  "nextPageToken": "same"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/tags",
+                "body": {
+                  "tags": [
+                    {
+                      "name": "refs/tags/v1.0.0"
+                    },
+                    {
+                      "name": "v1.1.0"
+                    },
+                    {
+                      "name": "v2.0.0"
+                    }
+                  ],
+                  "nextPageToken": "same"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/tree?ref=missing",
+                "status": 404,
+                "body": {
+                  "code": "not_found"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/tree",
+                "body": {
+                  "entries": [
+                    {
+                      "path": "README.md",
+                      "type": "blob",
+                      "size": 12
+                    },
+                    {
+                      "path": "src",
+                      "type": "tree"
+                    },
+                    {
+                      "path": "src/index.js",
+                      "size": "20"
+                    },
+                    {
+                      "path": ""
+                    },
+                    "x"
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/raw?ref=main&path=README.md",
+                "headers": {
+                  "Content-Type": "text/plain"
+                },
+                "body": "# App\n"
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/raw?ref=v1&path=docs%2Fguide.md",
+                "headers": {
+                  "Content-Type": "application/octet-stream"
+                },
+                "body": "# Guide\n"
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/raw",
+                "status": 404,
+                "body": {
+                  "code": "not_found"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/commits?ref=missing&pageSize=1",
+                "status": 404,
+                "headers": {
+                  "Content-Type": "application/problem+json"
+                },
+                "body": {
+                  "code": "not_found",
+                  "detail": "no such ref"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/commits?ref=empty&pageSize=1",
+                "body": {
+                  "commits": []
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/commits?ref=broken&pageSize=1",
+                "status": 502,
+                "body": {
+                  "code": "bad_gateway"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/commits?ref=anon&pageSize=1",
+                "body": {
+                  "commits": [
+                    {
+                      "sha": "",
+                      "author": "nobody"
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/commits",
+                "body": {
+                  "commits": [
+                    {
+                      "sha": "def4567890def4567890def4567890def4567890",
+                      "message": "Initial commit",
+                      "author": {
+                        "name": "Ada",
+                        "email": "ada@example.com"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/compare?base=bad&head=worse",
+                "status": 422,
+                "headers": {
+                  "Content-Type": "application/problem+json"
+                },
+                "body": {
+                  "code": "invalid_ref",
+                  "title": "Unprocessable"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/compare",
+                "body": {
+                  "files": [
+                    {
+                      "path": "a.txt",
+                      "status": "added"
+                    },
+                    {
+                      "path": "b.txt",
+                      "status": "renamed",
+                      "previousPath": "old.txt"
+                    },
+                    "x"
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails?status=open&per_page=100&cursor=n2",
+                "body": {
+                  "items": [
+                    {
+                      "id": "trl_2",
+                      "number": 2,
+                      "title": "Feature",
+                      "status": "draft",
+                      "branch": "feature",
+                      "head_sha": "h2",
+                      "base": "main",
+                      "base_sha": "b2",
+                      "merge_base_sha": "m2"
+                    }
+                  ],
+                  "next_cursor": ""
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails",
+                "body": {
+                  "items": [
+                    {
+                      "branch": "other",
+                      "number": 1
+                    },
+                    "x"
+                  ],
+                  "next_cursor": "n2"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails/2",
+                "body": {
+                  "id": "trl_2",
+                  "number": "2",
+                  "title": "Feature",
+                  "status": "open",
+                  "branch": "feature",
+                  "head_sha": "h2",
+                  "base": "main",
+                  "base_sha": "b2",
+                  "merge_base_sha": "m2"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails/3",
+                "body": {
+                  "id": "trl_3",
+                  "number": 3,
+                  "status": "closed",
+                  "branch": "gone",
+                  "head_sha": "h3",
+                  "base": "main",
+                  "merged_at": "2026-01-01T00:00:00Z"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails/4",
+                "body": {
+                  "id": "trl_4",
+                  "number": 4,
+                  "status": "open",
+                  "branch": "x"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails/99",
+                "status": 404,
+                "headers": {
+                  "Content-Type": "application/problem+json"
+                },
+                "body": {
+                  "code": "not_found",
+                  "title": "Not Found"
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails",
+                "times": 1,
+                "status": 201,
+                "body": {
+                  "trail": {
+                    "id": "trl_5",
+                    "number": 5,
+                    "title": "Add feature",
+                    "status": "open",
+                    "branch": "feature",
+                    "base": "main"
+                  }
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails",
+                "times": 1,
+                "status": 201,
+                "body": {
+                  "id": "trl_6",
+                  "number": 6,
+                  "title": "Flat",
+                  "status": "open"
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails",
+                "status": 409,
+                "body": {
+                  "code": "conflict",
+                  "detail": "branch is linked"
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails/2/discussions",
+                "status": 201,
+                "body": {
+                  "discussion": {
+                    "id": "dsc_1"
+                  }
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails/3/discussions",
+                "status": 403,
+                "body": {
+                  "code": "forbidden"
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails/4/discussions",
+                "status": 201,
+                "body": {
+                  "discussion": []
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails/5/discussions",
+                "status": 503,
+                "body": {
+                  "title": "Unavailable"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails/2/discussions/dsc_1",
+                "body": {
+                  "messages": [
+                    {
+                      "id": "msg_1",
+                      "body": "Looks good"
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails/2/discussions/dsc_empty",
+                "body": {
+                  "messages": []
+                }
+              },
+              {
+                "method": "PATCH",
+                "path": "/entire-cell/api/v1/repos/repo_1/trails/2/discussions/dsc_1/messages/msg_1",
+                "body": {
+                  "message": {
+                    "id": "msg_1"
+                  }
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/branches-containing",
+                "body": {
+                  "def4567890def4567890def4567890def4567890": [
+                    "refs/heads/main"
+                  ],
+                  "abc": []
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-cell/api/v1/repos/repo_1/commits/def4567890def4567890def4567890def4567890/check-runs",
+                "status": 201,
+                "body": {
+                  "check_runs": []
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1/commits/def4567890def4567890def4567890def4567890/check-runs",
+                "body": {
+                  "check_runs": [
+                    {
+                      "status": "completed",
+                      "conclusion": "success",
+                      "key": "build",
+                      "name": "Build",
+                      "output": {
+                        "title": "Built"
+                      },
+                      "details_url": "https://x.example.com"
+                    },
+                    {
+                      "status": "in_progress",
+                      "name": "lint"
+                    },
+                    {
+                      "status": "completed",
+                      "conclusion": "neutral",
+                      "key": "",
+                      "name": "n"
+                    },
+                    {
+                      "status": "completed",
+                      "conclusion": "skipped",
+                      "key": "s"
+                    },
+                    {
+                      "status": "completed",
+                      "conclusion": "failure",
+                      "key": "t"
+                    },
+                    "x"
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1/commits/abc/check-runs",
+                "status": 403,
+                "body": {
+                  "code": "forbidden",
+                  "detail": "checks:read"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test",
+            "endpoint": "${vcs}/~${ns}/origin/entire-core"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "ins_fixture",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIAMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD\n-----END PRIVATE KEY-----\n",
+            "appId": "appwrite"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.set_repository_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "repositoryId": "repo_1",
+            "apiBaseUrl": "${vcs}/~${ns}/origin/entire-cell/"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.set_repository_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "repositoryId": "",
+            "apiBaseUrl": "${vcs}/~${ns}/origin/entire-cell"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_pull_request_from_branch",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "branch": "feature"
+          },
+          "expect": {
+            "id": "trl_2",
+            "number": 2,
+            "title": "Feature",
+            "body": "",
+            "state": "open",
+            "draft": true,
+            "merged": false,
+            "head": {
+              "ref": "feature",
+              "sha": "h2"
+            },
+            "base": {
+              "ref": "main",
+              "sha": "b2"
+            },
+            "merge_base_sha": "m2"
+          }
+        },
+        {
+          "op": "vcs.get_pull_request_from_branch",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "branch": "nothing"
+          },
+          "expect": []
+        },
+        {
+          "op": "vcs.get_pull_request",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "pullRequestNumber": 2
+          },
+          "expect": {
+            "id": "trl_2",
+            "number": 2,
+            "title": "Feature",
+            "body": "",
+            "state": "open",
+            "draft": false,
+            "merged": false,
+            "head": {
+              "ref": "feature",
+              "sha": "h2"
+            },
+            "base": {
+              "ref": "main",
+              "sha": "b2"
+            },
+            "merge_base_sha": "m2"
+          }
+        },
+        {
+          "op": "vcs.get_pull_request",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "pullRequestNumber": 3
+          },
+          "expect": {
+            "id": "trl_3",
+            "number": 3,
+            "title": "",
+            "body": "",
+            "state": "closed",
+            "draft": false,
+            "merged": true,
+            "head": {
+              "ref": "gone",
+              "sha": "h3"
+            },
+            "base": {
+              "ref": "main",
+              "sha": ""
+            },
+            "merge_base_sha": ""
+          }
+        },
+        {
+          "op": "vcs.get_pull_request",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "pullRequestNumber": 99
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Failed to get trail: HTTP 404 (not_found Not Found)",
+              "code": 404
+            }
+          }
+        },
+        {
+          "op": "vcs.get_pull_request_files",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "pullRequestNumber": 2
+          },
+          "expect": [
+            {
+              "filename": "a.txt",
+              "status": "added",
+              "previous_filename": ""
+            },
+            {
+              "filename": "b.txt",
+              "status": "renamed",
+              "previous_filename": "old.txt"
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_pull_request_files",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "pullRequestNumber": 3
+          },
+          "expect": [
+            {
+              "filename": "a.txt",
+              "status": "added",
+              "previous_filename": ""
+            },
+            {
+              "filename": "b.txt",
+              "status": "renamed",
+              "previous_filename": "old.txt"
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_pull_request_files",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "pullRequestNumber": 4
+          },
+          "expect": []
+        },
+        {
+          "op": "vcs.create_pull_request",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "title": "Add feature",
+            "head": "feature",
+            "base": "main",
+            "body": "Adds it"
+          },
+          "expect": {
+            "id": "trl_5",
+            "number": 5,
+            "title": "Add feature",
+            "body": "",
+            "state": "open",
+            "draft": false,
+            "merged": false,
+            "head": {
+              "ref": "feature",
+              "sha": ""
+            },
+            "base": {
+              "ref": "main",
+              "sha": ""
+            },
+            "merge_base_sha": ""
+          }
+        },
+        {
+          "op": "vcs.create_pull_request",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "title": "Flat",
+            "head": "flat",
+            "base": "main"
+          },
+          "expect": {
+            "id": "trl_6",
+            "number": 6,
+            "title": "Flat",
+            "body": "",
+            "state": "open",
+            "draft": false,
+            "merged": false,
+            "head": {
+              "ref": "",
+              "sha": ""
+            },
+            "base": {
+              "ref": "",
+              "sha": ""
+            },
+            "merge_base_sha": ""
+          }
+        },
+        {
+          "op": "vcs.create_pull_request",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "title": "Again",
+            "head": "feature",
+            "base": "main"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Failed to create trail: HTTP 409 (conflict branch is linked)",
+              "code": 409
+            }
+          }
+        },
+        {
+          "op": "vcs.create_comment",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "pullRequestNumber": 2,
+            "comment": "## **Appwrite** build\n\n| Site | Status |\n|---|---|"
+          },
+          "expect": "2-dsc_1"
+        },
+        {
+          "op": "vcs.create_comment",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "pullRequestNumber": 3,
+            "comment": "Refused"
+          },
+          "expect": ""
+        },
+        {
+          "op": "vcs.create_comment",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "pullRequestNumber": 4,
+            "comment": "\n#\nüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüü"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Comment creation response is missing discussion ID.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.create_comment",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "pullRequestNumber": 5,
+            "comment": "###"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Failed to create comment: HTTP 503 (Unavailable)",
+              "code": 503
+            }
+          }
+        },
+        {
+          "op": "vcs.get_comment",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "commentId": "2-dsc_1"
+          },
+          "expect": "Looks good"
+        },
+        {
+          "op": "vcs.get_comment",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "commentId": "2-dsc_empty"
+          },
+          "expect": ""
+        },
+        {
+          "op": "vcs.get_comment",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "commentId": "no-separator-here"
+          },
+          "expect": ""
+        },
+        {
+          "op": "vcs.get_comment",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "commentId": "nodash"
+          },
+          "expect": ""
+        },
+        {
+          "op": "vcs.update_comment",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "commentId": "2-dsc_1",
+            "comment": "Looks great"
+          },
+          "expect": "2-dsc_1"
+        },
+        {
+          "op": "vcs.update_comment",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "commentId": "nodash",
+            "comment": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Comment id does not name a trail",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.update_comment",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "commentId": "2-dsc_empty",
+            "comment": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Discussion has no opening message.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.update_commit_status",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "repositoryName": "app",
+            "SHA": "def4567890def4567890def4567890def4567890",
+            "owner": "test-project",
+            "state": "success",
+            "description": "Built",
+            "target_url": "https://appwrite.test/build",
+            "context": "appwrite"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_commit_status",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "repositoryName": "app",
+            "SHA": "abc",
+            "owner": "test-project",
+            "state": "pending"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "No branch contains commit abc",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "SHA": "def4567890def4567890def4567890def4567890",
+            "state": "queued",
+            "name": "Site",
+            "title": "Queued"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_commit_statuses",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "commitHash": "def4567890def4567890def4567890def4567890"
+          },
+          "expect": [
+            {
+              "state": "success",
+              "description": "Built",
+              "target_url": "https://x.example.com",
+              "context": "build"
+            },
+            {
+              "state": "pending",
+              "description": "",
+              "target_url": "",
+              "context": "lint"
+            },
+            {
+              "state": "success",
+              "description": "",
+              "target_url": "",
+              "context": "n"
+            },
+            {
+              "state": "success",
+              "description": "",
+              "target_url": "",
+              "context": "s"
+            },
+            {
+              "state": "failure",
+              "description": "",
+              "target_url": "",
+              "context": "t"
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_commit_statuses",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "commitHash": "abc"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Failed to list check runs: HTTP 403 (forbidden checks:read)",
+              "code": 403
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/access-tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"https://appwrite.test\",\"aud\":\"${vcs}/~${ns}/origin/entire-core/api/authz/sts\",\"plugin_id\":\"appwrite\",\"installation_id\":\"ins_fixture\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"permissions\":{\"contents\":\"write\",\"checks\":\"write\",\"deployments\":\"write\",\"discussions\":\"write\",\"repositories\":\"create\"}}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/access-tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"https://appwrite.test\",\"aud\":\"${vcs}/~${ns}/origin/entire-core/api/authz/sts\",\"plugin_id\":\"appwrite\",\"installation_id\":\"ins_fixture\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"permissions\":{\"contents\":\"write\",\"checks\":\"write\",\"deployments\":\"write\",\"repositories\":\"create\"}}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/repositories",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"https://appwrite.test\",\"aud\":\"${vcs}/~${ns}/origin/entire-core/api/authz/sts\",\"plugin_id\":\"appwrite\",\"installation_id\":\"ins_fixture\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/repositories?cursor=c2",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"https://appwrite.test\",\"aud\":\"${vcs}/~${ns}/origin/entire-core/api/authz/sts\",\"plugin_id\":\"appwrite\",\"installation_id\":\"ins_fixture\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/repos/repo_1/trails?status=open&per_page=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/repos/repo_1/trails?status=open&per_page=100&cursor=n2",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/repos/repo_1/trails?status=open&per_page=100",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/repos/repo_1/trails?status=open&per_page=100&cursor=n2",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/repos/repo_1/trails/2",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/repos/repo_1/trails/3",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/repos/repo_1/trails/99",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/repos/repo_1/trails/2",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/repos/repo_1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/compare?base=m2&head=h2",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/repos/repo_1/trails/3",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/compare?base=main&head=h3",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/repos/repo_1/trails/4",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/repos/repo_1/trails",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"title\":\"Add feature\",\"body\":\"Adds it\",\"base\":\"main\",\"branch_name\":\"feature\",\"branch_action\":\"link\",\"status\":\"open\"}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/repos/repo_1/trails",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"title\":\"Flat\",\"body\":\"\",\"base\":\"main\",\"branch_name\":\"flat\",\"branch_action\":\"link\",\"status\":\"open\"}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/repos/repo_1/trails",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"title\":\"Again\",\"body\":\"\",\"base\":\"main\",\"branch_name\":\"feature\",\"branch_action\":\"link\",\"status\":\"open\"}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/repos/repo_1/trails/2/discussions",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"title\":\"Appwrite build\",\"body\":\"## **Appwrite** build\\n\\n| Site | Status |\\n|---|---|\"}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/repos/repo_1/trails/3/discussions",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"title\":\"Refused\",\"body\":\"Refused\"}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/repos/repo_1/trails/4/discussions",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"title\":\"\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u2026\",\"body\":\"\\n#\\n\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\\u00fc\"}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/repos/repo_1/trails/5/discussions",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"title\":\"Comment\",\"body\":\"###\"}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/repos/repo_1/trails/2/discussions/dsc_1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/repos/repo_1/trails/2/discussions/dsc_empty",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/repos/repo_1/trails/0/discussions/separator-here",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/repos/repo_1/trails/2/discussions/dsc_1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "PATCH",
+              "target": "/entire-cell/api/v1/repos/repo_1/trails/2/discussions/dsc_1/messages/msg_1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"body\":\"Looks great\"}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/repos/repo_1/trails/2/discussions/dsc_empty",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/branches-containing",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"targets\":[\"def4567890def4567890def4567890def4567890\"]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/repos/repo_1/commits/def4567890def4567890def4567890def4567890/check-runs",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"branch\":\"main\",\"check_suite\":{\"key\":\"appwrite\",\"name\":\"appwrite\",\"external_id\":\"appwrite\",\"external_updated_at\":\"<now>\",\"status\":\"completed\",\"conclusion\":\"success\",\"completed_at\":\"<now>\"},\"check_runs\":[{\"key\":\"appwrite\",\"name\":\"appwrite\",\"status\":\"completed\",\"external_id\":\"appwrite\",\"external_updated_at\":\"<now>\",\"conclusion\":\"success\",\"completed_at\":\"<now>\",\"output\":{\"title\":\"Built\",\"summary\":\"Built\"},\"details_url\":\"https:\\/\\/appwrite.test\\/build\"}]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/branches-containing",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"targets\":[\"abc\"]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/repos/repo_1/commits/def4567890def4567890def4567890def4567890/check-runs",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"branch\":\"main\",\"check_suite\":{\"key\":\"Site\",\"name\":\"Site\",\"external_id\":\"Site\",\"external_updated_at\":\"<now>\",\"status\":\"queued\"},\"check_runs\":[{\"key\":\"Site\",\"name\":\"Site\",\"status\":\"queued\",\"external_id\":\"Site\",\"external_updated_at\":\"<now>\",\"output\":{\"title\":\"Queued\",\"summary\":\"Queued\"}}]}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/repos/repo_1/commits/def4567890def4567890def4567890def4567890/check-runs",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/repos/repo_1/commits/abc/check-runs",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Git writes through the remote",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "origin": {
+                "ed25519": "7UkoxijRwsbq6QM4kFmVYSlZJzpcY_k2NsFGFKyHN9E",
+                "repositories": [
+                  {
+                    "owner": "test-owner",
+                    "name": "app",
+                    "files": {
+                      "README.md": "# App\n",
+                      "src/index.js": "console.log('app');\n"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "POST",
+                "path": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/access-tokens",
+                "body": {
+                  "token": "tok_fixture",
+                  "expires_at": "2100-01-01T00:00:00Z"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/repositories",
+                "body": {
+                  "repositories": [
+                    {
+                      "id": "repo_1",
+                      "full_name": "et/test-project/app",
+                      "entire_clone_url": "https://x-access-token:tok_fixture@${vcs-tls-host}/~${ns}/origin/git/test-owner/app.git",
+                      "placements": [
+                        {
+                          "api_base_url": "${base}/entire-cell",
+                          "role": "processing_primary"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1",
+                "body": {
+                  "id": "grepo_1",
+                  "default_branch": "main"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test",
+            "endpoint": "${vcs}/~${ns}/origin/entire-core"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "ins_fixture",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIAMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD\n-----END PRIVATE KEY-----\n",
+            "appId": "appwrite"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.create_file",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "filepath": "notes/todo.md",
+            "content": "- ship\n",
+            "message": "Add notes"
+          },
+          "bind": "f",
+          "expect": {
+            "path": "notes/todo.md",
+            "branch": "main",
+            "commitHash": "89c7a69564ff775c8d798f962712a96fc4f609db"
+          }
+        },
+        {
+          "op": "vcs.create_branch",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "newBranchName": "feature",
+            "oldBranchName": "main"
+          },
+          "expect": {
+            "name": "feature",
+            "ref": "refs/heads/feature",
+            "sha": "89c7a69564ff775c8d798f962712a96fc4f609db"
+          }
+        },
+        {
+          "op": "vcs.create_file",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "filepath": "src/feature.js",
+            "content": "export const feature = true;\n",
+            "branch": "feature"
+          },
+          "expect": {
+            "path": "src/feature.js",
+            "branch": "feature",
+            "commitHash": "03203cd2258e1d7d32cd3d330385188bf5d5ba11"
+          }
+        },
+        {
+          "op": "vcs.create_file",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "filepath": "src/new.js",
+            "content": "new\n",
+            "branch": "fresh"
+          },
+          "expect": {
+            "path": "src/new.js",
+            "branch": "fresh",
+            "commitHash": "c47d816b4278990a60eb1913219bc092645057ea"
+          }
+        },
+        {
+          "op": "vcs.create_tag",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "tagName": "v1.0.0",
+            "target": {
+              "$ref": "f",
+              "path": "/commitHash"
+            },
+            "message": "First release"
+          },
+          "expect": {
+            "name": "v1.0.0",
+            "sha": "89c7a69564ff775c8d798f962712a96fc4f609db",
+            "message": "First release"
+          }
+        },
+        {
+          "op": "vcs.create_tag",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "tagName": "v1.0.1",
+            "target": {
+              "$ref": "f",
+              "path": "/commitHash"
+            }
+          },
+          "expect": {
+            "name": "v1.0.1",
+            "sha": "89c7a69564ff775c8d798f962712a96fc4f609db",
+            "message": ""
+          }
+        },
+        {
+          "op": "vcs.create_tag",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "tagName": "v1.0.2",
+            "target": "main"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Pushing tag v1.0.2 failed: error: src refspec main does not match any\nerror: failed to push some refs to '${vcs-tls}/~${ns}/origin/git/test-owner/app.git'",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.create_branch",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "newBranchName": "other",
+            "oldBranchName": "missing"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Fetching branch missing failed: fatal: couldn't find remote ref refs/heads/missing",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.generate_clone_command",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "version": "feature",
+            "versionType": "branch",
+            "directory": "/tmp/compat-fs/${ns}/clone",
+            "rootDirectory": "src"
+          },
+          "bind": "cmd",
+          "expect": "'export' 'ENTIRE_TOKEN=tok_fixture' && 'mkdir' '-p' '/tmp/compat-fs/${ns}/clone' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' '-c' 'init.defaultBranch=main' 'init' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'remote' 'add' 'origin' 'https://x-access-token:tok_fixture@${vcs-tls-host}/~${ns}/origin/git/test-owner/app.git' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'config' 'core.sparseCheckout' 'true' && 'printf' '%s\\n' 'src' >> '/tmp/compat-fs/${ns}/clone/.git/info/sparse-checkout' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'config' '--add' 'remote.origin.fetch' '+refs/heads/*:refs/remotes/origin/*' && 'git' '-C' '/tmp/compat-fs/${ns}/clone' 'config' 'remote.origin.tagopt' '--no-tags' && 'sh' '-c' 'if git -C \"$1\" ls-remote --exit-code --heads origin \"$2\"; then git -C \"$1\" pull --depth=1 origin \"$2\" && git -C \"$1\" checkout \"$2\"; else git -C \"$1\" checkout -b \"$2\"; fi' 'sh' '/tmp/compat-fs/${ns}/clone' 'feature'"
+        },
+        {
+          "op": "clone.run",
+          "args": {
+            "command": {
+              "$ref": "cmd"
+            },
+            "directory": "/tmp/compat-fs/${ns}/clone",
+            "workspace": "/tmp/compat-fs/${ns}"
+          },
+          "expect": {
+            "exit": 0,
+            "files": {
+              "src/feature.js": "export const feature = true;\n",
+              "src/index.js": "console.log('app');\n"
+            },
+            "fatal": [],
+            "pwned": false
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/access-tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"https://appwrite.test\",\"aud\":\"${vcs}/~${ns}/origin/entire-core/api/authz/sts\",\"plugin_id\":\"appwrite\",\"installation_id\":\"ins_fixture\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"permissions\":{\"contents\":\"write\",\"checks\":\"write\",\"deployments\":\"write\",\"discussions\":\"write\",\"repositories\":\"create\"}}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/repositories",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"https://appwrite.test\",\"aud\":\"${vcs}/~${ns}/origin/entire-core/api/authz/sts\",\"plugin_id\":\"appwrite\",\"installation_id\":\"ins_fixture\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/repos/repo_1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a plugin the core refuses",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "origin": {
+                "ed25519": "7UkoxijRwsbq6QM4kFmVYSlZJzpcY_k2NsFGFKyHN9E"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "POST",
+                "path": "/entire-core/api/v1/plugins/appwrite/installations/ins_denied/access-tokens",
+                "status": 403,
+                "headers": {
+                  "Content-Type": "application/problem+json"
+                },
+                "body": {
+                  "type": "about:blank",
+                  "code": "installation_suspended",
+                  "title": "Forbidden",
+                  "detail": "suspended",
+                  "instance": "hidden"
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-core/api/v1/plugins/appwrite/installations/ins_plain/access-tokens",
+                "status": 503,
+                "headers": {
+                  "Content-Type": "text/plain"
+                },
+                "body": "unavailable"
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test",
+            "endpoint": "${vcs}/~${ns}/origin/entire-core/"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "ins_denied",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIAMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD\n-----END PRIVATE KEY-----\n",
+            "appId": "appwrite"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Failed to retrieve access token from Entire API. Status: 403. Response: {\"code\":\"installation_suspended\",\"title\":\"Forbidden\",\"detail\":\"suspended\"}",
+              "code": 403
+            }
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "ins_plain",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIAMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD\n-----END PRIVATE KEY-----\n",
+            "appId": "appwrite"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Failed to retrieve access token from Entire API. Status: 503. Response: []",
+              "code": 503
+            }
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "ins_x",
+            "privateKey": "not a key",
+            "appId": "appwrite"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "The Entire private key is not an Ed25519 PKCS#8 key.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "ins_x",
+            "privateKey": "BQUFBQUFBQUFBQUFBQUFBQ==",
+            "appId": "appwrite"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "The Entire private key is not an Ed25519 PKCS#8 key.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "ins_x",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nAAAA\n-----END PRIVATE KEY-----",
+            "appId": "appwrite"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "The Entire private key is not an Ed25519 PKCS#8 key.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "ins_x",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIAMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD\n-----END PRIVATE KEY-----\n",
+            "appId": "0"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Entire requires the plugin slug to sign the plugin JWT.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.get_owner_name",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "ins_plain"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Failed to list installation repositories: HTTP 404 (NOT_FOUND)",
+              "code": 404
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-core/api/v1/plugins/appwrite/installations/ins_denied/access-tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"https://appwrite.test\",\"aud\":\"${vcs}/~${ns}/origin/entire-core/api/authz/sts\",\"plugin_id\":\"appwrite\",\"installation_id\":\"ins_denied\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"permissions\":{\"contents\":\"write\",\"checks\":\"write\",\"deployments\":\"write\",\"discussions\":\"write\",\"repositories\":\"create\"}}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-core/api/v1/plugins/appwrite/installations/ins_plain/access-tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"https://appwrite.test\",\"aud\":\"${vcs}/~${ns}/origin/entire-core/api/authz/sts\",\"plugin_id\":\"appwrite\",\"installation_id\":\"ins_plain\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"permissions\":{\"contents\":\"write\",\"checks\":\"write\",\"deployments\":\"write\",\"discussions\":\"write\",\"repositories\":\"create\"}}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-core/api/v1/plugins/appwrite/installations/ins_x/repositories",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"https://appwrite.test\",\"aud\":\"${vcs}/~${ns}/origin/entire-core/api/authz/sts\",\"plugin_id\":\"appwrite\",\"installation_id\":\"ins_plain\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a cached installation token",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "origin": {
+                "ed25519": "7UkoxijRwsbq6QM4kFmVYSlZJzpcY_k2NsFGFKyHN9E"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "POST",
+                "path": "/entire-core/api/v1/plugins/appwrite/installations/ins_stale/access-tokens",
+                "body": {
+                  "token": "tok_fresh",
+                  "expires_at": "not a date"
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-core/api/v1/plugins/appwrite/installations/ins_bad/access-tokens",
+                "body": {
+                  "token": "tok_bad"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "endpoint": "${vcs}/~${ns}/origin/entire-core",
+            "issuer": "https://appwrite.test",
+            "seed": {
+              "entire-ins_fixture": "{\"accessToken\":\"tok_cached\",\"expiresAt\":4102444800}",
+              "entire-ins_stale": "{\"accessToken\":\"tok_stale\",\"expiresAt\":1767225600}",
+              "entire-ins_bad": "not json"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "ins_fixture",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIAMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD\n-----END PRIVATE KEY-----\n",
+            "appId": "appwrite"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.generate_push_command",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "directory": "/tmp/clone",
+            "branch": "main"
+          },
+          "expect": "'export' 'ENTIRE_TOKEN=tok_cached' && 'git' '-C' '/tmp/clone' 'push' 'origin' 'main'"
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "ins_stale",
+            "privateKey": "AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwM=",
+            "appId": "appwrite"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.generate_push_command",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "directory": "/tmp/clone",
+            "branch": "main"
+          },
+          "expect": "'export' 'ENTIRE_TOKEN=tok_fresh' && 'git' '-C' '/tmp/clone' 'push' 'origin' 'main'"
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "ins_bad",
+            "privateKey": "AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwPtSSjGKNHCxurpAziQWZVhKVknOlxj+TY2wUYUrIc30Q==",
+            "appId": "appwrite"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.generate_push_command",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "directory": "/tmp/clone",
+            "branch": "main"
+          },
+          "expect": "'export' 'ENTIRE_TOKEN=tok_bad' && 'git' '-C' '/tmp/clone' 'push' 'origin' 'main'"
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-core/api/v1/plugins/appwrite/installations/ins_stale/access-tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"https://appwrite.test\",\"aud\":\"${vcs}/~${ns}/origin/entire-core/api/authz/sts\",\"plugin_id\":\"appwrite\",\"installation_id\":\"ins_stale\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"permissions\":{\"contents\":\"write\",\"checks\":\"write\",\"deployments\":\"write\",\"discussions\":\"write\",\"repositories\":\"create\"}}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-core/api/v1/plugins/appwrite/installations/ins_bad/access-tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"https://appwrite.test\",\"aud\":\"${vcs}/~${ns}/origin/entire-core/api/authz/sts\",\"plugin_id\":\"appwrite\",\"installation_id\":\"ins_bad\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"permissions\":{\"contents\":\"write\",\"checks\":\"write\",\"deployments\":\"write\",\"discussions\":\"write\",\"repositories\":\"create\"}}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

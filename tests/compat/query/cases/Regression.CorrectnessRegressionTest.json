@@ -1,0 +1,2403 @@
+{
+  "source": "packages/query/tests/Regression/CorrectnessRegressionTest.php",
+  "cases": [
+    {
+      "name": "testMySqlHintAcceptsBacktickQuotedIndex",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "hint",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "INDEX(`users` `idx_users_age`)"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT /*+ INDEX(`users` `idx_users_age`) */ * FROM `users`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT /*+ INDEX(`users` `idx_users_age`) */ * FROM `users`",
+        [],
+        [],
+        "SELECT /*+ INDEX(`users` `idx_users_age`) */ * FROM `users`",
+        "SELECT /*+ INDEX(`users` `idx_users_age`) */ * FROM `users`"
+      ]
+    },
+    {
+      "name": "testSQLiteUnionEmitsBareCompound",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "archived_users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id"
+              ]
+            ]
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                "id"
+              ]
+            ]
+          },
+          {
+            "call": "union",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              {
+                "$o": 1
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT `id` FROM `users` UNION SELECT `id` FROM `archived_users`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT `id` FROM `users` UNION SELECT `id` FROM `archived_users`",
+        [],
+        [],
+        "SELECT `id` FROM `users` UNION SELECT `id` FROM `archived_users`",
+        "SELECT `id` FROM `users` UNION SELECT `id` FROM `archived_users`",
+        "SELECT `id` FROM `users` UNION SELECT `id` FROM `archived_users`",
+        "SELECT `id` FROM `users` UNION SELECT `id` FROM `archived_users`"
+      ]
+    },
+    {
+      "name": "testClickHouseAlterRejectsEmptyAlterations",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "alter",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "ALTER TABLE requires at least one alteration."
+          },
+          "id": 3
+        }
+      ]
+    },
+    {
+      "name": "testMySqlHashCommentReplacementEmitsValidDoubleDash",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Tokenizer\\MySQL",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SELECT 1 # tail\nFROM `users`"
+            ]
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 7
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 8
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 9
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 10
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 11
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tokenizer\\MySQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 2,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Integer"
+              },
+              "value": "1",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 8
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::LineComment"
+              },
+              "value": "--  tail",
+              "position": 9
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": "\n",
+              "position": 17
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 18
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 22
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "`users`",
+              "position": 23
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 11,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 30
+            }
+          }
+        ],
+        "SELECT",
+        " ",
+        "1",
+        " ",
+        "--  tail",
+        "\n",
+        "FROM",
+        " ",
+        "`users`",
+        ""
+      ]
+    },
+    {
+      "name": "testStatementCarriesMongoArrayFilters",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "students"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "grades.$[elem].mean": 0
+              }
+            ]
+          },
+          {
+            "call": "arrayFilter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "elem",
+              {
+                "elem.grade": {
+                  "$gte": 85
+                }
+              }
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "_id",
+              [
+                "abc"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "_id",
+            "values": [
+              "abc"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "{\"collection\":\"students\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$set\":{\"grades.$[elem].mean\":\"?\"}},\"options\":{\"arrayFilters\":[{\"elem.grade\":{\"$gte\":85}}]}}",
+            "bindings": [
+              "abc",
+              0
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"students\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$set\":{\"grades.$[elem].mean\":\"?\"}},\"options\":{\"arrayFilters\":[{\"elem.grade\":{\"$gte\":85}}]}}"
+      ]
+    },
+    {
+      "name": "testMongoUpdateBindingsOrder",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "city": "New York"
+              }
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "Alice"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "Alice"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"name\":\"?\"},\"update\":{\"$set\":{\"city\":\"?\"}}}",
+            "bindings": [
+              "Alice",
+              "New York"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        [
+          "Alice",
+          "New York"
+        ]
+      ]
+    },
+    {
+      "name": "testFingerprintDistinguishesElemMatchAttribute",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "x"
+              ]
+            ]
+          },
+          {
+            "static": "elemMatch",
+            "class": "Query",
+            "args": [
+              "tags",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "x"
+              ]
+            ]
+          },
+          {
+            "static": "elemMatch",
+            "class": "Query",
+            "args": [
+              "categories",
+              [
+                {
+                  "$o": 4
+                }
+              ]
+            ]
+          },
+          {
+            "static": "fingerprint",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "static": "fingerprint",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 5
+                }
+              ]
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "x"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::ElemMatch"
+            },
+            "attribute": "tags",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "name",
+                  "values": [
+                    "x"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "x"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 5,
+          "props": {
+            "method": {
+              "$enum": "Method::ElemMatch"
+            },
+            "attribute": "categories",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 6,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "name",
+                  "values": [
+                    "x"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "2242704f5e191b7df759c4a7343bb3d6",
+        "d5158e354977b28f9e8b875f0c88ba50"
+      ]
+    },
+    {
+      "name": "testFingerprintRecursesIntoLogicalQueries",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "x"
+              ]
+            ]
+          },
+          {
+            "static": "and",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "email",
+              [
+                "x"
+              ]
+            ]
+          },
+          {
+            "static": "and",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 4
+                }
+              ]
+            ]
+          },
+          {
+            "static": "fingerprint",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "static": "fingerprint",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 5
+                }
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "x"
+              ]
+            ]
+          },
+          {
+            "static": "or",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 7
+                }
+              ]
+            ]
+          },
+          {
+            "static": "fingerprint",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "static": "fingerprint",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 8
+                }
+              ]
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "x"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::And"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "name",
+                  "values": [
+                    "x"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "email",
+            "values": [
+              "x"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 5,
+          "props": {
+            "method": {
+              "$enum": "Method::And"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 6,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "email",
+                  "values": [
+                    "x"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "6885c3be88e74449504ce201d079cf60",
+        "db2bfa68b00809bd724dbf839ddea1f9",
+        {
+          "$value": "Query",
+          "id": 7,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "x"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 8,
+          "props": {
+            "method": {
+              "$enum": "Method::Or"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 9,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "name",
+                  "values": [
+                    "x"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "6885c3be88e74449504ce201d079cf60",
+        "985aa4f83fc5a10e142d612ceef46843"
+      ]
+    },
+    {
+      "name": "testOrderingStillEmittedThroughPendingQueries",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "static": "orderAsc",
+            "class": "Query",
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "static": "orderDesc",
+            "class": "Query",
+            "args": [
+              "age"
+            ]
+          },
+          {
+            "static": "orderRandom",
+            "class": "Query",
+            "args": []
+          },
+          {
+            "call": "queries",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::OrderAsc"
+            },
+            "attribute": "name",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::OrderDesc"
+            },
+            "attribute": "age",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::OrderRandom"
+            },
+            "attribute": "",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "SELECT * FROM `t` ORDER BY `name` ASC, `age` DESC, RAND()",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `t` ORDER BY `name` ASC, `age` DESC, RAND()"
+      ]
+    },
+    {
+      "name": "testResetClearsAliasQualificationState",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              "u"
+            ]
+          },
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "id",
+              "user_id"
+            ]
+          },
+          {
+            "static": "join",
+            "class": "Query",
+            "args": [
+              "orders",
+              "o",
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "static": "sum",
+            "class": "Query",
+            "args": [
+              "amount",
+              "total"
+            ]
+          },
+          {
+            "call": "queries",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 5
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "id",
+              "=",
+              "user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 4,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "id",
+                    "=",
+                    "user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "o",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 5,
+          "props": {
+            "method": {
+              "$enum": "Method::Sum"
+            },
+            "attribute": "amount",
+            "values": [],
+            "alias": "total",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "SELECT SUM(`u`.`amount`) AS `total` FROM `users` AS `u` JOIN `orders` AS `o` ON `u`.`id` = `u`.`user_id`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testResetPreservesUserInstalledHooks",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$impl": 1
+              }
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$impl": 2
+              }
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$impl": 3
+              }
+            ]
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              "u"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "id",
+              [
+                1
+              ]
+            ]
+          },
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "id",
+              "user_id"
+            ]
+          },
+          {
+            "static": "join",
+            "class": "Query",
+            "args": [
+              "orders",
+              "o",
+              [
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "queries",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 4
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": [],
+            "cb": [
+              {
+                "impl": 2,
+                "m": "resolve",
+                "ret": "id"
+              },
+              {
+                "impl": 2,
+                "m": "resolve",
+                "ret": "user_id"
+              },
+              {
+                "impl": 3,
+                "m": "filterJoin",
+                "ret": null
+              },
+              {
+                "impl": 1,
+                "m": "filter",
+                "do": [
+                  {
+                    "new": "Builder\\Condition",
+                    "args": [
+                      "1 = 1",
+                      []
+                    ]
+                  }
+                ],
+                "ret": {
+                  "$o": 6
+                }
+              }
+            ]
+          }
+        ],
+        "impls": {
+          "1": [
+            "Hook",
+            "Hook\\Filter"
+          ],
+          "2": [
+            "Hook",
+            "Hook\\Attribute"
+          ],
+          "3": [
+            "Hook",
+            "Hook\\Join\\Filter"
+          ]
+        }
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "id",
+            "values": [
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "id",
+              "=",
+              "user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "id",
+                    "=",
+                    "user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "o",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$cb": "impl:2:resolve",
+          "args": [
+            "id"
+          ]
+        },
+        {
+          "$cb": "impl:2:resolve",
+          "args": [
+            "user_id"
+          ]
+        },
+        {
+          "$cb": "impl:3:filterJoin",
+          "args": [
+            "o",
+            {
+              "$enum": "Builder\\JoinType::Inner"
+            }
+          ]
+        },
+        {
+          "$cb": "impl:1:filter",
+          "args": [
+            "u"
+          ]
+        },
+        {
+          "$value": "Builder\\Condition",
+          "id": 6,
+          "props": {
+            "expression": "1 = 1",
+            "bindings": []
+          }
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 7,
+          "props": {
+            "query": "SELECT * FROM `users` AS `u` JOIN `orders` AS `o` ON `u`.`id` = `u`.`user_id` WHERE `u`.`id` IN (?) AND 1 = 1",
+            "bindings": [
+              1
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testOffsetWithoutLimitThrowsOnMySQL",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "static": "offset",
+            "class": "Query",
+            "args": [
+              5
+            ]
+          },
+          {
+            "call": "queries",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Offset"
+            },
+            "attribute": "",
+            "values": [
+              5
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "OFFSET requires LIMIT on this engine. Set a limit or use the dialect's native no-limit form."
+          },
+          "id": 3
+        }
+      ]
+    },
+    {
+      "name": "testOffsetWithLimitStillWorksOnMySQL",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "static": "limit",
+            "class": "Query",
+            "args": [
+              10
+            ]
+          },
+          {
+            "static": "offset",
+            "class": "Query",
+            "args": [
+              5
+            ]
+          },
+          {
+            "call": "queries",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Limit"
+            },
+            "attribute": "",
+            "values": [
+              10
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Offset"
+            },
+            "attribute": "",
+            "values": [
+              5
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "SELECT * FROM `t` LIMIT ? OFFSET ?",
+            "bindings": [
+              10,
+              5
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `t` LIMIT ? OFFSET ?"
+      ]
+    },
+    {
+      "name": "testOffsetWithoutLimitStillWorksOnPostgreSQL",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "static": "offset",
+            "class": "Query",
+            "args": [
+              5
+            ]
+          },
+          {
+            "call": "queries",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Offset"
+            },
+            "attribute": "",
+            "values": [
+              5
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT * FROM \"t\" OFFSET ?",
+            "bindings": [
+              5
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM \"t\" OFFSET ?",
+        "SELECT * FROM \"t\" OFFSET ?"
+      ]
+    },
+    {
+      "name": "testMysqlJsonContainsRejectsInvalidUtf8",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "containsAll",
+            "class": "Query",
+            "args": [
+              "tags",
+              [
+                {
+                  "$bytes": "sTE="
+                }
+              ]
+            ]
+          },
+          {
+            "call": "setOnArray",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              true
+            ]
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "queries",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::ContainsAll"
+            },
+            "attribute": "tags",
+            "values": [
+              {
+                "$bytes": "sTE="
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        null,
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid JSON payload: Malformed UTF-8 characters, possibly incorrectly encoded"
+          },
+          "id": 3
+        }
+      ]
+    },
+    {
+      "name": "testMysqlJsonOverlapsRejectsInvalidUtf8",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "containsAny",
+            "class": "Query",
+            "args": [
+              "tags",
+              [
+                {
+                  "$bytes": "sTE="
+                }
+              ]
+            ]
+          },
+          {
+            "call": "setOnArray",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              true
+            ]
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "queries",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::ContainsAny"
+            },
+            "attribute": "tags",
+            "values": [
+              {
+                "$bytes": "sTE="
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        null,
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid JSON payload: Malformed UTF-8 characters, possibly incorrectly encoded"
+          },
+          "id": 3
+        }
+      ]
+    },
+    {
+      "name": "testOrderWithFillRejectsInjectionInDirection",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "orderWithFill",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "ts",
+              "ASC, 1; DROP TABLE t"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid direction for orderWithFill: ASC, 1; DROP TABLE t"
+          },
+          "id": 2
+        }
+      ]
+    }
+  ]
+}

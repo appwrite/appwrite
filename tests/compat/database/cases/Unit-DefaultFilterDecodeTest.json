@@ -1,0 +1,2985 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/DefaultFilterDecodeTest.php"
+  ],
+  "cases": [
+    {
+      "name": "DefaultFilterDecodeTest::testJsonAttributeHoldingAScalarDecodesToTheScalar#memory",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1"
+          },
+          "bind": "s7",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1"
+              },
+              "cache": "none"
+            },
+            "as": "o2"
+          },
+          "bind": "s8",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "decode_u000000000001"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "payload",
+              "size": 64,
+              "filters": [
+                {
+                  "$enum": "Filter::Json"
+                }
+              ]
+            },
+            "as": "o3"
+          },
+          "bind": "s12",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "payload",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "json"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4"
+          },
+          "bind": "s13",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o4"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5"
+          },
+          "bind": "s15",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o5"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "payloads",
+              "attributes": [
+                {
+                  "$obj": "o3"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o6"
+          },
+          "bind": "s17",
+          "expect": {
+            "$document": {
+              "$id": "payloads",
+              "name": "payloads",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "payload",
+                    "key": "payload",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o6"
+              }
+            },
+            "as": "o7"
+          },
+          "expect": {
+            "$document": {
+              "$id": "payloads",
+              "name": "payloads",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "payload",
+                    "key": "payload",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "integer",
+                "payload": "5"
+              }
+            },
+            "as": "o8"
+          },
+          "bind": "s19",
+          "expect": {
+            "$document": {
+              "$id": "integer",
+              "payload": "5"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "payloads",
+              "document": {
+                "$obj": "o8"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "integer",
+              "payload": 5,
+              "$collection": "payloads",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "boolean",
+                "payload": "true"
+              }
+            },
+            "as": "o9"
+          },
+          "bind": "s21",
+          "expect": {
+            "$document": {
+              "$id": "boolean",
+              "payload": "true"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "payloads",
+              "document": {
+                "$obj": "o9"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "boolean",
+              "payload": true,
+              "$collection": "payloads",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "string",
+                "payload": "\"x\""
+              }
+            },
+            "as": "o10"
+          },
+          "bind": "s23",
+          "expect": {
+            "$document": {
+              "$id": "string",
+              "payload": "\"x\""
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "payloads",
+              "document": {
+                "$obj": "o10"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "string",
+              "payload": "x",
+              "$collection": "payloads",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "float",
+                "payload": "1.5"
+              }
+            },
+            "as": "o11"
+          },
+          "bind": "s25",
+          "expect": {
+            "$document": {
+              "$id": "float",
+              "payload": "1.5"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "payloads",
+              "document": {
+                "$obj": "o11"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "float",
+              "payload": 1.5,
+              "$collection": "payloads",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "4"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "payloads",
+              "id": "integer"
+            },
+            "as": "o12"
+          },
+          "bind": "s27",
+          "expect": {
+            "$document": {
+              "payload": 5,
+              "$sequence": "1",
+              "$id": "integer",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "payloads"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "payload"
+            }
+          },
+          "expect": 5
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "$id",
+              "values": [
+                "integer"
+              ]
+            },
+            "as": "o13"
+          },
+          "bind": "s29",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "$id",
+              "values": [
+                "integer"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "findOne",
+            "args": {
+              "collection": "payloads",
+              "queries": [
+                {
+                  "$obj": "o13"
+                }
+              ]
+            },
+            "as": "o14"
+          },
+          "bind": "s30",
+          "expect": {
+            "$document": {
+              "payload": 5,
+              "$id": "integer",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "$collection": "payloads"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "payload"
+            }
+          },
+          "expect": 5
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "payloads",
+              "id": "boolean"
+            },
+            "as": "o15"
+          },
+          "bind": "s32",
+          "expect": {
+            "$document": {
+              "payload": true,
+              "$sequence": "2",
+              "$id": "boolean",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "payloads"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o15"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "payload"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "$id",
+              "values": [
+                "boolean"
+              ]
+            },
+            "as": "o16"
+          },
+          "bind": "s34",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "$id",
+              "values": [
+                "boolean"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "findOne",
+            "args": {
+              "collection": "payloads",
+              "queries": [
+                {
+                  "$obj": "o16"
+                }
+              ]
+            },
+            "as": "o17"
+          },
+          "bind": "s35",
+          "expect": {
+            "$document": {
+              "payload": true,
+              "$id": "boolean",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2",
+              "$collection": "payloads"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o17"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "payload"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "payloads",
+              "id": "string"
+            },
+            "as": "o18"
+          },
+          "bind": "s37",
+          "expect": {
+            "$document": {
+              "payload": "x",
+              "$sequence": "3",
+              "$id": "string",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "payloads"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o18"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "payload"
+            }
+          },
+          "expect": "x"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "$id",
+              "values": [
+                "string"
+              ]
+            },
+            "as": "o19"
+          },
+          "bind": "s39",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "$id",
+              "values": [
+                "string"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "findOne",
+            "args": {
+              "collection": "payloads",
+              "queries": [
+                {
+                  "$obj": "o19"
+                }
+              ]
+            },
+            "as": "o20"
+          },
+          "bind": "s40",
+          "expect": {
+            "$document": {
+              "payload": "x",
+              "$id": "string",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3",
+              "$collection": "payloads"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o20"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "payload"
+            }
+          },
+          "expect": "x"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "payloads",
+              "id": "float"
+            },
+            "as": "o21"
+          },
+          "bind": "s42",
+          "expect": {
+            "$document": {
+              "payload": 1.5,
+              "$sequence": "4",
+              "$id": "float",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "payloads"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o21"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "payload"
+            }
+          },
+          "expect": 1.5
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "$id",
+              "values": [
+                "float"
+              ]
+            },
+            "as": "o22"
+          },
+          "bind": "s44",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "$id",
+              "values": [
+                "float"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "findOne",
+            "args": {
+              "collection": "payloads",
+              "queries": [
+                {
+                  "$obj": "o22"
+                }
+              ]
+            },
+            "as": "o23"
+          },
+          "bind": "s45",
+          "expect": {
+            "$document": {
+              "payload": 1.5,
+              "$id": "float",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "4",
+              "$collection": "payloads"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o23"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "payload"
+            }
+          },
+          "expect": 1.5
+        }
+      ]
+    },
+    {
+      "name": "DefaultFilterDecodeTest::testJsonAttributeHoldingAScalarDecodesToTheScalar#sqlite",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o24"
+          },
+          "bind": "s47",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o24"
+              },
+              "cache": "none"
+            },
+            "as": "o25"
+          },
+          "bind": "s48",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o25"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o25"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "decode_u000000000002"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o25"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "payload",
+              "size": 64,
+              "filters": [
+                {
+                  "$enum": "Filter::Json"
+                }
+              ]
+            },
+            "as": "o26"
+          },
+          "bind": "s52",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "payload",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "json"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o27"
+          },
+          "bind": "s53",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o27"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o28"
+          },
+          "bind": "s55",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o28"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "payloads",
+              "attributes": [
+                {
+                  "$obj": "o26"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o29"
+          },
+          "bind": "s57",
+          "expect": {
+            "$document": {
+              "$id": "payloads",
+              "name": "payloads",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "payload",
+                    "key": "payload",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o25"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o29"
+              }
+            },
+            "as": "o30"
+          },
+          "expect": {
+            "$document": {
+              "$id": "payloads",
+              "name": "payloads",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "payload",
+                    "key": "payload",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "integer",
+                "payload": "5"
+              }
+            },
+            "as": "o31"
+          },
+          "bind": "s59",
+          "expect": {
+            "$document": {
+              "$id": "integer",
+              "payload": "5"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o25"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "payloads",
+              "document": {
+                "$obj": "o31"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "integer",
+              "payload": 5,
+              "$collection": "payloads",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "boolean",
+                "payload": "true"
+              }
+            },
+            "as": "o32"
+          },
+          "bind": "s61",
+          "expect": {
+            "$document": {
+              "$id": "boolean",
+              "payload": "true"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o25"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "payloads",
+              "document": {
+                "$obj": "o32"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "boolean",
+              "payload": true,
+              "$collection": "payloads",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "string",
+                "payload": "\"x\""
+              }
+            },
+            "as": "o33"
+          },
+          "bind": "s63",
+          "expect": {
+            "$document": {
+              "$id": "string",
+              "payload": "\"x\""
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o25"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "payloads",
+              "document": {
+                "$obj": "o33"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "string",
+              "payload": "x",
+              "$collection": "payloads",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "float",
+                "payload": "1.5"
+              }
+            },
+            "as": "o34"
+          },
+          "bind": "s65",
+          "expect": {
+            "$document": {
+              "$id": "float",
+              "payload": "1.5"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o25"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "payloads",
+              "document": {
+                "$obj": "o34"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "float",
+              "payload": 1.5,
+              "$collection": "payloads",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "4"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o25"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "payloads",
+              "id": "integer"
+            },
+            "as": "o35"
+          },
+          "bind": "s67",
+          "expect": {
+            "$document": {
+              "payload": 5,
+              "$sequence": "1",
+              "$id": "integer",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "payloads"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o35"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "payload"
+            }
+          },
+          "expect": 5
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "$id",
+              "values": [
+                "integer"
+              ]
+            },
+            "as": "o36"
+          },
+          "bind": "s69",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "$id",
+              "values": [
+                "integer"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o25"
+            },
+            "method": "findOne",
+            "args": {
+              "collection": "payloads",
+              "queries": [
+                {
+                  "$obj": "o36"
+                }
+              ]
+            },
+            "as": "o37"
+          },
+          "bind": "s70",
+          "expect": {
+            "$document": {
+              "payload": 5,
+              "$id": "integer",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "payloads"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o37"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "payload"
+            }
+          },
+          "expect": 5
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o25"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "payloads",
+              "id": "boolean"
+            },
+            "as": "o38"
+          },
+          "bind": "s72",
+          "expect": {
+            "$document": {
+              "payload": true,
+              "$sequence": "2",
+              "$id": "boolean",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "payloads"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o38"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "payload"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "$id",
+              "values": [
+                "boolean"
+              ]
+            },
+            "as": "o39"
+          },
+          "bind": "s74",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "$id",
+              "values": [
+                "boolean"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o25"
+            },
+            "method": "findOne",
+            "args": {
+              "collection": "payloads",
+              "queries": [
+                {
+                  "$obj": "o39"
+                }
+              ]
+            },
+            "as": "o40"
+          },
+          "bind": "s75",
+          "expect": {
+            "$document": {
+              "payload": true,
+              "$id": "boolean",
+              "$sequence": "2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "payloads"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o40"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "payload"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o25"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "payloads",
+              "id": "string"
+            },
+            "as": "o41"
+          },
+          "bind": "s77",
+          "expect": {
+            "$document": {
+              "payload": "x",
+              "$sequence": "3",
+              "$id": "string",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "payloads"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o41"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "payload"
+            }
+          },
+          "expect": "x"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "$id",
+              "values": [
+                "string"
+              ]
+            },
+            "as": "o42"
+          },
+          "bind": "s79",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "$id",
+              "values": [
+                "string"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o25"
+            },
+            "method": "findOne",
+            "args": {
+              "collection": "payloads",
+              "queries": [
+                {
+                  "$obj": "o42"
+                }
+              ]
+            },
+            "as": "o43"
+          },
+          "bind": "s80",
+          "expect": {
+            "$document": {
+              "payload": "x",
+              "$id": "string",
+              "$sequence": "3",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "payloads"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o43"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "payload"
+            }
+          },
+          "expect": "x"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o25"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "payloads",
+              "id": "float"
+            },
+            "as": "o44"
+          },
+          "bind": "s82",
+          "expect": {
+            "$document": {
+              "payload": 1.5,
+              "$sequence": "4",
+              "$id": "float",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "payloads"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o44"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "payload"
+            }
+          },
+          "expect": 1.5
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "$id",
+              "values": [
+                "float"
+              ]
+            },
+            "as": "o45"
+          },
+          "bind": "s84",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "$id",
+              "values": [
+                "float"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o25"
+            },
+            "method": "findOne",
+            "args": {
+              "collection": "payloads",
+              "queries": [
+                {
+                  "$obj": "o45"
+                }
+              ]
+            },
+            "as": "o46"
+          },
+          "bind": "s85",
+          "expect": {
+            "$document": {
+              "payload": 1.5,
+              "$id": "float",
+              "$sequence": "4",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "payloads"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o46"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "payload"
+            }
+          },
+          "expect": 1.5
+        }
+      ]
+    },
+    {
+      "name": "DefaultFilterDecodeTest::testSpatialFilterOnANonSpatialAdapterDecodesToNull#memory point",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o47"
+          },
+          "bind": "s87",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o47"
+              },
+              "cache": "none"
+            },
+            "as": "o48"
+          },
+          "bind": "s88",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o48"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o48"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "decode_u000000000003"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o48"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "shape",
+                "type": "string",
+                "array": false,
+                "filters": [
+                  "point"
+                ]
+              }
+            },
+            "as": "o49"
+          },
+          "bind": "s92",
+          "expect": {
+            "$document": {
+              "$id": "shape",
+              "type": "string",
+              "array": false,
+              "filters": [
+                "point"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "payloads",
+                "attributes": [
+                  {
+                    "$obj": "o49"
+                  }
+                ]
+              }
+            },
+            "as": "o50"
+          },
+          "bind": "s93",
+          "expect": {
+            "$document": {
+              "$id": "payloads",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "shape",
+                    "type": "string",
+                    "array": false,
+                    "filters": [
+                      "point"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "shape",
+                "shape": "POINT(1 2)"
+              }
+            },
+            "as": "o51"
+          },
+          "bind": "s94",
+          "expect": {
+            "$document": {
+              "$id": "shape",
+              "shape": "POINT(1 2)"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o48"
+            },
+            "method": "decode",
+            "args": {
+              "collection": {
+                "$obj": "o50"
+              },
+              "document": {
+                "$obj": "o51"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "shape",
+              "shape": null,
+              "$sequence": null,
+              "$collection": null,
+              "$createdAt": null,
+              "$updatedAt": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o51"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "shape"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "DefaultFilterDecodeTest::testSpatialFilterOnANonSpatialAdapterDecodesToNull#memory linestring",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o52"
+          },
+          "bind": "s97",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o52"
+              },
+              "cache": "none"
+            },
+            "as": "o53"
+          },
+          "bind": "s98",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o53"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o53"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "decode_u000000000004"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o53"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "shape",
+                "type": "string",
+                "array": false,
+                "filters": [
+                  "linestring"
+                ]
+              }
+            },
+            "as": "o54"
+          },
+          "bind": "s102",
+          "expect": {
+            "$document": {
+              "$id": "shape",
+              "type": "string",
+              "array": false,
+              "filters": [
+                "linestring"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "payloads",
+                "attributes": [
+                  {
+                    "$obj": "o54"
+                  }
+                ]
+              }
+            },
+            "as": "o55"
+          },
+          "bind": "s103",
+          "expect": {
+            "$document": {
+              "$id": "payloads",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "shape",
+                    "type": "string",
+                    "array": false,
+                    "filters": [
+                      "linestring"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "shape",
+                "shape": "LINESTRING(1 2, 3 4)"
+              }
+            },
+            "as": "o56"
+          },
+          "bind": "s104",
+          "expect": {
+            "$document": {
+              "$id": "shape",
+              "shape": "LINESTRING(1 2, 3 4)"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o53"
+            },
+            "method": "decode",
+            "args": {
+              "collection": {
+                "$obj": "o55"
+              },
+              "document": {
+                "$obj": "o56"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "shape",
+              "shape": null,
+              "$sequence": null,
+              "$collection": null,
+              "$createdAt": null,
+              "$updatedAt": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o56"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "shape"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "DefaultFilterDecodeTest::testSpatialFilterOnANonSpatialAdapterDecodesToNull#memory polygon",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o57"
+          },
+          "bind": "s107",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o57"
+              },
+              "cache": "none"
+            },
+            "as": "o58"
+          },
+          "bind": "s108",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o58"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o58"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "decode_u000000000005"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o58"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "shape",
+                "type": "string",
+                "array": false,
+                "filters": [
+                  "polygon"
+                ]
+              }
+            },
+            "as": "o59"
+          },
+          "bind": "s112",
+          "expect": {
+            "$document": {
+              "$id": "shape",
+              "type": "string",
+              "array": false,
+              "filters": [
+                "polygon"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "payloads",
+                "attributes": [
+                  {
+                    "$obj": "o59"
+                  }
+                ]
+              }
+            },
+            "as": "o60"
+          },
+          "bind": "s113",
+          "expect": {
+            "$document": {
+              "$id": "payloads",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "shape",
+                    "type": "string",
+                    "array": false,
+                    "filters": [
+                      "polygon"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "shape",
+                "shape": "POLYGON((0 0, 0 1, 1 1, 0 0))"
+              }
+            },
+            "as": "o61"
+          },
+          "bind": "s114",
+          "expect": {
+            "$document": {
+              "$id": "shape",
+              "shape": "POLYGON((0 0, 0 1, 1 1, 0 0))"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o58"
+            },
+            "method": "decode",
+            "args": {
+              "collection": {
+                "$obj": "o60"
+              },
+              "document": {
+                "$obj": "o61"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "shape",
+              "shape": null,
+              "$sequence": null,
+              "$collection": null,
+              "$createdAt": null,
+              "$updatedAt": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o61"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "shape"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "DefaultFilterDecodeTest::testSpatialFilterOnANonSpatialAdapterDecodesToNull#sqlite point",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o62"
+          },
+          "bind": "s117",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o62"
+              },
+              "cache": "none"
+            },
+            "as": "o63"
+          },
+          "bind": "s118",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o63"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o63"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "decode_u000000000006"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o63"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "shape",
+                "type": "string",
+                "array": false,
+                "filters": [
+                  "point"
+                ]
+              }
+            },
+            "as": "o64"
+          },
+          "bind": "s122",
+          "expect": {
+            "$document": {
+              "$id": "shape",
+              "type": "string",
+              "array": false,
+              "filters": [
+                "point"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "payloads",
+                "attributes": [
+                  {
+                    "$obj": "o64"
+                  }
+                ]
+              }
+            },
+            "as": "o65"
+          },
+          "bind": "s123",
+          "expect": {
+            "$document": {
+              "$id": "payloads",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "shape",
+                    "type": "string",
+                    "array": false,
+                    "filters": [
+                      "point"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "shape",
+                "shape": "POINT(1 2)"
+              }
+            },
+            "as": "o66"
+          },
+          "bind": "s124",
+          "expect": {
+            "$document": {
+              "$id": "shape",
+              "shape": "POINT(1 2)"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o63"
+            },
+            "method": "decode",
+            "args": {
+              "collection": {
+                "$obj": "o65"
+              },
+              "document": {
+                "$obj": "o66"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "shape",
+              "shape": null,
+              "$sequence": null,
+              "$collection": null,
+              "$createdAt": null,
+              "$updatedAt": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o66"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "shape"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "DefaultFilterDecodeTest::testSpatialFilterOnANonSpatialAdapterDecodesToNull#sqlite linestring",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o67"
+          },
+          "bind": "s127",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o67"
+              },
+              "cache": "none"
+            },
+            "as": "o68"
+          },
+          "bind": "s128",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o68"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o68"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "decode_u000000000007"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o68"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "shape",
+                "type": "string",
+                "array": false,
+                "filters": [
+                  "linestring"
+                ]
+              }
+            },
+            "as": "o69"
+          },
+          "bind": "s132",
+          "expect": {
+            "$document": {
+              "$id": "shape",
+              "type": "string",
+              "array": false,
+              "filters": [
+                "linestring"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "payloads",
+                "attributes": [
+                  {
+                    "$obj": "o69"
+                  }
+                ]
+              }
+            },
+            "as": "o70"
+          },
+          "bind": "s133",
+          "expect": {
+            "$document": {
+              "$id": "payloads",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "shape",
+                    "type": "string",
+                    "array": false,
+                    "filters": [
+                      "linestring"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "shape",
+                "shape": "LINESTRING(1 2, 3 4)"
+              }
+            },
+            "as": "o71"
+          },
+          "bind": "s134",
+          "expect": {
+            "$document": {
+              "$id": "shape",
+              "shape": "LINESTRING(1 2, 3 4)"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o68"
+            },
+            "method": "decode",
+            "args": {
+              "collection": {
+                "$obj": "o70"
+              },
+              "document": {
+                "$obj": "o71"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "shape",
+              "shape": null,
+              "$sequence": null,
+              "$collection": null,
+              "$createdAt": null,
+              "$updatedAt": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o71"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "shape"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "DefaultFilterDecodeTest::testSpatialFilterOnANonSpatialAdapterDecodesToNull#sqlite polygon",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o72"
+          },
+          "bind": "s137",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o72"
+              },
+              "cache": "none"
+            },
+            "as": "o73"
+          },
+          "bind": "s138",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o73"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o73"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "decode_u000000000008"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o73"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "shape",
+                "type": "string",
+                "array": false,
+                "filters": [
+                  "polygon"
+                ]
+              }
+            },
+            "as": "o74"
+          },
+          "bind": "s142",
+          "expect": {
+            "$document": {
+              "$id": "shape",
+              "type": "string",
+              "array": false,
+              "filters": [
+                "polygon"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "payloads",
+                "attributes": [
+                  {
+                    "$obj": "o74"
+                  }
+                ]
+              }
+            },
+            "as": "o75"
+          },
+          "bind": "s143",
+          "expect": {
+            "$document": {
+              "$id": "payloads",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "shape",
+                    "type": "string",
+                    "array": false,
+                    "filters": [
+                      "polygon"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "shape",
+                "shape": "POLYGON((0 0, 0 1, 1 1, 0 0))"
+              }
+            },
+            "as": "o76"
+          },
+          "bind": "s144",
+          "expect": {
+            "$document": {
+              "$id": "shape",
+              "shape": "POLYGON((0 0, 0 1, 1 1, 0 0))"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o73"
+            },
+            "method": "decode",
+            "args": {
+              "collection": {
+                "$obj": "o75"
+              },
+              "document": {
+                "$obj": "o76"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "shape",
+              "shape": null,
+              "$sequence": null,
+              "$collection": null,
+              "$createdAt": null,
+              "$updatedAt": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o76"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "shape"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

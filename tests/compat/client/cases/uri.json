@@ -1,0 +1,282 @@
+{
+  "cases": [
+    {
+      "name": "parse 'http://example.com'",
+      "op": "uri.parse",
+      "args": {
+        "uri": "http://example.com"
+      },
+      "expect": {
+        "scheme": "http",
+        "userInfo": "",
+        "host": "example.com",
+        "port": null,
+        "path": "",
+        "query": "",
+        "fragment": "",
+        "authority": "example.com",
+        "string": "http://example.com"
+      }
+    },
+    {
+      "name": "parse 'HTTPS://User:Pass@EXAMPLE.com:443/a b/%zz?q=a b&c=%20#frag ment'",
+      "op": "uri.parse",
+      "args": {
+        "uri": "HTTPS://User:Pass@EXAMPLE.com:443/a b/%zz?q=a b&c=%20#frag ment"
+      },
+      "expect": {
+        "scheme": "https",
+        "userInfo": "User:Pass",
+        "host": "example.com",
+        "port": null,
+        "path": "/a%20b/%25zz",
+        "query": "q=a%20b&c=%20",
+        "fragment": "frag%20ment",
+        "authority": "User:Pass@example.com",
+        "string": "https://User:Pass@example.com/a%20b/%25zz?q=a%20b&c=%20#frag%20ment"
+      }
+    },
+    {
+      "name": "parse 'http://[::1]:8080/x'",
+      "op": "uri.parse",
+      "args": {
+        "uri": "http://[::1]:8080/x"
+      },
+      "expect": {
+        "scheme": "http",
+        "userInfo": "",
+        "host": "[::1]",
+        "port": 8080,
+        "path": "/x",
+        "query": "",
+        "fragment": "",
+        "authority": "[::1]:8080",
+        "string": "http://[::1]:8080/x"
+      }
+    },
+    {
+      "name": "parse '/relative?x'",
+      "op": "uri.parse",
+      "args": {
+        "uri": "/relative?x"
+      },
+      "expect": {
+        "scheme": "",
+        "userInfo": "",
+        "host": "",
+        "port": null,
+        "path": "/relative",
+        "query": "x",
+        "fragment": "",
+        "authority": "",
+        "string": "/relative?x"
+      }
+    },
+    {
+      "name": "parse 'users?page=2'",
+      "op": "uri.parse",
+      "args": {
+        "uri": "users?page=2"
+      },
+      "expect": {
+        "scheme": "",
+        "userInfo": "",
+        "host": "",
+        "port": null,
+        "path": "users",
+        "query": "page=2",
+        "fragment": "",
+        "authority": "",
+        "string": "users?page=2"
+      }
+    },
+    {
+      "name": "parse 'http://example.com:80/'",
+      "op": "uri.parse",
+      "args": {
+        "uri": "http://example.com:80/"
+      },
+      "expect": {
+        "scheme": "http",
+        "userInfo": "",
+        "host": "example.com",
+        "port": null,
+        "path": "/",
+        "query": "",
+        "fragment": "",
+        "authority": "example.com",
+        "string": "http://example.com/"
+      }
+    },
+    {
+      "name": "parse 'https://example.com:8443'",
+      "op": "uri.parse",
+      "args": {
+        "uri": "https://example.com:8443"
+      },
+      "expect": {
+        "scheme": "https",
+        "userInfo": "",
+        "host": "example.com",
+        "port": 8443,
+        "path": "",
+        "query": "",
+        "fragment": "",
+        "authority": "example.com:8443",
+        "string": "https://example.com:8443"
+      }
+    },
+    {
+      "name": "parse 'mailto:ada@example.com'",
+      "op": "uri.parse",
+      "args": {
+        "uri": "mailto:ada@example.com"
+      },
+      "expect": {
+        "scheme": "mailto",
+        "userInfo": "",
+        "host": "",
+        "port": null,
+        "path": "ada@example.com",
+        "query": "",
+        "fragment": "",
+        "authority": "",
+        "string": "mailto:ada@example.com"
+      }
+    },
+    {
+      "name": "parse '//cdn.example.com/x'",
+      "op": "uri.parse",
+      "args": {
+        "uri": "//cdn.example.com/x"
+      },
+      "expect": {
+        "scheme": "",
+        "userInfo": "",
+        "host": "cdn.example.com",
+        "port": null,
+        "path": "/x",
+        "query": "",
+        "fragment": "",
+        "authority": "cdn.example.com",
+        "string": "//cdn.example.com/x"
+      }
+    },
+    {
+      "name": "parse 'http://:80'",
+      "op": "uri.parse",
+      "args": {
+        "uri": "http://:80"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid URI."
+        }
+      }
+    },
+    {
+      "name": "parse 'http:///x'",
+      "op": "uri.parse",
+      "args": {
+        "uri": "http:///x"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid URI."
+        }
+      }
+    },
+    {
+      "name": "parse 'http://example.com/é?ü#ö'",
+      "op": "uri.parse",
+      "args": {
+        "uri": "http://example.com/é?ü#ö"
+      },
+      "expect": {
+        "scheme": "http",
+        "userInfo": "",
+        "host": "example.com",
+        "port": null,
+        "path": "/%C3%A9",
+        "query": "%C3%BC",
+        "fragment": "%C3%B6",
+        "authority": "example.com",
+        "string": "http://example.com/%C3%A9?%C3%BC#%C3%B6"
+      }
+    },
+    {
+      "name": "parse ''",
+      "op": "uri.parse",
+      "args": {
+        "uri": ""
+      },
+      "expect": {
+        "scheme": "",
+        "userInfo": "",
+        "host": "",
+        "port": null,
+        "path": "",
+        "query": "",
+        "fragment": "",
+        "authority": "",
+        "string": ""
+      }
+    },
+    {
+      "name": "parse 'http://example.com/a%2Fb'",
+      "op": "uri.parse",
+      "args": {
+        "uri": "http://example.com/a%2Fb"
+      },
+      "expect": {
+        "scheme": "http",
+        "userInfo": "",
+        "host": "example.com",
+        "port": null,
+        "path": "/a%2Fb",
+        "query": "",
+        "fragment": "",
+        "authority": "example.com",
+        "string": "http://example.com/a%2Fb"
+      }
+    },
+    {
+      "name": "parse 'http://u@example.com'",
+      "op": "uri.parse",
+      "args": {
+        "uri": "http://u@example.com"
+      },
+      "expect": {
+        "scheme": "http",
+        "userInfo": "u",
+        "host": "example.com",
+        "port": null,
+        "path": "",
+        "query": "",
+        "fragment": "",
+        "authority": "u@example.com",
+        "string": "http://u@example.com"
+      }
+    },
+    {
+      "name": "parse 'http://example.com:0/'",
+      "op": "uri.parse",
+      "args": {
+        "uri": "http://example.com:0/"
+      },
+      "expect": {
+        "scheme": "http",
+        "userInfo": "",
+        "host": "example.com",
+        "port": 0,
+        "path": "/",
+        "query": "",
+        "fragment": "",
+        "authority": "example.com:0",
+        "string": "http://example.com:0/"
+      }
+    }
+  ]
+}

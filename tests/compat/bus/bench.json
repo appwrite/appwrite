@@ -1,0 +1,93 @@
+{
+  "lib": "bus",
+  "environment": {
+    "date": "2026-10-18T14:18:28Z",
+    "commit": "398712d31e",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.97",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "dispatch",
+      "description": "Dispatch an event to three listeners with one dependency each",
+      "php": {
+        "ns": 448.37675818757464,
+        "min": 431.4858306949707,
+        "max": 504.48847770799813,
+        "samples": 15,
+        "calls": 38534,
+        "cpu": 449.9974048891888,
+        "peak": 3008.0,
+        "retained": 0.0006505077766820643,
+        "rss": 107384832.0
+      },
+      "rust": {
+        "ns": 300.5278217198323,
+        "min": 297.0101058192932,
+        "max": 307.085208336533,
+        "samples": 15,
+        "calls": 65111,
+        "cpu": 300.8133536064055,
+        "rss": 22171648.0,
+        "allocations": 18.000011262817853,
+        "bytes": 558.0028761141231,
+        "peak": 1650.0,
+        "retained": 0.0016935182483246557
+      },
+      "speedup": 1.4919642235505732,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "miss",
+      "description": "Dispatch an event no listener handles",
+      "php": {
+        "ns": 51.99534245232142,
+        "min": 50.971426017090174,
+        "max": 56.56360941199542,
+        "samples": 15,
+        "calls": 346749,
+        "cpu": 52.46330919483546,
+        "peak": 3008.0,
+        "retained": 0.00007229052330840656,
+        "rss": 107384832.0
+      },
+      "rust": {
+        "ns": 5.682109015942761,
+        "min": 5.544359155151542,
+        "max": 5.828540893527755,
+        "samples": 15,
+        "calls": 3426508,
+        "cpu": 5.6792107105348455,
+        "rss": 22171648.0,
+        "allocations": 2.140176918697792e-7,
+        "bytes": 0.000054652336042019065,
+        "peak": 1650.0,
+        "retained": 0.00003218047839569225
+      },
+      "speedup": 9.150711875895693,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

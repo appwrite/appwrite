@@ -1,0 +1,125 @@
+{
+  "source": "packages/cdn/tests/Aws/SignatureTest.php",
+  "cases": [
+    {
+      "name": "matches the AWS get-vanilla vector",
+      "op": "aws.sign",
+      "args": {
+        "access_key_id": "AKIDEXAMPLE",
+        "secret_access_key": "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
+        "method": "GET",
+        "url": "https://example.amazonaws.com/",
+        "service": "service",
+        "region": "us-east-1",
+        "time": "2015-08-30T12:36:00Z"
+      },
+      "expect": {
+        "authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-date, Signature=5fa00fa31553b73ebf1942676e86291e8372ff2a2260956d9b8aae1d763fbf31",
+        "x-amz-date": "20150830T123600Z"
+      }
+    },
+    {
+      "name": "matches botocore for a signed XML POST with a session token",
+      "op": "aws.sign",
+      "args": {
+        "access_key_id": "AKIDEXAMPLE",
+        "secret_access_key": "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
+        "session_token": "session-token",
+        "method": "POST",
+        "url": "https://cloudfront.amazonaws.com/2020-05-31/distribution-tenant/dt_123/invalidation?b=2&a=1%201",
+        "headers": {
+          "Content-Type": "application/xml"
+        },
+        "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<InvalidationBatch/>",
+        "service": "cloudfront",
+        "region": "us-east-1",
+        "time": "2026-10-23T16:56:24Z"
+      },
+      "expect": {
+        "authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20261023/us-east-1/cloudfront/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-security-token, Signature=b5d99c9f739659c70adb3f22074f4c2829c138c416adf7ff6722d544bbe45a37",
+        "content-type": "application/xml",
+        "x-amz-date": "20261023T165624Z",
+        "x-amz-security-token": "session-token"
+      }
+    },
+    {
+      "name": "signing time is converted to UTC",
+      "op": "aws.sign",
+      "args": {
+        "access_key_id": "AKIDEXAMPLE",
+        "secret_access_key": "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
+        "method": "GET",
+        "url": "https://example.amazonaws.com/",
+        "service": "service",
+        "region": "us-east-1",
+        "time": "2015-08-30T14:36:00+02:00"
+      },
+      "expect": {
+        "authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-date, Signature=5fa00fa31553b73ebf1942676e86291e8372ff2a2260956d9b8aae1d763fbf31",
+        "x-amz-date": "20150830T123600Z"
+      }
+    },
+    {
+      "name": "resigning replaces the Authorization header",
+      "op": "aws.sign",
+      "args": {
+        "access_key_id": "AKIDEXAMPLE",
+        "secret_access_key": "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
+        "method": "GET",
+        "url": "https://example.amazonaws.com/",
+        "headers": {
+          "Authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-date, Signature=5fa00fa31553b73ebf1942676e86291e8372ff2a2260956d9b8aae1d763fbf31"
+        },
+        "service": "service",
+        "region": "us-east-1",
+        "time": "2015-08-30T12:36:00Z"
+      },
+      "expect": {
+        "authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150830/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-date, Signature=5fa00fa31553b73ebf1942676e86291e8372ff2a2260956d9b8aae1d763fbf31",
+        "x-amz-date": "20150830T123600Z"
+      }
+    },
+    {
+      "name": "signs now when no time is given",
+      "op": "aws.sign",
+      "args": {
+        "access_key_id": "AKIDEXAMPLE",
+        "secret_access_key": "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
+        "method": "GET",
+        "url": "https://example.amazonaws.com/",
+        "service": "service",
+        "region": "us-east-1"
+      },
+      "expect": {
+        "authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/<date>/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-date, Signature=<signature>",
+        "x-amz-date": "<date>"
+      }
+    },
+    {
+      "name": "canonical query, path and headers",
+      "op": "aws.sign",
+      "args": {
+        "access_key_id": "AKIDEXAMPLE",
+        "secret_access_key": "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
+        "method": "get",
+        "url": "https://example.amazonaws.com:8443/a%20b/c d/%2F?z=1&a=2&a=1&b&c=%7E%20x+y",
+        "headers": {
+          "X-Amz-Meta-Thing": "  a   b\tc  ",
+          "Content-Type": "text/plain",
+          "User-Agent": "not signed"
+        },
+        "body": "payload",
+        "service": "s3x",
+        "region": "eu-west-1",
+        "time": "2020-01-01T00:00:00Z"
+      },
+      "expect": {
+        "authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20200101/eu-west-1/s3x/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-meta-thing, Signature=66f6381add1eb43dcef1d36b2824acb892c93d86668bee3e9b4ef1d1cdd4d5aa",
+        "content-type": "text/plain",
+        "user-agent": "not signed",
+        "x-amz-date": "20200101T000000Z",
+        "x-amz-meta-thing": "  a   b\tc  "
+      }
+    }
+  ]
+}

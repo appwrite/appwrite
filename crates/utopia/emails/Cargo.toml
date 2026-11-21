@@ -1,18 +1,27 @@
 [package]
 name = "utopia-emails"
-description = "Email addresses split, checked and made canonical per provider, and their domains classified as free or disposable."
+description = "Email address parsing, canonical forms per provider, free, disposable and corporate classification, and validators."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-repository.workspace = true
+repository = "https://github.com/utopia-rs/emails"
 publish.workspace = true
 
 [dependencies]
 php-std.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
+utopia-domains.workspace = true
+utopia-validators.workspace = true
+# The emails-import task (src/bin), as PHP's import.php requires utopia-php/cli,
+# utopia-php/console and an HTTP client (dev requirements of the PHP package).
+indexmap.workspace = true
+utopia-async.workspace = true
+utopia-cli.workspace = true
+utopia-client.workspace = true
+utopia-console.workspace = true
+utopia-servers.workspace = true
 
 [package.metadata.utopia]
-category = "utilities"
-php-sync = "7b0d70bc62"
+php-sync = "e0d77bc7b7d81a8a465d6f9ab0f93c1fbff8f39c"

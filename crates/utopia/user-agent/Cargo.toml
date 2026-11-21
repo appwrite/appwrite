@@ -5,7 +5,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-repository.workspace = true
+repository = "https://github.com/utopia-rs/user-agent"
 publish.workspace = true
 
 [dependencies]
@@ -15,4 +15,4 @@ php-std.workspace = true
 
 [package.metadata.utopia]
 category = "utilities"
-php-sync = "b254acaf49e5ae867e4e5030bae482ce22c84dfe"
+php-sync = "ab221bbcda7fe2c95dd0522f7f9cb985fc40624d"

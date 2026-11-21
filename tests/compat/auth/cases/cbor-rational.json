@@ -1,0 +1,230 @@
+{
+  "source": "cbor rational numbers",
+  "cases": [
+    {
+      "name": "numerator and denominator above 128 bits reduce",
+      "op": "passkeys.ceremony_once",
+      "args": {
+        "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+        "phase": "register",
+        "attestation": "a363666d74d81e82c2581a0300000000000000000000000000000000000000000000000000c25402400000000000000000000000000000000000006761747453746d74a068617574684461746140"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Auth\\Passkeys\\Exception",
+          "message": "Invalid credential: The attestation statement format \"1125899906842624/3\" is not supported."
+        }
+      }
+    },
+    {
+      "name": "a negative bignum numerator reduces",
+      "op": "passkeys.ceremony_once",
+      "args": {
+        "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+        "phase": "register",
+        "attestation": "a363666d74d81e82c358266fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc25825540000000000000000000000000000000000000000000000000000000000000000000000006761747453746d74a068617574684461746140"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Auth\\Passkeys\\Exception",
+          "message": "Invalid credential: The attestation statement format \"-1024/3\" is not supported."
+        }
+      }
+    },
+    {
+      "name": "coprime bignums stay as they are",
+      "op": "passkeys.ceremony_once",
+      "args": {
+        "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+        "phase": "register",
+        "attestation": "a363666d74d81e82c258208000000000000000000000000000000000000000000000000000000000000003c255010ed2fb5f35a6390311c5e66183bd78016da83b736761747453746d74a068617574684461746140"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Auth\\Passkeys\\Exception",
+          "message": "Invalid credential: The attestation statement format \"57896044618658097711785492504343953926634992332820282019728792003956564819971/1546132562196033993109383389296863818106322566003\" is not supported."
+        }
+      }
+    },
+    {
+      "name": "a bignum over itself is one",
+      "op": "passkeys.ceremony_once",
+      "args": {
+        "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+        "phase": "register",
+        "attestation": "a363666d74d81e82c2510200000000000000000000000000003039c25102000000000000000000000000000030396761747453746d74a068617574684461746140"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Auth\\Passkeys\\Exception",
+          "message": "Invalid credential: The attestation statement format \"1\" is not supported."
+        }
+      }
+    },
+    {
+      "name": "a bignum over one is the bignum",
+      "op": "passkeys.ceremony_once",
+      "args": {
+        "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+        "phase": "register",
+        "attestation": "a363666d74d81e82c358199f4f2726179a224501d762422c946590d90fffffffffffffff016761747453746d74a068617574684461746140"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Auth\\Passkeys\\Exception",
+          "message": "Invalid credential: The attestation statement format \"-1000000000000000000000000000000000000000000000000000000000000\" is not supported."
+        }
+      }
+    },
+    {
+      "name": "a bignum denominator dividing the numerator",
+      "op": "passkeys.ceremony_once",
+      "args": {
+        "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+        "phase": "register",
+        "attestation": "a363666d74d81e82c2583b014e718d7d7625a2d96851f15802cac3b68141ee99b444273068ec13df249391fddba60c684d4546089e87de89b43a6bcd3f16938288753cb9b2e1c2581e01249ad2594c37ceb0b2784c4ce0bf38ace408e211a7caab24308a82e8f16761747453746d74a068617574684461746140"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Auth\\Passkeys\\Exception",
+          "message": "Invalid credential: The attestation statement format \"7888609052210118054117285652827862296732064351090230047702789306640625\" is not supported."
+        }
+      }
+    },
+    {
+      "name": "a zero numerator over a bignum",
+      "op": "passkeys.ceremony_once",
+      "args": {
+        "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+        "phase": "register",
+        "attestation": "a363666d74d81e8200c2581a01000000000000000000000000000000000000000000000000006761747453746d74a068617574684461746140"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Auth\\Passkeys\\Exception",
+          "message": "Invalid credential: The attestation statement format \"0\" is not supported."
+        }
+      }
+    },
+    {
+      "name": "256-byte bignums",
+      "op": "passkeys.ceremony_once",
+      "args": {
+        "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+        "phase": "register",
+        "attestation": "a363666d74d81e82c259010060000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c2590100060000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006761747453746d74a068617574684461746140"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Auth\\Passkeys\\Exception",
+          "message": "Invalid credential: The attestation statement format \"16\" is not supported."
+        }
+      }
+    },
+    {
+      "name": "a 128-bit numerator over a 129-bit denominator",
+      "op": "passkeys.ceremony_once",
+      "args": {
+        "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+        "phase": "register",
+        "attestation": "a363666d74d81e82c250fffffffffffffffffffffffffffffffec25102000000000000000000000000000000006761747453746d74a068617574684461746140"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Auth\\Passkeys\\Exception",
+          "message": "Invalid credential: The attestation statement format \"170141183460469231731687303715884105727/340282366920938463463374607431768211456\" is not supported."
+        }
+      }
+    },
+    {
+      "name": "a small numerator over a bignum",
+      "op": "passkeys.ceremony_once",
+      "args": {
+        "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+        "phase": "register",
+        "attestation": "a363666d74d81e8206c2529000000000000000000000000000000000006761747453746d74a068617574684461746140"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Auth\\Passkeys\\Exception",
+          "message": "Invalid credential: The attestation statement format \"1/2090694862362245919518973588060783891185664\" is not supported."
+        }
+      }
+    },
+    {
+      "name": "a negative integer over a bignum",
+      "op": "passkeys.ceremony_once",
+      "args": {
+        "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+        "phase": "register",
+        "attestation": "a363666d74d81e82380bc25130000000000000000000000000000000006761747453746d74a068617574684461746140"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Auth\\Passkeys\\Exception",
+          "message": "Invalid credential: The attestation statement format \"-1/1361129467683753853853498429727072845824\" is not supported."
+        }
+      }
+    },
+    {
+      "name": "leading zero bytes in a bignum",
+      "op": "passkeys.ceremony_once",
+      "args": {
+        "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+        "phase": "register",
+        "attestation": "a363666d74d81e82c258200000000000000000000000000040000000000000000000000000000000000000c2431000006761747453746d74a068617574684461746140"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Auth\\Passkeys\\Exception",
+          "message": "Invalid credential: The attestation statement format \"1361129467683753853853498429727072845824\" is not supported."
+        }
+      }
+    },
+    {
+      "name": "a zero bignum numerator",
+      "op": "passkeys.ceremony_once",
+      "args": {
+        "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+        "phase": "register",
+        "attestation": "a363666d74d81e82c240c2581a01000000000000000000000000000000000000000000000000006761747453746d74a068617574684461746140"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Auth\\Passkeys\\Exception",
+          "message": "Invalid credential: The attestation statement format \"0\" is not supported."
+        }
+      }
+    },
+    {
+      "name": "a zero bignum denominator after a bignum numerator",
+      "op": "passkeys.ceremony_once",
+      "args": {
+        "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+        "phase": "register",
+        "attestation": "a363666d74d81e82c2581a0100000000000000000000000000000000000000000000000000c241006761747453746d74a068617574684461746140"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Auth\\Passkeys\\Exception",
+          "message": "Invalid credential: Invalid denominator. The value shall not be zero."
+        }
+      }
+    },
+    {
+      "name": "a 257-byte bignum is out of range",
+      "op": "passkeys.ceremony_once",
+      "args": {
+        "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+        "phase": "register",
+        "attestation": "a363666d74d81e82c2590102010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c241036761747453746d74a068617574684461746140"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Auth\\Passkeys\\Exception",
+          "message": "Invalid credential: The big number is out of range. Its byte string shall not exceed 256 bytes, got 258."
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,4559 @@
+{
+  "source": "packages/usage/tests/E2E/Adapter/ClickHouseSplitParityTest.php",
+  "cases": [
+    {
+      "name": "routed sum equals raw: mid-day both ends",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_split_parity",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_split_parity_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), 'parity.metric.a', 100 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC'), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 200 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMinute(555), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 300 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMillisecond(86399999), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.b', 7, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalHour(12), '1' FROM numbers(41)"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "parity.metric.a"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 14:37:11"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 14:37:11"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 17523
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "parity.metric.a",
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "parity.metric.a"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 14:37:11"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 14:37:11"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 17523
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "routed batch equals raw: mid-day both ends",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_split_parity",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_split_parity_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), 'parity.metric.a', 100 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC'), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 200 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMinute(555), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 300 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMillisecond(86399999), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.b', 7, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalHour(12), '1' FROM numbers(41)"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "parity.metric.a",
+              "parity.metric.b"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 14:37:11"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 14:37:11"
+                  }
+                ]
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "parity.metric.a": 17523,
+            "parity.metric.b": 189
+          }
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "getTotalBatch",
+              "metric": null,
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "parity.metric.a",
+              "parity.metric.b"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 14:37:11"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 14:37:11"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "parity.metric.a": 17523,
+            "parity.metric.b": 189
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "routed sum equals raw: mid-day start, midnight end",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_split_parity",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_split_parity_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), 'parity.metric.a', 100 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC'), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 200 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMinute(555), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 300 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMillisecond(86399999), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.b', 7, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalHour(12), '1' FROM numbers(41)"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "parity.metric.a"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 06:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 17447
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "parity.metric.a",
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "parity.metric.a"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 06:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 17447
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "routed batch equals raw: mid-day start, midnight end",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_split_parity",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_split_parity_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), 'parity.metric.a', 100 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC'), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 200 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMinute(555), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 300 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMillisecond(86399999), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.b', 7, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalHour(12), '1' FROM numbers(41)"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "parity.metric.a",
+              "parity.metric.b"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 06:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "parity.metric.a": 17447,
+            "parity.metric.b": 189
+          }
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "getTotalBatch",
+              "metric": null,
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "parity.metric.a",
+              "parity.metric.b"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 06:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "parity.metric.a": 17447,
+            "parity.metric.b": 189
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "routed sum equals raw: midnight start, mid-day end",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_split_parity",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_split_parity_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), 'parity.metric.a', 100 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC'), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 200 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMinute(555), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 300 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMillisecond(86399999), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.b', 7, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalHour(12), '1' FROM numbers(41)"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "parity.metric.a"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 18:20:00"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 17883
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "parity.metric.a",
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "parity.metric.a"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 18:20:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 17883
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "routed batch equals raw: midnight start, mid-day end",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_split_parity",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_split_parity_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), 'parity.metric.a', 100 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC'), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 200 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMinute(555), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 300 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMillisecond(86399999), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.b', 7, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalHour(12), '1' FROM numbers(41)"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "parity.metric.a",
+              "parity.metric.b"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 18:20:00"
+                  }
+                ]
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "parity.metric.a": 17883,
+            "parity.metric.b": 196
+          }
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "getTotalBatch",
+              "metric": null,
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "parity.metric.a",
+              "parity.metric.b"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 18:20:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "parity.metric.a": 17883,
+            "parity.metric.b": 196
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "routed sum equals raw: both midnight",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_split_parity",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_split_parity_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), 'parity.metric.a', 100 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC'), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 200 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMinute(555), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 300 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMillisecond(86399999), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.b', 7, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalHour(12), '1' FROM numbers(41)"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "parity.metric.a"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 17577
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "parity.metric.a",
+              "route": "daily",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "parity.metric.a"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 17577
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "routed batch equals raw: both midnight",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_split_parity",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_split_parity_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), 'parity.metric.a', 100 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC'), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 200 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMinute(555), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 300 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMillisecond(86399999), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.b', 7, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalHour(12), '1' FROM numbers(41)"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "parity.metric.a",
+              "parity.metric.b"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "parity.metric.a": 17577,
+            "parity.metric.b": 189
+          }
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "getTotalBatch",
+              "metric": null,
+              "route": "daily",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "parity.metric.a",
+              "parity.metric.b"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "parity.metric.a": 17577,
+            "parity.metric.b": 189
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "routed sum equals raw: mid-day start, straddles today",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_split_parity",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_split_parity_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), 'parity.metric.a', 100 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC'), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 200 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMinute(555), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 300 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMillisecond(86399999), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.b', 7, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalHour(12), '1' FROM numbers(41)"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "parity.metric.a"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 14:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "1 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 19635
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "parity.metric.a",
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "parity.metric.a"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 14:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "1 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 19635
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "routed batch equals raw: mid-day start, straddles today",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_split_parity",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_split_parity_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), 'parity.metric.a', 100 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC'), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 200 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMinute(555), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 300 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMillisecond(86399999), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.b', 7, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalHour(12), '1' FROM numbers(41)"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "parity.metric.a",
+              "parity.metric.b"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 14:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "1 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "parity.metric.a": 19635,
+            "parity.metric.b": 210
+          }
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "getTotalBatch",
+              "metric": null,
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "parity.metric.a",
+              "parity.metric.b"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 14:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "1 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "parity.metric.a": 19635,
+            "parity.metric.b": 210
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "routed sum equals raw: midnight start, straddles today",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_split_parity",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_split_parity_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), 'parity.metric.a', 100 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC'), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 200 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMinute(555), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 300 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMillisecond(86399999), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.b', 7, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalHour(12), '1' FROM numbers(41)"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "parity.metric.a"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "1 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 19995
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "parity.metric.a",
+              "route": "hybrid",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "parity.metric.a"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "1 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 19995
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "routed batch equals raw: midnight start, straddles today",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_split_parity",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_split_parity_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), 'parity.metric.a', 100 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC'), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 200 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMinute(555), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 300 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMillisecond(86399999), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.b', 7, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalHour(12), '1' FROM numbers(41)"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "parity.metric.a",
+              "parity.metric.b"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "1 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "parity.metric.a": 19995,
+            "parity.metric.b": 217
+          }
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "getTotalBatch",
+              "metric": null,
+              "route": "hybrid",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "parity.metric.a",
+              "parity.metric.b"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "1 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "parity.metric.a": 19995,
+            "parity.metric.b": 217
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "routed sum equals raw: inclusive mid-day end",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_split_parity",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_split_parity_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), 'parity.metric.a', 100 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC'), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 200 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMinute(555), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 300 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMillisecond(86399999), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.b', 7, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalHour(12), '1' FROM numbers(41)"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "parity.metric.a"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 08:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 08:00:00"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 17550
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "parity.metric.a",
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "parity.metric.a"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 08:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 08:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 17550
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "routed batch equals raw: inclusive mid-day end",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_split_parity",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_split_parity_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), 'parity.metric.a', 100 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC'), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 200 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMinute(555), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 300 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMillisecond(86399999), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.b', 7, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalHour(12), '1' FROM numbers(41)"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "parity.metric.a",
+              "parity.metric.b"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 08:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 08:00:00"
+                  }
+                ]
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "parity.metric.a": 17550,
+            "parity.metric.b": 189
+          }
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "getTotalBatch",
+              "metric": null,
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "parity.metric.a",
+              "parity.metric.b"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 08:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 08:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "parity.metric.a": 17550,
+            "parity.metric.b": 189
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "routed sum equals raw: inclusive midnight end",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_split_parity",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_split_parity_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), 'parity.metric.a', 100 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC'), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 200 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMinute(555), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 300 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMillisecond(86399999), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.b', 7, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalHour(12), '1' FROM numbers(41)"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "parity.metric.a"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 17680
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "parity.metric.a",
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "parity.metric.a"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 17680
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "routed batch equals raw: inclusive midnight end",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_split_parity",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_split_parity_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), 'parity.metric.a', 100 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC'), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 200 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMinute(555), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 300 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMillisecond(86399999), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.b', 7, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalHour(12), '1' FROM numbers(41)"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "parity.metric.a",
+              "parity.metric.b"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "parity.metric.a": 17680,
+            "parity.metric.b": 189
+          }
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "getTotalBatch",
+              "metric": null,
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "parity.metric.a",
+              "parity.metric.b"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-30 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-3 days",
+                    "format": "Y-m-d 00:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "parity.metric.a": 17680,
+            "parity.metric.b": 189
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "routed sum equals raw: sub-day window",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_split_parity",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_split_parity_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), 'parity.metric.a', 100 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC'), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 200 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMinute(555), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 300 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMillisecond(86399999), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.b', 7, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalHour(12), '1' FROM numbers(41)"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "parity.metric.a"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-5 days",
+                    "format": "Y-m-d 06:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-5 days",
+                    "format": "Y-m-d 18:00:00"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 205
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "parity.metric.a",
+              "route": "raw",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "parity.metric.a"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-5 days",
+                    "format": "Y-m-d 06:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-5 days",
+                    "format": "Y-m-d 18:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 205
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "routed batch equals raw: sub-day window",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_split_parity",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_split_parity_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), 'parity.metric.a', 100 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC'), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 200 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMinute(555), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 300 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMillisecond(86399999), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.b', 7, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalHour(12), '1' FROM numbers(41)"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "parity.metric.a",
+              "parity.metric.b"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-5 days",
+                    "format": "Y-m-d 06:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-5 days",
+                    "format": "Y-m-d 18:00:00"
+                  }
+                ]
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "parity.metric.a": 205,
+            "parity.metric.b": 7
+          }
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "getTotalBatch",
+              "metric": null,
+              "route": "raw",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "parity.metric.a",
+              "parity.metric.b"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-5 days",
+                    "format": "Y-m-d 06:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-5 days",
+                    "format": "Y-m-d 18:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "parity.metric.a": 205,
+            "parity.metric.b": 7
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "routed sum equals raw: exactly one interior day",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_split_parity",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_split_parity_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), 'parity.metric.a', 100 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC'), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 200 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMinute(555), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 300 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMillisecond(86399999), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.b', 7, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalHour(12), '1' FROM numbers(41)"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "parity.metric.a"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-6 days",
+                    "format": "Y-m-d 13:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-4 days",
+                    "format": "Y-m-d 11:00:00"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 1229
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "parity.metric.a",
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "parity.metric.a"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-6 days",
+                    "format": "Y-m-d 13:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-4 days",
+                    "format": "Y-m-d 11:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 1229
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "routed batch equals raw: exactly one interior day",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_split_parity",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_split_parity_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), 'parity.metric.a', 100 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC'), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 200 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMinute(555), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 300 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMillisecond(86399999), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.b', 7, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalHour(12), '1' FROM numbers(41)"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "parity.metric.a",
+              "parity.metric.b"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-6 days",
+                    "format": "Y-m-d 13:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-4 days",
+                    "format": "Y-m-d 11:00:00"
+                  }
+                ]
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "parity.metric.a": 1229,
+            "parity.metric.b": 7
+          }
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "getTotalBatch",
+              "metric": null,
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "parity.metric.a",
+              "parity.metric.b"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-6 days",
+                    "format": "Y-m-d 13:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-4 days",
+                    "format": "Y-m-d 11:00:00"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "parity.metric.a": 1229,
+            "parity.metric.b": 7
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "routed sum equals raw: month-long mid-day",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_split_parity",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_split_parity_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), 'parity.metric.a', 100 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC'), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 200 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMinute(555), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 300 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMillisecond(86399999), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.b', 7, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalHour(12), '1' FROM numbers(41)"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "parity.metric.a"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-35 days",
+                    "format": "Y-m-d 03:33:33"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-4 days",
+                    "format": "Y-m-d 21:11:11"
+                  }
+                ]
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 20633
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "sum",
+              "metric": "parity.metric.a",
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.sum",
+          "args": {
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "metric",
+                "values": [
+                  "parity.metric.a"
+                ]
+              },
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-35 days",
+                    "format": "Y-m-d 03:33:33"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-4 days",
+                    "format": "Y-m-d 21:11:11"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "attribute": "value",
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": 20633
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    },
+    {
+      "name": "routed batch equals raw: month-long mid-day",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_split_parity",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_split_parity_usage_events` (id, metric, value, time, tenant) SELECT lower(hex(randomString(16))), 'parity.metric.a', 100 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC'), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 200 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMinute(555), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.a', 300 + number, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalMillisecond(86399999), '1' FROM numbers(41) UNION ALL SELECT lower(hex(randomString(16))), 'parity.metric.b', 7, toDateTime64(toDate(now('UTC')) - number, 3, 'UTC') + toIntervalHour(12), '1' FROM numbers(41)"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.clear_route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "parity.metric.a",
+              "parity.metric.b"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-35 days",
+                    "format": "Y-m-d 03:33:33"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-4 days",
+                    "format": "Y-m-d 21:11:11"
+                  }
+                ]
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "parity.metric.a": 20633,
+            "parity.metric.b": 224
+          }
+        },
+        {
+          "op": "clickhouse.route_log",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "expect": [
+            {
+              "operation": "getTotalBatch",
+              "metric": null,
+              "route": "split",
+              "start": "<now>",
+              "end": "<now>",
+              "dimensions": [],
+              "interval": null
+            }
+          ]
+        },
+        {
+          "op": "usage.total_batch",
+          "args": {
+            "tenant": "1",
+            "metrics": [
+              "parity.metric.a",
+              "parity.metric.b"
+            ],
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-35 days",
+                    "format": "Y-m-d 03:33:33"
+                  }
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  {
+                    "$time": "-4 days",
+                    "format": "Y-m-d 21:11:11"
+                  }
+                ]
+              },
+              {
+                "method": "isNotNull",
+                "attribute": "id",
+                "values": []
+              }
+            ],
+            "type": "event",
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "parity.metric.a": 20633,
+            "parity.metric.b": 224
+          }
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@usage-clickhouse"
+      ]
+    }
+  ]
+}

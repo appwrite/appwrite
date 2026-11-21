@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Differential compatibility tester for the PHP and Rust Utopia libraries.
+# See tests/compat/README.md and crates/CONVERSION.md.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+cargo build --quiet -p compat --bins
+exec "${CARGO_TARGET_DIR:-target}/debug/compat" "$@"

@@ -1,0 +1,480 @@
+{
+  "source": "packages/auth/tests/Algorithms/BcryptTest.php",
+  "cases": [
+    {
+      "name": "hash and verify",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "bcrypt"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123"
+          },
+          "bind": "out",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "salted hash: verified by both runtimes below"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "wrongpassword",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "fixture.substr",
+          "args": {
+            "value": {
+              "$ref": "out"
+            },
+            "start": 0,
+            "length": 7
+          },
+          "expect": "$2y$08$"
+        }
+      ]
+    },
+    {
+      "name": "name",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "bcrypt"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.name",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            }
+          },
+          "expect": "bcrypt"
+        }
+      ]
+    },
+    {
+      "name": "cost bounds",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "bcrypt"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setCost",
+            "value": 3
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Cost must be between 4 and 31"
+            }
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setCost",
+            "value": 32
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Cost must be between 4 and 31"
+            }
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setCost",
+            "value": 4
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.options",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            }
+          },
+          "expect": {
+            "type": "bcrypt",
+            "cost": 4
+          }
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "pw"
+          },
+          "bind": "out",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "salted"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.substr",
+          "args": {
+            "value": {
+              "$ref": "out"
+            },
+            "start": 0,
+            "length": 7
+          },
+          "expect": "$2y$04$"
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "pw",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "a stored cost is checked by password_hash",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "bcrypt"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "cost",
+            "value": 3
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "Invalid bcrypt cost parameter specified: 3"
+            }
+          }
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "cost",
+            "value": "5"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "bind": "out",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "salted"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.substr",
+          "args": {
+            "value": {
+              "$ref": "out"
+            },
+            "start": 0,
+            "length": 7
+          },
+          "expect": "$2y$05$"
+        }
+      ]
+    },
+    {
+      "name": "passwords with a NUL byte are refused",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "bcrypt"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "a\u0000b"
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "Bcrypt password must not contain null character"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "long passwords use their first 72 bytes",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "bcrypt"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setCost",
+            "value": 4
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "bind": "out",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "salted"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "verifies PHP fixtures",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "bcrypt"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "appwrite",
+            "hash_value": "$2a$15$xX/myGbFU.ZSKHSi6EHdBOySTdYm8QxBLXmOPHrYMwV0mHRBBSBOq"
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x",
+            "hash_value": "$2a$04$abcdefghijklmnopqrstuuPp7HPfoAs8I2dCQCQ/fW7zEJv8I8C8e"
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x",
+            "hash_value": "$2y$04$abcdefghijklmnopqrstuuPp7HPfoAs8I2dCQCQ/fW7zEJv8I8C8e"
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x",
+            "hash_value": "$2b$04$abcdefghijklmnopqrstuuPp7HPfoAs8I2dCQCQ/fW7zEJv8I8C8e"
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x",
+            "hash_value": "$2a$04$abcdefghijklmnopqrstuvPp7HPfoAs8I2dCQCQ/fW7zEJv8I8C8e"
+          },
+          "expect": false
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x",
+            "hash_value": "$2a$03$abcdefghijklmnopqrstuuPp7HPfoAs8I2dCQCQ/fW7zEJv8I8C8e"
+          },
+          "expect": false
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x\u0000y",
+            "hash_value": "$2a$04$abcdefghijklmnopqrstuuPp7HPfoAs8I2dCQCQ/fW7zEJv8I8C8e"
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4173 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Model/IndexFactoryTest.php"
+  ],
+  "cases": [
+    {
+      "name": "IndexFactoryTest::testFactoryPersistsItsShape#key",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name",
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [
+                64,
+                null
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                },
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                }
+              ]
+            },
+            "as": "o4099"
+          },
+          "bind": "s6194",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [
+                64,
+                null
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                },
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                }
+              ],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4099"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4111"
+          },
+          "bind": "s6206",
+          "expect": {
+            "$document": {
+              "$id": "by_name",
+              "key": "by_name",
+              "type": "key",
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [
+                64,
+                null
+              ],
+              "orders": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4111"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "by_name",
+            "key": "by_name",
+            "type": "key",
+            "attributes": [
+              "first",
+              "last"
+            ],
+            "lengths": [
+              64,
+              null
+            ],
+            "orders": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testFactoryPersistsItsShape#key without lengths or orders",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_age",
+              "attributes": [
+                "age"
+              ]
+            },
+            "as": "o4100"
+          },
+          "bind": "s6195",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_age",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4100"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4112"
+          },
+          "bind": "s6208",
+          "expect": {
+            "$document": {
+              "$id": "by_age",
+              "key": "by_age",
+              "type": "key",
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4112"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "by_age",
+            "key": "by_age",
+            "type": "key",
+            "attributes": [
+              "age"
+            ],
+            "lengths": [],
+            "orders": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testFactoryPersistsItsShape#unique",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "by_email",
+              "attributes": [
+                "email"
+              ],
+              "lengths": [
+                128
+              ],
+              "orders": [
+                null
+              ]
+            },
+            "as": "o4101"
+          },
+          "bind": "s6196",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_email",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "email"
+              ],
+              "lengths": [
+                128
+              ],
+              "orders": [
+                null
+              ],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4101"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4113"
+          },
+          "bind": "s6210",
+          "expect": {
+            "$document": {
+              "$id": "by_email",
+              "key": "by_email",
+              "type": "unique",
+              "attributes": [
+                "email"
+              ],
+              "lengths": [
+                128
+              ],
+              "orders": [
+                null
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4113"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "by_email",
+            "key": "by_email",
+            "type": "unique",
+            "attributes": [
+              "email"
+            ],
+            "lengths": [
+              128
+            ],
+            "orders": [
+              null
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testFactoryPersistsItsShape#fulltext stores no lengths or orders",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fulltext",
+            "args": {
+              "key": "search",
+              "attributes": [
+                "title",
+                "body"
+              ]
+            },
+            "as": "o4102"
+          },
+          "bind": "s6197",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "title",
+                "body"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4102"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4114"
+          },
+          "bind": "s6212",
+          "expect": {
+            "$document": {
+              "$id": "search",
+              "key": "search",
+              "type": "fulltext",
+              "attributes": [
+                "title",
+                "body"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4114"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "search",
+            "key": "search",
+            "type": "fulltext",
+            "attributes": [
+              "title",
+              "body"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testFactoryPersistsItsShape#trigram",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "trigram",
+            "args": {
+              "key": "fuzzy",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o4103"
+          },
+          "bind": "s6198",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "fuzzy",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Trigram"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4103"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4115"
+          },
+          "bind": "s6214",
+          "expect": {
+            "$document": {
+              "$id": "fuzzy",
+              "key": "fuzzy",
+              "type": "trigram",
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4115"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "fuzzy",
+            "key": "fuzzy",
+            "type": "trigram",
+            "attributes": [
+              "name"
+            ],
+            "lengths": [],
+            "orders": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testFactoryPersistsItsShape#spatial",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "spatial",
+            "args": {
+              "key": "where",
+              "attribute": "location"
+            },
+            "as": "o4104"
+          },
+          "bind": "s6199",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "where",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Spatial"
+              },
+              "attributes": [
+                "location"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4104"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4116"
+          },
+          "bind": "s6216",
+          "expect": {
+            "$document": {
+              "$id": "where",
+              "key": "where",
+              "type": "spatial",
+              "attributes": [
+                "location"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4116"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "where",
+            "key": "where",
+            "type": "spatial",
+            "attributes": [
+              "location"
+            ],
+            "lengths": [],
+            "orders": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testFactoryPersistsItsShape#spatial with an order",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "spatial",
+            "args": {
+              "key": "where",
+              "attribute": "location",
+              "order": {
+                "$enum": "Query\\OrderDirection::Desc"
+              }
+            },
+            "as": "o4105"
+          },
+          "bind": "s6200",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "where",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Spatial"
+              },
+              "attributes": [
+                "location"
+              ],
+              "lengths": [],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                }
+              ],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4105"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4117"
+          },
+          "bind": "s6218",
+          "expect": {
+            "$document": {
+              "$id": "where",
+              "key": "where",
+              "type": "spatial",
+              "attributes": [
+                "location"
+              ],
+              "lengths": [],
+              "orders": [
+                "DESC"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4117"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "where",
+            "key": "where",
+            "type": "spatial",
+            "attributes": [
+              "location"
+            ],
+            "lengths": [],
+            "orders": [
+              "DESC"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testFactoryPersistsItsShape#object",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "object",
+            "args": {
+              "key": "payload",
+              "attribute": "data"
+            },
+            "as": "o4106"
+          },
+          "bind": "s6201",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "payload",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Object"
+              },
+              "attributes": [
+                "data"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4106"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4118"
+          },
+          "bind": "s6220",
+          "expect": {
+            "$document": {
+              "$id": "payload",
+              "key": "payload",
+              "type": "object",
+              "attributes": [
+                "data"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4118"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "payload",
+            "key": "payload",
+            "type": "object",
+            "attributes": [
+              "data"
+            ],
+            "lengths": [],
+            "orders": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testFactoryPersistsItsShape#hnsw euclidean",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "hnswEuclidean",
+            "args": {
+              "key": "near",
+              "attribute": "embedding"
+            },
+            "as": "o4107"
+          },
+          "bind": "s6202",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "near",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::HnswEuclidean"
+              },
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4107"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4119"
+          },
+          "bind": "s6222",
+          "expect": {
+            "$document": {
+              "$id": "near",
+              "key": "near",
+              "type": "hnsw_euclidean",
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4119"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "near",
+            "key": "near",
+            "type": "hnsw_euclidean",
+            "attributes": [
+              "embedding"
+            ],
+            "lengths": [],
+            "orders": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testFactoryPersistsItsShape#hnsw cosine",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "hnswCosine",
+            "args": {
+              "key": "near",
+              "attribute": "embedding"
+            },
+            "as": "o4108"
+          },
+          "bind": "s6203",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "near",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::HnswCosine"
+              },
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4108"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4120"
+          },
+          "bind": "s6224",
+          "expect": {
+            "$document": {
+              "$id": "near",
+              "key": "near",
+              "type": "hnsw_cosine",
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4120"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "near",
+            "key": "near",
+            "type": "hnsw_cosine",
+            "attributes": [
+              "embedding"
+            ],
+            "lengths": [],
+            "orders": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testFactoryPersistsItsShape#hnsw dot",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "hnswDot",
+            "args": {
+              "key": "near",
+              "attribute": "embedding"
+            },
+            "as": "o4109"
+          },
+          "bind": "s6204",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "near",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::HnswDot"
+              },
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4109"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4121"
+          },
+          "bind": "s6226",
+          "expect": {
+            "$document": {
+              "$id": "near",
+              "key": "near",
+              "type": "hnsw_dot",
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4121"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "near",
+            "key": "near",
+            "type": "hnsw_dot",
+            "attributes": [
+              "embedding"
+            ],
+            "lengths": [],
+            "orders": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testFactoryPersistsItsShape#ttl stores ttl and no orders",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "ttl",
+            "args": {
+              "key": "expiry",
+              "attribute": "expiresAt",
+              "ttl": 3600
+            },
+            "as": "o4110"
+          },
+          "bind": "s6205",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "expiry",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Ttl"
+              },
+              "attributes": [
+                "expiresAt"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": 3600
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4110"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4122"
+          },
+          "bind": "s6228",
+          "expect": {
+            "$document": {
+              "$id": "expiry",
+              "key": "expiry",
+              "type": "ttl",
+              "attributes": [
+                "expiresAt"
+              ],
+              "lengths": [],
+              "ttl": 3600
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4122"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "expiry",
+            "key": "expiry",
+            "type": "ttl",
+            "attributes": [
+              "expiresAt"
+            ],
+            "lengths": [],
+            "ttl": 3600
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testPersistedShapeRoundTrips#key",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name",
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [
+                64,
+                null
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                },
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                }
+              ]
+            },
+            "as": "o4123"
+          },
+          "bind": "s6230",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [
+                64,
+                null
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                },
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                }
+              ],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4123"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4135"
+          },
+          "bind": "s6242",
+          "expect": {
+            "$document": {
+              "$id": "by_name",
+              "key": "by_name",
+              "type": "key",
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [
+                64,
+                null
+              ],
+              "orders": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4135"
+              }
+            },
+            "as": "o4136"
+          },
+          "bind": "s6243",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [
+                64,
+                null
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                },
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                }
+              ],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4136"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4137"
+          },
+          "bind": "s6244",
+          "expect": {
+            "$document": {
+              "$id": "by_name",
+              "key": "by_name",
+              "type": "key",
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [
+                64,
+                null
+              ],
+              "orders": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4137"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "by_name",
+            "key": "by_name",
+            "type": "key",
+            "attributes": [
+              "first",
+              "last"
+            ],
+            "lengths": [
+              64,
+              null
+            ],
+            "orders": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "by_name",
+                "key": "by_name",
+                "type": "key",
+                "attributes": [
+                  "first",
+                  "last"
+                ],
+                "lengths": [
+                  64,
+                  null
+                ],
+                "orders": [
+                  "ASC",
+                  "DESC"
+                ]
+              }
+            },
+            "as": "o4138"
+          },
+          "bind": "s6246",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [
+                64,
+                null
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                },
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                }
+              ],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4138"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4139"
+          },
+          "bind": "s6247",
+          "expect": {
+            "$document": {
+              "$id": "by_name",
+              "key": "by_name",
+              "type": "key",
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [
+                64,
+                null
+              ],
+              "orders": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4139"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "by_name",
+            "key": "by_name",
+            "type": "key",
+            "attributes": [
+              "first",
+              "last"
+            ],
+            "lengths": [
+              64,
+              null
+            ],
+            "orders": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testPersistedShapeRoundTrips#key without lengths or orders",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_age",
+              "attributes": [
+                "age"
+              ]
+            },
+            "as": "o4124"
+          },
+          "bind": "s6231",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_age",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4124"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4140"
+          },
+          "bind": "s6249",
+          "expect": {
+            "$document": {
+              "$id": "by_age",
+              "key": "by_age",
+              "type": "key",
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4140"
+              }
+            },
+            "as": "o4141"
+          },
+          "bind": "s6250",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_age",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4141"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4142"
+          },
+          "bind": "s6251",
+          "expect": {
+            "$document": {
+              "$id": "by_age",
+              "key": "by_age",
+              "type": "key",
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4142"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "by_age",
+            "key": "by_age",
+            "type": "key",
+            "attributes": [
+              "age"
+            ],
+            "lengths": [],
+            "orders": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "by_age",
+                "key": "by_age",
+                "type": "key",
+                "attributes": [
+                  "age"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            },
+            "as": "o4143"
+          },
+          "bind": "s6253",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_age",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4143"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4144"
+          },
+          "bind": "s6254",
+          "expect": {
+            "$document": {
+              "$id": "by_age",
+              "key": "by_age",
+              "type": "key",
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4144"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "by_age",
+            "key": "by_age",
+            "type": "key",
+            "attributes": [
+              "age"
+            ],
+            "lengths": [],
+            "orders": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testPersistedShapeRoundTrips#unique",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "by_email",
+              "attributes": [
+                "email"
+              ],
+              "lengths": [
+                128
+              ],
+              "orders": [
+                null
+              ]
+            },
+            "as": "o4125"
+          },
+          "bind": "s6232",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_email",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "email"
+              ],
+              "lengths": [
+                128
+              ],
+              "orders": [
+                null
+              ],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4125"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4145"
+          },
+          "bind": "s6256",
+          "expect": {
+            "$document": {
+              "$id": "by_email",
+              "key": "by_email",
+              "type": "unique",
+              "attributes": [
+                "email"
+              ],
+              "lengths": [
+                128
+              ],
+              "orders": [
+                null
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4145"
+              }
+            },
+            "as": "o4146"
+          },
+          "bind": "s6257",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_email",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "email"
+              ],
+              "lengths": [
+                128
+              ],
+              "orders": [
+                null
+              ],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4146"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4147"
+          },
+          "bind": "s6258",
+          "expect": {
+            "$document": {
+              "$id": "by_email",
+              "key": "by_email",
+              "type": "unique",
+              "attributes": [
+                "email"
+              ],
+              "lengths": [
+                128
+              ],
+              "orders": [
+                null
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4147"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "by_email",
+            "key": "by_email",
+            "type": "unique",
+            "attributes": [
+              "email"
+            ],
+            "lengths": [
+              128
+            ],
+            "orders": [
+              null
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "by_email",
+                "key": "by_email",
+                "type": "unique",
+                "attributes": [
+                  "email"
+                ],
+                "lengths": [
+                  128
+                ],
+                "orders": [
+                  null
+                ]
+              }
+            },
+            "as": "o4148"
+          },
+          "bind": "s6260",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_email",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "email"
+              ],
+              "lengths": [
+                128
+              ],
+              "orders": [
+                null
+              ],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4148"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4149"
+          },
+          "bind": "s6261",
+          "expect": {
+            "$document": {
+              "$id": "by_email",
+              "key": "by_email",
+              "type": "unique",
+              "attributes": [
+                "email"
+              ],
+              "lengths": [
+                128
+              ],
+              "orders": [
+                null
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4149"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "by_email",
+            "key": "by_email",
+            "type": "unique",
+            "attributes": [
+              "email"
+            ],
+            "lengths": [
+              128
+            ],
+            "orders": [
+              null
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testPersistedShapeRoundTrips#fulltext stores no lengths or orders",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fulltext",
+            "args": {
+              "key": "search",
+              "attributes": [
+                "title",
+                "body"
+              ]
+            },
+            "as": "o4126"
+          },
+          "bind": "s6233",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "title",
+                "body"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4126"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4150"
+          },
+          "bind": "s6263",
+          "expect": {
+            "$document": {
+              "$id": "search",
+              "key": "search",
+              "type": "fulltext",
+              "attributes": [
+                "title",
+                "body"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4150"
+              }
+            },
+            "as": "o4151"
+          },
+          "bind": "s6264",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "title",
+                "body"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4151"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4152"
+          },
+          "bind": "s6265",
+          "expect": {
+            "$document": {
+              "$id": "search",
+              "key": "search",
+              "type": "fulltext",
+              "attributes": [
+                "title",
+                "body"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4152"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "search",
+            "key": "search",
+            "type": "fulltext",
+            "attributes": [
+              "title",
+              "body"
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "search",
+                "key": "search",
+                "type": "fulltext",
+                "attributes": [
+                  "title",
+                  "body"
+                ]
+              }
+            },
+            "as": "o4153"
+          },
+          "bind": "s6267",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "title",
+                "body"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4153"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4154"
+          },
+          "bind": "s6268",
+          "expect": {
+            "$document": {
+              "$id": "search",
+              "key": "search",
+              "type": "fulltext",
+              "attributes": [
+                "title",
+                "body"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4154"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "search",
+            "key": "search",
+            "type": "fulltext",
+            "attributes": [
+              "title",
+              "body"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testPersistedShapeRoundTrips#trigram",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "trigram",
+            "args": {
+              "key": "fuzzy",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o4127"
+          },
+          "bind": "s6234",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "fuzzy",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Trigram"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4127"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4155"
+          },
+          "bind": "s6270",
+          "expect": {
+            "$document": {
+              "$id": "fuzzy",
+              "key": "fuzzy",
+              "type": "trigram",
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4155"
+              }
+            },
+            "as": "o4156"
+          },
+          "bind": "s6271",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "fuzzy",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Trigram"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4156"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4157"
+          },
+          "bind": "s6272",
+          "expect": {
+            "$document": {
+              "$id": "fuzzy",
+              "key": "fuzzy",
+              "type": "trigram",
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4157"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "fuzzy",
+            "key": "fuzzy",
+            "type": "trigram",
+            "attributes": [
+              "name"
+            ],
+            "lengths": [],
+            "orders": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "fuzzy",
+                "key": "fuzzy",
+                "type": "trigram",
+                "attributes": [
+                  "name"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            },
+            "as": "o4158"
+          },
+          "bind": "s6274",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "fuzzy",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Trigram"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4158"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4159"
+          },
+          "bind": "s6275",
+          "expect": {
+            "$document": {
+              "$id": "fuzzy",
+              "key": "fuzzy",
+              "type": "trigram",
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4159"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "fuzzy",
+            "key": "fuzzy",
+            "type": "trigram",
+            "attributes": [
+              "name"
+            ],
+            "lengths": [],
+            "orders": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testPersistedShapeRoundTrips#spatial",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "spatial",
+            "args": {
+              "key": "where",
+              "attribute": "location"
+            },
+            "as": "o4128"
+          },
+          "bind": "s6235",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "where",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Spatial"
+              },
+              "attributes": [
+                "location"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4128"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4160"
+          },
+          "bind": "s6277",
+          "expect": {
+            "$document": {
+              "$id": "where",
+              "key": "where",
+              "type": "spatial",
+              "attributes": [
+                "location"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4160"
+              }
+            },
+            "as": "o4161"
+          },
+          "bind": "s6278",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "where",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Spatial"
+              },
+              "attributes": [
+                "location"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4161"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4162"
+          },
+          "bind": "s6279",
+          "expect": {
+            "$document": {
+              "$id": "where",
+              "key": "where",
+              "type": "spatial",
+              "attributes": [
+                "location"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4162"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "where",
+            "key": "where",
+            "type": "spatial",
+            "attributes": [
+              "location"
+            ],
+            "lengths": [],
+            "orders": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "where",
+                "key": "where",
+                "type": "spatial",
+                "attributes": [
+                  "location"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            },
+            "as": "o4163"
+          },
+          "bind": "s6281",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "where",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Spatial"
+              },
+              "attributes": [
+                "location"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4163"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4164"
+          },
+          "bind": "s6282",
+          "expect": {
+            "$document": {
+              "$id": "where",
+              "key": "where",
+              "type": "spatial",
+              "attributes": [
+                "location"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4164"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "where",
+            "key": "where",
+            "type": "spatial",
+            "attributes": [
+              "location"
+            ],
+            "lengths": [],
+            "orders": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testPersistedShapeRoundTrips#spatial with an order",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "spatial",
+            "args": {
+              "key": "where",
+              "attribute": "location",
+              "order": {
+                "$enum": "Query\\OrderDirection::Desc"
+              }
+            },
+            "as": "o4129"
+          },
+          "bind": "s6236",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "where",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Spatial"
+              },
+              "attributes": [
+                "location"
+              ],
+              "lengths": [],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                }
+              ],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4129"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4165"
+          },
+          "bind": "s6284",
+          "expect": {
+            "$document": {
+              "$id": "where",
+              "key": "where",
+              "type": "spatial",
+              "attributes": [
+                "location"
+              ],
+              "lengths": [],
+              "orders": [
+                "DESC"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4165"
+              }
+            },
+            "as": "o4166"
+          },
+          "bind": "s6285",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "where",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Spatial"
+              },
+              "attributes": [
+                "location"
+              ],
+              "lengths": [],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                }
+              ],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4166"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4167"
+          },
+          "bind": "s6286",
+          "expect": {
+            "$document": {
+              "$id": "where",
+              "key": "where",
+              "type": "spatial",
+              "attributes": [
+                "location"
+              ],
+              "lengths": [],
+              "orders": [
+                "DESC"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4167"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "where",
+            "key": "where",
+            "type": "spatial",
+            "attributes": [
+              "location"
+            ],
+            "lengths": [],
+            "orders": [
+              "DESC"
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "where",
+                "key": "where",
+                "type": "spatial",
+                "attributes": [
+                  "location"
+                ],
+                "lengths": [],
+                "orders": [
+                  "DESC"
+                ]
+              }
+            },
+            "as": "o4168"
+          },
+          "bind": "s6288",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "where",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Spatial"
+              },
+              "attributes": [
+                "location"
+              ],
+              "lengths": [],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                }
+              ],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4168"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4169"
+          },
+          "bind": "s6289",
+          "expect": {
+            "$document": {
+              "$id": "where",
+              "key": "where",
+              "type": "spatial",
+              "attributes": [
+                "location"
+              ],
+              "lengths": [],
+              "orders": [
+                "DESC"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4169"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "where",
+            "key": "where",
+            "type": "spatial",
+            "attributes": [
+              "location"
+            ],
+            "lengths": [],
+            "orders": [
+              "DESC"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testPersistedShapeRoundTrips#object",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "object",
+            "args": {
+              "key": "payload",
+              "attribute": "data"
+            },
+            "as": "o4130"
+          },
+          "bind": "s6237",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "payload",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Object"
+              },
+              "attributes": [
+                "data"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4130"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4170"
+          },
+          "bind": "s6291",
+          "expect": {
+            "$document": {
+              "$id": "payload",
+              "key": "payload",
+              "type": "object",
+              "attributes": [
+                "data"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4170"
+              }
+            },
+            "as": "o4171"
+          },
+          "bind": "s6292",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "payload",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Object"
+              },
+              "attributes": [
+                "data"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4171"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4172"
+          },
+          "bind": "s6293",
+          "expect": {
+            "$document": {
+              "$id": "payload",
+              "key": "payload",
+              "type": "object",
+              "attributes": [
+                "data"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4172"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "payload",
+            "key": "payload",
+            "type": "object",
+            "attributes": [
+              "data"
+            ],
+            "lengths": [],
+            "orders": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "payload",
+                "key": "payload",
+                "type": "object",
+                "attributes": [
+                  "data"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            },
+            "as": "o4173"
+          },
+          "bind": "s6295",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "payload",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Object"
+              },
+              "attributes": [
+                "data"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4173"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4174"
+          },
+          "bind": "s6296",
+          "expect": {
+            "$document": {
+              "$id": "payload",
+              "key": "payload",
+              "type": "object",
+              "attributes": [
+                "data"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4174"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "payload",
+            "key": "payload",
+            "type": "object",
+            "attributes": [
+              "data"
+            ],
+            "lengths": [],
+            "orders": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testPersistedShapeRoundTrips#hnsw euclidean",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "hnswEuclidean",
+            "args": {
+              "key": "near",
+              "attribute": "embedding"
+            },
+            "as": "o4131"
+          },
+          "bind": "s6238",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "near",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::HnswEuclidean"
+              },
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4131"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4175"
+          },
+          "bind": "s6298",
+          "expect": {
+            "$document": {
+              "$id": "near",
+              "key": "near",
+              "type": "hnsw_euclidean",
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4175"
+              }
+            },
+            "as": "o4176"
+          },
+          "bind": "s6299",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "near",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::HnswEuclidean"
+              },
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4176"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4177"
+          },
+          "bind": "s6300",
+          "expect": {
+            "$document": {
+              "$id": "near",
+              "key": "near",
+              "type": "hnsw_euclidean",
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4177"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "near",
+            "key": "near",
+            "type": "hnsw_euclidean",
+            "attributes": [
+              "embedding"
+            ],
+            "lengths": [],
+            "orders": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "near",
+                "key": "near",
+                "type": "hnsw_euclidean",
+                "attributes": [
+                  "embedding"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            },
+            "as": "o4178"
+          },
+          "bind": "s6302",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "near",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::HnswEuclidean"
+              },
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4178"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4179"
+          },
+          "bind": "s6303",
+          "expect": {
+            "$document": {
+              "$id": "near",
+              "key": "near",
+              "type": "hnsw_euclidean",
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4179"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "near",
+            "key": "near",
+            "type": "hnsw_euclidean",
+            "attributes": [
+              "embedding"
+            ],
+            "lengths": [],
+            "orders": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testPersistedShapeRoundTrips#hnsw cosine",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "hnswCosine",
+            "args": {
+              "key": "near",
+              "attribute": "embedding"
+            },
+            "as": "o4132"
+          },
+          "bind": "s6239",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "near",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::HnswCosine"
+              },
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4132"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4180"
+          },
+          "bind": "s6305",
+          "expect": {
+            "$document": {
+              "$id": "near",
+              "key": "near",
+              "type": "hnsw_cosine",
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4180"
+              }
+            },
+            "as": "o4181"
+          },
+          "bind": "s6306",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "near",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::HnswCosine"
+              },
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4181"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4182"
+          },
+          "bind": "s6307",
+          "expect": {
+            "$document": {
+              "$id": "near",
+              "key": "near",
+              "type": "hnsw_cosine",
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4182"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "near",
+            "key": "near",
+            "type": "hnsw_cosine",
+            "attributes": [
+              "embedding"
+            ],
+            "lengths": [],
+            "orders": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "near",
+                "key": "near",
+                "type": "hnsw_cosine",
+                "attributes": [
+                  "embedding"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            },
+            "as": "o4183"
+          },
+          "bind": "s6309",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "near",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::HnswCosine"
+              },
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4183"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4184"
+          },
+          "bind": "s6310",
+          "expect": {
+            "$document": {
+              "$id": "near",
+              "key": "near",
+              "type": "hnsw_cosine",
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4184"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "near",
+            "key": "near",
+            "type": "hnsw_cosine",
+            "attributes": [
+              "embedding"
+            ],
+            "lengths": [],
+            "orders": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testPersistedShapeRoundTrips#hnsw dot",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "hnswDot",
+            "args": {
+              "key": "near",
+              "attribute": "embedding"
+            },
+            "as": "o4133"
+          },
+          "bind": "s6240",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "near",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::HnswDot"
+              },
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4133"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4185"
+          },
+          "bind": "s6312",
+          "expect": {
+            "$document": {
+              "$id": "near",
+              "key": "near",
+              "type": "hnsw_dot",
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4185"
+              }
+            },
+            "as": "o4186"
+          },
+          "bind": "s6313",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "near",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::HnswDot"
+              },
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4186"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4187"
+          },
+          "bind": "s6314",
+          "expect": {
+            "$document": {
+              "$id": "near",
+              "key": "near",
+              "type": "hnsw_dot",
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4187"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "near",
+            "key": "near",
+            "type": "hnsw_dot",
+            "attributes": [
+              "embedding"
+            ],
+            "lengths": [],
+            "orders": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "near",
+                "key": "near",
+                "type": "hnsw_dot",
+                "attributes": [
+                  "embedding"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            },
+            "as": "o4188"
+          },
+          "bind": "s6316",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "near",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::HnswDot"
+              },
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4188"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4189"
+          },
+          "bind": "s6317",
+          "expect": {
+            "$document": {
+              "$id": "near",
+              "key": "near",
+              "type": "hnsw_dot",
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4189"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "near",
+            "key": "near",
+            "type": "hnsw_dot",
+            "attributes": [
+              "embedding"
+            ],
+            "lengths": [],
+            "orders": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testPersistedShapeRoundTrips#ttl stores ttl and no orders",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "ttl",
+            "args": {
+              "key": "expiry",
+              "attribute": "expiresAt",
+              "ttl": 3600
+            },
+            "as": "o4134"
+          },
+          "bind": "s6241",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "expiry",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Ttl"
+              },
+              "attributes": [
+                "expiresAt"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": 3600
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4134"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4190"
+          },
+          "bind": "s6319",
+          "expect": {
+            "$document": {
+              "$id": "expiry",
+              "key": "expiry",
+              "type": "ttl",
+              "attributes": [
+                "expiresAt"
+              ],
+              "lengths": [],
+              "ttl": 3600
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4190"
+              }
+            },
+            "as": "o4191"
+          },
+          "bind": "s6320",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "expiry",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Ttl"
+              },
+              "attributes": [
+                "expiresAt"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": 3600
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4191"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4192"
+          },
+          "bind": "s6321",
+          "expect": {
+            "$document": {
+              "$id": "expiry",
+              "key": "expiry",
+              "type": "ttl",
+              "attributes": [
+                "expiresAt"
+              ],
+              "lengths": [],
+              "ttl": 3600
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4192"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "expiry",
+            "key": "expiry",
+            "type": "ttl",
+            "attributes": [
+              "expiresAt"
+            ],
+            "lengths": [],
+            "ttl": 3600
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "expiry",
+                "key": "expiry",
+                "type": "ttl",
+                "attributes": [
+                  "expiresAt"
+                ],
+                "lengths": [],
+                "ttl": 3600
+              }
+            },
+            "as": "o4193"
+          },
+          "bind": "s6323",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "expiry",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Ttl"
+              },
+              "attributes": [
+                "expiresAt"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": 3600
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4193"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4194"
+          },
+          "bind": "s6324",
+          "expect": {
+            "$document": {
+              "$id": "expiry",
+              "key": "expiry",
+              "type": "ttl",
+              "attributes": [
+                "expiresAt"
+              ],
+              "lengths": [],
+              "ttl": 3600
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4194"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "expiry",
+            "key": "expiry",
+            "type": "ttl",
+            "attributes": [
+              "expiresAt"
+            ],
+            "lengths": [],
+            "ttl": 3600
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testOnlyTtlIndexesCarryATtl",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "ttl",
+            "args": {
+              "key": "expiry",
+              "attribute": "expiresAt",
+              "ttl": 3600
+            },
+            "as": "o4195"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "expiry",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Ttl"
+              },
+              "attributes": [
+                "expiresAt"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": 3600
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_age",
+              "attributes": [
+                "age"
+              ]
+            },
+            "as": "o4196"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_age",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fulltext",
+            "args": {
+              "key": "search",
+              "attributes": [
+                "title"
+              ]
+            },
+            "as": "o4197"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testFactoriesExposeTypedProperties",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "by_name",
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [
+                32,
+                null
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                },
+                null
+              ]
+            },
+            "as": "o4198"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [
+                32,
+                null
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                },
+                null
+              ],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testRandomOrderIsRejected#key",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_age",
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Random"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Index",
+              "message": "Index orders cannot be random"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testRandomOrderIsRejected#unique",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "by_age",
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                },
+                {
+                  "$enum": "Query\\OrderDirection::Random"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Index",
+              "message": "Index orders cannot be random"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testRandomOrderIsRejected#spatial",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "spatial",
+            "args": {
+              "key": "where",
+              "attribute": "location",
+              "order": {
+                "$enum": "Query\\OrderDirection::Random"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Index",
+              "message": "Index orders cannot be random"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testTtlBelowOneIsRejected#zero",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "ttl",
+            "args": {
+              "key": "expiry",
+              "attribute": "expiresAt",
+              "ttl": 0
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Index",
+              "message": "TTL must be at least 1 second"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testTtlBelowOneIsRejected#negative",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "ttl",
+            "args": {
+              "key": "expiry",
+              "attribute": "expiresAt",
+              "ttl": -1
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Index",
+              "message": "TTL must be at least 1 second"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testTtlOfOneSecondIsAccepted",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "ttl",
+            "args": {
+              "key": "expiry",
+              "attribute": "expiresAt",
+              "ttl": 1
+            },
+            "as": "o4199"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "expiry",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Ttl"
+              },
+              "attributes": [
+                "expiresAt"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testFactoryRejectsAnOrderThatIsNotADirection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_age",
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": [
+                "ASC"
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Index",
+              "message": "Index orders must be OrderDirection cases or null"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testFactoryRejectsALengthThatIsNotAnInteger",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name",
+              "attributes": [
+                "name"
+              ],
+              "lengths": [
+                "64"
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Index",
+              "message": "Index lengths must be integers or null"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testFactoryRejectsAnAttributeThatIsNotAString",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name",
+              "attributes": [
+                1
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Index",
+              "message": "Index attributes must be strings"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IndexFactoryTest::testHydratedListsAreReindexed",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "by_name",
+                "type": "key",
+                "attributes": {
+                  "3": "first",
+                  "7": "last"
+                },
+                "lengths": {
+                  "2": 16
+                },
+                "orders": {
+                  "5": "desc"
+                }
+              }
+            },
+            "as": "o4200"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "first",
+                "last"
+              ],
+              "lengths": [
+                16
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                }
+              ],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

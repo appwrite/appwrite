@@ -1,0 +1,41 @@
+{
+  "source": "packages/schedule/src/Clock/System.php",
+  "cases": [
+    {
+      "name": "the system clock sleeps for real",
+      "op": "clock.system",
+      "args": {
+        "seconds": 0.02
+      },
+      "expect": {
+        "zone": "UTC",
+        "slept": true,
+        "bounded": true
+      }
+    },
+    {
+      "name": "the system clock does not sleep for zero",
+      "op": "clock.system",
+      "args": {
+        "seconds": 0
+      },
+      "expect": {
+        "zone": "UTC",
+        "slept": true,
+        "bounded": true
+      }
+    },
+    {
+      "name": "the system clock does not sleep for a negative span",
+      "op": "clock.system",
+      "args": {
+        "seconds": -5
+      },
+      "expect": {
+        "zone": "UTC",
+        "slept": true,
+        "bounded": true
+      }
+    }
+  ]
+}

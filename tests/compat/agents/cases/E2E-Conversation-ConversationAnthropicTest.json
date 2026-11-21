@@ -1,0 +1,1438 @@
+{
+  "source": "packages/agents/tests/E2E/Conversation/ConversationAnthropicTest.php",
+  "cases": [
+    {
+      "name": "constructor",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic",
+            "args": {
+              "apiKey": "test-api-key",
+              "model": "claude-3-haiku-20240307",
+              "maxTokens": 1024,
+              "temperature": 1.0
+            },
+            "client": "forward"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Test Anthropic Agent Description"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "description",
+                "You are a helpful assistant that can answer questions and help with tasks."
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.inspect",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "messages": [],
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "listened": null
+          }
+        },
+        {
+          "op": "agent.inspect",
+          "args": {
+            "agent": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "description": "Test Anthropic Agent Description",
+            "instructions": [
+              [
+                "description",
+                "You are a helpful assistant that can answer questions and help with tasks."
+              ]
+            ],
+            "schema": null,
+            "adapter": "anthropic"
+          }
+        }
+      ]
+    },
+    {
+      "name": "message",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic",
+            "args": {
+              "apiKey": "test-api-key",
+              "model": "claude-3-haiku-20240307",
+              "maxTokens": 1024,
+              "temperature": 1.0
+            },
+            "client": "forward"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Test Anthropic Agent Description"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "description",
+                "You are a helpful assistant that can answer questions and help with tasks."
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "user-1",
+              "name": "Test User"
+            },
+            "message": "Hello, AI!"
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.inspect",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "Hello, AI!",
+                "mime": "text/plain",
+                "hasAttachments": false,
+                "attachments": []
+              }
+            ],
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "listened": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "multiple messages",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic",
+            "args": {
+              "apiKey": "test-api-key",
+              "model": "claude-3-haiku-20240307",
+              "maxTokens": 1024,
+              "temperature": 1.0
+            },
+            "client": "forward"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Test Anthropic Agent Description"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "description",
+                "You are a helpful assistant that can answer questions and help with tasks."
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "user-1",
+              "name": "Test User"
+            },
+            "message": "Hello"
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "assistant",
+              "id": "assistant-1",
+              "name": "Test Assistant"
+            },
+            "message": "Hi there!"
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "user-1",
+              "name": "Test User"
+            },
+            "message": "How are you?"
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.inspect",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "Hello",
+                "mime": "text/plain",
+                "hasAttachments": false,
+                "attachments": []
+              },
+              {
+                "role": "assistant",
+                "content": "Hi there!",
+                "mime": "text/plain",
+                "hasAttachments": false,
+                "attachments": []
+              },
+              {
+                "role": "user",
+                "content": "How are you?",
+                "mime": "text/plain",
+                "hasAttachments": false,
+                "attachments": []
+              }
+            ],
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "listened": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "send",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic",
+            "args": {
+              "apiKey": "test-api-key",
+              "model": "claude-3-haiku-20240307",
+              "maxTokens": 1024,
+              "temperature": 1.0
+            },
+            "client": "forward"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Test Anthropic Agent Description"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "description",
+                "You are a helpful assistant that can answer questions and help with tasks."
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "chunks": [
+                  "event: message_start\nda",
+                  "t",
+                  "a: {\"type\":\"message_start\",\"message\":{\"id\":\"msg_1\",\"type\":\"messa",
+                  "ge\",\"",
+                  "role\":\"assistant\",\"model\":\"claude-3-haiku-20240307\",\"usage\":{\"input_tokens\":25,\"output_tokens\":1,\"cache_creation_input_tokens\":12,\"cache_read_input_tokens\":3}}}\n\nevent: content_block_start\ndata: {\"typ",
+                  "e\":",
+                  "\"content_block_start\",\"",
+                  "i",
+                  "ndex\":0,\"content_block\":{\"type\":\"text\",\"text\":\"\"}}\n\nevent: ping\n",
+                  "data:",
+                  " {\"type\":\"ping\"}\n\nevent: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\"Hello\"}}\n\nevent: content_block_delta\ndata: {\"type\":\"content_block_delta\"",
+                  ",\"i",
+                  "ndex\":0,\"delta\":{\"type\"",
+                  ":",
+                  "\"text_delta\",\"text\":\"! How can I \"}}\n\nevent: content_block_delta",
+                  "\ndata",
+                  ": {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\"help you\"}}\n\nevent: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\"",
+                  ":\" ",
+                  "today? Café ☕ 😀\"}",
+                  "}",
+                  "\n\nevent: content_block_stop\ndata: {\"type\":\"content_block_stop\",\"",
+                  "index",
+                  "\":0}\n\nevent: message_delta\ndata: {\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"end_turn\"},\"usage\":{\"output_tokens\":15}}\n\nevent: message_stop\ndata: {\"type\":\"message_stop\"}\n\n"
+                ]
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "user-1",
+              "name": "Test User"
+            },
+            "message": "Hello"
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.send",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "content": "Hello! How can I help you today? Café ☕ 😀",
+            "role": "user"
+          }
+        },
+        {
+          "op": "conversation.inspect",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "Hello",
+                "mime": "text/plain",
+                "hasAttachments": false,
+                "attachments": []
+              },
+              {
+                "role": "assistant",
+                "content": "Hello! How can I help you today? Café ☕ 😀",
+                "mime": "text/plain",
+                "hasAttachments": false,
+                "attachments": []
+              }
+            ],
+            "tokens": {
+              "input": 25,
+              "output": 16,
+              "cacheCreation": 12,
+              "cacheRead": 3,
+              "total": 56
+            },
+            "listened": null
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "expect": [
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/v1/messages",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "x-api-key",
+                  "test-api-key"
+                ],
+                [
+                  "anthropic-version",
+                  "2023-06-01"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "390"
+                ]
+              ],
+              "body": "{\"model\":\"claude-3-haiku-20240307\",\"system\":[{\"type\":\"text\",\"text\":\"Test Anthropic Agent Description\",\"cache_control\":{\"type\":\"ephemeral\"}},{\"type\":\"text\",\"text\":\"# description\\n\\nYou are a helpful assistant that can answer questions and help with tasks.\",\"cache_control\":{\"type\":\"ephemeral\"}}],\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}],\"max_tokens\":1024,\"temperature\":1,\"stream\":true}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "token counting",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic",
+            "args": {
+              "apiKey": "test-api-key",
+              "model": "claude-3-haiku-20240307",
+              "maxTokens": 1024,
+              "temperature": 1.0
+            },
+            "client": "forward"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Test Anthropic Agent Description"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "description",
+                "You are a helpful assistant that can answer questions and help with tasks."
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.count",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "input": 10
+          },
+          "expect": {
+            "input": 10,
+            "output": 0,
+            "cacheCreation": 0,
+            "cacheRead": 0,
+            "total": 10
+          }
+        },
+        {
+          "op": "conversation.count",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "input": 5
+          },
+          "expect": {
+            "input": 15,
+            "output": 0,
+            "cacheCreation": 0,
+            "cacheRead": 0,
+            "total": 15
+          }
+        },
+        {
+          "op": "conversation.count",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "output": 20
+          },
+          "expect": {
+            "input": 15,
+            "output": 20,
+            "cacheCreation": 0,
+            "cacheRead": 0,
+            "total": 35
+          }
+        },
+        {
+          "op": "conversation.count",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "output": 10
+          },
+          "expect": {
+            "input": 15,
+            "output": 30,
+            "cacheCreation": 0,
+            "cacheRead": 0,
+            "total": 45
+          }
+        },
+        {
+          "op": "conversation.inspect",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "messages": [],
+            "tokens": {
+              "input": 15,
+              "output": 30,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 45
+            },
+            "listened": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "listener",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic",
+            "args": {
+              "apiKey": "test-api-key",
+              "model": "claude-3-haiku-20240307",
+              "maxTokens": 1024,
+              "temperature": 1.0
+            },
+            "client": "forward"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Test Anthropic Agent Description"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "description",
+                "You are a helpful assistant that can answer questions and help with tasks."
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.listen",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "delay": 5,
+                "chunks": [
+                  "event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"id\":\"msg_1\",\"type\":\"message\",\"role",
+                  "\":\"assistant\"",
+                  ",\"model\":\"claude-3-haiku-20240307\",\"usage\":{\"input_tokens\":25,\"output_tokens\":1,\"cache_creation_input_tokens\":12,\"cache_read_input_tokens\":3}}}\n\nevent: content_block_start\ndata: {\"type\":\"content_block_start\",\"index\":0,\"content_block\":{\"type\":\"text\",\"t",
+                  "ex",
+                  "t\":\"\"}}\n\nevent: ping\ndata: {\"type\":\"ping\"}\n\nevent: content_block",
+                  "_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\"Rain fo",
+                  "rms when wate",
+                  "r vapour in the atmosphere cools and condenses into droplets around tiny particles. \"}}\n\nevent: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\"Step 1: droplets collide, coalesce and grow until th",
+                  "ey",
+                  " are heavy enough to fall — 7 µm. \"}}\n\nevent: content_block_d",
+                  "elta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\"Step 2: d",
+                  "roplets colli",
+                  "de, coalesce and grow until they are heavy enough to fall — 14 µm. \"}}\n\nevent: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\"Step 3: droplets collide, coalesce and grow until they are heavy e",
+                  "no",
+                  "ugh to fall — 21 µm. \"}}\n\nevent: content_block_delta\ndata: {\"",
+                  "type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\"Step 4: droplets colli",
+                  "de, coalesce ",
+                  "and grow until they are heavy enough to fall — 28 µm. \"}}\n\nevent: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\"Step 5: droplets collide, coalesce and grow until they are heavy enough to fall",
+                  {
+                    "$bytes": "IOI="
+                  },
+                  {
+                    "$bytes": "gJQgMzUgwrVtLiAifX0KCmV2ZW50OiBjb250ZW50X2Jsb2NrX2RlbHRhCmRhdGE6IHsidHlwZSI6ImNvbnRlbg=="
+                  },
+                  "t_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\"Step 6: droplets collide, coalesce ",
+                  "and grow unti",
+                  "l they are heavy enough to fall — 42 µm. \"}}\n\nevent: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\"Step 7: droplets collide, coalesce and grow until they are heavy enough to fall — 49 µm. ",
+                  "\"}",
+                  "}\n\nevent: content_block_delta\ndata: {\"type\":\"content_block_delta",
+                  "\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\"Step 8: droplets collide, coalesce and grow unti",
+                  "l they are he",
+                  "avy enough to fall — 56 µm. \"}}\n\nevent: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\"Step 9: droplets collide, coalesce and grow until they are heavy enough to fall — 63 µm. \"}}\n\nevent: c",
+                  "on",
+                  "tent_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"",
+                  "delta\":{\"type\":\"text_delta\",\"text\":\"Step 10: droplets collide, coalesce and grow until they are h",
+                  "eavy enough t",
+                  "o fall — 70 µm. \"}}\n\nevent: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\"Step 11: droplets collide, coalesce and grow until they are heavy enough to fall — 77 µm. \"}}\n\nevent: content_bloc",
+                  "k_",
+                  "stop\ndata: {\"type\":\"content_block_stop\",\"index\":0}\n\nevent: messa",
+                  "ge_delta\ndata: {\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"end_turn\"},\"usage\":{\"output_tokens",
+                  "\":15}}\n\nevent",
+                  ": message_stop\ndata: {\"type\":\"message_stop\"}\n\n"
+                ]
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "user-listen-1",
+              "name": "Test User"
+            },
+            "message": "Write a detailed explanation of how rain forms in the atmosphere, and make it long: at least 1200 characters."
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.send",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "content": "Rain forms when water vapour in the atmosphere cools and condenses into droplets around tiny particles. Step 1: droplets collide, coalesce and grow until they are heavy enough to fall — 7 µm. Step 2: droplets collide, coalesce and grow until they are heavy enough to fall — 14 µm. Step 3: droplets collide, coalesce and grow until they are heavy enough to fall — 21 µm. Step 4: droplets collide, coalesce and grow until they are heavy enough to fall — 28 µm. Step 5: droplets collide, coalesce and grow until they are heavy enough to fall — 35 µm. Step 6: droplets collide, coalesce and grow until they are heavy enough to fall — 42 µm. Step 7: droplets collide, coalesce and grow until they are heavy enough to fall — 49 µm. Step 8: droplets collide, coalesce and grow until they are heavy enough to fall — 56 µm. Step 9: droplets collide, coalesce and grow until they are heavy enough to fall — 63 µm. Step 10: droplets collide, coalesce and grow until they are heavy enough to fall — 70 µm. Step 11: droplets collide, coalesce and grow until they are heavy enough to fall — 77 µm. ",
+            "role": "user"
+          }
+        },
+        {
+          "op": "conversation.inspect",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "Write a detailed explanation of how rain forms in the atmosphere, and make it long: at least 1200 characters.",
+                "mime": "text/plain",
+                "hasAttachments": false,
+                "attachments": []
+              },
+              {
+                "role": "assistant",
+                "content": "Rain forms when water vapour in the atmosphere cools and condenses into droplets around tiny particles. Step 1: droplets collide, coalesce and grow until they are heavy enough to fall — 7 µm. Step 2: droplets collide, coalesce and grow until they are heavy enough to fall — 14 µm. Step 3: droplets collide, coalesce and grow until they are heavy enough to fall — 21 µm. Step 4: droplets collide, coalesce and grow until they are heavy enough to fall — 28 µm. Step 5: droplets collide, coalesce and grow until they are heavy enough to fall — 35 µm. Step 6: droplets collide, coalesce and grow until they are heavy enough to fall — 42 µm. Step 7: droplets collide, coalesce and grow until they are heavy enough to fall — 49 µm. Step 8: droplets collide, coalesce and grow until they are heavy enough to fall — 56 µm. Step 9: droplets collide, coalesce and grow until they are heavy enough to fall — 63 µm. Step 10: droplets collide, coalesce and grow until they are heavy enough to fall — 70 µm. Step 11: droplets collide, coalesce and grow until they are heavy enough to fall — 77 µm. ",
+                "mime": "text/plain",
+                "hasAttachments": false,
+                "attachments": []
+              }
+            ],
+            "tokens": {
+              "input": 25,
+              "output": 16,
+              "cacheCreation": 12,
+              "cacheRead": 3,
+              "total": 56
+            },
+            "listened": [
+              "Rain forms when water vapour in the atmosphere cools and condenses into droplets around tiny particles. ",
+              "Step 1: droplets collide, coalesce and grow until they are heavy enough to fall — 7 µm. ",
+              "Step 2: droplets collide, coalesce and grow until they are heavy enough to fall — 14 µm. ",
+              "Step 3: droplets collide, coalesce and grow until they are heavy enough to fall — 21 µm. ",
+              "Step 4: droplets collide, coalesce and grow until they are heavy enough to fall — 28 µm. ",
+              "Step 5: droplets collide, coalesce and grow until they are heavy enough to fall — 35 µm. ",
+              "Step 6: droplets collide, coalesce and grow until they are heavy enough to fall — 42 µm. ",
+              "Step 7: droplets collide, coalesce and grow until they are heavy enough to fall — 49 µm. ",
+              "Step 8: droplets collide, coalesce and grow until they are heavy enough to fall — 56 µm. ",
+              "Step 9: droplets collide, coalesce and grow until they are heavy enough to fall — 63 µm. ",
+              "Step 10: droplets collide, coalesce and grow until they are heavy enough to fall — 70 µm. ",
+              "Step 11: droplets collide, coalesce and grow until they are heavy enough to fall — 77 µm. "
+            ]
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "expect": [
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/v1/messages",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "x-api-key",
+                  "test-api-key"
+                ],
+                [
+                  "anthropic-version",
+                  "2023-06-01"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "494"
+                ]
+              ],
+              "body": "{\"model\":\"claude-3-haiku-20240307\",\"system\":[{\"type\":\"text\",\"text\":\"Test Anthropic Agent Description\",\"cache_control\":{\"type\":\"ephemeral\"}},{\"type\":\"text\",\"text\":\"# description\\n\\nYou are a helpful assistant that can answer questions and help with tasks.\",\"cache_control\":{\"type\":\"ephemeral\"}}],\"messages\":[{\"role\":\"user\",\"content\":\"Write a detailed explanation of how rain forms in the atmosphere, and make it long: at least 1200 characters.\"}],\"max_tokens\":1024,\"temperature\":1,\"stream\":true}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "schema",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic",
+            "args": {
+              "apiKey": "test-api-key",
+              "model": "claude-3-haiku-20240307",
+              "maxTokens": 1024,
+              "temperature": 1.0
+            },
+            "client": "forward"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Test Anthropic Agent Description"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "description",
+                "You are a helpful assistant that can answer questions and help with tasks."
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema_object.new",
+          "args": {},
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema_object.add",
+          "args": {
+            "object": {
+              "$ref": "o"
+            },
+            "name": "location",
+            "property": {
+              "type": "string",
+              "description": "The city and state, e.g. San Francisco, CA"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "schema_object.add",
+          "args": {
+            "object": {
+              "$ref": "o"
+            },
+            "name": "unit",
+            "property": {
+              "type": "string",
+              "enum": [
+                "celsius",
+                "fahrenheit"
+              ],
+              "description": "The unit of temperature, either \"celsius\" or \"fahrenheit\""
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "schema.new",
+          "args": {
+            "name": "get_weather",
+            "description": "Get the current weather in a given location in well structured JSON",
+            "object": {
+              "$ref": "o"
+            },
+            "required": [
+              "location",
+              "unit"
+            ]
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_schema",
+          "args": {
+            "agent": {
+              "$ref": "c"
+            },
+            "schema": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"id\":\"msg_2\",\"type\":\"message\",\"role\":\"assistant\",\"content\":[{\"type\":\"tool_use\",\"id\":\"toolu_1\",\"name\":\"get_weather\",\"input\":{\"location\":\"San Francisco, CA\",\"unit\":\"celsius\"}}],\"usage\":{\"input_tokens\":50,\"output_tokens\":20}}"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "user-2",
+              "name": "Test User"
+            },
+            "message": "What is the weather in San Francisco in celsius?"
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.send",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "content": "{\"location\":\"San Francisco, CA\",\"unit\":\"celsius\"}",
+            "role": "user"
+          }
+        },
+        {
+          "op": "conversation.inspect",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "What is the weather in San Francisco in celsius?",
+                "mime": "text/plain",
+                "hasAttachments": false,
+                "attachments": []
+              },
+              {
+                "role": "assistant",
+                "content": "{\"location\":\"San Francisco, CA\",\"unit\":\"celsius\"}",
+                "mime": "application/json",
+                "hasAttachments": false,
+                "attachments": []
+              }
+            ],
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "listened": null
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "expect": [
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/v1/messages",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "x-api-key",
+                  "test-api-key"
+                ],
+                [
+                  "anthropic-version",
+                  "2023-06-01"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "904"
+                ]
+              ],
+              "body": "{\"model\":\"claude-3-haiku-20240307\",\"system\":[{\"type\":\"text\",\"text\":\"Test Anthropic Agent Description\",\"cache_control\":{\"type\":\"ephemeral\"}},{\"type\":\"text\",\"text\":\"# description\\n\\nYou are a helpful assistant that can answer questions and help with tasks.\",\"cache_control\":{\"type\":\"ephemeral\"}}],\"messages\":[{\"role\":\"user\",\"content\":\"What is the weather in San Francisco in celsius?\"}],\"max_tokens\":1024,\"temperature\":1,\"tools\":[{\"name\":\"get_weather\",\"description\":\"Get the current weather in a given location in well structured JSON\",\"input_schema\":{\"type\":\"object\",\"properties\":{\"location\":{\"type\":\"string\",\"description\":\"The city and state, e.g. San Francisco, CA\"},\"unit\":{\"type\":\"string\",\"enum\":[\"celsius\",\"fahrenheit\"],\"description\":\"The unit of temperature, either \\\"celsius\\\" or \\\"fahrenheit\\\"\"}},\"required\":[\"location\",\"unit\"]}}],\"tool_choice\":{\"type\":\"tool\",\"name\":\"get_weather\"},\"stream\":false}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "the request as the adapter built it",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic",
+            "args": {
+              "apiKey": "test-api-key",
+              "model": "claude-3-haiku-20240307",
+              "maxTokens": 1024,
+              "temperature": 1.0
+            },
+            "client": "forward"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Test Anthropic Agent Description"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "description",
+                "You are a helpful assistant that can answer questions and help with tasks."
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "chunks": [
+                  "event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"id\":\"msg_1\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"claude-3-haiku-20240307\",\"usage\":{\"input_tokens\":25,\"output_tokens\":1,\"cache_creation_input_tokens\":12,\"cache_read_input_tokens\":3}}}\n\nevent: content_block_start\ndata: {\"type\":\"content_block_start\",\"index\":0,\"content_block\":{\"type\":\"text\",\"text\":\"\"}}\n\nevent: ping\ndata: {\"type\":\"ping\"}\n\nevent: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\"ok\"}}\n\nevent: content_block_stop\ndata: {\"type\":\"content_block_stop\",\"index\":0}\n\nevent: message_delta\ndata: {\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"end_turn\"},\"usage\":{\"output_tokens\":15}}\n\nevent: message_stop\ndata: {\"type\":\"message_stop\"}\n\n"
+                ]
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "user-1"
+            },
+            "message": "Hello"
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.send",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "content": "ok",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.requests",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "uri": "https://api.anthropic.com/v1/messages",
+              "headers": [
+                [
+                  "x-api-key",
+                  "test-api-key"
+                ],
+                [
+                  "anthropic-version",
+                  "2023-06-01"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ]
+              ],
+              "body": "{\"model\":\"claude-3-haiku-20240307\",\"system\":[{\"type\":\"text\",\"text\":\"Test Anthropic Agent Description\",\"cache_control\":{\"type\":\"ephemeral\"}},{\"type\":\"text\",\"text\":\"# description\\n\\nYou are a helpful assistant that can answer questions and help with tasks.\",\"cache_control\":{\"type\":\"ephemeral\"}}],\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}],\"max_tokens\":1024,\"temperature\":1,\"stream\":true}"
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "expect": [
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/v1/messages",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "x-api-key",
+                  "test-api-key"
+                ],
+                [
+                  "anthropic-version",
+                  "2023-06-01"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "390"
+                ]
+              ],
+              "body": "{\"model\":\"claude-3-haiku-20240307\",\"system\":[{\"type\":\"text\",\"text\":\"Test Anthropic Agent Description\",\"cache_control\":{\"type\":\"ephemeral\"}},{\"type\":\"text\",\"text\":\"# description\\n\\nYou are a helpful assistant that can answer questions and help with tasks.\",\"cache_control\":{\"type\":\"ephemeral\"}}],\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}],\"max_tokens\":1024,\"temperature\":1,\"stream\":true}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

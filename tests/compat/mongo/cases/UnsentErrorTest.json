@@ -1,0 +1,283 @@
+{
+  "source": "vendor/utopia-php/mongo/tests/UnsentErrorTest.php",
+  "cases": [
+    {
+      "name": "testAnUnsentFailureIsDistinguishableByType",
+      "steps": [
+        {
+          "op": "exception.new",
+          "args": {
+            "class": "UnsentException",
+            "message": "Client is not connected to MongoDB"
+          },
+          "expect": {
+            "class": "Utopia\\Mongo\\UnsentException",
+            "message": "Client is not connected to MongoDB",
+            "code": 0,
+            "transient": false,
+            "network": false,
+            "retryable_write": false,
+            "duplicate_key": false,
+            "write_concern": false,
+            "unsent": true,
+            "timeout": false,
+            "error_labels": [],
+            "write_errors": null,
+            "write_concern_errors": null,
+            "operation_type": null,
+            "category": "MongoDB Error"
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testAPostSendTimeoutIsNotReportedAsUnsent",
+      "steps": [
+        {
+          "op": "exception.new",
+          "args": {
+            "message": "Receive timeout: no data received within reasonable time",
+            "code": 11601
+          },
+          "expect": {
+            "class": "Utopia\\Mongo\\Exception",
+            "message": "Receive timeout: no data received within reasonable time",
+            "code": 11601,
+            "transient": true,
+            "network": true,
+            "retryable_write": false,
+            "duplicate_key": false,
+            "write_concern": false,
+            "unsent": false,
+            "timeout": true,
+            "error_labels": [],
+            "write_errors": null,
+            "write_concern_errors": null,
+            "operation_type": null,
+            "category": "Network Error"
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testAServerErrorResponseIsNeverReportedAsUnsent",
+      "steps": [
+        {
+          "op": "exception.from_response",
+          "args": {
+            "response": {
+              "code": 6,
+              "codeName": "HostUnreachable",
+              "errmsg": "host unreachable"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Mongo\\Exception",
+            "message": "host unreachable",
+            "code": 6,
+            "transient": true,
+            "network": true,
+            "retryable_write": false,
+            "duplicate_key": false,
+            "write_concern": false,
+            "unsent": false,
+            "timeout": false,
+            "error_labels": [],
+            "write_errors": null,
+            "write_concern_errors": null,
+            "operation_type": null,
+            "category": "Network Error"
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "a client that is not connected refuses commands before sending them",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "connect": false
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.query",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "command": {
+              "ping": 1
+            },
+            "inspect": true
+          },
+          "expect": {
+            "$exception": {
+              "class": "Utopia\\Mongo\\UnsentException",
+              "message": "Client is not connected to MongoDB",
+              "code": 0,
+              "transient": false,
+              "network": false,
+              "retryable_write": false,
+              "duplicate_key": false,
+              "write_concern": false,
+              "unsent": true,
+              "timeout": false,
+              "error_labels": [],
+              "write_errors": null,
+              "write_concern_errors": null,
+              "operation_type": null,
+              "category": "MongoDB Error"
+            }
+          }
+        },
+        {
+          "op": "client.get_connection_info",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": false,
+            "host": "compat-mongo",
+            "port": 27017,
+            "database": "${ns}",
+            "activeSessions": 0,
+            "clusterTimeSet": false,
+            "operationTimeSet": false
+          }
+        },
+        {
+          "op": "client.connect",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "$client": true
+          }
+        },
+        {
+          "op": "client.get_connection_info",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "host": "compat-mongo",
+            "port": 27017,
+            "database": "${ns}",
+            "activeSessions": 0,
+            "clusterTimeSet": true,
+            "operationTimeSet": true
+          }
+        },
+        {
+          "op": "client.close",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "inspect": true
+          },
+          "expect": {
+            "$exception": {
+              "class": "Utopia\\Mongo\\UnsentException",
+              "message": "Client is not connected to MongoDB",
+              "code": 0,
+              "transient": false,
+              "network": false,
+              "retryable_write": false,
+              "duplicate_key": false,
+              "write_concern": false,
+              "unsent": true,
+              "timeout": false,
+              "error_labels": [],
+              "write_errors": null,
+              "write_concern_errors": null,
+              "operation_type": null,
+              "category": "MongoDB Error"
+            }
+          }
+        },
+        {
+          "op": "client.get_connection_info",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": false,
+            "host": "compat-mongo",
+            "port": 27017,
+            "database": "${ns}",
+            "activeSessions": 0,
+            "clusterTimeSet": false,
+            "operationTimeSet": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "an unreachable server is an unsent failure",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "inspect": true,
+            "host": "compat-mongo-nowhere",
+            "port": 27017,
+            "connect_timeout": 0.5
+          },
+          "mask": {
+            "paths": [
+              "/$exception/message"
+            ],
+            "reason": "the host differs between the runtimes' networks; the class, code and flags are compared"
+          },
+          "expect": {
+            "$exception": {
+              "class": "Utopia\\Mongo\\UnsentException",
+              "message": "<masked>",
+              "code": 0,
+              "transient": false,
+              "network": false,
+              "retryable_write": false,
+              "duplicate_key": false,
+              "write_concern": false,
+              "unsent": true,
+              "timeout": false,
+              "error_labels": [],
+              "write_errors": null,
+              "write_concern_errors": null,
+              "operation_type": null,
+              "category": "MongoDB Error"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,494 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/ConnectionTest.php"
+  ],
+  "cases": [
+    {
+      "name": "ConnectionTest::testDriverErrorCodesOfALostConnectionAreDetected#MySQL disconnected an idle client",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "PDOException",
+                  "message": "SQLSTATE[HY000]: driver code 4031",
+                  "errorInfo": [
+                    "HY000",
+                    4031,
+                    "driver code 4031"
+                  ]
+                }
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "ConnectionTest::testDriverErrorCodesOfALostConnectionAreDetected#MySQL server has gone away",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "PDOException",
+                  "message": "SQLSTATE[HY000]: driver code 2006",
+                  "errorInfo": [
+                    "HY000",
+                    2006,
+                    "driver code 2006"
+                  ]
+                }
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "ConnectionTest::testDriverErrorCodesOfALostConnectionAreDetected#MySQL connection lost during a query",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "PDOException",
+                  "message": "SQLSTATE[HY000]: driver code 2013",
+                  "errorInfo": [
+                    "HY000",
+                    2013,
+                    "driver code 2013"
+                  ]
+                }
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "ConnectionTest::testDriverErrorCodesOfALostConnectionAreDetected#MySQL cannot connect",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "PDOException",
+                  "message": "SQLSTATE[HY000]: driver code 2002",
+                  "errorInfo": [
+                    "HY000",
+                    2002,
+                    "driver code 2002"
+                  ]
+                }
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "ConnectionTest::testDriverErrorCodesOfALostConnectionAreDetected#MySQL server shutting down",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "PDOException",
+                  "message": "SQLSTATE[08S01]: driver code 1053",
+                  "errorInfo": [
+                    "08S01",
+                    1053,
+                    "driver code 1053"
+                  ]
+                }
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "ConnectionTest::testDriverErrorCodesOfALostConnectionAreDetected#connection exception class",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "PDOException",
+                  "message": "SQLSTATE[08006]: driver code 7",
+                  "errorInfo": [
+                    "08006",
+                    7,
+                    "driver code 7"
+                  ]
+                }
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "ConnectionTest::testDriverErrorCodesOfALostConnectionAreDetected#PostgreSQL administrator shutdown",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "PDOException",
+                  "message": "SQLSTATE[57P01]: driver code 7",
+                  "errorInfo": [
+                    "57P01",
+                    7,
+                    "driver code 7"
+                  ]
+                }
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "ConnectionTest::testDriverErrorCodesOfALostConnectionAreDetected#PostgreSQL crash shutdown",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "PDOException",
+                  "message": "SQLSTATE[57P02]: driver code 7",
+                  "errorInfo": [
+                    "57P02",
+                    7,
+                    "driver code 7"
+                  ]
+                }
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "ConnectionTest::testDriverErrorCodesOfALostConnectionAreDetected#PostgreSQL cannot connect now",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "PDOException",
+                  "message": "SQLSTATE[57P03]: driver code 7",
+                  "errorInfo": [
+                    "57P03",
+                    7,
+                    "driver code 7"
+                  ]
+                }
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "ConnectionTest::testDriverErrorCodesOfALostConnectionAreDetected#PostgreSQL database dropped",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "PDOException",
+                  "message": "SQLSTATE[57P04]: driver code 7",
+                  "errorInfo": [
+                    "57P04",
+                    7,
+                    "driver code 7"
+                  ]
+                }
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "ConnectionTest::testDriverErrorCodesOfALostConnectionAreDetected#PostgreSQL idle session timeout",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "PDOException",
+                  "message": "SQLSTATE[57P05]: driver code 7",
+                  "errorInfo": [
+                    "57P05",
+                    7,
+                    "driver code 7"
+                  ]
+                }
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "ConnectionTest::testDriverErrorCodesOfALiveConnectionAreNotDetected#MariaDB statement timeout",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "PDOException",
+                  "message": "SQLSTATE[70100]: driver code 1969",
+                  "errorInfo": [
+                    "70100",
+                    1969,
+                    "driver code 1969"
+                  ]
+                }
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ConnectionTest::testDriverErrorCodesOfALiveConnectionAreNotDetected#MySQL statement timeout",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "PDOException",
+                  "message": "SQLSTATE[HY000]: driver code 3024",
+                  "errorInfo": [
+                    "HY000",
+                    3024,
+                    "driver code 3024"
+                  ]
+                }
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ConnectionTest::testDriverErrorCodesOfALiveConnectionAreNotDetected#PostgreSQL statement timeout",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "PDOException",
+                  "message": "SQLSTATE[57014]: driver code 7",
+                  "errorInfo": [
+                    "57014",
+                    7,
+                    "driver code 7"
+                  ]
+                }
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ConnectionTest::testDriverErrorCodesOfALiveConnectionAreNotDetected#duplicate key",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "PDOException",
+                  "message": "SQLSTATE[23000]: driver code 1062",
+                  "errorInfo": [
+                    "23000",
+                    1062,
+                    "driver code 1062"
+                  ]
+                }
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ConnectionTest::testDriverErrorCodesOfALiveConnectionAreNotDetected#syntax error",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "PDOException",
+                  "message": "SQLSTATE[42000]: driver code 1064",
+                  "errorInfo": [
+                    "42000",
+                    1064,
+                    "driver code 1064"
+                  ]
+                }
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ConnectionTest::testDriverErrorCodesOfALiveConnectionAreNotDetected#deadlock",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "PDOException",
+                  "message": "SQLSTATE[40001]: driver code 1213",
+                  "errorInfo": [
+                    "40001",
+                    1213,
+                    "driver code 1213"
+                  ]
+                }
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ConnectionTest::testConnectFailureCarryingTheDriverCodeIsDetected",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "PDOException",
+                  "message": "SQLSTATE[HY000] [2002] refused",
+                  "code": 2002,
+                  "errorInfo": [
+                    "HY000",
+                    2002,
+                    "refused"
+                  ]
+                }
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

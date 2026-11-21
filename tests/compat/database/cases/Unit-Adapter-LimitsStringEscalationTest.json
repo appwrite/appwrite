@@ -1,0 +1,244 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/LimitsStringEscalationTest.php"
+  ],
+  "cases": [
+    {
+      "name": "LimitsStringEscalationTest::testStringEscalatedStorageByteLimit",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 4294967295,
+              "varchar": 16381,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o1"
+          },
+          "bind": "s0",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 4294967295,
+              "varchar": 16381,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": [],
+              "escalatedStringByteCap": true
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1"
+            },
+            "method": "stringEscalatedStorageByteLimit",
+            "args": {
+              "size": 100
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1"
+            },
+            "method": "stringEscalatedStorageByteLimit",
+            "args": {
+              "size": 16382
+            }
+          },
+          "expect": 65535
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1"
+            },
+            "method": "stringEscalatedStorageByteLimit",
+            "args": {
+              "size": 65535
+            }
+          },
+          "expect": 65535
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1"
+            },
+            "method": "stringEscalatedStorageByteLimit",
+            "args": {
+              "size": 65536
+            }
+          },
+          "expect": 16777215
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1"
+            },
+            "method": "stringEscalatedStorageByteLimit",
+            "args": {
+              "size": 20000
+            }
+          },
+          "expect": 65535
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1"
+            },
+            "method": "stringEscalatedStorageByteLimit",
+            "args": {
+              "size": 100000
+            }
+          },
+          "expect": 16777215
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1"
+            },
+            "method": "stringEscalatedStorageByteLimit",
+            "args": {
+              "size": 20000000
+            }
+          },
+          "expect": 4294967295
+        }
+      ]
+    },
+    {
+      "name": "LimitsStringEscalationTest::testStringEscalatedStorageByteLimitDisabled",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 4294967295,
+              "varchar": 16381,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": [],
+              "escalatedStringByteCap": false
+            },
+            "as": "o2"
+          },
+          "bind": "s8",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 4294967295,
+              "varchar": 16381,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": [],
+              "escalatedStringByteCap": false
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "stringEscalatedStorageByteLimit",
+            "args": {
+              "size": 20000
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

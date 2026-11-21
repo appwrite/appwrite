@@ -1,0 +1,217 @@
+{
+  "lib": "dns",
+  "environment": {
+    "date": "2026-10-18T14:19:55Z",
+    "commit": "398712d31e",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.97",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "decode",
+      "description": "Decode a response with A, AAAA and TXT answers",
+      "php": {
+        "ns": 4735.420089180943,
+        "min": 4497.819291246186,
+        "max": 5095.517484158649,
+        "samples": 15,
+        "calls": 4261,
+        "cpu": 4778.565282015176,
+        "peak": 4248.0,
+        "retained": 0.005882813111163264,
+        "rss": 107597824.0
+      },
+      "rust": {
+        "ns": 712.1984081864696,
+        "min": 696.7343187417093,
+        "max": 1056.8306803107826,
+        "samples": 15,
+        "calls": 10554,
+        "cpu": 754.7214831659403,
+        "rss": 22822912.0,
+        "allocations": 19.000069483923948,
+        "bytes": 1028.0177436674878,
+        "peak": 1650.0,
+        "retained": 0.01044785547343819
+      },
+      "speedup": 6.649018075228699,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "encode",
+      "description": "Encode that response within 512 bytes",
+      "php": {
+        "ns": 2066.703473198153,
+        "min": 1992.98163019474,
+        "max": 3306.9915679582414,
+        "samples": 15,
+        "calls": 9962,
+        "cpu": 2163.160008030516,
+        "peak": 3008.0,
+        "retained": 0.002516228334337148,
+        "rss": 107597824.0
+      },
+      "rust": {
+        "ns": 245.9672839133844,
+        "min": 234.36224138970988,
+        "max": 341.86169250256347,
+        "samples": 15,
+        "calls": 82895,
+        "cpu": 253.17064318314334,
+        "rss": 22822912.0,
+        "allocations": 6.000008846532762,
+        "bytes": 636.0022590827754,
+        "peak": 1650.0,
+        "retained": 0.0013301968353539619
+      },
+      "speedup": 8.402351078226841,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "lookup",
+      "description": "Answer an A query from a zone",
+      "php": {
+        "ns": 1334.7866604539706,
+        "min": 1326.1332623310923,
+        "max": 1538.1110297543767,
+        "samples": 15,
+        "calls": 15023,
+        "cpu": 1354.1236770285561,
+        "peak": 3008.0,
+        "retained": 0.0016685526636934479,
+        "rss": 107597824.0
+      },
+      "rust": {
+        "ns": 80.46161712823587,
+        "min": 79.09857442675198,
+        "max": 82.60124198602766,
+        "samples": 15,
+        "calls": 243481,
+        "cpu": 80.64421152642986,
+        "rss": 22822912.0,
+        "allocations": 3.0000030118708785,
+        "bytes": 656.0007691222997,
+        "peak": 1650.0,
+        "retained": 0.0004528758575275552
+      },
+      "speedup": 16.589110536103835,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "lookup_wildcard",
+      "description": "Answer a query from a zone's wildcard CNAME",
+      "php": {
+        "ns": 1957.2396989288816,
+        "min": 1934.4381935732895,
+        "max": 2045.3979542603493,
+        "samples": 15,
+        "calls": 10363,
+        "cpu": 1966.9529415548907,
+        "peak": 57752.0,
+        "retained": 0.002418861976905015,
+        "rss": 107597824.0
+      },
+      "rust": {
+        "ns": 113.72817641211451,
+        "min": 112.52973042920752,
+        "max": 117.69213756756916,
+        "samples": 15,
+        "calls": 170011,
+        "cpu": 114.1608805704729,
+        "rss": 22822912.0,
+        "allocations": 4.000004313446385,
+        "bytes": 679.0011014973541,
+        "peak": 1650.0,
+        "retained": 0.000648585483684389
+      },
+      "speedup": 17.20980464714805,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "serve",
+      "description": "Decode a query, answer it from a zone and encode the response",
+      "php": {
+        "ns": 3522.672009864365,
+        "min": 3509.6001409194996,
+        "max": 3539.714285714286,
+        "samples": 15,
+        "calls": 5677,
+        "cpu": 3523.433738476895,
+        "peak": 50128.0,
+        "retained": 0.004415477658387646,
+        "rss": 107597824.0
+      },
+      "rust": {
+        "ns": 278.54057940066906,
+        "min": 274.2330414976155,
+        "max": 287.9528792084846,
+        "samples": 15,
+        "calls": 70245,
+        "cpu": 278.7446309345861,
+        "rss": 22822912.0,
+        "allocations": 10.000010439651696,
+        "bytes": 1816.0026659074192,
+        "peak": 1728.0,
+        "retained": 0.001569743991268655
+      },
+      "speedup": 12.6468897905075,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "name",
+      "description": "Validate a record name",
+      "php": {
+        "ns": 655.8348669901288,
+        "min": 652.1652668562824,
+        "max": 683.9370587251129,
+        "samples": 15,
+        "calls": 29885,
+        "cpu": 661.4399643076237,
+        "peak": 3008.0,
+        "retained": 0.0008387708437900842,
+        "rss": 107597824.0
+      },
+      "rust": {
+        "ns": 21.199550454192135,
+        "min": 20.607690381884353,
+        "max": 23.119668613022178,
+        "samples": 15,
+        "calls": 914701,
+        "cpu": 21.339836004698075,
+        "rss": 22822912.0,
+        "allocations": 8.017191774507006e-7,
+        "bytes": 0.0002047299244962744,
+        "peak": 1650.0,
+        "retained": 0.00012054941086395081
+      },
+      "speedup": 30.93626293667184,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

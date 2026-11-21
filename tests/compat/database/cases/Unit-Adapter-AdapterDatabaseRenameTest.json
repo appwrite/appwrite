@@ -1,0 +1,221 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/AdapterDatabaseRenameTest.php"
+  ],
+  "cases": [
+    {
+      "name": "AdapterDatabaseRenameTest::testSharedTablesRefuseTheRename#MariaDB",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MariaDB",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1"
+          },
+          "bind": "s0",
+          "expect": {
+            "$adapter": "MariaDB"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$adapter": "MariaDB"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1"
+            },
+            "method": "update",
+            "args": {
+              "name": "library",
+              "new": "archive"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Cannot rename a database while shared tables are enabled"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AdapterDatabaseRenameTest::testSharedTablesRefuseTheRename#MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MySQL",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o2"
+          },
+          "bind": "s1",
+          "expect": {
+            "$adapter": "MySQL"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$adapter": "MySQL"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "update",
+            "args": {
+              "name": "library",
+              "new": "archive"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Cannot rename a database while shared tables are enabled"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AdapterDatabaseRenameTest::testSharedTablesRefuseTheRename#Postgres",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Postgres",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o3"
+          },
+          "bind": "s2",
+          "expect": {
+            "$adapter": "Postgres"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$adapter": "Postgres"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3"
+            },
+            "method": "update",
+            "args": {
+              "name": "library",
+              "new": "archive"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Cannot rename a database while shared tables are enabled"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AdapterDatabaseRenameTest::testSharedTablesRefuseTheRename#Memory",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o4"
+          },
+          "bind": "s3",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4"
+            },
+            "method": "update",
+            "args": {
+              "name": "library",
+              "new": "archive"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Cannot rename a database while shared tables are enabled"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

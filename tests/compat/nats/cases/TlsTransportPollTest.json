@@ -1,0 +1,49 @@
+{
+  "source": "packages/nats/tests/Transport/TlsTransportPollTest.php",
+  "cases": [
+    {
+      "name": "tls: pending data, idle and closed transports as poll() sees them",
+      "op": "transport.poll",
+      "args": {
+        "kind": "tls",
+        "service": "nats-tls",
+        "tls": {
+          "cafile": "packages/nats/tests/fixtures/certs/ca.pem",
+          "local_cert": "packages/nats/tests/fixtures/certs/client-cert.pem",
+          "local_pk": "packages/nats/tests/fixtures/certs/client-key.pem",
+          "peer_name": "localhost"
+        }
+      },
+      "expect": [
+        [
+          "info_waiting",
+          true
+        ],
+        [
+          "info",
+          true
+        ],
+        [
+          "idle",
+          false
+        ],
+        [
+          "pong_waiting",
+          true
+        ],
+        [
+          "pong",
+          "PONG\r\n"
+        ],
+        [
+          "idle_again",
+          false
+        ],
+        [
+          "closed",
+          true
+        ]
+      ]
+    }
+  ]
+}

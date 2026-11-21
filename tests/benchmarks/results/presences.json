@@ -1,0 +1,264 @@
+{
+  "service": "presences",
+  "file": "tests/benchmarks/results/presences.json",
+  "workload": {
+    "script": "tests/benchmarks/api/presences.js",
+    "duration": "60s",
+    "hashing": false,
+    "seed": 200,
+    "run": "presences-20261012-030702"
+  },
+  "environment": {
+    "date": "2026-10-12T02:09:28Z",
+    "commit": "f3918daaff",
+    "branch": "feat/rust-utopia-conversion",
+    "machine": {
+      "os": "Darwin",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max",
+      "cores": 16,
+      "memory_gib": 128
+    },
+    "docker": "28.5.1",
+    "k6": "k6 v1.7.1",
+    "cpu_source": "docker stats",
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "88b87c5028a0",
+      "created": "2026-10-09T07:39:19.618591965Z"
+    },
+    "rust": {
+      "container": "appwrite-rust",
+      "image": "appwrite-rust-dev",
+      "id": "b0b46302463d",
+      "created": "2026-10-11T19:37:06.64190413Z"
+    },
+    "database": {
+      "container": "appwrite-postgresql",
+      "image": "appwrite/postgres:0.1.0",
+      "id": "77156232a16d",
+      "created": "2026-10-09T08:32:40.317530502Z"
+    },
+    "endpoint": {
+      "php": "http://localhost:9501/v1",
+      "rust": "http://localhost:9530/v1"
+    }
+  },
+  "steps": [
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 50,
+      "rps": 50.0,
+      "requests": 3000,
+      "failures": 0,
+      "errors": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 7.14,
+        "p50": 5.607,
+        "p90": 10.93,
+        "p95": 15.633,
+        "p99": 37.219,
+        "max": 92.791
+      },
+      "cpu_ms_per_request": 4.617,
+      "db_cpu_ms_per_request": 9.774,
+      "memory_mib": {
+        "baseline": 3863.6,
+        "avg": 3867.3,
+        "peak": 3868.7
+      },
+      "endpoints": {
+        "presences.list": {
+          "route": "GET /v1/presences",
+          "count": 657,
+          "rps": 10.95,
+          "avg": 6.808,
+          "p50": 5.915,
+          "p90": 9.698,
+          "p95": 11.99,
+          "p99": 18.992,
+          "max": 39.32
+        },
+        "presences.list.cached": {
+          "route": "GET /v1/presences",
+          "note": "with a 60-second list cache (ttl)",
+          "count": 254,
+          "rps": 4.23,
+          "avg": 5.071,
+          "p50": 4.47,
+          "p90": 7.252,
+          "p95": 9.261,
+          "p99": 15.359,
+          "max": 22.87
+        },
+        "presences.get": {
+          "route": "GET /v1/presences/:presenceId",
+          "count": 1039,
+          "rps": 17.32,
+          "avg": 4.815,
+          "p50": 4.029,
+          "p90": 7.059,
+          "p95": 9.471,
+          "p99": 16.338,
+          "max": 54.728
+        },
+        "presences.upsert": {
+          "route": "PUT /v1/presences/:presenceId",
+          "note": "a heartbeat: updates the user's presence",
+          "count": 612,
+          "rps": 10.2,
+          "avg": 10.365,
+          "p50": 7.236,
+          "p90": 17.796,
+          "p95": 26.878,
+          "p99": 60.426,
+          "max": 92.791
+        },
+        "presences.upsert.create": {
+          "route": "PUT /v1/presences/:presenceId",
+          "note": "creates the presence of a user who has none",
+          "count": 61,
+          "rps": 1.02,
+          "avg": 12.649,
+          "p50": 9.346,
+          "p90": 21.173,
+          "p95": 32.415,
+          "p99": 47.311,
+          "max": 58.091
+        },
+        "presences.update": {
+          "route": "PATCH /v1/presences/:presenceId",
+          "count": 319,
+          "rps": 5.32,
+          "avg": 9.626,
+          "p50": 6.596,
+          "p90": 16.673,
+          "p95": 22.757,
+          "p99": 56.586,
+          "max": 72.597
+        },
+        "presences.delete": {
+          "route": "DELETE /v1/presences/:presenceId",
+          "count": 58,
+          "rps": 0.97,
+          "avg": 8.1,
+          "p50": 5.47,
+          "p90": 12.912,
+          "p95": 18.262,
+          "p99": 52.018,
+          "max": 54.797
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 50,
+      "rps": 881.7,
+      "requests": 52900,
+      "failures": 0,
+      "errors": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 45.614,
+        "p50": 35.255,
+        "p90": 87.261,
+        "p95": 115.953,
+        "p99": 195.929,
+        "max": 764.62
+      },
+      "cpu_ms_per_request": 6.59,
+      "db_cpu_ms_per_request": 2.701,
+      "memory_mib": {
+        "baseline": 3866.6,
+        "avg": 3851.3,
+        "peak": 3898.4
+      },
+      "endpoints": {
+        "presences.list": {
+          "route": "GET /v1/presences",
+          "count": 11422,
+          "rps": 190.37,
+          "avg": 43.62,
+          "p50": 34.331,
+          "p90": 80.193,
+          "p95": 105.329,
+          "p99": 175.753,
+          "max": 367.82
+        },
+        "presences.list.cached": {
+          "route": "GET /v1/presences",
+          "note": "with a 60-second list cache (ttl)",
+          "count": 4682,
+          "rps": 78.03,
+          "avg": 37.315,
+          "p50": 28.855,
+          "p90": 71.491,
+          "p95": 93.002,
+          "p99": 153.977,
+          "max": 375.059
+        },
+        "presences.get": {
+          "route": "GET /v1/presences/:presenceId",
+          "count": 17172,
+          "rps": 286.2,
+          "avg": 31.53,
+          "p50": 24.449,
+          "p90": 59.631,
+          "p95": 79.085,
+          "p99": 131.913,
+          "max": 401.445
+        },
+        "presences.upsert": {
+          "route": "PUT /v1/presences/:presenceId",
+          "note": "a heartbeat: updates the user's presence",
+          "count": 11456,
+          "rps": 190.93,
+          "avg": 61.844,
+          "p50": 49.209,
+          "p90": 112.873,
+          "p95": 149.123,
+          "p99": 234.096,
+          "max": 764.62
+        },
+        "presences.upsert.create": {
+          "route": "PUT /v1/presences/:presenceId",
+          "note": "creates the presence of a user who has none",
+          "count": 1163,
+          "rps": 19.38,
+          "avg": 80.516,
+          "p50": 67.163,
+          "p90": 137.886,
+          "p95": 173.535,
+          "p99": 279.21,
+          "max": 485.596
+        },
+        "presences.update": {
+          "route": "PATCH /v1/presences/:presenceId",
+          "count": 5834,
+          "rps": 97.23,
+          "avg": 56.04,
+          "p50": 44.29,
+          "p90": 104.23,
+          "p95": 138.201,
+          "p99": 216.399,
+          "max": 454.671
+        },
+        "presences.delete": {
+          "route": "DELETE /v1/presences/:presenceId",
+          "count": 1171,
+          "rps": 19.52,
+          "avg": 59.371,
+          "p50": 48.945,
+          "p90": 102.641,
+          "p95": 136.109,
+          "p99": 230.282,
+          "max": 349.588
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/SQLTransactionTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SQLTransactionTest::testAConnectionThatIsNotAPdoIsRefusedOnUse",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MySQL",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o50"
+          },
+          "bind": "s124",
+          "expect": {
+            "$adapter": "MySQL"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o50"
+            },
+            "method": "reconnect",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "SQL adapter requires Utopia\\Database\\PDO, Swoole\\Database\\PDOProxy, or PDO"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

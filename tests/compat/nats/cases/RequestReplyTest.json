@@ -1,0 +1,169 @@
+{
+  "source": "packages/nats/tests/E2E/RequestReplyTest.php",
+  "cases": [
+    {
+      "name": "request and reply",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.echo.${ns}",
+            "mode": "echo",
+            "prefix": "echo: "
+          },
+          "bind": "sub",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.echo.${ns}",
+            "data": "hello",
+            "timeout": 2.0
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "echo: hello",
+            "reply": null,
+            "headers": null,
+            "sid": "2"
+          }
+        },
+        {
+          "op": "conn.unsubscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "sub": {
+              "$ref": "sub"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a silent responder times out",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.silent.${ns}",
+            "mode": "silent"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.silent.${ns}",
+            "data": "hello",
+            "timeout": 0.5
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "Request timed out after 0.5s"
+            }
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "no responders",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "test.no-responder-${ns}",
+            "data": "hello",
+            "timeout": 2.0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\NoRespondersException",
+              "message": "No responders for request"
+            }
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

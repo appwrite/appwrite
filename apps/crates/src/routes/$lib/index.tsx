@@ -1,0 +1,396 @@
+import { Link, createFileRoute, getRouteApi, notFound } from '@tanstack/react-router'
+import { ArrowRight, Check, Network } from 'lucide-react'
+import { CodeBlock, ExampleView, Examples } from '@/components/Code'
+import { Markdown } from '@/components/Markdown'
+import { PageHeader, Section, WithToc } from '@/components/Page'
+import { StatusBadge, StatusDot } from '@/components/Status'
+import { SyncBadge, SyncPanel } from '@/components/Sync'
+import { SpeedupBadge } from '@/components/Bench'
+import { KIND_ORDER, KIND_TITLE, STATUS, dependents as dependentsOf, guideHeadings, isTopLevel, itemHash, loadLibrary, moduleSplat, rustGuide, slug, summary, taskHash, type LibrarySummary, type Status } from '@/lib/docs'
+import { useMigration } from '@/lib/prefs'
+import { MigrationCard, MigrationOnly, PhpNotes } from '@/components/Migration'
+import { Tasks } from '@/components/Tasks'
+import { Time } from '@/components/Time'
+import { SizeLine, SizeTable } from '@/components/Size'
+import { formatCount } from '@/lib/docs'
+
+const root = getRouteApi('__root__')
+
+export const Route = createFileRoute('/$lib/')({
+  loader: async ({ params }) => {
+    const lib = await loadLibrary(params.lib)
+    if (!lib) throw notFound()
+    const top = lib.items.filter(isTopLevel)
+    const classes = new Map<string, { name: string; doc: string; methods: number }>()
+    for (const p of lib.php_api) {
+      const c = p.class ?? `${p.namespace}\\functions`
+      const entry = classes.get(c) ?? { name: c, doc: p.class_doc, methods: 0 }
+      entry.methods++
+      classes.set(c, entry)
+    }
+    return {
+      library: lib.library,
+      install: lib.install,
+      overview: lib.overview,
+      overview_notes: lib.overview_notes,
+      guide: lib.guide,
+      lifecycle: guideHeadings(lib.lifecycle ?? []),
+      tasks: lib.tasks ?? [],
+      sync: lib.sync,
+      bench: lib.bench,
+      examples: lib.examples,
+      modules: lib.modules
+        .filter((m) => m.path)
+        .map((m) => ({ path: m.path, public: m.public, summary: summary(m.doc), items: top.filter((i) => i.module === m.path).length })),
+      root: top.filter((i) => i.export || i.module === '').map((i) => ({ name: i.export ?? i.name, kind: i.kind, module: i.module, item: i.name, summary: summary(i.doc || i.inherited_doc) })),
+      classes: [...classes.values()].sort((a, b) => a.name.localeCompare(b.name)).map((c) => ({ ...c, doc: summary(c.doc) })),
+    }
+  },
+  component: LibraryPage,
+})
+
+const STEPS: Status[] = ['planned', 'started', 'progress', 'complete']
+
+/** Why a library is not converted, by design, in place of the conversion's steps. */
+function NotConverted({ l }: { l: LibrarySummary }) {
+  return (
+    <div className="grid gap-1 rounded-md border border-dashed border-border px-3.5 py-3 text-[13px]">
+      <span className="inline-flex items-center gap-1.5 font-medium">
+        <StatusDot status="retired" />
+        {STATUS.retired.label}
+      </span>
+      {l.not_converted?.reason ? <span className="text-muted-foreground">{l.not_converted.reason}.</span> : null}
+      <span className="text-muted-foreground">
+        A recorded decision (crates/CONVERSION.md §8): it is left out of the conversion count, and its Rust users rely on the standard crate instead.
+      </span>
+    </div>
+  )
+}
+
+function Progress({ status }: { status: Status }) {
+  const at = STEPS.indexOf(status)
+  return (
+    <ol className="m-0 grid list-none grid-cols-4 gap-2 p-0">
+      {STEPS.map((s, i) => (
+        <li key={s} className="grid gap-1.5">
+          <span className={`h-1 rounded-full ${i <= at ? (status === 'complete' ? 'bg-ok' : 'bg-progress') : 'bg-muted'}`} />
+          <span className={`inline-flex items-center gap-1 text-[11.5px] ${i === at ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
+            {i < at || status === 'complete' ? <Check className="size-3" /> : null}
+            {STATUS[s].label}
+          </span>
+        </li>
+      ))}
+    </ol>
+  )
+}
+
+/** Where the library sits in the ecosystem: what it depends on, what depends on it, and its place on the map. */
+function Ecosystem({ l }: { l: LibrarySummary }) {
+  const migration = useMigration()
+  const counts = l.counts.dependencies
+  if (!counts) return null
+  // A library without a Rust crate depends on PHP packages only: migration detail.
+  const deps = l.rust ? counts.rust : migration ? counts.php : undefined
+  // Through Rust alone outside migration mode.
+  const { count: dependents, appwrite } = dependentsOf(counts, migration)
+  const link = 'inline-flex items-center gap-1 hover:text-foreground'
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-muted-foreground">
+      <Link to="/$lib/dependencies" params={{ lib: l.slug }} className={link}>
+        {deps !== undefined ? `${deps} ${deps === 1 ? 'dependency' : 'dependencies'} · ` : ''}
+        {dependents ? `used by ${dependents}${appwrite ? ', Appwrite included' : ''}` : 'used by nothing yet'}
+      </Link>
+      <Link to="/map" hash={l.slug} className={link}>
+        <Network className="size-3.5" />
+        On the map
+      </Link>
+      {l.updated?.crate ? (
+        <span>
+          Updated <Time date={l.updated.crate} />
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
+/** When the library's parts last changed, so each number above reads with its age. */
+function Freshness({ l, benchRun }: { l: LibrarySummary; benchRun?: string }) {
+  const u = l.updated
+  if (!u) return null
+  const parts = [
+    u.cases && l.status !== 'retired' ? { label: 'Cases last recorded', date: u.cases } : null,
+    u.crate ? { label: 'Crate last changed', date: u.crate } : null,
+    benchRun ? { label: 'Benchmarks run', date: benchRun, stale: !!u.bench_stale } : null,
+    !l.rust && u.php ? { label: 'PHP package last changed', date: u.php } : null,
+  ].filter((p): p is { label: string; date: string; stale?: boolean } => !!p)
+  if (!parts.length) return null
+  return (
+    <div className="flex flex-wrap gap-x-4 gap-y-1 border-t border-border pt-3 text-[12px] text-muted-foreground">
+      {parts.map((p) => (
+        <span key={p.label}>
+          {p.label} <Time date={p.date} className="text-foreground" />
+          {p.stale ? <span className="text-progress-ink"> · measured before the latest Rust change</span> : null}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+function Fact({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="grid gap-0.5">
+      <span className="text-[11px] tracking-wider text-muted-foreground uppercase">{label}</span>
+      <span className="text-[13px] [overflow-wrap:anywhere]">{value}</span>
+    </div>
+  )
+}
+
+/** php-std: what it reimplements of PHP, and how much is proven, with a link to the inventory. */
+function PhpFunctionsCard({ l }: { l: LibrarySummary }) {
+  const t = l.counts.php_functions
+  if (!t) return null
+  const stat = (value: number, label: string) => (
+    <div className="grid content-start gap-0.5">
+      <span className="font-display text-[20px] leading-tight font-medium tabular-nums">{formatCount(value)}</span>
+      <span className="text-[12px] text-muted-foreground">{label}</span>
+    </div>
+  )
+  return (
+    <section id="php-functions" className="grid scroll-mt-20 gap-4 rounded-lg border border-border bg-card p-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-[17px]">PHP functions</h2>
+        <Link to="/$lib/functions" params={{ lib: l.slug }} className="text-[13px] text-muted-foreground hover:text-foreground">
+          Browse all {t.entries} →
+        </Link>
+      </div>
+      <p className="m-0 max-w-[72ch] text-[13px] text-muted-foreground">
+        The PHP engine's own behaviour, reimplemented in Rust so the Utopia crates match PHP byte for byte, each function checked against the real one by recorded cases and
+        fuzzing on every run.
+      </p>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-4">
+        {stat(t.entries, `PHP functions and behaviours`)}
+        {stat(t.groups, 'groups')}
+        {stat(t.cases, 'compat cases')}
+        {stat(t.fuzz.inputs, 'fuzz inputs per run')}
+        {l.size?.rust ? stat(l.size.rust.total, 'lines of Rust') : null}
+        {t.used_by ? stat(t.used_by, 'Utopia crates using it') : null}
+      </div>
+      <SizeTable lib={l} />
+    </section>
+  )
+}
+
+function LibraryPage() {
+  const d = Route.useLoaderData()
+  const index = root.useLoaderData()
+  const migration = useMigration()
+  const l = d.library
+  // Outside migration mode the guide leaves out its PHP sections and comparisons.
+  const guide = migration ? d.guide : rustGuide(d.guide)
+  const category = index?.categories.find((c) => c.id === l.category)
+  const ported = d.tasks.flatMap((t) => (t.status === 'ported' ? [{ name: t.name, bin: t.bin }] : []))
+  const toc = [
+    ...(l.counts.php_functions ? [{ id: 'php-functions', label: 'PHP functions' }] : []),
+    ...(migration ? [{ id: 'migration', label: 'Conversion status' }] : []),
+    ...(l.rust ? [{ id: 'install', label: 'Install' }] : []),
+    ...(d.lifecycle.length ? [{ id: 'lifecycle', label: 'Lifecycle' }] : []),
+    ...(guide.length ? [{ id: 'getting-started', label: 'Getting started' }, ...guideHeadings(guide).map((h) => ({ id: slug(h), label: h, depth: 1 }))] : []),
+    ...(d.overview || d.examples.length || (migration && d.overview_notes) ? [{ id: 'overview', label: guide.length ? 'Reference' : 'Overview' }] : []),
+    ...(d.modules.length ? [{ id: 'modules', label: 'Modules' }] : []),
+    ...(d.root.length ? [{ id: 'api', label: 'API' }] : []),
+    ...(ported.length || (migration && d.tasks.length) ? [{ id: 'commands', label: 'Commands' }, ...ported.map((t) => ({ id: taskHash(t.name), label: t.bin ?? t.name, depth: 1 }))] : []),
+    ...(migration && !l.rust && d.classes.length ? [{ id: 'php-api', label: 'PHP API' }] : []),
+  ]
+  const eyebrow = category ? (
+    <Link to="/categories/$category" params={{ category: category.id }} className="hover:text-foreground">
+      {category.title}
+    </Link>
+  ) : null
+  // Without a Rust crate, a library is only part of the migration view.
+  if (!l.rust && !migration)
+    return (
+      <div className="grid max-w-[72ch] gap-6">
+        <PageHeader eyebrow={eyebrow} title={l.title}>
+          {l.description}
+          <Ecosystem l={l} />
+        </PageHeader>
+        <div className="rounded-lg border border-border bg-card p-4 text-[13.5px] text-muted-foreground">
+          {l.status === 'retired' ? (
+            <>
+              {l.title} is not converted to Rust, by design{l.not_converted?.reason ? `: ${l.not_converted.reason}` : ''}. Turn on{' '}
+              <b className="font-medium text-foreground">Migration</b> to read its PHP API.
+            </>
+          ) : (
+            <>
+              {l.title} is not available in Rust yet. Turn on <b className="font-medium text-foreground">Migration</b> to follow its conversion and read its PHP API.
+            </>
+          )}
+        </div>
+      </div>
+    )
+  return (
+    <WithToc toc={toc}>
+      <PageHeader
+        eyebrow={eyebrow}
+        title={l.title}
+        aside={
+          <MigrationOnly>
+            <StatusBadge status={l.status} />
+            {l.status === 'retired' ? null : <SyncBadge sync={l.sync} />}
+            <SpeedupBadge bench={l.bench} />
+          </MigrationOnly>
+        }
+      >
+        {l.description}
+        <Ecosystem l={l} />
+        <SizeLine lib={l} />
+      </PageHeader>
+
+      <PhpFunctionsCard l={l} />
+
+      <MigrationCard id="migration" title="Conversion status">
+        <p className="m-0 text-[13px] text-muted-foreground">{STATUS[l.status].note}</p>
+        <div className="grid gap-4 rounded-lg border border-border bg-card p-4">
+          {l.status === 'retired' ? <NotConverted l={l} /> : <Progress status={l.status} />}
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-4">
+            <Fact label="Rust crate" value={l.rust ? <code className="font-mono">{l.rust.name}</code> : l.status === 'retired' ? 'None, by design' : 'Not yet'} />
+            <Fact label="PHP package" value={l.php ? <code className="font-mono">{l.php.package}</code> : 'None (engine built-ins)'} />
+            {l.compat ? <Fact label="Compared with PHP" value={`${l.compat.cases} cases over ${l.compat.operations} operations`} /> : null}
+            {l.rust ? <Fact label="Documented" value={`${l.counts.documented} of ${l.counts.items} items`} /> : null}
+            {l.rust ? <Fact label="Examples" value={l.counts.examples ? `${l.counts.examples}, Rust and PHP` : 'None yet'} /> : null}
+            {l.counts.php_symbols && l.status !== 'retired' ? <Fact label="PHP API mapped" value={`${l.counts.linked} of ${l.counts.php_symbols} methods`} /> : null}
+            {l.size?.rust || l.size?.php ? (
+              <Fact
+                label="Size"
+                value={[l.size.rust ? `Rust ${formatCount(l.size.rust.total)}` : null, l.size.php ? `PHP ${formatCount(l.size.php.total)}` : null].filter(Boolean).join(' · ') + ' lines'}
+              />
+            ) : null}
+            {d.bench?.results.length ? (
+              <Fact
+                label="Benchmarks"
+                value={
+                  <Link to="/$lib/benchmarks" params={{ lib: l.slug }} className="hover:underline">
+                    {d.bench.results.length} vs PHP →
+                  </Link>
+                }
+              />
+            ) : null}
+            {l.counts.tasks?.total ? <Fact label="Tasks ported" value={`${l.counts.tasks.ported} of ${l.counts.tasks.total}${l.counts.tasks.waived ? `, ${l.counts.tasks.waived} waived` : ''}`} /> : null}
+          </div>
+          {l.status === 'progress' && l.compat?.summary ? <p className="m-0 text-[13px] text-muted-foreground">{l.compat.summary}</p> : null}
+          <Freshness l={l} benchRun={d.bench?.environment.date} />
+        </div>
+        {l.status === 'retired' ? null : (
+          <>
+            <div className="grid gap-1 pt-1">
+              <h3 className="text-[15px]">Sync with PHP</h3>
+              <p className="m-0 text-[13px] text-muted-foreground">The PHP library keeps changing while it is ported. This compares the Rust crate with the PHP commits since it last matched them.</p>
+            </div>
+            <SyncPanel slug={l.slug} sync={d.sync} />
+          </>
+        )}
+      </MigrationCard>
+
+      {d.install.cargo ? (
+        <Section id="install" title="Install" description="The crate lives in the Appwrite repository; depend on it from Git.">
+          <CodeBlock code={d.install.cargo} lang="toml" />
+        </Section>
+      ) : null}
+      {d.install.composer ? (
+        <MigrationCard title="PHP package">
+          <CodeBlock code={d.install.composer} lang="bash" migration />
+        </MigrationCard>
+      ) : null}
+
+      {d.lifecycle.length ? (
+        <Section id="lifecycle" title="Lifecycle" description={`What ${l.title} runs, and in what order, drawn step by step with runnable examples.`}>
+          <Link to="/$lib/lifecycle" params={{ lib: l.slug }} className="group grid gap-3 rounded-lg border border-border bg-card p-4 transition-colors hover:border-ring hover:bg-accent/40">
+            <span className="flex items-center justify-between gap-2 text-[15px] font-medium">
+              Read the lifecycle
+              <ArrowRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
+            </span>
+            <span className="flex flex-wrap gap-1.5">
+              {d.lifecycle.map((h) => (
+                <span key={h} className="rounded border border-border px-2 py-0.5 text-[12px] text-muted-foreground">
+                  {h}
+                </span>
+              ))}
+            </span>
+          </Link>
+        </Section>
+      ) : null}
+
+      {guide.length ? (
+        <Section id="getting-started" title="Getting started" description={`Common tasks with ${l.title}, each a complete program you can copy and run.`}>
+          <div className="grid gap-4">
+            {guide.map((b, i) => ('text' in b ? <Markdown key={i} text={b.text} /> : <ExampleView key={i} example={b.example} />))}
+          </div>
+        </Section>
+      ) : null}
+
+      {d.overview || d.examples.length || (migration && d.overview_notes) ? (
+        <Section id="overview" title={guide.length ? 'Reference' : 'Overview'}>
+          <Markdown text={d.overview} />
+          <PhpNotes notes={d.overview_notes} title={l.rust ? 'From PHP' : 'PHP library'} />
+          <Examples examples={d.examples} />
+        </Section>
+      ) : null}
+
+      {d.modules.length ? (
+        <Section id="modules" title="Modules" description="Each module groups one concept of the library. Internal ones hold items the crate re-exports at its root.">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3">
+            {d.modules.map((m) => (
+              <Link key={m.path} to="/$lib/$" params={{ lib: l.slug, _splat: moduleSplat(m.path) }} className="grid content-start gap-1.5 rounded-lg border border-border bg-card p-3.5 transition-colors hover:border-ring hover:bg-accent/40">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-[13px] font-medium">{m.path}</span>
+                  <span className="text-[11px] text-muted-foreground">{m.public ? `${m.items} items` : 'internal'}</span>
+                </div>
+                <span className="line-clamp-3 text-[12.5px] text-muted-foreground">{m.summary || 'Undocumented.'}</span>
+              </Link>
+            ))}
+          </div>
+        </Section>
+      ) : null}
+
+      {d.root.length ? (
+        <Section id="api" title="API" description={`What ${l.rust?.crate ?? l.slug} exports at its root.`}>
+          {KIND_ORDER.map((k) => {
+            const items = d.root.filter((i) => i.kind === k).sort((a, b) => a.name.localeCompare(b.name))
+            return items.length ? (
+              <div key={k} className="grid gap-2">
+                <h3 className="text-[15px]">{KIND_TITLE[k]}</h3>
+                <div className="overflow-hidden rounded-lg border border-border">
+                  {items.map((i) => (
+                    <Link key={i.name + i.module} to="/$lib/$" params={{ lib: l.slug, _splat: moduleSplat(i.module) }} hash={itemHash(i.item)} className="grid gap-x-4 border-b border-border px-3.5 py-2.5 transition-colors last:border-b-0 hover:bg-accent/40 md:grid-cols-[minmax(10rem,16rem)_minmax(0,1fr)]">
+                      <span className="font-mono text-[13px] font-medium">{i.name}</span>
+                      <span className="text-[13px] text-muted-foreground">{i.summary || 'Undocumented.'}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : null
+          })}
+        </Section>
+      ) : null}
+
+      <Tasks id="commands" tasks={d.tasks} />
+
+      {migration && !l.rust && d.classes.length ? (
+        <MigrationCard id="php-api" title="PHP API">
+          <p className="m-0 text-[13px] text-muted-foreground">{l.status === 'retired'
+              ? "The PHP library's public classes, read from its source. They get no Rust counterpart: the library is not converted, by design."
+              : "The PHP library's public classes, read from its source. Each will get a Rust counterpart when the library is converted."}</p>
+          <div className="overflow-hidden rounded-lg border border-border">
+            {d.classes.map((c) => (
+              <Link key={c.name} to="/$lib/php-api/$" params={{ lib: l.slug, _splat: c.name.split('\\').join('/') }} className="grid gap-x-4 border-b border-border px-3.5 py-2.5 transition-colors last:border-b-0 hover:bg-accent/40 md:grid-cols-[minmax(12rem,20rem)_minmax(0,1fr)_auto]">
+                <span className="font-mono text-[12.5px] font-medium [overflow-wrap:anywhere]">{c.name}</span>
+                <span className="text-[13px] text-muted-foreground">{c.doc || 'Undocumented.'}</span>
+                <span className="text-[11px] text-muted-foreground tabular-nums">{c.methods} methods</span>
+              </Link>
+            ))}
+          </div>
+        </MigrationCard>
+      ) : null}
+    </WithToc>
+  )
+}

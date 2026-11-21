@@ -1,0 +1,5 @@
+<?php
+
+final class App
+{
+}

@@ -1,0 +1,3186 @@
+{
+  "source": "packages/smtp/tests/ReplyReadingTest.php",
+  "cases": [
+    {
+      "name": "accepts a reply arriving in pieces",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail.example.test",
+                "250 mail.example.test",
+                "250 Sender ok",
+                "250 Recipient ok",
+                "354 Go ahead",
+                "250 Ok"
+              ],
+              "chunk": 7
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "Body",
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects a line without a code",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "hello there"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "Body",
+            "catch": true
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\SMTP\\Exception\\ProtocolException",
+              "message": "Not a reply: hello there",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "",
+            "commands": [],
+            "connected": true,
+            "closed": true,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects a code that is not three digits",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "22 too short"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "Body",
+            "catch": true
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\SMTP\\Exception\\ProtocolException",
+              "message": "Not a reply: 22 too short",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "",
+            "commands": [],
+            "connected": true,
+            "closed": true,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects a code with a letter",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "2x0 nope"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "Body",
+            "catch": true
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\SMTP\\Exception\\ProtocolException",
+              "message": "Not a reply: 2x0 nope",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "",
+            "commands": [],
+            "connected": true,
+            "closed": true,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects a reply class that does not exist",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "620 not a class RFC 5321 defines"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "Body",
+            "catch": true
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\SMTP\\Exception\\ProtocolException",
+              "message": "Not an SMTP reply code: 620",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "",
+            "commands": [],
+            "connected": true,
+            "closed": true,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects a code below the classes",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "022 zero"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "Body",
+            "catch": true
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\SMTP\\Exception\\ProtocolException",
+              "message": "Not an SMTP reply code: 22",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "",
+            "commands": [],
+            "connected": true,
+            "closed": true,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects a code that changes part way through",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220-mail.example.test",
+                "250 different code"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "Body",
+            "catch": true
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\SMTP\\Exception\\ProtocolException",
+              "message": "The reply code changed part way through: 250 different code",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "",
+            "commands": [],
+            "connected": true,
+            "closed": true,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects a line too long to be a reply",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              ],
+              "chunk": 64
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "Body",
+            "catch": true
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\SMTP\\Exception\\ProtocolException",
+              "message": "The reply line is too long",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "",
+            "commands": [],
+            "connected": true,
+            "closed": true,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a long line that arrives whole is read",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "250 mail.example.test",
+                "250 Sender ok",
+                "250 Recipient ok",
+                "354 Go ahead",
+                "250 Ok"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "Body",
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\nBody\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "Body",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects a reply with too many lines",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220 done"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "Body",
+            "catch": true
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\SMTP\\Exception\\ProtocolException",
+              "message": "The reply has too many lines",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "",
+            "commands": [],
+            "connected": true,
+            "closed": true,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "accepts a reply of exactly the most lines",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220-continuation",
+                "220 done",
+                "250 mail.example.test",
+                "250 Sender ok",
+                "250 Recipient ok",
+                "354 Go ahead",
+                "250 Ok"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "Body",
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\nBody\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "Body",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "fails when the server hangs up part way through a reply",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220-mail.example.test"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "Body",
+            "catch": true
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\SMTP\\Exception\\ConnectionException",
+              "message": "The server closed the connection",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "",
+            "commands": [],
+            "connected": true,
+            "closed": true,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "fails when the server says nothing at all",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": []
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "Body",
+            "catch": true
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\SMTP\\Exception\\ConnectionException",
+              "message": "The server closed the connection",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "",
+            "commands": [],
+            "connected": true,
+            "closed": true,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a code with no separator and no text",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220",
+                "250",
+                "250",
+                "250",
+                "354",
+                "250"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "Body",
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\nBody\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "Body",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a code followed by another character",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220xgreeting",
+                "250 ok",
+                "250 ok",
+                "250 ok",
+                "354 go",
+                "250 ok"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "Body",
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\nBody\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "Body",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a bare line feed inside a reply",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail\nexample",
+                "250 ok",
+                "250 ok",
+                "250 ok",
+                "354 go",
+                "250 ok"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "Body",
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\nBody\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "Body",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a greedy server hands everything at once",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail.example.test",
+                "250 mail.example.test",
+                "250 Sender ok",
+                "250 Recipient ok",
+                "354 Go ahead",
+                "250 Ok"
+              ],
+              "greedy": true
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "Body",
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\nBody\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "Body",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "keeps the text of every continuation line",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail.example.test",
+                "250-mail.example.test",
+                "250-PIPELINING",
+                "250 SIZE 100"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.capabilities",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "keywords": [
+              [
+                "PIPELINING",
+                true,
+                []
+              ],
+              [
+                "SIZE",
+                true,
+                [
+                  "100"
+                ]
+              ],
+              [
+                "8BITMIME",
+                false,
+                []
+              ],
+              [
+                "SMTPUTF8",
+                false,
+                []
+              ],
+              [
+                "STARTTLS",
+                false,
+                []
+              ],
+              [
+                "AUTH",
+                false,
+                []
+              ],
+              [
+                "ENHANCEDSTATUSCODES",
+                false,
+                []
+              ],
+              [
+                "CHUNKING",
+                false,
+                []
+              ]
+            ],
+            "max_size": 100,
+            "mechanisms": []
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/IdTest.php"
+  ],
+  "cases": [
+    {
+      "name": "IdTest::test_custom_id",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "test"
+            }
+          },
+          "expect": "test"
+        }
+      ]
+    },
+    {
+      "name": "IdTest::test_unique_id",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "unique",
+            "args": {}
+          },
+          "expect": "<uniqid>"
+        }
+      ]
+    }
+  ]
+}

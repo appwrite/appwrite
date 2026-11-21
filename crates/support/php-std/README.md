@@ -1,5 +1,8 @@
 # PHP standard library
 
+> [!IMPORTANT]
+> This repository is a read-only mirror of [`crates/support/php-std`](https://github.com/appwrite/appwrite/tree/main/crates/support/php-std) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
 PHP engine semantics (the value model, juggling and comparison, string, number, JSON, serialize, igbinary, sorting, filter and URL functions) for crates that must behave exactly like PHP.
@@ -10,7 +13,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 
 ```toml
 [dependencies]
-php-std = { git = "https://github.com/appwrite/appwrite" }
+php-std = { git = "https://github.com/utopia-rs/php-std" }
 ```
 
 php-std reproduces PHP built-in functions and value semantics in Rust, byte for byte. When you port PHP code, call the php-std twin of each built-in instead of writing your own approximation, and the Rust code gives the same answer as PHP, edge cases included. Strings are bytes (`&[u8]`), because PHP strings are bytes. This guide covers the common tasks.
@@ -196,6 +199,30 @@ cargo test -p php-std
 cargo clippy -p php-std --all-targets -- -D warnings
 cargo fmt --all --check
 ```
+
+### Compare with PHP
+
+Replay the results PHP recorded for every case against Rust, without PHP:
+
+```bash
+COMPAT_LIB=php-std cargo test -p compat
+```
+
+Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
+
+```bash
+bin/compat run php-std
+bin/compat fuzz php-std
+bin/compat check php-std
+```
+
+### Benchmark
+
+```bash
+bin/compat bench php-std
+```
+
+This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/php-std/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/php-std/bench.json). Run it on a quiet machine, one library at a time.
 
 ## License
 

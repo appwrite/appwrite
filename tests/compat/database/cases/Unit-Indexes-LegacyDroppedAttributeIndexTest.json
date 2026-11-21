@@ -1,0 +1,632 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Indexes/LegacyDroppedAttributeIndexTest.php"
+  ],
+  "cases": [
+    {
+      "name": "LegacyDroppedAttributeIndexTest::testAFulltextIndexWhoseOnlyAttributeWasDeletedIsReadWithNoAttributes",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "category",
+                "key": "category",
+                "type": "fulltext",
+                "attributes": [
+                  null
+                ],
+                "orders": [
+                  "ASC"
+                ],
+                "lengths": [
+                  200
+                ]
+              }
+            },
+            "as": "o3325"
+          },
+          "bind": "s6121",
+          "expect": {
+            "$document": {
+              "$id": "category",
+              "key": "category",
+              "type": "fulltext",
+              "attributes": [
+                null
+              ],
+              "orders": [
+                "ASC"
+              ],
+              "lengths": [
+                200
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o3325"
+              }
+            },
+            "as": "o3326"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "category",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "LegacyDroppedAttributeIndexTest::testAUniqueIndexKeepsTheAttributesItStillCoversWithTheirLengthsAndOrders",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "index_2",
+                "key": "index_2",
+                "type": "unique",
+                "attributes": [
+                  "playId",
+                  null
+                ],
+                "orders": [
+                  "ASC",
+                  "ASC"
+                ],
+                "lengths": [
+                  null,
+                  null
+                ]
+              }
+            },
+            "as": "o3327"
+          },
+          "bind": "s6123",
+          "expect": {
+            "$document": {
+              "$id": "index_2",
+              "key": "index_2",
+              "type": "unique",
+              "attributes": [
+                "playId",
+                null
+              ],
+              "orders": [
+                "ASC",
+                "ASC"
+              ],
+              "lengths": [
+                null,
+                null
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o3327"
+              }
+            },
+            "as": "o3328"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "index_2",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "playId"
+              ],
+              "lengths": [
+                null
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                }
+              ],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "LegacyDroppedAttributeIndexTest::testADroppedAttributeBetweenOthersKeepsEachLengthAndOrderAtItsAttribute",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "mixed",
+                "key": "mixed",
+                "type": "key",
+                "attributes": [
+                  "a",
+                  null,
+                  "c"
+                ],
+                "orders": [
+                  "ASC",
+                  "DESC",
+                  "DESC"
+                ],
+                "lengths": [
+                  10,
+                  20,
+                  30
+                ]
+              }
+            },
+            "as": "o3329"
+          },
+          "bind": "s6125",
+          "expect": {
+            "$document": {
+              "$id": "mixed",
+              "key": "mixed",
+              "type": "key",
+              "attributes": [
+                "a",
+                null,
+                "c"
+              ],
+              "orders": [
+                "ASC",
+                "DESC",
+                "DESC"
+              ],
+              "lengths": [
+                10,
+                20,
+                30
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o3329"
+              }
+            },
+            "as": "o3330"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "mixed",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "a",
+                "c"
+              ],
+              "lengths": [
+                10,
+                30
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                },
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                }
+              ],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "LegacyDroppedAttributeIndexTest::testACollectionHoldingSuchAnIndexIsRead",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "playId",
+              "size": 36
+            },
+            "as": "o3331"
+          },
+          "bind": "s6127",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "playId",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 36,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3331"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o3332"
+          },
+          "bind": "s6128",
+          "expect": {
+            "$document": {
+              "$id": "playId",
+              "key": "playId",
+              "type": "string",
+              "size": 36,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "index_2",
+                "key": "index_2",
+                "type": "unique",
+                "attributes": [
+                  "playId",
+                  null
+                ],
+                "orders": [
+                  "ASC",
+                  "ASC"
+                ],
+                "lengths": [
+                  null,
+                  null
+                ]
+              }
+            },
+            "as": "o3333"
+          },
+          "bind": "s6129",
+          "expect": {
+            "$document": {
+              "$id": "index_2",
+              "key": "index_2",
+              "type": "unique",
+              "attributes": [
+                "playId",
+                null
+              ],
+              "orders": [
+                "ASC",
+                "ASC"
+              ],
+              "lengths": [
+                null,
+                null
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "plays",
+                "name": "plays",
+                "attributes": [
+                  {
+                    "$obj": "o3332"
+                  }
+                ],
+                "indexes": [
+                  {
+                    "$obj": "o3333"
+                  }
+                ]
+              }
+            },
+            "as": "o3334"
+          },
+          "bind": "s6130",
+          "expect": {
+            "$document": {
+              "$id": "plays",
+              "name": "plays",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "playId",
+                    "key": "playId",
+                    "type": "string",
+                    "size": 36,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "index_2",
+                    "key": "index_2",
+                    "type": "unique",
+                    "attributes": [
+                      "playId",
+                      null
+                    ],
+                    "orders": [
+                      "ASC",
+                      "ASC"
+                    ],
+                    "lengths": [
+                      null,
+                      null
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o3334"
+              }
+            },
+            "as": "o3335"
+          },
+          "bind": "s6131",
+          "expect": {
+            "$document": {
+              "$id": "plays",
+              "name": "plays",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "playId",
+                    "key": "playId",
+                    "type": "string",
+                    "size": 36,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "index_2",
+                    "key": "index_2",
+                    "type": "unique",
+                    "attributes": [
+                      "playId",
+                      null
+                    ],
+                    "orders": [
+                      "ASC",
+                      "ASC"
+                    ],
+                    "lengths": [
+                      null,
+                      null
+                    ]
+                  }
+                }
+              ],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3335"
+            },
+            "method": "indexes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Index",
+              "fields": {
+                "key": "index_2",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Unique"
+                },
+                "attributes": [
+                  "playId"
+                ],
+                "lengths": [
+                  null
+                ],
+                "orders": [
+                  {
+                    "$enum": "Query\\OrderDirection::Asc"
+                  }
+                ],
+                "ttl": null
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "LegacyDroppedAttributeIndexTest::testAnIndexDefinedByACallerStillRefusesAnAttributeThatIsNotAString",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "bad",
+                "type": "key",
+                "attributes": [
+                  "playId",
+                  null
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Index",
+              "message": "Index attributes must be strings"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

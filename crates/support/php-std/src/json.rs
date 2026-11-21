@@ -263,9 +263,16 @@ pub const DEFAULT_DEPTH: i64 = 512;
 /// Returns the JSON text, or the error PHP reports: `Err(Error::Json)` where
 /// PHP returns `false` (or throws with `JSON_THROW_ON_ERROR`), and
 /// `Err(Error::Partial)` carrying the output PHP returns when
-/// `JSON_PARTIAL_OUTPUT_ON_ERROR` is set. `depth` is cast to a C `int` like
-/// PHP does; it is not validated (a depth below 1 fails on any array).
+/// `JSON_PARTIAL_OUTPUT_ON_ERROR` is set. A `depth` outside a C `int` is a
+/// `ValueError` (PHP 8.5.13); a depth below 1 fails on any array.
 pub fn encode<X: Extension>(value: &Value<X>, flags: Flags, depth: i64) -> Result<String, Error> {
+    if i32::try_from(depth).is_err() {
+        return Err(Error::Value(format!(
+            "json_encode(): Argument #3 ($depth) must be between {} and {}",
+            i32::MIN,
+            i32::MAX
+        )));
+    }
     let mut encoder =
         Encoder { out: Vec::with_capacity(512), depth: 0, max_depth: depth as i32, error: ErrorCode::None };
     // The engine ignores the encoder's return value here: the error code decides.
@@ -1602,7 +1609,7 @@ mod tests {
             Err(Error::Partial { json: "[0,null]".into(), code: ErrorCode::Utf8 })
         );
         assert_eq!(encode(&v(json!([[1]])), Flags::NONE, 1), Err(Error::Json(ErrorCode::Depth)));
-        assert_eq!(encode(&v(json!([[1]])), Flags::NONE, 4294967298), Ok("[[1]]".into()));
+        assert!(matches!(encode(&v(json!([[1]])), Flags::NONE, 4294967298), Err(Error::Value(_))));
     }
 
     #[test]

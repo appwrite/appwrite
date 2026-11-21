@@ -1,0 +1,907 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Builder/PostgresIdCollationTest.php"
+  ],
+  "cases": [
+    {
+      "name": "PostgresIdCollationTest::testEqualComparesInTheIndexCollation#id",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {
+              "sharedTables": false
+            },
+            "as": "o1"
+          },
+          "bind": "s0",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1"
+            },
+            "method": "from",
+            "args": {
+              "table": "docs"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query\\Query",
+            "method": "equal",
+            "args": {
+              "attribute": "_uid",
+              "values": [
+                "abc"
+              ]
+            },
+            "as": "o2"
+          },
+          "bind": "s2",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "_uid",
+              "values": [
+                "abc"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1"
+            },
+            "method": "filter",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o2"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1"
+            },
+            "method": "build",
+            "args": {},
+            "as": "o3"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Statement",
+            "fields": {
+              "query": "SELECT * FROM \"docs\" WHERE \"_uid\" COLLATE utf8_ci_ai IN (?)",
+              "bindings": [
+                "abc"
+              ],
+              "readOnly": true,
+              "namedBindings": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresIdCollationTest::testEqualComparesInTheIndexCollation#shared id",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {
+              "sharedTables": true
+            },
+            "as": "o4"
+          },
+          "bind": "s5",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4"
+            },
+            "method": "from",
+            "args": {
+              "table": "docs"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query\\Query",
+            "method": "equal",
+            "args": {
+              "attribute": "_uid",
+              "values": [
+                "abc"
+              ]
+            },
+            "as": "o5"
+          },
+          "bind": "s7",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "_uid",
+              "values": [
+                "abc"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4"
+            },
+            "method": "filter",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o5"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4"
+            },
+            "method": "build",
+            "args": {},
+            "as": "o6"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Statement",
+            "fields": {
+              "query": "SELECT * FROM \"docs\" WHERE \"_uid\" COLLATE utf8_ci_ai IN (?)",
+              "bindings": [
+                "abc"
+              ],
+              "readOnly": true,
+              "namedBindings": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresIdCollationTest::testEqualComparesInTheIndexCollation#permission document",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {
+              "sharedTables": false
+            },
+            "as": "o7"
+          },
+          "bind": "s10",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7"
+            },
+            "method": "from",
+            "args": {
+              "table": "docs"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query\\Query",
+            "method": "equal",
+            "args": {
+              "attribute": "_document",
+              "values": [
+                "abc"
+              ]
+            },
+            "as": "o8"
+          },
+          "bind": "s12",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "_document",
+              "values": [
+                "abc"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7"
+            },
+            "method": "filter",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o8"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7"
+            },
+            "method": "build",
+            "args": {},
+            "as": "o9"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Statement",
+            "fields": {
+              "query": "SELECT * FROM \"docs\" WHERE \"_document\" COLLATE utf8_ci_ai IN (?)",
+              "bindings": [
+                "abc"
+              ],
+              "readOnly": true,
+              "namedBindings": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresIdCollationTest::testEqualComparesInTheIndexCollation#shared permission document",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {
+              "sharedTables": true
+            },
+            "as": "o10"
+          },
+          "bind": "s15",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10"
+            },
+            "method": "from",
+            "args": {
+              "table": "docs"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query\\Query",
+            "method": "equal",
+            "args": {
+              "attribute": "_document",
+              "values": [
+                "abc"
+              ]
+            },
+            "as": "o11"
+          },
+          "bind": "s17",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "_document",
+              "values": [
+                "abc"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10"
+            },
+            "method": "filter",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o11"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10"
+            },
+            "method": "build",
+            "args": {},
+            "as": "o12"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Statement",
+            "fields": {
+              "query": "SELECT * FROM \"docs\" WHERE \"_document\" IN (?)",
+              "bindings": [
+                "abc"
+              ],
+              "readOnly": true,
+              "namedBindings": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresIdCollationTest::testEqualComparesInTheIndexCollation#plain column",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {
+              "sharedTables": false
+            },
+            "as": "o13"
+          },
+          "bind": "s20",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o13"
+            },
+            "method": "from",
+            "args": {
+              "table": "docs"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query\\Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "abc"
+              ]
+            },
+            "as": "o14"
+          },
+          "bind": "s22",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "abc"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o13"
+            },
+            "method": "filter",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o14"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o13"
+            },
+            "method": "build",
+            "args": {},
+            "as": "o15"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Statement",
+            "fields": {
+              "query": "SELECT * FROM \"docs\" WHERE \"name\" IN (?)",
+              "bindings": [
+                "abc"
+              ],
+              "readOnly": true,
+              "namedBindings": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresIdCollationTest::testJoinOnTwoIdsComparesInTheIndexCollation#id to id",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o16"
+          },
+          "bind": "s25",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16"
+            },
+            "method": "from",
+            "args": {
+              "table": "a",
+              "alias": "a"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16"
+            },
+            "method": "join",
+            "args": {
+              "table": "b",
+              "left": "a._uid",
+              "right": "b._uid",
+              "operator": "=",
+              "alias": "b"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16"
+            },
+            "method": "build",
+            "args": {},
+            "as": "o17"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Statement",
+            "fields": {
+              "query": "SELECT * FROM \"a\" AS \"a\" JOIN \"b\" AS \"b\" ON \"a\".\"_uid\" COLLATE utf8_ci_ai = \"b\".\"_uid\"",
+              "bindings": [],
+              "readOnly": true,
+              "namedBindings": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresIdCollationTest::testJoinOnTwoIdsComparesInTheIndexCollation#id to relationship key",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o18"
+          },
+          "bind": "s29",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o18"
+            },
+            "method": "from",
+            "args": {
+              "table": "a",
+              "alias": "a"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o18"
+            },
+            "method": "join",
+            "args": {
+              "table": "b",
+              "left": "a._uid",
+              "right": "b.authorId",
+              "operator": "=",
+              "alias": "b"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o18"
+            },
+            "method": "build",
+            "args": {},
+            "as": "o19"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Statement",
+            "fields": {
+              "query": "SELECT * FROM \"a\" AS \"a\" JOIN \"b\" AS \"b\" ON \"a\".\"_uid\" = \"b\".\"authorId\"",
+              "bindings": [],
+              "readOnly": true,
+              "namedBindings": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresIdCollationTest::testJoinBuilderOnTwoIdsComparesInTheIndexCollation#id to id",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o20"
+          },
+          "bind": "s33",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o20"
+            },
+            "method": "from",
+            "args": {
+              "table": "a",
+              "alias": "a"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o20"
+            },
+            "method": "joinWhere",
+            "args": {
+              "table": "b",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$value": "Query\\Builder\\JoinBuilder",
+                        "fields": {
+                          "ons": [],
+                          "wheres": []
+                        }
+                      },
+                      "method": "on",
+                      "args": {
+                        "left": "a._uid",
+                        "right": "b._uid"
+                      },
+                      "as": "o21"
+                    }
+                  }
+                ]
+              },
+              "alias": "b"
+            }
+          },
+          "expect": {
+            "result": {
+              "$builder": true
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [
+                    {
+                      "$value": "Query\\Builder\\JoinBuilder",
+                      "fields": {
+                        "ons": [],
+                        "wheres": []
+                      }
+                    }
+                  ],
+                  "steps": [
+                    {
+                      "$value": "Query\\Builder\\JoinBuilder",
+                      "fields": {
+                        "ons": [
+                          {
+                            "$value": "Query\\Builder\\JoinOn",
+                            "fields": {
+                              "left": "a._uid",
+                              "operator": "=",
+                              "right": "b._uid"
+                            }
+                          }
+                        ],
+                        "wheres": []
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o20"
+            },
+            "method": "build",
+            "args": {},
+            "as": "o22"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Statement",
+            "fields": {
+              "query": "SELECT * FROM \"a\" AS \"a\" JOIN \"b\" AS \"b\"",
+              "bindings": [],
+              "readOnly": true,
+              "namedBindings": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresIdCollationTest::testJoinBuilderOnTwoIdsComparesInTheIndexCollation#id to relationship key",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o23"
+          },
+          "bind": "s37",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o23"
+            },
+            "method": "from",
+            "args": {
+              "table": "a",
+              "alias": "a"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o23"
+            },
+            "method": "joinWhere",
+            "args": {
+              "table": "b",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$value": "Query\\Builder\\JoinBuilder",
+                        "fields": {
+                          "ons": [],
+                          "wheres": []
+                        }
+                      },
+                      "method": "on",
+                      "args": {
+                        "left": "a._uid",
+                        "right": "b.authorId"
+                      },
+                      "as": "o24"
+                    }
+                  }
+                ]
+              },
+              "alias": "b"
+            }
+          },
+          "expect": {
+            "result": {
+              "$builder": true
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [
+                    {
+                      "$value": "Query\\Builder\\JoinBuilder",
+                      "fields": {
+                        "ons": [],
+                        "wheres": []
+                      }
+                    }
+                  ],
+                  "steps": [
+                    {
+                      "$value": "Query\\Builder\\JoinBuilder",
+                      "fields": {
+                        "ons": [
+                          {
+                            "$value": "Query\\Builder\\JoinOn",
+                            "fields": {
+                              "left": "a._uid",
+                              "operator": "=",
+                              "right": "b.authorId"
+                            }
+                          }
+                        ],
+                        "wheres": []
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o23"
+            },
+            "method": "build",
+            "args": {},
+            "as": "o25"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Statement",
+            "fields": {
+              "query": "SELECT * FROM \"a\" AS \"a\" JOIN \"b\" AS \"b\"",
+              "bindings": [],
+              "readOnly": true,
+              "namedBindings": null
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

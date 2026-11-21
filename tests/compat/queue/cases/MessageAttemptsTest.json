@@ -1,0 +1,563 @@
+{
+  "source": "packages/queue/tests/MessageTest.php",
+  "cases": [
+    {
+      "name": "testADeliveryIsNeverTheLastWhenTheBrokerSetsNoMaximum",
+      "op": "message.set",
+      "args": {
+        "envelope": {
+          "pid": "pid",
+          "queue": "q",
+          "timestamp": 0,
+          "payload": []
+        },
+        "attempts": 99,
+        "max_attempts": null
+      },
+      "expect": {
+        "$array": [
+          [
+            "pid",
+            "pid"
+          ],
+          [
+            "queue",
+            "q"
+          ],
+          [
+            "timestamp",
+            0
+          ],
+          [
+            "payload",
+            []
+          ],
+          [
+            "attempts",
+            99
+          ],
+          [
+            "sequence",
+            null
+          ],
+          [
+            "receipt",
+            null
+          ],
+          [
+            "terminal",
+            false
+          ],
+          [
+            "size",
+            null
+          ],
+          [
+            "array",
+            {
+              "$array": [
+                [
+                  "pid",
+                  "pid"
+                ],
+                [
+                  "queue",
+                  "q"
+                ],
+                [
+                  "timestamp",
+                  0
+                ],
+                [
+                  "payload",
+                  []
+                ],
+                [
+                  "attempts",
+                  99
+                ],
+                [
+                  "sequence",
+                  null
+                ]
+              ]
+            }
+          ],
+          [
+            "max_attempts",
+            null
+          ],
+          [
+            "last_attempt",
+            false
+          ]
+        ]
+      }
+    },
+    {
+      "name": "testTheDeliveryThatUsesTheLastAllowedAttemptIsTheLast",
+      "steps": [
+        {
+          "op": "message.set",
+          "args": {
+            "envelope": {
+              "pid": "pid",
+              "queue": "q",
+              "timestamp": 0,
+              "payload": []
+            },
+            "attempts": 1,
+            "max_attempts": 3
+          },
+          "expect": {
+            "$array": [
+              [
+                "pid",
+                "pid"
+              ],
+              [
+                "queue",
+                "q"
+              ],
+              [
+                "timestamp",
+                0
+              ],
+              [
+                "payload",
+                []
+              ],
+              [
+                "attempts",
+                1
+              ],
+              [
+                "sequence",
+                null
+              ],
+              [
+                "receipt",
+                null
+              ],
+              [
+                "terminal",
+                false
+              ],
+              [
+                "size",
+                null
+              ],
+              [
+                "array",
+                {
+                  "$array": [
+                    [
+                      "pid",
+                      "pid"
+                    ],
+                    [
+                      "queue",
+                      "q"
+                    ],
+                    [
+                      "timestamp",
+                      0
+                    ],
+                    [
+                      "payload",
+                      []
+                    ],
+                    [
+                      "attempts",
+                      1
+                    ],
+                    [
+                      "sequence",
+                      null
+                    ]
+                  ]
+                }
+              ],
+              [
+                "max_attempts",
+                3
+              ],
+              [
+                "last_attempt",
+                false
+              ]
+            ]
+          }
+        },
+        {
+          "op": "message.set",
+          "args": {
+            "envelope": {
+              "pid": "pid",
+              "queue": "q",
+              "timestamp": 0,
+              "payload": []
+            },
+            "attempts": 2,
+            "max_attempts": 3
+          },
+          "expect": {
+            "$array": [
+              [
+                "pid",
+                "pid"
+              ],
+              [
+                "queue",
+                "q"
+              ],
+              [
+                "timestamp",
+                0
+              ],
+              [
+                "payload",
+                []
+              ],
+              [
+                "attempts",
+                2
+              ],
+              [
+                "sequence",
+                null
+              ],
+              [
+                "receipt",
+                null
+              ],
+              [
+                "terminal",
+                false
+              ],
+              [
+                "size",
+                null
+              ],
+              [
+                "array",
+                {
+                  "$array": [
+                    [
+                      "pid",
+                      "pid"
+                    ],
+                    [
+                      "queue",
+                      "q"
+                    ],
+                    [
+                      "timestamp",
+                      0
+                    ],
+                    [
+                      "payload",
+                      []
+                    ],
+                    [
+                      "attempts",
+                      2
+                    ],
+                    [
+                      "sequence",
+                      null
+                    ]
+                  ]
+                }
+              ],
+              [
+                "max_attempts",
+                3
+              ],
+              [
+                "last_attempt",
+                true
+              ]
+            ]
+          }
+        },
+        {
+          "op": "message.set",
+          "args": {
+            "envelope": {
+              "pid": "pid",
+              "queue": "q",
+              "timestamp": 0,
+              "payload": []
+            },
+            "attempts": 0,
+            "max_attempts": 1
+          },
+          "expect": {
+            "$array": [
+              [
+                "pid",
+                "pid"
+              ],
+              [
+                "queue",
+                "q"
+              ],
+              [
+                "timestamp",
+                0
+              ],
+              [
+                "payload",
+                []
+              ],
+              [
+                "attempts",
+                0
+              ],
+              [
+                "sequence",
+                null
+              ],
+              [
+                "receipt",
+                null
+              ],
+              [
+                "terminal",
+                false
+              ],
+              [
+                "size",
+                null
+              ],
+              [
+                "array",
+                {
+                  "$array": [
+                    [
+                      "pid",
+                      "pid"
+                    ],
+                    [
+                      "queue",
+                      "q"
+                    ],
+                    [
+                      "timestamp",
+                      0
+                    ],
+                    [
+                      "payload",
+                      []
+                    ],
+                    [
+                      "attempts",
+                      0
+                    ],
+                    [
+                      "sequence",
+                      null
+                    ]
+                  ]
+                }
+              ],
+              [
+                "max_attempts",
+                1
+              ],
+              [
+                "last_attempt",
+                true
+              ]
+            ]
+          }
+        },
+        {
+          "op": "message.set",
+          "args": {
+            "envelope": {
+              "pid": "pid",
+              "queue": "q",
+              "timestamp": 0,
+              "payload": []
+            },
+            "attempts": 5,
+            "max_attempts": 3
+          },
+          "expect": {
+            "$array": [
+              [
+                "pid",
+                "pid"
+              ],
+              [
+                "queue",
+                "q"
+              ],
+              [
+                "timestamp",
+                0
+              ],
+              [
+                "payload",
+                []
+              ],
+              [
+                "attempts",
+                5
+              ],
+              [
+                "sequence",
+                null
+              ],
+              [
+                "receipt",
+                null
+              ],
+              [
+                "terminal",
+                false
+              ],
+              [
+                "size",
+                null
+              ],
+              [
+                "array",
+                {
+                  "$array": [
+                    [
+                      "pid",
+                      "pid"
+                    ],
+                    [
+                      "queue",
+                      "q"
+                    ],
+                    [
+                      "timestamp",
+                      0
+                    ],
+                    [
+                      "payload",
+                      []
+                    ],
+                    [
+                      "attempts",
+                      5
+                    ],
+                    [
+                      "sequence",
+                      null
+                    ]
+                  ]
+                }
+              ],
+              [
+                "max_attempts",
+                3
+              ],
+              [
+                "last_attempt",
+                true
+              ]
+            ]
+          }
+        },
+        {
+          "op": "message.set",
+          "args": {
+            "envelope": {
+              "pid": "pid",
+              "queue": "q",
+              "timestamp": 0,
+              "payload": []
+            },
+            "attempts": 9223372036854775807,
+            "max_attempts": 9223372036854775807
+          },
+          "expect": {
+            "$array": [
+              [
+                "pid",
+                "pid"
+              ],
+              [
+                "queue",
+                "q"
+              ],
+              [
+                "timestamp",
+                0
+              ],
+              [
+                "payload",
+                []
+              ],
+              [
+                "attempts",
+                9223372036854775807
+              ],
+              [
+                "sequence",
+                null
+              ],
+              [
+                "receipt",
+                null
+              ],
+              [
+                "terminal",
+                false
+              ],
+              [
+                "size",
+                null
+              ],
+              [
+                "array",
+                {
+                  "$array": [
+                    [
+                      "pid",
+                      "pid"
+                    ],
+                    [
+                      "queue",
+                      "q"
+                    ],
+                    [
+                      "timestamp",
+                      0
+                    ],
+                    [
+                      "payload",
+                      []
+                    ],
+                    [
+                      "attempts",
+                      9223372036854775807
+                    ],
+                    [
+                      "sequence",
+                      null
+                    ]
+                  ]
+                }
+              ],
+              [
+                "max_attempts",
+                9223372036854775807
+              ],
+              [
+                "last_attempt",
+                true
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

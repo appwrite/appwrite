@@ -1,0 +1,124 @@
+{
+  "service": "home",
+  "file": "tests/benchmarks/results/home.json",
+  "workload": {
+    "script": "tests/benchmarks/api/home.js",
+    "duration": "60s",
+    "hashing": false,
+    "seed": 200,
+    "run": "home-20261012-005115"
+  },
+  "environment": {
+    "date": "2026-10-11T23:53:32Z",
+    "commit": "5075396361",
+    "branch": "feat/rust-utopia-conversion",
+    "machine": {
+      "os": "Darwin",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max",
+      "cores": 16,
+      "memory_gib": 128
+    },
+    "docker": "28.5.1",
+    "k6": "k6 v1.7.1",
+    "cpu_source": "docker stats",
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "88b87c5028a0",
+      "created": "2026-10-09T07:39:19.618591965Z"
+    },
+    "rust": {
+      "container": "appwrite-rust",
+      "image": "appwrite-rust-dev",
+      "id": "b0b46302463d",
+      "created": "2026-10-11T19:37:06.64190413Z"
+    },
+    "database": {
+      "container": "appwrite-postgresql",
+      "image": "appwrite/postgres:0.1.0",
+      "id": "77156232a16d",
+      "created": "2026-10-09T08:32:40.317530502Z"
+    },
+    "endpoint": {
+      "php": "http://localhost:9501/v1",
+      "rust": "http://localhost:9530/v1"
+    }
+  },
+  "steps": [
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 50,
+      "rps": 50.0,
+      "requests": 3001,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 1.17,
+        "p50": 0.957,
+        "p90": 1.384,
+        "p95": 1.882,
+        "p99": 4.438,
+        "max": 33.781
+      },
+      "cpu_ms_per_request": 0.82,
+      "db_cpu_ms_per_request": 0.499,
+      "memory_mib": {
+        "baseline": 3403.8,
+        "avg": 3405.0,
+        "peak": 3407.9
+      },
+      "endpoints": {
+        "home.versions.get": {
+          "route": "GET /versions",
+          "count": 3001,
+          "rps": 50.02,
+          "avg": 1.17,
+          "p50": 0.957,
+          "p90": 1.384,
+          "p95": 1.882,
+          "p99": 4.438,
+          "max": 33.781
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 50,
+      "rps": 7203.7,
+      "requests": 432224,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 6.866,
+        "p50": 4.089,
+        "p90": 14.317,
+        "p95": 22.477,
+        "p99": 47.612,
+        "max": 258.925
+      },
+      "cpu_ms_per_request": 0.829,
+      "db_cpu_ms_per_request": 0.01,
+      "memory_mib": {
+        "baseline": 3405.8,
+        "avg": 2902.3,
+        "peak": 3417.1
+      },
+      "endpoints": {
+        "home.versions.get": {
+          "route": "GET /versions",
+          "count": 432224,
+          "rps": 7203.73,
+          "avg": 6.866,
+          "p50": 4.089,
+          "p90": 14.317,
+          "p95": 22.477,
+          "p99": 47.612,
+          "max": 258.925
+        }
+      }
+    }
+  ]
+}

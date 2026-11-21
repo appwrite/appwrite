@@ -1,0 +1,186 @@
+{
+  "source": "packages/client/tests/Adapter/Curl/DecodedSizeLimitTest.php",
+  "cases": [
+    {
+      "name": "it reads the cap the way curl does (no limit)",
+      "steps": [
+        {
+          "op": "decoded_size_limit.from_options",
+          "args": {},
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "it reads the cap the way curl does (zero means none)",
+      "steps": [
+        {
+          "op": "decoded_size_limit.from_options",
+          "args": {
+            "large": 0
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "it reads the cap the way curl does (negative means none)",
+      "steps": [
+        {
+          "op": "decoded_size_limit.from_options",
+          "args": {
+            "legacy": -1
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "it reads the cap the way curl does (non-numeric string means none)",
+      "steps": [
+        {
+          "op": "decoded_size_limit.from_options",
+          "args": {
+            "large": "unlimited"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "it reads the cap the way curl does (integer)",
+      "steps": [
+        {
+          "op": "decoded_size_limit.from_options",
+          "args": {
+            "large": 10000
+          },
+          "expect": 10000
+        }
+      ]
+    },
+    {
+      "name": "it reads the cap the way curl does (legacy option)",
+      "steps": [
+        {
+          "op": "decoded_size_limit.from_options",
+          "args": {
+            "legacy": 10000
+          },
+          "expect": 10000
+        }
+      ]
+    },
+    {
+      "name": "it reads the cap the way curl does (numeric string, as cURL reads it)",
+      "steps": [
+        {
+          "op": "decoded_size_limit.from_options",
+          "args": {
+            "large": "10000"
+          },
+          "expect": 10000
+        }
+      ]
+    },
+    {
+      "name": "it reads the cap the way curl does (both options, the smaller applies)",
+      "steps": [
+        {
+          "op": "decoded_size_limit.from_options",
+          "args": {
+            "large": 100000000,
+            "legacy": 10000
+          },
+          "expect": 10000
+        }
+      ]
+    },
+    {
+      "name": "it passes chunks to the write callback until the cap",
+      "steps": [
+        {
+          "op": "decoded_size_limit.wrap",
+          "args": {
+            "large": 10000,
+            "chunks": [
+              6000,
+              4000,
+              1
+            ]
+          },
+          "expect": {
+            "returns": [
+              6000,
+              4000,
+              0
+            ],
+            "exceeded": true,
+            "written": [
+              6000,
+              4000
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a chunk that would pass the cap is not written, nor any after it",
+      "steps": [
+        {
+          "op": "decoded_size_limit.wrap",
+          "args": {
+            "large": 10,
+            "chunks": [
+              4,
+              7,
+              1,
+              0
+            ]
+          },
+          "expect": {
+            "returns": [
+              4,
+              0,
+              0,
+              0
+            ],
+            "exceeded": true,
+            "written": [
+              4
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "chunks up to the cap are written",
+      "steps": [
+        {
+          "op": "decoded_size_limit.wrap",
+          "args": {
+            "legacy": 10,
+            "chunks": [
+              0,
+              10,
+              0
+            ]
+          },
+          "expect": {
+            "returns": [
+              0,
+              10,
+              0
+            ],
+            "exceeded": false,
+            "written": [
+              0,
+              10,
+              0
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

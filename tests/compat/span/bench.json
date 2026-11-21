@@ -1,0 +1,124 @@
+{
+  "lib": "span",
+  "environment": {
+    "date": "2026-10-18T14:23:14Z",
+    "commit": "398712d31e",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.97",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "add",
+      "description": "Set an attribute on the current span",
+      "php": {
+        "ns": 79.17920468685193,
+        "min": 72.84212982165077,
+        "max": 97.79502799668188,
+        "samples": 15,
+        "calls": 38576,
+        "cpu": 79.59180146550533,
+        "peak": 3008.0,
+        "retained": 0.0006497995299322549,
+        "rss": 107552768.0
+      },
+      "rust": {
+        "ns": 23.954888053894212,
+        "min": 23.87557838203724,
+        "max": 25.802744859718423,
+        "samples": 15,
+        "calls": 809586,
+        "cpu": 24.15759066979913,
+        "rss": 22446080.0,
+        "allocations": 9.05812765207567e-7,
+        "bytes": 0.00023131164158800505,
+        "peak": 1650.0,
+        "retained": 0.00013620130124121052
+      },
+      "speedup": 3.3053464707792783,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "set",
+      "description": "Set an attribute on a span held by the caller",
+      "php": {
+        "ns": 47.64980032288215,
+        "min": 47.25534360513968,
+        "max": 57.77851889615846,
+        "samples": 15,
+        "calls": 423684,
+        "cpu": 49.01137010916941,
+        "peak": 3008.0,
+        "retained": 0.00005916359047466193,
+        "rss": 107552768.0
+      },
+      "rust": {
+        "ns": 6.905876054777548,
+        "min": 6.840165349520587,
+        "max": 7.075685969746861,
+        "samples": 15,
+        "calls": 2899071,
+        "cpu": 6.913963887052094,
+        "rss": 22708224.0,
+        "allocations": 2.5295459591480627e-7,
+        "bytes": 0.00006459540544769916,
+        "peak": 1650.0,
+        "retained": 0.00003803517287664451
+      },
+      "speedup": 6.89989219976191,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "lifecycle",
+      "description": "Start a span, add three attributes and finish it without exporters",
+      "php": {
+        "ns": 1109.4817766384306,
+        "min": 1090.027808738297,
+        "max": 1258.0342732946947,
+        "samples": 15,
+        "calls": 17944,
+        "cpu": 1127.8793282805766,
+        "peak": 3008.0,
+        "retained": 0.001396938623866845,
+        "rss": 107552768.0
+      },
+      "rust": {
+        "ns": 683.1092935990382,
+        "min": 669.5174323290466,
+        "max": 723.8530365404932,
+        "samples": 15,
+        "calls": 27449,
+        "cpu": 689.3685623034233,
+        "rss": 23101440.0,
+        "allocations": 16.0000267162131,
+        "bytes": 1422.0068223493267,
+        "peak": 1650.0,
+        "retained": 0.004017146951315774
+      },
+      "speedup": 1.6241643716966592,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

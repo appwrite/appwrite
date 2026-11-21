@@ -1,0 +1,1371 @@
+{
+  "source": "packages/query/tests/Classifier/MongoDBTest.php",
+  "cases": [
+    {
+      "name": "testFindCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "OAAAAAEAAAAAAAAA3QcAAAAAAAAAIwAAAAJmaW5kAAYAAAB1c2VycwACJGRiAAUAAABteWRiAAA="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testAggregateCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "PQAAAAEAAAAAAAAA3QcAAAAAAAAAKAAAAAJhZ2dyZWdhdGUABgAAAHVzZXJzAAIkZGIABQAAAG15ZGIAAA=="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testCountCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "OQAAAAEAAAAAAAAA3QcAAAAAAAAAJAAAAAJjb3VudAAGAAAAdXNlcnMAAiRkYgAFAAAAbXlkYgAA"
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testDistinctCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "SgAAAAEAAAAAAAAA3QcAAAAAAAAANQAAAAJkaXN0aW5jdAAGAAAAdXNlcnMAAmtleQAFAAAAbmFtZQACJGRiAAUAAABteWRiAAA="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testListCollectionsCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "PQAAAAEAAAAAAAAA3QcAAAAAAAAAKAAAABBsaXN0Q29sbGVjdGlvbnMAAQAAAAIkZGIABQAAAG15ZGIAAA=="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testListDatabasesCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "PAAAAAEAAAAAAAAA3QcAAAAAAAAAJwAAABBsaXN0RGF0YWJhc2VzAAEAAAACJGRiAAYAAABhZG1pbgAA"
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testListIndexesCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "PwAAAAEAAAAAAAAA3QcAAAAAAAAAKgAAAAJsaXN0SW5kZXhlcwAGAAAAdXNlcnMAAiRkYgAFAAAAbXlkYgAA"
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testDbStatsCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "NQAAAAEAAAAAAAAA3QcAAAAAAAAAIAAAABBkYlN0YXRzAAEAAAACJGRiAAUAAABteWRiAAA="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testCollStatsCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "PQAAAAEAAAAAAAAA3QcAAAAAAAAAKAAAAAJjb2xsU3RhdHMABgAAAHVzZXJzAAIkZGIABQAAAG15ZGIAAA=="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testExplainCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "OwAAAAEAAAAAAAAA3QcAAAAAAAAAJgAAAAJleHBsYWluAAYAAAB1c2VycwACJGRiAAUAAABteWRiAAA="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testGetMoreCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "NQAAAAEAAAAAAAAA3QcAAAAAAAAAIAAAABBnZXRNb3JlADkwAAACJGRiAAUAAABteWRiAAA="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testServerStatusCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "OwAAAAEAAAAAAAAA3QcAAAAAAAAAJgAAABBzZXJ2ZXJTdGF0dXMAAQAAAAIkZGIABgAAAGFkbWluAAA="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testPingCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "MwAAAAEAAAAAAAAA3QcAAAAAAAAAHgAAABBwaW5nAAEAAAACJGRiAAYAAABhZG1pbgAA"
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testHelloCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "NAAAAAEAAAAAAAAA3QcAAAAAAAAAHwAAABBoZWxsbwABAAAAAiRkYgAGAAAAYWRtaW4AAA=="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testIsMasterCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "NwAAAAEAAAAAAAAA3QcAAAAAAAAAIgAAABBpc01hc3RlcgABAAAAAiRkYgAGAAAAYWRtaW4AAA=="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testInsertCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "OgAAAAEAAAAAAAAA3QcAAAAAAAAAJQAAAAJpbnNlcnQABgAAAHVzZXJzAAIkZGIABQAAAG15ZGIAAA=="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testUpdateCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "OgAAAAEAAAAAAAAA3QcAAAAAAAAAJQAAAAJ1cGRhdGUABgAAAHVzZXJzAAIkZGIABQAAAG15ZGIAAA=="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testDeleteCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "OgAAAAEAAAAAAAAA3QcAAAAAAAAAJQAAAAJkZWxldGUABgAAAHVzZXJzAAIkZGIABQAAAG15ZGIAAA=="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testFindAndModifyCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "QQAAAAEAAAAAAAAA3QcAAAAAAAAALAAAAAJmaW5kQW5kTW9kaWZ5AAYAAAB1c2VycwACJGRiAAUAAABteWRiAAA="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testCreateCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "QwAAAAEAAAAAAAAA3QcAAAAAAAAALgAAAAJjcmVhdGUADwAAAG5ld19jb2xsZWN0aW9uAAIkZGIABQAAAG15ZGIAAA=="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testDropCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "OAAAAAEAAAAAAAAA3QcAAAAAAAAAIwAAAAJkcm9wAAYAAAB1c2VycwACJGRiAAUAAABteWRiAAA="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testCreateIndexesCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "QQAAAAEAAAAAAAAA3QcAAAAAAAAALAAAAAJjcmVhdGVJbmRleGVzAAYAAAB1c2VycwACJGRiAAUAAABteWRiAAA="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testDropIndexesCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "PwAAAAEAAAAAAAAA3QcAAAAAAAAAKgAAAAJkcm9wSW5kZXhlcwAGAAAAdXNlcnMAAiRkYgAFAAAAbXlkYgAA"
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testDropDatabaseCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "OgAAAAEAAAAAAAAA3QcAAAAAAAAAJQAAABBkcm9wRGF0YWJhc2UAAQAAAAIkZGIABQAAAG15ZGIAAA=="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testRenameCollectionCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "RQAAAAEAAAAAAAAA3QcAAAAAAAAAMAAAAAJyZW5hbWVDb2xsZWN0aW9uAAYAAAB1c2VycwACJGRiAAYAAABhZG1pbgAA"
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testStartTransaction",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "SwAAAAEAAAAAAAAA3QcAAAAAAAAANgAAAAJmaW5kAAYAAAB1c2VycwACJGRiAAUAAABteWRiAAhzdGFydFRyYW5zYWN0aW9uAAEA"
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::TransactionBegin"
+        }
+      ]
+    },
+    {
+      "name": "testCommitTransaction",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "QAAAAAEAAAAAAAAA3QcAAAAAAAAAKwAAABBjb21taXRUcmFuc2FjdGlvbgABAAAAAiRkYgAGAAAAYWRtaW4AAA=="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::TransactionEnd"
+        }
+      ]
+    },
+    {
+      "name": "testAbortTransaction",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "PwAAAAEAAAAAAAAA3QcAAAAAAAAAKgAAABBhYm9ydFRyYW5zYWN0aW9uAAEAAAACJGRiAAYAAABhZG1pbgAA"
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::TransactionEnd"
+        }
+      ]
+    },
+    {
+      "name": "testStartTransactionFlagOnNonEligibleCommandIsIgnored",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "RgAAAAEAAAAAAAAA3QcAAAAAAAAAMQAAABBwaW5nAAEAAAACJGRiAAYAAABhZG1pbgAIc3RhcnRUcmFuc2FjdGlvbgABAA=="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testStartTransactionFlagOnEligibleCommands",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "SwAAAAEAAAAAAAAA3QcAAAAAAAAANgAAAAJmaW5kAAYAAAB1c2VycwACJGRiAAUAAABteWRiAAhzdGFydFRyYW5zYWN0aW9uAAEA"
+              }
+            ]
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "TQAAAAEAAAAAAAAA3QcAAAAAAAAAOAAAAAJpbnNlcnQABgAAAHVzZXJzAAIkZGIABQAAAG15ZGIACHN0YXJ0VHJhbnNhY3Rpb24AAQA="
+              }
+            ]
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "TQAAAAEAAAAAAAAA3QcAAAAAAAAAOAAAAAJ1cGRhdGUABgAAAHVzZXJzAAIkZGIABQAAAG15ZGIACHN0YXJ0VHJhbnNhY3Rpb24AAQA="
+              }
+            ]
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "TQAAAAEAAAAAAAAA3QcAAAAAAAAAOAAAAAJkZWxldGUABgAAAHVzZXJzAAIkZGIABQAAAG15ZGIACHN0YXJ0VHJhbnNhY3Rpb24AAQA="
+              }
+            ]
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "UAAAAAEAAAAAAAAA3QcAAAAAAAAAOwAAAAJhZ2dyZWdhdGUABgAAAHVzZXJzAAIkZGIABQAAAG15ZGIACHN0YXJ0VHJhbnNhY3Rpb24AAQA="
+              }
+            ]
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "VAAAAAEAAAAAAAAA3QcAAAAAAAAAPwAAAAJmaW5kQW5kTW9kaWZ5AAYAAAB1c2VycwACJGRiAAUAAABteWRiAAhzdGFydFRyYW5zYWN0aW9uAAEA"
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::TransactionBegin"
+        },
+        {
+          "$enum": "Type::TransactionBegin"
+        },
+        {
+          "$enum": "Type::TransactionBegin"
+        },
+        {
+          "$enum": "Type::TransactionBegin"
+        },
+        {
+          "$enum": "Type::TransactionBegin"
+        },
+        {
+          "$enum": "Type::TransactionBegin"
+        }
+      ]
+    },
+    {
+      "name": "testTooShortPacket",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "\u0000\u0000\u0000\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Unknown"
+        }
+      ]
+    },
+    {
+      "name": "testWrongOpcode",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "KgAAAAEAAAAAAAAA1AcAAAAAAAAAFQAAAAJmaW5kAAYAAAB1c2VycwAA"
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Unknown"
+        }
+      ]
+    },
+    {
+      "name": "testUnknownCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "OwAAAAEAAAAAAAAA3QcAAAAAAAAAJgAAABBjdXN0b21Db21tYW5kAAEAAAACJGRiAAUAAABteWRiAAA="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Unknown"
+        }
+      ]
+    },
+    {
+      "name": "testEmptyBsonDocument",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "GgAAAAEAAAAAAAAA3QcAAAAAAAAABQAAAAA="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Unknown"
+        }
+      ]
+    },
+    {
+      "name": "testMalformedBsonStringLengthDoesNotCrash",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "JQAAAAEAAAAAAAAA3QcAAAAAAAAAEAAAAAJmb28A/////3gAAA=="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Unknown"
+        }
+      ]
+    },
+    {
+      "name": "testMalformedBsonBinaryLengthDoesNotCrash",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "JAAAAAEAAAAAAAAA3QcAAAAAAAAADwAAAAVmb28A/////wAA"
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Unknown"
+        }
+      ]
+    },
+    {
+      "name": "testMalformedBsonNestedDocumentLengthDoesNotCrash",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "KAAAAAEAAAAAAAAA3QcAAAAAAAAAEwAAAANzdWIA////fwAAAAAAAA=="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Unknown"
+        }
+      ]
+    },
+    {
+      "name": "testMalformedBsonOuterDocumentLengthDoesNotCrash",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "JAAAAAEAAAAAAAAA3QcAAAAAAAAA////fxBmaW5kAAEAAAAA"
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Unknown"
+        }
+      ]
+    },
+    {
+      "name": "testMalformedBsonRegexRunsToEofWithoutCrash",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "RAAAAAEAAAAAAAAA3QcAAAAAAAAALwAAAAtyeABwYXR0ZXJuLXdpdGhvdXQtbnVsbC10ZXJtaW5hdG9yLWF0LWFsbAA="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Unknown"
+        }
+      ]
+    },
+    {
+      "name": "testMalformedBsonDbPointerLengthDoesNotCrash",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "KAAAAAEAAAAAAAAA3QcAAAAAAAAAEwAAAAxyZWYAAgAAAGEAAQIDAA=="
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Unknown"
+        }
+      ]
+    },
+    {
+      "name": "testDoesNotExposeSqlHelpers",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        }
+      ]
+    }
+  ]
+}

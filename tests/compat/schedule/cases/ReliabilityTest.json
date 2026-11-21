@@ -1,0 +1,1892 @@
+{
+  "source": "packages/schedule/tests/ReliabilityTest.php",
+  "cases": [
+    {
+      "name": "ten thousand schedules deliver exactly once under tick jitter",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 13:20:30.250000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "prefix": "s0-",
+                "count": 2000,
+                "version": "v1",
+                "data": {
+                  "interval": 60
+                }
+              },
+              {
+                "prefix": "s1-",
+                "count": 2000,
+                "version": "v1",
+                "data": {
+                  "interval": 120
+                }
+              },
+              {
+                "prefix": "s2-",
+                "count": 2000,
+                "version": "v1",
+                "data": {
+                  "interval": 300
+                }
+              },
+              {
+                "prefix": "s3-",
+                "count": 2000,
+                "version": "v1",
+                "data": {
+                  "interval": 900
+                }
+              },
+              {
+                "prefix": "s4-",
+                "count": 500,
+                "version": "v1",
+                "data": {
+                  "cron": "*/5 * * * *"
+                }
+              },
+              {
+                "prefix": "s5-",
+                "count": 500,
+                "version": "v1",
+                "data": {
+                  "cron": "*/15 * * * *"
+                }
+              },
+              {
+                "prefix": "s6-",
+                "count": 500,
+                "version": "v1",
+                "data": {
+                  "cron": "0 * * * *"
+                }
+              },
+              {
+                "prefix": "s7-",
+                "count": 500,
+                "version": "v1",
+                "data": {
+                  "cron": "30 * * * *"
+                }
+              }
+            ]
+          },
+          "bind": "source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "tick": 60,
+            "lease": 600,
+            "token": "t"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clock.now",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "format": "U.u"
+          },
+          "expect": "1787059230.250000"
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 0,
+            "distinct": 0,
+            "digest": "d41d8cd98f00b204e9800998ecf8427e"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 59.6
+          },
+          "expect": null
+        },
+        {
+          "op": "clock.now",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "format": "U.u"
+          },
+          "expect": "1787059289.850000"
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 2000,
+            "distinct": 2000,
+            "digest": "630bef09245dcb8e80248b87398c59ab"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 59.75
+          },
+          "expect": null
+        },
+        {
+          "op": "clock.now",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "format": "U.u"
+          },
+          "expect": "1787059349.600000"
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 4000,
+            "distinct": 4000,
+            "digest": "1d3f8c5988418fef16e531005d509040"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 59.9
+          },
+          "expect": null
+        },
+        {
+          "op": "clock.now",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "format": "U.u"
+          },
+          "expect": "1787059409.500000"
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 2000,
+            "distinct": 2000,
+            "digest": "68a2088557925c3e6bd530cb92047aa5"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.050000000000004
+          },
+          "expect": null
+        },
+        {
+          "op": "clock.now",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "format": "U.u"
+          },
+          "expect": "1787059469.550000"
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 4000,
+            "distinct": 4000,
+            "digest": "f5bb5011f0e8925a01e30c4309f14dd8"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.2
+          },
+          "expect": null
+        },
+        {
+          "op": "clock.now",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "format": "U.u"
+          },
+          "expect": "1787059529.750000"
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 4500,
+            "distinct": 4500,
+            "digest": "253c05b36313e3d784e852158aacfc0d"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.35
+          },
+          "expect": null
+        },
+        {
+          "op": "clock.now",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "format": "U.u"
+          },
+          "expect": "1787059590.100000"
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 4000,
+            "distinct": 4000,
+            "digest": "48c398c4fe4e38bdda4f1aa75a5b2a17"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 59.65
+          },
+          "expect": null
+        },
+        {
+          "op": "clock.now",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "format": "U.u"
+          },
+          "expect": "1787059649.750000"
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 2000,
+            "distinct": 2000,
+            "digest": "711d3648acfcab09567207ef3ae78f3d"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 59.800000000000004
+          },
+          "expect": null
+        },
+        {
+          "op": "clock.now",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "format": "U.u"
+          },
+          "expect": "1787059709.550000"
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 4000,
+            "distinct": 4000,
+            "digest": "bbd882a0a3f19ab4de79c0d3fc216b78"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 59.95
+          },
+          "expect": null
+        },
+        {
+          "op": "clock.now",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "format": "U.u"
+          },
+          "expect": "1787059769.500000"
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 2000,
+            "distinct": 2000,
+            "digest": "4fa522d0e9fbb6cd4bacc837259a6980"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.1
+          },
+          "expect": null
+        },
+        {
+          "op": "clock.now",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "format": "U.u"
+          },
+          "expect": "1787059829.600000"
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 9500,
+            "distinct": 9500,
+            "digest": "bceed86e729c7f328143d62ece22c6d5"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.25
+          },
+          "expect": null
+        },
+        {
+          "op": "clock.now",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "format": "U.u"
+          },
+          "expect": "1787059889.850000"
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 2000,
+            "distinct": 2000,
+            "digest": "78cb4612791c58bcc3ecb231f6e607f0"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.4
+          },
+          "expect": null
+        },
+        {
+          "op": "clock.now",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "format": "U.u"
+          },
+          "expect": "1787059950.250000"
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 4000,
+            "distinct": 4000,
+            "digest": "175602cca61983258f0ac4734343676e"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 59.7
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "reconciling ten thousand rows is version gated and converges",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 13:20:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "prefix": "r",
+                "count": 10000,
+                "version": "v1"
+              }
+            ],
+            "trigger": {
+              "interval": 60
+            }
+          },
+          "bind": "source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "token": "t"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "source.made",
+          "args": {
+            "source": {
+              "$ref": "source"
+            }
+          },
+          "expect": 10000
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "source.made",
+          "args": {
+            "source": {
+              "$ref": "source"
+            }
+          },
+          "expect": 10000
+        },
+        {
+          "op": "source.set",
+          "args": {
+            "source": {
+              "$ref": "source"
+            },
+            "rows": [
+              {
+                "prefix": "r",
+                "count": 100,
+                "version": "v2"
+              },
+              {
+                "prefix": "r",
+                "from": 150,
+                "count": 10000,
+                "version": "v1"
+              },
+              {
+                "prefix": "new",
+                "count": 50,
+                "version": "v1"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "source.made",
+          "args": {
+            "source": {
+              "$ref": "source"
+            }
+          },
+          "expect": 10150
+        },
+        {
+          "op": "scheduler.count",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": 10000
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "s"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 10000,
+            "distinct": 10000,
+            "digest": "249c6efeca2f60e960419667e0c03a10"
+          }
+        }
+      ]
+    },
+    {
+      "name": "leaderless gap is recovered exactly once after takeover",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 12:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.memory",
+          "args": {},
+          "bind": "store",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "prefix": "s",
+                "count": 50,
+                "version": "v1"
+              }
+            ],
+            "trigger": {
+              "interval": 60
+            }
+          },
+          "bind": "a_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "a_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "store": {
+              "$ref": "store"
+            },
+            "tick": 60,
+            "recover": 600,
+            "lease": 240,
+            "token": "a"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "prefix": "s",
+                "count": 50,
+                "version": "v1"
+              }
+            ],
+            "trigger": {
+              "interval": 60
+            }
+          },
+          "bind": "b_source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "b_source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "store": {
+              "$ref": "store"
+            },
+            "tick": 60,
+            "recover": 600,
+            "lease": 240,
+            "token": "b"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 0,
+            "distinct": 0,
+            "digest": "d41d8cd98f00b204e9800998ecf8427e"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 0,
+            "distinct": 0,
+            "digest": "d41d8cd98f00b204e9800998ecf8427e"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 50,
+            "distinct": 50,
+            "digest": "32fc01c5974f9e36fddb50c4184565b7"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 0,
+            "distinct": 0,
+            "digest": "d41d8cd98f00b204e9800998ecf8427e"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 50,
+            "distinct": 50,
+            "digest": "2017f701d5da21f889938274521178af"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 0,
+            "distinct": 0,
+            "digest": "d41d8cd98f00b204e9800998ecf8427e"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 50,
+            "distinct": 50,
+            "digest": "c4ac282348d380591b62fe3159479bf1"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 0,
+            "distinct": 0,
+            "digest": "d41d8cd98f00b204e9800998ecf8427e"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 50,
+            "distinct": 50,
+            "digest": "d717e66f540e5ddf6304d7a087e2e996"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 0,
+            "distinct": 0,
+            "digest": "d41d8cd98f00b204e9800998ecf8427e"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 50,
+            "distinct": 50,
+            "digest": "153e48c65fe026b7dbe467e055a01249"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 0,
+            "distinct": 0,
+            "digest": "d41d8cd98f00b204e9800998ecf8427e"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 50,
+            "distinct": 50,
+            "digest": "8960a4d341c9a14d5918f0d444fb498e"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 0,
+            "distinct": 0,
+            "digest": "d41d8cd98f00b204e9800998ecf8427e"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 50,
+            "distinct": 50,
+            "digest": "046f47c36adff4365245f091b0935a8f"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 0,
+            "distinct": 0,
+            "digest": "d41d8cd98f00b204e9800998ecf8427e"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 50,
+            "distinct": 50,
+            "digest": "65183aff19f3a7f05618fecfdabd36d3"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 0,
+            "distinct": 0,
+            "digest": "d41d8cd98f00b204e9800998ecf8427e"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 50,
+            "distinct": 50,
+            "digest": "b84b3bb753dd86e267a3ffe06b34f19a"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 0,
+            "distinct": 0,
+            "digest": "d41d8cd98f00b204e9800998ecf8427e"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 240.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 250,
+            "distinct": 250,
+            "digest": "a1dd15019d857bbf9802d06ade59ebc4"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 0,
+            "distinct": 0,
+            "digest": "d41d8cd98f00b204e9800998ecf8427e"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 50,
+            "distinct": 50,
+            "digest": "7112ab703d213f268d94a798cb864817"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 0,
+            "distinct": 0,
+            "digest": "d41d8cd98f00b204e9800998ecf8427e"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 50,
+            "distinct": 50,
+            "digest": "5d941dd49093321e6e7c971cce718bd6"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 0,
+            "distinct": 0,
+            "digest": "d41d8cd98f00b204e9800998ecf8427e"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 50,
+            "distinct": 50,
+            "digest": "e65da68a2c6b8cec6e22597c8660be5d"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 0,
+            "distinct": 0,
+            "digest": "d41d8cd98f00b204e9800998ecf8427e"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 50,
+            "distinct": 50,
+            "digest": "033a2cd815dd2f0b0a3d3d98d4e89ba6"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 0,
+            "distinct": 0,
+            "digest": "d41d8cd98f00b204e9800998ecf8427e"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 50,
+            "distinct": 50,
+            "digest": "743fce67708734f7419ab35ae7c3aecf"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            },
+            "summary": true
+          },
+          "expect": {
+            "count": 0,
+            "distinct": 0,
+            "digest": "d41d8cd98f00b204e9800998ecf8427e"
+          }
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

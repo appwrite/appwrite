@@ -1,8 +1,21 @@
-//! The network validators: `Hostname`, `Domain`, `Host`, `IP`, `URL` and `Phone`.
+//! The checks of the network validators: `Hostname`, `Domain`, `Host`, `IP`, `URL` and
+//! `Phone`.
 //!
 //! PHP runs `filter_var()`, `parse_url()` and `Uri\Rfc3986\Uri::parse()` for them; these
 //! functions run [`php_std`]'s ports of the same, so a value is accepted exactly when PHP
-//! accepts it.
+//! accepts it. This crate's validators ([`crate::Hostname`], [`crate::Domain`],
+//! [`crate::Host`], [`crate::Ip`], [`crate::Url`], [`crate::Phone`]) run them, and so do the
+//! classes of the PHP extension (`crates/extension`), which keep the constructors' state
+//! themselves and pass it in.
+//!
+//! | PHP | Rust |
+//! |---|---|
+//! | `Hostname::isValid()`, `getDescription()` | [`hostname`], [`hostname_allowed`], [`HOSTNAME_DESCRIPTION`] |
+//! | `Domain::isValid()`, `getDescription()` | [`domain`], [`explode_count`], [`DOMAIN_DESCRIPTION`] |
+//! | `IP::isValid()`, `getDescription()` | [`ip`], [`ip_str`], [`IP_DESCRIPTION`] |
+//! | `URL::isValid()`, `getDescription()`, `isPrivateUseSchemeURI()` | [`url_ascii`], [`url`], [`url_str`], [`url_component`], [`private_use_scheme`], [`url_description`], [`LOOPBACK_HOSTS`] |
+//! | `Host::getDescription()` | [`host_description`] |
+//! | `Phone::isValid()`, `normalize()`, `getDescription()` | [`phone`], [`phone_normalize`], [`PHONE_DESCRIPTION`] |
 
 use std::borrow::Cow;
 
@@ -76,8 +89,11 @@ pub const IP_DESCRIPTION: &str = "Value must be a valid IP address";
 /// The IP versions `IP` accepts: `IP::ALL`, `IP::V4` or `IP::V6`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum IpType {
+    /// IPv4 and IPv6 (`IP::ALL`).
     All,
+    /// IPv4 only (`IP::V4`).
     V4,
+    /// IPv6 only (`IP::V6`).
     V6,
 }
 

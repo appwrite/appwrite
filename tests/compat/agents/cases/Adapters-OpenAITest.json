@@ -1,0 +1,974 @@
+{
+  "source": "packages/agents/tests/Adapters/OpenAITest.php",
+  "cases": [
+    {
+      "name": "adapter identity and default model",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "openai",
+            "model": "o3-mini",
+            "schema": true,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 7,
+            "modelListed": true,
+            "endpoint": "https://api.openai.com/v1/chat/completions"
+          }
+        }
+      ]
+    },
+    {
+      "name": "models contract",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "models": true
+          },
+          "expect": {
+            "name": "openai",
+            "model": "o3-mini",
+            "schema": true,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 7,
+            "modelListed": true,
+            "models": [
+              "gpt-5-nano",
+              "gpt-4.5-preview",
+              "gpt-4.1",
+              "gpt-4o",
+              "o4-mini",
+              "o3",
+              "o3-mini"
+            ],
+            "endpoint": "https://api.openai.com/v1/chat/completions"
+          }
+        }
+      ]
+    },
+    {
+      "name": "set model round trip with known model",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "models": true
+          },
+          "bind": "info",
+          "expect": {
+            "name": "openai",
+            "model": "o3-mini",
+            "schema": true,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 7,
+            "modelListed": true,
+            "models": [
+              "gpt-5-nano",
+              "gpt-4.5-preview",
+              "gpt-4.1",
+              "gpt-4o",
+              "o4-mini",
+              "o3",
+              "o3-mini"
+            ],
+            "endpoint": "https://api.openai.com/v1/chat/completions"
+          }
+        },
+        {
+          "op": "adapter.set_model",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "model": {
+              "$ref": "info",
+              "path": "/models/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "openai",
+            "model": "gpt-5-nano",
+            "schema": true,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 7,
+            "modelListed": true,
+            "endpoint": "https://api.openai.com/v1/chat/completions"
+          }
+        }
+      ]
+    },
+    {
+      "name": "timeout round trip",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.set",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "timeout": 12345
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "openai",
+            "model": "o3-mini",
+            "schema": true,
+            "embeddings": false,
+            "timeout": 12345,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 7,
+            "modelListed": true,
+            "endpoint": "https://api.openai.com/v1/chat/completions"
+          }
+        }
+      ]
+    },
+    {
+      "name": "token counters accumulate and total is consistent",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.count",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "input": 3,
+            "output": 5,
+            "cacheCreation": 7,
+            "cacheRead": 11
+          },
+          "expect": {
+            "input": 3,
+            "output": 5,
+            "cacheCreation": 7,
+            "cacheRead": 11,
+            "total": 26
+          }
+        }
+      ]
+    },
+    {
+      "name": "agent reference round trip",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.agent",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.agent",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "agent.inspect",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "description": "",
+            "instructions": [],
+            "schema": null,
+            "adapter": "openai"
+          }
+        }
+      ]
+    },
+    {
+      "name": "endpoint round trip when supported",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.set",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "endpoint": "https://example.local/endpoint"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "openai",
+            "model": "o3-mini",
+            "schema": true,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 7,
+            "modelListed": true,
+            "endpoint": "https://example.local/endpoint"
+          }
+        }
+      ]
+    },
+    {
+      "name": "embed behavior matches embedding support",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.embed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "text": "test"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Embeddings are not supported for this adapter."
+            }
+          }
+        },
+        {
+          "op": "adapter.bulk_embed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "texts": [
+              "test"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Embeddings are not supported for this adapter."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "get embedding dimension when not supported throws",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.embedding_dimension",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Embeddings are not supported for this adapter."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "schema request is posted as json with bearer token",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai",
+            "args": {
+              "apiKey": "secret",
+              "model": "gpt-4.1"
+            },
+            "client": {
+              "queue": [
+                {
+                  "status": 200,
+                  "body": "{\"choices\": [{\"message\": {\"role\": \"assistant\", \"content\": \"{\\\"ok\\\":true}\"}}]}"
+                }
+              ]
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema_object.new",
+          "args": {
+            "properties": {
+              "ok": {
+                "type": "boolean",
+                "description": "ok"
+              }
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema.new",
+          "args": {
+            "name": "Result",
+            "description": "Result",
+            "object": {
+              "$ref": "o"
+            },
+            "required": [
+              "ok"
+            ]
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_schema",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "schema": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "hi"
+            ]
+          },
+          "expect": {
+            "content": "{\"ok\":true}",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.requests",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "uri": "https://api.openai.com/v1/chat/completions",
+              "headers": [
+                [
+                  "authorization",
+                  "Bearer secret"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ]
+              ],
+              "body": "{\"model\":\"gpt-4.1\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"temperature\":1,\"response_format\":{\"type\":\"json_schema\",\"json_schema\":{\"name\":\"Result\",\"strict\":true,\"schema\":{\"type\":\"object\",\"properties\":{\"ok\":{\"type\":\"boolean\",\"description\":\"ok\"}},\"required\":[\"ok\"],\"additionalProperties\":false}}},\"stream\":false,\"max_tokens\":1024}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "streamed response is assembled across chunk boundaries",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai",
+            "args": {
+              "apiKey": "secret"
+            },
+            "client": {
+              "queue": [
+                {
+                  "status": 200,
+                  "chunks": [
+                    "data: {\"ch",
+                    "oices\":[{\"delta\":{\"content\":\"Hel\"}}]}\ndata: {\"choices\":[{\"delta\":{\"content\":\"lo\"}}]}\ndata: [DONE]"
+                  ]
+                }
+              ]
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "hi"
+            ],
+            "listen": true
+          },
+          "expect": {
+            "content": "Hello",
+            "role": "user",
+            "tokens": [
+              "Hel",
+              "lo"
+            ]
+          }
+        },
+        {
+          "op": "adapter.requests",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "uri": "https://api.openai.com/v1/chat/completions",
+              "headers": [
+                [
+                  "authorization",
+                  "Bearer secret"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ]
+              ],
+              "body": "{\"model\":\"o3-mini\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"temperature\":1,\"stream\":true,\"max_completion_tokens\":1024}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "injected client carries every request across timeout changes",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai",
+            "args": {
+              "apiKey": "secret"
+            },
+            "client": {
+              "queue": [
+                {
+                  "status": 200,
+                  "chunks": [
+                    "data: {\"choices\":[{\"delta\":{\"content\":\"a\"}}]}\n"
+                  ]
+                },
+                {
+                  "status": 200,
+                  "chunks": [
+                    "data: {\"choices\":[{\"delta\":{\"content\":\"b\"}}]}\n"
+                  ]
+                }
+              ]
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "one"
+            ]
+          },
+          "expect": {
+            "content": "a",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.set",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "timeout": 2000
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "two"
+            ]
+          },
+          "expect": {
+            "content": "b",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.requests",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "uri": "https://api.openai.com/v1/chat/completions",
+              "headers": [
+                [
+                  "authorization",
+                  "Bearer secret"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ]
+              ],
+              "body": "{\"model\":\"o3-mini\",\"messages\":[{\"role\":\"user\",\"content\":\"one\"}],\"temperature\":1,\"stream\":true,\"max_completion_tokens\":1024}"
+            },
+            {
+              "method": "POST",
+              "uri": "https://api.openai.com/v1/chat/completions",
+              "headers": [
+                [
+                  "authorization",
+                  "Bearer secret"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ]
+              ],
+              "body": "{\"model\":\"o3-mini\",\"messages\":[{\"role\":\"user\",\"content\":\"two\"}],\"temperature\":1,\"stream\":true,\"max_completion_tokens\":1024}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "error response throws with status code",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai",
+            "args": {
+              "apiKey": "secret"
+            },
+            "client": {
+              "queue": [
+                {
+                  "status": 401,
+                  "body": "{\"error\": {\"code\": \"invalid_api_key\", \"message\": \"Bad key\"}}"
+                }
+              ]
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema_object.new",
+          "args": {
+            "properties": {
+              "ok": {
+                "type": "boolean",
+                "description": "ok"
+              }
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema.new",
+          "args": {
+            "name": "Result",
+            "description": "Result",
+            "object": {
+              "$ref": "o"
+            },
+            "required": [
+              "ok"
+            ]
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_schema",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "schema": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "hi"
+            ],
+            "code": true
+          },
+          "expect": {
+            "class": "Exception",
+            "message": "Openai API error: (invalid_api_key) Bad key",
+            "code": 401,
+            "tokens": []
+          }
+        }
+      ]
+    }
+  ]
+}

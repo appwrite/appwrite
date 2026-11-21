@@ -1,0 +1,161 @@
+{
+  "source": "packages/nats/tests/Transport/TcpTransportNoDelayTest.php",
+  "cases": [
+    {
+      "name": "request-reply does not stall on the delayed ACK (Nagle is off)",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "nd.${ns}",
+            "mode": "echo",
+            "prefix": "r"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.request_tally",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "nd.${ns}",
+            "count": 20,
+            "timeout": 1.0
+          },
+          "expect": {
+            "total": 20,
+            "distinct": [
+              "r0",
+              "r1",
+              "r10",
+              "r11",
+              "r12",
+              "r13",
+              "r14",
+              "r15",
+              "r16",
+              "r17",
+              "r18",
+              "r19",
+              "r2",
+              "r3",
+              "r4",
+              "r5",
+              "r6",
+              "r7",
+              "r8",
+              "r9"
+            ]
+          }
+        },
+        {
+          "op": "conn.request_many",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "nd.${ns}",
+            "max": 1,
+            "timeout": 1.0,
+            "within": 0.035
+          },
+          "expect": {
+            "bodies": [
+              "r"
+            ],
+            "within": true
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "the TCP transport on its own",
+      "steps": [
+        {
+          "op": "transport.round_trip",
+          "args": {
+            "kind": "tcp",
+            "service": "nats"
+          },
+          "expect": [
+            [
+              "connect",
+              null
+            ],
+            [
+              "connected",
+              true
+            ],
+            [
+              "info",
+              true
+            ],
+            [
+              "write",
+              33
+            ],
+            [
+              "pong",
+              "PONG\r\n"
+            ],
+            [
+              "ping",
+              6
+            ],
+            [
+              "read",
+              "PONG\r\n"
+            ],
+            [
+              "close",
+              null
+            ],
+            [
+              "connected_after",
+              false
+            ],
+            [
+              "write_after",
+              {
+                "class": "Utopia\\NATS\\Exception\\ConnectionException",
+                "message": "Not connected"
+              }
+            ],
+            [
+              "read_after",
+              {
+                "class": "Utopia\\NATS\\Exception\\ConnectionException",
+                "message": "Not connected"
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

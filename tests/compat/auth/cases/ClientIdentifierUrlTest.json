@@ -1,0 +1,355 @@
+{
+  "source": "packages/auth/tests/OAuth2/ClientIdentifierUrlTest.php",
+  "cases": [
+    {
+      "name": "from string (path)",
+      "steps": [
+        {
+          "op": "client_id_url.from_string",
+          "args": {
+            "value": "https://client.example/metadata",
+            "allow_http": false
+          },
+          "expect": {
+            "string": "https://client.example/metadata",
+            "host": "client.example"
+          }
+        }
+      ]
+    },
+    {
+      "name": "from string (root path is allowed)",
+      "steps": [
+        {
+          "op": "client_id_url.from_string",
+          "args": {
+            "value": "https://client.example/",
+            "allow_http": false
+          },
+          "expect": {
+            "string": "https://client.example/",
+            "host": "client.example"
+          }
+        }
+      ]
+    },
+    {
+      "name": "from string (port and query)",
+      "steps": [
+        {
+          "op": "client_id_url.from_string",
+          "args": {
+            "value": "https://client.example:8443/metadata?version=1",
+            "allow_http": false
+          },
+          "expect": {
+            "string": "https://client.example:8443/metadata?version=1",
+            "host": "client.example"
+          }
+        }
+      ]
+    },
+    {
+      "name": "from string (development http)",
+      "steps": [
+        {
+          "op": "client_id_url.from_string",
+          "args": {
+            "value": "http://localhost/metadata",
+            "allow_http": true
+          },
+          "expect": {
+            "string": "http://localhost/metadata",
+            "host": "localhost"
+          }
+        }
+      ]
+    },
+    {
+      "name": "from string (uppercase scheme)",
+      "steps": [
+        {
+          "op": "client_id_url.from_string",
+          "args": {
+            "value": "HTTPS://client.example/metadata",
+            "allow_http": false
+          },
+          "expect": {
+            "string": "HTTPS://client.example/metadata",
+            "host": "client.example"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid URL (empty)",
+      "steps": [
+        {
+          "op": "client_id_url.from_string",
+          "args": {
+            "value": "",
+            "allow_http": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "Client Identifier URL is malformed."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid URL (opaque identifier)",
+      "steps": [
+        {
+          "op": "client_id_url.from_string",
+          "args": {
+            "value": "opaque-client-id",
+            "allow_http": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "Client Identifier URL is malformed."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid URL (http by default)",
+      "steps": [
+        {
+          "op": "client_id_url.from_string",
+          "args": {
+            "value": "http://client.example/metadata",
+            "allow_http": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "Client Identifier URL must use the https scheme."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid URL (missing path)",
+      "steps": [
+        {
+          "op": "client_id_url.from_string",
+          "args": {
+            "value": "https://client.example",
+            "allow_http": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "Client Identifier URL must contain a host and a path component."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid URL (missing host)",
+      "steps": [
+        {
+          "op": "client_id_url.from_string",
+          "args": {
+            "value": "https:///metadata",
+            "allow_http": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "Client Identifier URL is malformed."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid URL (userinfo)",
+      "steps": [
+        {
+          "op": "client_id_url.from_string",
+          "args": {
+            "value": "https://user:password@client.example/metadata",
+            "allow_http": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "Client Identifier URL must not contain a userinfo component."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid URL (fragment)",
+      "steps": [
+        {
+          "op": "client_id_url.from_string",
+          "args": {
+            "value": "https://client.example/metadata#fragment",
+            "allow_http": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "Client Identifier URL must not contain a fragment component."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid URL (single dot segment)",
+      "steps": [
+        {
+          "op": "client_id_url.from_string",
+          "args": {
+            "value": "https://client.example/a/./metadata",
+            "allow_http": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "Client Identifier URL must not contain dot path segments."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid URL (double dot segment)",
+      "steps": [
+        {
+          "op": "client_id_url.from_string",
+          "args": {
+            "value": "https://client.example/a/../metadata",
+            "allow_http": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "Client Identifier URL must not contain dot path segments."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid URL (invalid characters)",
+      "steps": [
+        {
+          "op": "client_id_url.from_string",
+          "args": {
+            "value": "https://client.example/a path",
+            "allow_http": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "Client Identifier URL is malformed."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid URL (ftp)",
+      "steps": [
+        {
+          "op": "client_id_url.from_string",
+          "args": {
+            "value": "ftp://client.example/x",
+            "allow_http": true
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "Client Identifier URL must use the https scheme."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid URL (trailing dot segment)",
+      "steps": [
+        {
+          "op": "client_id_url.from_string",
+          "args": {
+            "value": "https://client.example/a/..",
+            "allow_http": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidClientMetadataException",
+              "message": "Client Identifier URL must not contain dot path segments."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "candidate detection",
+      "steps": [
+        {
+          "op": "client_id_url.is_candidate",
+          "args": {
+            "value": "https://client.example/metadata"
+          },
+          "expect": true
+        },
+        {
+          "op": "client_id_url.is_candidate",
+          "args": {
+            "value": "HTTPS://client.example/metadata"
+          },
+          "expect": true
+        },
+        {
+          "op": "client_id_url.is_candidate",
+          "args": {
+            "value": "http://localhost/metadata"
+          },
+          "expect": true
+        },
+        {
+          "op": "client_id_url.is_candidate",
+          "args": {
+            "value": "client.example/metadata"
+          },
+          "expect": false
+        },
+        {
+          "op": "client_id_url.is_candidate",
+          "args": {
+            "value": "opaque-client-id"
+          },
+          "expect": false
+        },
+        {
+          "op": "client_id_url.is_candidate",
+          "args": {
+            "value": "HtTp://"
+          },
+          "expect": true
+        },
+        {
+          "op": "client_id_url.is_candidate",
+          "args": {
+            "value": ""
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

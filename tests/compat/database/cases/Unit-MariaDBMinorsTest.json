@@ -1,0 +1,235 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/MariaDBMinorsTest.php"
+  ],
+  "cases": [
+    {
+      "name": "MariaDBMinorsTest::testNoTimeoutNeverTouchesTheDriver#MariaDB",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MariaDB",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o14442"
+          },
+          "bind": "s28218",
+          "expect": {
+            "$adapter": "MariaDB"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14442"
+            },
+            "method": "clearTimeout",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14442"
+            },
+            "method": "clearTimeout",
+            "args": {
+              "event": {
+                "$enum": "Event::DocumentFind"
+              }
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14442"
+            },
+            "method": "setTimeout",
+            "args": {
+              "milliseconds": 1000,
+              "event": {
+                "$enum": "Event::DocumentFind"
+              }
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14442"
+            },
+            "method": "clearTimeout",
+            "args": {
+              "event": {
+                "$enum": "Event::DocumentFind"
+              }
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14442"
+            },
+            "method": "clearTimeout",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14442"
+            },
+            "method": "getTimeout",
+            "args": {}
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14442"
+            },
+            "method": "getTimeout",
+            "args": {
+              "event": {
+                "$enum": "Event::DocumentFind"
+              }
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "MariaDBMinorsTest::testNoTimeoutNeverTouchesTheDriver#MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MySQL",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o14443"
+          },
+          "bind": "s28226",
+          "expect": {
+            "$adapter": "MySQL"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14443"
+            },
+            "method": "clearTimeout",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14443"
+            },
+            "method": "clearTimeout",
+            "args": {
+              "event": {
+                "$enum": "Event::DocumentFind"
+              }
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14443"
+            },
+            "method": "setTimeout",
+            "args": {
+              "milliseconds": 1000,
+              "event": {
+                "$enum": "Event::DocumentFind"
+              }
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14443"
+            },
+            "method": "clearTimeout",
+            "args": {
+              "event": {
+                "$enum": "Event::DocumentFind"
+              }
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14443"
+            },
+            "method": "clearTimeout",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14443"
+            },
+            "method": "getTimeout",
+            "args": {}
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14443"
+            },
+            "method": "getTimeout",
+            "args": {
+              "event": {
+                "$enum": "Event::DocumentFind"
+              }
+            }
+          },
+          "expect": 0
+        }
+      ]
+    }
+  ]
+}

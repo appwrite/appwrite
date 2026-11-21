@@ -1,6 +1,6 @@
 //! Canonical forms of addresses per mail provider.
 //!
-//! PHP: `Utopia\Emails\Canonicals\Providers\*`, as `Email` consults them.
+//! PHP: `Utopia\Emails\Canonicals\Providers\*`.
 
 use php_std::string;
 
@@ -43,7 +43,8 @@ pub struct Provider {
     dots: bool,
     /// Refuses a local part left empty (or `"0"`).
     required: bool,
-    /// Keeps the address's own domain instead of the canonical one.
+    /// Keeps the address's own domain, when it is one of [`Provider::domains`],
+    /// instead of the canonical one.
     own_domain: bool,
 }
 
@@ -214,6 +215,17 @@ impl Provider {
         own_domain: false,
     };
 
+    /// Yandex: keeps the local part; every Yandex domain is `yandex.ru`. Not
+    /// in [`PROVIDERS`].
+    pub const YANDEX: Provider = Provider {
+        canonical_domain: "yandex.ru",
+        domains: &["yandex.ru", "yandex.ua", "yandex.kz", "yandex.com", "yandex.by", "ya.ru"],
+        plus: false,
+        dots: false,
+        required: false,
+        own_domain: false,
+    };
+
     /// Any other domain: only lower-cases the local part.
     pub const GENERIC: Provider =
         Provider { canonical_domain: "", domains: &[], plus: false, dots: false, required: false, own_domain: true };
@@ -256,7 +268,12 @@ impl Provider {
         if self.required && (local.is_empty() || local == b"0") {
             return Err(Error::EmptyLocal);
         }
-        let domain = if self.own_domain { domain.to_vec() } else { self.canonical_domain.as_bytes().to_vec() };
+        // Proton Mail keeps one of its own domains and falls back to its canonical one.
+        let domain = if self.own_domain && self.supports(domain) {
+            domain.to_vec()
+        } else {
+            self.canonical_domain.as_bytes().to_vec()
+        };
         Ok(Canonical { local, domain })
     }
 }
@@ -296,6 +313,9 @@ mod tests {
         assert_eq!(canonical("..", "gmail.com"), Err(Error::EmptyLocal));
         assert_eq!(canonical("0", "yahoo.com").unwrap(), "0@yahoo.com");
         assert_eq!(Provider::of(b"me.com").canonical_domain, "icloud.com");
+        let proton = Provider::PROTONMAIL.canonical(b"A+b", b"example.com").unwrap();
+        assert_eq!(proton.address(), b"a@protonmail.com");
+        assert_eq!(Provider::YANDEX.canonical(b"A.b+c", b"ya.ru").unwrap().address(), b"a.b+c@yandex.ru");
         assert_eq!(Provider::of(b"GMAIL.com"), &Provider::GENERIC);
     }
 }

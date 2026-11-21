@@ -1,23 +1,34 @@
 [package]
 name = "utopia-auth"
-description = "The password hash algorithms of utopia-php/auth: PECL scrypt, Firebase's modified scrypt and phpass."
+description = "Password hashing (with PECL scrypt, Firebase's modified scrypt and phpass), proofs, session stores, JWT issuers and verifiers, OAuth2 server values and WebAuthn passkeys."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-repository.workspace = true
+repository = "https://github.com/utopia-rs/auth"
 publish.workspace = true
 
 [dependencies]
 # AES-256 for Firebase's modified scrypt (openssl_encrypt aes-256-ctr in PHP).
 aes.workspace = true
-# random_bytes() and password_hash()'s salts.
+# random_bytes() and password_hash()'s salts, as PHP draws them.
 getrandom.workspace = true
+rand.workspace = true
+hex.workspace = true
+hmac.workspace = true
+indexmap.workspace = true
 md-5.workspace = true
+num-bigint.workspace = true
+num-integer.workspace = true
+openssl.workspace = true
+p256.workspace = true
 php-std.workspace = true
+serde_json.workspace = true
 sha2.workspace = true
+thiserror.workspace = true
+# Wiping derived keys and scrypt's working memory.
 zeroize.workspace = true
 
 [package.metadata.utopia]
 category = "security"
-php-sync = "57748900ad9d8217892a42d315ad025b2ecaf5dc"
+php-sync = "8f87278823e99568756f454f6d76a00da239b056"

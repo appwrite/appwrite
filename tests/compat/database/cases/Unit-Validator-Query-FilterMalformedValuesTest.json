@@ -1,0 +1,3081 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/Query/FilterMalformedValuesTest.php"
+  ],
+  "cases": [
+    {
+      "name": "FilterMalformedValuesTest::testValuesGivenAsAnObjectAreRefused#equal",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o5128"
+          },
+          "bind": "s9046",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "array": true
+              }
+            },
+            "as": "o5129"
+          },
+          "bind": "s9047",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5130"
+          },
+          "bind": "s9048",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "array": false,
+                "size": 2
+              }
+            },
+            "as": "o5131"
+          },
+          "bind": "s9049",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "array": false,
+              "size": 2
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5128"
+                },
+                {
+                  "$obj": "o5129"
+                },
+                {
+                  "$obj": "o5130"
+                },
+                {
+                  "$obj": "o5131"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportForAttributes": true
+            },
+            "as": "o5132"
+          },
+          "bind": "s9050",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":{\"value\":\"a\"}}"
+            },
+            "as": "o5133"
+          },
+          "bind": "s9051",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": {
+                "value": "a"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5132"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5133"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5133"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Equal"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5132"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Equal query values must be a list"
+        }
+      ]
+    },
+    {
+      "name": "FilterMalformedValuesTest::testValuesGivenAsAnObjectAreRefused#contains",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o5134"
+          },
+          "bind": "s9055",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "array": true
+              }
+            },
+            "as": "o5135"
+          },
+          "bind": "s9056",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5136"
+          },
+          "bind": "s9057",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "array": false,
+                "size": 2
+              }
+            },
+            "as": "o5137"
+          },
+          "bind": "s9058",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "array": false,
+              "size": 2
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5134"
+                },
+                {
+                  "$obj": "o5135"
+                },
+                {
+                  "$obj": "o5136"
+                },
+                {
+                  "$obj": "o5137"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportForAttributes": true
+            },
+            "as": "o5138"
+          },
+          "bind": "s9059",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"contains\",\"attribute\":\"tags\",\"values\":{\"tag\":\"a\"}}"
+            },
+            "as": "o5139"
+          },
+          "bind": "s9060",
+          "expect": {
+            "$query": {
+              "method": "contains",
+              "attribute": "tags",
+              "values": {
+                "tag": "a"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5138"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5139"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5139"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Contains"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5138"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Contains query values must be a list"
+        }
+      ]
+    },
+    {
+      "name": "FilterMalformedValuesTest::testValuesGivenAsAnObjectAreRefused#notEqual",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o5140"
+          },
+          "bind": "s9064",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "array": true
+              }
+            },
+            "as": "o5141"
+          },
+          "bind": "s9065",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5142"
+          },
+          "bind": "s9066",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "array": false,
+                "size": 2
+              }
+            },
+            "as": "o5143"
+          },
+          "bind": "s9067",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "array": false,
+              "size": 2
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5140"
+                },
+                {
+                  "$obj": "o5141"
+                },
+                {
+                  "$obj": "o5142"
+                },
+                {
+                  "$obj": "o5143"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportForAttributes": true
+            },
+            "as": "o5144"
+          },
+          "bind": "s9068",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"notEqual\",\"attribute\":\"name\",\"values\":{\"value\":\"a\"}}"
+            },
+            "as": "o5145"
+          },
+          "bind": "s9069",
+          "expect": {
+            "$query": {
+              "method": "notEqual",
+              "attribute": "name",
+              "values": {
+                "value": "a"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5144"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5145"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5145"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::NotEqual"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5144"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "NotEqual query values must be a list"
+        }
+      ]
+    },
+    {
+      "name": "FilterMalformedValuesTest::testValuesGivenAsAnObjectAreRefused#regex",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o5146"
+          },
+          "bind": "s9073",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "array": true
+              }
+            },
+            "as": "o5147"
+          },
+          "bind": "s9074",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5148"
+          },
+          "bind": "s9075",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "array": false,
+                "size": 2
+              }
+            },
+            "as": "o5149"
+          },
+          "bind": "s9076",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "array": false,
+              "size": 2
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5146"
+                },
+                {
+                  "$obj": "o5147"
+                },
+                {
+                  "$obj": "o5148"
+                },
+                {
+                  "$obj": "o5149"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportForAttributes": true
+            },
+            "as": "o5150"
+          },
+          "bind": "s9077",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"regex\",\"attribute\":\"name\",\"values\":{\"pattern\":\"^a\"}}"
+            },
+            "as": "o5151"
+          },
+          "bind": "s9078",
+          "expect": {
+            "$query": {
+              "method": "regex",
+              "attribute": "name",
+              "values": {
+                "pattern": "^a"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5150"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5151"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5151"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Regex"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5150"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Regex query values must be a list"
+        }
+      ]
+    },
+    {
+      "name": "FilterMalformedValuesTest::testValuesGivenAsAnObjectAreRefused#between",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o5152"
+          },
+          "bind": "s9082",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "array": true
+              }
+            },
+            "as": "o5153"
+          },
+          "bind": "s9083",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5154"
+          },
+          "bind": "s9084",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "array": false,
+                "size": 2
+              }
+            },
+            "as": "o5155"
+          },
+          "bind": "s9085",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "array": false,
+              "size": 2
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5152"
+                },
+                {
+                  "$obj": "o5153"
+                },
+                {
+                  "$obj": "o5154"
+                },
+                {
+                  "$obj": "o5155"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportForAttributes": true
+            },
+            "as": "o5156"
+          },
+          "bind": "s9086",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"between\",\"attribute\":\"name\",\"values\":{\"from\":\"a\",\"to\":\"b\"}}"
+            },
+            "as": "o5157"
+          },
+          "bind": "s9087",
+          "expect": {
+            "$query": {
+              "method": "between",
+              "attribute": "name",
+              "values": {
+                "from": "a",
+                "to": "b"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5156"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5157"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5157"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Between"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5156"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Between query values must be a list"
+        }
+      ]
+    },
+    {
+      "name": "FilterMalformedValuesTest::testValuesGivenAsAnObjectAreRefused#exists",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o5158"
+          },
+          "bind": "s9091",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "array": true
+              }
+            },
+            "as": "o5159"
+          },
+          "bind": "s9092",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5160"
+          },
+          "bind": "s9093",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "array": false,
+                "size": 2
+              }
+            },
+            "as": "o5161"
+          },
+          "bind": "s9094",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "array": false,
+              "size": 2
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5158"
+                },
+                {
+                  "$obj": "o5159"
+                },
+                {
+                  "$obj": "o5160"
+                },
+                {
+                  "$obj": "o5161"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportForAttributes": true
+            },
+            "as": "o5162"
+          },
+          "bind": "s9095",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"exists\",\"attribute\":\"\",\"values\":{\"attribute\":\"name\"}}"
+            },
+            "as": "o5163"
+          },
+          "bind": "s9096",
+          "expect": {
+            "$query": {
+              "method": "exists",
+              "attribute": "",
+              "values": {
+                "attribute": "name"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5162"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5163"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5163"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Exists"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5162"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Exists query values must be a list"
+        }
+      ]
+    },
+    {
+      "name": "FilterMalformedValuesTest::testValuesGivenAsAnObjectAreRefused#intersects",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o5164"
+          },
+          "bind": "s9100",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "array": true
+              }
+            },
+            "as": "o5165"
+          },
+          "bind": "s9101",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5166"
+          },
+          "bind": "s9102",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "array": false,
+                "size": 2
+              }
+            },
+            "as": "o5167"
+          },
+          "bind": "s9103",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "array": false,
+              "size": 2
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5164"
+                },
+                {
+                  "$obj": "o5165"
+                },
+                {
+                  "$obj": "o5166"
+                },
+                {
+                  "$obj": "o5167"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportForAttributes": true
+            },
+            "as": "o5168"
+          },
+          "bind": "s9104",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"intersects\",\"attribute\":\"location\",\"values\":{\"type\":\"Point\",\"coordinates\":[1,2]}}"
+            },
+            "as": "o5169"
+          },
+          "bind": "s9105",
+          "expect": {
+            "$query": {
+              "method": "intersects",
+              "attribute": "location",
+              "values": {
+                "type": "Point",
+                "coordinates": [
+                  1,
+                  2
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5168"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5169"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5169"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Intersects"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5168"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Intersects query values must be a list"
+        }
+      ]
+    },
+    {
+      "name": "FilterMalformedValuesTest::testValuesGivenAsAnObjectAreRefused#distanceLessThan",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o5170"
+          },
+          "bind": "s9109",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "array": true
+              }
+            },
+            "as": "o5171"
+          },
+          "bind": "s9110",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5172"
+          },
+          "bind": "s9111",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "array": false,
+                "size": 2
+              }
+            },
+            "as": "o5173"
+          },
+          "bind": "s9112",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "array": false,
+              "size": 2
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5170"
+                },
+                {
+                  "$obj": "o5171"
+                },
+                {
+                  "$obj": "o5172"
+                },
+                {
+                  "$obj": "o5173"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportForAttributes": true
+            },
+            "as": "o5174"
+          },
+          "bind": "s9113",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"distanceLessThan\",\"attribute\":\"location\",\"values\":{\"geometry\":[[1,2],10,false]}}"
+            },
+            "as": "o5175"
+          },
+          "bind": "s9114",
+          "expect": {
+            "$query": {
+              "method": "distanceLessThan",
+              "attribute": "location",
+              "values": {
+                "geometry": [
+                  [
+                    1,
+                    2
+                  ],
+                  10,
+                  false
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5174"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5175"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5175"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::DistanceLessThan"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5174"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "DistanceLessThan query values must be a list"
+        }
+      ]
+    },
+    {
+      "name": "FilterMalformedValuesTest::testValuesGivenAsAnObjectAreRefused#vectorDot",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o5176"
+          },
+          "bind": "s9118",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "array": true
+              }
+            },
+            "as": "o5177"
+          },
+          "bind": "s9119",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5178"
+          },
+          "bind": "s9120",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "array": false,
+                "size": 2
+              }
+            },
+            "as": "o5179"
+          },
+          "bind": "s9121",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "array": false,
+              "size": 2
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5176"
+                },
+                {
+                  "$obj": "o5177"
+                },
+                {
+                  "$obj": "o5178"
+                },
+                {
+                  "$obj": "o5179"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportForAttributes": true
+            },
+            "as": "o5180"
+          },
+          "bind": "s9122",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"vectorDot\",\"attribute\":\"embedding\",\"values\":{\"vector\":[1,2]}}"
+            },
+            "as": "o5181"
+          },
+          "bind": "s9123",
+          "expect": {
+            "$query": {
+              "method": "vectorDot",
+              "attribute": "embedding",
+              "values": {
+                "vector": [
+                  1,
+                  2
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5180"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5181"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5181"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::VectorDot"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5180"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "VectorDot query values must be a list"
+        }
+      ]
+    },
+    {
+      "name": "FilterMalformedValuesTest::testADistanceTupleGivenAsAnObjectIsRefused",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o5182"
+          },
+          "bind": "s9127",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "array": true
+              }
+            },
+            "as": "o5183"
+          },
+          "bind": "s9128",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5184"
+          },
+          "bind": "s9129",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "array": false,
+                "size": 2
+              }
+            },
+            "as": "o5185"
+          },
+          "bind": "s9130",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "array": false,
+              "size": 2
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5182"
+                },
+                {
+                  "$obj": "o5183"
+                },
+                {
+                  "$obj": "o5184"
+                },
+                {
+                  "$obj": "o5185"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportForAttributes": true
+            },
+            "as": "o5186"
+          },
+          "bind": "s9131",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"distanceLessThan\",\"attribute\":\"location\",\"values\":[{\"geometry\":[1,2],\"distance\":10,\"meters\":false}]}"
+            },
+            "as": "o5187"
+          },
+          "bind": "s9132",
+          "expect": {
+            "$query": {
+              "method": "distanceLessThan",
+              "attribute": "location",
+              "values": [
+                {
+                  "geometry": [
+                    1,
+                    2
+                  ],
+                  "distance": 10,
+                  "meters": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5186"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5187"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5186"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Distance query requires [[geometry, distance]] parameters"
+        }
+      ]
+    },
+    {
+      "name": "FilterMalformedValuesTest::testADistanceWithAMetersFlagThatIsNotABooleanIsRefused",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o5188"
+          },
+          "bind": "s9135",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "array": true
+              }
+            },
+            "as": "o5189"
+          },
+          "bind": "s9136",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5190"
+          },
+          "bind": "s9137",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "array": false,
+                "size": 2
+              }
+            },
+            "as": "o5191"
+          },
+          "bind": "s9138",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "array": false,
+              "size": 2
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5188"
+                },
+                {
+                  "$obj": "o5189"
+                },
+                {
+                  "$obj": "o5190"
+                },
+                {
+                  "$obj": "o5191"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportForAttributes": true
+            },
+            "as": "o5192"
+          },
+          "bind": "s9139",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::DistanceLessThan"
+              },
+              "attribute": "location",
+              "values": [
+                [
+                  [
+                    1,
+                    2
+                  ],
+                  10,
+                  [
+                    "yes"
+                  ]
+                ]
+              ]
+            },
+            "as": "o5193"
+          },
+          "bind": "s9140",
+          "expect": {
+            "$query": {
+              "method": "distanceLessThan",
+              "attribute": "location",
+              "values": [
+                [
+                  [
+                    1,
+                    2
+                  ],
+                  10,
+                  [
+                    "yes"
+                  ]
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5192"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5193"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5192"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Distance query requires a boolean meters flag"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceLessThan",
+            "args": {
+              "attribute": "location",
+              "values": [
+                1,
+                2
+              ],
+              "distance": 10,
+              "meters": true
+            },
+            "as": "o5194"
+          },
+          "bind": "s9143",
+          "expect": {
+            "$query": {
+              "method": "distanceLessThan",
+              "attribute": "location",
+              "values": [
+                [
+                  [
+                    1,
+                    2
+                  ],
+                  10,
+                  true
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5192"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5194"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "FilterMalformedValuesTest::testAVectorGivenAsAnObjectIsRefused",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o5195"
+          },
+          "bind": "s9145",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "array": true
+              }
+            },
+            "as": "o5196"
+          },
+          "bind": "s9146",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5197"
+          },
+          "bind": "s9147",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "array": false,
+                "size": 2
+              }
+            },
+            "as": "o5198"
+          },
+          "bind": "s9148",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "array": false,
+              "size": 2
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5195"
+                },
+                {
+                  "$obj": "o5196"
+                },
+                {
+                  "$obj": "o5197"
+                },
+                {
+                  "$obj": "o5198"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportForAttributes": true
+            },
+            "as": "o5199"
+          },
+          "bind": "s9149",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "vectorDot",
+            "args": {
+              "attribute": "embedding",
+              "vector": {
+                "x": 1.0,
+                "y": 2.0
+              }
+            },
+            "as": "o5200"
+          },
+          "bind": "s9150",
+          "expect": {
+            "$query": {
+              "method": "vectorDot",
+              "attribute": "embedding",
+              "values": [
+                {
+                  "x": 1.0,
+                  "y": 2.0
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5199"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5200"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5199"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Vector query value must be an array"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "vectorDot",
+            "args": {
+              "attribute": "embedding",
+              "vector": [
+                1.0,
+                2.0
+              ]
+            },
+            "as": "o5201"
+          },
+          "bind": "s9153",
+          "expect": {
+            "$query": {
+              "method": "vectorDot",
+              "attribute": "embedding",
+              "values": [
+                [
+                  1.0,
+                  2.0
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5199"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5201"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "FilterMalformedValuesTest::testAVectorQueryOnAnUndeclaredAttributeIsRefusedWithoutAWarning",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o5202"
+          },
+          "bind": "s9155",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "array": true
+              }
+            },
+            "as": "o5203"
+          },
+          "bind": "s9156",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5204"
+          },
+          "bind": "s9157",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "array": false,
+                "size": 2
+              }
+            },
+            "as": "o5205"
+          },
+          "bind": "s9158",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "array": false,
+              "size": 2
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5202"
+                },
+                {
+                  "$obj": "o5203"
+                },
+                {
+                  "$obj": "o5204"
+                },
+                {
+                  "$obj": "o5205"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportForAttributes": false
+            },
+            "as": "o5206"
+          },
+          "bind": "s9159",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "vectorDot",
+            "args": {
+              "attribute": "undeclared",
+              "vector": [
+                1.0,
+                2.0
+              ]
+            },
+            "as": "o5207"
+          },
+          "bind": "s9160",
+          "expect": {
+            "$query": {
+              "method": "vectorDot",
+              "attribute": "undeclared",
+              "values": [
+                [
+                  1.0,
+                  2.0
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5206"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5207"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5206"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Vector queries can only be used on vector attributes"
+        }
+      ]
+    },
+    {
+      "name": "FilterMalformedValuesTest::testListValuesAreStillValid",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o5208"
+          },
+          "bind": "s9163",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "array": true
+              }
+            },
+            "as": "o5209"
+          },
+          "bind": "s9164",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o5210"
+          },
+          "bind": "s9165",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "array": false,
+                "size": 2
+              }
+            },
+            "as": "o5211"
+          },
+          "bind": "s9166",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "array": false,
+              "size": 2
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5208"
+                },
+                {
+                  "$obj": "o5209"
+                },
+                {
+                  "$obj": "o5210"
+                },
+                {
+                  "$obj": "o5211"
+                }
+              ],
+              "idAttributeType": "integer",
+              "supportForAttributes": true
+            },
+            "as": "o5212"
+          },
+          "bind": "s9167",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "a",
+                "b"
+              ]
+            },
+            "as": "o5213"
+          },
+          "bind": "s9168",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "a",
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5212"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5213"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "contains",
+            "args": {
+              "attribute": "tags",
+              "values": [
+                "a"
+              ]
+            },
+            "as": "o5214"
+          },
+          "bind": "s9170",
+          "expect": {
+            "$query": {
+              "method": "contains",
+              "attribute": "tags",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5212"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5214"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "intersects",
+            "args": {
+              "attribute": "location",
+              "values": [
+                1,
+                2
+              ]
+            },
+            "as": "o5215"
+          },
+          "bind": "s9172",
+          "expect": {
+            "$query": {
+              "method": "intersects",
+              "attribute": "location",
+              "values": [
+                [
+                  1,
+                  2
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5212"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5215"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

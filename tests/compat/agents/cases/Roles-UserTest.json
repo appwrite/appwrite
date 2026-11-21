@@ -1,0 +1,71 @@
+{
+  "source": "packages/agents/tests/Roles/UserTest.php",
+  "cases": [
+    {
+      "name": "constructor",
+      "op": "role.inspect",
+      "args": {
+        "kind": "user",
+        "id": "test-id",
+        "name": "Test User"
+      },
+      "expect": {
+        "id": "test-id",
+        "name": "Test User",
+        "identifier": "user"
+      }
+    },
+    {
+      "name": "constructor without name",
+      "op": "role.inspect",
+      "args": {
+        "kind": "user",
+        "id": "test-id"
+      },
+      "expect": {
+        "id": "test-id",
+        "name": "",
+        "identifier": "user"
+      }
+    },
+    {
+      "name": "get identifier",
+      "steps": [
+        {
+          "op": "role.inspect",
+          "args": {
+            "kind": "user",
+            "id": "test-id"
+          },
+          "expect": {
+            "id": "test-id",
+            "name": "",
+            "identifier": "user"
+          }
+        },
+        {
+          "op": "role.constants",
+          "expect": {
+            "assistant": "assistant",
+            "user": "user"
+          }
+        }
+      ]
+    },
+    {
+      "name": "set name",
+      "op": "role.inspect",
+      "args": {
+        "kind": "user",
+        "id": "test-id",
+        "name": "a",
+        "rename": "b"
+      },
+      "expect": {
+        "id": "test-id",
+        "name": "b",
+        "identifier": "user"
+      }
+    }
+  ]
+}

@@ -1,0 +1,442 @@
+{
+  "service": "mock",
+  "file": "tests/benchmarks/results/mock.json",
+  "workload": {
+    "script": "tests/benchmarks/api/mock.js",
+    "duration": "60s",
+    "hashing": false,
+    "seed": 200,
+    "run": "mock-20261012-010033"
+  },
+  "environment": {
+    "date": "2026-10-12T00:02:49Z",
+    "commit": "5075396361",
+    "branch": "feat/rust-utopia-conversion",
+    "machine": {
+      "os": "Darwin",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max",
+      "cores": 16,
+      "memory_gib": 128
+    },
+    "docker": "28.5.1",
+    "k6": "k6 v1.7.1",
+    "cpu_source": "docker stats",
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "88b87c5028a0",
+      "created": "2026-10-09T07:39:19.618591965Z"
+    },
+    "rust": {
+      "container": "appwrite-rust",
+      "image": "appwrite-rust-dev",
+      "id": "b0b46302463d",
+      "created": "2026-10-11T19:37:06.64190413Z"
+    },
+    "database": {
+      "container": "appwrite-postgresql",
+      "image": "appwrite/postgres:0.1.0",
+      "id": "77156232a16d",
+      "created": "2026-10-09T08:32:40.317530502Z"
+    },
+    "endpoint": {
+      "php": "http://localhost:9501/v1",
+      "rust": "http://localhost:9530/v1"
+    }
+  },
+  "steps": [
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 50,
+      "rps": 50.0,
+      "requests": 3001,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 3.415,
+        "p50": 0.737,
+        "p90": 6.507,
+        "p95": 15.127,
+        "p99": 45.207,
+        "max": 164.744
+      },
+      "cpu_ms_per_request": 3.362,
+      "db_cpu_ms_per_request": 7.779,
+      "memory_mib": {
+        "baseline": 3041.3,
+        "avg": 3051.1,
+        "peak": 3054.6
+      },
+      "endpoints": {
+        "mock.oauth2.get": {
+          "route": "GET /v1/mock/tests/general/oauth2",
+          "note": "redirects (301, not followed) to the callback with a code",
+          "count": 348,
+          "rps": 5.8,
+          "avg": 3.771,
+          "p50": 1.28,
+          "p90": 8.763,
+          "p95": 15.9,
+          "p99": 31.65,
+          "max": 37.256
+        },
+        "mock.oauth2.token.get": {
+          "route": "GET /v1/mock/tests/general/oauth2/token",
+          "count": 335,
+          "rps": 5.58,
+          "avg": 0.676,
+          "p50": 0.659,
+          "p90": 0.806,
+          "p95": 0.878,
+          "p99": 0.994,
+          "max": 2.972
+        },
+        "mock.oauth2.user.get": {
+          "route": "GET /v1/mock/tests/general/oauth2/user",
+          "count": 363,
+          "rps": 6.05,
+          "avg": 0.712,
+          "p50": 0.652,
+          "p90": 0.828,
+          "p95": 0.904,
+          "p99": 2.022,
+          "max": 7.914
+        },
+        "mock.oauth2.userUnverified.get": {
+          "route": "GET /v1/mock/tests/general/oauth2/user-unverified",
+          "count": 163,
+          "rps": 2.72,
+          "avg": 0.677,
+          "p50": 0.651,
+          "p90": 0.8,
+          "p95": 0.93,
+          "p99": 1.287,
+          "max": 1.529
+        },
+        "mock.oauth2.userNoEmail.get": {
+          "route": "GET /v1/mock/tests/general/oauth2/user-no-email",
+          "count": 171,
+          "rps": 2.85,
+          "avg": 0.673,
+          "p50": 0.649,
+          "p90": 0.829,
+          "p95": 0.902,
+          "p99": 1.162,
+          "max": 1.865
+        },
+        "mock.oauth2.photo.get": {
+          "route": "GET /v1/mock/tests/general/oauth2/photo",
+          "count": 182,
+          "rps": 3.03,
+          "avg": 0.655,
+          "p50": 0.64,
+          "p90": 0.756,
+          "p95": 0.786,
+          "p99": 1.156,
+          "max": 2.138
+        },
+        "mock.oauth2.photoRefreshed.get": {
+          "route": "GET /v1/mock/tests/general/oauth2/photo-refreshed",
+          "count": 172,
+          "rps": 2.87,
+          "avg": 0.651,
+          "p50": 0.637,
+          "p90": 0.774,
+          "p95": 0.82,
+          "p99": 1.132,
+          "max": 1.177
+        },
+        "mock.oauth2.jwks.get": {
+          "route": "GET /v1/mock/tests/general/oauth2/jwks",
+          "count": 156,
+          "rps": 2.6,
+          "avg": 3.898,
+          "p50": 1.609,
+          "p90": 7.564,
+          "p95": 15.542,
+          "p99": 33.308,
+          "max": 35.64
+        },
+        "mock.oauth2.idToken.get": {
+          "route": "GET /v1/mock/tests/general/oauth2/id-token",
+          "note": "signs an RS256 ID token",
+          "count": 163,
+          "rps": 2.72,
+          "avg": 5.316,
+          "p50": 2.206,
+          "p90": 10.311,
+          "p95": 25.386,
+          "p99": 34.362,
+          "max": 64.116
+        },
+        "mock.oauth2.success.get": {
+          "route": "GET /v1/mock/tests/general/oauth2/success",
+          "count": 164,
+          "rps": 2.73,
+          "avg": 0.638,
+          "p50": 0.625,
+          "p90": 0.768,
+          "p95": 0.823,
+          "p99": 0.96,
+          "max": 0.993
+        },
+        "mock.oauth2.failure.get": {
+          "route": "GET /v1/mock/tests/general/oauth2/failure",
+          "note": "answers 400 by design",
+          "count": 158,
+          "rps": 2.63,
+          "avg": 0.68,
+          "p50": 0.636,
+          "p90": 0.788,
+          "p95": 0.872,
+          "p99": 1.97,
+          "max": 3.315
+        },
+        "mock.oauth2.native.update": {
+          "route": "PATCH /v1/mock/tests/general/oauth2/native",
+          "note": "keeps native ID token sign-in disabled on the run's project",
+          "count": 141,
+          "rps": 2.35,
+          "avg": 18.846,
+          "p50": 7.7,
+          "p90": 53.725,
+          "p95": 65.236,
+          "p99": 76.646,
+          "max": 102.746
+        },
+        "mock.locale.get": {
+          "route": "GET /v1/mock/tests/locale",
+          "count": 145,
+          "rps": 2.42,
+          "avg": 0.659,
+          "p50": 0.65,
+          "p90": 0.768,
+          "p95": 0.85,
+          "p99": 1.054,
+          "max": 1.142
+        },
+        "mock.apiKeyUnprefixed.create": {
+          "route": "POST /v1/mock/api-key-unprefixed",
+          "count": 174,
+          "rps": 2.9,
+          "avg": 9.981,
+          "p50": 4.684,
+          "p90": 21.759,
+          "p95": 31.75,
+          "p99": 47.83,
+          "max": 164.744
+        },
+        "mock.github.callback.get": {
+          "route": "GET /v1/mock/github/callback",
+          "note": "measured on its project-not-found path: an installation looks up the owner on the production GitHub API",
+          "count": 166,
+          "rps": 2.77,
+          "avg": 10.949,
+          "p50": 3.859,
+          "p90": 32.645,
+          "p95": 41.618,
+          "p99": 59.408,
+          "max": 71.58
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 50,
+      "rps": 2080.2,
+      "requests": 124810,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 22.903,
+        "p50": 0.777,
+        "p90": 47.493,
+        "p95": 167.147,
+        "p99": 366.419,
+        "max": 1311.134
+      },
+      "cpu_ms_per_request": 2.96,
+      "db_cpu_ms_per_request": 1.026,
+      "memory_mib": {
+        "baseline": 3047.4,
+        "avg": 3094.9,
+        "peak": 3133.4
+      },
+      "endpoints": {
+        "mock.oauth2.get": {
+          "route": "GET /v1/mock/tests/general/oauth2",
+          "note": "redirects (301, not followed) to the callback with a code",
+          "count": 13934,
+          "rps": 232.23,
+          "avg": 50.178,
+          "p50": 5.015,
+          "p90": 192.746,
+          "p95": 292.26,
+          "p99": 459.515,
+          "max": 1139.591
+        },
+        "mock.oauth2.token.get": {
+          "route": "GET /v1/mock/tests/general/oauth2/token",
+          "count": 13776,
+          "rps": 229.6,
+          "avg": 0.657,
+          "p50": 0.566,
+          "p90": 0.943,
+          "p95": 1.171,
+          "p99": 2.229,
+          "max": 12.475
+        },
+        "mock.oauth2.user.get": {
+          "route": "GET /v1/mock/tests/general/oauth2/user",
+          "count": 14062,
+          "rps": 234.37,
+          "avg": 0.646,
+          "p50": 0.556,
+          "p90": 0.929,
+          "p95": 1.166,
+          "p99": 2.168,
+          "max": 13.292
+        },
+        "mock.oauth2.userUnverified.get": {
+          "route": "GET /v1/mock/tests/general/oauth2/user-unverified",
+          "count": 6877,
+          "rps": 114.62,
+          "avg": 0.633,
+          "p50": 0.551,
+          "p90": 0.917,
+          "p95": 1.136,
+          "p99": 2.038,
+          "max": 8.569
+        },
+        "mock.oauth2.userNoEmail.get": {
+          "route": "GET /v1/mock/tests/general/oauth2/user-no-email",
+          "count": 6940,
+          "rps": 115.67,
+          "avg": 0.647,
+          "p50": 0.551,
+          "p90": 0.917,
+          "p95": 1.16,
+          "p99": 2.498,
+          "max": 8.716
+        },
+        "mock.oauth2.photo.get": {
+          "route": "GET /v1/mock/tests/general/oauth2/photo",
+          "count": 7007,
+          "rps": 116.78,
+          "avg": 0.642,
+          "p50": 0.549,
+          "p90": 0.939,
+          "p95": 1.159,
+          "p99": 2.213,
+          "max": 8.055
+        },
+        "mock.oauth2.photoRefreshed.get": {
+          "route": "GET /v1/mock/tests/general/oauth2/photo-refreshed",
+          "count": 6851,
+          "rps": 114.18,
+          "avg": 0.638,
+          "p50": 0.544,
+          "p90": 0.91,
+          "p95": 1.144,
+          "p99": 2.072,
+          "max": 8.373
+        },
+        "mock.oauth2.jwks.get": {
+          "route": "GET /v1/mock/tests/general/oauth2/jwks",
+          "count": 6825,
+          "rps": 113.75,
+          "avg": 53.299,
+          "p50": 5.331,
+          "p90": 200.892,
+          "p95": 306.836,
+          "p99": 463.645,
+          "max": 904.174
+        },
+        "mock.oauth2.idToken.get": {
+          "route": "GET /v1/mock/tests/general/oauth2/id-token",
+          "note": "signs an RS256 ID token",
+          "count": 7073,
+          "rps": 117.88,
+          "avg": 53.379,
+          "p50": 6.134,
+          "p90": 200.849,
+          "p95": 298.515,
+          "p99": 458.235,
+          "max": 1014.282
+        },
+        "mock.oauth2.success.get": {
+          "route": "GET /v1/mock/tests/general/oauth2/success",
+          "count": 6925,
+          "rps": 115.42,
+          "avg": 0.635,
+          "p50": 0.546,
+          "p90": 0.926,
+          "p95": 1.161,
+          "p99": 2.145,
+          "max": 11.396
+        },
+        "mock.oauth2.failure.get": {
+          "route": "GET /v1/mock/tests/general/oauth2/failure",
+          "note": "answers 400 by design",
+          "count": 6796,
+          "rps": 113.27,
+          "avg": 0.65,
+          "p50": 0.546,
+          "p90": 0.935,
+          "p95": 1.205,
+          "p99": 2.258,
+          "max": 31.404
+        },
+        "mock.oauth2.native.update": {
+          "route": "PATCH /v1/mock/tests/general/oauth2/native",
+          "note": "keeps native ID token sign-in disabled on the run's project",
+          "count": 6774,
+          "rps": 112.9,
+          "avg": 79.729,
+          "p50": 17.313,
+          "p90": 233.327,
+          "p95": 354.192,
+          "p99": 683.306,
+          "max": 1311.134
+        },
+        "mock.locale.get": {
+          "route": "GET /v1/mock/tests/locale",
+          "count": 7066,
+          "rps": 117.77,
+          "avg": 0.653,
+          "p50": 0.552,
+          "p90": 0.938,
+          "p95": 1.18,
+          "p99": 2.304,
+          "max": 8.523
+        },
+        "mock.apiKeyUnprefixed.create": {
+          "route": "POST /v1/mock/api-key-unprefixed",
+          "count": 6959,
+          "rps": 115.98,
+          "avg": 57.854,
+          "p50": 9.113,
+          "p90": 207.765,
+          "p95": 300.772,
+          "p99": 454.677,
+          "max": 877.147
+        },
+        "mock.github.callback.get": {
+          "route": "GET /v1/mock/github/callback",
+          "note": "measured on its project-not-found path: an installation looks up the owner on the production GitHub API",
+          "count": 6945,
+          "rps": 115.75,
+          "avg": 61.346,
+          "p50": 8.557,
+          "p90": 210.983,
+          "p95": 330.89,
+          "p99": 494.042,
+          "max": 1246.22
+        }
+      }
+    }
+  ]
+}

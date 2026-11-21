@@ -4,7 +4,8 @@
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum Error {
     /// [`Email::new`](crate::Email::new) was given an empty address, or one
-    /// without exactly one `@` and something on both sides of it. The message
+    /// without exactly one `@` and something on both sides of it, or
+    /// [`Address::new`](crate::Address::new) a URL as its domain. The message
     /// quotes the input, which can be any bytes.
     ///
     /// PHP: `Exception`.

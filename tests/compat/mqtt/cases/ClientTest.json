@@ -1,0 +1,367 @@
+{
+  "source": "packages/mqtt/tests/ClientTest.php",
+  "cases": [
+    {
+      "name": "testRejectsInvalidUrl",
+      "op": "client.new",
+      "args": {
+        "url": ":::not a url"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid MQTT URL"
+        }
+      }
+    },
+    {
+      "name": "testRejectsUrlWithoutHost",
+      "op": "client.new",
+      "args": {
+        "url": "mqtt://"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid MQTT URL"
+        }
+      }
+    },
+    {
+      "name": "testStartsDisconnected",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "url": "mqtt://broker.local:1883"
+          },
+          "bind": "c",
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "broker.local",
+            "port": 1883,
+            "tls": false,
+            "timeout": 30.0
+          }
+        },
+        {
+          "op": "client.is_connected",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testSendBeforeConnectThrows",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "url": "mqtt://broker.local"
+          },
+          "bind": "c",
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "broker.local",
+            "port": 1883,
+            "tls": false,
+            "timeout": 30.0
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            },
+            "data": "anything"
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Not connected to MQTT broker"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testReceiveBeforeConnectThrows",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "url": "mqtts://broker.local"
+          },
+          "bind": "c",
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "broker.local",
+            "port": 8883,
+            "tls": true,
+            "timeout": 30.0
+          }
+        },
+        {
+          "op": "client.receive",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Not connected to MQTT broker"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testHandlersAreChainable",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "url": "mqtt://broker.local"
+          },
+          "bind": "c",
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "broker.local",
+            "port": 1883,
+            "tls": false,
+            "timeout": 30.0
+          }
+        },
+        {
+          "op": "client.hooks",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "urls: default ports by scheme, explicit ports and timeouts",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "url": "mqtt://h"
+          },
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "h",
+            "port": 1883,
+            "tls": false,
+            "timeout": 30.0
+          }
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "url": "mqtts://h"
+          },
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "h",
+            "port": 8883,
+            "tls": true,
+            "timeout": 30.0
+          }
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "url": "http://h"
+          },
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "h",
+            "port": 1883,
+            "tls": false,
+            "timeout": 30.0
+          }
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "url": "MQTTS://h"
+          },
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "h",
+            "port": 1883,
+            "tls": false,
+            "timeout": 30.0
+          }
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "url": "mqtts://h:1883",
+            "timeout": 2.5
+          },
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "h",
+            "port": 1883,
+            "tls": true,
+            "timeout": 2.5
+          }
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "url": "mqtt://user:pass@[::1]:8883/path?x#y",
+            "timeout": 1
+          },
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "[::1]",
+            "port": 8883,
+            "tls": false,
+            "timeout": 1.0
+          }
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "url": "//h:9"
+          },
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "h",
+            "port": 9,
+            "tls": false,
+            "timeout": 30.0
+          }
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "url": "h"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid MQTT URL"
+            }
+          }
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "url": "mqtt://h:99999"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid MQTT URL"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "connect to a closed port fails and reports the error",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "url": "mqtt://127.0.0.1:1",
+            "timeout": 2
+          },
+          "bind": "c",
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "127.0.0.1",
+            "port": 1,
+            "tls": false,
+            "timeout": 2.0
+          }
+        },
+        {
+          "op": "client.connect",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": {
+            "error": [
+              "RuntimeException",
+              "MQTT connection failed: 111 - Connection refused"
+            ],
+            "log": [
+              [
+                "error",
+                "RuntimeException",
+                "MQTT connection failed: 111 - Connection refused"
+              ]
+            ],
+            "connected": false
+          }
+        },
+        {
+          "op": "client.is_connected",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "client.close",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

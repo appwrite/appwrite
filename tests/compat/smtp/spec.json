@@ -1,0 +1,1119 @@
+{
+  "lib": "smtp",
+  "description": "utopia-php/smtp: the SMTP client (scripted with the library's own FakeTransport, and against two throwaway Mailpit servers for STARTTLS, implicit TLS and authentication), replies and capabilities, envelopes, and MIME messages with attachments rendered byte for byte.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/smtp/src"
+    ],
+    "tests": [
+      "packages/smtp/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/smtp"
+  },
+  "services": [
+    "smtp",
+    "smtp-api",
+    "smtp-implicit",
+    "smtp-implicit-api"
+  ],
+  "state": [],
+  "ops": {
+    "address.new": {
+      "doc": "new Address(email, name?) as {email, name, string: (string), international}",
+      "covers": [
+        "Utopia\\SMTP\\Address::__construct",
+        "Utopia\\SMTP\\Address::__toString",
+        "Utopia\\SMTP\\Address::isInternational"
+      ],
+      "fuzz": [
+        {
+          "name": "addresses",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "email": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "local"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "@",
+                      "",
+                      "@@"
+                    ]
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "domain"
+                  }
+                ]
+              },
+              "name": {
+                "gen": "string",
+                "alphabet": "unicode",
+                "max": 40,
+                "tricky": 0.2
+              }
+            },
+            "optional": [
+              "name"
+            ]
+          },
+          "iterations": 4000
+        }
+      ]
+    },
+    "header.line": {
+      "doc": "Header::line(name, value)",
+      "covers": [
+        "Utopia\\SMTP\\Mime\\Header::line"
+      ],
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "name": {
+                "gen": "pick",
+                "from": [
+                  "Subject",
+                  "X-Custom",
+                  "To",
+                  "X"
+                ]
+              },
+              "value": {
+                "gen": "ref",
+                "name": "header_value"
+              }
+            }
+          },
+          "iterations": 4000
+        }
+      ]
+    },
+    "header.phrase": {
+      "doc": "Header::phrase(value)",
+      "covers": [
+        "Utopia\\SMTP\\Mime\\Header::phrase"
+      ],
+      "fuzz": [
+        {
+          "name": "names",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "header_value"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "encoding.is_ascii": {
+      "doc": "Encoding::isAscii(value)",
+      "covers": [
+        "Utopia\\SMTP\\Mime\\Encoding::isAscii"
+      ]
+    },
+    "encoding.quoted_printable": {
+      "doc": "Encoding::quotedPrintable(value)",
+      "covers": [
+        "Utopia\\SMTP\\Mime\\Encoding::quotedPrintable"
+      ],
+      "fuzz": [
+        {
+          "name": "bytes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "bytes",
+                "max": 300
+              }
+            }
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "text",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "string",
+                "alphabet": "a =\t\r\n.é",
+                "max": 200
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "encoding.base64": {
+      "doc": "Encoding::base64(value)",
+      "covers": [
+        "Utopia\\SMTP\\Mime\\Encoding::base64"
+      ],
+      "fuzz": [
+        {
+          "name": "bytes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "bytes",
+                "max": 400
+              }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "encoding.line_endings": {
+      "doc": "Encoding::lineEndings(value)",
+      "covers": [
+        "Utopia\\SMTP\\Mime\\Encoding::lineEndings"
+      ],
+      "fuzz": [
+        {
+          "name": "endings",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "string",
+                "alphabet": "a\r\n",
+                "max": 20
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "encoding.boundary": {
+      "doc": "count x Encoding::boundary(): {distinct, lengths, prefixes, hex} (the values are random)",
+      "covers": [
+        "Utopia\\SMTP\\Mime\\Encoding::boundary"
+      ]
+    },
+    "envelope.new": {
+      "doc": "new Envelope(sender, recipients, utf8?) as {sender, recipients, international}",
+      "covers": [
+        "Utopia\\SMTP\\Envelope::__construct",
+        "Utopia\\SMTP\\Envelope::isInternational"
+      ]
+    },
+    "envelope.from_message": {
+      "doc": "Envelope::fromMessage(message)",
+      "covers": [
+        "Utopia\\SMTP\\Envelope::fromMessage"
+      ]
+    },
+    "attachment.new": {
+      "doc": "Attachment::fromPath(path, name?, type?) or ::fromString(content, name, type?), then ->inline(cid?): {name, type, content, path, cid}",
+      "covers": [
+        "Utopia\\SMTP\\Attachment::fromPath",
+        "Utopia\\SMTP\\Attachment::fromString",
+        "Utopia\\SMTP\\Attachment::inline"
+      ]
+    },
+    "message.render": {
+      "doc": "new Message(...) rendered: {string: (string), chunks: toIterable(), international, message_id, date}; boundaries renamed =_BOUNDARY<n>",
+      "covers": [
+        "Utopia\\SMTP\\Message::__construct",
+        "Utopia\\SMTP\\Message::__toString",
+        "Utopia\\SMTP\\Message::toIterable",
+        "Utopia\\SMTP\\Message::isInternational"
+      ],
+      "fuzz": [
+        {
+          "name": "messages",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "message": {
+                "gen": "object",
+                "fields": {
+                  "from": {
+                    "gen": "object",
+                    "fields": {
+                      "email": {
+                        "gen": "pick",
+                        "from": [
+                          "jane@example.test",
+                          "jäne@example.test"
+                        ]
+                      },
+                      "name": {
+                        "gen": "string",
+                        "alphabet": "unicode",
+                        "max": 30
+                      }
+                    }
+                  },
+                  "to": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "object",
+                      "fields": {
+                        "email": {
+                          "gen": "pick",
+                          "from": [
+                            "john@example.test",
+                            "a@b.test"
+                          ]
+                        },
+                        "name": {
+                          "gen": "string",
+                          "alphabet": "ab \"\\é",
+                          "max": 12
+                        }
+                      }
+                    },
+                    "max": 3
+                  },
+                  "bcc": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "object",
+                      "fields": {
+                        "email": {
+                          "gen": "const",
+                          "value": "eve@example.test"
+                        }
+                      }
+                    },
+                    "max": 1
+                  },
+                  "subject": {
+                    "gen": "string",
+                    "alphabet": "unicode",
+                    "max": 90,
+                    "tricky": 0.1
+                  },
+                  "text": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "null"
+                      },
+                      {
+                        "gen": "string",
+                        "alphabet": "ab .\r\n=é",
+                        "max": 120
+                      },
+                      {
+                        "gen": "bytes",
+                        "max": 60
+                      }
+                    ]
+                  },
+                  "html": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "null"
+                      },
+                      {
+                        "gen": "string",
+                        "alphabet": "<p>ab</p>\n",
+                        "max": 40
+                      }
+                    ]
+                  },
+                  "attachments": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "object",
+                      "fields": {
+                        "content": {
+                          "gen": "bytes",
+                          "max": 200
+                        },
+                        "name": {
+                          "gen": "string",
+                          "alphabet": "ab.\"\\ é%",
+                          "min": 1,
+                          "max": 10
+                        },
+                        "type": {
+                          "gen": "pick",
+                          "from": [
+                            "text/plain",
+                            "image/png",
+                            "application/octet-stream"
+                          ]
+                        },
+                        "cid": {
+                          "gen": "pick",
+                          "from": [
+                            "logo",
+                            "a@b"
+                          ]
+                        }
+                      },
+                      "optional": [
+                        "cid",
+                        "type"
+                      ]
+                    },
+                    "max": 3
+                  },
+                  "date": {
+                    "gen": "object",
+                    "fields": {
+                      "timestamp": {
+                        "gen": "int",
+                        "min": 0,
+                        "max": 4102444800
+                      },
+                      "offset": {
+                        "gen": "pick",
+                        "from": [
+                          0,
+                          3600,
+                          -12600,
+                          20700,
+                          -43200
+                        ]
+                      }
+                    }
+                  },
+                  "message_id": {
+                    "gen": "const",
+                    "value": "fuzz@example.test"
+                  }
+                },
+                "optional": [
+                  "bcc"
+                ]
+              }
+            }
+          },
+          "iterations": 1500
+        }
+      ]
+    },
+    "part.render": {
+      "doc": "Part::text / ::attachment / ::multipart: {head: head(), body: body()}; boundaries renamed",
+      "covers": [
+        "Utopia\\SMTP\\Mime\\Part::text",
+        "Utopia\\SMTP\\Mime\\Part::attachment",
+        "Utopia\\SMTP\\Mime\\Part::multipart",
+        "Utopia\\SMTP\\Mime\\Part::head",
+        "Utopia\\SMTP\\Mime\\Part::body"
+      ]
+    },
+    "reply.new": {
+      "doc": "new Reply(code, lines): {code, lines, status, outcome, text, string}",
+      "covers": [
+        "Utopia\\SMTP\\Reply::__construct",
+        "Utopia\\SMTP\\Reply::text",
+        "Utopia\\SMTP\\Reply::__toString"
+      ],
+      "fuzz": [
+        {
+          "name": "replies",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "code": {
+                "gen": "int",
+                "min": 0,
+                "max": 999
+              },
+              "lines": {
+                "gen": "array",
+                "items": {
+                  "gen": "string",
+                  "alphabet": "245. 0139abc\n",
+                  "max": 12
+                },
+                "max": 3
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "outcome.from_code": {
+      "doc": "Outcome::fromCode(code)->name",
+      "covers": [
+        "Utopia\\SMTP\\Outcome::fromCode"
+      ]
+    },
+    "capabilities.parse": {
+      "doc": "Capabilities::fromReply(new Reply(code ?? 250, lines)): has()/params() of each keyword, maxSize(), mechanisms()",
+      "covers": [
+        "Utopia\\SMTP\\Capabilities::fromReply",
+        "Utopia\\SMTP\\Capabilities::has",
+        "Utopia\\SMTP\\Capabilities::params",
+        "Utopia\\SMTP\\Capabilities::maxSize",
+        "Utopia\\SMTP\\Capabilities::mechanisms"
+      ],
+      "fuzz": [
+        {
+          "name": "ehlo",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "lines": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "capability_line"
+                },
+                "min": 1,
+                "max": 6
+              },
+              "keywords": {
+                "gen": "const",
+                "value": [
+                  "AUTH",
+                  "SIZE",
+                  "8BITMIME",
+                  "STARTTLS",
+                  "X-1",
+                  "SMTPUTF8",
+                  "0"
+                ]
+              }
+            }
+          },
+          "iterations": 4000
+        }
+      ]
+    },
+    "capabilities.none": {
+      "doc": "Capabilities::none()",
+      "covers": [
+        "Utopia\\SMTP\\Capabilities::none"
+      ]
+    },
+    "timeouts.new": {
+      "doc": "new Timeouts(connect?, read?, write?)",
+      "covers": [
+        "Utopia\\SMTP\\Timeouts::__construct"
+      ]
+    },
+    "tls.new": {
+      "doc": "new Tls(verify, peerName, caFile, ciphers)",
+      "covers": [
+        "Utopia\\SMTP\\Tls::__construct"
+      ]
+    },
+    "auth.exchange": {
+      "doc": "new Plain|Login|XOAuth2(username, secret): mechanism(), initial(), respond(challenge, step) for each challenge",
+      "covers": [
+        "Utopia\\SMTP\\Auth\\Plain::__construct",
+        "Utopia\\SMTP\\Auth\\Plain::mechanism",
+        "Utopia\\SMTP\\Auth\\Plain::initial",
+        "Utopia\\SMTP\\Auth\\Plain::respond",
+        "Utopia\\SMTP\\Auth\\Login::__construct",
+        "Utopia\\SMTP\\Auth\\Login::mechanism",
+        "Utopia\\SMTP\\Auth\\Login::initial",
+        "Utopia\\SMTP\\Auth\\Login::respond",
+        "Utopia\\SMTP\\Auth\\XOAuth2::__construct",
+        "Utopia\\SMTP\\Auth\\XOAuth2::mechanism",
+        "Utopia\\SMTP\\Auth\\XOAuth2::initial",
+        "Utopia\\SMTP\\Auth\\XOAuth2::respond"
+      ]
+    },
+    "exception.new": {
+      "doc": "an exception of each class: {class, message, code, reply/rejected/transient/permanent for a transaction, smtp: instanceof SmtpException, connection: instanceof ConnectionException}",
+      "covers": [
+        "Utopia\\SMTP\\Exception\\TransactionException::__construct",
+        "Utopia\\SMTP\\Exception\\TransactionException::isTransient",
+        "Utopia\\SMTP\\Exception\\TransactionException::isPermanent"
+      ]
+    },
+    "file.write": {
+      "doc": "test glue: file_put_contents(path, content), creating the directory"
+    },
+    "file.delete": {
+      "doc": "test glue: unlink(path)"
+    },
+    "client.new": {
+      "doc": "new Client(transport, domain, authenticators, encryption, timeouts) as a handle; transport is a scripted FakeTransport ({replies, greedy, after_handshake, fail_writing, chunk, fail_handshake}) or Native to a service ({service, verify, peer_name})",
+      "covers": [
+        "Utopia\\SMTP\\Client::__construct"
+      ]
+    },
+    "client.send_raw": {
+      "doc": "sendRaw(envelope, content string | list of chunks): {message_id, accepted, rejected, complete}; `catch` returns a runtime failure's details",
+      "covers": [
+        "Utopia\\SMTP\\Client::sendRaw",
+        "Utopia\\SMTP\\Result::__construct",
+        "Utopia\\SMTP\\Result::isComplete"
+      ]
+    },
+    "client.send": {
+      "doc": "send(message)",
+      "covers": [
+        "Utopia\\SMTP\\Client::send"
+      ]
+    },
+    "client.capabilities": {
+      "doc": "capabilities()",
+      "covers": [
+        "Utopia\\SMTP\\Client::capabilities"
+      ]
+    },
+    "client.command": {
+      "doc": "command(command, expect)",
+      "covers": [
+        "Utopia\\SMTP\\Client::command"
+      ]
+    },
+    "client.noop": {
+      "doc": "noop()",
+      "covers": [
+        "Utopia\\SMTP\\Client::noop"
+      ]
+    },
+    "client.reset": {
+      "doc": "reset()",
+      "covers": [
+        "Utopia\\SMTP\\Client::reset"
+      ]
+    },
+    "client.close": {
+      "doc": "close()",
+      "covers": [
+        "Utopia\\SMTP\\Client::close"
+      ]
+    },
+    "client.ping": {
+      "doc": "ping()",
+      "covers": [
+        "Utopia\\SMTP\\Client::ping"
+      ]
+    },
+    "client.idle": {
+      "doc": "idle(): {session: false} for INF, else {session: true, under_a_second}",
+      "covers": [
+        "Utopia\\SMTP\\Client::idle"
+      ]
+    },
+    "client.transactions": {
+      "doc": "$client->transactions"
+    },
+    "client.session": {
+      "doc": "test glue for fuzzing: client.new, then sendRaw(envelope, content) with failures caught, then the scripted transport: {result, written, closed, transactions}",
+      "covers": [
+        "Utopia\\SMTP\\Client::sendRaw"
+      ],
+      "fuzz": [
+        {
+          "name": "stuffing",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "transport": {
+                "gen": "const",
+                "value": {
+                  "replies": [
+                    "220 mail.example.test",
+                    "250-mail.example.test",
+                    "250-8BITMIME",
+                    "250-SIZE 64",
+                    "250 SMTPUTF8",
+                    "250 ok",
+                    "250 ok",
+                    "354 go",
+                    "250 Ok: queued as Q1"
+                  ]
+                }
+              },
+              "encryption": {
+                "gen": "const",
+                "value": "none"
+              },
+              "envelope": {
+                "gen": "const",
+                "value": {
+                  "sender": "jane@example.test",
+                  "recipients": [
+                    "john@example.test"
+                  ]
+                }
+              },
+              "content": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "ref",
+                      "name": "chunk"
+                    },
+                    "max": 6
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "chunk"
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": ".\r\nxé",
+                    "max": 80
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 4000
+        },
+        {
+          "name": "replies",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "transport": {
+                "gen": "object",
+                "fields": {
+                  "replies": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "ref",
+                      "name": "reply_line"
+                    },
+                    "min": 0,
+                    "max": 9
+                  },
+                  "chunk": {
+                    "gen": "pick",
+                    "from": [
+                      1,
+                      2,
+                      3,
+                      5,
+                      7,
+                      9
+                    ]
+                  },
+                  "greedy": {
+                    "gen": "bool"
+                  }
+                },
+                "optional": [
+                  "chunk",
+                  "greedy"
+                ]
+              },
+              "encryption": {
+                "gen": "pick",
+                "from": [
+                  "none",
+                  "opportunistic"
+                ]
+              },
+              "authenticators": {
+                "gen": "const",
+                "value": [
+                  {
+                    "mechanism": "login",
+                    "username": "jane",
+                    "secret": "secret"
+                  }
+                ]
+              },
+              "envelope": {
+                "gen": "const",
+                "value": {
+                  "sender": "jane@example.test",
+                  "recipients": [
+                    "john@example.test",
+                    "ann@example.test"
+                  ]
+                }
+              },
+              "content": {
+                "gen": "const",
+                "value": "Body"
+              }
+            },
+            "optional": [
+              "authenticators"
+            ]
+          },
+          "iterations": 4000
+        },
+        {
+          "name": "queue identifiers",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "transport": {
+                "gen": "object",
+                "fields": {
+                  "replies": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "concat",
+                      "parts": [
+                        {
+                          "gen": "const",
+                          "value": "250 "
+                        },
+                        {
+                          "gen": "repeat",
+                          "part": {
+                            "gen": "pick",
+                            "from": [
+                              "queued as ",
+                              "QUEUED AS ",
+                              "id=",
+                              "Ok ",
+                              "ok ",
+                              "x",
+                              "_",
+                              " ",
+                              "ABC1",
+                              "0123456789abcdef",
+                              "-",
+                              "é",
+                              "\t"
+                            ]
+                          },
+                          "sep": "",
+                          "min": 0,
+                          "max": 6
+                        }
+                      ]
+                    },
+                    "min": 1,
+                    "max": 1
+                  }
+                }
+              },
+              "encryption": {
+                "gen": "const",
+                "value": "none"
+              },
+              "envelope": {
+                "gen": "const",
+                "value": {
+                  "sender": "jane@example.test",
+                  "recipients": [
+                    "john@example.test"
+                  ]
+                }
+              },
+              "content": {
+                "gen": "const",
+                "value": "Body"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "fake.reply": {
+      "doc": "queue more reply lines on a scripted client's transport"
+    },
+    "fake.state": {
+      "doc": "a scripted transport: {written, commands, connected, closed, handshakes, tls, waits}"
+    },
+    "listener.new": {
+      "doc": "test glue: a TCP listener on 127.0.0.1, in the driver's process"
+    },
+    "listener.accept": {
+      "doc": "test glue: accept the pending connection"
+    },
+    "listener.send": {
+      "doc": "test glue: the listener's side writes data"
+    },
+    "listener.receive": {
+      "doc": "test glue: the listener's side reads up to length bytes"
+    },
+    "listener.hangup": {
+      "doc": "test glue: the listener's side closes"
+    },
+    "transport.new": {
+      "doc": "new Native(host ?? 127.0.0.1, port of a listener or `port`, tls) as a handle",
+      "covers": [
+        "Utopia\\SMTP\\Transport\\Native::__construct"
+      ]
+    },
+    "transport.connect": {
+      "doc": "connect(timeout, tls)",
+      "covers": [
+        "Utopia\\SMTP\\Transport\\Native::connect"
+      ]
+    },
+    "transport.read": {
+      "doc": "read(length, timeout)",
+      "covers": [
+        "Utopia\\SMTP\\Transport\\Native::read"
+      ]
+    },
+    "transport.write": {
+      "doc": "write(data, timeout)",
+      "covers": [
+        "Utopia\\SMTP\\Transport\\Native::write"
+      ]
+    },
+    "transport.start_tls": {
+      "doc": "startTls(timeout)",
+      "covers": [
+        "Utopia\\SMTP\\Transport\\Native::startTls"
+      ]
+    },
+    "transport.is_tls": {
+      "doc": "isTls()",
+      "covers": [
+        "Utopia\\SMTP\\Transport\\Native::isTls"
+      ]
+    },
+    "transport.close": {
+      "doc": "close()",
+      "covers": [
+        "Utopia\\SMTP\\Transport\\Native::close"
+      ]
+    },
+    "mailpit.clear": {
+      "doc": "test glue: DELETE /api/v1/messages on a Mailpit API service"
+    },
+    "mailpit.count": {
+      "doc": "test glue: how many messages Mailpit holds"
+    },
+    "mailpit.message": {
+      "doc": "test glue: Mailpit's reading of its one message: subject, people, text, html, attachments and inline parts with their decoded content"
+    },
+    "mailpit.raw": {
+      "doc": "test glue: the source as received from `Date: ` on (boundaries renamed), the Bcc Mailpit prepends, and the longest line"
+    }
+  },
+  "generators": {
+    "header_value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "unicode",
+          "max": 120,
+          "tricky": 0.2
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "string",
+            "alphabet": "abcdéü😀 ",
+            "min": 0,
+            "max": 30
+          },
+          "sep": " ",
+          "min": 1,
+          "max": 12
+        },
+        {
+          "gen": "string",
+          "alphabet": "a ",
+          "min": 70,
+          "max": 200
+        }
+      ]
+    },
+    "local": {
+      "gen": "string",
+      "alphabet": "abcz09.+-_'\"ä ()@",
+      "min": 0,
+      "max": 12
+    },
+    "domain": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "example.test",
+            "a.b",
+            "[127.0.0.1]",
+            "ex ample.test",
+            "x",
+            "例え.テスト",
+            ""
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "hostname",
+          "max": 20
+        }
+      ]
+    },
+    "reply_line": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "pick",
+          "from": [
+            "220",
+            "250",
+            "251",
+            "334",
+            "354",
+            "421",
+            "450",
+            "550",
+            "2x0",
+            "22",
+            "620",
+            "022",
+            ""
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            " ",
+            "-",
+            "",
+            "x"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "ab .=-PLAINSIZE0123",
+          "max": 20
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            " é"
+          ]
+        }
+      ]
+    },
+    "capability_line": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            " ",
+            "\t"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "AUTH",
+            "auth",
+            "SIZE",
+            "8BITMIME",
+            "STARTTLS",
+            "X-1",
+            "-X",
+            "Ä",
+            "SMTPUTF8",
+            "0"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            " ",
+            "=",
+            "\t",
+            "  "
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "PLAIN login 0123\t\u000b\f\n\r=-",
+          "max": 16
+        }
+      ]
+    },
+    "chunk": {
+      "gen": "string",
+      "alphabet": ".\r\nabé",
+      "max": 8
+    }
+  },
+  "waivers": {
+    "Utopia\\SMTP\\Transport\\Swoole::*": "PHP runtime plumbing: the Swoole coroutine transport, PHP's second I/O model. Rust has one async transport (TcpTransport), whose behaviour the transport.* cases hold to the same promises (cases/SwooleTest.json ports SwooleTest onto it)."
+  },
+  "tests_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\SMTP\\Mime\\Part::body",
+      "description": "A multipart part without children writes no delimiters at all, just an empty body: body() checks `$this->parts !== []` before treating the part as a multipart.",
+      "case": "part.json#an empty multipart"
+    },
+    {
+      "symbol": "Utopia\\SMTP\\Message::__construct",
+      "description": "A non-ASCII address in To, Cc, Reply-To or From makes the whole header value (angle brackets and address included) one run of RFC 2047 encoded words, which no parser reads back as an address; RFC 6532 would send it as UTF-8.",
+      "case": "MessageTest.json#an international To is encoded whole"
+    },
+    {
+      "symbol": "Utopia\\SMTP\\Mime\\Header::line",
+      "description": "Folding drops the space before a word that follows an empty word at a fold point (`$current === ''` reads the empty word as no line at all), so a run of spaces can lose one when a fold lands inside it.",
+      "case": "HeaderTest.json#double spaces survive folding"
+    },
+    {
+      "symbol": "Utopia\\SMTP\\Message::__construct",
+      "description": "The subject is checked for CR and LF only, so a NUL byte reaches the Subject header, while custom headers and addresses refuse it.",
+      "case": "MessageTest.json#a NUL in the subject is allowed"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\SMTP\\Address::__construct",
+      "php": "An email address or display name may be any bytes; a non-ASCII display name that is not valid UTF-8 encodes to nothing (preg_split('//u') fails), leaving ` <email>`.",
+      "reason": "Addresses, subjects, header names and values, envelope paths, attachment names and commands are Rust strings (UTF-8), so invalid UTF-8 cannot be passed. Bodies and attachment content stay bytes."
+    },
+    {
+      "symbol": "Utopia\\SMTP\\Reply::__construct",
+      "php": "The code is any int (a negative one is refused as not a reply class) and lines are bytes, kept as received.",
+      "reason": "The code is a u16; reply text read off the wire is decoded as UTF-8 lossily (RFC 5321 replies are ASCII), so a byte that is not UTF-8 reads as U+FFFD."
+    },
+    {
+      "symbol": "Utopia\\SMTP\\Message::__construct",
+      "php": "A custom header named by a decimal integer becomes an int array key, and strtolower() under strict types throws a TypeError.",
+      "reason": "Header names are strings; such a name is accepted like any other."
+    },
+    {
+      "symbol": "Utopia\\SMTP\\Attachment::fromPath",
+      "php": "Without a type, the media type is libmagic's (mime_content_type), from a database of thousands of formats.",
+      "reason": "utopia_smtp::detect knows the formats a message usually carries (empty, one byte, PNG, GIF, JPEG, PDF, ZIP, gzip, UTF-8 text, other binary) and answers as libmagic does for them; other formats get application/octet-stream. Pass the type to be exact."
+    },
+    {
+      "symbol": "Utopia\\SMTP\\Tls::__construct",
+      "php": "`ciphers` is an OpenSSL cipher list handed to the handshake.",
+      "reason": "rustls offers its own fixed set of modern suites and takes no OpenSSL list; the value is kept on Tls and not applied."
+    },
+    {
+      "symbol": "Utopia\\SMTP\\Transport\\Native::connect",
+      "php": "The exception code of a connection failure is errno, and a failed implicit TLS handshake reads as the stream layer's error.",
+      "reason": "The message carries the OS error text the same way; Error::code is a reply code (0 here), and a failed TLS handshake reads as rustls describes it."
+    }
+  ],
+  "bench": {
+    "bound": {
+      "send": "A Mailpit round trip (MAIL, RCPT, DATA and the stored message), the same on both runtimes, dominates the call"
+    }
+  }
+}

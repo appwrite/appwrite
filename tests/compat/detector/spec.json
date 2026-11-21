@@ -1,0 +1,321 @@
+{
+  "lib": "detector",
+  "description": "utopia-php/detector: a project's packager, runtime, framework and rendering from its file names, languages and manifests.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/detector/src"
+    ],
+    "tests": [
+      "packages/detector/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/detector"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "packager.detect": {
+      "doc": "new Packager(), addOption for each of `options` (names), addInput for each of `inputs`, detect()?->getName()",
+      "covers": [
+        "Utopia\\Detector\\Detector\\Packager::__construct",
+        "Utopia\\Detector\\Detector\\Packager::detect",
+        "Utopia\\Detector\\Detector::__construct",
+        "Utopia\\Detector\\Detector::addInput",
+        "Utopia\\Detector\\Detector::addOption"
+      ],
+      "fuzz": [
+        {
+          "name": "files",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "options": { "gen": "array", "items": { "gen": "pick", "from": ["pnpm", "yarn", "npm"] }, "min": 0, "max": 4 },
+              "inputs": { "gen": "array", "items": { "gen": "ref", "name": "file" }, "min": 0, "max": 6 }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "packager.describe": {
+      "doc": "getName() and getFiles() of a packager",
+      "covers": [
+        "Utopia\\Detector\\Detection\\Packager\\*"
+      ]
+    },
+    "strategy.new": {
+      "doc": "(new Strategy(value))->getValue()",
+      "covers": [
+        "Utopia\\Detector\\Detector\\Strategy::__construct",
+        "Utopia\\Detector\\Detector\\Strategy::getValue"
+      ]
+    },
+    "runtime.detect": {
+      "doc": "new Runtime(new Strategy(strategy), packager?), options by name, inputs: {name, commands, entrypoint} of detect(), or null",
+      "covers": [
+        "Utopia\\Detector\\Detector\\Runtime::__construct",
+        "Utopia\\Detector\\Detector\\Runtime::detect"
+      ],
+      "fuzz": [
+        {
+          "name": "inputs",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "strategy": { "gen": "pick", "from": ["filematch", "extension", "languages"] },
+              "packager": { "gen": "pick", "from": ["pnpm", "yarn", "npm", "bun", ""] },
+              "options": { "gen": "array", "items": { "gen": "ref", "name": "runtime" }, "min": 0, "max": 11 },
+              "inputs": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    { "gen": "ref", "name": "file" },
+                    { "gen": "pick", "from": ["JavaScript", "TypeScript", "PHP", "Python", "Dart", "Swift", "Ruby", "Java", "C++", "C#", "Visual Basic .NET", "HTML", "javascript", "DockerFile"] }
+                  ]
+                },
+                "min": 0,
+                "max": 6
+              }
+            },
+            "optional": ["packager"]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "runtime.describe": {
+      "doc": "every getter of a runtime, after setPackager(packager) when given",
+      "covers": [
+        "Utopia\\Detector\\Detection\\Runtime\\*",
+        "Utopia\\Detector\\Detection\\Runtime::__construct",
+        "Utopia\\Detector\\Detection\\Runtime::setPackager"
+      ]
+    },
+    "framework.detect": {
+      "doc": "new Framework(packager?), options by name, `files` as INPUT_FILE, `packages` as INPUT_PACKAGES, `inputs` ({content, type}): {name, install, build, output} of detect(), or null",
+      "covers": [
+        "Utopia\\Detector\\Detector\\Framework::__construct",
+        "Utopia\\Detector\\Detector\\Framework::addInput",
+        "Utopia\\Detector\\Detector\\Framework::detect"
+      ],
+      "fuzz": [
+        {
+          "name": "scores",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "packager": { "gen": "pick", "from": ["pnpm", "yarn", "npm", "bun", ""] },
+              "options": { "gen": "array", "items": { "gen": "ref", "name": "framework" }, "min": 0, "max": 16 },
+              "files": { "gen": "array", "items": { "gen": "ref", "name": "file" }, "min": 0, "max": 8 },
+              "packages": { "gen": "array", "items": { "gen": "ref", "name": "manifest" }, "min": 0, "max": 2 }
+            },
+            "optional": ["packager"]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "framework.describe": {
+      "doc": "every getter of a framework but getAdapter(), after setPackager(packager) when given",
+      "covers": [
+        "Utopia\\Detector\\Detection\\Framework\\*",
+        "Utopia\\Detector\\Detection\\Framework::__construct",
+        "Utopia\\Detector\\Detection\\Framework::setPackager",
+        "Utopia\\Detector\\Detection\\Framework::getPackages",
+        "Utopia\\Detector\\Detection\\Framework::getConfigFiles"
+      ]
+    },
+    "framework.adapter": {
+      "doc": "$framework->getAdapter(config): 'ssr', 'static' or ''",
+      "covers": [
+        "Utopia\\Detector\\Detection\\Framework::getAdapter"
+      ],
+      "fuzz": [
+        {
+          "name": "configs",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "framework": { "gen": "ref", "name": "framework" },
+              "config": { "gen": "ref", "name": "config" }
+            }
+          },
+          "iterations": 4000
+        }
+      ]
+    },
+    "framework.dependencies": {
+      "doc": "the protected Framework::dependencies(manifest), through a subclass: dependency names of a package.json or pubspec.yaml",
+      "fuzz": [
+        {
+          "name": "manifests",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "manifest": { "gen": "ref", "name": "manifest" }
+            }
+          },
+          "iterations": 4000
+        }
+      ]
+    },
+    "rendering.detect": {
+      "doc": "new Rendering(framework), options (`ssr`, `static` or {type, fallback}), inputs: {name, fallback} of detect()",
+      "covers": [
+        "Utopia\\Detector\\Detector\\Rendering::__construct",
+        "Utopia\\Detector\\Detector\\Rendering::detect"
+      ],
+      "fuzz": [
+        {
+          "name": "builds",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "framework": { "gen": "one_of", "of": [{ "gen": "ref", "name": "framework" }, { "gen": "pick", "from": ["", "unknown", "NEXTJS"] }] },
+              "options": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    { "gen": "pick", "from": ["ssr", "static"] },
+                    { "gen": "object", "fields": { "type": { "gen": "pick", "from": ["ssr", "static"] }, "fallback": { "gen": "ref", "name": "file" } } }
+                  ]
+                },
+                "min": 0,
+                "max": 3
+              },
+              "inputs": { "gen": "array", "items": { "gen": "ref", "name": "file" }, "min": 0, "max": 6 }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "rendering.describe": {
+      "doc": "getName(), getFiles(framework) and getFallbackFile() of a rendering",
+      "covers": [
+        "Utopia\\Detector\\Detection\\Rendering\\*",
+        "Utopia\\Detector\\Detection\\Rendering::__construct",
+        "Utopia\\Detector\\Detection\\Rendering::getFallbackFile"
+      ]
+    },
+    "detect.fixture": {
+      "doc": "every detector over tests/compat/detector/fixtures/<fixture>: its files (recursive, sorted), package.json and pubspec.yaml as manifests, the detected framework's first config file for its adapter, and build/ for the rendering"
+    }
+  },
+  "generators": {
+    "file": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "package.json", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lockb", "tsconfig.json", "composer.json", "composer.lock",
+            "requirements.txt", "setup.py", "pubspec.yaml", "pubspec.lock", "Gemfile", "Gemfile.lock", "pom.xml", "build.gradle", "Package.swift",
+            "main.cpp", "CMakeLists.txt", "Program.cs", "mod.ts", "deps.ts", "next.config.js", "next.config.mjs", "nuxt.config.ts", "svelte.config.js",
+            "astro.config.mjs", "angular.json", "remix.config.js", "lynx.config.ts", "vite.config.ts", "index.html", "about.html", "404.html", "style.css",
+            "server.js", "handler.js", "server/index.mjs", "server/server.mjs", "server/entry.mjs", "server/server.js", "build/server/index.js",
+            ".next/turbopack", ".next/server/webpack-runtime.js", "app", "src", "main.ts", "main.js", "index.php", "main.py", "main.dart", "Main.java",
+            "lib.rs", "a.tsx", "b.jsx", "c.rb", "d.swift", "e.cs", "f.vb", "g.hpp", "x.tar.gz", ".env", "Dockerfile", "pages/index.html/", "dir/", ""
+          ]
+        },
+        { "gen": "string", "min": 0, "max": 12, "alphabet": "abc./-_html" }
+      ]
+    },
+    "framework": {
+      "gen": "pick",
+      "from": ["analog", "angular", "astro", "flutter", "jaspr", "lynx", "nextjs", "nuxt", "react", "react-native", "remix", "svelte", "sveltekit", "tanstack-start", "vue"]
+    },
+    "runtime": {
+      "gen": "pick",
+      "from": ["node", "bun", "deno", "php", "python", "dart", "swift", "ruby", "java", "cpp", "dotnet"]
+    },
+    "package": {
+      "gen": "pick",
+      "from": [
+        "react", "next", "react-native", "@remix-run/react", "@lynx-js/react", "@tanstack/react-start", "@tanstack/solid-start", "@angular/core",
+        "@analogjs/platform", "vue", "nuxt", "svelte", "@sveltejs/kit", "astro", "flutter", "jaspr", "jaspr_builder", "lodash", "0", "123", "true"
+      ]
+    },
+    "section": {
+      "gen": "pick",
+      "from": ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies", "dev_dependencies", "dependency_overrides", "scripts", "Dependencies"]
+    },
+    "manifest": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            { "gen": "const", "value": "{\"name\": \"app\", \"" },
+            { "gen": "ref", "name": "section" },
+            { "gen": "const", "value": "\": {" },
+            {
+              "gen": "repeat",
+              "part": { "gen": "concat", "parts": [{ "gen": "const", "value": "\"" }, { "gen": "ref", "name": "package" }, { "gen": "const", "value": "\": \"^1.0.0\"" }] },
+              "min": 0,
+              "max": 4,
+              "sep": ", "
+            },
+            { "gen": "pick", "from": ["}}", "}, \"devDependencies\": {\"react\": \"1\"}}", "}", "}, \"dependencies\": []}", "}, \"dependencies\": \"react\"}"] }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            { "gen": "pick", "from": ["name: app\n", "", "# comment\n", "---\n"] },
+            { "gen": "ref", "name": "section" },
+            { "gen": "pick", "from": [":\n", ": {", ":\n  # jaspr: ^1\n"] },
+            {
+              "gen": "repeat",
+              "part": { "gen": "concat", "parts": [{ "gen": "pick", "from": ["  ", "  '", "  \""] }, { "gen": "ref", "name": "package" }, { "gen": "pick", "from": [": ^1.0.0\n", "':  ^1\n", "\": 1\n", ":\n    sdk: flutter\n"] }] },
+              "min": 0,
+              "max": 4,
+              "sep": ""
+            },
+            { "gen": "pick", "from": ["", "}", "jaspr:\n  mode: server\n", "\t- bad\n"] }
+          ]
+        },
+        { "gen": "pick", "from": ["", "{}", "[]", "null", "\"react\"", "123", "{\"dependencies\": {\"0\": \"x\", \"1\": \"y\"}}", "dependencies: [react, vue]", "dependencies:\n  1: a\n  true: b\n  ~: c\n"] },
+        { "gen": "string", "min": 0, "max": 20, "tricky": 0.5 }
+      ]
+    },
+    "config": {
+      "gen": "repeat",
+      "part": {
+        "gen": "pick",
+        "from": [
+          "export default defineConfig({", "})", "output", "output:", " : ", ": ", "'server'", "\"server\"", "`hybrid`", "'static'", "server", "hybrid",
+          "//", "// ", "https://", "http://example.com", "\n", " ", "prerender", "prerender:", "'prerender'", "\"prerender\": ", "false", "true", "{ routes: ['/'] }",
+          "nitro/vite", "@tanstack/nitro-v2-vite-plugin", "@sveltejs/adapter-static", "@sveltejs/adapter-auto", "import adapter from ", ";",
+          "jaspr:", "\n  mode: ", "mode: server", "static", "client", "{mode: server}", "#", "'", "\"", "{", "}", ",", "dev:", "\n    "
+        ]
+      },
+      "min": 0,
+      "max": 10,
+      "sep": ""
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\Detector\\Detector\\Framework::detect",
+      "description": "Scores are kept by framework name, so two options with one name share (and double) a score and their parent counts add up.",
+      "case": "DetectorTest.json#options sharing a name share a score"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Detector\\Detector::addInput",
+      "php": "Inputs are byte strings, so a file name or language that is not UTF-8 is matched byte for byte.",
+      "reason": "File names and languages are `String`s in Rust; manifests (FrameworkDetector::add_manifest) stay bytes."
+    }
+  ],
+  "bench": {
+    "bound": {}
+  }
+}

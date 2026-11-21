@@ -1,0 +1,352 @@
+{
+  "service": "organization",
+  "file": "tests/benchmarks/results/organization.json",
+  "workload": {
+    "script": "tests/benchmarks/api/organization.js",
+    "duration": "60s",
+    "hashing": false,
+    "seed": 200,
+    "run": "organization-20261012-030439"
+  },
+  "environment": {
+    "date": "2026-10-12T02:07:02Z",
+    "commit": "85a07ca4ae",
+    "branch": "feat/rust-utopia-conversion",
+    "machine": {
+      "os": "Darwin",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max",
+      "cores": 16,
+      "memory_gib": 128
+    },
+    "docker": "28.5.1",
+    "k6": "k6 v1.7.1",
+    "cpu_source": "docker stats",
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "88b87c5028a0",
+      "created": "2026-10-09T07:39:19.618591965Z"
+    },
+    "rust": {
+      "container": "appwrite-rust",
+      "image": "appwrite-rust-dev",
+      "id": "b0b46302463d",
+      "created": "2026-10-11T19:37:06.64190413Z"
+    },
+    "database": {
+      "container": "appwrite-postgresql",
+      "image": "appwrite/postgres:0.1.0",
+      "id": "77156232a16d",
+      "created": "2026-10-09T08:32:40.317530502Z"
+    },
+    "endpoint": {
+      "php": "http://localhost:9501/v1",
+      "rust": "http://localhost:9530/v1"
+    }
+  },
+  "steps": [
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 50,
+      "rps": 50.0,
+      "requests": 3000,
+      "failures": 0,
+      "errors": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 49.16,
+        "p50": 7.002,
+        "p90": 110.416,
+        "p95": 233.377,
+        "p99": 463.003,
+        "max": 3548.199
+      },
+      "cpu_ms_per_request": 12.955,
+      "db_cpu_ms_per_request": 27.255,
+      "memory_mib": {
+        "baseline": 3892.2,
+        "avg": 3898.2,
+        "peak": 3902.5
+      },
+      "endpoints": {
+        "organization.projects.list": {
+          "route": "GET /v1/organization/projects",
+          "count": 638,
+          "rps": 10.63,
+          "avg": 83.34,
+          "p50": 47.418,
+          "p90": 135.412,
+          "p95": 303.85,
+          "p99": 609.52,
+          "max": 968.259
+        },
+        "organization.projects.get": {
+          "route": "GET /v1/organization/projects/:projectId",
+          "count": 616,
+          "rps": 10.27,
+          "avg": 5.815,
+          "p50": 3.5,
+          "p90": 9.854,
+          "p95": 14.839,
+          "p99": 47.593,
+          "max": 128.062
+        },
+        "organization.projects.create": {
+          "route": "POST /v1/organization/projects",
+          "note": "provisions the project's database schema",
+          "count": 71,
+          "rps": 1.18,
+          "avg": 588.148,
+          "p50": 252.247,
+          "p90": 1593.398,
+          "p95": 2866.324,
+          "p99": 3522.033,
+          "max": 3548.199
+        },
+        "organization.projects.update": {
+          "route": "PATCH /v1/organization/projects/:projectId",
+          "note": "renames the run's project to its own name",
+          "count": 148,
+          "rps": 2.47,
+          "avg": 15.05,
+          "p50": 10.056,
+          "p90": 19.33,
+          "p95": 46.636,
+          "p99": 100.331,
+          "max": 150.004
+        },
+        "organization.projects.delete": {
+          "route": "DELETE /v1/organization/projects/:projectId",
+          "count": 78,
+          "rps": 1.3,
+          "avg": 13.445,
+          "p50": 8.308,
+          "p90": 22.602,
+          "p95": 44.81,
+          "p99": 82.283,
+          "max": 82.378
+        },
+        "organization.projects.keys.list": {
+          "route": "GET /v1/organization/projects/:projectId/keys",
+          "count": 377,
+          "rps": 6.28,
+          "avg": 10.156,
+          "p50": 5.5,
+          "p90": 15.395,
+          "p95": 38.104,
+          "p99": 81.786,
+          "max": 238.541
+        },
+        "organization.projects.keys.get": {
+          "route": "GET /v1/organization/projects/:projectId/keys/:keyId",
+          "count": 387,
+          "rps": 6.45,
+          "avg": 6.607,
+          "p50": 3.611,
+          "p90": 9.55,
+          "p95": 19.672,
+          "p99": 65.53,
+          "max": 99.531
+        },
+        "organization.projects.keys.create": {
+          "route": "POST /v1/organization/projects/:projectId/keys",
+          "count": 153,
+          "rps": 2.55,
+          "avg": 10.442,
+          "p50": 5.614,
+          "p90": 16.57,
+          "p95": 35.964,
+          "p99": 94.426,
+          "max": 114.331
+        },
+        "organization.projects.keys.update": {
+          "route": "PUT /v1/organization/projects/:projectId/keys/:keyId",
+          "count": 151,
+          "rps": 2.52,
+          "avg": 12.296,
+          "p50": 6.927,
+          "p90": 18.886,
+          "p95": 38.493,
+          "p99": 107.454,
+          "max": 175.839
+        },
+        "organization.projects.keys.delete": {
+          "route": "DELETE /v1/organization/projects/:projectId/keys/:keyId",
+          "count": 153,
+          "rps": 2.55,
+          "avg": 225.782,
+          "p50": 227.144,
+          "p90": 293.095,
+          "p95": 310.614,
+          "p99": 448.942,
+          "max": 587.144
+        },
+        "organization.projects.keys.ephemeral.create": {
+          "route": "POST /v1/organization/projects/:projectId/keys/ephemeral",
+          "note": "a signed JWT, nothing stored",
+          "count": 228,
+          "rps": 3.8,
+          "avg": 5.743,
+          "p50": 3.988,
+          "p90": 10.134,
+          "p95": 14.971,
+          "p99": 50.887,
+          "max": 68.176
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 50,
+      "rps": 138.2,
+      "requests": 8294,
+      "failures": 0,
+      "errors": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 207.959,
+        "p50": 22.584,
+        "p90": 219.018,
+        "p95": 325.982,
+        "p99": 5670.864,
+        "max": 7117.689
+      },
+      "cpu_ms_per_request": 21.903,
+      "db_cpu_ms_per_request": 29.171,
+      "memory_mib": {
+        "baseline": 3897.3,
+        "avg": 3886.2,
+        "peak": 3902.5
+      },
+      "endpoints": {
+        "organization.projects.list": {
+          "route": "GET /v1/organization/projects",
+          "count": 1693,
+          "rps": 28.22,
+          "avg": 169.293,
+          "p50": 146.169,
+          "p90": 272.299,
+          "p95": 325.563,
+          "p99": 469.345,
+          "max": 662.495
+        },
+        "organization.projects.get": {
+          "route": "GET /v1/organization/projects/:projectId",
+          "count": 1707,
+          "rps": 28.45,
+          "avg": 14.365,
+          "p50": 11.667,
+          "p90": 25.507,
+          "p95": 34.745,
+          "p99": 64.725,
+          "max": 151.68
+        },
+        "organization.projects.create": {
+          "route": "POST /v1/organization/projects",
+          "note": "provisions the project's database schema",
+          "count": 221,
+          "rps": 3.68,
+          "avg": 5436.38,
+          "p50": 5477.058,
+          "p90": 6425.178,
+          "p95": 6689.201,
+          "p99": 6975.353,
+          "max": 7117.689
+        },
+        "organization.projects.update": {
+          "route": "PATCH /v1/organization/projects/:projectId",
+          "note": "renames the run's project to its own name",
+          "count": 449,
+          "rps": 7.48,
+          "avg": 45.271,
+          "p50": 33.88,
+          "p90": 76.587,
+          "p95": 123.162,
+          "p99": 193.412,
+          "max": 287.36
+        },
+        "organization.projects.delete": {
+          "route": "DELETE /v1/organization/projects/:projectId",
+          "count": 219,
+          "rps": 3.65,
+          "avg": 35.315,
+          "p50": 29.764,
+          "p90": 55.675,
+          "p95": 74.921,
+          "p99": 119.784,
+          "max": 158.441
+        },
+        "organization.projects.keys.list": {
+          "route": "GET /v1/organization/projects/:projectId/keys",
+          "count": 1010,
+          "rps": 16.83,
+          "avg": 20.136,
+          "p50": 16.181,
+          "p90": 35.415,
+          "p95": 44.144,
+          "p99": 84.308,
+          "max": 160.83
+        },
+        "organization.projects.keys.get": {
+          "route": "GET /v1/organization/projects/:projectId/keys/:keyId",
+          "count": 1073,
+          "rps": 17.88,
+          "avg": 16.385,
+          "p50": 13.075,
+          "p90": 29.686,
+          "p95": 39.282,
+          "p99": 72.579,
+          "max": 139.771
+        },
+        "organization.projects.keys.create": {
+          "route": "POST /v1/organization/projects/:projectId/keys",
+          "count": 444,
+          "rps": 7.4,
+          "avg": 28.39,
+          "p50": 20.922,
+          "p90": 50.355,
+          "p95": 69.73,
+          "p99": 136.879,
+          "max": 290.739
+        },
+        "organization.projects.keys.update": {
+          "route": "PUT /v1/organization/projects/:projectId/keys/:keyId",
+          "count": 441,
+          "rps": 7.35,
+          "avg": 30.454,
+          "p50": 23.952,
+          "p90": 50.093,
+          "p95": 72.547,
+          "p99": 146.662,
+          "max": 308.987
+        },
+        "organization.projects.keys.delete": {
+          "route": "DELETE /v1/organization/projects/:projectId/keys/:keyId",
+          "count": 417,
+          "rps": 6.95,
+          "avg": 266.591,
+          "p50": 254.145,
+          "p90": 380.77,
+          "p95": 418.144,
+          "p99": 547.406,
+          "max": 679.531
+        },
+        "organization.projects.keys.ephemeral.create": {
+          "route": "POST /v1/organization/projects/:projectId/keys/ephemeral",
+          "note": "a signed JWT, nothing stored",
+          "count": 620,
+          "rps": 10.33,
+          "avg": 14.601,
+          "p50": 11.829,
+          "p90": 25.531,
+          "p95": 36.346,
+          "p99": 62.853,
+          "max": 170.493
+        }
+      }
+    }
+  ]
+}

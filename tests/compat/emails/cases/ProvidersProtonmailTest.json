@@ -1,0 +1,400 @@
+{
+  "source": "packages/emails/tests/Canonicals/Providers/ProtonmailTest.php",
+  "cases": [
+    {
+      "name": "supports",
+      "steps": [
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "protonmail",
+            "domain": "protonmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "protonmail",
+            "domain": "proton.me"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "protonmail",
+            "domain": "pm.me"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "protonmail",
+            "domain": "protonmail.ch"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "protonmail",
+            "domain": "gmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "protonmail",
+            "domain": "outlook.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "protonmail",
+            "domain": "example.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "get canonical",
+      "steps": [
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "user.name",
+            "domain": "protonmail.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "protonmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "user.name+tag",
+            "domain": "protonmail.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "protonmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "user.name+spam",
+            "domain": "protonmail.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "protonmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "user.name+newsletter",
+            "domain": "protonmail.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "protonmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "user.name+work",
+            "domain": "protonmail.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "protonmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "user.name+personal",
+            "domain": "protonmail.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "protonmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "user.name+test123",
+            "domain": "protonmail.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "protonmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "user.name+anything",
+            "domain": "protonmail.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "protonmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "user.name+verylongtag",
+            "domain": "protonmail.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "protonmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "user.name+tag.with.dots",
+            "domain": "protonmail.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "protonmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "user.name+tag-with-hyphens",
+            "domain": "protonmail.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "protonmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "user.name+tag_with_underscores",
+            "domain": "protonmail.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "protonmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "user.name+tag123",
+            "domain": "protonmail.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "protonmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "u.s.e.r.n.a.m.e",
+            "domain": "protonmail.com"
+          },
+          "expect": {
+            "local": "u.s.e.r.n.a.m.e",
+            "domain": "protonmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "u.s.e.r.n.a.m.e+tag",
+            "domain": "protonmail.com"
+          },
+          "expect": {
+            "local": "u.s.e.r.n.a.m.e",
+            "domain": "protonmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "user+",
+            "domain": "protonmail.com"
+          },
+          "expect": {
+            "local": "user",
+            "domain": "protonmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "user.",
+            "domain": "protonmail.com"
+          },
+          "expect": {
+            "local": "user.",
+            "domain": "protonmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": ".user",
+            "domain": "protonmail.com"
+          },
+          "expect": {
+            "local": ".user",
+            "domain": "protonmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "user..name",
+            "domain": "protonmail.com"
+          },
+          "expect": {
+            "local": "user..name",
+            "domain": "protonmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "user.name+tag",
+            "domain": "proton.me"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "proton.me"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "user.name+tag",
+            "domain": "pm.me"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "pm.me"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "user.name",
+            "domain": "proton.me"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "proton.me"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "user.name",
+            "domain": "pm.me"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "pm.me"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "user.name",
+            "domain": "protonmail.ch"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "protonmail.ch"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "protonmail",
+            "local": "user.name+tag",
+            "domain": "protonmail.ch"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "protonmail.ch"
+          }
+        }
+      ]
+    },
+    {
+      "name": "get canonical domain",
+      "steps": [
+        {
+          "op": "provider.canonical_domain",
+          "args": {
+            "provider": "protonmail"
+          },
+          "expect": "protonmail.com"
+        }
+      ]
+    },
+    {
+      "name": "get supported domains",
+      "steps": [
+        {
+          "op": "provider.supported_domains",
+          "args": {
+            "provider": "protonmail"
+          },
+          "expect": [
+            "protonmail.com",
+            "proton.me",
+            "pm.me",
+            "protonmail.ch"
+          ]
+        }
+      ]
+    }
+  ]
+}

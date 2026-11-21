@@ -18,7 +18,8 @@ use ext_php_rs::ffi::{
 use ext_php_rs::flags::PropertyFlags;
 use ext_php_rs::types::{ZendHashTable, ZendObject, ZendStr, Zval};
 use ext_php_rs::zend::{ClassEntry, ExecuteData, ce};
-use utopia_validators::{Input, Number};
+use utopia_validators::Number;
+use utopia_validators::scalar::Input;
 
 /// `MAY_BE_BOOL`: `false` and `true`.
 pub const MAY_BE_BOOL: u32 = (1 << 2) | (1 << 3);

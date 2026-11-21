@@ -1,0 +1,135 @@
+@import 'tailwindcss';
+
+/* Utopia.php design system: zinc neutrals, Poppins headings, system body,
+   mono code; periwinkle only on the wordmark; semantic colors for status. */
+@custom-variant dark (@media (prefers-color-scheme: dark));
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.141 0.005 285.823);
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  --accent: oklch(0.967 0.001 286.375);
+  --border: oklch(0.92 0.004 286.32);
+  --ring: oklch(0.871 0.006 286.286);
+  --primary: oklch(0.21 0.006 285.885);
+  --primary-foreground: oklch(0.985 0 0);
+  --periwinkle: #6474ce;
+  --ok: #22c55e;
+  --ok-surface: #f0fdf4;
+  --ok-border: #bbf7d0;
+  --ok-ink: #14532d;
+  --bad: #ef4444;
+  --bad-surface: #fef2f2;
+  --bad-border: #fecaca;
+  --bad-ink: #7f1d1d;
+  --warn: #eab308;
+  --warn-surface: #fefce8;
+  --warn-border: #fef08a;
+  --warn-ink: #713f12;
+  --info: #3b82f6;
+  --info-surface: #eff6ff;
+  --info-border: #bfdbfe;
+  --info-ink: #1e3a8a;
+  --code: oklch(0.141 0.005 285.823);
+  --code-foreground: #f8f8f2;
+  --code-muted: #a1a1aa;
+  --code-border: rgba(75, 85, 99, 0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: oklch(0.141 0.005 285.823);
+    --foreground: oklch(0.985 0 0);
+    --muted: oklch(0.274 0.006 286.033);
+    --muted-foreground: oklch(0.705 0.015 286.067);
+    --accent: oklch(0.274 0.006 286.033);
+    --border: oklch(0.274 0.006 286.033);
+    --ring: oklch(0.442 0.017 285.786);
+    --primary: oklch(0.985 0 0);
+    --primary-foreground: oklch(0.21 0.006 285.885);
+    --ok-surface: rgba(5, 46, 22, 0.3);
+    --ok-border: #14532d;
+    --ok-ink: #dcfce7;
+    --bad-surface: rgba(69, 10, 10, 0.3);
+    --bad-border: #7f1d1d;
+    --bad-ink: #fee2e2;
+    --warn-surface: rgba(66, 32, 6, 0.3);
+    --warn-border: #713f12;
+    --warn-ink: #fef9c3;
+    --info-surface: rgba(23, 37, 84, 0.3);
+    --info-border: #1e3a8a;
+    --info-ink: #dbeafe;
+    --code: oklch(0.21 0.006 285.885);
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-periwinkle: var(--periwinkle);
+  --color-ok: var(--ok);
+  --color-ok-surface: var(--ok-surface);
+  --color-ok-border: var(--ok-border);
+  --color-ok-ink: var(--ok-ink);
+  --color-bad: var(--bad);
+  --color-bad-surface: var(--bad-surface);
+  --color-bad-border: var(--bad-border);
+  --color-bad-ink: var(--bad-ink);
+  --color-warn: var(--warn);
+  --color-warn-surface: var(--warn-surface);
+  --color-warn-border: var(--warn-border);
+  --color-warn-ink: var(--warn-ink);
+  --color-info: var(--info);
+  --color-info-surface: var(--info-surface);
+  --color-info-border: var(--info-border);
+  --color-info-ink: var(--info-ink);
+  --color-code: var(--code);
+  --color-code-foreground: var(--code-foreground);
+  --color-code-muted: var(--code-muted);
+  --color-code-border: var(--code-border);
+  --font-display: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  --font-mono: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground font-sans text-sm antialiased;
+    line-height: 1.625;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display font-medium;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+  :focus-visible {
+    outline: 3px solid color-mix(in oklab, var(--ring) 60%, transparent);
+    outline-offset: 1px;
+    border-radius: 6px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition: none !important;
+    }
+  }
+}
+
+.diff-add {
+  display: block;
+  background: rgba(34, 197, 94, 0.16);
+}
+.diff-del {
+  display: block;
+  background: rgba(239, 68, 68, 0.2);
+}

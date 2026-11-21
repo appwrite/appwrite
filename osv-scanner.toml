@@ -4,4 +4,12 @@ reason = "paste is unmaintained, not vulnerable. It is a proc-macro, so it runs 
 
 [[IgnoredVulns]]
 id = "RUSTSEC-2024-0449"
-reason = "unsafe-libyaml is unmaintained, not vulnerable: the advisory has no fixed version and reports no flaw. Only php-std's yaml module (PHP's yaml_parse()) uses it, and nothing the utopia extension builds calls that yet."
+reason = "unsafe-libyaml is unmaintained (archived), not reported vulnerable. php-std's yaml_parse must reproduce PHP's ext-yaml, which is libyaml, quirks included; the suggested safe-Rust parsers (saphyr, noyalib) parse differently. The fuzz profiles keep away from the one input shape where ext-yaml itself corrupts its heap. Replacing it with the vendored C libyaml (as php-std vendors PCRE2) removes this entry."
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0543"
+reason = "chrono is unmaintained, not reported vulnerable: the advisory has no fixed version and reports no flaw. It is reached through tokio-postgres's with-chrono-0_4 feature and the workspace's datetime handling; moving to jiff or time is a separate change."
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0544"
+reason = "The overflow is in zlib's gz_vacate(), reached only through the gzFile API (gzwrite, gzprintf, gzvprintf on a non-blocking stream). utopia-compression and utopia-http call deflate and inflate only, never the gzFile functions. libz-sys stays on zlib 1.3.2, the version PHP's ext-zlib links, because the fixed release bundles zlib 1.4 and gzdeflate()/gzencode() output must match PHP byte for byte."

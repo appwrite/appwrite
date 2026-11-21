@@ -1,0 +1,90 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/SQLiteUserFunctionsTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SQLiteUserFunctionsTest::testRegistersRegexpWithoutPhpDeprecations",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:",
+                  "wrapper": true
+                }
+              }
+            },
+            "as": "o50915"
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        }
+      ]
+    },
+    {
+      "name": "SQLiteUserFunctionsTest::testReconnectRegistersRegexpOnReplacementConnection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:",
+                  "wrapper": true
+                }
+              }
+            },
+            "as": "o50917"
+          },
+          "bind": "s77857",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o50917"
+            },
+            "method": "reconnect",
+            "args": {}
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "SQLiteUserFunctionsTest::testDoesNotUseDeprecatedFallbackForGenericPdo",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o50918"
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        }
+      ]
+    }
+  ]
+}

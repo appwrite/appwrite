@@ -1,0 +1,482 @@
+{
+  "source": "packages/domains/tests/DomainTest.php",
+  "cases": [
+    {
+      "name": "httpmydomain.com",
+      "op": "domain.parse",
+      "args": {
+        "domain": "httpmydomain.com"
+      },
+      "expect": {
+        "get": "httpmydomain.com",
+        "tld": "com",
+        "suffix": "com",
+        "rule": "com",
+        "name": "httpmydomain",
+        "sub": "",
+        "apex": "httpmydomain.com",
+        "registerable": "httpmydomain.com",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "demo.example.co.uk",
+      "op": "domain.parse",
+      "args": {
+        "domain": "demo.example.co.uk"
+      },
+      "expect": {
+        "get": "demo.example.co.uk",
+        "tld": "uk",
+        "suffix": "co.uk",
+        "rule": "co.uk",
+        "name": "example",
+        "sub": "demo",
+        "apex": "example.co.uk",
+        "registerable": "example.co.uk",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "subsub.demo.example.co.uk",
+      "op": "domain.parse",
+      "args": {
+        "domain": "subsub.demo.example.co.uk"
+      },
+      "expect": {
+        "get": "subsub.demo.example.co.uk",
+        "tld": "uk",
+        "suffix": "co.uk",
+        "rule": "co.uk",
+        "name": "example",
+        "sub": "subsub.demo",
+        "apex": "example.co.uk",
+        "registerable": "example.co.uk",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "localhost",
+      "op": "domain.parse",
+      "args": {
+        "domain": "localhost"
+      },
+      "expect": {
+        "get": "localhost",
+        "tld": "localhost",
+        "suffix": "",
+        "rule": "",
+        "name": "",
+        "sub": "",
+        "apex": ".",
+        "registerable": "",
+        "known": false,
+        "icann": false,
+        "private": false,
+        "test": true
+      }
+    },
+    {
+      "name": "demo.localhost",
+      "op": "domain.parse",
+      "args": {
+        "domain": "demo.localhost"
+      },
+      "expect": {
+        "get": "demo.localhost",
+        "tld": "localhost",
+        "suffix": "",
+        "rule": "",
+        "name": "demo",
+        "sub": "",
+        "apex": "demo.",
+        "registerable": "",
+        "known": false,
+        "icann": false,
+        "private": false,
+        "test": true
+      }
+    },
+    {
+      "name": "sub.sub.demo.localhost",
+      "op": "domain.parse",
+      "args": {
+        "domain": "sub.sub.demo.localhost"
+      },
+      "expect": {
+        "get": "sub.sub.demo.localhost",
+        "tld": "localhost",
+        "suffix": "",
+        "rule": "",
+        "name": "demo",
+        "sub": "sub.sub",
+        "apex": "demo.",
+        "registerable": "",
+        "known": false,
+        "icann": false,
+        "private": false,
+        "test": true
+      }
+    },
+    {
+      "name": "sub.demo.localhost",
+      "op": "domain.parse",
+      "args": {
+        "domain": "sub.demo.localhost"
+      },
+      "expect": {
+        "get": "sub.demo.localhost",
+        "tld": "localhost",
+        "suffix": "",
+        "rule": "",
+        "name": "demo",
+        "sub": "sub",
+        "apex": "demo.",
+        "registerable": "",
+        "known": false,
+        "icann": false,
+        "private": false,
+        "test": true
+      }
+    },
+    {
+      "name": "אשקלון.קום",
+      "op": "domain.parse",
+      "args": {
+        "domain": "אשקלון.קום"
+      },
+      "expect": {
+        "get": "אשקלון.קום",
+        "tld": "קום",
+        "suffix": "קום",
+        "rule": "קום",
+        "name": "אשקלון",
+        "sub": "",
+        "apex": "אשקלון.קום",
+        "registerable": "אשקלון.קום",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "חדשות.אשקלון.קום",
+      "op": "domain.parse",
+      "args": {
+        "domain": "חדשות.אשקלון.קום"
+      },
+      "expect": {
+        "get": "חדשות.אשקלון.קום",
+        "tld": "קום",
+        "suffix": "קום",
+        "rule": "קום",
+        "name": "אשקלון",
+        "sub": "חדשות",
+        "apex": "אשקלון.קום",
+        "registerable": "אשקלון.קום",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "blog.potager.org",
+      "op": "domain.parse",
+      "args": {
+        "domain": "blog.potager.org"
+      },
+      "expect": {
+        "get": "blog.potager.org",
+        "tld": "org",
+        "suffix": "potager.org",
+        "rule": "potager.org",
+        "name": "blog",
+        "sub": "",
+        "apex": "blog.potager.org",
+        "registerable": "blog.potager.org",
+        "known": true,
+        "icann": false,
+        "private": true,
+        "test": false
+      }
+    },
+    {
+      "name": "example.example.ck",
+      "op": "domain.parse",
+      "args": {
+        "domain": "example.example.ck"
+      },
+      "expect": {
+        "get": "example.example.ck",
+        "tld": "ck",
+        "suffix": "example.ck",
+        "rule": "*.ck",
+        "name": "example",
+        "sub": "",
+        "apex": "example.example.ck",
+        "registerable": "example.example.ck",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "subsub.demo.example.example.ck",
+      "op": "domain.parse",
+      "args": {
+        "domain": "subsub.demo.example.example.ck"
+      },
+      "expect": {
+        "get": "subsub.demo.example.example.ck",
+        "tld": "ck",
+        "suffix": "example.ck",
+        "rule": "*.ck",
+        "name": "example",
+        "sub": "subsub.demo",
+        "apex": "example.example.ck",
+        "registerable": "example.example.ck",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "www.ck",
+      "op": "domain.parse",
+      "args": {
+        "domain": "www.ck"
+      },
+      "expect": {
+        "get": "www.ck",
+        "tld": "ck",
+        "suffix": "ck",
+        "rule": "!www.ck",
+        "name": "www",
+        "sub": "",
+        "apex": "www.ck",
+        "registerable": "www.ck",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "subsub.demo.www.ck",
+      "op": "domain.parse",
+      "args": {
+        "domain": "subsub.demo.www.ck"
+      },
+      "expect": {
+        "get": "subsub.demo.www.ck",
+        "tld": "ck",
+        "suffix": "ck",
+        "rule": "!www.ck",
+        "name": "www",
+        "sub": "subsub.demo",
+        "apex": "www.ck",
+        "registerable": "www.ck",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "sub.example.com.nom.br",
+      "op": "domain.parse",
+      "args": {
+        "domain": "sub.example.com.nom.br"
+      },
+      "expect": {
+        "get": "sub.example.com.nom.br",
+        "tld": "br",
+        "suffix": "com.nom.br",
+        "rule": "*.nom.br",
+        "name": "example",
+        "sub": "sub",
+        "apex": "example.com.nom.br",
+        "registerable": "example.com.nom.br",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "sub.example.com.kawasaki.jp",
+      "op": "domain.parse",
+      "args": {
+        "domain": "sub.example.com.kawasaki.jp"
+      },
+      "expect": {
+        "get": "sub.example.com.kawasaki.jp",
+        "tld": "jp",
+        "suffix": "com.kawasaki.jp",
+        "rule": "*.kawasaki.jp",
+        "name": "example",
+        "sub": "sub",
+        "apex": "example.com.kawasaki.jp",
+        "registerable": "example.com.kawasaki.jp",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "sub.city.kawasaki.jp",
+      "op": "domain.parse",
+      "args": {
+        "domain": "sub.city.kawasaki.jp"
+      },
+      "expect": {
+        "get": "sub.city.kawasaki.jp",
+        "tld": "jp",
+        "suffix": "kawasaki.jp",
+        "rule": "!city.kawasaki.jp",
+        "name": "city",
+        "sub": "sub",
+        "apex": "city.kawasaki.jp",
+        "registerable": "city.kawasaki.jp",
+        "known": true,
+        "icann": true,
+        "private": false,
+        "test": false
+      }
+    },
+    {
+      "name": "sub.example.com.dev.adobeaemcloud.com",
+      "op": "domain.parse",
+      "args": {
+        "domain": "sub.example.com.dev.adobeaemcloud.com"
+      },
+      "expect": {
+        "get": "sub.example.com.dev.adobeaemcloud.com",
+        "tld": "com",
+        "suffix": "com.dev.adobeaemcloud.com",
+        "rule": "*.dev.adobeaemcloud.com",
+        "name": "example",
+        "sub": "sub",
+        "apex": "example.com.dev.adobeaemcloud.com",
+        "registerable": "example.com.dev.adobeaemcloud.com",
+        "known": true,
+        "icann": false,
+        "private": true,
+        "test": false
+      }
+    },
+    {
+      "name": "sub.example.adobeaemcloud.net",
+      "op": "domain.parse",
+      "args": {
+        "domain": "sub.example.adobeaemcloud.net"
+      },
+      "expect": {
+        "get": "sub.example.adobeaemcloud.net",
+        "tld": "net",
+        "suffix": "adobeaemcloud.net",
+        "rule": "adobeaemcloud.net",
+        "name": "example",
+        "sub": "sub",
+        "apex": "example.adobeaemcloud.net",
+        "registerable": "example.adobeaemcloud.net",
+        "known": true,
+        "icann": false,
+        "private": true,
+        "test": false
+      }
+    },
+    {
+      "name": "url: http://httpmydomain.com",
+      "op": "domain.parse",
+      "args": {
+        "domain": "http://httpmydomain.com"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "'http://httpmydomain.com' must be a valid domain or hostname"
+        }
+      }
+    },
+    {
+      "name": "url: https://httpmydomain.com",
+      "op": "domain.parse",
+      "args": {
+        "domain": "https://httpmydomain.com"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "'https://httpmydomain.com' must be a valid domain or hostname"
+        }
+      }
+    },
+    {
+      "name": "url: http://www.facbook.com",
+      "op": "domain.parse",
+      "args": {
+        "domain": "http://www.facbook.com"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "'http://www.facbook.com' must be a valid domain or hostname"
+        }
+      }
+    },
+    {
+      "name": "url: http://facbook.com",
+      "op": "domain.parse",
+      "args": {
+        "domain": "http://facbook.com"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "'http://facbook.com' must be a valid domain or hostname"
+        }
+      }
+    },
+    {
+      "name": "url: https://www.facbook.com",
+      "op": "domain.parse",
+      "args": {
+        "domain": "https://www.facbook.com"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "'https://www.facbook.com' must be a valid domain or hostname"
+        }
+      }
+    },
+    {
+      "name": "url: https://facbook.com",
+      "op": "domain.parse",
+      "args": {
+        "domain": "https://facbook.com"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "'https://facbook.com' must be a valid domain or hostname"
+        }
+      }
+    }
+  ]
+}

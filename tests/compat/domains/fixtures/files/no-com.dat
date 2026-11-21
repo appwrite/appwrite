@@ -1,0 +1,5 @@
+// ===BEGIN ICANN DOMAINS===
+// A list without the `com` rule is corrupt.
+net
+org
+// ===END ICANN DOMAINS===

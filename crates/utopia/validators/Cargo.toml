@@ -1,15 +1,20 @@
 [package]
 name = "utopia-validators"
-description = "The checks of Utopia's request validators: booleans, integers, floats, numbers, ranges, ports, hex colors, text, identifiers, white lists, substrings, DNS labels, hostnames, domains, hosts, IP addresses, URLs, phone numbers, JSON, FCM service accounts, globstar patterns and the validators that compose others."
+description = "Request parameter validators with their user-facing messages, and the checks they share with the utopia PHP extension: scalars, text, identifiers, white lists, substrings, DNS labels, hostnames, domains, hosts, IP addresses, URLs, phone numbers, JSON, FCM service accounts, globstar patterns and the validators that compose others."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-repository.workspace = true
+repository = "https://github.com/utopia-rs/validators"
 publish.workspace = true
 
 [dependencies]
 php-std.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
 
 [package.metadata.utopia]
+php-sync = "771d14ca4f46b8530fe3f3635cb6460775501568"
+# The Utopia site's category, here rather than in packages/validators/composer.json:
+# a change there re-checks its dependents linked, and migration cannot resolve.
 category = "utilities"

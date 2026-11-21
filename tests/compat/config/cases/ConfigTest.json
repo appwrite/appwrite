@@ -1,0 +1,810 @@
+{
+  "source": "packages/config/tests/ConfigTest.php",
+  "cases": [
+    {
+      "name": "testFileSource",
+      "steps": [
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "file",
+              "path": "/tmp/compat-fs/${ns}/config.json",
+              "contents": "{\n  \"jsonKey\": \"customValue\"\n}\n"
+            },
+            "parser": "json",
+            "schema": "TestConfig"
+          },
+          "expect": {
+            "$config": "TestConfig",
+            "properties": [
+              [
+                "phpKey",
+                null
+              ],
+              [
+                "jsonKey",
+                "customValue"
+              ],
+              [
+                "yamlKey",
+                null
+              ],
+              [
+                "ymlKey",
+                null
+              ],
+              [
+                "envKey",
+                null
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testFileSourceException",
+      "steps": [
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "file",
+              "path": "/tmp/compat-fs/${ns}/non-existing.json"
+            },
+            "parser": "json",
+            "schema": "TestConfig"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Load",
+              "message": "Loader returned null contents."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testVariableSource",
+      "steps": [
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "phpKey": "aValue",
+                "ENV_KEY": "aValue"
+              }
+            },
+            "parser": "none",
+            "schema": "TestConfig"
+          },
+          "expect": {
+            "$config": "TestConfig",
+            "properties": [
+              [
+                "phpKey",
+                "aValue"
+              ],
+              [
+                "jsonKey",
+                null
+              ],
+              [
+                "yamlKey",
+                null
+              ],
+              [
+                "ymlKey",
+                null
+              ],
+              [
+                "envKey",
+                "aValue"
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": "ENV_KEY=aValue"
+            },
+            "parser": "dotenv",
+            "schema": "TestConfig"
+          },
+          "expect": {
+            "$config": "TestConfig",
+            "properties": [
+              [
+                "phpKey",
+                null
+              ],
+              [
+                "jsonKey",
+                null
+              ],
+              [
+                "yamlKey",
+                null
+              ],
+              [
+                "ymlKey",
+                null
+              ],
+              [
+                "envKey",
+                "aValue"
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "environment",
+              "set": {
+                "_UTOPIA_KEY1": "hello",
+                "_UTOPIA_KEY2": "world"
+              }
+            },
+            "parser": "none",
+            "schema": "TestEnvConfig"
+          },
+          "expect": {
+            "$config": "TestEnvConfig",
+            "properties": [
+              [
+                "key1",
+                "hello"
+              ],
+              [
+                "key2",
+                "world"
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testAdapters php",
+      "steps": [
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "file",
+              "path": "/tmp/compat-fs/${ns}/config.php",
+              "contents": "<?php\n\ndeclare(strict_types=1);\n\nreturn [\n    'phpKey' => 'customValue',\n];\n"
+            },
+            "parser": "php",
+            "schema": "TestConfig"
+          },
+          "expect": {
+            "$config": "TestConfig",
+            "properties": [
+              [
+                "phpKey",
+                "customValue"
+              ],
+              [
+                "jsonKey",
+                null
+              ],
+              [
+                "yamlKey",
+                null
+              ],
+              [
+                "ymlKey",
+                null
+              ],
+              [
+                "envKey",
+                null
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testAdapters json",
+      "steps": [
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "file",
+              "path": "/tmp/compat-fs/${ns}/config.json",
+              "contents": "{\n  \"jsonKey\": \"customValue\"\n}\n"
+            },
+            "parser": "json",
+            "schema": "TestConfig"
+          },
+          "expect": {
+            "$config": "TestConfig",
+            "properties": [
+              [
+                "phpKey",
+                null
+              ],
+              [
+                "jsonKey",
+                "customValue"
+              ],
+              [
+                "yamlKey",
+                null
+              ],
+              [
+                "ymlKey",
+                null
+              ],
+              [
+                "envKey",
+                null
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testAdapters yaml",
+      "steps": [
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "file",
+              "path": "/tmp/compat-fs/${ns}/config.yaml",
+              "contents": "yaml-key: customValue"
+            },
+            "parser": "yaml",
+            "schema": "TestConfig"
+          },
+          "expect": {
+            "$config": "TestConfig",
+            "properties": [
+              [
+                "phpKey",
+                null
+              ],
+              [
+                "jsonKey",
+                null
+              ],
+              [
+                "yamlKey",
+                "customValue"
+              ],
+              [
+                "ymlKey",
+                null
+              ],
+              [
+                "envKey",
+                null
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testAdapters yml",
+      "steps": [
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "file",
+              "path": "/tmp/compat-fs/${ns}/config.yml",
+              "contents": "yml_key: customValue"
+            },
+            "parser": "yaml",
+            "schema": "TestConfig"
+          },
+          "expect": {
+            "$config": "TestConfig",
+            "properties": [
+              [
+                "phpKey",
+                null
+              ],
+              [
+                "jsonKey",
+                null
+              ],
+              [
+                "yamlKey",
+                null
+              ],
+              [
+                "ymlKey",
+                "customValue"
+              ],
+              [
+                "envKey",
+                null
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testAdapters env",
+      "steps": [
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "file",
+              "path": "/tmp/compat-fs/${ns}/config.env",
+              "contents": "ENV_KEY=customValue"
+            },
+            "parser": "dotenv",
+            "schema": "TestConfig"
+          },
+          "expect": {
+            "$config": "TestConfig",
+            "properties": [
+              [
+                "phpKey",
+                null
+              ],
+              [
+                "jsonKey",
+                null
+              ],
+              [
+                "yamlKey",
+                null
+              ],
+              [
+                "ymlKey",
+                null
+              ],
+              [
+                "envKey",
+                "customValue"
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSubConfigs",
+      "steps": [
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": "ENV_KEY=envValue"
+            },
+            "parser": "dotenv",
+            "schema": "TestConfig",
+            "handle": true
+          },
+          "bind": "c1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": "yml_key: ymlValue"
+            },
+            "parser": "yaml",
+            "schema": "TestConfig",
+            "handle": true
+          },
+          "bind": "c2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "config1": {
+                  "$ref": "c1"
+                },
+                "config2": {
+                  "$ref": "c2"
+                },
+                "rootKey": "rootValue"
+              }
+            },
+            "parser": "none",
+            "schema": "TestGroupConfig"
+          },
+          "expect": {
+            "$config": "TestGroupConfig",
+            "properties": [
+              [
+                "config1",
+                {
+                  "$config": "TestConfig",
+                  "properties": [
+                    [
+                      "phpKey",
+                      null
+                    ],
+                    [
+                      "jsonKey",
+                      null
+                    ],
+                    [
+                      "yamlKey",
+                      null
+                    ],
+                    [
+                      "ymlKey",
+                      null
+                    ],
+                    [
+                      "envKey",
+                      "envValue"
+                    ]
+                  ]
+                }
+              ],
+              [
+                "config2",
+                {
+                  "$config": "TestConfig",
+                  "properties": [
+                    [
+                      "phpKey",
+                      null
+                    ],
+                    [
+                      "jsonKey",
+                      null
+                    ],
+                    [
+                      "yamlKey",
+                      null
+                    ],
+                    [
+                      "ymlKey",
+                      "ymlValue"
+                    ],
+                    [
+                      "envKey",
+                      null
+                    ]
+                  ]
+                }
+              ],
+              [
+                "rootKey",
+                "rootValue"
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testExceptionValidator",
+      "steps": [
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": "key=too_long_value_that_will_not_get_accepted"
+            },
+            "parser": "dotenv",
+            "schema": "TestConfigRequired"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Load",
+              "message": "Invalid value for key: Value must be a valid string and no longer than 8 chars"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testExceptionRequired",
+      "steps": [
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": "SOME_OTHER_KEY=value"
+            },
+            "parser": "dotenv",
+            "schema": "TestConfigRequired"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Load",
+              "message": "Missing required key: key"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testAbsentOptionalKeyLeavesAUsableObject",
+      "steps": [
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "host": "db"
+              }
+            },
+            "parser": "none",
+            "schema": "TestOptionalConfig"
+          },
+          "expect": {
+            "$config": "TestOptionalConfig",
+            "properties": [
+              [
+                "host",
+                "db"
+              ],
+              [
+                "mode",
+                "auto"
+              ],
+              [
+                "port",
+                null
+              ],
+              [
+                "tls",
+                null
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testAbsentOptionalKeyWithoutDefaultThrowsLoad",
+      "steps": [
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": []
+            },
+            "parser": "none",
+            "schema": "TestOptionalWithoutDefaultConfig"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Load",
+              "message": "Missing optional key: name. Property name needs a default or a nullable type."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testNestedValues",
+      "steps": [
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": "{\"db.host\": \"docker.internal\", \"db.config.tls\": true}"
+            },
+            "parser": "json",
+            "schema": "TestNestedValueConfig"
+          },
+          "expect": {
+            "$config": "TestNestedValueConfig",
+            "properties": [
+              [
+                "dbHost",
+                "docker.internal"
+              ],
+              [
+                "tls",
+                true
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": "{\"db\": {\"host\": \"docker.internal\", \"config\": {\"tls\": true}}}"
+            },
+            "parser": "json",
+            "schema": "TestNestedValueConfig"
+          },
+          "expect": {
+            "$config": "TestNestedValueConfig",
+            "properties": [
+              [
+                "dbHost",
+                "docker.internal"
+              ],
+              [
+                "tls",
+                true
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": "{\"db\": {\"host\": \"docker.internal\", \"config.tls\": true}}"
+            },
+            "parser": "json",
+            "schema": "TestNestedValueConfig"
+          },
+          "expect": {
+            "$config": "TestNestedValueConfig",
+            "properties": [
+              [
+                "dbHost",
+                "docker.internal"
+              ],
+              [
+                "tls",
+                true
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": "{\"db.host\": \"docker.internal\", \"db\": {\"config\": {\"tls\": true}}}"
+            },
+            "parser": "json",
+            "schema": "TestNestedValueConfig"
+          },
+          "expect": {
+            "$config": "TestNestedValueConfig",
+            "properties": [
+              [
+                "dbHost",
+                "docker.internal"
+              ],
+              [
+                "tls",
+                true
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testRequiredNullablePresentNull",
+      "steps": [
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": "{\"name\": null}"
+            },
+            "parser": "json",
+            "schema": "TestNullableConfig"
+          },
+          "expect": {
+            "$config": "TestNullableConfig",
+            "properties": [
+              [
+                "name",
+                null
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testRequiredNullableNestedPresentNull",
+      "steps": [
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": "{\"db\": {\"name\": null}}"
+            },
+            "parser": "json",
+            "schema": "TestNestedNullableConfig"
+          },
+          "expect": {
+            "$config": "TestNestedNullableConfig",
+            "properties": [
+              [
+                "dbName",
+                null
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testOptionalNullablePresentNullIsAssigned",
+      "steps": [
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": "{\"name\": null}"
+            },
+            "parser": "json",
+            "schema": "TestOptionalNullableConfig"
+          },
+          "expect": {
+            "$config": "TestOptionalNullableConfig",
+            "properties": [
+              [
+                "name",
+                null
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValueTypeMismatchThrowsLoad",
+      "steps": [
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": "PORT=abc"
+            },
+            "parser": "dotenv",
+            "schema": "TestTypeMismatchConfig"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Load",
+              "message": "Invalid value for PORT: does not match the type of property port."
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

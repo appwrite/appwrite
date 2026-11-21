@@ -1,0 +1,349 @@
+{
+  "source": [],
+  "cases": [
+    {
+      "name": "a proxy server in front of the fixture",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ]
+              },
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "resolver": {
+                  "kind": "proxy"
+                },
+                "upstream": 0
+              }
+            ],
+            "steps": [
+              {
+                "kind": "query",
+                "server": 1,
+                "transport": "udp",
+                "name": "dev.appwrite.io",
+                "type": 1,
+                "id": 1
+              },
+              {
+                "kind": "query",
+                "server": 1,
+                "transport": "tcp",
+                "name": "dev.appwrite.io",
+                "type": 16,
+                "id": 2
+              },
+              {
+                "kind": "query",
+                "server": 1,
+                "transport": "udp",
+                "name": "missing.appwrite.io",
+                "type": 1,
+                "id": 3
+              },
+              {
+                "kind": "query",
+                "server": 1,
+                "transport": "tcp",
+                "name": "large.localhost",
+                "type": 16,
+                "id": 4
+              }
+            ]
+          },
+          "expect": [
+            {
+              "header": {
+                "id": 1,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 1,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "dev.appwrite.io",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "dev.appwrite.io",
+                  "type": 1,
+                  "class": 1,
+                  "ttl": 10,
+                  "rdata": "180.12.3.24",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 2,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 1,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "dev.appwrite.io",
+                  "type": 16,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "dev.appwrite.io",
+                  "type": 16,
+                  "class": 1,
+                  "ttl": 30,
+                  "rdata": "awesome-secret-key",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 3,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 3,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 1,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "missing.appwrite.io",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [],
+              "authority": [
+                {
+                  "name": "appwrite.io",
+                  "type": 6,
+                  "class": 1,
+                  "ttl": 30,
+                  "rdata": "ns1.appwrite.zone team.appwrite.io 1 7200 1800 1209600 3600",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 4,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": true,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 3,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "large.localhost",
+                  "type": 16,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "large.localhost",
+                  "type": 16,
+                  "class": 1,
+                  "ttl": 300,
+                  "rdata": "Neque porro quisquam est qui dolorem ipsum quia dolor sit amet consectetur adipisci velit",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                },
+                {
+                  "name": "large.localhost",
+                  "type": 16,
+                  "class": 1,
+                  "ttl": 300,
+                  "rdata": "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                },
+                {
+                  "name": "large.localhost",
+                  "type": 16,
+                  "class": 1,
+                  "ttl": 300,
+                  "rdata": "Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "proxy and client constructors",
+      "steps": [
+        {
+          "op": "resolver.new",
+          "args": {
+            "resolver": "proxy",
+            "server": "127.0.0.1",
+            "port": 5300
+          },
+          "expect": null
+        },
+        {
+          "op": "resolver.new",
+          "args": {
+            "resolver": "proxy",
+            "server": "localhost",
+            "port": 5300
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Server must be an IP address."
+            }
+          }
+        },
+        {
+          "op": "resolver.new",
+          "args": {
+            "resolver": "proxy",
+            "server": "::1",
+            "port": 5300
+          },
+          "expect": null
+        },
+        {
+          "op": "resolver.new",
+          "args": {
+            "resolver": "proxy",
+            "server": "",
+            "port": 5300
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Server must be an IP address."
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "native",
+            "transports": []
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "At least one transport is required."
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "swoole",
+            "transports": []
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "At least one transport is required."
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "http",
+            "cert": "/tmp/cert.pem"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "TLS requires both a certificate and a key path."
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "http",
+            "key": "/tmp/key.pem"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "TLS requires both a certificate and a key path."
+            }
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "http"
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

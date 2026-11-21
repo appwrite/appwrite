@@ -1,0 +1,156 @@
+{
+  "source": "packages/dns/tests/E2E/Resolver/GoogleTest.php",
+  "cases": [
+    {
+      "name": "constructs the google preset",
+      "steps": [
+        {
+          "op": "resolver.new",
+          "args": {
+            "resolver": "google"
+          },
+          "expect": null
+        },
+        {
+          "op": "resolver.new",
+          "args": {
+            "resolver": "google",
+            "backup": true
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "resolves A through a proxy (google, local upstream)",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ]
+              }
+            ],
+            "steps": [
+              {
+                "kind": "proxy",
+                "name": "dev.appwrite.io",
+                "type": 1
+              }
+            ]
+          },
+          "expect": [
+            {
+              "header": {
+                "id": 1,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 1,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "dev.appwrite.io",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "dev.appwrite.io",
+                  "type": 1,
+                  "class": 1,
+                  "ttl": 10,
+                  "rdata": "180.12.3.24",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "resolves AAAA through a proxy (google, local upstream)",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ]
+              }
+            ],
+            "steps": [
+              {
+                "kind": "proxy",
+                "name": "dev.appwrite.io",
+                "type": 28,
+                "id": 2
+              }
+            ]
+          },
+          "expect": [
+            {
+              "header": {
+                "id": 2,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 1,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "dev.appwrite.io",
+                  "type": 28,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "dev.appwrite.io",
+                  "type": 28,
+                  "class": 1,
+                  "ttl": 20,
+                  "rdata": "2001:db8::ff00:42:8329",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

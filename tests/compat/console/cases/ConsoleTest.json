@@ -1,0 +1,1620 @@
+{
+  "source": "packages/console/tests/ConsoleTest.php",
+  "cases": [
+    {
+      "name": "testLogs log",
+      "op": "console.log",
+      "args": {
+        "method": "log",
+        "message": "log"
+      },
+      "expect": {
+        "result": 4,
+        "stdout": "log\n",
+        "stderr": "",
+        "status": 0
+      }
+    },
+    {
+      "name": "testLogs success",
+      "op": "console.log",
+      "args": {
+        "method": "success",
+        "message": "success"
+      },
+      "expect": {
+        "result": 17,
+        "stdout": "\u001b[32msuccess\u001b[0m\n",
+        "stderr": "",
+        "status": 0
+      }
+    },
+    {
+      "name": "testLogs info",
+      "op": "console.log",
+      "args": {
+        "method": "info",
+        "message": "info"
+      },
+      "expect": {
+        "result": 14,
+        "stdout": "\u001b[34minfo\u001b[0m\n",
+        "stderr": "",
+        "status": 0
+      }
+    },
+    {
+      "name": "testLogs warning",
+      "op": "console.log",
+      "args": {
+        "method": "warning",
+        "message": "warning"
+      },
+      "expect": {
+        "result": 19,
+        "stdout": "",
+        "stderr": "\u001b[1;33mwarning\u001b[0m\n",
+        "status": 0
+      }
+    },
+    {
+      "name": "testLogs error",
+      "op": "console.log",
+      "args": {
+        "method": "error",
+        "message": "error"
+      },
+      "expect": {
+        "result": 15,
+        "stdout": "",
+        "stderr": "\u001b[31merror\u001b[0m\n",
+        "status": 0
+      }
+    },
+    {
+      "name": "testConfirm",
+      "op": "console.confirm",
+      "args": {
+        "question": "this is a question",
+        "input": "this is an answer\n"
+      },
+      "expect": {
+        "result": "this is an answer",
+        "stdout": "this is a question\n",
+        "stderr": "",
+        "status": 0
+      }
+    },
+    {
+      "name": "testExecuteBasic",
+      "op": "console.execute",
+      "args": {
+        "program": {
+          "command": {
+            "plain": {
+              "executable": "sh",
+              "steps": [
+                {
+                  "option": {
+                    "key": "-c",
+                    "value": "printf 'hello world'"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "timeout": 10
+      },
+      "expect": {
+        "status": 0,
+        "stdout": "hello world",
+        "stderr": "",
+        "progress": ""
+      }
+    },
+    {
+      "name": "testCommandToArray",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "plain": {
+            "executable": "tar",
+            "steps": [
+              {
+                "flag": "-cz"
+              },
+              {
+                "option": {
+                  "key": "-f",
+                  "value": "archive.tar.gz"
+                }
+              },
+              {
+                "option": {
+                  "key": "-C",
+                  "value": "/tmp/project"
+                }
+              },
+              {
+                "argument": {
+                  "value": "."
+                }
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "plain": true,
+        "array": [
+          "tar",
+          "-cz",
+          "-f",
+          "archive.tar.gz",
+          "-C",
+          "/tmp/project",
+          "."
+        ],
+        "string": "'tar' '-cz' '-f' 'archive.tar.gz' '-C' '/tmp/project' '.'",
+        "cast": "'tar' '-cz' '-f' 'archive.tar.gz' '-C' '/tmp/project' '.'"
+      }
+    },
+    {
+      "name": "testCommandToStringEscapesArguments",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "plain": {
+            "executable": "php",
+            "steps": [
+              {
+                "option": {
+                  "key": "-r",
+                  "value": "echo 'hello'; rm -rf /"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "plain": true,
+        "array": [
+          "php",
+          "-r",
+          "echo 'hello'; rm -rf /"
+        ],
+        "string": "'php' '-r' 'echo '\\''hello'\\''; rm -rf /'",
+        "cast": "'php' '-r' 'echo '\\''hello'\\''; rm -rf /'"
+      }
+    },
+    {
+      "name": "testCommandDefaultValidatorRejectsEmptyArgument",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "plain": {
+            "executable": "git",
+            "steps": [
+              {
+                "argument": {
+                  "value": ""
+                }
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "error": {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Command argument cannot be empty"
+          }
+        }
+      }
+    },
+    {
+      "name": "testCommandValidatorSuccess",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "plain": {
+            "executable": "git",
+            "steps": [
+              {
+                "argument": {
+                  "value": "checkout"
+                }
+              },
+              {
+                "argument": {
+                  "value": "develop",
+                  "check": {
+                    "in": [
+                      "main",
+                      "develop",
+                      "staging"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "plain": true,
+        "array": [
+          "git",
+          "checkout",
+          "develop"
+        ],
+        "string": "'git' 'checkout' 'develop'",
+        "cast": "'git' 'checkout' 'develop'"
+      }
+    },
+    {
+      "name": "testCommandValidatorFailure",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "plain": {
+            "executable": "git",
+            "steps": [
+              {
+                "argument": {
+                  "value": "checkout"
+                }
+              },
+              {
+                "argument": {
+                  "value": "feature/test; rm -rf /",
+                  "check": {
+                    "in": [
+                      "main",
+                      "develop"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "error": {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Invalid command argument: feature/test; rm -rf /"
+          }
+        }
+      }
+    },
+    {
+      "name": "testCommandRejectsInvalidFlag",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "plain": {
+            "executable": "git",
+            "steps": [
+              {
+                "flag": "verbose"
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "error": {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Invalid command flag: verbose"
+          }
+        }
+      }
+    },
+    {
+      "name": "testCommandRejectsInvalidOption",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "plain": {
+            "executable": "tar",
+            "steps": [
+              {
+                "option": {
+                  "key": "-cz",
+                  "value": "archive.tar.gz"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "error": {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Invalid command option: -cz"
+          }
+        }
+      }
+    },
+    {
+      "name": "testCommandRejectsEmptyRedirectTarget",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "redirect_stdout": {
+            "command": {
+              "plain": {
+                "executable": "php"
+              }
+            },
+            "path": ""
+          }
+        }
+      },
+      "expect": {
+        "error": {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Command redirect target cannot be empty"
+          }
+        }
+      }
+    },
+    {
+      "name": "testExecuteArray",
+      "op": "console.execute",
+      "args": {
+        "program": {
+          "argv": [
+            "sh",
+            "-c",
+            "printf 'hello world'"
+          ]
+        },
+        "timeout": 10
+      },
+      "expect": {
+        "status": 0,
+        "stdout": "hello world",
+        "stderr": "",
+        "progress": ""
+      }
+    },
+    {
+      "name": "testExecuteEnvVariables",
+      "op": "console.execute",
+      "args": {
+        "program": {
+          "argv": [
+            "printenv",
+            "PATH"
+          ]
+        },
+        "timeout": 10
+      },
+      "mask": {
+        "paths": [
+          "/stdout"
+        ],
+        "reason": "the drivers' environments differ (PHP in a container, Rust on the host); the case checks the child inherits it (printenv succeeds)"
+      },
+      "expect": {
+        "status": 0,
+        "stdout": "<masked>",
+        "stderr": "",
+        "progress": ""
+      }
+    },
+    {
+      "name": "testExecuteStream",
+      "op": "console.execute",
+      "args": {
+        "program": {
+          "command": {
+            "plain": {
+              "executable": "sh",
+              "steps": [
+                {
+                  "option": {
+                    "key": "-c",
+                    "value": "for i in 1 2 3 4 5; do printf $i; sleep 0.2; done"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "timeout": 10,
+        "progress": true
+      },
+      "expect": {
+        "status": 0,
+        "stdout": "12345",
+        "stderr": "",
+        "progress": "12345"
+      }
+    },
+    {
+      "name": "testExecuteStdOut",
+      "op": "console.execute",
+      "args": {
+        "program": {
+          "command": {
+            "plain": {
+              "executable": "sh",
+              "steps": [
+                {
+                  "option": {
+                    "key": "-c",
+                    "value": "printf 'success\\n'"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "timeout": 3
+      },
+      "expect": {
+        "status": 0,
+        "stdout": "success\n",
+        "stderr": "",
+        "progress": ""
+      }
+    },
+    {
+      "name": "testExecuteStdErr",
+      "op": "console.execute",
+      "args": {
+        "program": {
+          "command": {
+            "plain": {
+              "executable": "sh",
+              "steps": [
+                {
+                  "option": {
+                    "key": "-c",
+                    "value": "printf 'error\\n' >&2"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "timeout": 3
+      },
+      "expect": {
+        "status": 0,
+        "stdout": "",
+        "stderr": "error\n",
+        "progress": ""
+      }
+    },
+    {
+      "name": "testExecuteExitCode",
+      "steps": [
+        {
+          "op": "console.execute",
+          "args": {
+            "program": {
+              "command": {
+                "plain": {
+                  "executable": "sh",
+                  "steps": [
+                    {
+                      "option": {
+                        "key": "-c",
+                        "value": "printf 'hello world'; exit 2"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "timeout": 10
+          },
+          "expect": {
+            "status": 2,
+            "stdout": "hello world",
+            "stderr": "",
+            "progress": ""
+          }
+        },
+        {
+          "op": "console.execute",
+          "args": {
+            "program": {
+              "command": {
+                "plain": {
+                  "executable": "sh",
+                  "steps": [
+                    {
+                      "option": {
+                        "key": "-c",
+                        "value": "printf 'hello world'; exit 100"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "timeout": 10
+          },
+          "expect": {
+            "status": 100,
+            "stdout": "hello world",
+            "stderr": "",
+            "progress": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "testExecuteTimeout",
+      "steps": [
+        {
+          "op": "console.execute",
+          "args": {
+            "program": {
+              "command": {
+                "plain": {
+                  "executable": "sh",
+                  "steps": [
+                    {
+                      "option": {
+                        "key": "-c",
+                        "value": "sleep 1; printf 'hello world'; exit 0"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "timeout": 3
+          },
+          "expect": {
+            "status": 0,
+            "stdout": "hello world",
+            "stderr": "",
+            "progress": ""
+          }
+        },
+        {
+          "op": "console.execute",
+          "args": {
+            "program": {
+              "command": {
+                "plain": {
+                  "executable": "sh",
+                  "steps": [
+                    {
+                      "option": {
+                        "key": "-c",
+                        "value": "sleep 4; printf 'hello world'; exit 0"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "timeout": 2
+          },
+          "expect": {
+            "status": 1,
+            "stdout": "",
+            "stderr": "",
+            "progress": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "testLoop",
+      "op": "console.loop",
+      "args": {
+        "sleep": 0,
+        "fail": [
+          40
+        ],
+        "on_error": false
+      },
+      "expect": {
+        "calls": 40,
+        "errors": [],
+        "thrown": "fail 40"
+      }
+    },
+    {
+      "name": "testCommandCompositionToString",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "and": [
+            {
+              "group": {
+                "or": [
+                  {
+                    "plain": {
+                      "executable": "build"
+                    }
+                  },
+                  {
+                    "plain": {
+                      "executable": "build:fallback"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "plain": {
+                "executable": "publish"
+              }
+            }
+          ]
+        }
+      },
+      "expect": {
+        "plain": false,
+        "array": {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Only plain commands can be converted to an array"
+          }
+        },
+        "string": "( 'build' || 'build:fallback' ) && 'publish'",
+        "cast": "( 'build' || 'build:fallback' ) && 'publish'"
+      }
+    },
+    {
+      "name": "testCommandPipeToString",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "pipe": [
+            {
+              "plain": {
+                "executable": "ps",
+                "steps": [
+                  {
+                    "flag": "-ef"
+                  }
+                ]
+              }
+            },
+            {
+              "plain": {
+                "executable": "grep",
+                "steps": [
+                  {
+                    "argument": {
+                      "value": "php-fpm"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "plain": {
+                "executable": "wc",
+                "steps": [
+                  {
+                    "flag": "-l"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "expect": {
+        "plain": false,
+        "array": {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Only plain commands can be converted to an array"
+          }
+        },
+        "string": "'ps' '-ef' | 'grep' 'php-fpm' | 'wc' '-l'",
+        "cast": "'ps' '-ef' | 'grep' 'php-fpm' | 'wc' '-l'"
+      }
+    },
+    {
+      "name": "testCommandRedirectsToString",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "append_stdout": {
+            "command": {
+              "pipe": [
+                {
+                  "plain": {
+                    "executable": "cat",
+                    "steps": [
+                      {
+                        "argument": {
+                          "value": "app.log"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "plain": {
+                    "executable": "grep",
+                    "steps": [
+                      {
+                        "argument": {
+                          "value": "ERROR"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "path": "errors.log"
+          }
+        }
+      },
+      "expect": {
+        "plain": false,
+        "array": {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Only plain commands can be converted to an array"
+          }
+        },
+        "string": "'cat' 'app.log' | 'grep' 'ERROR' >> 'errors.log'",
+        "cast": "'cat' 'app.log' | 'grep' 'ERROR' >> 'errors.log'"
+      }
+    },
+    {
+      "name": "testNestedCommandExpressionToString",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "redirect_stdout": {
+            "command": {
+              "group": {
+                "and": [
+                  {
+                    "or": [
+                      {
+                        "plain": {
+                          "executable": "build"
+                        }
+                      },
+                      {
+                        "plain": {
+                          "executable": "build:fallback"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "plain": {
+                      "executable": "publish"
+                    }
+                  }
+                ]
+              }
+            },
+            "path": "deploy.log"
+          }
+        }
+      },
+      "expect": {
+        "plain": false,
+        "array": {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Only plain commands can be converted to an array"
+          }
+        },
+        "string": "( 'build' || 'build:fallback' && 'publish' ) > 'deploy.log'",
+        "cast": "( 'build' || 'build:fallback' && 'publish' ) > 'deploy.log'"
+      }
+    },
+    {
+      "name": "testGroupAnyCommand",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "group": {
+            "plain": {
+              "executable": "build"
+            }
+          }
+        }
+      },
+      "expect": {
+        "plain": false,
+        "array": {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Only plain commands can be converted to an array"
+          }
+        },
+        "string": "( 'build' )",
+        "cast": "( 'build' )"
+      }
+    },
+    {
+      "name": "testCompositeCommandIsNotPlain",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "and": [
+            {
+              "plain": {
+                "executable": "build"
+              }
+            },
+            {
+              "plain": {
+                "executable": "publish"
+              }
+            }
+          ]
+        }
+      },
+      "expect": {
+        "plain": false,
+        "array": {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Only plain commands can be converted to an array"
+          }
+        },
+        "string": "'build' && 'publish'",
+        "cast": "'build' && 'publish'"
+      }
+    },
+    {
+      "name": "testRedirectedCommandIsNotPlain",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "redirect_stdout": {
+            "command": {
+              "plain": {
+                "executable": "build"
+              }
+            },
+            "path": "build.log"
+          }
+        }
+      },
+      "expect": {
+        "plain": false,
+        "array": {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Only plain commands can be converted to an array"
+          }
+        },
+        "string": "'build' > 'build.log'",
+        "cast": "'build' > 'build.log'"
+      }
+    },
+    {
+      "name": "testCompositeCommandRequiresAtLeastTwoCommands",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "and": [
+            {
+              "plain": {
+                "executable": "build"
+              }
+            }
+          ]
+        }
+      },
+      "expect": {
+        "error": {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Composed commands require at least two commands"
+          }
+        }
+      }
+    },
+    {
+      "name": "testGroupedCommandRejectsAdditionalFlags",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "then": {
+            "command": {
+              "group": {
+                "plain": {
+                  "executable": "build"
+                }
+              }
+            },
+            "steps": [
+              {
+                "flag": "-v"
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "error": {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Flags, options, and arguments can only be added to plain commands"
+          }
+        }
+      }
+    },
+    {
+      "name": "testCompositeCommandRejectsAdditionalOptions",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "then": {
+            "command": {
+              "and": [
+                {
+                  "plain": {
+                    "executable": "build"
+                  }
+                },
+                {
+                  "plain": {
+                    "executable": "publish"
+                  }
+                }
+              ]
+            },
+            "steps": [
+              {
+                "option": {
+                  "key": "--env",
+                  "value": "prod"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "error": {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Flags, options, and arguments can only be added to plain commands"
+          }
+        }
+      }
+    },
+    {
+      "name": "testRedirectedCommandRejectsAdditionalArguments",
+      "op": "command.run",
+      "args": {
+        "expr": {
+          "then": {
+            "command": {
+              "redirect_stdout": {
+                "command": {
+                  "plain": {
+                    "executable": "build"
+                  }
+                },
+                "path": "build.log"
+              }
+            },
+            "steps": [
+              {
+                "argument": {
+                  "value": "extra"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "error": {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Flags, options, and arguments can only be added to plain commands"
+          }
+        }
+      }
+    },
+    {
+      "name": "testExecutePipeExpression",
+      "op": "console.execute",
+      "args": {
+        "program": {
+          "command": {
+            "pipe": [
+              {
+                "plain": {
+                  "executable": "sh",
+                  "steps": [
+                    {
+                      "option": {
+                        "key": "-c",
+                        "value": "printf 'alpha\\nbeta\\n'"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "plain": {
+                  "executable": "grep",
+                  "steps": [
+                    {
+                      "argument": {
+                        "value": "beta"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "timeout": 10
+      },
+      "expect": {
+        "status": 0,
+        "stdout": "beta\n",
+        "stderr": "",
+        "progress": ""
+      }
+    },
+    {
+      "name": "testExecuteGroupedFallbackExpression",
+      "op": "console.execute",
+      "args": {
+        "program": {
+          "command": {
+            "and": [
+              {
+                "group": {
+                  "or": [
+                    {
+                      "plain": {
+                        "executable": "sh",
+                        "steps": [
+                          {
+                            "option": {
+                              "key": "-c",
+                              "value": "exit 1"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "plain": {
+                        "executable": "sh",
+                        "steps": [
+                          {
+                            "option": {
+                              "key": "-c",
+                              "value": "printf fallback"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "plain": {
+                  "executable": "sh",
+                  "steps": [
+                    {
+                      "option": {
+                        "key": "-c",
+                        "value": "printf ' publish'"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "timeout": 10
+      },
+      "expect": {
+        "status": 0,
+        "stdout": "fallback publish",
+        "stderr": "",
+        "progress": ""
+      }
+    },
+    {
+      "name": "testExecuteAndStopsOnFailure",
+      "op": "console.execute",
+      "args": {
+        "program": {
+          "command": {
+            "and": [
+              {
+                "plain": {
+                  "executable": "sh",
+                  "steps": [
+                    {
+                      "option": {
+                        "key": "-c",
+                        "value": "printf start; exit 1"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "plain": {
+                  "executable": "sh",
+                  "steps": [
+                    {
+                      "option": {
+                        "key": "-c",
+                        "value": "printf never"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "timeout": 10
+      },
+      "expect": {
+        "status": 1,
+        "stdout": "start",
+        "stderr": "",
+        "progress": ""
+      }
+    },
+    {
+      "name": "testExecuteOrStopsAfterSuccess",
+      "op": "console.execute",
+      "args": {
+        "program": {
+          "command": {
+            "or": [
+              {
+                "plain": {
+                  "executable": "sh",
+                  "steps": [
+                    {
+                      "option": {
+                        "key": "-c",
+                        "value": "printf done"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "plain": {
+                  "executable": "sh",
+                  "steps": [
+                    {
+                      "option": {
+                        "key": "-c",
+                        "value": "printf fallback"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "timeout": 10
+      },
+      "expect": {
+        "status": 0,
+        "stdout": "done",
+        "stderr": "",
+        "progress": ""
+      }
+    },
+    {
+      "name": "testExecuteGroupedPrecedenceChangesOutcome",
+      "op": "console.execute",
+      "args": {
+        "program": {
+          "command": {
+            "and": [
+              {
+                "group": {
+                  "or": [
+                    {
+                      "plain": {
+                        "executable": "sh",
+                        "steps": [
+                          {
+                            "option": {
+                              "key": "-c",
+                              "value": "exit 1"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "plain": {
+                        "executable": "sh",
+                        "steps": [
+                          {
+                            "option": {
+                              "key": "-c",
+                              "value": "printf fallback"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "plain": {
+                  "executable": "sh",
+                  "steps": [
+                    {
+                      "option": {
+                        "key": "-c",
+                        "value": "printf ' publish'"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "timeout": 10
+      },
+      "expect": {
+        "status": 0,
+        "stdout": "fallback publish",
+        "stderr": "",
+        "progress": ""
+      }
+    },
+    {
+      "name": "testExecuteRedirectStdoutExpression",
+      "steps": [
+        {
+          "op": "console.execute",
+          "args": {
+            "program": {
+              "argv": [
+                "mkdir",
+                "-p",
+                "/tmp/compat-fs/${ns}"
+              ]
+            }
+          },
+          "expect": {
+            "status": 0,
+            "stdout": "",
+            "stderr": "",
+            "progress": ""
+          }
+        },
+        {
+          "op": "console.execute",
+          "args": {
+            "program": {
+              "command": {
+                "redirect_stdout": {
+                  "command": {
+                    "plain": {
+                      "executable": "sh",
+                      "steps": [
+                        {
+                          "option": {
+                            "key": "-c",
+                            "value": "printf saved"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "path": "/tmp/compat-fs/${ns}/out.txt"
+                }
+              }
+            },
+            "timeout": 10
+          },
+          "expect": {
+            "status": 0,
+            "stdout": "",
+            "stderr": "",
+            "progress": ""
+          }
+        },
+        {
+          "op": "console.execute",
+          "args": {
+            "program": {
+              "argv": [
+                "cat",
+                "/tmp/compat-fs/${ns}/out.txt"
+              ]
+            }
+          },
+          "expect": {
+            "status": 0,
+            "stdout": "saved",
+            "stderr": "",
+            "progress": ""
+          }
+        },
+        {
+          "op": "console.execute",
+          "args": {
+            "program": {
+              "argv": [
+                "rm",
+                "-rf",
+                "/tmp/compat-fs/${ns}"
+              ]
+            }
+          },
+          "expect": {
+            "status": 0,
+            "stdout": "",
+            "stderr": "",
+            "progress": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "testExecuteAppendStdoutExpression",
+      "steps": [
+        {
+          "op": "console.execute",
+          "args": {
+            "program": {
+              "argv": [
+                "mkdir",
+                "-p",
+                "/tmp/compat-fs/${ns}"
+              ]
+            }
+          },
+          "expect": {
+            "status": 0,
+            "stdout": "",
+            "stderr": "",
+            "progress": ""
+          }
+        },
+        {
+          "op": "console.execute",
+          "args": {
+            "program": {
+              "command": {
+                "redirect_stdout": {
+                  "command": {
+                    "plain": {
+                      "executable": "printf",
+                      "steps": [
+                        {
+                          "argument": {
+                            "value": "first\n"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "path": "/tmp/compat-fs/${ns}/out.txt"
+                }
+              }
+            }
+          },
+          "expect": {
+            "status": 0,
+            "stdout": "",
+            "stderr": "",
+            "progress": ""
+          }
+        },
+        {
+          "op": "console.execute",
+          "args": {
+            "program": {
+              "command": {
+                "append_stdout": {
+                  "command": {
+                    "plain": {
+                      "executable": "sh",
+                      "steps": [
+                        {
+                          "option": {
+                            "key": "-c",
+                            "value": "printf second"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "path": "/tmp/compat-fs/${ns}/out.txt"
+                }
+              }
+            },
+            "timeout": 10
+          },
+          "expect": {
+            "status": 0,
+            "stdout": "",
+            "stderr": "",
+            "progress": ""
+          }
+        },
+        {
+          "op": "console.execute",
+          "args": {
+            "program": {
+              "argv": [
+                "cat",
+                "/tmp/compat-fs/${ns}/out.txt"
+              ]
+            }
+          },
+          "expect": {
+            "status": 0,
+            "stdout": "first\nsecond",
+            "stderr": "",
+            "progress": ""
+          }
+        },
+        {
+          "op": "console.execute",
+          "args": {
+            "program": {
+              "argv": [
+                "rm",
+                "-rf",
+                "/tmp/compat-fs/${ns}"
+              ]
+            }
+          },
+          "expect": {
+            "status": 0,
+            "stdout": "",
+            "stderr": "",
+            "progress": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "testExecuteRedirectInputExpression",
+      "steps": [
+        {
+          "op": "console.execute",
+          "args": {
+            "program": {
+              "argv": [
+                "mkdir",
+                "-p",
+                "/tmp/compat-fs/${ns}"
+              ]
+            }
+          },
+          "expect": {
+            "status": 0,
+            "stdout": "",
+            "stderr": "",
+            "progress": ""
+          }
+        },
+        {
+          "op": "console.execute",
+          "args": {
+            "program": {
+              "command": {
+                "redirect_stdout": {
+                  "command": {
+                    "plain": {
+                      "executable": "printf",
+                      "steps": [
+                        {
+                          "argument": {
+                            "value": "delta\nalpha\n"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "path": "/tmp/compat-fs/${ns}/in.txt"
+                }
+              }
+            }
+          },
+          "expect": {
+            "status": 0,
+            "stdout": "",
+            "stderr": "",
+            "progress": ""
+          }
+        },
+        {
+          "op": "console.execute",
+          "args": {
+            "program": {
+              "command": {
+                "redirect_input": {
+                  "command": {
+                    "plain": {
+                      "executable": "sort"
+                    }
+                  },
+                  "path": "/tmp/compat-fs/${ns}/in.txt"
+                }
+              }
+            },
+            "timeout": 10
+          },
+          "expect": {
+            "status": 0,
+            "stdout": "alpha\ndelta\n",
+            "stderr": "",
+            "progress": ""
+          }
+        },
+        {
+          "op": "console.execute",
+          "args": {
+            "program": {
+              "argv": [
+                "rm",
+                "-rf",
+                "/tmp/compat-fs/${ns}"
+              ]
+            }
+          },
+          "expect": {
+            "status": 0,
+            "stdout": "",
+            "stderr": "",
+            "progress": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "testExecuteStringRemainsCompatible",
+      "op": "console.execute",
+      "args": {
+        "program": {
+          "shell": "sh -c \"printf 'hello world'\""
+        },
+        "timeout": 10
+      },
+      "expect": {
+        "status": 0,
+        "stdout": "hello world",
+        "stderr": "",
+        "progress": ""
+      }
+    }
+  ]
+}

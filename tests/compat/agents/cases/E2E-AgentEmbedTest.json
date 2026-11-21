@@ -1,0 +1,730 @@
+{
+  "source": "packages/agents/tests/E2E/AgentEmbedTest.php",
+  "cases": [
+    {
+      "name": "embed returns array with embedding adapter",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "ollama"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.set",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "timeout": 180004,
+            "endpoint": "${fixture}/api/embed"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"model\":\"embeddinggemma\",\"embeddings\":[[0.0123,-0.5,0,1,-0.0,1e-07,3.14159265358979,2.5e+20]],\"total_duration\":81234567,\"load_duration\":1234567,\"prompt_eval_count\":512}"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.embed",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "text": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. "
+          },
+          "expect": {
+            "embedding": [
+              0.0123,
+              -0.5,
+              0,
+              1,
+              -0.0,
+              1e-7,
+              3.14159265358979,
+              2.5e+20
+            ],
+            "tokensProcessed": 512,
+            "totalDuration": 81234567,
+            "modelLoadingDuration": 1234567
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "expect": [
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/api/embed",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "2317"
+                ]
+              ],
+              "body": "{\"model\":\"embeddinggemma\",\"input\":\"Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit amet consectetur adipisicing elit. \"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "embedding dimensions",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "ollama"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.set",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "timeout": 180004,
+            "endpoint": "${fixture}/api/embed"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"model\":\"embeddinggemma\",\"embeddings\":[[0.0123,-0.5]],\"total_duration\":81234567,\"load_duration\":1234567,\"prompt_eval_count\":3}"
+              },
+              {
+                "status": 200,
+                "body": "{\"model\":\"embeddinggemma\",\"embeddings\":[[0.0123,-0.5,0]],\"total_duration\":81234567,\"load_duration\":1234567,\"prompt_eval_count\":4}"
+              },
+              {
+                "status": 200,
+                "body": "{\"model\":\"embeddinggemma\",\"embeddings\":[[0.0123,-0.5,0,1]],\"total_duration\":81234567,\"load_duration\":1234567,\"prompt_eval_count\":5}"
+              },
+              {
+                "status": 200,
+                "body": "{\"model\":\"embeddinggemma\",\"embeddings\":[[0.0123,-0.5,0,1,-0.0]],\"total_duration\":81234567,\"load_duration\":1234567,\"prompt_eval_count\":6}"
+              },
+              {
+                "status": 200,
+                "body": "{\"model\":\"embeddinggemma\",\"embeddings\":[[0.0123,-0.5,0,1,-0.0,1e-07]],\"total_duration\":81234567,\"load_duration\":1234567,\"prompt_eval_count\":7}"
+              },
+              {
+                "status": 200,
+                "body": "{\"model\":\"embeddinggemma\",\"embeddings\":[[0.0123,-0.5,0,1,-0.0,1e-07,3.14159265358979]],\"total_duration\":81234567,\"load_duration\":1234567,\"prompt_eval_count\":8}"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.embed",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "text": "hi"
+          },
+          "expect": {
+            "embedding": [
+              0.0123,
+              -0.5
+            ],
+            "tokensProcessed": 3,
+            "totalDuration": 81234567,
+            "modelLoadingDuration": 1234567
+          }
+        },
+        {
+          "op": "agent.embed",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "text": "hello world"
+          },
+          "expect": {
+            "embedding": [
+              0.0123,
+              -0.5,
+              0
+            ],
+            "tokensProcessed": 4,
+            "totalDuration": 81234567,
+            "modelLoadingDuration": 1234567
+          }
+        },
+        {
+          "op": "agent.embed",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "text": "this is a short sentence for testing"
+          },
+          "expect": {
+            "embedding": [
+              0.0123,
+              -0.5,
+              0,
+              1
+            ],
+            "tokensProcessed": 5,
+            "totalDuration": 81234567,
+            "modelLoadingDuration": 1234567
+          }
+        },
+        {
+          "op": "agent.embed",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "text": "In the midst of chaos, there is also opportunity — this simple truth often reveals itself when we least expect it."
+          },
+          "expect": {
+            "embedding": [
+              0.0123,
+              -0.5,
+              0,
+              1,
+              -0.0
+            ],
+            "tokensProcessed": 6,
+            "totalDuration": 81234567,
+            "modelLoadingDuration": 1234567
+          }
+        },
+        {
+          "op": "agent.embed",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "text": "Artificial intelligence models like Ollama generate embeddings that map words, phrases, and even full documents into high-dimensional vector spaces where semantic similarity can be computed efficiently."
+          },
+          "expect": {
+            "embedding": [
+              0.0123,
+              -0.5,
+              0,
+              1,
+              -0.0,
+              1e-7
+            ],
+            "tokensProcessed": 7,
+            "totalDuration": 81234567,
+            "modelLoadingDuration": 1234567
+          }
+        },
+        {
+          "op": "agent.embed",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "text": "This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. "
+          },
+          "expect": {
+            "embedding": [
+              0.0123,
+              -0.5,
+              0,
+              1,
+              -0.0,
+              1e-7,
+              3.14159265358979
+            ],
+            "tokensProcessed": 8,
+            "totalDuration": 81234567,
+            "modelLoadingDuration": 1234567
+          }
+        },
+        {
+          "op": "adapter.embedding_dimension",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": 768
+        },
+        {
+          "op": "fixture.requests",
+          "expect": [
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/api/embed",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "39"
+                ]
+              ],
+              "body": "{\"model\":\"embeddinggemma\",\"input\":\"hi\"}"
+            },
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/api/embed",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "48"
+                ]
+              ],
+              "body": "{\"model\":\"embeddinggemma\",\"input\":\"hello world\"}"
+            },
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/api/embed",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "73"
+                ]
+              ],
+              "body": "{\"model\":\"embeddinggemma\",\"input\":\"this is a short sentence for testing\"}"
+            },
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/api/embed",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "156"
+                ]
+              ],
+              "body": "{\"model\":\"embeddinggemma\",\"input\":\"In the midst of chaos, there is also opportunity \\u2014 this simple truth often reveals itself when we least expect it.\"}"
+            },
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/api/embed",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "239"
+                ]
+              ],
+              "body": "{\"model\":\"embeddinggemma\",\"input\":\"Artificial intelligence models like Ollama generate embeddings that map words, phrases, and even full documents into high-dimensional vector spaces where semantic similarity can be computed efficiently.\"}"
+            },
+            {
+              "method": "POST",
+              "target": "/serve/${ns}/api/embed",
+              "protocol": "HTTP/1.1",
+              "headers": [
+                [
+                  "Host",
+                  "${fixture}"
+                ],
+                [
+                  "Accept-Encoding",
+                  "deflate, gzip, br, zstd"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ],
+                [
+                  "Content-Length",
+                  "2837"
+                ]
+              ],
+              "body": "{\"model\":\"embeddinggemma\",\"input\":\"This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. This is a repeated pattern. \"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "bulk embed sums tokens and durations",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "ollama"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.set",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "timeout": 180004,
+            "endpoint": "${fixture}/api/embed"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"model\":\"embeddinggemma\",\"embeddings\":[[0.1,0.2]],\"total_duration\":81234567,\"load_duration\":1234567,\"prompt_eval_count\":3}"
+              },
+              {
+                "status": 200,
+                "body": "{\"embeddings\":[[1,2]],\"prompt_eval_count\":\"7\"}"
+              },
+              {
+                "status": 200,
+                "body": "{\"embeddings\":[],\"total_duration\":5}"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.bulk_embed",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "texts": [
+              "a",
+              "b",
+              "c"
+            ]
+          },
+          "expect": {
+            "embeddings": [
+              [
+                0.1,
+                0.2
+              ],
+              [
+                1,
+                2
+              ],
+              []
+            ],
+            "tokensProcessed": 3,
+            "totalDuration": 81234572
+          }
+        },
+        {
+          "op": "agent.bulk_embed",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "texts": []
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "bulkEmbed requires at least one text"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "embedding errors",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "ollama"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.set",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "timeout": 180004,
+            "endpoint": "${fixture}/api/embed"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.queue",
+          "args": {
+            "responses": [
+              {
+                "status": 404,
+                "body": "{\"error\":\"model \\\"embeddinggemma\\\" not found, try pulling it first\"}"
+              },
+              {
+                "status": 500,
+                "body": "{\"error\":{\"nested\":true}}"
+              },
+              {
+                "status": 200,
+                "body": "not json"
+              },
+              {
+                "status": 503,
+                "body": "{\"embeddings\":[[0.5]]}"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "x"
+            ],
+            "code": true
+          },
+          "expect": {
+            "class": "Exception",
+            "message": "OllamaAdapter does not support chat or messages. Use embed() instead.",
+            "code": 0,
+            "tokens": []
+          }
+        },
+        {
+          "op": "agent.embed",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "text": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "model \"embeddinggemma\" not found, try pulling it first"
+            }
+          }
+        },
+        {
+          "op": "agent.embed",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "text": "b"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unknown error"
+            }
+          }
+        },
+        {
+          "op": "agent.embed",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "text": "c"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid response format received from the API"
+            }
+          }
+        },
+        {
+          "op": "agent.embed",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "text": "d"
+          },
+          "expect": {
+            "embedding": [
+              0.5
+            ],
+            "tokensProcessed": null,
+            "totalDuration": null,
+            "modelLoadingDuration": null
+          }
+        }
+      ]
+    }
+  ]
+}

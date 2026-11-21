@@ -1,0 +1,2480 @@
+{
+  "source": "packages/query/tests/E2E/Builder/SQLiteIntegrationTest.php",
+  "cases": [
+    {
+      "name": "testSelectWithWhere",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "name",
+                "email"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "city",
+              [
+                "New York"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "city",
+            "values": [
+              "New York"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT `name`, `email` FROM `users` WHERE `city` IN (?)",
+            "bindings": [
+              "New York"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSelectWithOrderByLimitOffset",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "call": "limit",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              2
+            ]
+          },
+          {
+            "call": "offset",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              1
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT `name` FROM `users` ORDER BY `name` ASC LIMIT ? OFFSET ?",
+            "bindings": [
+              2,
+              1
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSelectWithJoin",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              "u"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "u.name",
+                "o.product",
+                "o.amount"
+              ]
+            ]
+          },
+          {
+            "call": "join",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders",
+              "u.id",
+              "o.user_id",
+              "=",
+              "o"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "o.status",
+              [
+                "completed"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "u.name"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "o.status",
+            "values": [
+              "completed"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT `u`.`name`, `o`.`product`, `o`.`amount` FROM `users` AS `u` JOIN `orders` AS `o` ON `u`.`id` = `o`.`user_id` WHERE `o`.`status` IN (?) ORDER BY `u`.`name` ASC",
+            "bindings": [
+              "completed"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSelectWithLeftJoin",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              "u"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "u.name",
+                "o.product"
+              ]
+            ]
+          },
+          {
+            "call": "leftJoin",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders",
+              "u.id",
+              "o.user_id",
+              "=",
+              "o"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "o.status",
+              [
+                "cancelled"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "u.name"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "o.status",
+            "values": [
+              "cancelled"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT `u`.`name`, `o`.`product` FROM `users` AS `u` LEFT JOIN `orders` AS `o` ON `u`.`id` = `o`.`user_id` WHERE `o`.`status` IN (?) ORDER BY `u`.`name` ASC",
+            "bindings": [
+              "cancelled"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInsertSingleRow",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "name": "Frank",
+                "email": "frank@example.com",
+                "age": 40,
+                "city": "Berlin",
+                "active": true
+              }
+            ]
+          },
+          {
+            "call": "insert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              [
+                "name",
+                "city"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "email",
+              [
+                "frank@example.com"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              [
+                {
+                  "$o": 4
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `users` (`name`, `email`, `age`, `city`, `active`) VALUES (?, ?, ?, ?, ?)",
+            "bindings": [
+              "Frank",
+              "frank@example.com",
+              40,
+              "Berlin",
+              true
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "email",
+            "values": [
+              "frank@example.com"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "SELECT `name`, `city` FROM `users` WHERE `email` IN (?)",
+            "bindings": [
+              "frank@example.com"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInsertMultipleRows",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "name": "Grace",
+                "email": "grace@example.com",
+                "age": 33,
+                "city": "Tokyo",
+                "active": true
+              }
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "name": "Hank",
+                "email": "hank@example.com",
+                "age": 45,
+                "city": "Tokyo",
+                "active": false
+              }
+            ]
+          },
+          {
+            "call": "insert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "city",
+              [
+                "Tokyo"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              [
+                {
+                  "$o": 4
+                }
+              ]
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `users` (`name`, `email`, `age`, `city`, `active`) VALUES (?, ?, ?, ?, ?), (?, ?, ?, ?, ?)",
+            "bindings": [
+              "Grace",
+              "grace@example.com",
+              33,
+              "Tokyo",
+              true,
+              "Hank",
+              "hank@example.com",
+              45,
+              "Tokyo",
+              false
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "city",
+            "values": [
+              "Tokyo"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "SELECT `name` FROM `users` WHERE `city` IN (?) ORDER BY `name` ASC",
+            "bindings": [
+              "Tokyo"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testUpdateWithWhere",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "city": "San Francisco"
+              }
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "Alice"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              [
+                "city"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "Alice"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              [
+                {
+                  "$o": 5
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "Alice"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "UPDATE `users` SET `city` = ? WHERE `name` IN (?)",
+            "bindings": [
+              "San Francisco",
+              "Alice"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 4
+        },
+        {
+          "$value": "Query",
+          "id": 5,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "Alice"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "SELECT `city` FROM `users` WHERE `name` IN (?)",
+            "bindings": [
+              "Alice"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDeleteWithWhere",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "Eve"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "delete",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "Eve"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              [
+                {
+                  "$o": 5
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "Eve"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "DELETE FROM `users` WHERE `name` IN (?)",
+            "bindings": [
+              "Eve"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 4
+        },
+        {
+          "$value": "Query",
+          "id": 5,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "Eve"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "SELECT * FROM `users` WHERE `name` IN (?)",
+            "bindings": [
+              "Eve"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSelectWithGroupByAndHaving",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "user_id"
+              ]
+            ]
+          },
+          {
+            "call": "count",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "*",
+              "order_count"
+            ]
+          },
+          {
+            "call": "groupBy",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "user_id"
+              ]
+            ]
+          },
+          {
+            "static": "greaterThan",
+            "class": "Query",
+            "args": [
+              "order_count",
+              1
+            ]
+          },
+          {
+            "call": "having",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "user_id"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::GreaterThan"
+            },
+            "attribute": "order_count",
+            "values": [
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT COUNT(*) AS `order_count`, `user_id` FROM `orders` GROUP BY `user_id` HAVING COUNT(*) > ? ORDER BY `user_id` ASC",
+            "bindings": [
+              1
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSelectWithUnion",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "city",
+              [
+                "New York"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "city",
+              [
+                "London"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              [
+                {
+                  "$o": 4
+                }
+              ]
+            ]
+          },
+          {
+            "call": "union",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              {
+                "$o": 1
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "city",
+            "values": [
+              "New York"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "city",
+            "values": [
+              "London"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "SELECT `name` FROM `users` WHERE `city` IN (?) UNION SELECT `name` FROM `users` WHERE `city` IN (?)",
+            "bindings": [
+              "London",
+              "New York"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT `name` FROM `users` WHERE `city` IN (?) UNION SELECT `name` FROM `users` WHERE `city` IN (?)"
+      ]
+    },
+    {
+      "name": "testUpsertOnConflictDoUpdate",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "name": "Alice Updated",
+                "email": "alice@example.com",
+                "age": 31,
+                "city": "Boston",
+                "active": true
+              }
+            ]
+          },
+          {
+            "call": "onConflict",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "email"
+              ],
+              [
+                "name",
+                "age",
+                "city"
+              ]
+            ]
+          },
+          {
+            "call": "upsert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              [
+                "name",
+                "age",
+                "city"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "email",
+              [
+                "alice@example.com"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              [
+                {
+                  "$o": 4
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `users` (`name`, `email`, `age`, `city`, `active`) VALUES (?, ?, ?, ?, ?) ON CONFLICT (`email`) DO UPDATE SET `name` = excluded.`name`, `age` = excluded.`age`, `city` = excluded.`city`",
+            "bindings": [
+              "Alice Updated",
+              "alice@example.com",
+              31,
+              "Boston",
+              true
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "email",
+            "values": [
+              "alice@example.com"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "SELECT `name`, `age`, `city` FROM `users` WHERE `email` IN (?)",
+            "bindings": [
+              "alice@example.com"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInsertOrIgnoreOnConflictDoNothing",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "name": "Alice Duplicate",
+                "email": "alice@example.com",
+                "age": 99,
+                "city": "Nowhere",
+                "active": false
+              }
+            ]
+          },
+          {
+            "call": "insertOrIgnore",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              [
+                "name",
+                "age"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "email",
+              [
+                "alice@example.com"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              [
+                {
+                  "$o": 4
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "INSERT OR IGNORE INTO `users` (`name`, `email`, `age`, `city`, `active`) VALUES (?, ?, ?, ?, ?)",
+            "bindings": [
+              "Alice Duplicate",
+              "alice@example.com",
+              99,
+              "Nowhere",
+              false
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "email",
+            "values": [
+              "alice@example.com"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "SELECT `name`, `age` FROM `users` WHERE `email` IN (?)",
+            "bindings": [
+              "alice@example.com"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSelectWithCte",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id",
+                "name",
+                "city"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "active",
+              [
+                true
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "with",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "active_users",
+              {
+                "$o": 1
+              }
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "active_users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              [
+                "name",
+                "city"
+              ]
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "active",
+            "values": [
+              true
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "WITH `active_users` AS (SELECT `id`, `name`, `city` FROM `users` WHERE `active` IN (?)) SELECT `name`, `city` FROM `active_users` ORDER BY `name` ASC",
+            "bindings": [
+              true
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSelectWithWindowFunction",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "user_id",
+                "product",
+                "amount"
+              ]
+            ]
+          },
+          {
+            "call": "selectWindow",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "ROW_NUMBER()",
+              "rn",
+              [
+                "user_id"
+              ],
+              [
+                "-amount"
+              ]
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "user_id"
+            ]
+          },
+          {
+            "call": "sortDesc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "amount"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT `user_id`, `product`, `amount`, ROW_NUMBER() OVER (PARTITION BY `user_id` ORDER BY `amount` DESC) AS `rn` FROM `orders` ORDER BY `user_id` ASC, `amount` DESC",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testRecursiveCte",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "fromNone",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "selectRaw",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "1"
+            ]
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "selectRaw",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "`n` + 1"
+            ]
+          },
+          {
+            "static": "lessThan",
+            "class": "Query",
+            "args": [
+              "n",
+              5
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "withRecursiveSeedStep",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "t",
+              {
+                "$o": 1
+              },
+              {
+                "$o": 2
+              },
+              [
+                "n"
+              ]
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              [
+                "n"
+              ]
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "n"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::LessThan"
+            },
+            "attribute": "n",
+            "values": [
+              5
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "WITH RECURSIVE `t`(`n`) AS (SELECT 1 UNION ALL SELECT `n` + 1 FROM `t` WHERE `n` < ?) SELECT `n` FROM `t` ORDER BY `n` ASC",
+            "bindings": [
+              5
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    }
+  ]
+}

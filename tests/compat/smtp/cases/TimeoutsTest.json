@@ -1,0 +1,381 @@
+{
+  "source": "packages/smtp/tests/TimeoutsTest.php",
+  "cases": [
+    {
+      "name": "reaching a server is given less patience than hearing back",
+      "op": "timeouts.new",
+      "args": {},
+      "expect": {
+        "connect": 10.0,
+        "read": 30.0,
+        "write": 30.0
+      }
+    },
+    {
+      "name": "each wait is set separately",
+      "op": "timeouts.new",
+      "args": {
+        "connect": 1.5,
+        "read": 90.0,
+        "write": 45.0
+      },
+      "expect": {
+        "connect": 1.5,
+        "read": 90.0,
+        "write": 45.0
+      }
+    },
+    {
+      "name": "refuses a timeout that would never wait",
+      "op": "timeouts.new",
+      "args": {
+        "connect": 0.0
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "The connect timeout must be a finite number greater than zero, got 0.0"
+        }
+      }
+    },
+    {
+      "name": "refuses a timeout below zero",
+      "op": "timeouts.new",
+      "args": {
+        "read": -1.0
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "The read timeout must be a finite number greater than zero, got -1.0"
+        }
+      }
+    },
+    {
+      "name": "refuses a wait with no end",
+      "op": "timeouts.new",
+      "args": {
+        "read": {
+          "$float": "INF"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "The read timeout must be a finite number greater than zero, got INF"
+        }
+      }
+    },
+    {
+      "name": "refuses a number that is not one",
+      "op": "timeouts.new",
+      "args": {
+        "write": {
+          "$float": "NAN"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "The write timeout must be a finite number greater than zero, got NAN"
+        }
+      }
+    },
+    {
+      "name": "refuses a huge negative",
+      "op": "timeouts.new",
+      "args": {
+        "write": -1e+100
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "The write timeout must be a finite number greater than zero, got -1.0E+100"
+        }
+      }
+    },
+    {
+      "name": "a tiny timeout is kept exactly",
+      "op": "timeouts.new",
+      "args": {
+        "connect": 1e-10
+      },
+      "expect": {
+        "connect": 1e-10,
+        "read": 30.0,
+        "write": 30.0
+      }
+    },
+    {
+      "name": "the client asks for each wait by name",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail.example.test",
+                "250 mail.example.test",
+                "250 Sender ok",
+                "250 Recipient ok",
+                "354 Go ahead",
+                "250 Ok"
+              ]
+            },
+            "encryption": "none",
+            "timeouts": {
+              "connect": 1.0,
+              "read": 2.0,
+              "write": 3.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "Body",
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\nBody\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "Body",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                1.0
+              ],
+              [
+                "read",
+                2.0
+              ],
+              [
+                "write",
+                3.0
+              ],
+              [
+                "read",
+                2.0
+              ],
+              [
+                "write",
+                3.0
+              ],
+              [
+                "read",
+                2.0
+              ],
+              [
+                "write",
+                3.0
+              ],
+              [
+                "read",
+                2.0
+              ],
+              [
+                "write",
+                3.0
+              ],
+              [
+                "read",
+                2.0
+              ],
+              [
+                "write",
+                3.0
+              ],
+              [
+                "write",
+                3.0
+              ],
+              [
+                "read",
+                2.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a server that never answers times out",
+      "steps": [
+        {
+          "op": "listener.new",
+          "args": {},
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transport.new",
+          "args": {
+            "listener": {
+              "$ref": "l"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transport.connect",
+          "args": {
+            "transport": {
+              "$ref": "t"
+            },
+            "timeout": 2.0
+          },
+          "expect": null
+        },
+        {
+          "op": "listener.accept",
+          "args": {
+            "listener": {
+              "$ref": "l"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "transport.read",
+          "args": {
+            "transport": {
+              "$ref": "t"
+            },
+            "length": 8192,
+            "timeout": 0.25
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\SMTP\\Exception\\TimeoutException",
+              "message": "Timed out waiting for the server"
+            }
+          }
+        },
+        {
+          "op": "transport.close",
+          "args": {
+            "transport": {
+              "$ref": "t"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a timeout is told apart from a closed connection",
+      "steps": [
+        {
+          "op": "listener.new",
+          "args": {},
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transport.new",
+          "args": {
+            "listener": {
+              "$ref": "l"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transport.connect",
+          "args": {
+            "transport": {
+              "$ref": "t"
+            },
+            "timeout": 2.0
+          },
+          "expect": null
+        },
+        {
+          "op": "listener.accept",
+          "args": {
+            "listener": {
+              "$ref": "l"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "listener.hangup",
+          "args": {
+            "listener": {
+              "$ref": "l"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "transport.read",
+          "args": {
+            "transport": {
+              "$ref": "t"
+            },
+            "length": 8192,
+            "timeout": 2.0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\SMTP\\Exception\\ConnectionException",
+              "message": "The server closed the connection"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,448 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/PostgresTest.php"
+  ],
+  "cases": [
+    {
+      "name": "PostgresTest::testRenameIndexFindsTheCreatorOfTheExactCollectionId",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.get_tenant",
+          "args": {},
+          "expect": 999
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 998
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "RenameCreator",
+                "name": "RenameCreator",
+                "attributes": [
+                  {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [
+                  {
+                    "$id": "idx",
+                    "key": "idx",
+                    "type": "key",
+                    "attributes": [
+                      "title"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                ],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "RenameCreator",
+              "name": "RenameCreator",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "idx",
+                    "key": "idx",
+                    "type": "key",
+                    "attributes": [
+                      "title"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "998",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1000
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "renameCreator",
+                "name": "renameCreator",
+                "attributes": [
+                  {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [
+                  {
+                    "$id": "idx",
+                    "key": "idx",
+                    "type": "key",
+                    "attributes": [
+                      "title"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                ],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "renameCreator",
+              "name": "renameCreator",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "idx",
+                    "key": "idx",
+                    "type": "key",
+                    "attributes": [
+                      "title"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "1000",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 999
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "renameCreator",
+                "name": "renameCreator",
+                "attributes": [
+                  {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [
+                  {
+                    "$id": "idx",
+                    "key": "idx",
+                    "type": "key",
+                    "attributes": [
+                      "title"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                ],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "renameCreator",
+              "name": "renameCreator",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "idx",
+                    "key": "idx",
+                    "type": "key",
+                    "attributes": [
+                      "title"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "3"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.rename_index",
+          "args": {
+            "collection": "renameCreator",
+            "old": "idx",
+            "new": "idx2"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "renameCreator"
+          },
+          "expect": {
+            "$document": {
+              "name": "renameCreator",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "idx2",
+                    "key": "idx2",
+                    "type": "key",
+                    "attributes": [
+                      "title"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$sequence": "3",
+              "$id": "renameCreator",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 999
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "renameCreator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1000
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "renameCreator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 998
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "RenameCreator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 999
+          },
+          "expect": {
+            "$database": true
+          }
+        }
+      ]
+    }
+  ]
+}

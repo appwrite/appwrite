@@ -1,0 +1,3819 @@
+{
+  "source": "packages/migration/tests/Destinations/AppwriteSpecificationTest.php",
+  "cases": [
+    {
+      "name": "offered specifications are kept",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/v1/functions/specifications",
+                "status": 200,
+                "body": {
+                  "total": 4,
+                  "specifications": [
+                    {
+                      "slug": "s-2vcpu-2gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 2048
+                    },
+                    {
+                      "slug": "s-2vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-4vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 4,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-8vcpu-8gb",
+                      "enabled": false,
+                      "cpus": 8,
+                      "memory": 8192
+                    }
+                  ]
+                },
+                "times": 1
+              },
+              {
+                "method": "GET",
+                "path": "/v1/functions/specifications",
+                "status": 200,
+                "body": {
+                  "total": 7,
+                  "specifications": [
+                    {
+                      "slug": "s-0.5vcpu-512mb",
+                      "enabled": true,
+                      "cpus": 0.5,
+                      "memory": 512
+                    },
+                    {
+                      "slug": "s-1vcpu-512mb",
+                      "enabled": true,
+                      "cpus": 1,
+                      "memory": 512
+                    },
+                    {
+                      "slug": "s-1vcpu-1gb",
+                      "enabled": true,
+                      "cpus": 1,
+                      "memory": 1024
+                    },
+                    {
+                      "slug": "s-2vcpu-2gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 2048
+                    },
+                    {
+                      "slug": "s-2vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-4vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 4,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-8vcpu-8gb",
+                      "enabled": false,
+                      "cpus": 8,
+                      "memory": 8192
+                    }
+                  ]
+                },
+                "times": 1
+              },
+              {
+                "method": "POST",
+                "path": "/v1/functions",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "execute": [],
+                  "name": "",
+                  "enabled": false,
+                  "live": false,
+                  "logging": false,
+                  "runtime": "",
+                  "deploymentRetention": 0,
+                  "deploymentId": "",
+                  "deploymentCreatedAt": "",
+                  "latestDeploymentId": "",
+                  "latestDeploymentCreatedAt": "",
+                  "latestDeploymentStatus": "",
+                  "scopes": [],
+                  "vars": [],
+                  "events": [],
+                  "schedule": "",
+                  "timeout": 0,
+                  "entrypoint": "",
+                  "commands": "",
+                  "version": "",
+                  "installationId": "",
+                  "providerRepositoryId": "",
+                  "providerBranch": "",
+                  "providerRootDirectory": "",
+                  "providerSilentMode": false,
+                  "providerBranches": [],
+                  "providerPaths": [],
+                  "buildSpecification": "",
+                  "runtimeSpecification": ""
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "users"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "targets"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "providers"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "users",
+            "document": {
+              "$id": "u1",
+              "name": "U"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "providers",
+            "document": {
+              "$id": "fcm1",
+              "name": "F"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Func",
+            "args": {
+              "id": "function",
+              "name": "Function",
+              "runtime": "node-22",
+              "specification": "s-1vcpu-1gb",
+              "buildSpecification": "s-2vcpu-4gb"
+            }
+          },
+          "bind": "r0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "api": true,
+            "key": "test-key"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "function"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "function",
+                "id": "function",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Functions\\Func",
+            "getActiveDeployment": "",
+            "getBuildSpecification": "s-2vcpu-4gb",
+            "getCommands": "",
+            "getCreatedAt": "",
+            "getDeploymentRetention": 0,
+            "getDescription": "",
+            "getEnabled": true,
+            "getEntrypoint": "",
+            "getEvents": [],
+            "getExecute": [],
+            "getFunctionName": "Function",
+            "getGroup": "functions",
+            "getId": "function",
+            "getInterval": 0,
+            "getLogging": true,
+            "getMessage": "",
+            "getName": "function",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRuntime": "node-22",
+            "getRuntimeSpecification": "s-1vcpu-1gb",
+            "getSchedule": "",
+            "getScopes": [],
+            "getSequence": "<uniqid>",
+            "getSpecification": "s-1vcpu-1gb",
+            "getStatus": "success",
+            "getTimeout": 0,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "path": "/v1/functions/specifications",
+              "query": "type=builds",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/functions/specifications",
+              "query": "type=runtimes",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "path": "/v1/functions",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": "{\"functionId\":\"function\",\"name\":\"Function\",\"runtime\":\"node-22\",\"execute\":[],\"events\":[],\"schedule\":\"\",\"timeout\":0,\"enabled\":true,\"logging\":true,\"entrypoint\":\"\",\"commands\":\"\",\"scopes\":[],\"buildSpecification\":\"s-2vcpu-4gb\",\"runtimeSpecification\":\"s-1vcpu-1gb\",\"deploymentRetention\":0,\"description\":\"\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a function created before its plan is imported with the plan's default build",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/v1/functions/specifications",
+                "status": 200,
+                "body": {
+                  "total": 4,
+                  "specifications": [
+                    {
+                      "slug": "s-2vcpu-2gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 2048
+                    },
+                    {
+                      "slug": "s-2vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-4vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 4,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-8vcpu-8gb",
+                      "enabled": false,
+                      "cpus": 8,
+                      "memory": 8192
+                    }
+                  ]
+                },
+                "times": 1
+              },
+              {
+                "method": "GET",
+                "path": "/v1/functions/specifications",
+                "status": 200,
+                "body": {
+                  "total": 7,
+                  "specifications": [
+                    {
+                      "slug": "s-0.5vcpu-512mb",
+                      "enabled": true,
+                      "cpus": 0.5,
+                      "memory": 512
+                    },
+                    {
+                      "slug": "s-1vcpu-512mb",
+                      "enabled": true,
+                      "cpus": 1,
+                      "memory": 512
+                    },
+                    {
+                      "slug": "s-1vcpu-1gb",
+                      "enabled": true,
+                      "cpus": 1,
+                      "memory": 1024
+                    },
+                    {
+                      "slug": "s-2vcpu-2gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 2048
+                    },
+                    {
+                      "slug": "s-2vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-4vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 4,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-8vcpu-8gb",
+                      "enabled": false,
+                      "cpus": 8,
+                      "memory": 8192
+                    }
+                  ]
+                },
+                "times": 1
+              },
+              {
+                "method": "POST",
+                "path": "/v1/functions",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "execute": [],
+                  "name": "",
+                  "enabled": false,
+                  "live": false,
+                  "logging": false,
+                  "runtime": "",
+                  "deploymentRetention": 0,
+                  "deploymentId": "",
+                  "deploymentCreatedAt": "",
+                  "latestDeploymentId": "",
+                  "latestDeploymentCreatedAt": "",
+                  "latestDeploymentStatus": "",
+                  "scopes": [],
+                  "vars": [],
+                  "events": [],
+                  "schedule": "",
+                  "timeout": 0,
+                  "entrypoint": "",
+                  "commands": "",
+                  "version": "",
+                  "installationId": "",
+                  "providerRepositoryId": "",
+                  "providerBranch": "",
+                  "providerRootDirectory": "",
+                  "providerSilentMode": false,
+                  "providerBranches": [],
+                  "providerPaths": [],
+                  "buildSpecification": "",
+                  "runtimeSpecification": ""
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "users"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "targets"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "providers"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "users",
+            "document": {
+              "$id": "u1",
+              "name": "U"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "providers",
+            "document": {
+              "$id": "fcm1",
+              "name": "F"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Func",
+            "args": {
+              "id": "function",
+              "name": "Function",
+              "runtime": "node-22",
+              "specification": "s-0.5vcpu-512mb",
+              "buildSpecification": ""
+            }
+          },
+          "bind": "r0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "api": true,
+            "key": "test-key"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "function"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "function",
+                "id": "function",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "resourceName": "function",
+              "resourceGroup": "functions",
+              "resourceId": "function",
+              "message": "Function \"function\" used the build specification \"s-0.5vcpu-512mb\", which this project's plan does not offer, so it was imported with the default."
+            }
+          ]
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Functions\\Func",
+            "getActiveDeployment": "",
+            "getBuildSpecification": "s-0.5vcpu-512mb",
+            "getCommands": "",
+            "getCreatedAt": "",
+            "getDeploymentRetention": 0,
+            "getDescription": "",
+            "getEnabled": true,
+            "getEntrypoint": "",
+            "getEvents": [],
+            "getExecute": [],
+            "getFunctionName": "Function",
+            "getGroup": "functions",
+            "getId": "function",
+            "getInterval": 0,
+            "getLogging": true,
+            "getMessage": "",
+            "getName": "function",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRuntime": "node-22",
+            "getRuntimeSpecification": "s-0.5vcpu-512mb",
+            "getSchedule": "",
+            "getScopes": [],
+            "getSequence": "<uniqid>",
+            "getSpecification": "s-0.5vcpu-512mb",
+            "getStatus": "success",
+            "getTimeout": 0,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "path": "/v1/functions/specifications",
+              "query": "type=builds",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/functions/specifications",
+              "query": "type=runtimes",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "path": "/v1/functions",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": "{\"functionId\":\"function\",\"name\":\"Function\",\"runtime\":\"node-22\",\"execute\":[],\"events\":[],\"schedule\":\"\",\"timeout\":0,\"enabled\":true,\"logging\":true,\"entrypoint\":\"\",\"commands\":\"\",\"scopes\":[],\"runtimeSpecification\":\"s-0.5vcpu-512mb\",\"deploymentRetention\":0,\"description\":\"\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a runtime specification of a higher plan is left to the destination",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/v1/functions/specifications",
+                "status": 200,
+                "body": {
+                  "total": 4,
+                  "specifications": [
+                    {
+                      "slug": "s-2vcpu-2gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 2048
+                    },
+                    {
+                      "slug": "s-2vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-4vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 4,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-8vcpu-8gb",
+                      "enabled": false,
+                      "cpus": 8,
+                      "memory": 8192
+                    }
+                  ]
+                },
+                "times": 1
+              },
+              {
+                "method": "GET",
+                "path": "/v1/functions/specifications",
+                "status": 200,
+                "body": {
+                  "total": 7,
+                  "specifications": [
+                    {
+                      "slug": "s-0.5vcpu-512mb",
+                      "enabled": true,
+                      "cpus": 0.5,
+                      "memory": 512
+                    },
+                    {
+                      "slug": "s-1vcpu-512mb",
+                      "enabled": true,
+                      "cpus": 1,
+                      "memory": 512
+                    },
+                    {
+                      "slug": "s-1vcpu-1gb",
+                      "enabled": true,
+                      "cpus": 1,
+                      "memory": 1024
+                    },
+                    {
+                      "slug": "s-2vcpu-2gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 2048
+                    },
+                    {
+                      "slug": "s-2vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-4vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 4,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-8vcpu-8gb",
+                      "enabled": false,
+                      "cpus": 8,
+                      "memory": 8192
+                    }
+                  ]
+                },
+                "times": 1
+              },
+              {
+                "method": "POST",
+                "path": "/v1/functions",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "execute": [],
+                  "name": "",
+                  "enabled": false,
+                  "live": false,
+                  "logging": false,
+                  "runtime": "",
+                  "deploymentRetention": 0,
+                  "deploymentId": "",
+                  "deploymentCreatedAt": "",
+                  "latestDeploymentId": "",
+                  "latestDeploymentCreatedAt": "",
+                  "latestDeploymentStatus": "",
+                  "scopes": [],
+                  "vars": [],
+                  "events": [],
+                  "schedule": "",
+                  "timeout": 0,
+                  "entrypoint": "",
+                  "commands": "",
+                  "version": "",
+                  "installationId": "",
+                  "providerRepositoryId": "",
+                  "providerBranch": "",
+                  "providerRootDirectory": "",
+                  "providerSilentMode": false,
+                  "providerBranches": [],
+                  "providerPaths": [],
+                  "buildSpecification": "",
+                  "runtimeSpecification": ""
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "users"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "targets"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "providers"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "users",
+            "document": {
+              "$id": "u1",
+              "name": "U"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "providers",
+            "document": {
+              "$id": "fcm1",
+              "name": "F"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Func",
+            "args": {
+              "id": "function",
+              "name": "Function",
+              "runtime": "node-22",
+              "specification": "s-8vcpu-8gb",
+              "buildSpecification": "s-4vcpu-4gb"
+            }
+          },
+          "bind": "r0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "api": true,
+            "key": "test-key"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "function"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "function",
+                "id": "function",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "resourceName": "function",
+              "resourceGroup": "functions",
+              "resourceId": "function",
+              "message": "Function \"function\" used the runtime specification \"s-8vcpu-8gb\", which this project's plan does not offer, so it was imported with the default."
+            }
+          ]
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Functions\\Func",
+            "getActiveDeployment": "",
+            "getBuildSpecification": "s-4vcpu-4gb",
+            "getCommands": "",
+            "getCreatedAt": "",
+            "getDeploymentRetention": 0,
+            "getDescription": "",
+            "getEnabled": true,
+            "getEntrypoint": "",
+            "getEvents": [],
+            "getExecute": [],
+            "getFunctionName": "Function",
+            "getGroup": "functions",
+            "getId": "function",
+            "getInterval": 0,
+            "getLogging": true,
+            "getMessage": "",
+            "getName": "function",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRuntime": "node-22",
+            "getRuntimeSpecification": "s-8vcpu-8gb",
+            "getSchedule": "",
+            "getScopes": [],
+            "getSequence": "<uniqid>",
+            "getSpecification": "s-8vcpu-8gb",
+            "getStatus": "success",
+            "getTimeout": 0,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "path": "/v1/functions/specifications",
+              "query": "type=builds",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/functions/specifications",
+              "query": "type=runtimes",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "path": "/v1/functions",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": "{\"functionId\":\"function\",\"name\":\"Function\",\"runtime\":\"node-22\",\"execute\":[],\"events\":[],\"schedule\":\"\",\"timeout\":0,\"enabled\":true,\"logging\":true,\"entrypoint\":\"\",\"commands\":\"\",\"scopes\":[],\"buildSpecification\":\"s-4vcpu-4gb\",\"deploymentRetention\":0,\"description\":\"\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "specifications are listed once per migration",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/v1/functions/specifications",
+                "status": 200,
+                "body": {
+                  "total": 4,
+                  "specifications": [
+                    {
+                      "slug": "s-2vcpu-2gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 2048
+                    },
+                    {
+                      "slug": "s-2vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-4vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 4,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-8vcpu-8gb",
+                      "enabled": false,
+                      "cpus": 8,
+                      "memory": 8192
+                    }
+                  ]
+                },
+                "times": 1
+              },
+              {
+                "method": "GET",
+                "path": "/v1/functions/specifications",
+                "status": 200,
+                "body": {
+                  "total": 7,
+                  "specifications": [
+                    {
+                      "slug": "s-0.5vcpu-512mb",
+                      "enabled": true,
+                      "cpus": 0.5,
+                      "memory": 512
+                    },
+                    {
+                      "slug": "s-1vcpu-512mb",
+                      "enabled": true,
+                      "cpus": 1,
+                      "memory": 512
+                    },
+                    {
+                      "slug": "s-1vcpu-1gb",
+                      "enabled": true,
+                      "cpus": 1,
+                      "memory": 1024
+                    },
+                    {
+                      "slug": "s-2vcpu-2gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 2048
+                    },
+                    {
+                      "slug": "s-2vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-4vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 4,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-8vcpu-8gb",
+                      "enabled": false,
+                      "cpus": 8,
+                      "memory": 8192
+                    }
+                  ]
+                },
+                "times": 1
+              },
+              {
+                "method": "POST",
+                "path": "/v1/functions",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "execute": [],
+                  "name": "",
+                  "enabled": false,
+                  "live": false,
+                  "logging": false,
+                  "runtime": "",
+                  "deploymentRetention": 0,
+                  "deploymentId": "",
+                  "deploymentCreatedAt": "",
+                  "latestDeploymentId": "",
+                  "latestDeploymentCreatedAt": "",
+                  "latestDeploymentStatus": "",
+                  "scopes": [],
+                  "vars": [],
+                  "events": [],
+                  "schedule": "",
+                  "timeout": 0,
+                  "entrypoint": "",
+                  "commands": "",
+                  "version": "",
+                  "installationId": "",
+                  "providerRepositoryId": "",
+                  "providerBranch": "",
+                  "providerRootDirectory": "",
+                  "providerSilentMode": false,
+                  "providerBranches": [],
+                  "providerPaths": [],
+                  "buildSpecification": "",
+                  "runtimeSpecification": ""
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "users"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "targets"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "providers"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "users",
+            "document": {
+              "$id": "u1",
+              "name": "U"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "providers",
+            "document": {
+              "$id": "fcm1",
+              "name": "F"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Func",
+            "args": {
+              "id": "first",
+              "name": "Function",
+              "runtime": "node-22",
+              "specification": "s-0.5vcpu-512mb",
+              "buildSpecification": ""
+            }
+          },
+          "bind": "r0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Func",
+            "args": {
+              "id": "second",
+              "name": "Function",
+              "runtime": "node-22",
+              "specification": "s-0.5vcpu-512mb",
+              "buildSpecification": ""
+            }
+          },
+          "bind": "r1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "api": true,
+            "key": "test-key"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "function"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "function",
+                "id": "first",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "function",
+                "id": "second",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "resourceName": "function",
+              "resourceGroup": "functions",
+              "resourceId": "first",
+              "message": "Function \"first\" used the build specification \"s-0.5vcpu-512mb\", which this project's plan does not offer, so it was imported with the default."
+            },
+            {
+              "resourceName": "function",
+              "resourceGroup": "functions",
+              "resourceId": "second",
+              "message": "Function \"second\" used the build specification \"s-0.5vcpu-512mb\", which this project's plan does not offer, so it was imported with the default."
+            }
+          ]
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Functions\\Func",
+            "getActiveDeployment": "",
+            "getBuildSpecification": "s-0.5vcpu-512mb",
+            "getCommands": "",
+            "getCreatedAt": "",
+            "getDeploymentRetention": 0,
+            "getDescription": "",
+            "getEnabled": true,
+            "getEntrypoint": "",
+            "getEvents": [],
+            "getExecute": [],
+            "getFunctionName": "Function",
+            "getGroup": "functions",
+            "getId": "first",
+            "getInterval": 0,
+            "getLogging": true,
+            "getMessage": "",
+            "getName": "function",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRuntime": "node-22",
+            "getRuntimeSpecification": "s-0.5vcpu-512mb",
+            "getSchedule": "",
+            "getScopes": [],
+            "getSequence": "<uniqid>",
+            "getSpecification": "s-0.5vcpu-512mb",
+            "getStatus": "success",
+            "getTimeout": 0,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "r1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Functions\\Func",
+            "getActiveDeployment": "",
+            "getBuildSpecification": "s-0.5vcpu-512mb",
+            "getCommands": "",
+            "getCreatedAt": "",
+            "getDeploymentRetention": 0,
+            "getDescription": "",
+            "getEnabled": true,
+            "getEntrypoint": "",
+            "getEvents": [],
+            "getExecute": [],
+            "getFunctionName": "Function",
+            "getGroup": "functions",
+            "getId": "second",
+            "getInterval": 0,
+            "getLogging": true,
+            "getMessage": "",
+            "getName": "function",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRuntime": "node-22",
+            "getRuntimeSpecification": "s-0.5vcpu-512mb",
+            "getSchedule": "",
+            "getScopes": [],
+            "getSequence": "<uniqid>",
+            "getSpecification": "s-0.5vcpu-512mb",
+            "getStatus": "success",
+            "getTimeout": 0,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "path": "/v1/functions/specifications",
+              "query": "type=builds",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/functions/specifications",
+              "query": "type=runtimes",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "path": "/v1/functions",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": "{\"functionId\":\"first\",\"name\":\"Function\",\"runtime\":\"node-22\",\"execute\":[],\"events\":[],\"schedule\":\"\",\"timeout\":0,\"enabled\":true,\"logging\":true,\"entrypoint\":\"\",\"commands\":\"\",\"scopes\":[],\"runtimeSpecification\":\"s-0.5vcpu-512mb\",\"deploymentRetention\":0,\"description\":\"\"}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/functions",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": "{\"functionId\":\"second\",\"name\":\"Function\",\"runtime\":\"node-22\",\"execute\":[],\"events\":[],\"schedule\":\"\",\"timeout\":0,\"enabled\":true,\"logging\":true,\"entrypoint\":\"\",\"commands\":\"\",\"scopes\":[],\"runtimeSpecification\":\"s-0.5vcpu-512mb\",\"deploymentRetention\":0,\"description\":\"\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a specification is sent as is when the destination cannot list them",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/v1/functions/specifications",
+                "status": 401,
+                "body": {
+                  "message": "The current user is not authorized to perform the requested action.",
+                  "code": 401,
+                  "type": "general_unauthorized_scope"
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/functions",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "execute": [],
+                  "name": "",
+                  "enabled": false,
+                  "live": false,
+                  "logging": false,
+                  "runtime": "",
+                  "deploymentRetention": 0,
+                  "deploymentId": "",
+                  "deploymentCreatedAt": "",
+                  "latestDeploymentId": "",
+                  "latestDeploymentCreatedAt": "",
+                  "latestDeploymentStatus": "",
+                  "scopes": [],
+                  "vars": [],
+                  "events": [],
+                  "schedule": "",
+                  "timeout": 0,
+                  "entrypoint": "",
+                  "commands": "",
+                  "version": "",
+                  "installationId": "",
+                  "providerRepositoryId": "",
+                  "providerBranch": "",
+                  "providerRootDirectory": "",
+                  "providerSilentMode": false,
+                  "providerBranches": [],
+                  "providerPaths": [],
+                  "buildSpecification": "",
+                  "runtimeSpecification": ""
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "users"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "targets"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "providers"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "users",
+            "document": {
+              "$id": "u1",
+              "name": "U"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "providers",
+            "document": {
+              "$id": "fcm1",
+              "name": "F"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Func",
+            "args": {
+              "id": "function",
+              "name": "Function",
+              "runtime": "node-22",
+              "specification": "s-1vcpu-1gb",
+              "buildSpecification": "s-2vcpu-2gb"
+            }
+          },
+          "bind": "r0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "api": true,
+            "key": "test-key"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "function"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "function",
+                "id": "function",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Functions\\Func",
+            "getActiveDeployment": "",
+            "getBuildSpecification": "s-2vcpu-2gb",
+            "getCommands": "",
+            "getCreatedAt": "",
+            "getDeploymentRetention": 0,
+            "getDescription": "",
+            "getEnabled": true,
+            "getEntrypoint": "",
+            "getEvents": [],
+            "getExecute": [],
+            "getFunctionName": "Function",
+            "getGroup": "functions",
+            "getId": "function",
+            "getInterval": 0,
+            "getLogging": true,
+            "getMessage": "",
+            "getName": "function",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRuntime": "node-22",
+            "getRuntimeSpecification": "s-1vcpu-1gb",
+            "getSchedule": "",
+            "getScopes": [],
+            "getSequence": "<uniqid>",
+            "getSpecification": "s-1vcpu-1gb",
+            "getStatus": "success",
+            "getTimeout": 0,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "path": "/v1/functions/specifications",
+              "query": "type=builds",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/functions/specifications",
+              "query": "type=runtimes",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "path": "/v1/functions",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": "{\"functionId\":\"function\",\"name\":\"Function\",\"runtime\":\"node-22\",\"execute\":[],\"events\":[],\"schedule\":\"\",\"timeout\":0,\"enabled\":true,\"logging\":true,\"entrypoint\":\"\",\"commands\":\"\",\"scopes\":[],\"buildSpecification\":\"s-2vcpu-2gb\",\"runtimeSpecification\":\"s-1vcpu-1gb\",\"deploymentRetention\":0,\"description\":\"\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a function without a specification sends none",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/v1/functions/specifications",
+                "status": 200,
+                "body": {
+                  "total": 4,
+                  "specifications": [
+                    {
+                      "slug": "s-2vcpu-2gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 2048
+                    },
+                    {
+                      "slug": "s-2vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-4vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 4,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-8vcpu-8gb",
+                      "enabled": false,
+                      "cpus": 8,
+                      "memory": 8192
+                    }
+                  ]
+                },
+                "times": 1
+              },
+              {
+                "method": "GET",
+                "path": "/v1/functions/specifications",
+                "status": 200,
+                "body": {
+                  "total": 7,
+                  "specifications": [
+                    {
+                      "slug": "s-0.5vcpu-512mb",
+                      "enabled": true,
+                      "cpus": 0.5,
+                      "memory": 512
+                    },
+                    {
+                      "slug": "s-1vcpu-512mb",
+                      "enabled": true,
+                      "cpus": 1,
+                      "memory": 512
+                    },
+                    {
+                      "slug": "s-1vcpu-1gb",
+                      "enabled": true,
+                      "cpus": 1,
+                      "memory": 1024
+                    },
+                    {
+                      "slug": "s-2vcpu-2gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 2048
+                    },
+                    {
+                      "slug": "s-2vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-4vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 4,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-8vcpu-8gb",
+                      "enabled": false,
+                      "cpus": 8,
+                      "memory": 8192
+                    }
+                  ]
+                },
+                "times": 1
+              },
+              {
+                "method": "POST",
+                "path": "/v1/functions",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "execute": [],
+                  "name": "",
+                  "enabled": false,
+                  "live": false,
+                  "logging": false,
+                  "runtime": "",
+                  "deploymentRetention": 0,
+                  "deploymentId": "",
+                  "deploymentCreatedAt": "",
+                  "latestDeploymentId": "",
+                  "latestDeploymentCreatedAt": "",
+                  "latestDeploymentStatus": "",
+                  "scopes": [],
+                  "vars": [],
+                  "events": [],
+                  "schedule": "",
+                  "timeout": 0,
+                  "entrypoint": "",
+                  "commands": "",
+                  "version": "",
+                  "installationId": "",
+                  "providerRepositoryId": "",
+                  "providerBranch": "",
+                  "providerRootDirectory": "",
+                  "providerSilentMode": false,
+                  "providerBranches": [],
+                  "providerPaths": [],
+                  "buildSpecification": "",
+                  "runtimeSpecification": ""
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "users"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "targets"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "providers"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "users",
+            "document": {
+              "$id": "u1",
+              "name": "U"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "providers",
+            "document": {
+              "$id": "fcm1",
+              "name": "F"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Func",
+            "args": {
+              "id": "function",
+              "name": "Function",
+              "runtime": "node-22",
+              "specification": "",
+              "buildSpecification": ""
+            }
+          },
+          "bind": "r0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "api": true,
+            "key": "test-key"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "function"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "function",
+                "id": "function",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Functions\\Func",
+            "getActiveDeployment": "",
+            "getBuildSpecification": "",
+            "getCommands": "",
+            "getCreatedAt": "",
+            "getDeploymentRetention": 0,
+            "getDescription": "",
+            "getEnabled": true,
+            "getEntrypoint": "",
+            "getEvents": [],
+            "getExecute": [],
+            "getFunctionName": "Function",
+            "getGroup": "functions",
+            "getId": "function",
+            "getInterval": 0,
+            "getLogging": true,
+            "getMessage": "",
+            "getName": "function",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRuntime": "node-22",
+            "getRuntimeSpecification": "",
+            "getSchedule": "",
+            "getScopes": [],
+            "getSequence": "<uniqid>",
+            "getSpecification": "",
+            "getStatus": "success",
+            "getTimeout": 0,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "path": "/v1/functions",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": "{\"functionId\":\"function\",\"name\":\"Function\",\"runtime\":\"node-22\",\"execute\":[],\"events\":[],\"schedule\":\"\",\"timeout\":0,\"enabled\":true,\"logging\":true,\"entrypoint\":\"\",\"commands\":\"\",\"scopes\":[],\"deploymentRetention\":0,\"description\":\"\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a specification is warned about once when the interval is refused too",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/v1/functions/specifications",
+                "status": 200,
+                "body": {
+                  "total": 4,
+                  "specifications": [
+                    {
+                      "slug": "s-2vcpu-2gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 2048
+                    },
+                    {
+                      "slug": "s-2vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-4vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 4,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-8vcpu-8gb",
+                      "enabled": false,
+                      "cpus": 8,
+                      "memory": 8192
+                    }
+                  ]
+                },
+                "times": 1
+              },
+              {
+                "method": "GET",
+                "path": "/v1/functions/specifications",
+                "status": 200,
+                "body": {
+                  "total": 7,
+                  "specifications": [
+                    {
+                      "slug": "s-0.5vcpu-512mb",
+                      "enabled": true,
+                      "cpus": 0.5,
+                      "memory": 512
+                    },
+                    {
+                      "slug": "s-1vcpu-512mb",
+                      "enabled": true,
+                      "cpus": 1,
+                      "memory": 512
+                    },
+                    {
+                      "slug": "s-1vcpu-1gb",
+                      "enabled": true,
+                      "cpus": 1,
+                      "memory": 1024
+                    },
+                    {
+                      "slug": "s-2vcpu-2gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 2048
+                    },
+                    {
+                      "slug": "s-2vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-4vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 4,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-8vcpu-8gb",
+                      "enabled": false,
+                      "cpus": 8,
+                      "memory": 8192
+                    }
+                  ]
+                },
+                "times": 1
+              },
+              {
+                "method": "POST",
+                "path": "/v1/functions",
+                "status": 400,
+                "body": {
+                  "message": "Scheduling functions by interval is not available on your plan.",
+                  "code": 400,
+                  "type": "billing_feature_unsupported"
+                },
+                "times": 1
+              },
+              {
+                "method": "POST",
+                "path": "/v1/functions",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "execute": [],
+                  "name": "",
+                  "enabled": false,
+                  "live": false,
+                  "logging": false,
+                  "runtime": "",
+                  "deploymentRetention": 0,
+                  "deploymentId": "",
+                  "deploymentCreatedAt": "",
+                  "latestDeploymentId": "",
+                  "latestDeploymentCreatedAt": "",
+                  "latestDeploymentStatus": "",
+                  "scopes": [],
+                  "vars": [],
+                  "events": [],
+                  "schedule": "",
+                  "timeout": 0,
+                  "entrypoint": "",
+                  "commands": "",
+                  "version": "",
+                  "installationId": "",
+                  "providerRepositoryId": "",
+                  "providerBranch": "",
+                  "providerRootDirectory": "",
+                  "providerSilentMode": false,
+                  "providerBranches": [],
+                  "providerPaths": [],
+                  "buildSpecification": "",
+                  "runtimeSpecification": ""
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "users"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "targets"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "providers"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "users",
+            "document": {
+              "$id": "u1",
+              "name": "U"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "providers",
+            "document": {
+              "$id": "fcm1",
+              "name": "F"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Functions\\Func",
+            "args": {
+              "id": "function",
+              "name": "Function",
+              "runtime": "node-22",
+              "specification": "s-0.5vcpu-512mb",
+              "interval": 5
+            }
+          },
+          "bind": "r0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "api": true,
+            "key": "test-key"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "function"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "function",
+                "id": "function",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "resourceName": "function",
+              "resourceGroup": "functions",
+              "resourceId": "function",
+              "message": "Function \"function\" used the build specification \"s-0.5vcpu-512mb\", which this project's plan does not offer, so it was imported with the default."
+            },
+            {
+              "resourceName": "function",
+              "resourceGroup": "functions",
+              "resourceId": "function",
+              "message": "Function \"function\" ran every 5 minutes, which this plan does not allow, so it was imported without a schedule."
+            }
+          ]
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Functions\\Func",
+            "getActiveDeployment": "",
+            "getBuildSpecification": "s-0.5vcpu-512mb",
+            "getCommands": "",
+            "getCreatedAt": "",
+            "getDeploymentRetention": 0,
+            "getDescription": "",
+            "getEnabled": true,
+            "getEntrypoint": "",
+            "getEvents": [],
+            "getExecute": [],
+            "getFunctionName": "Function",
+            "getGroup": "functions",
+            "getId": "function",
+            "getInterval": 5,
+            "getLogging": true,
+            "getMessage": "",
+            "getName": "function",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getRuntime": "node-22",
+            "getRuntimeSpecification": "s-0.5vcpu-512mb",
+            "getSchedule": "",
+            "getScopes": [],
+            "getSequence": "<uniqid>",
+            "getSpecification": "s-0.5vcpu-512mb",
+            "getStatus": "success",
+            "getTimeout": 0,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "path": "/v1/functions/specifications",
+              "query": "type=builds",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/functions/specifications",
+              "query": "type=runtimes",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "path": "/v1/functions",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": "{\"functionId\":\"function\",\"name\":\"Function\",\"runtime\":\"node-22\",\"execute\":[],\"events\":[],\"schedule\":\"\",\"timeout\":0,\"enabled\":true,\"logging\":true,\"entrypoint\":\"\",\"commands\":\"\",\"scopes\":[],\"runtimeSpecification\":\"s-0.5vcpu-512mb\",\"deploymentRetention\":0,\"interval\":5,\"description\":\"\"}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/functions",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": "{\"functionId\":\"function\",\"name\":\"Function\",\"runtime\":\"node-22\",\"execute\":[],\"events\":[],\"schedule\":\"\",\"timeout\":0,\"enabled\":true,\"logging\":true,\"entrypoint\":\"\",\"commands\":\"\",\"scopes\":[],\"runtimeSpecification\":\"s-0.5vcpu-512mb\",\"deploymentRetention\":0,\"description\":\"\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a site created before its plan is imported with the plan's defaults",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/v1/sites/specifications",
+                "status": 200,
+                "body": {
+                  "total": 4,
+                  "specifications": [
+                    {
+                      "slug": "s-2vcpu-2gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 2048
+                    },
+                    {
+                      "slug": "s-2vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-4vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 4,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-8vcpu-8gb",
+                      "enabled": false,
+                      "cpus": 8,
+                      "memory": 8192
+                    }
+                  ]
+                },
+                "times": 1
+              },
+              {
+                "method": "GET",
+                "path": "/v1/sites/specifications",
+                "status": 200,
+                "body": {
+                  "total": 7,
+                  "specifications": [
+                    {
+                      "slug": "s-0.5vcpu-512mb",
+                      "enabled": true,
+                      "cpus": 0.5,
+                      "memory": 512
+                    },
+                    {
+                      "slug": "s-1vcpu-512mb",
+                      "enabled": true,
+                      "cpus": 1,
+                      "memory": 512
+                    },
+                    {
+                      "slug": "s-1vcpu-1gb",
+                      "enabled": true,
+                      "cpus": 1,
+                      "memory": 1024
+                    },
+                    {
+                      "slug": "s-2vcpu-2gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 2048
+                    },
+                    {
+                      "slug": "s-2vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-4vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 4,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-8vcpu-8gb",
+                      "enabled": false,
+                      "cpus": 8,
+                      "memory": 8192
+                    }
+                  ]
+                },
+                "times": 1
+              },
+              {
+                "method": "POST",
+                "path": "/v1/sites",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "name": "",
+                  "enabled": false,
+                  "live": false,
+                  "logging": false,
+                  "framework": "",
+                  "deploymentRetention": 0,
+                  "deploymentId": "",
+                  "deploymentCreatedAt": "",
+                  "deploymentScreenshotLight": "",
+                  "deploymentScreenshotDark": "",
+                  "latestDeploymentId": "",
+                  "latestDeploymentCreatedAt": "",
+                  "latestDeploymentStatus": "",
+                  "vars": [],
+                  "timeout": 0,
+                  "installCommand": "",
+                  "buildCommand": "",
+                  "startCommand": "",
+                  "outputDirectory": "",
+                  "installationId": "",
+                  "providerRepositoryId": "",
+                  "providerBranch": "",
+                  "providerRootDirectory": "",
+                  "providerSilentMode": false,
+                  "providerBranches": [],
+                  "providerPaths": [],
+                  "buildSpecification": "",
+                  "runtimeSpecification": "",
+                  "buildRuntime": "",
+                  "adapter": "",
+                  "fallbackFile": ""
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "users"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "targets"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "providers"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "users",
+            "document": {
+              "$id": "u1",
+              "name": "U"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "providers",
+            "document": {
+              "$id": "fcm1",
+              "name": "F"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Sites\\Site",
+            "args": {
+              "id": "site",
+              "name": "Site",
+              "framework": "other",
+              "buildRuntime": "static-1",
+              "specification": "s-8vcpu-8gb",
+              "buildSpecification": "s-0.5vcpu-512mb"
+            }
+          },
+          "bind": "r0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "api": true,
+            "key": "test-key"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "site"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "site",
+                "id": "site",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "resourceName": "site",
+              "resourceGroup": "sites",
+              "resourceId": "site",
+              "message": "Site \"site\" used the build specification \"s-0.5vcpu-512mb\", which this project's plan does not offer, so it was imported with the default."
+            },
+            {
+              "resourceName": "site",
+              "resourceGroup": "sites",
+              "resourceId": "site",
+              "message": "Site \"site\" used the runtime specification \"s-8vcpu-8gb\", which this project's plan does not offer, so it was imported with the default."
+            }
+          ]
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Sites\\Site",
+            "getActiveDeployment": "",
+            "getAdapter": "static",
+            "getBuildCommand": "",
+            "getBuildRuntime": "static-1",
+            "getBuildSpecification": "s-0.5vcpu-512mb",
+            "getCreatedAt": "",
+            "getDeploymentRetention": 0,
+            "getDescription": "",
+            "getEnabled": true,
+            "getFallbackFile": "",
+            "getFramework": "other",
+            "getGroup": "sites",
+            "getId": "site",
+            "getInstallCommand": "",
+            "getLogging": true,
+            "getMessage": "",
+            "getName": "site",
+            "getOriginalId": "",
+            "getOutputDirectory": "",
+            "getPermissions": [],
+            "getRuntimeSpecification": "s-8vcpu-8gb",
+            "getScopes": [],
+            "getSequence": "<uniqid>",
+            "getSiteName": "Site",
+            "getSpecification": "s-8vcpu-8gb",
+            "getStartCommand": "",
+            "getStatus": "success",
+            "getTimeout": 600,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "path": "/v1/sites/specifications",
+              "query": "type=builds",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/sites/specifications",
+              "query": "type=runtimes",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "path": "/v1/sites",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": "{\"siteId\":\"site\",\"name\":\"Site\",\"framework\":\"other\",\"buildRuntime\":\"static-1\",\"enabled\":true,\"logging\":true,\"timeout\":600,\"installCommand\":\"\",\"buildCommand\":\"\",\"outputDirectory\":\"\",\"adapter\":\"static\",\"fallbackFile\":\"\",\"deploymentRetention\":0,\"scopes\":[],\"description\":\"\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a site keeps the specifications its destination offers",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/v1/sites/specifications",
+                "status": 200,
+                "body": {
+                  "total": 4,
+                  "specifications": [
+                    {
+                      "slug": "s-2vcpu-2gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 2048
+                    },
+                    {
+                      "slug": "s-2vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-4vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 4,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-8vcpu-8gb",
+                      "enabled": false,
+                      "cpus": 8,
+                      "memory": 8192
+                    }
+                  ]
+                },
+                "times": 1
+              },
+              {
+                "method": "GET",
+                "path": "/v1/sites/specifications",
+                "status": 200,
+                "body": {
+                  "total": 7,
+                  "specifications": [
+                    {
+                      "slug": "s-0.5vcpu-512mb",
+                      "enabled": true,
+                      "cpus": 0.5,
+                      "memory": 512
+                    },
+                    {
+                      "slug": "s-1vcpu-512mb",
+                      "enabled": true,
+                      "cpus": 1,
+                      "memory": 512
+                    },
+                    {
+                      "slug": "s-1vcpu-1gb",
+                      "enabled": true,
+                      "cpus": 1,
+                      "memory": 1024
+                    },
+                    {
+                      "slug": "s-2vcpu-2gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 2048
+                    },
+                    {
+                      "slug": "s-2vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 2,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-4vcpu-4gb",
+                      "enabled": true,
+                      "cpus": 4,
+                      "memory": 4096
+                    },
+                    {
+                      "slug": "s-8vcpu-8gb",
+                      "enabled": false,
+                      "cpus": 8,
+                      "memory": 8192
+                    }
+                  ]
+                },
+                "times": 1
+              },
+              {
+                "method": "POST",
+                "path": "/v1/sites",
+                "status": 200,
+                "body": {
+                  "$id": "",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "name": "",
+                  "enabled": false,
+                  "live": false,
+                  "logging": false,
+                  "framework": "",
+                  "deploymentRetention": 0,
+                  "deploymentId": "",
+                  "deploymentCreatedAt": "",
+                  "deploymentScreenshotLight": "",
+                  "deploymentScreenshotDark": "",
+                  "latestDeploymentId": "",
+                  "latestDeploymentCreatedAt": "",
+                  "latestDeploymentStatus": "",
+                  "vars": [],
+                  "timeout": 0,
+                  "installCommand": "",
+                  "buildCommand": "",
+                  "startCommand": "",
+                  "outputDirectory": "",
+                  "installationId": "",
+                  "providerRepositoryId": "",
+                  "providerBranch": "",
+                  "providerRootDirectory": "",
+                  "providerSilentMode": false,
+                  "providerBranches": [],
+                  "providerPaths": [],
+                  "buildSpecification": "",
+                  "runtimeSpecification": "",
+                  "buildRuntime": "",
+                  "adapter": "",
+                  "fallbackFile": ""
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "users"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "targets"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "providers"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "users",
+            "document": {
+              "$id": "u1",
+              "name": "U"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "providers",
+            "document": {
+              "$id": "fcm1",
+              "name": "F"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Sites\\Site",
+            "args": {
+              "id": "site",
+              "name": "Site",
+              "framework": "other",
+              "buildRuntime": "static-1",
+              "specification": "s-1vcpu-512mb",
+              "buildSpecification": "s-2vcpu-2gb"
+            }
+          },
+          "bind": "r0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "api": true,
+            "key": "test-key"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "site"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "site",
+                "id": "site",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Sites\\Site",
+            "getActiveDeployment": "",
+            "getAdapter": "static",
+            "getBuildCommand": "",
+            "getBuildRuntime": "static-1",
+            "getBuildSpecification": "s-2vcpu-2gb",
+            "getCreatedAt": "",
+            "getDeploymentRetention": 0,
+            "getDescription": "",
+            "getEnabled": true,
+            "getFallbackFile": "",
+            "getFramework": "other",
+            "getGroup": "sites",
+            "getId": "site",
+            "getInstallCommand": "",
+            "getLogging": true,
+            "getMessage": "",
+            "getName": "site",
+            "getOriginalId": "",
+            "getOutputDirectory": "",
+            "getPermissions": [],
+            "getRuntimeSpecification": "s-1vcpu-512mb",
+            "getScopes": [],
+            "getSequence": "<uniqid>",
+            "getSiteName": "Site",
+            "getSpecification": "s-1vcpu-512mb",
+            "getStartCommand": "",
+            "getStatus": "success",
+            "getTimeout": 600,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "path": "/v1/sites/specifications",
+              "query": "type=builds",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/sites/specifications",
+              "query": "type=runtimes",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "path": "/v1/sites",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": "{\"siteId\":\"site\",\"name\":\"Site\",\"framework\":\"other\",\"buildRuntime\":\"static-1\",\"enabled\":true,\"logging\":true,\"timeout\":600,\"installCommand\":\"\",\"buildCommand\":\"\",\"outputDirectory\":\"\",\"adapter\":\"static\",\"fallbackFile\":\"\",\"buildSpecification\":\"s-2vcpu-2gb\",\"runtimeSpecification\":\"s-1vcpu-512mb\",\"deploymentRetention\":0,\"scopes\":[],\"description\":\"\"}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

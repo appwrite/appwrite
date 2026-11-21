@@ -1,0 +1,802 @@
+{
+  "source": "packages/dns/tests/Message/RecordTest.php",
+  "cases": [
+    {
+      "name": "encode A record matches bytes",
+      "steps": [
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "example.com",
+              "type": 1,
+              "ttl": 300,
+              "rdata": "93.184.216.34",
+              "class": 1
+            }
+          },
+          "expect": {
+            "$bytes": "B2V4YW1wbGUDY29tAAABAAEAAAEsAARduNgi"
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode A record parses fields",
+      "steps": [
+        {
+          "op": "record.decode",
+          "args": {
+            "data": {
+              "$bytes": "B2V4YW1wbGUDY29tAAABAAEAAAEsAARduNgi"
+            }
+          },
+          "expect": {
+            "record": {
+              "name": "example.com",
+              "type": 1,
+              "class": 1,
+              "ttl": 300,
+              "rdata": "93.184.216.34",
+              "priority": null,
+              "weight": null,
+              "port": null
+            },
+            "offset": 27
+          }
+        }
+      ]
+    },
+    {
+      "name": "encode MX record matches bytes",
+      "steps": [
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "mail.example.com",
+              "type": 15,
+              "ttl": 3600,
+              "rdata": "mail.exchange.example.com",
+              "class": 1,
+              "priority": 10
+            }
+          },
+          "expect": "\u0004mail\u0007example\u0003com\u0000\u0000\u000f\u0000\u0001\u0000\u0000\u000e\u0010\u0000\u001d\u0000\n\u0004mail\bexchange\u0007example\u0003com\u0000"
+        }
+      ]
+    },
+    {
+      "name": "decode MX record parses fields",
+      "steps": [
+        {
+          "op": "record.decode",
+          "args": {
+            "data": "\u0004mail\u0007example\u0003com\u0000\u0000\u000f\u0000\u0001\u0000\u0000\u000e\u0010\u0000\u001d\u0000\n\u0004mail\bexchange\u0007example\u0003com\u0000"
+          },
+          "expect": {
+            "record": {
+              "name": "mail.example.com",
+              "type": 15,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "mail.exchange.example.com",
+              "priority": 10,
+              "weight": null,
+              "port": null
+            },
+            "offset": 57
+          }
+        }
+      ]
+    },
+    {
+      "name": "encode SRV record matches bytes",
+      "steps": [
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "_sip._tcp.example.com",
+              "type": 33,
+              "ttl": 7200,
+              "rdata": "sip.example.com",
+              "class": 1,
+              "priority": 5,
+              "weight": 10,
+              "port": 5060
+            }
+          },
+          "expect": {
+            "$bytes": "BF9zaXAEX3RjcAdleGFtcGxlA2NvbQAAIQABAAAcIAAXAAUAChPEA3NpcAdleGFtcGxlA2NvbQA="
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode SRV record parses fields",
+      "steps": [
+        {
+          "op": "record.decode",
+          "args": {
+            "data": {
+              "$bytes": "BF9zaXAEX3RjcAdleGFtcGxlA2NvbQAAIQABAAAcIAAXAAUAChPEA3NpcAdleGFtcGxlA2NvbQA="
+            }
+          },
+          "expect": {
+            "record": {
+              "name": "_sip._tcp.example.com",
+              "type": 33,
+              "class": 1,
+              "ttl": 7200,
+              "rdata": "sip.example.com",
+              "priority": 5,
+              "weight": 10,
+              "port": 5060
+            },
+            "offset": 56
+          }
+        }
+      ]
+    },
+    {
+      "name": "encode MX record with zero priority matches bytes",
+      "steps": [
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "mail.example.com",
+              "type": 15,
+              "ttl": 3600,
+              "rdata": "mail.exchange.example.com",
+              "class": 1,
+              "priority": 0
+            }
+          },
+          "expect": "\u0004mail\u0007example\u0003com\u0000\u0000\u000f\u0000\u0001\u0000\u0000\u000e\u0010\u0000\u001d\u0000\u0000\u0004mail\bexchange\u0007example\u0003com\u0000"
+        }
+      ]
+    },
+    {
+      "name": "decode MX record with zero priority parses fields",
+      "steps": [
+        {
+          "op": "record.decode",
+          "args": {
+            "data": "\u0004mail\u0007example\u0003com\u0000\u0000\u000f\u0000\u0001\u0000\u0000\u000e\u0010\u0000\u001d\u0000\u0000\u0004mail\bexchange\u0007example\u0003com\u0000"
+          },
+          "expect": {
+            "record": {
+              "name": "mail.example.com",
+              "type": 15,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "mail.exchange.example.com",
+              "priority": 0,
+              "weight": null,
+              "port": null
+            },
+            "offset": 57
+          }
+        }
+      ]
+    },
+    {
+      "name": "encode SRV record with zero numerics matches bytes",
+      "steps": [
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "_sip._tcp.example.com",
+              "type": 33,
+              "ttl": 7200,
+              "rdata": "sip.example.com",
+              "class": 1,
+              "priority": 0,
+              "weight": 0,
+              "port": 0
+            }
+          },
+          "expect": "\u0004_sip\u0004_tcp\u0007example\u0003com\u0000\u0000!\u0000\u0001\u0000\u0000\u001c \u0000\u0017\u0000\u0000\u0000\u0000\u0000\u0000\u0003sip\u0007example\u0003com\u0000"
+        }
+      ]
+    },
+    {
+      "name": "decode SRV record with zero numerics parses fields",
+      "steps": [
+        {
+          "op": "record.decode",
+          "args": {
+            "data": "\u0004_sip\u0004_tcp\u0007example\u0003com\u0000\u0000!\u0000\u0001\u0000\u0000\u001c \u0000\u0017\u0000\u0000\u0000\u0000\u0000\u0000\u0003sip\u0007example\u0003com\u0000"
+          },
+          "expect": {
+            "record": {
+              "name": "_sip._tcp.example.com",
+              "type": 33,
+              "class": 1,
+              "ttl": 7200,
+              "rdata": "sip.example.com",
+              "priority": 0,
+              "weight": 0,
+              "port": 0
+            },
+            "offset": 56
+          }
+        }
+      ]
+    },
+    {
+      "name": "encode TXT record matches bytes",
+      "steps": [
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "example.com",
+              "type": 16,
+              "ttl": 600,
+              "rdata": "hello",
+              "class": 1
+            }
+          },
+          "expect": "\u0007example\u0003com\u0000\u0000\u0010\u0000\u0001\u0000\u0000\u0002X\u0000\u0006\u0005hello"
+        }
+      ]
+    },
+    {
+      "name": "decode TXT record parses fields",
+      "steps": [
+        {
+          "op": "record.decode",
+          "args": {
+            "data": "\u0007example\u0003com\u0000\u0000\u0010\u0000\u0001\u0000\u0000\u0002X\u0000\u0006\u0005hello"
+          },
+          "expect": {
+            "record": {
+              "name": "example.com",
+              "type": 16,
+              "class": 1,
+              "ttl": 600,
+              "rdata": "hello",
+              "priority": null,
+              "weight": null,
+              "port": null
+            },
+            "offset": 29
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode CNAME record parses name rdata",
+      "steps": [
+        {
+          "op": "record.decode",
+          "args": {
+            "data": {
+              "$bytes": "A3d3dwdleGFtcGxlA2NvbQAABQABAAAPoAARA2NkbgdleGFtcGxlA2NvbQA="
+            }
+          },
+          "expect": {
+            "record": {
+              "name": "www.example.com",
+              "type": 5,
+              "class": 1,
+              "ttl": 4000,
+              "rdata": "cdn.example.com",
+              "priority": null,
+              "weight": null,
+              "port": null
+            },
+            "offset": 44
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode unknown record keeps hex data",
+      "steps": [
+        {
+          "op": "record.decode",
+          "args": {
+            "data": {
+              "$bytes": "B2V4YW1wbGUDY29tAP74AAEAAAA8AAIK/w=="
+            }
+          },
+          "expect": {
+            "record": {
+              "name": "example.com",
+              "type": 65272,
+              "class": 1,
+              "ttl": 60,
+              "rdata": "0aff",
+              "priority": null,
+              "weight": null,
+              "port": null
+            },
+            "offset": 25
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode SOA record parses fields",
+      "steps": [
+        {
+          "op": "record.decode",
+          "args": {
+            "data": {
+              "$bytes": "B2V4YW1wbGUDY29tAAAGAAEAAA4QADgDbnMxB2V4YW1wbGUDY29tAAVhZG1pbgdleGFtcGxlA2NvbQB4pVstAAAcIAAADhAAEnUAAAFRgA=="
+            }
+          },
+          "expect": {
+            "record": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2024102701 7200 3600 1209600 86400",
+              "priority": null,
+              "weight": null,
+              "port": null
+            },
+            "offset": 79
+          }
+        }
+      ]
+    },
+    {
+      "name": "encode SOA record matches bytes",
+      "steps": [
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "example.com",
+              "type": 6,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2024102701 7200 3600 1209600 86400",
+              "class": 1
+            }
+          },
+          "expect": {
+            "$bytes": "B2V4YW1wbGUDY29tAAAGAAEAAA4QADgDbnMxB2V4YW1wbGUDY29tAAVhZG1pbgdleGFtcGxlA2NvbQB4pVstAAAcIAAADhAAEnUAAAFRgA=="
+          }
+        }
+      ]
+    },
+    {
+      "name": "encode SOA record accepts email rname",
+      "steps": [
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "example.com",
+              "type": 6,
+              "ttl": 3600,
+              "rdata": "ns1.example.com hostmaster@example.com 2024102701 7200 3600 1209600 86400",
+              "class": 1
+            }
+          },
+          "expect": {
+            "$bytes": "B2V4YW1wbGUDY29tAAAGAAEAAA4QAD0DbnMxB2V4YW1wbGUDY29tAApob3N0bWFzdGVyB2V4YW1wbGUDY29tAHilWy0AABwgAAAOEAASdQAAAVGA"
+          }
+        }
+      ]
+    },
+    {
+      "name": "encode SOA record escapes dots in email rname local part",
+      "steps": [
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "example.com",
+              "type": 6,
+              "ttl": 3600,
+              "rdata": "ns1.example.com first.last@example.com 2024102701 7200 3600 1209600 86400",
+              "class": 1
+            }
+          },
+          "expect": {
+            "$bytes": "B2V4YW1wbGUDY29tAAAGAAEAAA4QAD0DbnMxB2V4YW1wbGUDY29tAApmaXJzdC5sYXN0B2V4YW1wbGUDY29tAHilWy0AABwgAAAOEAASdQAAAVGA"
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode TXT record with multiple chunks",
+      "steps": [
+        {
+          "op": "record.decode",
+          "args": {
+            "data": "\u0007example\u0003com\u0000\u0000\u0010\u0000\u0001\u0000\u0000\u0002X\u0000\f\u0005hello\u0005world"
+          },
+          "expect": {
+            "record": {
+              "name": "example.com",
+              "type": 16,
+              "class": 1,
+              "ttl": 600,
+              "rdata": "helloworld",
+              "priority": null,
+              "weight": null,
+              "port": null
+            },
+            "offset": 35
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode TXT record with three chunks",
+      "steps": [
+        {
+          "op": "record.decode",
+          "args": {
+            "data": "\u0007example\u0003com\u0000\u0000\u0010\u0000\u0001\u0000\u0000\u0002X\u0000\f\u0003foo\u0003bar\u0003baz"
+          },
+          "expect": {
+            "record": {
+              "name": "example.com",
+              "type": 16,
+              "class": 1,
+              "ttl": 600,
+              "rdata": "foobarbaz",
+              "priority": null,
+              "weight": null,
+              "port": null
+            },
+            "offset": 35
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode SOA record round trip",
+      "steps": [
+        {
+          "op": "record.decode",
+          "args": {
+            "data": {
+              "$bytes": "B2V4YW1wbGUDY29tAAAGAAEAAA4QADgDbnMxB2V4YW1wbGUDY29tAAVhZG1pbgdleGFtcGxlA2NvbQB4pVstAAAcIAAADhAAEnUAAAFRgA=="
+            }
+          },
+          "bind": "soa",
+          "expect": {
+            "record": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com admin.example.com 2024102701 7200 3600 1209600 86400",
+              "priority": null,
+              "weight": null,
+              "port": null
+            },
+            "offset": 79
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "$ref": "soa",
+              "path": "/record"
+            }
+          },
+          "expect": {
+            "$bytes": "B2V4YW1wbGUDY29tAAAGAAEAAA4QADgDbnMxB2V4YW1wbGUDY29tAAVhZG1pbgdleGFtcGxlA2NvbQB4pVstAAAcIAAADhAAEnUAAAFRgA=="
+          }
+        }
+      ]
+    },
+    {
+      "name": "encode TXT record with multiple chunks",
+      "steps": [
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "example.com",
+              "type": 16,
+              "ttl": 600,
+              "rdata": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "class": 1
+            }
+          },
+          "bind": "e",
+          "expect": {
+            "$bytes": "B2V4YW1wbGUDY29tAAAQAAEAAAJYAQL/YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhAWE="
+          }
+        },
+        {
+          "op": "record.decode",
+          "args": {
+            "data": {
+              "$ref": "e"
+            }
+          },
+          "expect": {
+            "record": {
+              "name": "example.com",
+              "type": 16,
+              "class": 1,
+              "ttl": 600,
+              "rdata": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "priority": null,
+              "weight": null,
+              "port": null
+            },
+            "offset": 281
+          }
+        }
+      ]
+    },
+    {
+      "name": "encode TXT record with long string",
+      "steps": [
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "example.com",
+              "type": 16,
+              "ttl": 600,
+              "rdata": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "class": 1
+            }
+          },
+          "bind": "e",
+          "expect": {
+            "$bytes": "B2V4YW1wbGUDY29tAAAQAAEAAAJYAS7/YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhLWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYQ=="
+          }
+        },
+        {
+          "op": "record.decode",
+          "args": {
+            "data": {
+              "$ref": "e"
+            }
+          },
+          "expect": {
+            "record": {
+              "name": "example.com",
+              "type": 16,
+              "class": 1,
+              "ttl": 600,
+              "rdata": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "priority": null,
+              "weight": null,
+              "port": null
+            },
+            "offset": 325
+          }
+        }
+      ]
+    },
+    {
+      "name": "encode TXT record round trip with multiple chunks",
+      "steps": [
+        {
+          "op": "record.decode",
+          "args": {
+            "data": "\u0007example\u0003com\u0000\u0000\u0010\u0000\u0001\u0000\u0000\u0002X\u0000\f\u0003foo\u0003bar\u0003baz"
+          },
+          "bind": "r",
+          "expect": {
+            "record": {
+              "name": "example.com",
+              "type": 16,
+              "class": 1,
+              "ttl": 600,
+              "rdata": "foobarbaz",
+              "priority": null,
+              "weight": null,
+              "port": null
+            },
+            "offset": 35
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "$ref": "r",
+              "path": "/record"
+            }
+          },
+          "bind": "e",
+          "expect": "\u0007example\u0003com\u0000\u0000\u0010\u0000\u0001\u0000\u0000\u0002X\u0000\n\tfoobarbaz"
+        },
+        {
+          "op": "record.decode",
+          "args": {
+            "data": {
+              "$ref": "e"
+            }
+          },
+          "expect": {
+            "record": {
+              "name": "example.com",
+              "type": 16,
+              "class": 1,
+              "ttl": 600,
+              "rdata": "foobarbaz",
+              "priority": null,
+              "weight": null,
+              "port": null
+            },
+            "offset": 33
+          }
+        }
+      ]
+    },
+    {
+      "name": "encode TXT record with empty rdata",
+      "steps": [
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "example.com",
+              "type": 16,
+              "ttl": 600,
+              "rdata": "",
+              "class": 1
+            }
+          },
+          "bind": "e",
+          "expect": "\u0007example\u0003com\u0000\u0000\u0010\u0000\u0001\u0000\u0000\u0002X\u0000\u0001\u0000"
+        },
+        {
+          "op": "record.decode",
+          "args": {
+            "data": {
+              "$ref": "e"
+            }
+          },
+          "expect": {
+            "record": {
+              "name": "example.com",
+              "type": 16,
+              "class": 1,
+              "ttl": 600,
+              "rdata": "",
+              "priority": null,
+              "weight": null,
+              "port": null
+            },
+            "offset": 24
+          }
+        }
+      ]
+    },
+    {
+      "name": "validate rdata rejects hostname for A record",
+      "steps": [
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "example.com",
+              "type": 1,
+              "ttl": 300,
+              "rdata": "ns2.appwrite.zone",
+              "class": 1
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid IPv4 address: ns2.appwrite.zone"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "validate rdata accepts hostname for NS record",
+      "steps": [
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "example.com",
+              "type": 2,
+              "ttl": 300,
+              "rdata": "ns2.appwrite.zone",
+              "class": 1
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "constructor trims whitespace from name",
+      "steps": [
+        {
+          "op": "record.new",
+          "args": {
+            "record": {
+              "name": "  example.com  ",
+              "type": 1,
+              "ttl": 300,
+              "rdata": "93.184.216.34",
+              "class": 1
+            }
+          },
+          "expect": {
+            "name": "example.com",
+            "type": 1,
+            "class": 1,
+            "ttl": 300,
+            "rdata": "93.184.216.34",
+            "priority": null,
+            "weight": null,
+            "port": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "constructor trims tabs and newlines from name",
+      "steps": [
+        {
+          "op": "record.new",
+          "args": {
+            "record": {
+              "name": "\t\nexample.com\r\n",
+              "type": 1,
+              "ttl": 300,
+              "rdata": "93.184.216.34",
+              "class": 1
+            }
+          },
+          "expect": {
+            "name": "example.com",
+            "type": 1,
+            "class": 1,
+            "ttl": 300,
+            "rdata": "93.184.216.34",
+            "priority": null,
+            "weight": null,
+            "port": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "with name trims whitespace",
+      "steps": [
+        {
+          "op": "record.with_name",
+          "args": {
+            "record": {
+              "name": "example.com",
+              "type": 1,
+              "ttl": 300,
+              "rdata": "93.184.216.34",
+              "class": 1
+            },
+            "name": "  other.com  "
+          },
+          "expect": {
+            "name": "other.com",
+            "type": 1,
+            "class": 1,
+            "ttl": 300,
+            "rdata": "93.184.216.34",
+            "priority": null,
+            "weight": null,
+            "port": null
+          }
+        }
+      ]
+    }
+  ]
+}

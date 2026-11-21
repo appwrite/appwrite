@@ -14,7 +14,7 @@ use ext_php_rs::args::ArgInfoTables;
 use ext_php_rs::exception::throw;
 use ext_php_rs::types::{ZendStr, Zval};
 use ext_php_rs::zend::{ClassEntry, ExecuteData};
-use utopia_validators::Integer as IntegerCheck;
+use utopia_validators::scalar::Integer as IntegerCheck;
 
 use super::engine::{
     self, Literal, MAY_BE_BOOL, MAY_BE_LONG, MAY_BE_STRING, Property, bool_arg, get, input, long_arg, number_arg, set,

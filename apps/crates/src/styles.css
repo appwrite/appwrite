@@ -1,0 +1,629 @@
+@import 'tailwindcss';
+
+/* The Utopia docs design system: a printed engineering catalogue. Dark paper
+   and ink, the wordmark's red dot as the one accent, Archivo set wide for
+   titles, Geist for text, Geist Mono for code, labels and figures. Square
+   corners, hairline rules, no shadows or gradients. Colour otherwise comes
+   only from the callout triplets (status, and the yellow migration cards). */
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --paper: #11100d;
+  --paper-deep: #1a1915;
+  --paper-sunk: #23211c;
+  --ink: #ece8de;
+  --ink-soft: #bdb8ab;
+  --ink-mute: #8a857a;
+  --rule: #2a2822;
+  --rule-strong: #46433a;
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: #15140f;
+  --muted: var(--paper-deep);
+  --muted-foreground: var(--ink-mute);
+  --accent: var(--paper-deep);
+  --accent-foreground: var(--ink);
+  --primary: var(--ink);
+  --primary-foreground: var(--paper);
+  --border: var(--rule);
+  --ring: var(--rule-strong);
+  --sidebar: var(--paper);
+  --sidebar-accent: var(--paper-deep);
+  /* Menu text sits in a narrow band, so headings and links read as one list. */
+  --sidebar-ink: var(--ink-soft);
+  --sidebar-strong: var(--ink);
+  --brand: #6474ce;
+  /* The accent: the wordmark's red dot. Used sparingly: markers, the active row, links on hover. */
+  --highlight: #ff3d5f;
+  --highlight-soft: rgba(255, 61, 95, 0.09);
+  --highlight-line: rgba(255, 61, 95, 0.45);
+
+  --code-bg: #0b0a08;
+  --code-header: #12110e;
+  --code-border: #2a2822;
+  --code-header-fg: #a8a397;
+  --code-plain: #ebe7dc;
+  --code-module-keyword: #9fc2c9;
+  --code-function: #e6c07b;
+  --code-keyword: #f2798f;
+  --code-comment: #7d796d;
+  --code-property: #d9b3a0;
+  --code-string: #b7cf96;
+  --code-number: #d7a7d0;
+  --code-punctuation: #8f8a7d;
+
+  /* Callout triplets: success, warning, info; planned is neutral. */
+  --ok: #4cbc72;
+  --ok-soft: rgba(47, 158, 85, 0.14);
+  --ok-ink: #bfe6c9;
+  --progress: #e2b21c;
+  --progress-soft: rgba(201, 154, 6, 0.14);
+  --progress-ink: #f1dfa0;
+  --started: #6b97f0;
+  --started-soft: rgba(58, 111, 216, 0.16);
+  --started-ink: #c9d8f7;
+  --planned: #6c685e;
+  --planned-soft: var(--paper-deep);
+  --planned-ink: var(--ink-mute);
+  /* Migration cards: the design system's warning callout. */
+  --migration: rgba(201, 154, 6, 0.1);
+  /* The two runtimes in comparisons: PHP's elephant blue-violet, Rust's orange. */
+  --php: #9aa3d6;
+  --rust: #ec8a4d;
+  /* The map: one colour per category. */
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --chart-brand: oklch(0.6 0.26 358);
+  --migration-border: #5a4a12;
+  --migration-ink: #f1dfa0;
+
+  /* Titles: Archivo on its width axis, a little expanded, like lettering on a machine plate. */
+  --font-title: 'Archivo', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  --font-display: 'Geist', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  --font-body: 'Geist', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  --font-code: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
+
+  color-scheme: dark;
+}
+
+/* Square corners: the whole radius scale collapses to a hairline bevel. */
+@theme {
+  --radius-xs: 1px;
+  --radius-sm: 1px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+  --radius-xl: 3px;
+  --radius-2xl: 3px;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-ink: var(--sidebar-ink);
+  --color-sidebar-strong: var(--sidebar-strong);
+  --color-brand: var(--brand);
+  --color-ink-soft: var(--ink-soft);
+  --color-highlight: var(--highlight);
+  --color-highlight-soft: var(--highlight-soft);
+  --color-highlight-line: var(--highlight-line);
+  --color-code: var(--code-bg);
+  --color-code-header: var(--code-header);
+  --color-code-header-fg: var(--code-header-fg);
+  --color-code-border: var(--code-border);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-ok-ink: var(--ok-ink);
+  --color-progress: var(--progress);
+  --color-progress-soft: var(--progress-soft);
+  --color-progress-ink: var(--progress-ink);
+  --color-started: var(--started);
+  --color-started-soft: var(--started-soft);
+  --color-started-ink: var(--started-ink);
+  --color-planned: var(--planned);
+  --color-planned-soft: var(--planned-soft);
+  --color-planned-ink: var(--planned-ink);
+  --color-migration: var(--migration);
+  --color-php: var(--php);
+  --color-rust: var(--rust);
+  --color-migration-border: var(--migration-border);
+  --color-migration-ink: var(--migration-ink);
+  --font-title: var(--font-title);
+  --font-display: var(--font-display);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-code);
+}
+
+@layer base {
+  /* No rubber-band bounce past the page edges, in the page or its menus. */
+  html,
+  body {
+    background: var(--background);
+    overscroll-behavior: none;
+  }
+  aside,
+  nav {
+    overscroll-behavior: contain;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-size: 14px;
+    line-height: 1.625;
+    font-feature-settings: 'ss01';
+  }
+  /* Titles in Archivo; smaller headings in the sans. */
+  h1,
+  h2 {
+    font-family: var(--font-title);
+    font-weight: 600;
+    font-stretch: 112%;
+    letter-spacing: -0.03em;
+    line-height: 1.02;
+    text-wrap: balance;
+  }
+  h3,
+  h4 {
+    @apply font-display font-semibold;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+  ::selection {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  /* Native selects draw their arrow against the edge; draw our own with room. */
+  select {
+    appearance: none;
+    padding-right: 2rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.625rem center;
+    background-size: 0.875rem;
+  }
+  :focus-visible {
+    outline: 1.5px solid var(--highlight);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition: none !important;
+    }
+  }
+}
+
+/* A menu item shown only in migration mode: the migration cards' tint.
+   In the components layer, so a row's hover and
+   active backgrounds still win over the tint. */
+@layer components {
+  .nav-migration {
+    background-color: var(--migration);
+  }
+  /* A small label in mono capitals: section eyebrows, menu headings, table heads. */
+  .label {
+    font-family: var(--font-code);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  /* Archivo, wide: page and section titles, and the smaller titles that should read as them. */
+  .title {
+    font-family: var(--font-title);
+    font-weight: 600;
+    font-stretch: 112%;
+    letter-spacing: -0.025em;
+  }
+  /* Soft electronic gestures: rules that end in vias like traces, a pad on cards, faint circuitry behind the hero. */
+  .trace-rule {
+    position: relative;
+  }
+  .trace-rule::before,
+  .trace-rule::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .trace-rule::before {
+    left: -3px;
+    border: 1px solid var(--rule-strong);
+    background: var(--background);
+  }
+  .trace-rule::after {
+    right: -1px;
+    top: -2px;
+    width: 3px;
+    height: 3px;
+    background: var(--rule-strong);
+  }
+  .trace-rule.trace-bottom::before {
+    top: auto;
+    bottom: -4px;
+    border-color: var(--foreground);
+  }
+  .trace-rule.trace-bottom::after {
+    top: auto;
+    bottom: -2px;
+    background: var(--foreground);
+  }
+  .pad::after {
+    content: '';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    border: 1px solid var(--rule-strong);
+    transition: border-color 0.2s, background-color 0.2s;
+    pointer-events: none;
+  }
+  .pad:hover::after {
+    border-color: var(--highlight);
+    background: var(--highlight);
+  }
+  /* Circuitry behind the hero (src/components/Circuit.tsx): traces and vias in the rule colour,
+     fading out towards the middle, with current running along some of them into their vias. */
+  .circuit {
+    /* Clear behind the copy, and dissolving at every edge rather than cut off by the box. */
+    -webkit-mask-image:
+      radial-gradient(ellipse 55% 65% at 50% 45%, transparent 35%, #000 85%),
+      linear-gradient(to bottom, transparent, #000 18%, #000 58%, transparent),
+      linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+    mask-image:
+      radial-gradient(ellipse 55% 65% at 50% 45%, transparent 35%, #000 85%),
+      linear-gradient(to bottom, transparent, #000 18%, #000 58%, transparent),
+      linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+  .circuit > rect {
+    opacity: 0.4;
+  }
+  .circuit .trace {
+    fill: none;
+    stroke: var(--rule-strong);
+    stroke-width: 1;
+  }
+  /* A faint pulse a sixth of the trace long, run from the tile's edge to the via in the first 15% of its clock: fast. */
+  .circuit .current {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 1.25;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 0.16 2;
+    stroke-dashoffset: 0.16;
+    opacity: 0.45;
+    animation: circuit-current var(--t) linear var(--d) infinite;
+  }
+  .circuit .current.glow {
+    stroke-width: 5;
+    opacity: 0.06;
+  }
+  .circuit .hot .current {
+    stroke: var(--highlight);
+  }
+  .circuit .hot .current:not(.glow) {
+    opacity: 0.6;
+  }
+  .circuit .spark {
+    fill: var(--ink);
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: circuit-spark var(--t) ease-out var(--d) infinite;
+  }
+  .circuit .hot .spark {
+    fill: var(--highlight);
+  }
+  .circuit[data-idle] * {
+    animation-play-state: paused;
+  }
+  @keyframes circuit-current {
+    0% {
+      stroke-dashoffset: 0.16;
+    }
+    15%,
+    100% {
+      stroke-dashoffset: -1;
+    }
+  }
+  /* The via flares as the pulse arrives, then settles. */
+  @keyframes circuit-spark {
+    0%,
+    12% {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+    14% {
+      opacity: 0.45;
+      transform: scale(1.2);
+    }
+    30%,
+    100% {
+      opacity: 0;
+      transform: scale(1);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .circuit .current,
+    .circuit .spark {
+      display: none;
+    }
+  }
+  /* The red square: the wordmark's dot as a marker. */
+  .marker {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    flex: none;
+    background: var(--highlight);
+  }
+}
+
+/* The factory drawing (src/components/Factory.tsx): a circuit board in the
+   paper's tones, its blocks in three flat shades with ink hairlines, a thin
+   trace between sockets, the accent for blocks in focus. */
+.factory {
+  --f-top: #2b2924;
+  --f-left: #1f1d19;
+  --f-right: #171612;
+  --f-dim: var(--paper);
+  --p-top: #181713;
+  --p-left: #14130f;
+  --p-right: #0f0e0b;
+}
+.factory .face,
+.factory .board {
+  stroke: var(--ink);
+  stroke-width: 0.75;
+  stroke-opacity: 0.8;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  transition: fill 0.25s;
+}
+.factory .top {
+  fill: var(--f-top);
+}
+.factory .left {
+  fill: var(--f-left);
+}
+.factory .right {
+  fill: var(--f-right);
+}
+.factory .board.top {
+  fill: var(--p-top);
+}
+.factory .board.left {
+  fill: var(--p-left);
+}
+.factory .board.right {
+  fill: var(--p-right);
+}
+.factory .plot {
+  fill: var(--paper);
+  stroke: var(--rule-strong);
+  stroke-width: 0.75;
+  stroke-dasharray: 3 2;
+  vector-effect: non-scaling-stroke;
+}
+.factory .trace {
+  fill: none;
+  stroke: var(--ink-mute);
+  stroke-opacity: 0.55;
+  stroke-width: 0.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.factory .bus {
+  fill: var(--paper);
+  stroke: var(--rule-strong);
+  stroke-width: 0.75;
+  vector-effect: non-scaling-stroke;
+}
+.factory .card.top {
+  fill: var(--p-left);
+}
+.factory .card.left,
+.factory .card.right {
+  fill: var(--p-right);
+}
+.factory .vent {
+  fill: none;
+  stroke: var(--ink);
+  stroke-opacity: 0.35;
+  stroke-width: 0.75;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+/* Packets: small squares riding the queue lanes from the bus to the workers. */
+.factory .packet {
+  fill: var(--ink-soft);
+  animation: factory-packet 3s linear infinite;
+}
+@keyframes factory-packet {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  12%,
+  85% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy));
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .factory .packet {
+    animation: none;
+    opacity: 0;
+  }
+}
+/* Floating: the board bobs a few pixels; its shadow on the ground tightens and fades as it rises. */
+.factory {
+  --f-shadow: 0.55;
+}
+.factory .shadow {
+  fill: #000;
+  opacity: var(--f-shadow);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: factory-shadow 7s ease-in-out infinite;
+}
+.factory .floating {
+  animation: factory-float 7s ease-in-out infinite;
+}
+@keyframes factory-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-9px);
+  }
+}
+@keyframes factory-shadow {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+    opacity: calc(var(--f-shadow) * 0.7);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .factory .floating,
+  .factory .shadow {
+    animation: none;
+  }
+}
+.factory .engraving-logo {
+  color: var(--ink-soft);
+}
+.factory .engraving {
+  fill: var(--ink-soft);
+  font-size: 8.5px;
+}
+.factory .engraving .title {
+  font-size: 9.5px;
+}
+.factory .engraving .mono {
+  font-family: var(--font-code);
+  font-size: 6.5px;
+  letter-spacing: 0.08em;
+  fill: var(--ink-mute);
+}
+.factory .blk {
+  cursor: pointer;
+}
+/* Out of focus: flat paper and faint lines, still solid, so the blocks in focus stand out and nothing shows through. */
+.factory svg[data-focus] .blk:not([data-hi]) .face {
+  fill: var(--f-dim);
+  stroke-opacity: 0.3;
+}
+.factory .blk[data-hi] .top {
+  fill: var(--highlight);
+}
+.factory .blk[data-hi] .left {
+  fill: color-mix(in oklch, var(--highlight) 78%, var(--ink));
+}
+.factory .blk[data-hi] .right {
+  fill: color-mix(in oklch, var(--highlight) 58%, var(--ink));
+}
+.factory .flash {
+  fill: var(--highlight);
+  pointer-events: none;
+}
+.factory .beam {
+  stroke: var(--highlight);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.factory .tag line {
+  stroke: var(--ink);
+  stroke-width: 0.75;
+  vector-effect: non-scaling-stroke;
+}
+.factory .tag rect {
+  fill: var(--ink);
+}
+.factory .tag text {
+  fill: var(--paper);
+  font-family: var(--font-code);
+  font-size: 7px;
+  letter-spacing: 0.08em;
+}
+
+/* Prism tokens in the docs' palette. Tokens stay inline: their class
+   names (a TOML `table`) must not pick up Tailwind utilities of the same name. */
+.code .token {
+  display: inline;
+}
+
+.code .token.comment,
+.code .token.prolog,
+.code .token.doctype {
+  color: var(--code-comment);
+  font-style: italic;
+}
+.code .token.punctuation,
+.code .token.operator {
+  color: var(--code-punctuation);
+}
+.code .token.keyword,
+.code .token.boolean,
+.code .token.important {
+  color: var(--code-keyword);
+}
+.code .token.string,
+.code .token.char,
+.code .token.attr-value,
+.code .token.regex {
+  color: var(--code-string);
+}
+.code .token.function,
+.code .token.function-definition,
+.code .token.macro {
+  color: var(--code-function);
+}
+.code .token.class-name,
+.code .token.namespace,
+.code .token.module,
+.code .token.lifetime-annotation {
+  color: var(--code-module-keyword);
+}
+.code .token.property,
+.code .token.tag,
+.code .token.attr-name {
+  color: var(--code-property);
+}
+.code .token.number,
+.code .token.constant,
+.code .token.boolean {
+  color: var(--code-number);
+}
+.code {
+  color: var(--code-plain);
+}

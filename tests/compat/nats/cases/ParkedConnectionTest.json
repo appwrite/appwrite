@@ -1,0 +1,1114 @@
+{
+  "source": "packages/nats/tests/ParkedConnectionTest.php",
+  "cases": [
+    {
+      "name": "a request after the server closed an idle connection reconnects before writing",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": true,
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0,
+              "requestTimeout": 0.2
+            },
+            "rules": [
+              {
+                "when": {
+                  "contains": "PUB work "
+                },
+                "do": [
+                  {
+                    "reply": {
+                      "subject": "work",
+                      "payload": "ok"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.park",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "INFO {\"server_id\":\"FAKE\",\"ldm\":true}\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "work",
+            "data": ""
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "ok",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "CONNECT "
+          },
+          "expect": 2
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PUB work "
+          },
+          "expect": 1
+        },
+        {
+          "op": "fake.written",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": "CONNECT {\"verbose\":false,\"pedantic\":false,\"lang\":\"php\",\"version\":\"0.1.0\",\"protocol\":1,\"echo\":true,\"headers\":true,\"no_responders\":true}\r\nPING\r\nCONNECT {\"verbose\":false,\"pedantic\":false,\"lang\":\"php\",\"version\":\"0.1.0\",\"protocol\":1,\"echo\":true,\"headers\":true,\"no_responders\":true}\r\nPING\r\nSUB _INBOX.*.* 1\r\nPUB work _INBOX.*.* 0\r\n\r\n"
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "settle reconnects a connection the server closed while idle",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": true,
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0,
+              "requestTimeout": 0.2
+            },
+            "rules": [
+              {
+                "when": {
+                  "contains": "PUB work "
+                },
+                "do": [
+                  {
+                    "reply": {
+                      "subject": "work",
+                      "payload": "ok"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.park",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "INFO {\"server_id\":\"FAKE\",\"ldm\":true}\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.settle",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 0
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "CONNECT "
+          },
+          "expect": 2
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "an idle stale connection error is handled without writing the request twice",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": true,
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0,
+              "requestTimeout": 0.2
+            },
+            "rules": [
+              {
+                "when": {
+                  "contains": "PUB work "
+                },
+                "do": [
+                  {
+                    "reply": {
+                      "subject": "work",
+                      "payload": "ok"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.park",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "-ERR 'Stale Connection'\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "work",
+            "data": ""
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "ok",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PUB work "
+          },
+          "expect": 1
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 1
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "an idle PING is answered before the request is written",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": true,
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0,
+              "requestTimeout": 0.2
+            },
+            "rules": [
+              {
+                "when": {
+                  "contains": "PUB work "
+                },
+                "do": [
+                  {
+                    "reply": {
+                      "subject": "work",
+                      "payload": "ok"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "PING\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "work",
+            "data": ""
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "ok",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "fake.written",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": "CONNECT {\"verbose\":false,\"pedantic\":false,\"lang\":\"php\",\"version\":\"0.1.0\",\"protocol\":1,\"echo\":true,\"headers\":true,\"no_responders\":true}\r\nPING\r\nPONG\r\nSUB _INBOX.*.* 1\r\nPUB work _INBOX.*.* 0\r\n\r\n"
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "flush after the server closed an idle connection reconnects",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": true,
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0,
+              "requestTimeout": 0.2
+            },
+            "rules": [
+              {
+                "when": {
+                  "contains": "PUB work "
+                },
+                "do": [
+                  {
+                    "reply": {
+                      "subject": "work",
+                      "payload": "ok"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.park",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "INFO {\"server_id\":\"FAKE\",\"ldm\":true}\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.flush",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 0
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "CONNECT "
+          },
+          "expect": 2
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "requestMany after the server closed an idle connection gets its reply",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": true,
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0,
+              "requestTimeout": 0.2
+            },
+            "rules": [
+              {
+                "when": {
+                  "contains": "PUB work "
+                },
+                "do": [
+                  {
+                    "reply": {
+                      "subject": "work",
+                      "payload": "ok"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.park",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "INFO {\"server_id\":\"FAKE\",\"ldm\":true}\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.request_many",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "work",
+            "data": "",
+            "max": 1,
+            "timeout": 0.2
+          },
+          "expect": {
+            "bodies": [
+              "ok"
+            ]
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a request without reconnect fails before writing into the closed connection",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": false,
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0,
+              "requestTimeout": 0.2
+            },
+            "rules": [
+              {
+                "when": {
+                  "contains": "PUB work "
+                },
+                "do": [
+                  {
+                    "reply": {
+                      "subject": "work",
+                      "payload": "ok"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.park",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "INFO {\"server_id\":\"FAKE\",\"ldm\":true}\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "work",
+            "data": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Connection closed by server"
+            }
+          }
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": false,
+            "closed": false,
+            "reconnecting": false,
+            "status": "disconnected",
+            "subscriptions": 0
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PUB work "
+          },
+          "expect": 0
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "an idle non-closing error goes to onError and does not fail the next request",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": true,
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0,
+              "requestTimeout": 0.2,
+              "hooks": {
+                "onError": true
+              }
+            },
+            "rules": [
+              {
+                "when": {
+                  "contains": "PUB work "
+                },
+                "do": [
+                  {
+                    "reply": {
+                      "subject": "work",
+                      "payload": "ok"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "-ERR 'Permissions Violation for Publish to \"denied\"'\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "work",
+            "data": ""
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "ok",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "transport",
+              "nats"
+            ],
+            [
+              "onError",
+              [
+                "Utopia\\NATS\\Exception\\NatsException",
+                "Permissions Violation for Publish to \"denied"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 1
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a healthy idle connection writes only the request",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": true,
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0,
+              "requestTimeout": 0.2
+            },
+            "rules": [
+              {
+                "when": {
+                  "contains": "PUB work "
+                },
+                "do": [
+                  {
+                    "reply": {
+                      "subject": "work",
+                      "payload": "ok"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.mark",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": 142
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "work",
+            "data": ""
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "ok",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "CONNECT "
+          },
+          "expect": 1
+        },
+        {
+          "op": "fake.writes",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "CONNECT {\"verbose\":false,\"pedantic\":false,\"lang\":\"php\",\"version\":\"0.1.0\",\"protocol\":1,\"echo\":true,\"headers\":true,\"no_responders\":true}\r\n",
+            "PING\r\n",
+            "SUB _INBOX.*.* 1\r\n",
+            "PUB work _INBOX.*.* 0\r\n\r\n"
+          ]
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "settle leaves a partial line for the next read",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": true,
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0,
+              "requestTimeout": 0.2
+            },
+            "rules": [
+              {
+                "when": {
+                  "contains": "PUB work "
+                },
+                "do": [
+                  {
+                    "reply": {
+                      "subject": "work",
+                      "payload": "ok"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "PI"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.settle",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "NG\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 0.05
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PONG\r\n"
+          },
+          "expect": 1
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 0
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "flush raises a non-closing error the server sent before it",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": true,
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0,
+              "requestTimeout": 0.2,
+              "hooks": {
+                "onError": true
+              }
+            },
+            "rules": [
+              {
+                "when": {
+                  "contains": "PUB work "
+                },
+                "do": [
+                  {
+                    "reply": {
+                      "subject": "work",
+                      "payload": "ok"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "-ERR 'Permissions Violation for Publish to \"denied\"'\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.flush",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\PermissionException",
+              "message": "Permissions Violation for Publish to \"denied"
+            }
+          }
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "transport",
+              "nats"
+            ],
+            [
+              "onError",
+              [
+                "Utopia\\NATS\\Exception\\NatsException",
+                "Permissions Violation for Publish to \"denied"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 0
+          }
+        },
+        {
+          "op": "conn.flush",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a readable socket without an operation costs one short read",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": true,
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0,
+              "requestTimeout": 30.0
+            },
+            "rules": [
+              {
+                "when": {
+                  "contains": "PUB work "
+                },
+                "do": [
+                  {
+                    "reply": {
+                      "subject": "work",
+                      "payload": "ok"
+                    }
+                  }
+                ]
+              }
+            ],
+            "ready": true
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "work",
+            "data": "",
+            "timeout": 2.0
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "ok",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

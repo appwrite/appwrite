@@ -1,0 +1,2276 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/MemorySchemaPathsTest.php"
+  ],
+  "cases": [
+    {
+      "name": "MemorySchemaPathsTest::testRollbackUndoesCreateCollection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o486"
+          },
+          "bind": "s928",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o487"
+          },
+          "bind": "s929",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o487"
+            },
+            "method": "disable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o486"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o487"
+              }
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o486"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "schema_paths"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o486"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "schema_paths_u000000000008"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o486"
+            },
+            "method": "create",
+            "args": {
+              "name": "schema_paths"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o486"
+            },
+            "method": "startTransaction",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o486"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "rolled"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o486"
+            },
+            "method": "collectionExists",
+            "args": {
+              "database": "schema_paths",
+              "collection": "rolled"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o486"
+            },
+            "method": "rollbackTransaction",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o486"
+            },
+            "method": "collectionExists",
+            "args": {
+              "database": "schema_paths",
+              "collection": "rolled"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o486"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "rolled"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "MemorySchemaPathsTest::testDeleteAttributeKeepsTheOrdersOfTheRemainingIndexAttributes",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o488"
+          },
+          "bind": "s941",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o488"
+            },
+            "method": "disable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "a",
+              "size": 32
+            },
+            "as": "o489"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "b",
+              "size": 32
+            },
+            "as": "o490"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "b",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "c",
+              "size": 32
+            },
+            "as": "o491"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "c",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_all",
+              "attributes": [
+                "a",
+                "b",
+                "c"
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                },
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                },
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                }
+              ]
+            },
+            "as": "o492"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_all",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "a",
+                "b",
+                "c"
+              ],
+              "lengths": [],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                },
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                },
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                }
+              ],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemorySchemaPathsTest::testRollbackOfDeleteAttributeRestoresValuesAndIndexes",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o493"
+          },
+          "bind": "s947",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o493"
+            },
+            "method": "disable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "a",
+              "size": 32
+            },
+            "as": "o494"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "b",
+              "size": 32
+            },
+            "as": "o495"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "b",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "c",
+              "size": 32
+            },
+            "as": "o496"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "c",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "unique_pair",
+              "attributes": [
+                "a",
+                "b"
+              ]
+            },
+            "as": "o497"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "unique_pair",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "a",
+                "b"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pairs"
+              }
+            },
+            "as": "o498"
+          },
+          "expect": {
+            "$document": {
+              "$id": "pairs"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "$permissions": [],
+                "a": "x",
+                "b": "y"
+              }
+            },
+            "as": "o499"
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$permissions": [],
+              "a": "x",
+              "b": "y"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pairs"
+              }
+            },
+            "as": "o500"
+          },
+          "expect": {
+            "$document": {
+              "$id": "pairs"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "b": "y",
+                "$id": "first",
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
+                "$sequence": "1"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pairs"
+              }
+            },
+            "as": "o501"
+          },
+          "expect": {
+            "$document": {
+              "$id": "pairs"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "b": "y",
+                "$id": "first",
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
+                "$sequence": "1",
+                "a": "x"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "a"
+            }
+          },
+          "expect": "x"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pairs"
+              }
+            },
+            "as": "o502"
+          },
+          "expect": {
+            "$document": {
+              "$id": "pairs"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second",
+                "$permissions": [],
+                "a": "x",
+                "b": "y"
+              }
+            },
+            "as": "o503"
+          },
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "$permissions": [],
+              "a": "x",
+              "b": "y"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemorySchemaPathsTest::testRollbackOfRenameAttributeRestoresTheOldName",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o504"
+          },
+          "bind": "s961",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o504"
+            },
+            "method": "disable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "a",
+              "size": 32
+            },
+            "as": "o505"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "b",
+              "size": 32
+            },
+            "as": "o506"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "b",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "c",
+              "size": 32
+            },
+            "as": "o507"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "c",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_a",
+              "attributes": [
+                "a"
+              ]
+            },
+            "as": "o508"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_a",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "a"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pairs"
+              }
+            },
+            "as": "o509"
+          },
+          "expect": {
+            "$document": {
+              "$id": "pairs"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "$permissions": [],
+                "a": "x",
+                "b": "y"
+              }
+            },
+            "as": "o510"
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$permissions": [],
+              "a": "x",
+              "b": "y"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pairs"
+              }
+            },
+            "as": "o511"
+          },
+          "expect": {
+            "$document": {
+              "$id": "pairs"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "b": "y",
+                "$id": "first",
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
+                "$sequence": "1",
+                "a": "x"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "a"
+            }
+          },
+          "expect": "x"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "b": "y",
+                "$id": "first",
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
+                "$sequence": "1",
+                "a": "x"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "renamed"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pairs"
+              }
+            },
+            "as": "o512"
+          },
+          "expect": {
+            "$document": {
+              "$id": "pairs"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "a",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o513"
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "b": "y",
+                "$id": "first",
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
+                "$sequence": "1",
+                "a": "x"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "first"
+        }
+      ]
+    },
+    {
+      "name": "MemorySchemaPathsTest::testUnvalidatedQueriesFollowSqlNullAndMethodRules",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o514"
+          },
+          "bind": "s975",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o515"
+          },
+          "bind": "s976",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o515"
+            },
+            "method": "disable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o514"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o515"
+              }
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o514"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "schema_paths"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o514"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "schema_paths_u000000000009"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o514"
+            },
+            "method": "create",
+            "args": {
+              "name": "schema_paths"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o514"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "pairs"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "a",
+              "size": 32
+            },
+            "as": "o516"
+          },
+          "bind": "s983",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o514"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "pairs",
+              "attribute": {
+                "$obj": "o516"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "b",
+              "size": 32
+            },
+            "as": "o517"
+          },
+          "bind": "s985",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "b",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o514"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "pairs",
+              "attribute": {
+                "$obj": "o517"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "c",
+              "size": 32
+            },
+            "as": "o518"
+          },
+          "bind": "s987",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "c",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o514"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "pairs",
+              "attribute": {
+                "$obj": "o518"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pairs"
+              }
+            },
+            "as": "o519"
+          },
+          "bind": "s989",
+          "expect": {
+            "$document": {
+              "$id": "pairs"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "$permissions": [],
+                "a": "x",
+                "b": "y"
+              }
+            },
+            "as": "o520"
+          },
+          "bind": "s990",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$permissions": [],
+              "a": "x",
+              "b": "y"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o514"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o519"
+              },
+              "document": {
+                "$obj": "o520"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$permissions": [],
+              "a": "x",
+              "b": "y",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pairs"
+              }
+            },
+            "as": "o521"
+          },
+          "bind": "s992",
+          "expect": {
+            "$document": {
+              "$id": "pairs"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second",
+                "$permissions": [],
+                "a": "z",
+                "b": "y"
+              }
+            },
+            "as": "o522"
+          },
+          "bind": "s993",
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "$permissions": [],
+              "a": "z",
+              "b": "y"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o514"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o521"
+              },
+              "document": {
+                "$obj": "o522"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "$permissions": [],
+              "a": "z",
+              "b": "y",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pairs"
+              }
+            },
+            "as": "o523"
+          },
+          "bind": "s995",
+          "expect": {
+            "$document": {
+              "$id": "pairs"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::NotEqual"
+              },
+              "attribute": "a",
+              "values": [
+                null,
+                "x"
+              ]
+            },
+            "as": "o524"
+          },
+          "bind": "s996",
+          "expect": {
+            "$query": {
+              "method": "notEqual",
+              "attribute": "a",
+              "values": [
+                null,
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o514"
+            },
+            "method": "find",
+            "args": {
+              "collection": {
+                "$obj": "o523"
+              },
+              "queries": [
+                {
+                  "$obj": "o524"
+                }
+              ]
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pairs"
+              }
+            },
+            "as": "o525"
+          },
+          "bind": "s998",
+          "expect": {
+            "$document": {
+              "$id": "pairs"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Regex"
+              },
+              "attribute": "a",
+              "values": [
+                5
+              ]
+            },
+            "as": "o526"
+          },
+          "bind": "s999",
+          "expect": {
+            "$query": {
+              "method": "regex",
+              "attribute": "a",
+              "values": [
+                5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o514"
+            },
+            "method": "find",
+            "args": {
+              "collection": {
+                "$obj": "o525"
+              },
+              "queries": [
+                {
+                  "$obj": "o526"
+                }
+              ]
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pairs"
+              }
+            },
+            "as": "o527"
+          },
+          "bind": "s1001",
+          "expect": {
+            "$document": {
+              "$id": "pairs"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "exists",
+            "args": {
+              "attributes": [
+                "a"
+              ]
+            },
+            "as": "o528"
+          },
+          "bind": "s1002",
+          "expect": {
+            "$query": {
+              "method": "exists",
+              "attribute": "",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o514"
+            },
+            "method": "find",
+            "args": {
+              "collection": {
+                "$obj": "o527"
+              },
+              "queries": [
+                {
+                  "$obj": "o528"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Query method not implemented in the Memory adapter: exists"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemorySchemaPathsTest::testUnorderedReadReturnsRowsInSequenceOrder",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o529"
+          },
+          "bind": "s1004",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o530"
+          },
+          "bind": "s1005",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o530"
+            },
+            "method": "disable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o529"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o530"
+              }
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o529"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "schema_paths"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o529"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "schema_paths_u000000000010"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o529"
+            },
+            "method": "create",
+            "args": {
+              "name": "schema_paths"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o529"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "pairs"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "a",
+              "size": 32
+            },
+            "as": "o531"
+          },
+          "bind": "s1012",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o529"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "pairs",
+              "attribute": {
+                "$obj": "o531"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "b",
+              "size": 32
+            },
+            "as": "o532"
+          },
+          "bind": "s1014",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "b",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o529"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "pairs",
+              "attribute": {
+                "$obj": "o532"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "c",
+              "size": 32
+            },
+            "as": "o533"
+          },
+          "bind": "s1016",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "c",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o529"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "pairs",
+              "attribute": {
+                "$obj": "o533"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pairs"
+              }
+            },
+            "as": "o534"
+          },
+          "bind": "s1018",
+          "expect": {
+            "$document": {
+              "$id": "pairs"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "$permissions": [],
+                "a": "first",
+                "b": "y"
+              }
+            },
+            "as": "o535"
+          },
+          "bind": "s1019",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$permissions": [],
+              "a": "first",
+              "b": "y"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o529"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o534"
+              },
+              "document": {
+                "$obj": "o535"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$permissions": [],
+              "a": "first",
+              "b": "y",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pairs"
+              }
+            },
+            "as": "o536"
+          },
+          "bind": "s1021",
+          "expect": {
+            "$document": {
+              "$id": "pairs"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second",
+                "$permissions": [],
+                "a": "second",
+                "b": "y"
+              }
+            },
+            "as": "o537"
+          },
+          "bind": "s1022",
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "$permissions": [],
+              "a": "second",
+              "b": "y"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o529"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o536"
+              },
+              "document": {
+                "$obj": "o537"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "$permissions": [],
+              "a": "second",
+              "b": "y",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pairs"
+              }
+            },
+            "as": "o538"
+          },
+          "bind": "s1024",
+          "expect": {
+            "$document": {
+              "$id": "pairs"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "third",
+                "$permissions": [],
+                "a": "third",
+                "b": "y"
+              }
+            },
+            "as": "o539"
+          },
+          "bind": "s1025",
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "$permissions": [],
+              "a": "third",
+              "b": "y"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o529"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o538"
+              },
+              "document": {
+                "$obj": "o539"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "$permissions": [],
+              "a": "third",
+              "b": "y",
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pairs"
+              }
+            },
+            "as": "o540"
+          },
+          "bind": "s1027",
+          "expect": {
+            "$document": {
+              "$id": "pairs"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "renamed"
+              }
+            },
+            "as": "o541"
+          },
+          "bind": "s1028",
+          "expect": {
+            "$document": {
+              "$id": "renamed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o529"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": {
+                "$obj": "o540"
+              },
+              "id": "first",
+              "document": {
+                "$obj": "o541"
+              },
+              "skipPermissions": true
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "renamed"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pairs"
+              }
+            },
+            "as": "o542"
+          },
+          "bind": "s1030",
+          "expect": {
+            "$document": {
+              "$id": "pairs"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o529"
+            },
+            "method": "find",
+            "args": {
+              "collection": {
+                "$obj": "o542"
+              }
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "a": "first",
+                "b": "y",
+                "$id": "renamed",
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
+                "$sequence": "1"
+              }
+            },
+            {
+              "$document": {
+                "a": "second",
+                "b": "y",
+                "$id": "second",
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
+                "$sequence": "2"
+              }
+            },
+            {
+              "$document": {
+                "a": "third",
+                "b": "y",
+                "$id": "third",
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
+                "$sequence": "3"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "a": "first",
+                "b": "y",
+                "$id": "renamed",
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
+                "$sequence": "1"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "renamed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "a": "second",
+                "b": "y",
+                "$id": "second",
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
+                "$sequence": "2"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "second"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "a": "third",
+                "b": "y",
+                "$id": "third",
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
+                "$sequence": "3"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "third"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "pairs"
+              }
+            },
+            "as": "o543"
+          },
+          "bind": "s1035",
+          "expect": {
+            "$document": {
+              "$id": "pairs"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o529"
+            },
+            "method": "find",
+            "args": {
+              "collection": {
+                "$obj": "o543"
+              },
+              "limit": 1,
+              "offset": 1
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "a": "second",
+                "b": "y",
+                "$id": "second",
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
+                "$sequence": "2"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "a": "second",
+                "b": "y",
+                "$id": "second",
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
+                "$sequence": "2"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "second"
+        }
+      ]
+    }
+  ]
+}

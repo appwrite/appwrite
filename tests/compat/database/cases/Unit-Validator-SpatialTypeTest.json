@@ -1,0 +1,310 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/SpatialTypeTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SpatialTypeTest::testAnArrayForAValidatorOfANonSpatialTypeIsAnUnknownSpatialType#string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "string"
+            },
+            "as": "o4354"
+          },
+          "bind": "s6874",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4354"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                1.0,
+                2.0
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4354"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a valid string: Unknown spatial type: string"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4354"
+            },
+            "method": "isValid",
+            "args": {
+              "value": null
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SpatialTypeTest::testAnArrayForAValidatorOfANonSpatialTypeIsAnUnknownSpatialType#vector",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "vector"
+            },
+            "as": "o4355"
+          },
+          "bind": "s6878",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4355"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                1.0,
+                2.0
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4355"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a valid vector: Unknown spatial type: vector"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4355"
+            },
+            "method": "isValid",
+            "args": {
+              "value": null
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SpatialTypeTest::testAnArrayForAValidatorOfANonSpatialTypeIsAnUnknownSpatialType#empty",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": ""
+            },
+            "as": "o4356"
+          },
+          "bind": "s6882",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4356"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                1.0,
+                2.0
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4356"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a valid : Unknown spatial type: "
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4356"
+            },
+            "method": "isValid",
+            "args": {
+              "value": null
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SpatialTypeTest::testAnArrayForAValidatorOfANonSpatialTypeIsAnUnknownSpatialType#unknown name",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "circle"
+            },
+            "as": "o4357"
+          },
+          "bind": "s6886",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4357"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                1.0,
+                2.0
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4357"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a valid circle: Unknown spatial type: circle"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4357"
+            },
+            "method": "isValid",
+            "args": {
+              "value": null
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SpatialTypeTest::testAnArrayForAPointValidatorIsCheckedAsAPoint",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "point"
+            },
+            "as": "o4358"
+          },
+          "bind": "s6890",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4358"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                1.0,
+                2.0
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4358"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a valid point: "
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4358"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a valid point: "
+        }
+      ]
+    }
+  ]
+}

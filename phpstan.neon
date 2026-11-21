@@ -8,8 +8,12 @@ parameters:
     - tests
   bootstrapFiles:
     - app/init/constants.php
+  scanDirectories:
+    - vendor/swoole/ide-helper
   scanFiles:
+    # Utopia\Image\Canvas, which the utopia extension registers
     - packages/image/stubs/Canvas.php
+    # Utopia\DSN\DSN, Utopia\Locale\Locale, Utopia\UserAgent\UserAgent, Utopia\Domains\Domain, Utopia\Emails\Email and the validators, which the extension registers
     - crates/extension/stubs/DSN.php
     - crates/extension/stubs/Locale.php
     - packages/user-agent/stubs/UserAgent.php
@@ -17,10 +21,16 @@ parameters:
     - packages/emails/stubs/Email.php
     - packages/validators/stubs/Validators.php
     - packages/auth/stubs/Hash.php
-  scanDirectories:
-    - vendor/swoole/ide-helper
+    # Classes the compat database recorder generates with eval()
+    - tests/compat/database/recorder/Classes.stub
+    # The migration suite's test doubles, which the compat migration adapter extends
+    - packages/migration/tests/Adapters/MockSource.php
+    - packages/migration/tests/Adapters/MockDestination.php
   excludePaths:
     - tests/resources
+    # Written against utopia-php/agents before its redesign (models, tools and a
+    # step loop); rewritten with the agents crate (task main-nov16-libraries).
+    - tests/compat/agents
   ignoreErrors:
     # Database\Query::parseQueries inherits the base @throws Utopia\Query\Exception
     # annotation, but late static binding wraps that as Database\Exception\Query.

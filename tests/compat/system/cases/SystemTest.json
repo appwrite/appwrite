@@ -1,0 +1,2376 @@
+{
+  "source": "packages/system/tests/SystemTest.php",
+  "cases": [
+    {
+      "name": "os",
+      "steps": [
+        {
+          "op": "system.machine",
+          "args": {
+            "call": "getOS"
+          },
+          "expect": {
+            "type": "string",
+            "empty": false
+          }
+        },
+        {
+          "op": "system.machine",
+          "args": {
+            "call": "getArch"
+          },
+          "expect": {
+            "type": "string",
+            "empty": false
+          }
+        },
+        {
+          "op": "system.machine",
+          "args": {
+            "call": "getArchEnum"
+          },
+          "expect": {
+            "type": "string",
+            "empty": false
+          }
+        },
+        {
+          "op": "system.machine",
+          "args": {
+            "call": "getHostname"
+          },
+          "expect": {
+            "type": "string",
+            "empty": false
+          }
+        },
+        {
+          "op": "system.machine",
+          "args": {
+            "call": "isArch",
+            "arch": "throw"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "'throw' not found."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "arch consistency",
+      "steps": [
+        {
+          "op": "system.machine",
+          "args": {
+            "call": "getArchEnum"
+          },
+          "expect": {
+            "type": "string",
+            "empty": false
+          }
+        },
+        {
+          "op": "system.machine",
+          "args": {
+            "call": "isX86"
+          },
+          "expect": {
+            "type": "bool"
+          }
+        },
+        {
+          "op": "system.machine",
+          "args": {
+            "call": "isPPC"
+          },
+          "expect": {
+            "type": "bool"
+          }
+        },
+        {
+          "op": "system.machine",
+          "args": {
+            "call": "isArm64"
+          },
+          "expect": {
+            "type": "bool"
+          }
+        },
+        {
+          "op": "system.machine",
+          "args": {
+            "call": "isArmV7"
+          },
+          "expect": {
+            "type": "bool"
+          }
+        },
+        {
+          "op": "system.machine",
+          "args": {
+            "call": "isArmV8"
+          },
+          "expect": {
+            "type": "bool"
+          }
+        }
+      ]
+    },
+    {
+      "name": "cpu cores",
+      "steps": [
+        {
+          "op": "system.machine",
+          "args": {
+            "call": "getCPUCores"
+          },
+          "expect": {
+            "type": "int",
+            "sign": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "cpu",
+      "steps": [
+        {
+          "op": "system.machine",
+          "args": {
+            "call": "getCPU"
+          },
+          "expect": {
+            "type": "float",
+            "sign": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "disk total",
+      "steps": [
+        {
+          "op": "system.machine",
+          "args": {
+            "call": "getDiskTotal",
+            "directory": "/tmp"
+          },
+          "expect": {
+            "type": "int",
+            "sign": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "disk free",
+      "steps": [
+        {
+          "op": "system.machine",
+          "args": {
+            "call": "getDiskFree",
+            "directory": "/tmp"
+          },
+          "mask": {
+            "paths": [
+              "/sign"
+            ],
+            "reason": "free memory and disk can round down to 0 MiB on one machine and not the other"
+          },
+          "expect": {
+            "type": "int",
+            "sign": "<masked>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "cpu usage",
+      "steps": [
+        {
+          "op": "system.machine",
+          "args": {
+            "call": "getCPUUsage",
+            "duration": 1
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Linux-only metric: the PHP driver runs in a Linux container, the Rust driver on the host (macOS in development); the Linux behaviour is pinned by fixture cases"
+          },
+          "expect": "<masked>"
+        }
+      ]
+    },
+    {
+      "name": "memory total",
+      "steps": [
+        {
+          "op": "system.machine",
+          "args": {
+            "call": "getMemoryTotal"
+          },
+          "expect": {
+            "type": "int",
+            "sign": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "memory",
+      "steps": [
+        {
+          "op": "system.machine",
+          "args": {
+            "call": "getMemory"
+          },
+          "expect": {
+            "type": "int",
+            "sign": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "memory free",
+      "steps": [
+        {
+          "op": "system.machine",
+          "args": {
+            "call": "getMemoryFree"
+          },
+          "mask": {
+            "paths": [
+              "/sign"
+            ],
+            "reason": "free memory and disk can round down to 0 MiB on one machine and not the other"
+          },
+          "expect": {
+            "type": "int",
+            "sign": "<masked>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "memory available",
+      "steps": [
+        {
+          "op": "system.machine",
+          "args": {
+            "call": "getMemoryAvailable"
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Linux-only metric: the PHP driver runs in a Linux container, the Rust driver on the host (macOS in development); the Linux behaviour is pinned by fixture cases"
+          },
+          "expect": "<masked>"
+        }
+      ]
+    },
+    {
+      "name": "io usage",
+      "steps": [
+        {
+          "op": "system.machine",
+          "args": {
+            "call": "getIOUsage",
+            "duration": 0
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Linux-only metric: the PHP driver runs in a Linux container, the Rust driver on the host (macOS in development); the Linux behaviour is pinned by fixture cases"
+          },
+          "expect": "<masked>"
+        }
+      ]
+    },
+    {
+      "name": "network usage",
+      "steps": [
+        {
+          "op": "system.machine",
+          "args": {
+            "call": "getNetworkUsage",
+            "duration": 0
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Linux-only metric: the PHP driver runs in a Linux container, the Rust driver on the host (macOS in development); the Linux behaviour is pinned by fixture cases"
+          },
+          "expect": "<masked>"
+        }
+      ]
+    },
+    {
+      "name": "getEnv",
+      "steps": [
+        {
+          "op": "system.env",
+          "args": {
+            "name": "COMPAT_${ns}_A",
+            "value": "VALUEA",
+            "default": "DEFAULTA"
+          },
+          "expect": "VALUEA"
+        },
+        {
+          "op": "system.env",
+          "args": {
+            "name": "COMPAT_${ns}_B",
+            "value": "VALUEB",
+            "default": "DEFAULTB"
+          },
+          "expect": "VALUEB"
+        },
+        {
+          "op": "system.env",
+          "args": {
+            "name": "COMPAT_${ns}_C",
+            "default": "DEFAULTC"
+          },
+          "expect": "DEFAULTC"
+        },
+        {
+          "op": "system.env",
+          "args": {
+            "name": "COMPAT_${ns}_C"
+          },
+          "expect": null
+        },
+        {
+          "op": "system.env",
+          "args": {
+            "name": "COMPAT_${ns}_D",
+            "value": "",
+            "default": "DEFAULTD"
+          },
+          "expect": "DEFAULTD"
+        },
+        {
+          "op": "system.env",
+          "args": {
+            "name": "COMPAT_${ns}_E",
+            "value": "0",
+            "default": "DEFAULTE"
+          },
+          "expect": "DEFAULTE"
+        },
+        {
+          "op": "system.env",
+          "args": {
+            "name": "COMPAT_${ns}_F",
+            "value": "0.0"
+          },
+          "expect": "0.0"
+        },
+        {
+          "op": "system.env",
+          "args": {
+            "name": "COMPAT_${ns}_G",
+            "value": " "
+          },
+          "expect": " "
+        },
+        {
+          "op": "system.env",
+          "args": {
+            "name": "COMPAT_${ns}_E",
+            "default": null
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "linux os and arch",
+      "op": "system.fixture",
+      "args": {
+        "call": "getOS",
+        "machine": {
+          "os": "Linux",
+          "arch": "aarch64",
+          "hostname": "box"
+        }
+      },
+      "expect": {
+        "value": "Linux",
+        "sleeps": []
+      }
+    },
+    {
+      "name": "arch matrix",
+      "steps": [
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getArch",
+            "machine": {
+              "arch": "x86_64"
+            }
+          },
+          "expect": {
+            "value": "x86_64",
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getArchEnum",
+            "machine": {
+              "arch": "x86_64"
+            }
+          },
+          "expect": {
+            "value": "x86",
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isX86",
+            "machine": {
+              "arch": "x86_64"
+            }
+          },
+          "expect": {
+            "value": true,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isPPC",
+            "machine": {
+              "arch": "x86_64"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArm64",
+            "machine": {
+              "arch": "x86_64"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArmV7",
+            "machine": {
+              "arch": "x86_64"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArmV8",
+            "machine": {
+              "arch": "x86_64"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArch",
+            "machine": {
+              "arch": "x86_64"
+            },
+            "arch": "x86"
+          },
+          "expect": {
+            "value": true,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getArch",
+            "machine": {
+              "arch": "i686"
+            }
+          },
+          "expect": {
+            "value": "i686",
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getArchEnum",
+            "machine": {
+              "arch": "i686"
+            }
+          },
+          "expect": {
+            "value": "x86",
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isX86",
+            "machine": {
+              "arch": "i686"
+            }
+          },
+          "expect": {
+            "value": true,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isPPC",
+            "machine": {
+              "arch": "i686"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArm64",
+            "machine": {
+              "arch": "i686"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArmV7",
+            "machine": {
+              "arch": "i686"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArmV8",
+            "machine": {
+              "arch": "i686"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArch",
+            "machine": {
+              "arch": "i686"
+            },
+            "arch": "x86"
+          },
+          "expect": {
+            "value": true,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getArch",
+            "machine": {
+              "arch": "aarch64"
+            }
+          },
+          "expect": {
+            "value": "aarch64",
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getArchEnum",
+            "machine": {
+              "arch": "aarch64"
+            }
+          },
+          "expect": {
+            "value": "arm64",
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isX86",
+            "machine": {
+              "arch": "aarch64"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isPPC",
+            "machine": {
+              "arch": "aarch64"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArm64",
+            "machine": {
+              "arch": "aarch64"
+            }
+          },
+          "expect": {
+            "value": true,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArmV7",
+            "machine": {
+              "arch": "aarch64"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArmV8",
+            "machine": {
+              "arch": "aarch64"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArch",
+            "machine": {
+              "arch": "aarch64"
+            },
+            "arch": "x86"
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getArch",
+            "machine": {
+              "arch": "arm64"
+            }
+          },
+          "expect": {
+            "value": "arm64",
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getArchEnum",
+            "machine": {
+              "arch": "arm64"
+            }
+          },
+          "expect": {
+            "value": "arm64",
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isX86",
+            "machine": {
+              "arch": "arm64"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isPPC",
+            "machine": {
+              "arch": "arm64"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArm64",
+            "machine": {
+              "arch": "arm64"
+            }
+          },
+          "expect": {
+            "value": true,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArmV7",
+            "machine": {
+              "arch": "arm64"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArmV8",
+            "machine": {
+              "arch": "arm64"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArch",
+            "machine": {
+              "arch": "arm64"
+            },
+            "arch": "x86"
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getArch",
+            "machine": {
+              "arch": "armv7l"
+            }
+          },
+          "expect": {
+            "value": "armv7l",
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getArchEnum",
+            "machine": {
+              "arch": "armv7l"
+            }
+          },
+          "expect": {
+            "value": "armv7",
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isX86",
+            "machine": {
+              "arch": "armv7l"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isPPC",
+            "machine": {
+              "arch": "armv7l"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArm64",
+            "machine": {
+              "arch": "armv7l"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArmV7",
+            "machine": {
+              "arch": "armv7l"
+            }
+          },
+          "expect": {
+            "value": true,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArmV8",
+            "machine": {
+              "arch": "armv7l"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArch",
+            "machine": {
+              "arch": "armv7l"
+            },
+            "arch": "x86"
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getArch",
+            "machine": {
+              "arch": "armv8l"
+            }
+          },
+          "expect": {
+            "value": "armv8l",
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getArchEnum",
+            "machine": {
+              "arch": "armv8l"
+            }
+          },
+          "expect": {
+            "value": "armv8",
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isX86",
+            "machine": {
+              "arch": "armv8l"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isPPC",
+            "machine": {
+              "arch": "armv8l"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArm64",
+            "machine": {
+              "arch": "armv8l"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArmV7",
+            "machine": {
+              "arch": "armv8l"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArmV8",
+            "machine": {
+              "arch": "armv8l"
+            }
+          },
+          "expect": {
+            "value": true,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArch",
+            "machine": {
+              "arch": "armv8l"
+            },
+            "arch": "x86"
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getArch",
+            "machine": {
+              "arch": "ppc64le"
+            }
+          },
+          "expect": {
+            "value": "ppc64le",
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getArchEnum",
+            "machine": {
+              "arch": "ppc64le"
+            }
+          },
+          "expect": {
+            "value": "ppc",
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isX86",
+            "machine": {
+              "arch": "ppc64le"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isPPC",
+            "machine": {
+              "arch": "ppc64le"
+            }
+          },
+          "expect": {
+            "value": true,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArm64",
+            "machine": {
+              "arch": "ppc64le"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArmV7",
+            "machine": {
+              "arch": "ppc64le"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArmV8",
+            "machine": {
+              "arch": "ppc64le"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArch",
+            "machine": {
+              "arch": "ppc64le"
+            },
+            "arch": "x86"
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getArch",
+            "machine": {
+              "arch": "riscv64"
+            }
+          },
+          "expect": {
+            "value": "riscv64",
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getArchEnum",
+            "machine": {
+              "arch": "riscv64"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "'riscv64' enum not found."
+            }
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isX86",
+            "machine": {
+              "arch": "riscv64"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isPPC",
+            "machine": {
+              "arch": "riscv64"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArm64",
+            "machine": {
+              "arch": "riscv64"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArmV7",
+            "machine": {
+              "arch": "riscv64"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArmV8",
+            "machine": {
+              "arch": "riscv64"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArch",
+            "machine": {
+              "arch": "riscv64"
+            },
+            "arch": "x86"
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getArch",
+            "machine": {
+              "arch": "amd64"
+            }
+          },
+          "expect": {
+            "value": "amd64",
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "getArchEnum",
+            "machine": {
+              "arch": "amd64"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "'amd64' enum not found."
+            }
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isX86",
+            "machine": {
+              "arch": "amd64"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isPPC",
+            "machine": {
+              "arch": "amd64"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArm64",
+            "machine": {
+              "arch": "amd64"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArmV7",
+            "machine": {
+              "arch": "amd64"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArmV8",
+            "machine": {
+              "arch": "amd64"
+            }
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        },
+        {
+          "op": "system.fixture",
+          "args": {
+            "call": "isArch",
+            "machine": {
+              "arch": "amd64"
+            },
+            "arch": "x86"
+          },
+          "expect": {
+            "value": false,
+            "sleeps": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "isArch unknown",
+      "op": "system.fixture",
+      "args": {
+        "call": "isArch",
+        "machine": {
+          "arch": "x86_64"
+        },
+        "arch": "X86"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "'X86' not found."
+        }
+      }
+    },
+    {
+      "name": "hostname",
+      "op": "system.fixture",
+      "args": {
+        "call": "getHostname",
+        "machine": {
+          "hostname": "appwrite-box"
+        }
+      },
+      "expect": {
+        "value": "appwrite-box",
+        "sleeps": []
+      }
+    },
+    {
+      "name": "cpu cores linux",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPUCores",
+        "machine": {
+          "os": "Linux",
+          "files": {
+            "/proc/cpuinfo": "processor\t: 0\nmodel\nprocessor\t: 1\n processor\nprocessor"
+          }
+        }
+      },
+      "expect": {
+        "value": 3,
+        "sleeps": []
+      }
+    },
+    {
+      "name": "cpu cores linux unreadable",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPUCores",
+        "machine": {
+          "os": "Linux"
+        }
+      },
+      "expect": {
+        "value": 0,
+        "sleeps": []
+      }
+    },
+    {
+      "name": "cpu cores linux zero",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPUCores",
+        "machine": {
+          "os": "Linux",
+          "files": {
+            "/proc/cpuinfo": "0"
+          }
+        }
+      },
+      "expect": {
+        "value": 0,
+        "sleeps": []
+      }
+    },
+    {
+      "name": "cpu cores darwin",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPUCores",
+        "machine": {
+          "os": "Darwin",
+          "exec": {
+            "sysctl -n hw.ncpu": "10\n"
+          }
+        }
+      },
+      "expect": {
+        "value": 10,
+        "sleeps": []
+      }
+    },
+    {
+      "name": "cpu cores windows",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPUCores",
+        "machine": {
+          "os": "Windows",
+          "exec": {
+            "wmic cpu get NumberOfCores": "NumberOfCores\n8\n"
+          }
+        }
+      },
+      "expect": {
+        "value": 0,
+        "sleeps": []
+      }
+    },
+    {
+      "name": "cpu cores unsupported",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPUCores",
+        "machine": {
+          "os": "SunOS"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "SunOS not supported."
+        }
+      }
+    },
+    {
+      "name": "cpu from cgroup v2 quota",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPU",
+        "machine": {
+          "os": "Linux",
+          "files": {
+            "/sys/fs/cgroup/cpu.max": "50000 100000\n",
+            "/proc/cpuinfo": "processor\nprocessor\n"
+          }
+        }
+      },
+      "expect": {
+        "value": 0.5,
+        "sleeps": []
+      }
+    },
+    {
+      "name": "cpu from cgroup v1 quota",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPU",
+        "machine": {
+          "os": "Linux",
+          "files": {
+            "/sys/fs/cgroup/cpu/cpu.cfs_quota_us": "150000",
+            "/sys/fs/cgroup/cpu/cpu.cfs_period_us": "100000\n"
+          }
+        }
+      },
+      "expect": {
+        "value": 1.5,
+        "sleeps": []
+      }
+    },
+    {
+      "name": "cpu unlimited quota falls back to cpuinfo",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPU",
+        "machine": {
+          "os": "Linux",
+          "files": {
+            "/sys/fs/cgroup/cpu.max": "max 100000",
+            "/proc/cpuinfo": "processor\nprocessor\nprocessor\n"
+          }
+        }
+      },
+      "expect": {
+        "value": 3.0,
+        "sleeps": []
+      }
+    },
+    {
+      "name": "cpu from cpuset",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPU",
+        "machine": {
+          "os": "Linux",
+          "files": {
+            "/sys/fs/cgroup/cpuset.cpus.effective": "0-1,3\n",
+            "/sys/devices/system/cpu/online": "0-15\n"
+          }
+        }
+      },
+      "expect": {
+        "value": 3.0,
+        "sleeps": []
+      }
+    },
+    {
+      "name": "cpu cpuset of every online cpu is no limit",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPU",
+        "machine": {
+          "os": "Linux",
+          "files": {
+            "/sys/fs/cgroup/cpuset.cpus.effective": "0-15",
+            "/sys/devices/system/cpu/online": "0-15",
+            "/proc/cpuinfo": "processor\n"
+          }
+        }
+      },
+      "expect": {
+        "value": 1.0,
+        "sleeps": []
+      }
+    },
+    {
+      "name": "cpu smaller of quota and cpuset",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPU",
+        "machine": {
+          "os": "Linux",
+          "files": {
+            "/sys/fs/cgroup/cpu.max": "350000 100000",
+            "/sys/fs/cgroup/cpuset/cpuset.cpus": "0-1"
+          }
+        }
+      },
+      "expect": {
+        "value": 2.0,
+        "sleeps": []
+      }
+    },
+    {
+      "name": "negative cgroup quota",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPU",
+        "machine": {
+          "os": "Linux",
+          "files": {
+            "/sys/fs/cgroup/cpu.max": "-100000 100000",
+            "/proc/cpuinfo": "processor\n"
+          }
+        }
+      },
+      "expect": {
+        "value": -1.0,
+        "sleeps": []
+      }
+    },
+    {
+      "name": "cpu infinite quota",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPU",
+        "machine": {
+          "os": "Linux",
+          "files": {
+            "/sys/fs/cgroup/cpu.max": "1e400 1e400",
+            "/sys/fs/cgroup/cpuset.cpus.effective": "0-1"
+          }
+        }
+      },
+      "expect": {
+        "value": 2.0,
+        "sleeps": []
+      }
+    },
+    {
+      "name": "cpuset count overflow is a TypeError",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPU",
+        "machine": {
+          "os": "Linux",
+          "files": {
+            "/sys/fs/cgroup/cpuset.cpus.effective": "0-9223372036854775807"
+          }
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "TypeError",
+          "message": "Utopia\\System\\System::countCpuList(): Return value must be of type int, float returned"
+        }
+      }
+    },
+    {
+      "name": "cpuset of a huge online list",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPU",
+        "machine": {
+          "os": "Linux",
+          "files": {
+            "/sys/fs/cgroup/cpuset.cpus.effective": "1",
+            "/sys/devices/system/cpu/online": "1e30-1e31",
+            "/proc/cpuinfo": "processor"
+          }
+        }
+      },
+      "expect": {
+        "value": 1.0,
+        "sleeps": []
+      }
+    },
+    {
+      "name": "cpu no cpuinfo",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPU",
+        "machine": {
+          "os": "Linux"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Unable to determine CPU count: /proc/cpuinfo is not readable and no cgroup limits are configured."
+        }
+      }
+    },
+    {
+      "name": "cpu no processors",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPU",
+        "machine": {
+          "os": "Linux",
+          "files": {
+            "/proc/cpuinfo": "model name: x\n"
+          }
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Unable to determine CPU count: /proc/cpuinfo contained no processor entries."
+        }
+      }
+    },
+    {
+      "name": "cpu darwin",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPU",
+        "machine": {
+          "os": "Darwin",
+          "exec": {
+            "sysctl -n hw.ncpu": "hw: 0012 cores\n"
+          }
+        }
+      },
+      "expect": {
+        "value": 12.0,
+        "sleeps": []
+      }
+    },
+    {
+      "name": "cpu darwin failure",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPU",
+        "machine": {
+          "os": "Darwin",
+          "exec": {
+            "sysctl -n hw.ncpu": "none"
+          }
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Unable to determine CPU count via sysctl."
+        }
+      }
+    },
+    {
+      "name": "cpu windows",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPU",
+        "machine": {
+          "os": "Windows",
+          "exec": {
+            "wmic cpu get NumberOfCores": "NumberOfCores\n4\n4\n"
+          }
+        }
+      },
+      "expect": {
+        "value": 8.0,
+        "sleeps": []
+      }
+    },
+    {
+      "name": "cpu windows failure",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPU",
+        "machine": {
+          "os": "Windows",
+          "exec": {
+            "wmic cpu get NumberOfCores": "0"
+          }
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Unable to determine CPU count via wmic."
+        }
+      }
+    },
+    {
+      "name": "cpu unsupported",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPU",
+        "machine": {
+          "os": "FreeBSD"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "FreeBSD not supported."
+        }
+      }
+    },
+    {
+      "name": "cpu usage sums cpuN lines",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPUUsage",
+        "machine": {
+          "os": "Linux",
+          "files": {
+            "/proc/stat": [
+              "cpu  100 0 100 1000 0 0 0 0 0 0\ncpu0 10 0 10 100 5 0 0 0 0 0\ncpu1 20 0 20 200 5 0 0 0 0 0\nintr 1 2 3\n",
+              "cpu  200 0 200 2000 0 0 0 0 0 0\ncpu0 30 0 20 150 5 0 0 0 0 0\ncpu1 40 0 40 260 5 0 0 0 0 0\nintr 1 2 3\n"
+            ]
+          }
+        },
+        "duration": 2
+      },
+      "expect": {
+        "value": 38.88888888888889,
+        "sleeps": [
+          2
+        ]
+      }
+    },
+    {
+      "name": "cpu usage without elapsed time",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPUUsage",
+        "machine": {
+          "os": "Linux",
+          "files": {
+            "/proc/stat": "cpu  100 0 100 1000 0 0 0 0 0 0\ncpu0 10 0 10 100 5 0 0 0 0 0\ncpu1 20 0 20 200 5 0 0 0 0 0\nintr 1 2 3\n"
+          }
+        },
+        "duration": 0
+      },
+      "expect": {
+        "$error": {
+          "class": "DivisionByZeroError",
+          "message": "Division by zero"
+        }
+      }
+    },
+    {
+      "name": "cpu usage exact percentage is a float",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPUUsage",
+        "machine": {
+          "os": "Linux",
+          "files": {
+            "/proc/stat": [
+              "cpu0 1 0 0 1",
+              "cpu0 2 0 0 1"
+            ]
+          }
+        },
+        "duration": 1
+      },
+      "expect": {
+        "value": 100.0,
+        "sleeps": [
+          1
+        ]
+      }
+    },
+    {
+      "name": "cpu usage double spaces shift fields",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPUUsage",
+        "machine": {
+          "os": "Linux",
+          "files": {
+            "/proc/stat": [
+              "cpu0  1 2 3 4 5",
+              "cpu0  9 2 3 8 5"
+            ]
+          }
+        },
+        "duration": 1
+      },
+      "expect": {
+        "value": 66.66666666666666,
+        "sleeps": [
+          1
+        ]
+      }
+    },
+    {
+      "name": "cpu usage unreadable",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPUUsage",
+        "machine": {
+          "os": "Linux",
+          "files": {
+            "/proc/stat": "0"
+          }
+        },
+        "duration": 1
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Unable to read /proc/stat"
+        }
+      }
+    },
+    {
+      "name": "cpu usage unsupported",
+      "op": "system.fixture",
+      "args": {
+        "call": "getCPUUsage",
+        "machine": {
+          "os": "Darwin"
+        },
+        "duration": 1
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Darwin not supported."
+        }
+      }
+    },
+    {
+      "name": "memory available linux",
+      "op": "system.fixture",
+      "args": {
+        "call": "getMemoryAvailable",
+        "machine": {
+          "os": "Linux",
+          "files": {
+            "/proc/meminfo": "MemTotal:       8388608 kB\nMemFree:         1048576 kB\nMemAvailable:    4194304 kB\n"
+          }
+        }
+      },
+      "expect": {
+        "value": 4096,
+        "sleeps": []
+      }
+    },
+    {
+      "name": "memory free linux",
+      "op": "system.fixture",
+      "args": {
+        "call": "getMemoryFree",
+        "machine": {
+          "os": "Linux",
+          "files": {
+            "/proc/meminfo": "MemTotal:       8388608 kB\nMemFree:         1048576 kB\nMemAvailable:    4194304 kB\n"
+          }
+        }
+      },
+      "expect": {
+        "value": 1024,
+        "sleeps": []
+      }
+    },
+    {
+      "name": "memory field missing",
+      "op": "system.fixture",
+      "args": {
+        "call": "getMemoryAvailable",
+        "machine": {
+          "os": "Linux",
+          "files": {
+            "/proc/meminfo": "MemTotal: 1 kB"
+          }
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Unable to find MemAvailable in /proc/meminfo."
+        }
+      }
+    },
+    {
+      "name": "memory unreadable",
+      "op": "system.fixture",
+      "args": {
+        "call": "getMemoryTotal",
+        "machine": {
+          "os": "Linux"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Unable to read /proc/meminfo"
+        }
+      }
+    },
+    {
+      "name": "memory darwin",
+      "op": "system.fixture",
+      "args": {
+        "call": "getMemoryTotal",
+        "machine": {
+          "os": "Darwin",
+          "exec": {
+            "sysctl -n hw.memsize": "17179869184\n"
+          }
+        }
+      },
+      "expect": {
+        "value": 16384,
+        "sleeps": []
+      }
+    },
+    {
+      "name": "memory darwin no cgroups",
+      "op": "system.fixture",
+      "args": {
+        "call": "getMemory",
+        "machine": {
+          "os": "Darwin",
+          "exec": {
+            "sysctl -n hw.memsize": "17179869184\n"
+          },
+          "files": {
+            "/sys/fs/cgroup/memory.max": "1048576"
+          }
+        }
+      },
+      "expect": {
+        "value": 16384,
+        "sleeps": []
+      }
+    },
+    {
+      "name": "memory free darwin",
+      "op": "system.fixture",
+      "args": {
+        "call": "getMemoryFree",
+        "machine": {
+          "os": "Darwin",
+          "exec": {
+            "sysctl -n vm.page_free_count": "3145728"
+          }
+        }
+      },
+      "expect": {
+        "value": 3,
+        "sleeps": []
+      }
+    },
+    {
+      "name": "memory available darwin",
+      "op": "system.fixture",
+      "args": {
+        "call": "getMemoryAvailable",
+        "machine": {
+          "os": "Darwin"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Darwin not supported."
+        }
+      }
+    },
+    {
+      "name": "memory unsupported",
+      "op": "system.fixture",
+      "args": {
+        "call": "getMemoryTotal",
+        "machine": {
+          "os": "Windows"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Windows not supported."
+        }
+      }
+    },
+    {
+      "name": "disk total fixture",
+      "op": "system.fixture",
+      "args": {
+        "call": "getDiskTotal",
+        "machine": {
+          "disk": {
+            "total": 1995218165760.0,
+            "free": 1.0
+          }
+        },
+        "directory": "/"
+      },
+      "expect": {
+        "value": 1902788,
+        "sleeps": []
+      }
+    },
+    {
+      "name": "disk free fixture",
+      "op": "system.fixture",
+      "args": {
+        "call": "getDiskFree",
+        "machine": {
+          "disk": {
+            "total": 1.0,
+            "free": 1048575.0
+          }
+        },
+        "directory": "/"
+      },
+      "expect": {
+        "value": 0,
+        "sleeps": []
+      }
+    },
+    {
+      "name": "disk total failure",
+      "op": "system.fixture",
+      "args": {
+        "call": "getDiskTotal",
+        "machine": {
+          "os": "Linux"
+        },
+        "directory": "/nope"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Unable to get disk space"
+        }
+      }
+    },
+    {
+      "name": "disk free failure",
+      "op": "system.fixture",
+      "args": {
+        "call": "getDiskFree",
+        "machine": {
+          "os": "Linux"
+        },
+        "directory": "/nope"
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Unable to get free disk space"
+        }
+      }
+    },
+    {
+      "name": "io usage fixture",
+      "op": "system.fixture",
+      "args": {
+        "call": "getIOUsage",
+        "machine": {
+          "files": {
+            "/proc/diskstats": [
+              "8\t0\tsda\t100\t0\t2048\t0\t50\t0\t4096\t0\n8\t1\tloop0\t1\t0\t1\t0\t1\t0\t1\t0\n1\t0\tram0\t0\t0\t0\t0\t0\t0\t0\t0\n8\t16\tsdb\t1\t0\t3\t0\t1\t0\t5\t0\n",
+              "8\t0\tsda\t100\t0\t4096\t0\t50\t0\t4097\t0\n8\t1\tloop0\t1\t0\t1\t0\t1\t0\t1\t0\n1\t0\tram0\t0\t0\t0\t0\t0\t0\t0\t0\n8\t16\tsdb\t1\t0\t3\t0\t1\t0\t5\t0\n"
+            ]
+          }
+        },
+        "duration": 1
+      },
+      "expect": {
+        "value": {
+          "sda": {
+            "read": 1,
+            "write": 0.00048828125
+          },
+          "sdb": {
+            "read": 0,
+            "write": 0
+          },
+          "total": {
+            "read": 1,
+            "write": 0.00048828125
+          }
+        },
+        "sleeps": [
+          1
+        ]
+      }
+    },
+    {
+      "name": "io usage on space aligned diskstats",
+      "op": "system.fixture",
+      "args": {
+        "call": "getIOUsage",
+        "machine": {
+          "files": {
+            "/proc/diskstats": "   8       0 sda 100 0 2048 0 50 0 4096 0 0 0 0\n   8       1 sda1 1 0 1 0 1 0 1 0 0 0 0\n"
+          }
+        },
+        "duration": 0
+      },
+      "expect": {
+        "value": {
+          "": {
+            "read": 0,
+            "write": 0
+          },
+          "total": {
+            "read": 0,
+            "write": 0
+          }
+        },
+        "sleeps": [
+          0
+        ]
+      }
+    },
+    {
+      "name": "io usage unreadable",
+      "op": "system.fixture",
+      "args": {
+        "call": "getIOUsage",
+        "machine": {
+          "files": {
+            "/proc/diskstats": ""
+          }
+        },
+        "duration": 0
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Unable to read /proc/diskstats"
+        }
+      }
+    },
+    {
+      "name": "io usage short lines",
+      "op": "system.fixture",
+      "args": {
+        "call": "getIOUsage",
+        "machine": {
+          "files": {
+            "/proc/diskstats": [
+              "a b\n0\n8\t0\tsdc\t1",
+              "8\t0\tsdc\t1\t2\t3\t4\t5\t6\t7\t8"
+            ]
+          }
+        },
+        "duration": 0
+      },
+      "expect": {
+        "value": {
+          "sdc": {
+            "read": 0.00146484375,
+            "write": 0.00341796875
+          },
+          "total": {
+            "read": 0.00146484375,
+            "write": 0.00341796875
+          }
+        },
+        "sleeps": [
+          0
+        ]
+      }
+    },
+    {
+      "name": "network usage filters and sleeps per interface",
+      "op": "system.fixture",
+      "args": {
+        "call": "getNetworkUsage",
+        "machine": {
+          "files": {
+            "/sys/class/net/eth0/statistics/tx_bytes": [
+              "1048576",
+              "3145728"
+            ],
+            "/sys/class/net/eth0/statistics/rx_bytes": [
+              "0",
+              "1000000"
+            ],
+            "/sys/class/net/wlo1/statistics/tx_bytes": "1",
+            "/sys/class/net/total/statistics/tx_bytes": [
+              "0",
+              "2097152"
+            ],
+            "/sys/class/net/total/statistics/rx_bytes": [
+              "5",
+              "5"
+            ]
+          },
+          "dirs": {
+            "/sys/class/net": [
+              ".",
+              "..",
+              "lo",
+              "eth0",
+              "docker0",
+              "veth12",
+              "wlo1",
+              "eth0.100",
+              "bonding_masters",
+              "total",
+              "ens5"
+            ]
+          }
+        },
+        "duration": 1
+      },
+      "expect": {
+        "value": {
+          "eth0": {
+            "download": 0.95,
+            "upload": 2.0
+          },
+          "total": {
+            "download": 0.95,
+            "upload": 4.0
+          },
+          "ens5": {
+            "download": 0.0,
+            "upload": 0.0
+          }
+        },
+        "sleeps": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "name": "network usage with no interfaces",
+      "op": "system.fixture",
+      "args": {
+        "call": "getNetworkUsage",
+        "machine": {
+          "dirs": {
+            "/sys/class/net": [
+              ".",
+              "..",
+              "lo"
+            ]
+          }
+        },
+        "duration": 1
+      },
+      "expect": {
+        "value": {
+          "total": {
+            "download": 0,
+            "upload": 0
+          }
+        },
+        "sleeps": []
+      }
+    },
+    {
+      "name": "network usage unreadable",
+      "op": "system.fixture",
+      "args": {
+        "call": "getNetworkUsage",
+        "machine": {
+          "dirs": {
+            "/sys/class/net": []
+          }
+        },
+        "duration": 1
+      },
+      "expect": {
+        "$error": {
+          "class": "Exception",
+          "message": "Unable to read /sys/class/net"
+        }
+      }
+    }
+  ]
+}

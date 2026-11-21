@@ -1,0 +1,225 @@
+{
+  "source": "tests/compat/query/record/Extra/GrammarCoverageTest.php",
+  "cases": [
+    {
+      "name": "testIsIdentifier",
+      "op": "ast",
+      "args": {
+        "program": [
+          {
+            "static": "isIdentifier",
+            "class": "AST\\Grammar",
+            "args": [
+              "LOWER"
+            ]
+          },
+          {
+            "static": "isIdentifier",
+            "class": "AST\\Grammar",
+            "args": [
+              "_a1"
+            ]
+          },
+          {
+            "static": "isIdentifier",
+            "class": "AST\\Grammar",
+            "args": [
+              ""
+            ]
+          },
+          {
+            "static": "isIdentifier",
+            "class": "AST\\Grammar",
+            "args": [
+              "1a"
+            ]
+          },
+          {
+            "static": "isIdentifier",
+            "class": "AST\\Grammar",
+            "args": [
+              "NOW "
+            ]
+          },
+          {
+            "static": "isIdentifier",
+            "class": "AST\\Grammar",
+            "args": [
+              "NOW() OR 1=1"
+            ]
+          },
+          {
+            "static": "isIdentifier",
+            "class": "AST\\Grammar",
+            "args": [
+              "é"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "name": "testIsType",
+      "op": "ast",
+      "args": {
+        "program": [
+          {
+            "static": "isType",
+            "class": "AST\\Grammar",
+            "args": [
+              "INT"
+            ]
+          },
+          {
+            "static": "isType",
+            "class": "AST\\Grammar",
+            "args": [
+              "DOUBLE PRECISION"
+            ]
+          },
+          {
+            "static": "isType",
+            "class": "AST\\Grammar",
+            "args": [
+              "DOUBLE\tPRECISION"
+            ]
+          },
+          {
+            "static": "isType",
+            "class": "AST\\Grammar",
+            "args": [
+              "DOUBLE  PRECISION"
+            ]
+          },
+          {
+            "static": "isType",
+            "class": "AST\\Grammar",
+            "args": [
+              "DECIMAL(10, 2)"
+            ]
+          },
+          {
+            "static": "isType",
+            "class": "AST\\Grammar",
+            "args": [
+              "CHARACTER VARYING (255)"
+            ]
+          },
+          {
+            "static": "isType",
+            "class": "AST\\Grammar",
+            "args": [
+              "NUMERIC( 10 ,\n2 )"
+            ]
+          },
+          {
+            "static": "isType",
+            "class": "AST\\Grammar",
+            "args": [
+              ""
+            ]
+          },
+          {
+            "static": "isType",
+            "class": "AST\\Grammar",
+            "args": [
+              " INT"
+            ]
+          },
+          {
+            "static": "isType",
+            "class": "AST\\Grammar",
+            "args": [
+              "INT "
+            ]
+          },
+          {
+            "static": "isType",
+            "class": "AST\\Grammar",
+            "args": [
+              "()"
+            ]
+          },
+          {
+            "static": "isType",
+            "class": "AST\\Grammar",
+            "args": [
+              "(1)"
+            ]
+          },
+          {
+            "static": "isType",
+            "class": "AST\\Grammar",
+            "args": [
+              "DECIMAL()"
+            ]
+          },
+          {
+            "static": "isType",
+            "class": "AST\\Grammar",
+            "args": [
+              "DECIMAL(1"
+            ]
+          },
+          {
+            "static": "isType",
+            "class": "AST\\Grammar",
+            "args": [
+              "DECIMAL(1))"
+            ]
+          },
+          {
+            "static": "isType",
+            "class": "AST\\Grammar",
+            "args": [
+              "DECIMAL(1)(2)"
+            ]
+          },
+          {
+            "static": "isType",
+            "class": "AST\\Grammar",
+            "args": [
+              "1INT"
+            ]
+          },
+          {
+            "static": "isType",
+            "class": "AST\\Grammar",
+            "args": [
+              "TEXT) OR (1=1"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  ]
+}

@@ -1,9 +1,65 @@
-//! Booleans, integers, floats, numbers, ranges, ports and hex colors.
+//! The checks of the scalar validators: booleans, integers, floats, numbers, ranges,
+//! ports and hex colors.
+//!
+//! Each function is the body of a PHP validator's method over a value as PHP sees it
+//! ([`Input`]): the same coercions (`is_numeric()`, `$value + 0`), the same comparisons and
+//! the same messages. This crate's validators ([`crate::Boolean`], [`crate::Integer`],
+//! [`crate::Float`], [`crate::Numeric`], [`crate::Range`], [`crate::Port`],
+//! [`crate::HexColor`]) run them, and so do the classes of the PHP extension
+//! (`crates/extension`), which keep the constructors' state themselves and pass it in.
+//!
+//! | PHP | Rust |
+//! |---|---|
+//! | `Boolean::isValid()` | [`boolean`] |
+//! | `Integer::isValid()`, `getDescription()`, `getFormat()` | [`Integer`] |
+//! | `FloatValidator::isValid()` | [`float`] |
+//! | `Numeric::isValid()` | [`numeric`] |
+//! | `Range::isValid()`, `getDescription()` | [`range`], [`range_description`] |
+//! | `Port::isValid()` | [`port`] |
+//! | `HexColor::isValid()` | [`hex_color`] |
 
 use php_std::filter::{self, FILTER_FLAG_IPV4, FILTER_FLAG_IPV6, FILTER_VALIDATE_IP, Options};
 use php_std::format::number_format;
 
-use crate::{Input, Number, decimal};
+pub use php_std::value::Number;
+
+use crate::decimal;
+
+/// A PHP value as the checks look at it: scalars by value, strings as bytes, and
+/// everything else (arrays, objects, resources) as [`Input::Other`], which no check here
+/// accepts as a number or a string.
+///
+/// This crate's validators pass [`crate::Input::scalar`]; the PHP extension builds one
+/// from a `zval`.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Input<'a> {
+    /// `null`.
+    Null,
+    /// A `bool`.
+    Bool(bool),
+    /// An `int`.
+    Int(i64),
+    /// A `float`.
+    Float(f64),
+    /// A `string`, as bytes.
+    Str(&'a [u8]),
+    /// An array, an object or a resource.
+    Other,
+}
+
+impl Input<'_> {
+    /// PHP `is_numeric($value) ? $value + 0 : null`: ints and floats as they are, numeric
+    /// strings (leading and trailing whitespace allowed, no hex) parsed as the engine
+    /// parses them, an integer that overflows becoming a float.
+    pub fn numeric(self) -> Option<Number> {
+        match self {
+            Input::Int(i) => Some(Number::Int(i)),
+            Input::Float(f) => Some(Number::Float(f)),
+            Input::Str(s) => php_std::value::numeric_bytes_ex(s).map(|(n, _)| n),
+            Input::Null | Input::Bool(_) | Input::Other => None,
+        }
+    }
+}
 
 /// PHP `$a <= $b` on two numbers: exact between ints, as floats otherwise (NaN is never
 /// smaller or equal).
