@@ -818,4 +818,15 @@ return [
         'mock' => true,
         'class' => 'Appwrite\\Auth\\OAuth2\\MockNoEmail',
     ],
+    'mock-link-only' => [
+        'name' => 'MockLinkOnly',
+        'developers' => 'https://appwrite.io',
+        'icon' => 'icon-appwrite',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => true,
+        'class' => 'Appwrite\\Auth\\OAuth2\\MockLinkOnly',
+    ],
 ];
