@@ -69,6 +69,7 @@ use Utopia\DI\Container;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
+use Utopia\Http\Router;
 use Utopia\Locale\Locale;
 use Utopia\Lock\Distributed as DistributedLock;
 use Utopia\Pools\Group;
@@ -1170,12 +1171,58 @@ return function (Container $context): void {
             }
 
             return match ($token->getAttribute('resourceType')) {
-                TOKENS_RESOURCE_TYPE_FILES => (function () use ($token, $dbForProject, $authorization) {
+                TOKENS_RESOURCE_TYPE_FILES => (function () use ($token, $dbForProject, $authorization, $request) {
                     $sequences = explode(':', $token->getAttribute('resourceInternalId'));
                     $ids = explode(':', $token->getAttribute('resourceId'));
 
                     if (count($sequences) !== 2 || count($ids) !== 2) {
                         return new Document([]);
+                    }
+
+                    $path = parse_url($request->getURI(), PHP_URL_PATH);
+                    $path = \is_string($path) ? ($path === '' ? '/' : $path) : '/';
+                    $method = $request->getMethod();
+                    $method = ($method === Http::REQUEST_METHOD_HEAD) ? Http::REQUEST_METHOD_GET : $method;
+                    $match = Router::match($method, $path);
+
+                    $requestedBucketId = $match?->params['bucketId'] ?? null;
+                    $requestedFileId = $match?->params['fileId'] ?? null;
+
+                    if ($requestedBucketId === null || $requestedFileId === null || $requestedBucketId !== $ids[0] || $requestedFileId !== $ids[1]) {
+                        return new Document([]);
+                    }
+
+                    $maxUses = $token->getAttribute('maxUses');
+                    $uses = $token->getAttribute('uses', 0);
+
+                    if ($maxUses !== null && $uses >= $maxUses) {
+                        return new Document([]);
+                    }
+
+                    $rangeHeader = $request->getHeaderLine('range');
+                    $isRangeContinuation = !empty($rangeHeader) && $request->getRangeStart() !== 0;
+
+                    if (!$isRangeContinuation) {
+                        if ($maxUses !== null) {
+                            try {
+                                $token = $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute(
+                                    'resourceTokens',
+                                    $token->getId(),
+                                    'uses',
+                                    1,
+                                    max: $maxUses
+                                ));
+                            } catch (\Utopia\Database\Exception\Limit) {
+                                return new Document([]);
+                            }
+                        } else {
+                            $token = $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute(
+                                'resourceTokens',
+                                $token->getId(),
+                                'uses',
+                                1
+                            ));
+                        }
                     }
 
                     $accessedAt = $token->getAttribute('accessedAt', 0);
@@ -1187,10 +1234,13 @@ return function (Container $context): void {
                     }
 
                     return new Document([
+                        '$id' => $token->getId(),
                         'bucketId' => $ids[0],
                         'fileId' => $ids[1],
                         'bucketInternalId' => $sequences[0],
                         'fileInternalId' => $sequences[1],
+                        'maxUses' => $maxUses,
+                        'uses' => $token->getAttribute('uses', 0),
                     ]);
                 })(),
 
