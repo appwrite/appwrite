@@ -448,7 +448,7 @@ class Certificates extends Action
             // gets a generic line; the worker still reports the raw error
             // TODO: ask the provider whether its errors are the owner's, instead of checking its class
             $logs .= $e instanceof CertificateException
-                || $e instanceof AppwriteException
+                || ($e instanceof AppwriteException && $e->getType() === AppwriteException::RULE_VERIFICATION_FAILED)
                 || $certificates instanceof LetsEncrypt
                 || $certificates instanceof External
                 ? \rtrim(\mb_strcut($e->getMessage(), 0, 500000)) . "\n" // Limit to 500kb
