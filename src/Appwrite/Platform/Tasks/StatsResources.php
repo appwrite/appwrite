@@ -57,7 +57,7 @@ class StatsResources extends Action
             snapshotSeconds: $interval,
             telemetry: $telemetry,
             onError: function (\Throwable $error): void {
-                Span::init('schedule.stats.reconcile');
+                Span::init('schedule.stats.error');
                 Span::current()?->finish(error: $error);
             },
         );
