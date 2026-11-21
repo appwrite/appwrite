@@ -1,9 +1,10 @@
 import { describe, expect, test } from 'bun:test'
 import {
-  buildFunctionEmailAddress,
+  functionEmailAddress,
   functionUpdateBody,
   isFunctionEmailEnabled,
   putFunction,
+  suggestFunctionEmailLabel,
   type FunctionUpdateClient,
   type FunctionWithEmail,
 } from '@/lib/function-email'
@@ -21,65 +22,38 @@ describe('isFunctionEmailEnabled', () => {
   })
 })
 
-describe('buildFunctionEmailAddress', () => {
-  test('puts function and project in the host and lowercases them', () => {
-    expect(
-      buildFunctionEmailAddress('MyProject', 'FnAbc', 'Appwrite.Email'),
-    ).toBe('contact@fnabc-myproject.appwrite.email')
+describe('suggestFunctionEmailLabel', () => {
+  test('turns the function name into a label with the random part', () => {
+    expect(suggestFunctionEmailLabel('Order Mailer!', 'x7k2ab')).toBe(
+      'order-mailer-x7k2ab',
+    )
   })
 
-  test('keeps hyphens in the project ID', () => {
-    expect(
-      buildFunctionEmailAddress('my-app', 'sendmail', 'appwrite.email'),
-    ).toBe('contact@sendmail-my-app.appwrite.email')
+  test('falls back to a generic base for a name without label characters', () => {
+    expect(suggestFunctionEmailLabel('', 'x7k2ab')).toBe('mail-x7k2ab')
+    expect(suggestFunctionEmailLabel(null, 'x7k2ab')).toBe('mail-x7k2ab')
+    expect(suggestFunctionEmailLabel('--__--', 'x7k2ab')).toBe('mail-x7k2ab')
   })
 
-  test('accepts a label of exactly 63 characters', () => {
-    expect(
-      buildFunctionEmailAddress(
-        'p'.repeat(31),
-        'f'.repeat(31),
-        'appwrite.email',
-      ),
-    ).toBe(`contact@${'f'.repeat(31)}-${'p'.repeat(31)}.appwrite.email`)
+  test('keeps the label within 63 characters and never ends a part with -', () => {
+    const label = suggestFunctionEmailLabel(`${'a'.repeat(55)} b`, 'x7k2ab')
+    expect(label.length).toBeLessThanOrEqual(63)
+    expect(label).toBe(`${'a'.repeat(55)}-x7k2ab`)
   })
 
-  test('keeps hyphens in the function ID', () => {
-    expect(
-      buildFunctionEmailAddress('my-app', 'send-mail', 'appwrite.email'),
-    ).toBe('contact@send-mail-my-app.appwrite.email')
+  test('adds a fresh random part by default', () => {
+    const first = suggestFunctionEmailLabel('mailer')
+    expect(first.startsWith('mailer-')).toBe(true)
+    expect(first.length).toBe('mailer-'.length + 6)
+    expect(first.slice('mailer-'.length)).toMatch(/^[a-z0-9]{6}$/)
   })
+})
 
-  test('returns null when the IDs do not fit one DNS label', () => {
-    expect(
-      buildFunctionEmailAddress('my-app-', 'sendmail', 'appwrite.email'),
-    ).toBeNull()
-    expect(
-      buildFunctionEmailAddress(
-        'p'.repeat(31),
-        'f'.repeat(32),
-        'appwrite.email',
-      ),
-    ).toBeNull()
-    expect(
-      buildFunctionEmailAddress('proj', 'Fn.Abc', 'appwrite.email'),
-    ).toBeNull()
-    expect(
-      buildFunctionEmailAddress('proj', 'fn_abc', 'appwrite.email'),
-    ).toBeNull()
-    expect(
-      buildFunctionEmailAddress(
-        'p'.repeat(36),
-        'f'.repeat(36),
-        'appwrite.email',
-      ),
-    ).toBeNull()
-  })
-
-  test('returns null when any part is missing', () => {
-    expect(buildFunctionEmailAddress('p', 'f', undefined)).toBeNull()
-    expect(buildFunctionEmailAddress('p', '', 'appwrite.email')).toBeNull()
-    expect(buildFunctionEmailAddress(null, 'f', 'appwrite.email')).toBeNull()
+describe('functionEmailAddress', () => {
+  test('shows the domain with the contact local part', () => {
+    expect(functionEmailAddress('orders-x7k2ab.appwrite.email')).toBe(
+      'contact@orders-x7k2ab.appwrite.email',
+    )
   })
 })
 
