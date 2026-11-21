@@ -22,7 +22,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Storage\Device;
 
 class Delete extends Action
 {
@@ -68,7 +67,6 @@ class Delete extends Action
             ->inject('dbForProject')
             ->inject('publisherForDeletes')
             ->inject('queueForEvents')
-            ->inject('deviceForSites')
             ->inject('deployments')
             ->inject('project')
             ->inject('dbForPlatform')
@@ -85,7 +83,6 @@ class Delete extends Action
         Database $dbForProject,
         DeletePublisher $publisherForDeletes,
         Event $queueForEvents,
-        Device $deviceForSites,
         Deployments $deployments,
         Document $project,
         Database $dbForPlatform,
@@ -140,12 +137,6 @@ class Delete extends Action
 
         if (!$snapshot->isEmpty()) {
             $deployment = $snapshot;
-        }
-
-        if (!empty($deployment->getAttribute('sourcePath', ''))) {
-            if (!($deviceForSites->delete($deployment->getAttribute('sourcePath', '')))) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from storage');
-            }
         }
 
         // A build still running would write its output after the deletes worker has cleared it.
