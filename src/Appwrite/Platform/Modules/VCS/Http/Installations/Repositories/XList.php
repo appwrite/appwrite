@@ -9,54 +9,19 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\VcsRepositories;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Detection;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
-use Swoole\Coroutine\WaitGroup;
 use Utopia\Config\Config;
-use Utopia\Config\Exception\Parse;
-use Utopia\Config\Parser\Dotenv as ConfigDotenv;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Detector\Detection\Framework\Analog;
-use Utopia\Detector\Detection\Framework\Angular;
-use Utopia\Detector\Detection\Framework\Astro;
-use Utopia\Detector\Detection\Framework\Flutter;
-use Utopia\Detector\Detection\Framework\Lynx;
-use Utopia\Detector\Detection\Framework\NextJs;
-use Utopia\Detector\Detection\Framework\Nuxt;
-use Utopia\Detector\Detection\Framework\React;
-use Utopia\Detector\Detection\Framework\ReactNative;
-use Utopia\Detector\Detection\Framework\Remix;
-use Utopia\Detector\Detection\Framework\Svelte;
-use Utopia\Detector\Detection\Framework\SvelteKit;
-use Utopia\Detector\Detection\Framework\TanStackStart;
-use Utopia\Detector\Detection\Framework\Vue;
-use Utopia\Detector\Detection\Packager\NPM;
-use Utopia\Detector\Detection\Packager\PNPM;
-use Utopia\Detector\Detection\Packager\Yarn;
-use Utopia\Detector\Detection\Runtime\Bun;
-use Utopia\Detector\Detection\Runtime\CPP;
-use Utopia\Detector\Detection\Runtime\Dart;
-use Utopia\Detector\Detection\Runtime\Deno;
-use Utopia\Detector\Detection\Runtime\Dotnet;
-use Utopia\Detector\Detection\Runtime\Java;
-use Utopia\Detector\Detection\Runtime\Node;
-use Utopia\Detector\Detection\Runtime\PHP;
-use Utopia\Detector\Detection\Runtime\Python;
-use Utopia\Detector\Detection\Runtime\Ruby;
-use Utopia\Detector\Detection\Runtime\Swift;
-use Utopia\Detector\Detector\Framework;
-use Utopia\Detector\Detector\Packager;
-use Utopia\Detector\Detector\Runtime;
-use Utopia\Detector\Detector\Strategy;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Query\Method as QueryMethod;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Exception\FileNotFound;
 
 use function Swoole\Coroutine\batch;
 
@@ -125,11 +90,7 @@ class XList extends Action
 
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
-        if ($installation->isEmpty()) {
-            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
-        }
-
-        if ($installation->getAttribute('projectInternalId') !== $project->getSequence()) {
+        if ($installation->isEmpty() || $installation->getAttribute('projectInternalId') !== $project->getSequence()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
@@ -173,50 +134,11 @@ class XList extends Action
                 $files = $vcs->listRepositoryContents($repo['organization'], $repo['name'], '');
                 $files = \array_column($files, 'name');
 
-                $detector = new Packager();
-                foreach ($files as $file) {
-                    $detector->addInput($file);
-                }
-                $detector
-                    ->addOption(new Yarn())
-                    ->addOption(new PNPM())
-                    ->addOption(new NPM());
-                $detection = $detector->detect();
-
-                $packager = !\is_null($detection) ? $detection->getName() : 'npm';
+                $detection = new Detection($vcs, $repo['organization'], $repo['name']);
+                $packager = $detection->packager($files);
 
                 if ($type === 'framework') {
-                    $packages = '';
-                    try {
-                        $contentResponse = $vcs->getRepositoryContent($repo['organization'], $repo['name'], 'package.json');
-                        $packages = $contentResponse['content'] ?? '';
-                    } catch (FileNotFound $e) {
-                        // Continue detection without package.json
-                    }
-
-                    $frameworkDetector = new Framework($packager);
-                    $frameworkDetector->addInput($packages, Framework::INPUT_PACKAGES);
-                    foreach ($files as $file) {
-                        $frameworkDetector->addInput($file, Framework::INPUT_FILE);
-                    }
-
-                    $frameworkDetector
-                        ->addOption(new Analog())
-                        ->addOption(new Angular())
-                        ->addOption(new Astro())
-                        ->addOption(new Flutter())
-                        ->addOption(new Lynx())
-                        ->addOption(new NextJs())
-                        ->addOption(new Nuxt())
-                        ->addOption(new React())
-                        ->addOption(new ReactNative())
-                        ->addOption(new Remix())
-                        ->addOption(new Svelte())
-                        ->addOption(new SvelteKit())
-                        ->addOption(new TanStackStart())
-                        ->addOption(new Vue());
-
-                    $detectedFramework = $frameworkDetector->detect();
+                    $detectedFramework = $detection->framework($files, $packager);
 
                     if (!\is_null($detectedFramework)) {
                         $framework = $detectedFramework->getName();
@@ -232,43 +154,7 @@ class XList extends Action
                 } else {
                     $languages = $vcs->listRepositoryLanguages($repo['organization'], $repo['name']);
 
-                    $strategies = [
-                        new Strategy(Strategy::FILEMATCH),
-                        new Strategy(Strategy::LANGUAGES),
-                        new Strategy(Strategy::EXTENSION),
-                    ];
-
-                    foreach ($strategies as $strategy) {
-                        $detector = new Runtime($strategy, $packager);
-                        if ($strategy->getValue() === Strategy::LANGUAGES) {
-                            foreach ($languages as $language) {
-                                $detector->addInput($language);
-                            }
-                        } else {
-                            foreach ($files as $file) {
-                                $detector->addInput($file);
-                            }
-                        }
-                        $detector
-                            ->addOption(new Node())
-                            ->addOption(new Bun())
-                            ->addOption(new Deno())
-                            ->addOption(new PHP())
-                            ->addOption(new Python())
-                            ->addOption(new Dart())
-                            ->addOption(new Swift())
-                            ->addOption(new Ruby())
-                            ->addOption(new Java())
-                            ->addOption(new CPP())
-                            ->addOption(new Dotnet());
-
-                        $runtime = $detector->detect();
-
-                        if (!\is_null($runtime)) {
-                            $runtime = $runtime->getName();
-                            break;
-                        }
-                    }
+                    $runtime = $detection->runtime($files, $languages, $packager)?->getName();
 
                     if (!empty($runtime)) {
                         $runtimes = Config::getParam('runtimes');
@@ -283,43 +169,7 @@ class XList extends Action
                     }
                 }
 
-                $wg = new WaitGroup();
-                $envs = [];
-                foreach ($files as $file) {
-                    if (!(\str_starts_with($file, '.env'))) {
-                        continue;
-                    }
-
-                    $wg->add();
-                    go(function () use ($vcs, $repo, $file, $wg, &$envs) {
-                        try {
-                            $contentResponse = $vcs->getRepositoryContent($repo['organization'], $repo['name'], $file);
-                            $envFile = $contentResponse['content'] ?? '';
-
-                            $configAdapter = new ConfigDotenv();
-                            try {
-                                $envObject = $configAdapter->parse($envFile);
-                                foreach ($envObject as $envName => $envValue) {
-                                    // The parser maps a literal null to null; suggest it as the text the file holds
-                                    $envs[$envName] = $envValue ?? 'null';
-                                }
-                            } catch (Parse) {
-                                // Silence error, so rest of endpoint can return
-                            }
-                        } finally {
-                            $wg->done();
-                        }
-                    });
-                }
-                $wg->wait();
-
-                $repo['variables'] = [];
-                foreach ($envs as $key => $value) {
-                    $repo['variables'][] = [
-                        'name' => $key,
-                        'value' => $value,
-                    ];
-                }
+                $repo['variables'] = $detection->variables($files);
 
                 return $repo;
             };
