@@ -9,7 +9,12 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
+use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Id;
+use Utopia\Database\Query;
 use Utopia\System\System;
 
 final class UsersCustomServerTest extends Scope
@@ -363,5 +368,199 @@ final class UsersCustomServerTest extends Scope
             ]);
             $this->assertSame(401, $account['headers']['status-code']);
         }
+    }
+
+    public function testListUserSessionsQueries(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        $createUser = function () use ($headers): string {
+            $user = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+                'userId' => Id::unique(),
+                'email' => 'list-sessions-' . Id::unique() . '@appwrite.io',
+                'password' => 'password',
+            ]);
+            $this->assertSame(201, $user['headers']['status-code']);
+
+            return $user['body']['$id'];
+        };
+        $createSession = function (string $userId) use ($headers): string {
+            $session = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/sessions', $headers);
+            $this->assertSame(201, $session['headers']['status-code']);
+
+            return $session['body']['$id'];
+        };
+
+        // One user with three sessions, and a second user to check isolation
+        $userId = $createUser();
+        $otherId = $createUser();
+        $ids = [$createSession($userId), $createSession($userId), $createSession($userId)];
+        $otherSessionId = $createSession($otherId);
+
+        $list = fn (string $id, array $queries) => $this->client->call(Client::METHOD_GET, '/users/' . $id . '/sessions', $headers, [
+            'queries' => $queries,
+        ]);
+
+        /**
+         * Test for SUCCESS
+         */
+        // Without queries the response is unchanged: every active session, none marked current
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/sessions', $headers);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(3, $response['body']['total']);
+        $this->assertCount(3, $response['body']['sessions']);
+        $this->assertSame([false, false, false], \array_column($response['body']['sessions'], 'current'));
+
+        // Limit and order: total is not capped by the page size
+        $response = $list($userId, [Query::orderDesc('$createdAt')->toString(), Query::limit(1)->toString()]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame([$ids[2]], \array_column($response['body']['sessions'], '$id'));
+        $this->assertSame(3, $response['body']['total']);
+
+        // Offset
+        $response = $list($userId, [Query::orderAsc('$createdAt')->toString(), Query::offset(1)->toString(), Query::limit(1)->toString()]);
+        $this->assertSame([$ids[1]], \array_column($response['body']['sessions'], '$id'));
+
+        // Cursor
+        $response = $list($userId, [Query::orderAsc('$createdAt')->toString(), Query::cursorAfter(new Document(['$id' => $ids[0]]))->toString(), Query::limit(1)->toString()]);
+        $this->assertSame([$ids[1]], \array_column($response['body']['sessions'], '$id'));
+
+        // Filters: total follows the filter, not the page
+        $response = $list($userId, [Query::equal('$id', [$ids[2]])->toString()]);
+        $this->assertSame([$ids[2]], \array_column($response['body']['sessions'], '$id'));
+        $this->assertSame(1, $response['body']['total']);
+
+        $response = $list($userId, [Query::equal('provider', ['github'])->toString()]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['total']);
+        $this->assertCount(0, $response['body']['sessions']);
+
+        // Filtering on expire is allowed
+        $response = $list($userId, [Query::greaterThan('expire', DateTime::now())->toString()]);
+        $this->assertSame(3, $response['body']['total']);
+
+        $response = $list($userId, [Query::lessThan('expire', DateTime::now())->toString()]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['total']);
+
+        // Another user's session never shows up, even when asked for by id
+        $response = $list($userId, [Query::equal('$id', [$otherSessionId])->toString()]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['total']);
+        $this->assertCount(0, $response['body']['sessions']);
+
+        // total=false skips the count but still returns the sessions
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/sessions', $headers, ['total' => false]);
+        $this->assertSame(0, $response['body']['total']);
+        $this->assertCount(3, $response['body']['sessions']);
+
+        /**
+         * Test for FAILURE
+         */
+        // Attributes that are not allowed cannot be queried
+        $response = $list($userId, [Query::equal('secret', ['anything'])->toString()]);
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_query_invalid', $response['body']['type']);
+
+        $response = $list($userId, [Query::equal('userInternalId', ['1'])->toString()]);
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_query_invalid', $response['body']['type']);
+
+        $response = $list($userId, ['not-a-query']);
+        $this->assertSame(400, $response['headers']['status-code']);
+
+        // A cursor must be one of this user's own sessions
+        $response = $list($userId, [Query::cursorAfter(new Document(['$id' => $otherSessionId]))->toString()]);
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_cursor_not_found', $response['body']['type']);
+
+        $response = $list($userId, [Query::cursorAfter(new Document(['$id' => 'nonexistent-session']))->toString()]);
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_cursor_not_found', $response['body']['type']);
+
+        // The user must exist
+        $response = $list('nonexistent-user', []);
+        $this->assertSame(404, $response['headers']['status-code']);
+        $this->assertSame('user_not_found', $response['body']['type']);
+    }
+
+    public function testListUserSessionsExcludesExpired(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => Id::unique(),
+            'email' => 'list-sessions-' . Id::unique() . '@appwrite.io',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        // One active session, and one that expired in the past
+        $active = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/sessions', $headers);
+        $this->assertSame(201, $active['headers']['status-code']);
+        $expired = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/sessions', $headers);
+        $this->assertSame(201, $expired['headers']['status-code']);
+        $this->expireSession($projectId, $expired['body']['$id']);
+
+        $list = fn (array $queries) => $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/sessions', $headers, [
+            'queries' => $queries,
+        ]);
+
+        /**
+         * Test for SUCCESS
+         */
+        // Expired sessions are hidden by default, and total does not count them
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/sessions', $headers);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(1, $response['body']['total']);
+        $this->assertSame([$active['body']['$id']], \array_column($response['body']['sessions'], '$id'));
+
+        // Ordering by expire does not bring them back
+        $response = $list([Query::orderAsc('expire')->toString()]);
+        $this->assertSame(1, $response['body']['total']);
+        $this->assertSame([$active['body']['$id']], \array_column($response['body']['sessions'], '$id'));
+
+        // Filtering on expire does
+        $response = $list([Query::lessThan('expire', DateTime::now())->toString()]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(1, $response['body']['total']);
+        $this->assertSame([$expired['body']['$id']], \array_column($response['body']['sessions'], '$id'));
+
+        // Also when the filter on expire is nested inside or()
+        $response = $list([Query::or([
+            Query::lessThan('expire', DateTime::now()),
+            Query::greaterThan('expire', DateTime::now()),
+        ])->toString()]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(2, $response['body']['total']);
+    }
+
+    /**
+     * Moves a session's expiry into the past, so it is expired without waiting for it.
+     */
+    protected function expireSession(string $projectId, string $sessionId): void
+    {
+        $stdout = '';
+        $stderr = '';
+        $command = (new Command('docker'))
+            ->argument('exec')
+            ->argument('appwrite')
+            ->argument('task-time-travel')
+            ->argument('--projectId=' . $projectId)
+            ->argument('--resourceType=session')
+            ->argument('--resourceId=' . $sessionId)
+            ->argument('--expire=2020-01-01T00:00:00Z');
+        $code = Console::execute($command, '', $stdout, $stderr);
+        $this->assertSame(0, $code, "Time-travel command failed with code $code: $stderr ($stdout)");
+        $this->assertStringContainsString('Time-travel successful', $stdout . $stderr);
     }
 }
