@@ -5,6 +5,7 @@ namespace Appwrite\Database;
 use Appwrite\Utopia\Database\Documents\Project;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Hook\UniqueId;
+use Appwrite\Utopia\Database\Hook\UnsetColumnPermissions;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter;
@@ -243,6 +244,7 @@ class Factory implements Provisioner
     private function applyHooks(Database $database, bool $relationships = false): Database
     {
         $database->addHook(new Permissions());
+        $database->addHook(new UnsetColumnPermissions());
 
         if ($relationships) {
             $database->addHook(new Relationships());
