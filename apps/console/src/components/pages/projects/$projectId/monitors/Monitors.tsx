@@ -515,25 +515,26 @@ export function Monitors({
                         </TooltipContent>
                       </Tooltip>
                     )}
-                    {monitor.notify.length === 0 && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span
-                            tabIndex={0}
-                            aria-label={t('Notifies nobody')}
-                            onClick={(event) => event.stopPropagation()}
-                            className="hidden shrink-0 text-muted-foreground/70 lg:inline-flex"
-                          >
-                            <BellOff className="h-3.5 w-3.5" />
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {t(
-                            'Notifies nobody. Its alerts only fire their events.',
-                          )}
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
+                    {monitor.notify.length === 0 &&
+                      !monitor.escalationPolicyId && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span
+                              tabIndex={0}
+                              aria-label={t('Notifies nobody')}
+                              onClick={(event) => event.stopPropagation()}
+                              className="hidden shrink-0 text-muted-foreground/70 lg:inline-flex"
+                            >
+                              <BellOff className="h-3.5 w-3.5" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {t(
+                              'Notifies nobody. Its alerts only fire their events.',
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                     <MonitorState
                       projectId={projectId}
                       monitor={monitor}

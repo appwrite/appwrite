@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import * as RadioGroupPrimitive from '@radix-ui/react-radio-group'
 import {
   BellRing,
@@ -28,7 +29,11 @@ import {
   dedicatedDatabasesQueryOptions,
   functionsQueryOptions,
   sitesQueryOptions,
+  useEscalationMembers,
+  useEscalationPolicies,
+  useProject,
 } from '@/lib/react-query/hooks'
+import { policySummary } from '@/lib/alerts/escalation'
 import {
   buildRules,
   type AlertComparator,
@@ -70,8 +75,13 @@ export type RuleForm = {
   window: number
   cooldown: number
   notify: string[]
+  /** Notify the roles once, or step by step with an escalation policy. */
+  recipients: Recipients
+  escalationPolicyId: string
   severity: MonitorSeverity
 }
+
+export type Recipients = 'roles' | 'policy'
 
 const RESOURCE_PICKER_LIMIT = 100
 
@@ -87,6 +97,8 @@ export function emptyRuleForm(): RuleForm {
     window: 3600,
     cooldown: 3600,
     notify: ['owner'],
+    recipients: 'roles',
+    escalationPolicyId: '',
     severity: 'warning',
   }
 }
@@ -109,6 +121,8 @@ export function ruleFormFromMonitor(rule: ParsedMonitor): RuleForm {
     window: rule.window,
     cooldown: rule.cooldown,
     notify: rule.notify,
+    recipients: rule.escalationPolicyId ? 'policy' : 'roles',
+    escalationPolicyId: rule.escalationPolicyId ?? '',
     severity: rule.severity,
   }
 }
@@ -234,6 +248,8 @@ export function monitorInputFromForm(
     window: metricDefinition(form.metric).counter ? form.window : undefined,
     cooldown: form.cooldown,
     notify: form.notify,
+    escalationPolicyId:
+      form.recipients === 'policy' ? form.escalationPolicyId : '',
     severity: form.severity,
   }
 }
@@ -248,6 +264,9 @@ export function ruleFormError(
   }
   if (!Number.isFinite(form.threshold) || form.threshold < 0) {
     return t('Enter a threshold of 0 or more.')
+  }
+  if (form.recipients === 'policy' && !form.escalationPolicyId) {
+    return t('Select an escalation policy.')
   }
   return undefined
 }
@@ -417,6 +436,7 @@ export function RuleFields({
 }: RuleFieldsProps) {
   const t = useT()
   const { isCloud } = useConsoleProfile()
+  const { project } = useProject(projectId)
   const definition = metricDefinition(form.metric)
   // Dedicated databases and analytics exist only on the cloud profile.
   const metrics = METRIC_NAMES.filter(
@@ -653,6 +673,11 @@ export function RuleFields({
       <NotifyFields
         notify={form.notify}
         severity={form.severity}
+        escalation={{
+          organizationId: project?.teamId,
+          recipients: form.recipients,
+          escalationPolicyId: form.escalationPolicyId,
+        }}
         onChange={onChange}
         disabled={disabled}
       />
@@ -672,72 +697,134 @@ export function RuleFields({
 export function NotifyFields({
   notify,
   severity,
+  escalation,
   onChange,
   disabled,
 }: {
   notify: string[]
   severity: MonitorSeverity
-  onChange: (changes: { notify?: string[]; severity?: MonitorSeverity }) => void
+  /** Offers an escalation policy instead of the roles. */
+  escalation?: {
+    organizationId: string | undefined
+    recipients: Recipients
+    escalationPolicyId: string
+  }
+  onChange: (changes: {
+    notify?: string[]
+    severity?: MonitorSeverity
+    recipients?: Recipients
+    escalationPolicyId?: string
+  }) => void
   disabled?: boolean
 }) {
   const t = useT()
+  const policy = escalation?.recipients === 'policy'
   return (
     <section>
       <SectionHeading
         title={t('Notify')}
-        description={t(
-          'Members with these roles get an email and a console notification when the monitor fires and again when it resolves.',
-        )}
+        description={
+          policy
+            ? t(
+                'Each step of the policy is notified in turn until someone acknowledges the alert.',
+              )
+            : t(
+                'Members with these roles get an email and a console notification when the monitor fires and again when it resolves.',
+              )
+        }
       />
-      <div className="flex flex-wrap gap-2">
-        {NOTIFY_ROLES.map((role) => {
-          const selected = notify.includes(role)
-          return (
-            <button
-              key={role}
-              type="button"
-              role="checkbox"
-              aria-checked={selected}
-              disabled={disabled}
-              onClick={() =>
-                onChange({
-                  notify: selected
-                    ? notify.filter((entry) => entry !== role)
-                    : [...notify, role],
-                })
-              }
+      {escalation && (
+        <RadioGroupPrimitive.Root
+          aria-label={t('Recipients')}
+          value={escalation.recipients}
+          onValueChange={(next) => onChange({ recipients: next as Recipients })}
+          disabled={disabled}
+          orientation="horizontal"
+          className="mb-3 inline-flex rounded-md border border-border p-0.5"
+        >
+          {(
+            [
+              { value: 'roles', label: 'Notify roles once' },
+              { value: 'policy', label: 'Escalation policy' },
+            ] as const
+          ).map((option) => (
+            <RadioGroupPrimitive.Item
+              key={option.value}
+              value={option.value}
               className={cn(
-                'inline-flex h-8 items-center gap-2 rounded-md border px-3 text-[13px] transition-colors disabled:cursor-not-allowed disabled:opacity-60',
-                selected
-                  ? 'border-foreground text-foreground ring-1 ring-inset ring-foreground'
-                  : 'border-border text-muted-foreground hover:bg-accent/40',
+                'h-7 rounded px-3 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60',
+                escalation.recipients === option.value
+                  ? 'bg-accent font-medium text-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
               )}
             >
-              <span
-                aria-hidden
-                className={cn(
-                  'flex h-3.5 w-3.5 items-center justify-center rounded-[4px] border-[1.5px]',
-                  selected
-                    ? 'border-foreground bg-foreground text-background'
-                    : 'border-muted-foreground/60',
+              {t(option.label)}
+            </RadioGroupPrimitive.Item>
+          ))}
+        </RadioGroupPrimitive.Root>
+      )}
+      {escalation && policy ? (
+        <EscalationPolicyPicker
+          organizationId={escalation.organizationId}
+          value={escalation.escalationPolicyId}
+          onChange={(escalationPolicyId) => onChange({ escalationPolicyId })}
+          disabled={disabled}
+        />
+      ) : (
+        <>
+          <div className="flex flex-wrap gap-2">
+            {NOTIFY_ROLES.map((role) => {
+              const selected = notify.includes(role)
+              return (
+                <button
+                  key={role}
+                  type="button"
+                  role="checkbox"
+                  aria-checked={selected}
+                  disabled={disabled}
+                  onClick={() =>
+                    onChange({
+                      notify: selected
+                        ? notify.filter((entry) => entry !== role)
+                        : [...notify, role],
+                    })
+                  }
+                  className={cn(
+                    'inline-flex h-8 items-center gap-2 rounded-md border px-3 text-[13px] transition-colors disabled:cursor-not-allowed disabled:opacity-60',
+                    selected
+                      ? 'border-foreground text-foreground ring-1 ring-inset ring-foreground'
+                      : 'border-border text-muted-foreground hover:bg-accent/40',
+                  )}
+                >
+                  <span
+                    aria-hidden
+                    className={cn(
+                      'flex h-3.5 w-3.5 items-center justify-center rounded-[4px] border-[1.5px]',
+                      selected
+                        ? 'border-foreground bg-foreground text-background'
+                        : 'border-muted-foreground/60',
+                    )}
+                  >
+                    {selected && (
+                      <Check className="h-2.5 w-2.5" strokeWidth={3} />
+                    )}
+                  </span>
+                  {t(roleLabel(role))}
+                </button>
+              )
+            })}
+          </div>
+          <p className="mt-2 text-[12px] text-muted-foreground">
+            {notify.length === 0
+              ? t(
+                  'Nobody is emailed or notified. The alerts still fire their events for project webhooks and functions.',
+                )
+              : t(
+                  'Project webhooks and functions can also listen to its alert events.',
                 )}
-              >
-                {selected && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
-              </span>
-              {t(roleLabel(role))}
-            </button>
-          )
-        })}
-      </div>
-      <p className="mt-2 text-[12px] text-muted-foreground">
-        {notify.length === 0
-          ? t(
-              'Nobody is emailed or notified. The alerts still fire their events for project webhooks and functions.',
-            )
-          : t(
-              'Project webhooks and functions can also listen to its alert events.',
-            )}
-      </p>
+          </p>
+        </>
+      )}
       <div className="mt-4">
         <Label id="alert-severity" className="text-[13px] font-semibold">
           {t('Severity')}
@@ -774,6 +861,100 @@ export function NotifyFields({
         </p>
       </div>
     </section>
+  )
+}
+
+/** One of the organization's escalation policies, with what its steps do. */
+function EscalationPolicyPicker({
+  organizationId,
+  value,
+  onChange,
+  disabled,
+}: {
+  organizationId: string | undefined
+  value: string
+  onChange: (escalationPolicyId: string) => void
+  disabled?: boolean
+}) {
+  const t = useT()
+  const { policies, isLoading, error, refetch } =
+    useEscalationPolicies(organizationId)
+  const { memberName } = useEscalationMembers(organizationId)
+  const selected = policies.find((policy) => policy.$id === value)
+  const manage = organizationId ? (
+    <Link
+      to="/organizations/$orgId/settings/escalation-policies"
+      params={{ orgId: organizationId }}
+      className="text-[12px] text-foreground underline underline-offset-2"
+    >
+      {policies.length === 0 && !isLoading
+        ? t('Create a policy')
+        : t('Manage policies')}
+    </Link>
+  ) : null
+
+  if (error) {
+    return (
+      <div className="flex items-center gap-2 text-[13px] text-destructive">
+        <span>{t('Could not load escalation policies.')}</span>
+        <button
+          type="button"
+          className="underline underline-offset-2"
+          onClick={() => void refetch()}
+        >
+          {t('Retry')}
+        </button>
+      </div>
+    )
+  }
+
+  if (!isLoading && policies.length === 0) {
+    return (
+      <p className="text-[13px] text-muted-foreground">
+        {t('Your organization has no escalation policies yet.')} {manage}
+      </p>
+    )
+  }
+
+  return (
+    <div className="space-y-2">
+      <Select
+        value={value}
+        onValueChange={(next) => {
+          if (next) onChange(next)
+        }}
+        disabled={disabled}
+      >
+        <SelectTrigger className="w-full" aria-label={t('Escalation policy')}>
+          <SelectValue
+            placeholder={isLoading ? t('Loading...') : t('Select a policy')}
+          />
+        </SelectTrigger>
+        <SelectContent>
+          {policies.map((policy) => (
+            <SelectItem key={policy.$id} value={policy.$id}>
+              {policy.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <p className="text-[12px] text-muted-foreground">
+        {selected && (
+          <>
+            {policySummary(
+              selected.steps,
+              memberName,
+              (role) => t(roleLabel(role)),
+              t,
+            )}
+            {selected.repeat > 0 &&
+              ` · ${t('repeats {count}×').replace('{count}', String(selected.repeat))}`}
+            {' · '}
+          </>
+        )}
+        {manage}
+      </p>
+    </div>
   )
 }
 

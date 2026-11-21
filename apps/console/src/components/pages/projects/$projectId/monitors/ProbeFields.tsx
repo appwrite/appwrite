@@ -41,6 +41,7 @@ import {
   probeTarget,
 } from '@/lib/alerts/probes'
 import { useT } from '@/lib/i18n/translate'
+import { useProject } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
 import {
   NotifyFields,
@@ -48,6 +49,7 @@ import {
   SectionHeading,
   Word,
   durationOptions,
+  type Recipients,
 } from './RuleFields'
 
 /** Probe monitor form state; headers and status codes are kept as typed. */
@@ -73,6 +75,8 @@ export type ProbeForm = {
   timeout: number
   cooldown: number
   notify: string[]
+  recipients: Recipients
+  escalationPolicyId: string
   severity: MonitorSeverity
 }
 
@@ -100,6 +104,8 @@ export function emptyProbeForm(type: ProbeType): ProbeForm {
     timeout: 10,
     cooldown: 3600,
     notify: ['owner'],
+    recipients: 'roles',
+    escalationPolicyId: '',
     severity: 'warning',
   }
 }
@@ -127,6 +133,8 @@ export function probeFormFromMonitor(
     timeout: monitor.timeout,
     cooldown: monitor.cooldown,
     notify: monitor.notify,
+    recipients: monitor.escalationPolicyId ? 'policy' : 'roles',
+    escalationPolicyId: monitor.escalationPolicyId ?? '',
     severity: monitor.severity,
   }
 }
@@ -149,6 +157,8 @@ export function probeInputFromForm(form: ProbeForm): ProbeMonitorInput {
     timeout: form.timeout,
     cooldown: form.cooldown,
     notify: form.notify,
+    escalationPolicyId:
+      form.recipients === 'policy' ? form.escalationPolicyId : '',
     severity: form.severity,
   }
   switch (form.type) {
@@ -227,6 +237,9 @@ export function probeFormError(
   }
   if (form.timeout > form.interval) {
     return t('The timeout must not be longer than the interval.')
+  }
+  if (form.recipients === 'policy' && !form.escalationPolicyId) {
+    return t('Select an escalation policy.')
   }
   return undefined
 }
@@ -345,8 +358,14 @@ function HostFields({ form, onChange, disabled }: ProbeFieldsProps) {
   )
 }
 
-export function ProbeFields({ form, onChange, disabled }: ProbeFieldsProps) {
+export function ProbeFields({
+  projectId,
+  form,
+  onChange,
+  disabled,
+}: ProbeFieldsProps & { projectId: string }) {
   const t = useT()
+  const { project } = useProject(projectId)
   const definition = PROBE_TYPES.find((entry) => entry.value === form.type)
 
   return (
@@ -630,6 +649,11 @@ export function ProbeFields({ form, onChange, disabled }: ProbeFieldsProps) {
       <NotifyFields
         notify={form.notify}
         severity={form.severity}
+        escalation={{
+          organizationId: project?.teamId,
+          recipients: form.recipients,
+          escalationPolicyId: form.escalationPolicyId,
+        }}
         onChange={onChange}
         disabled={disabled}
       />

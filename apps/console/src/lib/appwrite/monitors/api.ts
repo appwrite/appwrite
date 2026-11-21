@@ -209,6 +209,22 @@ export type Alert = {
    * How many times the alert was announced as firing: once when it fired, and again after each cooldown while it kept firing.
    */
   notifications: number
+  /**
+   * ID of the escalation policy notifying the alert's steps in turn. Empty when the monitor notifies roles instead.
+   */
+  escalationPolicyId: string
+  /**
+   * Index of the next escalation step to notify. Equals the policy's number of steps once every step has gone out.
+   */
+  escalationStep: number
+  /**
+   * How many times the escalation has started over from the first step.
+   */
+  escalationRound: number
+  /**
+   * Date the next escalation step goes out, in ISO 8601 format. Null once acknowledged, resolved or finished.
+   */
+  escalatesAt?: string | null
 }
 
 /**
@@ -357,6 +373,10 @@ export type Monitor = {
    * Organization roles whose confirmed members get an email and a console notification when the monitor fires and resolves. Empty when the alert events are the only delivery.
    */
   notify: string[]
+  /**
+   * ID of the organization escalation policy that notifies the monitor's alerts step by step. Empty when `notify` roles are notified instead.
+   */
+  escalationPolicyId: string
   /**
    * How urgent the monitor's alerts are: `info`, `warning`, `error` or `critical`. Critical alerts may be delivered with higher urgency by the notification channels that support it.
    */
