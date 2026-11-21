@@ -1290,20 +1290,20 @@ export const jaProductPagesDictionary: Record<string, string> = {
   'Upload a WebVTT or SubRip file to Storage and attach it to a video with a name and an ISO 639-2 language code. Uploads are converted to WebVTT and segmented for streaming. Subtitle tracks embedded in the source are extracted automatically during the first encoding job, and you can retag their language at any time.':
     'WebVTT または SubRip ファイルをストレージにアップロードし、名前と ISO 639-2 の言語コードを付けて動画に追加します。アップロードしたファイルは WebVTT に変換され、ストリーミング用にセグメント化されます。ソースに埋め込まれた字幕トラックは最初のエンコードジョブで自動的に抽出され、言語はいつでも付け直せます。',
   'What happens when I delete a video?': '動画を削除するとどうなりますか？',
-  'Deleting a video removes its renditions, subtitles, previews, and transcoded segments. Deleting a profile keeps the renditions that were already encoded with it.':
-    '動画を削除すると、そのレンディション、字幕、プレビュー、トランスコード済みセグメントが削除されます。プロファイルを削除しても、そのプロファイルでエンコード済みのレンディションは残ります。',
+  'Deleting a video removes its renditions, captions, timeline thumbnails, and transcoded segments. Deleting a profile keeps the renditions that were already encoded with it.':
+    '動画を削除すると、そのレンディション、字幕、タイムラインのサムネイル、トランスコード済みセグメントが削除されます。プロファイルを削除しても、そのプロファイルでエンコード済みのレンディションは残ります。',
   'How do you reach a first frame under 100 ms?': '最初のフレームを 100 ms 未満にするには？',
   'The pipeline is designed for that startup budget. Players load a small master manifest, pick a rendition from the ladder that the connection can fetch immediately, and request a short first segment instead of the source file. Use the inspector to watch time to first frame on a real session.':
     'パイプラインはその起動予算向けに設計されています。プレーヤーは小さなマスターマニフェストを読み込み、回線がすぐ取れるレンディションをラダーから選び、ソースファイルではなく短い最初のセグメントを要求します。実際のセッションの最初のフレームまでの時間はインスペクターで確認できます。',
   'Who can manage videos in my organization?': '組織内で誰が動画を管理できますか？',
-  'Videos follows your organization roles. The videos.read and videos.write scopes control who can view and manage videos, profiles, renditions, and subtitles.':
-    '動画は組織のロールに従います。videos.read と videos.write のスコープで、動画、プロファイル、レンディション、字幕を閲覧・管理できるユーザーを制御します。',
+  'Videos follows your organization roles. The videos.read and videos.write scopes control who can view and manage videos, renditions, and captions. The project.videos.profiles.read and project.videos.profiles.write scopes cover encoding profiles.':
+    '動画は組織のロールに従います。videos.read と videos.write のスコープで、動画、レンディション、字幕を閲覧・管理できるユーザーを制御します。エンコードプロファイルは project.videos.profiles.read と project.videos.profiles.write のスコープで制御します。',
   'Start from any file in Storage': 'ストレージ内の任意のファイルから開始',
   'Create a video from a file that is already in a Storage bucket. The first encoding job probes codecs, resolution, frame rate, duration, and bitrate, so you never parse media metadata yourself.':
     'ストレージのバケットにあるファイルから動画を作成します。最初のエンコードジョブがコーデック、解像度、フレームレート、再生時間、ビットレートを解析するので、メディアのメタデータを自分でパースする必要はありません。',
   'Encode an adaptive bitrate ladder': 'アダプティブビットレートラダーをエンコード',
-  'Every new project starts with a default ladder of encoding profiles. Renditions encode in the background and report status and progress until they are ready to stream. Add your own profiles when you need a different resolution or bitrate.':
-    '新しいプロジェクトには、デフォルトのエンコードプロファイルのラダーが用意されています。レンディションはバックグラウンドでエンコードされ、ストリーミングの準備ができるまでステータスと進捗を報告します。別の解像度やビットレートが必要なときは独自のプロファイルを追加できます。',
+  'Start from resolution presets or define your own encoding profiles. Renditions encode in the background and report status and progress until they are ready to stream.':
+    '解像度のプリセットから始めるか、独自のエンコードプロファイルを定義します。レンディションはバックグラウンドでエンコードされ、ストリーミングの準備ができるまでステータスと進捗を報告します。',
   'HLS, DASH, and CMAF from one source': '1 つのソースから HLS、DASH、CMAF',
   'Package each rendition for the players you support. Every output has a master manifest that players follow to the right rendition for each viewer and connection.':
     'サポートするプレーヤーに合わせて各レンディションをパッケージします。各出力にはマスターマニフェストがあり、プレーヤーは視聴者と回線に合ったレンディションを選びます。',
@@ -1311,8 +1311,8 @@ export const jaProductPagesDictionary: Record<string, string> = {
   'Upload WebVTT or SubRip files from Storage, or use the tracks already embedded in the source. Tag each track with a language, choose a default, and players pick it up from the manifest.':
     'ストレージから WebVTT や SubRip ファイルをアップロードするか、ソースに埋め込まれたトラックをそのまま使えます。各トラックに言語を設定してデフォルトを選べば、プレーヤーはマニフェストから読み込みます。',
   'Scrubbing thumbnails on the timeline': 'タイムラインのシークサムネイル',
-  'Generate sprite sheets with a WebVTT index so viewers see a preview frame while they scrub. The same sprites give every video a poster image.':
-    'WebVTT インデックス付きのスプライトシートを生成し、視聴者がシーク中にプレビューフレームを見られるようにします。同じスプライトがすべての動画のポスター画像にもなります。',
+  'Generate sprite sheets with a WebVTT index so viewers see a preview frame while they scrub.':
+    'WebVTT インデックス付きのスプライトシートを生成し、視聴者がシーク中にプレビューフレームを見られるようにします。',
   'Play anywhere': 'どこでも再生',
   'Hand the master manifest URL to hls.js, dash.js, Shaka Player, AVPlayer, or ExoPlayer. Or copy an embed snippet from the Console and drop it into any page.':
     'マスターマニフェストの URL を hls.js、dash.js、Shaka Player、AVPlayer、ExoPlayer に渡すだけです。コンソールから埋め込みスニペットをコピーして、任意のページに貼り付けることもできます。',
@@ -1336,7 +1336,6 @@ export const jaProductPagesDictionary: Record<string, string> = {
   '3 outputs': '3 つの出力',
   'HLS, DASH, and CMAF': 'HLS、DASH、CMAF',
   Adaptive: 'アダプティブ',
-  'Default bitrate ladder': 'デフォルトのビットレートラダー',
   'Uploaded or extracted': 'アップロードまたは抽出',
   Timeline: 'タイムライン',
   'Scrubbing thumbnails': 'シークサムネイル',

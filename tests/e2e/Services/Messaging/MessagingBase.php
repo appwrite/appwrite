@@ -109,6 +109,19 @@ trait MessagingBase
                 'apiSecret' => 'my-apisecret',
                 'from' => '+123456789',
             ],
+            'bird-sms' => [
+                'providerId' => Id::unique(),
+                'name' => 'Bird1',
+                'apiKey' => 'my-apikey',
+                'from' => '+123456789',
+            ],
+            'bird-email' => [
+                'providerId' => Id::unique(),
+                'name' => 'BirdEmail1',
+                'apiKey' => 'my-apikey',
+                'fromName' => 'sender name',
+                'fromEmail' => 'sender-email@my-domain.com',
+            ],
             'fcm' => [
                 'providerId' => Id::unique(),
                 'name' => 'FCM1',
@@ -204,6 +217,14 @@ trait MessagingBase
                 'name' => 'Vonage2',
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
+            ],
+            'bird-sms' => [
+                'name' => 'Bird2',
+                'apiKey' => 'my-apikey',
+            ],
+            'bird-email' => [
+                'name' => 'BirdEmail2',
+                'apiKey' => 'my-apikey',
             ],
             'fcm' => [
                 'name' => 'FCM2',
@@ -822,6 +843,19 @@ trait MessagingBase
                 'apiSecret' => 'my-apisecret',
                 'from' => '+123456789',
             ],
+            'bird-sms' => [
+                'providerId' => Id::unique(),
+                'name' => 'Bird1',
+                'apiKey' => 'my-apikey',
+                'from' => '+123456789',
+            ],
+            'bird-email' => [
+                'providerId' => Id::unique(),
+                'name' => 'BirdEmail1',
+                'apiKey' => 'my-apikey',
+                'fromName' => 'sender name',
+                'fromEmail' => 'sender-email@my-domain.com',
+            ],
             'fcm' => [
                 'providerId' => Id::unique(),
                 'name' => 'FCM1',
@@ -1133,8 +1167,11 @@ trait MessagingBase
             'title' => 'Match update',
             'body' => 'India needs 12 off 6',
             'data' => ['matchId' => '42'],
+            // Carried through the worker to the push, so delivery fails if the worker drops or misplaces it.
+            'mutableContent' => true,
         ]);
         $this->assertEquals(201, $push['headers']['status-code']);
+        $this->assertTrue($push['body']['data']['mutableContent']);
         $pushMessageId = $push['body']['$id'];
 
         // Test for SUCCESS: the worker fans the message into the broker and marks it sent.
@@ -1264,6 +1301,14 @@ trait MessagingBase
                 'name' => 'Vonage2',
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
+            ],
+            'bird-sms' => [
+                'name' => 'Bird2',
+                'apiKey' => 'my-apikey',
+            ],
+            'bird-email' => [
+                'name' => 'BirdEmail2',
+                'apiKey' => 'my-apikey',
             ],
             'fcm' => [
                 'name' => 'FCM2',
@@ -1553,6 +1598,30 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Create new Bird provider with no credentials
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/bird-sms', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => Id::unique(),
+            'name' => 'BirdNoCreds',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertFalse($response['body']['enabled']);
+
+        // Enable Bird provider with no credentials
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/bird-sms/' . $response['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
     }
 
     public function testListProviders(): array
@@ -1702,6 +1771,110 @@ trait MessagingBase
 
         $deleteEnabledResponse = $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $enabledResponse['body']['$id'], $headers);
         $this->assertEquals(204, $deleteEnabledResponse['headers']['status-code']);
+    }
+
+    public function testBirdEmailProvider(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        // Create with an API key but no fromEmail, so the provider stays disabled.
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/bird-email', $headers, [
+            'providerId' => Id::unique(),
+            'name' => 'BirdEmail1',
+            'apiKey' => 'bk_eu1_my-apikey',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals('BirdEmail1', $response['body']['name']);
+        $this->assertEquals('bird', $response['body']['provider']);
+        $this->assertEquals('email', $response['body']['type']);
+        $this->assertEquals(false, $response['body']['enabled']);
+        $this->assertArrayNotHasKey('apiKey', $response['body']['credentials']);
+        $this->assertArrayHasKey('fromEmail', $response['body']['options']);
+
+        $providerId = $response['body']['$id'];
+
+        // Create enabled: the API key plus fromEmail present.
+        $enabledResponse = $this->client->call(Client::METHOD_POST, '/messaging/providers/bird-email', $headers, [
+            'providerId' => Id::unique(),
+            'name' => 'BirdEmail-enabled',
+            'apiKey' => 'bk_eu1_my-apikey',
+            'fromName' => 'Sender Name',
+            'fromEmail' => 'sender-email@my-domain.com',
+            'replyToEmail' => 'reply-to@my-domain.com',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(201, $enabledResponse['headers']['status-code']);
+        $this->assertEquals(true, $enabledResponse['body']['enabled']);
+        $this->assertEquals('Sender Name', $enabledResponse['body']['options']['fromName']);
+        $this->assertEquals('sender-email@my-domain.com', $enabledResponse['body']['options']['fromEmail']);
+        $this->assertEquals('reply-to@my-domain.com', $enabledResponse['body']['options']['replyToEmail']);
+
+        // Enabling while fromEmail is still empty must be rejected, not silently enabled.
+        $enableWithoutFromEmail = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/bird-email/' . $providerId, $headers, [
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(400, $enableWithoutFromEmail['headers']['status-code']);
+        $this->assertEquals('provider_missing_credentials', $enableWithoutFromEmail['body']['type']);
+
+        // Enable once fromEmail is supplied; the stored API key is kept.
+        $enableResponse = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/bird-email/' . $providerId, $headers, [
+            'name' => 'BirdEmail2',
+            'fromEmail' => 'sender-email@my-domain.com',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $enableResponse['headers']['status-code']);
+        $this->assertEquals('BirdEmail2', $enableResponse['body']['name']);
+        $this->assertEquals(true, $enableResponse['body']['enabled']);
+
+        // Sparse update: change only the sender name, the other options must be preserved.
+        $updateResponse = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/bird-email/' . $providerId, $headers, [
+            'fromName' => 'New Sender',
+        ]);
+
+        $this->assertEquals(200, $updateResponse['headers']['status-code']);
+        $this->assertEquals('New Sender', $updateResponse['body']['options']['fromName']);
+        $this->assertEquals('sender-email@my-domain.com', $updateResponse['body']['options']['fromEmail']);
+        $this->assertEquals(true, $updateResponse['body']['enabled']);
+
+        // Bird's SMS provider shares the provider name, so each route must refuse the other's providers.
+        $smsResponse = $this->client->call(Client::METHOD_POST, '/messaging/providers/bird-sms', $headers, [
+            'providerId' => Id::unique(),
+            'name' => 'BirdSms',
+            'apiKey' => 'bk_eu1_my-apikey',
+            'from' => '+123456789',
+        ]);
+
+        $this->assertEquals(201, $smsResponse['headers']['status-code']);
+        $this->assertEquals('bird', $smsResponse['body']['provider']);
+        $this->assertEquals('sms', $smsResponse['body']['type']);
+
+        $emailThroughSms = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/bird-sms/' . $providerId, $headers, [
+            'from' => '+123456789',
+        ]);
+
+        $this->assertEquals(400, $emailThroughSms['headers']['status-code']);
+        $this->assertEquals('provider_incorrect_type', $emailThroughSms['body']['type']);
+
+        $smsThroughEmail = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/bird-email/' . $smsResponse['body']['$id'], $headers, [
+            'fromEmail' => 'sender-email@my-domain.com',
+        ]);
+
+        $this->assertEquals(400, $smsThroughEmail['headers']['status-code']);
+        $this->assertEquals('provider_incorrect_type', $smsThroughEmail['body']['type']);
+
+        foreach ([$providerId, $enabledResponse['body']['$id'], $smsResponse['body']['$id']] as $id) {
+            $deleteResponse = $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $id, $headers);
+            $this->assertEquals(204, $deleteResponse['headers']['status-code']);
+        }
     }
 
     public function testCreateTopic(): void
@@ -2910,12 +3083,14 @@ trait MessagingBase
             'title' => 'New blog post',
             'body' => 'Check out the new blog post',
             'data' => $data,
+            'mutableContent' => true,
             'draft' => true,
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertEquals(MessageStatus::DRAFT, $response['body']['status']);
         $this->assertEquals($data, $response['body']['data']['data']);
+        $this->assertTrue($response['body']['data']['mutableContent']);
 
         $messageId = $response['body']['$id'];
         $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, [
@@ -2926,6 +3101,19 @@ trait MessagingBase
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals($data, $message['body']['data']['data']);
+        $this->assertTrue($message['body']['data']['mutableContent']);
+
+        $updated = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'mutableContent' => false,
+        ]);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertFalse($updated['body']['data']['mutableContent']);
+        $this->assertEquals($data, $updated['body']['data']['data']);
     }
 
     public function testCreateDraftEmailKeepsNullAttachments(): void
@@ -2989,6 +3177,7 @@ trait MessagingBase
             'scheduledAt' => null,
             'contentAvailable' => null,
             'critical' => null,
+            'mutableContent' => null,
             'priority' => null,
         ]);
         $this->assertSame(201, $response['headers']['status-code']);

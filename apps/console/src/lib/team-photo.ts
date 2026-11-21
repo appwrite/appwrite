@@ -1,7 +1,7 @@
 /**
  * Version counter for team photos. A React `<img>` whose `src` does not change
- * never re-requests it, so bumping the version after `teams.updatePhoto` or
- * `teams.deletePhoto` reloads every `TeamAvatar`.
+ * never re-requests it, so bumping the version after `avatars.updateTeamPhoto` or
+ * `avatars.deleteTeamPhoto` reloads every `TeamAvatar`.
  */
 const TEAM_PHOTO_VERSION_EVENT = 'console:team-photo-version'
 

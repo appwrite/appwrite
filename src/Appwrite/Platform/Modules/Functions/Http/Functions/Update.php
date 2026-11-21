@@ -334,12 +334,16 @@ class Update extends Base
             $live = false;
         }
 
-        // Enforce Cold Start if spec limits change.
+        // Enforce Cold Start if spec limits or logging change. The executor
+        // builds a runtime for its logging mode: only a logged runtime mounts
+        // the logs volume, and an unlogged one can run in a user namespace.
         if (!empty($function->getAttribute('deploymentId'))) {
             $specsChanged = false;
             if ($function->getAttribute('runtimeSpecification', '') !== $runtimeSpecification) {
                 $specsChanged = true;
             } elseif ($function->getAttribute('buildSpecification', '') !== $buildSpecification) {
+                $specsChanged = true;
+            } elseif ($function->getAttribute('logging', true) !== $logging) {
                 $specsChanged = true;
             }
 

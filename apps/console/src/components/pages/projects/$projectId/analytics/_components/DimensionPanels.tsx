@@ -167,6 +167,7 @@ export function PagesPanel({
       title={screens ? 'Screens' : 'Pages'}
       description={screens ? 'Most viewed screens' : 'Most visited paths'}
       tabs={screens ? SCREEN_TABS : PAGE_TABS}
+      mobile={screens}
       // Rank numbers come from the panel (and the modal's own rank column),
       // not renderLeading, so they're never drawn twice.
       ranked
@@ -192,7 +193,13 @@ const LOCATION_TABS: BreakdownTab[] = [
   { id: 'cities', label: 'Cities', dimension: AnalyticsDimension.City },
 ]
 
-export function LocationsPanel(props: PanelProps) {
+export function LocationsPanel({
+  type,
+  ...props
+}: PanelProps & {
+  type: AnalyticsPropertyType
+}) {
+  const mobile = type === AnalyticsPropertyType.Mobile
   // Same locale list Usage uses to print country names beside the flags.
   const { lookups: countryLookups } = useCountryLookups()
 
@@ -201,7 +208,10 @@ export function LocationsPanel(props: PanelProps) {
       {...props}
       cardId="locations"
       title="Locations"
-      description="Where visitors are browsing from"
+      description={
+        mobile ? 'Where your users are' : 'Where visitors are browsing from'
+      }
+      mobile={mobile}
       tabs={LOCATION_TABS}
       renderLeading={(entry, _index, tabId) =>
         // Only `country` is an ISO-2 code; regions and cities are names.
@@ -262,9 +272,10 @@ export function TechnologyPanel({
       cardId="technology"
       title="Technology"
       description={
-        mobile ? 'What visitors are using' : 'What visitors are browsing with'
+        mobile ? 'What your users are on' : 'What visitors are browsing with'
       }
       tabs={mobile ? MOBILE_TECH_TABS : TECH_TABS}
+      mobile={mobile}
       renderLeading={(entry, _index, tabId) =>
         tabId === 'browsers' ? <BrowserIcon name={entry.value} /> : undefined
       }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b4967f83c04633b08ba59c763605ba2c",
+    "content-hash": "35f1947d28b8e94142445160836e85d3",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4849,16 +4849,16 @@
         },
         {
             "name": "utopia-php/video",
-            "version": "0.0.6",
+            "version": "0.0.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/video.git",
-                "reference": "ae53ec411d721d2f97e019df50618f80a9f9a276"
+                "reference": "ddf124e3d370ebcbd2a5aa1e30d91d05c2fb9f80"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/video/zipball/ae53ec411d721d2f97e019df50618f80a9f9a276",
-                "reference": "ae53ec411d721d2f97e019df50618f80a9f9a276",
+                "url": "https://api.github.com/repos/utopia-php/video/zipball/ddf124e3d370ebcbd2a5aa1e30d91d05c2fb9f80",
+                "reference": "ddf124e3d370ebcbd2a5aa1e30d91d05c2fb9f80",
                 "shasum": ""
             },
             "require": {
@@ -4907,10 +4907,10 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/video/issues",
-                "source": "https://github.com/utopia-php/video/tree/0.0.6"
+                "source": "https://github.com/utopia-php/video/tree/0.0.7"
             },
-            "time": "2026-11-17T17:29:58+00:00",
-            "published-time": "2026-11-17T17:30:11+00:00"
+            "time": "2026-11-21T13:26:31+00:00",
+            "published-time": "2026-11-21T13:32:19+00:00"
         },
         {
             "name": "web-auth/cose-lib",

@@ -29,7 +29,8 @@ export function OrganizationPhoto({
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false)
 
   const uploadMutation = useMutation({
-    mutationFn: (file: File) => sdk.forConsole.teams.updatePhoto({ teamId, file }),
+    mutationFn: (file: File) =>
+      sdk.forConsole.avatars.updateTeamPhoto({ teamId, file }),
     onSuccess: () => {
       bumpTeamPhotoVersion()
       toast.success(t('Organization photo updated'))
@@ -42,7 +43,7 @@ export function OrganizationPhoto({
   })
 
   const removeMutation = useMutation({
-    mutationFn: () => sdk.forConsole.teams.deletePhoto({ teamId }),
+    mutationFn: () => sdk.forConsole.avatars.deleteTeamPhoto({ teamId }),
     onSuccess: () => {
       bumpTeamPhotoVersion()
       setRemoveDialogOpen(false)

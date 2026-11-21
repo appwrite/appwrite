@@ -5,7 +5,7 @@
  * All status badges should use these utilities for consistency.
  */
 
-import type { ProxyRuleRecord } from '@/lib/appwrite/proxy-rules'
+import type { Models } from '@appwrite.io/console'
 import type { CanonicalPlanId } from '@/lib/utils/plan-filter'
 import { getRecordName } from '@/lib/utils/proxy-domains'
 
@@ -90,10 +90,10 @@ export type InvoiceStatus =
   | 'pending'
   | 'due'
   | 'overdue'
-    | 'failed'
-    | 'cancelled'
-    | 'abandoned'
-    | 'requires_authentication'
+  | 'failed'
+  | 'cancelled'
+  | 'abandoned'
+  | 'requires_authentication'
 
 /**
  * Map billing API invoice status strings to UI statuses.
@@ -314,13 +314,14 @@ export function isWaitingForDns(
 /**
  * Whether the last DNS check of a domain found a record with the wrong value:
  * a CAA record that blocks the certificate, or no pointing record verified
- * while one points elsewhere. A subdomain points with its CNAME. An apex
+ * while one points elsewhere or sits at the wrong name ('misplaced': the full
+ * domain entered as the host). A subdomain points with its CNAME. An apex
  * points with an ALIAS, which the A and AAAA checks verify, as they do for a
  * domain with no CNAME check.
  */
 export function hasWrongDnsRecord(
   domain: string,
-  records: Pick<ProxyRuleRecord, 'type' | 'status'>[],
+  records: Pick<Models.ProxyRuleRecord, 'type' | 'status'>[],
 ): boolean {
   if (records.some((r) => r.type === 'CAA' && r.status === 'mismatch'))
     return true
@@ -333,10 +334,20 @@ export function hasWrongDnsRecord(
     return false
   const cname =
     getRecordName(domain) !== '@' && records.some((r) => r.type === 'CNAME')
+  // An A or AAAA record where a subdomain's CNAME is missing answers in its
+  // place, such as a provider's URL redirect, so it is never just propagating.
+  if (
+    cname &&
+    records.some((r) => r.type === 'CNAME' && r.status === 'missing') &&
+    records.some(
+      (r) => (r.type === 'A' || r.type === 'AAAA') && r.status === 'mismatch',
+    )
+  )
+    return true
   return records.some(
     (r) =>
       (cname ? r.type === 'CNAME' : r.type === 'A' || r.type === 'AAAA') &&
-      r.status === 'mismatch',
+      (r.status === 'mismatch' || r.status === 'misplaced'),
   )
 }
 
@@ -406,8 +417,8 @@ export function getRuleStatusBadgeConfig(
     logs?: string
     $createdAt?: string
     domain?: string
-    /** The stored DNS checks, see ProxyRuleRecord */
-    records?: Pick<ProxyRuleRecord, 'type' | 'status'>[]
+    /** The stored DNS checks, see Models.ProxyRuleRecord */
+    records?: Pick<Models.ProxyRuleRecord, 'type' | 'status'>[] | null
   },
   now: Date = new Date(),
 ): {
@@ -445,7 +456,7 @@ export function getRuleStatusBadgeConfig(
       return {
         variant: 'error',
         label: 'Action needed',
-        hint: 'A DNS record has the wrong value. Open Records to see which one and what to change it to.',
+        hint: 'A DNS record has the wrong value or name. Open Records to see which one and what to change it to.',
       }
     }
     return {

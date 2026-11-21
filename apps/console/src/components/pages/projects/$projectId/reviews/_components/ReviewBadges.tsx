@@ -1,7 +1,10 @@
 import { Loader2 } from 'lucide-react'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { useT } from '@/lib/i18n/translate'
+import { formatMs } from '@/lib/review-trace'
 import type {
+  Review,
   ReviewFindingSeverity,
   ReviewStatus,
   ReviewTrigger,
@@ -104,7 +107,7 @@ export function useReviewTriggerLabel() {
   return (trigger: ReviewTrigger) => t(TRIGGER_LABELS[trigger] ?? trigger)
 }
 
-const SEVERITY_LABELS: Record<ReviewFindingSeverity, string> = {
+export const SEVERITY_LABELS: Record<ReviewFindingSeverity, string> = {
   critical: 'Critical',
   major: 'Major',
   minor: 'Minor',
@@ -140,4 +143,55 @@ export function FindingSeverityBadge({
       {t(SEVERITY_LABELS[severity] ?? severity)}
     </Badge>
   )
+}
+
+/** Who opened the pull request, with their GitHub avatar, linking to their profile. */
+export function ReviewAuthorLink({ author }: { author: string }) {
+  const t = useT()
+  if (!author) {
+    return (
+      <span className="text-[13px] text-muted-foreground">
+        {t('Unknown author')}
+      </span>
+    )
+  }
+  return (
+    <a
+      href={`https://github.com/${encodeURIComponent(author)}`}
+      target="_blank"
+      rel="noreferrer"
+      className="flex min-w-0 items-center gap-2 hover:underline"
+    >
+      <Avatar className="h-6 w-6 shrink-0">
+        <AvatarImage
+          src={`https://github.com/${encodeURIComponent(author)}.png?size=48`}
+          alt=""
+        />
+        <AvatarFallback className="text-[10px]">
+          {author.slice(0, 2).toUpperCase()}
+        </AvatarFallback>
+      </Avatar>
+      <span className="truncate text-[13px] font-medium text-foreground">
+        @{author}
+      </span>
+    </a>
+  )
+}
+
+/**
+ * How long a review ran: from start to end, or to `now` while it runs. Empty
+ * until it starts, and for a review that ended without starting.
+ */
+export function reviewDuration(
+  review: Pick<Review, 'startedAt' | 'completedAt'>,
+  now: number,
+): string {
+  if (!review.startedAt) return ''
+  const start = Date.parse(review.startedAt)
+  const end = review.completedAt ? Date.parse(review.completedAt) : now
+  if (Number.isNaN(start) || Number.isNaN(end)) return ''
+  const ms = Math.max(0, end - start)
+  if (ms < 60 * 60 * 1000) return formatMs(ms)
+  const minutes = Math.floor(ms / 60_000)
+  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`
 }

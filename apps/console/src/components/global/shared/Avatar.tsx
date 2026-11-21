@@ -318,7 +318,7 @@ export function PhotoAvatar({
 }
 
 /**
- * Organization photo via `teams.getPhoto`. The API falls back to the team's
+ * Organization photo via `avatars.getTeamPhoto`. The API falls back to the team's
  * initials, then a placeholder, when no photo was uploaded.
  */
 export function TeamAvatar({
@@ -335,7 +335,7 @@ export function TeamAvatar({
   )
   const pixels = sizePixels[size]
   const src = useMemo(() => {
-    const url = sdk.forConsole.teams.getPhoto({
+    const url = sdk.forConsole.avatars.getTeamPhoto({
       teamId,
       width: pixels,
       height: pixels,

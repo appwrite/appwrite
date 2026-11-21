@@ -9,7 +9,11 @@ import { cn } from '@/lib/utils'
 import type { FactoryLabels, FactoryMount } from './factory/boot'
 import { factoryBoot, holdFactory, takeFactory } from './factory/early'
 import type { FactoryEngine } from './factory/engine'
-import { STATION_IDS, type FactoryStationId } from './factory/layout'
+import {
+  EXTENSION_IDS,
+  STATION_IDS,
+  type FactoryStationId,
+} from './factory/layout'
 
 const importFactory = createClientOnlyFn(() => import('./factory/boot'))
 let factory: ReturnType<typeof importFactory> | null = null
@@ -59,8 +63,12 @@ export function FactoryStage({ className }: { className?: string }) {
   const [fallback, setFallback] = useState(false)
 
   const names = STATION_IDS.map((id) => t(PRODUCT_REGISTRY[id].name))
-  /** What the machine prints: every station's name, then the gate's sign. */
-  const plates = [...names, NETWORK_NAME]
+  /** What the machine prints: every station's name, the gate's sign, then each extension's name. */
+  const plates = [
+    ...names,
+    NETWORK_NAME,
+    ...EXTENSION_IDS.map((id) => t(PRODUCT_REGISTRY[id].name)),
+  ]
   /** What each hologram says: up to three lines, ending in the brand underscore. */
   const copy: Record<FactoryStationId, string> = {
     auth: t(
@@ -204,6 +212,10 @@ export function FactoryStage({ className }: { className?: string }) {
         })}
         {/* Appwrite Network's mark, as in the Docs navigation. */}
         <Share2 strokeWidth={2} />
+        {EXTENSION_IDS.map((id) => {
+          const Icon = PRODUCT_REGISTRY[id].icon
+          return <Icon key={id} strokeWidth={2} />
+        })}
       </div>
 
       {/* What the holograms say, for screen readers. */}

@@ -1,0 +1,648 @@
+---
+layout: article
+title: Permissions
+description: Learn how Appwrite Videos controls who can watch a stream with per-video permissions, and which scopes manage videos and encoding profiles.
+---
+
+Appwrite Videos has two kinds of access: who can **watch** a stream, and who can **manage** videos, renditions, captions, and profiles.
+
+# Playback {% #playback %}
+
+Each video has its own [permissions](/docs/advanced/security/permissions). Manifest, segment, caption, timeline, and thumbnail requests check the video's **read** permission.
+
+The source file's permissions in Storage are checked only when the video is created: whoever creates it must be able to read the file. After that, playback never looks at the file, so the source can stay private while its stream is public.
+
+| Goal | Grant Read on the video to |
+|------|----------------------------|
+| Public video on a website or in an app | `Role.any()` |
+| Members-only video | `Role.users()`, or one user with `Role.user('<USER_ID>')` |
+| Video for one team or role | `Role.team('<TEAM_ID>')`, or a team role such as `Role.team('<TEAM_ID>', 'editor')` |
+
+Visitors who are not signed in can play a stream that grants Read to `Role.any()` or `Role.guests()`, but cannot read its details or list videos. Load the video's name and duration from your own database, or from your backend, when you show a public video.
+
+## Default permissions {% #default-permissions %}
+
+When you create a video without `permissions`:
+
+- **With an API key**, the video has no permissions. Only API keys and members of your project, in the Console, can read it, and it does not play anywhere else.
+- **From the Console**, the video is private in the same way. Turn on **Public playback** in its settings to share it. See [Change access later](#change-access-later).
+- **With a user session**, the user who created it gets read, update, and delete permissions.
+
+## Set permissions on create {% #set-permissions-on-create %}
+
+Pass `permissions` when you create the video. For example, to share a recording with one team:
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const videos = new sdk.Videos(client);
+
+const video = await videos.create({
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    permissions: [sdk.Permission.read(sdk.Role.team('<TEAM_ID>'))] // optional
+});
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.videos import Videos
+from appwrite.permission import Permission
+from appwrite.role import Role
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+videos = Videos(client)
+
+video = videos.create(
+    bucket_id = '<BUCKET_ID>',
+    file_id = '<FILE_ID>',
+    permissions = [Permission.read(Role.team('<TEAM_ID>'))] # optional
+)
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+Videos videos = Videos(client);
+
+final video = await videos.create(
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    permissions: [Permission.read(Role.team('<TEAM_ID>'))], // (optional)
+);
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Videos;
+use Appwrite\Permission;
+use Appwrite\Role;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<API_KEY>');
+
+$videos = new Videos($client);
+
+$video = $videos->create(
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    permissions: [Permission::read(Role::team('<TEAM_ID>'))] // optional
+);
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<API_KEY>')
+
+videos = Videos.new(client)
+
+video = videos.create(
+    bucket_id: '<BUCKET_ID>',
+    file_id: '<FILE_ID>',
+    permissions: [Permission.read(Role.team('<TEAM_ID>'))] # optional
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<API_KEY>");
+
+Videos videos = new Videos(client);
+
+Video video = await videos.Create(
+    bucketId: "<BUCKET_ID>",
+    fileId: "<FILE_ID>",
+    permissions: new List<string> { Permission.Read(Role.Team("<TEAM_ID>")) } // optional
+);
+```
+
+```server-deno
+import { Client, Videos, Permission, Role } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const videos = new Videos(client);
+
+const video = await videos.create({
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    permissions: [Permission.read(Role.team('<TEAM_ID>'))] // optional
+});
+```
+
+```server-go
+package main
+
+import (
+	"fmt"
+
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/permission"
+	"github.com/appwrite/sdk-for-go/v7/role"
+	"github.com/appwrite/sdk-for-go/v7/videos"
+)
+
+func main() {
+	client := appwrite.NewClient(
+		appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+		appwrite.WithProject("<PROJECT_ID>"),
+		appwrite.WithKey("<API_KEY>"),
+	)
+
+	service := videos.New(client)
+
+	video, err := service.Create(
+		"<BUCKET_ID>",
+		"<FILE_ID>",
+		service.WithCreatePermissions([]string{permission.Read(role.Team("<TEAM_ID>", ""))}),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(video)
+}
+```
+
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+let videos = Videos(client)
+
+let video = try await videos.create(
+    bucketId: "<BUCKET_ID>",
+    fileId: "<FILE_ID>",
+    permissions: [Permission.read(Role.team("<TEAM_ID>"))] // optional
+)
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.Permission
+import io.appwrite.Role
+import io.appwrite.services.Videos
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+val videos = Videos(client)
+
+val video = videos.create(
+    bucketId = "<BUCKET_ID>",
+    fileId = "<FILE_ID>",
+    permissions = listOf(Permission.read(Role.team("<TEAM_ID>"))) // optional
+)
+```
+
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.exceptions.AppwriteException;
+import io.appwrite.Permission;
+import io.appwrite.Role;
+import io.appwrite.services.Videos;
+import java.util.List;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>");
+
+Videos videos = new Videos(client);
+
+try {
+    videos.create(
+        "<BUCKET_ID>", // bucketId
+        "<FILE_ID>", // fileId
+        null, // name (optional)
+        List.of(Permission.read(Role.team("<TEAM_ID>"))), // permissions (optional)
+        new CoroutineCallback<>((result, error) -> {
+            if (error != null) {
+                error.printStackTrace();
+                return;
+            }
+
+            System.out.println(result);
+        })
+    );
+} catch (AppwriteException e) {
+    e.printStackTrace();
+}
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::permission::Permission;
+use appwrite::role::Role;
+use appwrite::services::Videos;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let videos = Videos::new(&client);
+
+    let video = videos.create(
+        "<BUCKET_ID>",
+        "<FILE_ID>",
+        None, // name
+        Some(vec![Permission::read(Role::team("<TEAM_ID>", None)).to_string()]) // permissions
+    ).await?;
+
+    println!("{:?}", video);
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+Signed-in users can also create videos from a client SDK, from files they can read. They can only grant permissions to roles they belong to.
+
+## Change access later {% #change-access-later %}
+
+In the Console, open the video, select **Settings**, and use the **Access** card:
+
+- **Public playback** grants or removes **Read** for **Any** as soon as you flip it.
+- **Permissions** edits read, update, and delete for any role. Click **Update** to save.
+
+{% only_dark %}
+![Access settings of a video with Public playback turned on and Read granted to Any](/images/docs/videos/dark/settings-access.avif)
+{% /only_dark %}
+{% only_light %}
+![Access settings of a video with Public playback turned on and Read granted to Any](/images/docs/videos/settings-access.avif)
+{% /only_light %}
+
+While a video has no Read for Any, every tab of the video shows a **This video is private** notice with a link to these settings.
+
+With a server SDK, update the video's permissions with `videos.update()`. The new list replaces the old one, and `name` is required, so pass the current name to keep it:
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const videos = new sdk.Videos(client);
+
+const video = await videos.update({
+    videoId: '<VIDEO_ID>',
+    name: '<VIDEO_NAME>',
+    permissions: [sdk.Permission.read(sdk.Role.users())] // optional
+});
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.videos import Videos
+from appwrite.permission import Permission
+from appwrite.role import Role
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+videos = Videos(client)
+
+video = videos.update(
+    video_id = '<VIDEO_ID>',
+    name = '<VIDEO_NAME>',
+    permissions = [Permission.read(Role.users())] # optional
+)
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+Videos videos = Videos(client);
+
+final video = await videos.update(
+    videoId: '<VIDEO_ID>',
+    name: '<VIDEO_NAME>',
+    permissions: [Permission.read(Role.users())], // (optional)
+);
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Videos;
+use Appwrite\Permission;
+use Appwrite\Role;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<API_KEY>');
+
+$videos = new Videos($client);
+
+$video = $videos->update(
+    videoId: '<VIDEO_ID>',
+    name: '<VIDEO_NAME>',
+    permissions: [Permission::read(Role::users())] // optional
+);
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<API_KEY>')
+
+videos = Videos.new(client)
+
+video = videos.update(
+    video_id: '<VIDEO_ID>',
+    name: '<VIDEO_NAME>',
+    permissions: [Permission.read(Role.users())] # optional
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<API_KEY>");
+
+Videos videos = new Videos(client);
+
+Video video = await videos.Update(
+    videoId: "<VIDEO_ID>",
+    name: "<VIDEO_NAME>",
+    permissions: new List<string> { Permission.Read(Role.Users()) } // optional
+);
+```
+
+```server-deno
+import { Client, Videos, Permission, Role } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const videos = new Videos(client);
+
+const video = await videos.update({
+    videoId: '<VIDEO_ID>',
+    name: '<VIDEO_NAME>',
+    permissions: [Permission.read(Role.users())] // optional
+});
+```
+
+```server-go
+package main
+
+import (
+	"fmt"
+
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/permission"
+	"github.com/appwrite/sdk-for-go/v7/role"
+	"github.com/appwrite/sdk-for-go/v7/videos"
+)
+
+func main() {
+	client := appwrite.NewClient(
+		appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+		appwrite.WithProject("<PROJECT_ID>"),
+		appwrite.WithKey("<API_KEY>"),
+	)
+
+	service := videos.New(client)
+
+	video, err := service.Update(
+		"<VIDEO_ID>",
+		"<VIDEO_NAME>",
+		service.WithUpdatePermissions([]string{permission.Read(role.Users(""))}),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(video)
+}
+```
+
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+let videos = Videos(client)
+
+let video = try await videos.update(
+    videoId: "<VIDEO_ID>",
+    name: "<VIDEO_NAME>",
+    permissions: [Permission.read(Role.users())] // optional
+)
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.Permission
+import io.appwrite.Role
+import io.appwrite.services.Videos
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+val videos = Videos(client)
+
+val video = videos.update(
+    videoId = "<VIDEO_ID>",
+    name = "<VIDEO_NAME>",
+    permissions = listOf(Permission.read(Role.users())) // optional
+)
+```
+
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.exceptions.AppwriteException;
+import io.appwrite.Permission;
+import io.appwrite.Role;
+import io.appwrite.services.Videos;
+import java.util.List;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>");
+
+Videos videos = new Videos(client);
+
+try {
+    videos.update(
+        "<VIDEO_ID>", // videoId
+        "<VIDEO_NAME>", // name
+        List.of(Permission.read(Role.users())), // permissions (optional)
+        new CoroutineCallback<>((result, error) -> {
+            if (error != null) {
+                error.printStackTrace();
+                return;
+            }
+
+            System.out.println(result);
+        })
+    );
+} catch (AppwriteException e) {
+    e.printStackTrace();
+}
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::permission::Permission;
+use appwrite::role::Role;
+use appwrite::services::Videos;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let videos = Videos::new(&client);
+
+    let video = videos.update(
+        "<VIDEO_ID>",
+        "<VIDEO_NAME>",
+        Some(vec![Permission::read(Role::users(None)).to_string()]) // permissions
+    ).await?;
+
+    println!("{:?}", video);
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+## Common setups {% #common-setups %}
+
+| App | Setup |
+|-----|-------|
+| Marketing site or public course preview | Grant **Read** to `Role.any()` on each video |
+| Paid course or members area | Grant **Read** to the users or team who bought access, and update the video's permissions as people buy |
+| Team workspace, such as internal recordings | Grant **Read** to the team, or to a team role such as `editor` |
+| User uploads shown only to the uploader | Let the user create the video from their own session. They get access by default |
+
+## Private playback {% #private-playback %}
+
+For a video that is not readable by `Role.any()`, every manifest, playlist, and segment request must carry the viewer's identity. A request without it returns `404` with the `video_not_found` error.
+
+Players load these URLs on their own, so on the web the request carries the viewer's session only when the browser sends the Appwrite session cookie. Browsers treat that cookie as a third-party cookie and often block it, unless your Appwrite endpoint is on a [custom domain](/docs/products/network/custom-domains#third-party-cookies) that shares your app's domain. With a custom domain, private videos play in any player, including Safari's native one.
+
+Without a custom domain, use a player that lets you add request headers, and send a [JWT](/docs/products/auth/jwt) for the signed-in user with each request. For example, with hls.js:
+
+```js
+import { Client, Account } from 'appwrite'
+import Hls from 'hls.js'
+
+const client = new Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<PROJECT_ID>')
+const account = new Account(client)
+
+let { jwt } = await account.createJWT()
+// JWTs expire after 15 minutes. Refresh before then for long videos.
+setInterval(async () => ({ jwt } = await account.createJWT()), 10 * 60 * 1000)
+
+const hls = new Hls({
+  xhrSetup: (xhr) => xhr.setRequestHeader('X-Appwrite-JWT', jwt),
+})
+hls.loadSource('<HLS_MANIFEST_URL>')
+hls.attachMedia(document.getElementById('player'))
+```
+
+Test private playback while signed in as a viewer, not only from the Console. The Console plays private videos for project members through its own access, so it does not show what your viewers get.
+
+## Renditions and captions {% #renditions-and-captions %}
+
+Renditions and captions have no permissions of their own. Anyone who can read the video can read them, and creating, changing, or deleting them requires **update** permission on the video.
+
+# Managing videos {% #managing-videos %}
+
+API keys and Console sessions manage videos through scopes:
+
+| Scope | Allows |
+|-------|--------|
+| `videos.read` | List and read videos, renditions, captions, and codecs |
+| `videos.write` | Create, update, and delete videos, renditions, and captions |
+| `videos.play` | Load manifests, segments, captions, timelines, and thumbnails. Visitors who are not signed in have only this scope |
+| `project.videos.profiles.read` | List and read [encoding profiles](/docs/products/videos/profiles) |
+| `project.videos.profiles.write` | Create, update, and delete encoding profiles |
+
+Encoding profiles are project settings, so only API keys and the Console can manage them, not client SDKs.
+
+Use an API key with these scopes from a [server SDK](/docs/sdks#server). API keys skip video permissions, so they can read and change every video. On Appwrite Cloud with [organization roles](/docs/advanced/security/roles) enabled, members manage videos according to their role.
+
+Give each key only what it needs. A backend that only checks whether renditions are ready needs `videos.read`. A [function that creates videos on upload](/docs/products/videos/videos#automate-with-functions) needs `videos.write`. Never ship an API key in a client app; let viewers stream with their own session instead.
