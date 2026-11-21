@@ -46,6 +46,11 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   '1 year': '1 年',
   'Custom date': 'カスタム日付',
   'Learn more about API key scopes': 'API キースコープの詳細',
+  'Prefer ephemeral keys in Functions and Sites':
+    'Functions とサイトでは一時的なキーを推奨',
+  'Ephemeral keys are more secure than a long-lived API key. Appwrite generates a scoped key for every function execution, site build, and SSR request that expires on its own, so there is no secret to store or rotate.':
+    '一時的なキーは、長期間有効な API キーよりも安全です。Appwrite は関数の実行、サイトのビルド、SSR リクエストごとに、スコープを限定し自動で期限切れになるキーを生成するため、シークレットを保管したりローテーションしたりする必要はありません。',
+  'Learn more about ephemeral keys': '一時的なキーの詳細',
   // Onboarding
   'Progress by product': '製品別の進捗',
   'Connect your app first.': 'まずアプリを接続してください。',
