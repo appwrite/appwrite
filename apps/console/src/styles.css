@@ -3486,6 +3486,148 @@ pre.prism-code .token-line > span {
   }
 }
 
+/* Init 5 hero: the init_ underscore blinks like a terminal caret, then settles. */
+@keyframes init5-caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.init5-caret {
+  animation: init5-caret-blink 0.7s steps(1, end) var(--init5-caret-delay, 1.3s)
+    3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .init5-caret {
+    animation: none;
+  }
+}
+
+/* Init 5 wordmark: short comets of light trace each letter's outline. */
+@keyframes init5-wordmark-trace {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.init5-wordmark-trail {
+  /* Two comets per letter, each with a bright head and a soft halo. */
+  stroke-dasharray: 13 37;
+  stroke-linecap: round;
+  animation: init5-wordmark-trace 6.4s linear infinite;
+  filter: drop-shadow(0 0 3px var(--brand-cta))
+    drop-shadow(0 0 8px color-mix(in oklch, var(--brand-cta) 60%, transparent));
+}
+
+.init5-wordmark-glow {
+  filter: drop-shadow(
+    0 0 14px color-mix(in oklch, var(--brand-cta) 70%, transparent)
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .init5-wordmark-trail {
+    display: none;
+  }
+}
+
+/*
+ * Init 5 light frame: the hero's light trails in miniature. A comet of
+ * peach -> pink -> violet light circles a hairline border. Add an
+ * `.init5-light-halo` child for a soft glow that follows the comet around the
+ * rounded edge. Reduced motion keeps the arc still.
+ */
+@property --init5-trail-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes init5-trail-orbit {
+  to {
+    --init5-trail-angle: 360deg;
+  }
+}
+
+.init5-light-frame {
+  /* Stops only: the angle must resolve on the element that animates it. */
+  --init5-trail-stops:
+    transparent 0deg 228deg,
+    color-mix(in oklch, var(--network-globe-edge) 70%, transparent) 290deg,
+    var(--brand-cta) 336deg, var(--network-globe-region) 354deg,
+    transparent 360deg;
+  position: relative;
+}
+
+.init5-light-frame::before,
+.init5-light-halo::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  /* Keep only the border ring; the rounded corners come from border-radius. */
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  animation: init5-trail-orbit var(--init5-trail-duration, 7s) linear infinite;
+}
+
+/* Hairline border with the comet riding on it. */
+.init5-light-frame::before {
+  padding: 1px;
+  background:
+    conic-gradient(from var(--init5-trail-angle), var(--init5-trail-stops)),
+    linear-gradient(var(--border), var(--border));
+}
+
+/*
+ * Halo: the same comet on a slightly thicker ring, glowing through a
+ * drop-shadow on the parent. The filter runs after the ring's mask, so the
+ * glow hugs the rounded edge instead of filling the box.
+ */
+.init5-light-halo {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--init5-trail-glow, 0.55);
+  transition: opacity 0.4s ease-out;
+  filter: drop-shadow(
+      0 0 4px color-mix(in oklch, var(--brand-cta) 85%, transparent)
+    )
+    drop-shadow(0 0 14px color-mix(in oklch, var(--brand-cta) 55%, transparent));
+}
+
+.init5-light-halo::before {
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--init5-trail-angle),
+    var(--init5-trail-stops)
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .init5-light-frame::before,
+  .init5-light-halo::before {
+    animation: none;
+    --init5-trail-angle: 40deg;
+  }
+}
 
 /*
  * Homepage Console section: the screenshot tilts up into place as it scrolls

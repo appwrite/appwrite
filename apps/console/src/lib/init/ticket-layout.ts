@@ -3,6 +3,15 @@ export const INIT_TICKET_BG_SRC_LIGHT = '/images/init/ticket-bg-light.avif'
 export const INIT_TICKET_BG_SRC_DARK = '/images/init/ticket-bg-dark.avif'
 export const INIT_TICKET_BG_SRC_GOLD = '/images/init/ticket-bg-gold.avif'
 export const INIT_TICKET_BG_SRC_SILVER = '/images/init/ticket-bg-silver.avif'
+/** Init 5 frames: the hero's light-trail 5 on the stub, same geometry as above. */
+export const INIT_5_TICKET_BG_SRC_LIGHT =
+  '/images/init/ticket-bg-light-init-5.avif'
+export const INIT_5_TICKET_BG_SRC_DARK =
+  '/images/init/ticket-bg-dark-init-5.avif'
+export const INIT_5_TICKET_BG_SRC_GOLD =
+  '/images/init/ticket-bg-gold-init-5.avif'
+export const INIT_5_TICKET_BG_SRC_SILVER =
+  '/images/init/ticket-bg-silver-init-5.avif'
 
 export const INIT_TICKET_IMAGE_WIDTH = 1024
 export const INIT_TICKET_IMAGE_HEIGHT = 682

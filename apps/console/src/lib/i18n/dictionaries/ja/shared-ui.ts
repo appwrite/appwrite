@@ -1384,6 +1384,19 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Load more': 'さらに読み込む',
   'Loading more failed. Try again.':
     'さらに読み込めませんでした。もう一度お試しください。',
+  'Browse Init events': 'Init イベントを見る',
+  'Switch between past and upcoming Init launch weeks.':
+    '過去と今後の Init ローンチ週を切り替えます。',
+  Past: '過去',
+  Upcoming: '近日公開',
+  'AUGUST 31 - SEPTEMBER 4': '8月31日 - 9月4日',
+  'NOVEMBER 30 - DECEMBER 4': '11月30日 - 12月4日',
+  'Starts in': '開始まで',
+  'Ask us anything': '何でも聞いてください',
+  'Bring your questions about every Init 5 launch. The team answers live on r/appwrite.':
+    'Init 5 のすべてのローンチについて質問をお寄せください。チームが r/appwrite でライブで回答します。',
+  'The team answered your questions about every Init 5 launch on r/appwrite.':
+    'チームが r/appwrite で Init 5 のすべてのローンチに関する質問に回答しました。',
   Previews: 'プレビュー',
   'Early access. Saved in this browser.':
     '早期アクセスです。このブラウザに保存されます。',
