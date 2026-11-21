@@ -9,6 +9,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Id;
@@ -484,5 +486,81 @@ final class UsersCustomServerTest extends Scope
         $response = $list('nonexistent-user', []);
         $this->assertSame(404, $response['headers']['status-code']);
         $this->assertSame('user_not_found', $response['body']['type']);
+    }
+
+    public function testListUserSessionsExcludesExpired(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => Id::unique(),
+            'email' => 'list-sessions-' . Id::unique() . '@appwrite.io',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        // One active session, and one that expired in the past
+        $active = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/sessions', $headers);
+        $this->assertSame(201, $active['headers']['status-code']);
+        $expired = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/sessions', $headers);
+        $this->assertSame(201, $expired['headers']['status-code']);
+        $this->expireSession($projectId, $expired['body']['$id']);
+
+        $list = fn (array $queries) => $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/sessions', $headers, [
+            'queries' => $queries,
+        ]);
+
+        /**
+         * Test for SUCCESS
+         */
+        // Expired sessions are hidden by default, and total does not count them
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/sessions', $headers);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(1, $response['body']['total']);
+        $this->assertSame([$active['body']['$id']], \array_column($response['body']['sessions'], '$id'));
+
+        // Ordering by expire does not bring them back
+        $response = $list([Query::orderAsc('expire')->toString()]);
+        $this->assertSame(1, $response['body']['total']);
+        $this->assertSame([$active['body']['$id']], \array_column($response['body']['sessions'], '$id'));
+
+        // Filtering on expire does
+        $response = $list([Query::lessThan('expire', DateTime::now())->toString()]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(1, $response['body']['total']);
+        $this->assertSame([$expired['body']['$id']], \array_column($response['body']['sessions'], '$id'));
+
+        // Also when the filter on expire is nested inside or()
+        $response = $list([Query::or([
+            Query::lessThan('expire', DateTime::now()),
+            Query::greaterThan('expire', DateTime::now()),
+        ])->toString()]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(2, $response['body']['total']);
+    }
+
+    /**
+     * Moves a session's expiry into the past, so it is expired without waiting for it.
+     */
+    protected function expireSession(string $projectId, string $sessionId): void
+    {
+        $stdout = '';
+        $stderr = '';
+        $command = (new Command('docker'))
+            ->argument('exec')
+            ->argument('appwrite')
+            ->argument('task-time-travel')
+            ->argument('--projectId=' . $projectId)
+            ->argument('--resourceType=session')
+            ->argument('--resourceId=' . $sessionId)
+            ->argument('--expire=2020-01-01T00:00:00Z');
+        $code = Console::execute($command, '', $stdout, $stderr);
+        $this->assertSame(0, $code, "Time-travel command failed with code $code: $stderr ($stdout)");
+        $this->assertStringContainsString('Time-travel successful', $stdout . $stderr);
     }
 }

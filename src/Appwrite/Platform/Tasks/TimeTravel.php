@@ -25,12 +25,13 @@ class TimeTravel extends Action
         $this
             ->desc('Create a time-travel to change document dates and video seed fields (development only)')
             ->param('projectId', '', new UID(), 'Project ID.')
-            ->param('resourceType', '', new WhiteList(['deployment', 'video', 'videos_rendition', 'videos_caption']), 'Type of resource.')
+            ->param('resourceType', '', new WhiteList(['deployment', 'session', 'video', 'videos_rendition', 'videos_caption']), 'Type of resource.')
             ->param('resourceId', '', new UID(), 'ID of resource.')
             ->param('createdAt', '', new Nullable(new DatetimeValidator()), 'New value for $createdAt.', true)
             ->param('updatedAt', '', new Nullable(new DatetimeValidator()), 'New value for $updatedAt.', true)
             ->param('status', '', new Nullable(new Text(64)), 'Optional status override (renditions, captions; timelineStatus for a video).', true)
             ->param('progress', '', new Nullable(new Text(8)), 'Optional progress (renditions).', true)
+            ->param('expire', '', new Nullable(new DatetimeValidator()), 'New value for expire (sessions).', true)
             ->inject('getProjectDB')
             ->inject('dbForPlatform')
             ->callback($this->action(...));
@@ -44,6 +45,7 @@ class TimeTravel extends Action
         ?string $updatedAt,
         ?string $status,
         ?string $progress,
+        ?string $expire,
         callable $getProjectDB,
         Database $dbForPlatform
     ): void {
@@ -63,6 +65,7 @@ class TimeTravel extends Action
 
         $collection = match ($resourceType) {
             'deployment' => 'deployments',
+            'session' => 'sessions',
             'video' => 'videos',
             'videos_rendition' => 'videosRenditions',
             'videos_caption' => 'videosCaptions',
@@ -91,6 +94,9 @@ class TimeTravel extends Action
         }
         if ($progress !== null && $progress !== '') {
             $data['progress'] = $progress;
+        }
+        if (!empty($expire)) {
+            $data['expire'] = $expire;
         }
 
         if ($data === []) {

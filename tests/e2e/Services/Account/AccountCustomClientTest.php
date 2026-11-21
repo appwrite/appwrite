@@ -10,6 +10,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Id;
@@ -1197,6 +1199,79 @@ final class AccountCustomClientTest extends Scope
         $response = $list([Query::cursorAfter(new Document(['$id' => 'nonexistent-session']))->toString()]);
         $this->assertSame(400, $response['headers']['status-code']);
         $this->assertSame('general_cursor_not_found', $response['body']['type']);
+    }
+
+    public function testListAccountSessionsExcludesExpired(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $guest = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        // One active session, and one that expired in the past
+        $data = $this->createFreshAccountWithSession();
+        $created = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $guest, [
+            'email' => $data['email'],
+            'password' => $data['password'],
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+        $expiredId = $created['body']['$id'];
+        $this->expireSession($projectId, $expiredId);
+
+        $headers = $guest + ['cookie' => 'a_session_' . $projectId . '=' . $data['session']];
+        $list = fn (array $queries) => $this->client->call(Client::METHOD_GET, '/account/sessions', $headers, [
+            'queries' => $queries,
+        ]);
+
+        /**
+         * Test for SUCCESS
+         */
+        // Expired sessions are hidden by default, and total does not count them
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', $headers);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(1, $response['body']['total']);
+        $this->assertSame([$data['sessionId']], \array_column($response['body']['sessions'], '$id'));
+
+        // Ordering by expire does not bring them back
+        $response = $list([Query::orderAsc('expire')->toString()]);
+        $this->assertSame(1, $response['body']['total']);
+        $this->assertSame([$data['sessionId']], \array_column($response['body']['sessions'], '$id'));
+
+        // Filtering on expire does
+        $response = $list([Query::lessThan('expire', DateTime::now())->toString()]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(1, $response['body']['total']);
+        $this->assertSame([$expiredId], \array_column($response['body']['sessions'], '$id'));
+
+        // Also when the filter on expire is nested inside or()
+        $response = $list([Query::or([
+            Query::lessThan('expire', DateTime::now()),
+            Query::greaterThan('expire', DateTime::now()),
+        ])->toString()]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(2, $response['body']['total']);
+    }
+
+    /**
+     * Moves a session's expiry into the past, so it is expired without waiting for it.
+     */
+    protected function expireSession(string $projectId, string $sessionId): void
+    {
+        $stdout = '';
+        $stderr = '';
+        $command = (new Command('docker'))
+            ->argument('exec')
+            ->argument('appwrite')
+            ->argument('task-time-travel')
+            ->argument('--projectId=' . $projectId)
+            ->argument('--resourceType=session')
+            ->argument('--resourceId=' . $sessionId)
+            ->argument('--expire=2020-01-01T00:00:00Z');
+        $code = Console::execute($command, '', $stdout, $stderr);
+        $this->assertSame(0, $code, "Time-travel command failed with code $code: $stderr ($stdout)");
+        $this->assertStringContainsString('Time-travel successful', $stdout . $stderr);
     }
 
     public function testCreateEmailPasswordSessionWithDuration(): void
