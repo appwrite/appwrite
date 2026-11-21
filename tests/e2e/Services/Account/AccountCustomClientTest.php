@@ -3145,12 +3145,12 @@ final class AccountCustomClientTest extends Scope
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
+        $this->assertStringStartsWith('http://appwrite/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
 
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/mock/redirect?code=', $response['headers']['location']);
+        $this->assertStringStartsWith('http://appwrite/v1/account/sessions/oauth2/mock/redirect?code=', $response['headers']['location']);
 
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
 
@@ -3208,12 +3208,12 @@ final class AccountCustomClientTest extends Scope
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
+        $this->assertStringStartsWith('http://appwrite/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
 
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/mock/redirect?code=', $response['headers']['location']);
+        $this->assertStringStartsWith('http://appwrite/v1/account/sessions/oauth2/mock/redirect?code=', $response['headers']['location']);
 
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
 
@@ -3398,11 +3398,11 @@ final class AccountCustomClientTest extends Scope
 
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
+        $this->assertStringStartsWith('http://appwrite/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
 
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/mock/redirect?code=', $response['headers']['location']);
+        $this->assertStringStartsWith('http://appwrite/v1/account/sessions/oauth2/mock/redirect?code=', $response['headers']['location']);
 
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
@@ -3472,11 +3472,11 @@ final class AccountCustomClientTest extends Scope
 
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
+        $this->assertStringStartsWith('http://appwrite/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
 
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/mock/redirect?code=', $response['headers']['location']);
+        $this->assertStringStartsWith('http://appwrite/v1/account/sessions/oauth2/mock/redirect?code=', $response['headers']['location']);
 
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
@@ -9488,6 +9488,89 @@ final class AccountCustomClientTest extends Scope
             'password' => $verified['password'],
         ]);
         $this->assertEquals(201, $login['headers']['status-code']);
+    }
+
+    /**
+     * A registrant who holds an unverified account links ID tokens through its session while the owner of the
+     * address claims it. Whichever commits first, nothing the registrant wrote may survive on the claimed account:
+     * a link that ran before the claim is revoked by it, and one that read the account before the claim is
+     * refused under the lock.
+     *
+     * The requests run concurrently, so a run is not guaranteed to hit the read-before-claim, write-after
+     * interleaving; this checks the end state holds in every order. The ordering itself is covered
+     * deterministically by the User::lockUnchanged() unit tests.
+     */
+    public function testCreateIdTokenSessionLinkRacingAClaimLeavesNothingBehind(): void
+    {
+        $this->updateMockProvider(true);
+        $projectId = $this->getProject()['$id'];
+        $cookie = 'a_session_' . $projectId;
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $registrant = $this->createFreshAccountWithSession();
+
+        $requests = [];
+        for ($i = 0; $i < 4; $i++) {
+            $sub = 'idtoken-registrant-' . \uniqid('', true);
+            $requests[] = [Client::METHOD_POST, '/account/sessions/id-token', \array_merge($headers, [
+                'cookie' => $cookie . '=' . $registrant['session'],
+            ]), [
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken([
+                    'sub' => $sub,
+                    'email' => 'idtoken.registrant.' . \uniqid('', true) . '@localhost.test',
+                    'email_verified' => true,
+                ]),
+            ]];
+        }
+
+        $ownerSub = 'idtoken-owner-' . \uniqid('', true);
+        $requests[] = [Client::METHOD_POST, '/account/sessions/id-token', $headers, [
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken([
+                'sub' => $ownerSub,
+                'email' => $registrant['email'],
+                'email_verified' => true,
+            ]),
+        ]];
+
+        $responses = $this->client->callConcurrently($requests);
+        $claim = \array_pop($responses);
+
+        $this->assertEquals(201, $claim['headers']['status-code']);
+        $this->assertEquals($registrant['id'], $claim['body']['userId']);
+        $owner = \array_merge($headers, ['cookie' => $cookie . '=' . $claim['cookies'][$cookie]]);
+
+        // No identity the registrant linked is left on the account, only the owner's
+        $identities = $this->client->call(Client::METHOD_GET, '/account/identities', $owner);
+        $this->assertEquals(200, $identities['headers']['status-code']);
+        $this->assertSame([$ownerSub], \array_column($identities['body']['identities'], 'providerUid'));
+
+        // No session the registrant held or was issued still works
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => $cookie . '=' . $registrant['session'],
+        ]));
+        $this->assertEquals(401, $account['headers']['status-code']);
+
+        foreach ($responses as $response) {
+            // A request that read the account after the claim found its session revoked and signed in as a new
+            // user of its own provider email, which is not the claimed account
+            if ($response['headers']['status-code'] !== 201 || $response['body']['userId'] !== $registrant['id']) {
+                continue;
+            }
+            $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+                'cookie' => $cookie . '=' . $response['cookies'][$cookie],
+            ]));
+            $this->assertEquals(401, $account['headers']['status-code']);
+        }
+
+        $sessions = $this->client->call(Client::METHOD_GET, '/account/sessions', $owner);
+        $this->assertEquals(200, $sessions['headers']['status-code']);
+        $this->assertSame([$claim['body']['$id']], \array_column($sessions['body']['sessions'], '$id'));
     }
 
     public function testCreateIdTokenSessionMatchesExactEmail(): void

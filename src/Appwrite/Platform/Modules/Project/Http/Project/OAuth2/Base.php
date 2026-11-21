@@ -424,6 +424,7 @@ abstract class Base extends Action
             'apple' => Apple\Update::class,
             'microsoft' => Microsoft\Update::class,
             'resend' => Resend\Update::class,
+            'bird' => Bird\Update::class,
             'vipps' => Vipps\Update::class,
             'vippsSandbox' => VippsSandbox\Update::class,
         ];

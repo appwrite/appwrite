@@ -37,6 +37,9 @@ ext-php-rs = "0.16.5"
 # Multi-needle substring search (utopia-user-agent: the bot table, in one pass).
 aho-corasick = "1"
 argon2 = { version = "0.5", features = ["std"] }
+# BLAKE2b for php-std's Argon2, which fills lanes on scoped threads (the `argon2` crate, a test
+# reference, fills them one after the other).
+blake2 = "0.10"
 blowfish = { version = "0.9", features = ["bcrypt"] }
 bytes = "1"
 cc = "1"

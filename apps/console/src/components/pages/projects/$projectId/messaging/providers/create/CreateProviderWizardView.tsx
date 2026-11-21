@@ -25,7 +25,8 @@ import {
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { toast } from 'sonner'
-import { useT } from '@/lib/i18n/translate'
+import { translate, useT } from '@/lib/i18n/translate'
+import type { AnalyticsActionId } from '@/lib/analytics-actions'
 import { cn } from '@/lib/utils'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { DEFAULT_AWS_SES_REGION } from '@/lib/messaging/aws-ses-regions'
@@ -40,11 +41,17 @@ import {
   parseQuickSetupReturn,
   stripQuickSetupReturn,
 } from '@/lib/smtp/quick-setup'
+import {
+  getAvailableSmtpQuickSetupProvider,
+  type SmtpQuickSetupProviderId,
+} from '@/lib/smtp/providers'
+import { birdRegion } from '@/lib/smtp/bird'
 import { AwsSesRegionSelect } from '../../_components/AwsSesRegionSelect'
 import {
-  ResendOneClickSetup,
-  type ResendOneClickSetupHandle,
-} from './_components/ResendOneClickSetup'
+  OneClickSetup,
+  type OneClickChannel,
+  type OneClickSetupHandle,
+} from './_components/OneClickSetup'
 
 type ProviderType = 'email' | 'sms' | 'push'
 
@@ -80,6 +87,17 @@ interface ProviderConfig {
   /** Filename in /public/icons (omit for type fallback). */
   icon?: string
   fields: ProviderField[]
+  /**
+   * Let Appwrite mint the `apiKey` field through the email provider's console
+   * OAuth2 flow (cloud only), the same one the project SMTP settings use.
+   */
+  oneClick?: {
+    provider: SmtpQuickSetupProviderId
+    channel?: OneClickChannel
+    /** Provider name filled in when the user left it empty. */
+    defaultName: string
+    analyticsAction: AnalyticsActionId
+  }
   /** Build the SDK call from the form values. */
   submit: (
     projectSdk: ReturnType<typeof sdk.forProject>,
@@ -179,6 +197,11 @@ const PROVIDERS: ProviderConfig[] = [
       { key: 'apiKey', label: 'API key', type: 'password', required: true },
       ...COMMON_FROM_EMAIL_FIELDS,
     ],
+    oneClick: {
+      provider: 'resend',
+      defaultName: 'One-click Resend sender',
+      analyticsAction: 'messaging-quick-setup-resend',
+    },
     submit: (projectSdk, providerId, v) =>
       projectSdk.messaging.createResendProvider({
         providerId,
@@ -188,6 +211,52 @@ const PROVIDERS: ProviderConfig[] = [
         fromEmail: optString(v.fromEmail),
         enabled: true,
       }),
+  },
+  {
+    // Bird has two providers under one name: this one sends email through
+    // Bird's email API and `bird-sms` sends SMS. The key's `bk_{region}_`
+    // prefix picks the API host, so a key without one cannot send.
+    id: 'bird',
+    name: 'Bird',
+    type: 'email',
+    description: 'Send email through Bird.',
+    icon: 'bird.svg',
+    fields: [
+      COMMON_NAME_FIELD,
+      {
+        key: 'apiKey',
+        label: 'API key',
+        type: 'password',
+        required: true,
+        placeholder: 'bk_eu1_…',
+        helper: 'A Bird API key with the emails:write scope.',
+      },
+      ...COMMON_FROM_EMAIL_FIELDS,
+    ],
+    oneClick: {
+      provider: 'bird',
+      defaultName: 'One-click Bird sender',
+      analyticsAction: 'messaging-quick-setup-bird',
+    },
+    submit: (projectSdk, providerId, v) => {
+      const apiKey = String(v.apiKey).trim()
+      const region = apiKey.startsWith('bk_') ? birdRegion(apiKey) : null
+      if (!region) {
+        throw new Error(
+          translate(
+            'Bird API keys start with bk_ and their region, for example bk_eu1_.',
+          ),
+        )
+      }
+      return projectSdk.messaging.createBirdEmailProvider({
+        providerId,
+        name: String(v.name).trim(),
+        apiKey,
+        fromName: optString(v.fromName),
+        fromEmail: optString(v.fromEmail),
+        enabled: true,
+      })
+    },
   },
   {
     id: 'sendgrid',
@@ -285,6 +354,47 @@ const PROVIDERS: ProviderConfig[] = [
       }),
   },
   // SMS
+  {
+    id: 'bird-sms',
+    name: 'Bird',
+    type: 'sms',
+    description: 'Send SMS through Bird.',
+    icon: 'bird.svg',
+    fields: [
+      COMMON_NAME_FIELD,
+      {
+        key: 'apiKey',
+        label: 'API key',
+        type: 'password',
+        required: true,
+        placeholder: 'bk_eu1_…',
+        helper: 'A Bird API key with the sms:write scope.',
+      },
+      {
+        key: 'from',
+        label: 'Sender',
+        type: 'text',
+        required: true,
+        placeholder: '+447700900123',
+        helper:
+          'A sender your Bird workspace owns: a number with its country code, or an alphanumeric sender ID.',
+      },
+    ],
+    oneClick: {
+      provider: 'bird',
+      channel: 'sms',
+      defaultName: 'One-click Bird SMS',
+      analyticsAction: 'messaging-quick-setup-bird-sms',
+    },
+    submit: (projectSdk, providerId, v) =>
+      projectSdk.messaging.createBirdSMSProvider({
+        providerId,
+        name: String(v.name).trim(),
+        apiKey: optString(v.apiKey),
+        from: optString(v.from),
+        enabled: true,
+      }),
+  },
   {
     id: 'twilio',
     name: 'Twilio',
@@ -604,7 +714,7 @@ export function CreateProviderWizardView() {
   )
   const handledReturnRef = useRef(false)
   const [autoStartOneClick, setAutoStartOneClick] = useState(false)
-  const oneClickRef = useRef<ResendOneClickSetupHandle | null>(null)
+  const oneClickRef = useRef<OneClickSetupHandle | null>(null)
 
   const { features } = useConsoleProfile()
   const providers = useMemo(
@@ -616,6 +726,14 @@ export function CreateProviderWizardView() {
     () => providers.find((p) => p.id === selectedId) ?? null,
     [providers, selectedId],
   )
+  const oneClickProvider = selected?.oneClick
+    ? getAvailableSmtpQuickSetupProvider(selected.oneClick.provider)
+    : undefined
+  // SMS setups need a provider that mints SMS keys.
+  const selectedOneClickProvider =
+    selected?.oneClick?.channel === 'sms' && !oneClickProvider?.sms
+      ? undefined
+      : oneClickProvider
 
   const grouped = useMemo(() => {
     const out: Record<ProviderType, ProviderConfig[]> = {
@@ -635,23 +753,34 @@ export function CreateProviderWizardView() {
   }, [step, selected])
 
   // Returning from a provider authorization: the redirect wiped this wizard's
-  // state, so reopen the Resend step. On success the one-click panel picks
-  // the flow back up and fills the fields; on failure the user is back on the
-  // empty form, minus the connection, and can retry or type the key by hand.
+  // state, so reopen the step of the provider that was authorized. On success
+  // the one-click panel picks the flow back up and fills the fields; on
+  // failure the user is back on the empty form, minus the connection, and can
+  // retry or type the key by hand.
   useEffect(() => {
     if (!quickSetupReturn || handledReturnRef.current) return
     handledReturnRef.current = true
 
-    const resend = PROVIDERS.find((p) => p.id === 'resend')
-    if (quickSetupReturn.providerId !== 'resend' || !resend) return
+    // The target names the card when one provider serves two (Bird email
+    // and Bird SMS); returns without one fall back to the provider's card.
+    const returned =
+      PROVIDERS.find(
+        (p) =>
+          p.id === quickSetupReturn.target &&
+          p.oneClick?.provider === quickSetupReturn.providerId,
+      ) ??
+      PROVIDERS.find(
+        (p) => p.oneClick?.provider === quickSetupReturn.providerId,
+      )
+    if (!returned) return
 
     navigate({
       search: ((prev: unknown) => stripQuickSetupReturn(prev)) as never,
       replace: true,
     })
 
-    setSelectedId(resend.id)
-    setValues(defaultsForProvider(resend))
+    setSelectedId(returned.id)
+    setValues(defaultsForProvider(returned))
     setStep('configure')
 
     if (quickSetupReturn.status === 'failed') {
@@ -741,10 +870,15 @@ export function CreateProviderWizardView() {
       )}
       {step === 'configure' && selected && (
         <div className="w-full space-y-6">
-          {/* Needs the console's Resend OAuth2 provider, which only cloud has. */}
-          {selected.id === 'resend' && isCloudProfile() ? (
-            <ResendOneClickSetup
+          {/* Needs the console's OAuth2 provider for it, which only cloud has. */}
+          {selectedOneClickProvider && selected.oneClick && isCloudProfile() ? (
+            <OneClickSetup
               ref={oneClickRef}
+              provider={selectedOneClickProvider}
+              channel={selected.oneClick.channel}
+              target={selected.id}
+              analyticsAction={selected.oneClick.analyticsAction}
+              defaultName={selected.oneClick.defaultName}
               projectName={project?.name ?? ''}
               values={values}
               autoStart={autoStartOneClick}
@@ -755,6 +889,7 @@ export function CreateProviderWizardView() {
                   ...(fields.name ? { name: fields.name } : {}),
                   ...(fields.fromName ? { fromName: fields.fromName } : {}),
                   ...(fields.fromEmail ? { fromEmail: fields.fromEmail } : {}),
+                  ...(fields.from ? { from: fields.from } : {}),
                 }))
               }
             />

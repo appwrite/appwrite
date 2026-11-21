@@ -5,7 +5,7 @@
  * All status badges should use these utilities for consistency.
  */
 
-import type { ProxyRuleRecord } from '@/lib/appwrite/proxy-rules'
+import type { Models } from '@appwrite.io/console'
 import type { CanonicalPlanId } from '@/lib/utils/plan-filter'
 import { getRecordName } from '@/lib/utils/proxy-domains'
 
@@ -321,7 +321,7 @@ export function isWaitingForDns(
  */
 export function hasWrongDnsRecord(
   domain: string,
-  records: Pick<ProxyRuleRecord, 'type' | 'status'>[],
+  records: Pick<Models.ProxyRuleRecord, 'type' | 'status'>[],
 ): boolean {
   if (records.some((r) => r.type === 'CAA' && r.status === 'mismatch'))
     return true
@@ -417,8 +417,8 @@ export function getRuleStatusBadgeConfig(
     logs?: string
     $createdAt?: string
     domain?: string
-    /** The stored DNS checks, see ProxyRuleRecord */
-    records?: Pick<ProxyRuleRecord, 'type' | 'status'>[]
+    /** The stored DNS checks, see Models.ProxyRuleRecord */
+    records?: Pick<Models.ProxyRuleRecord, 'type' | 'status'>[] | null
   },
   now: Date = new Date(),
 ): {

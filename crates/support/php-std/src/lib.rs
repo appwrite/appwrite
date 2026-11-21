@@ -23,6 +23,7 @@
 #[doc = include_str!("../guide.md")]
 pub struct GettingStarted;
 
+mod argon2;
 pub mod csv;
 pub mod datetime;
 pub mod encoding;

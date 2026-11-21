@@ -59,14 +59,14 @@ import { installPower, stationPower, type FrameState } from './frame'
 const REST = ARM_REST - HEAD_GAP
 const ARM_LENGTH = ARM.front - ARM.back
 
-type Track = <T extends BufferGeometry>(geometry: T) => T
+export type Track = <T extends BufferGeometry>(geometry: T) => T
 type PartKey = Extract<
   Finish,
   'aluminum' | 'steel' | 'graphite' | 'matte' | 'accent'
 >
 
 /** Collects parts by finish and merges them all into one mesh (one draw). */
-class Assembly {
+export class Assembly {
   private readonly parts: Partial<Record<PartKey, BufferGeometry[]>> = {}
 
   add(key: PartKey, geometry: BufferGeometry, x = 0, y = 0, z = 0) {
@@ -338,7 +338,7 @@ const databases: Builder = (shop) => {
 const storage: Builder = (shop) => {
   const { kit, track } = shop
   const axis = createAxis(shop)
-  const feedZ = -0.36
+  const feedZ = -0.44
   const tile = { width: 0.2, depth: 0.16, height: 0.012 }
   const stackBase = BED_TOP + 0.05
   const stackTop = stackBase + 4 * 0.0135
@@ -385,8 +385,8 @@ const storage: Builder = (shop) => {
 
   const hit = STATION_HIT.storage
   const feed = feedZ - TRACK_Z
-  // High enough to carry the tile over an open laptop's lid.
-  const cruise = REST - 0.01
+  // As high as it goes, to carry the tile over an open laptop's lid.
+  const cruise = REST
 
   return {
     group: axis.group,

@@ -63,6 +63,8 @@ abstract class Base extends Action
             $target .= "#{$url['fragment']}";
         }
 
-        $response->redirect($target);
+        // Temporary, so a browser that reached a custom domain before its rule existed
+        // does not keep sending it to the console once the domain serves a site
+        $response->redirect($target, 302);
     }
 }

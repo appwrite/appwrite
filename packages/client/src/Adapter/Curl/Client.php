@@ -349,10 +349,7 @@ class Client implements Adapter, ResponseStreamingClientInterface
         // cURL checks CURLOPT_MAXFILESIZE against the bytes on the wire, before content decoding,
         // so a small compressed body could still expand past it in memory. The same cap is applied
         // to the bytes handed to the sink, which are the decoded ones.
-        $limit = $this->options[\CURLOPT_MAXFILESIZE_LARGE] ?? $this->options[\CURLOPT_MAXFILESIZE] ?? null;
-        $limit = \is_int($limit) && $limit > 0 ? $limit : null;
-
-        $received = 0;
+        $limit = DecodedSizeLimit::fromOptions($this->options);
 
         $options = [
             \CURLOPT_URL => (string) $request->getUri(),
@@ -368,17 +365,8 @@ class Client implements Adapter, ResponseStreamingClientInterface
                 return \strlen($line);
             },
             \CURLOPT_RETURNTRANSFER => false,
-            \CURLOPT_WRITEFUNCTION => static function (CurlHandle $handle, string $chunk) use ($sink, $limit, &$received, &$exceeded): int {
+            \CURLOPT_WRITEFUNCTION => static function (CurlHandle $handle, string $chunk) use ($sink): int {
                 unset($handle);
-                $received += \strlen($chunk);
-
-                if ($limit !== null && $received > $limit) {
-                    $exceeded = true;
-
-                    // Any count other than the chunk's length aborts the transfer.
-                    return 0;
-                }
-
                 $sink($chunk);
 
                 return \strlen($chunk);
@@ -435,6 +423,13 @@ class Client implements Adapter, ResponseStreamingClientInterface
         // the helpers.
         $merged[\CURLOPT_FORBID_REUSE] = !$this->reuseConnections;
         $merged[\CURLOPT_FOLLOWLOCATION] = $this->followRedirects;
+
+        // The adapter owns the response body. PHP's cURL lets the last of these options win, so a caller's
+        // CURLOPT_WRITEFUNCTION or CURLOPT_FILE was overridden by CURLOPT_RETURNTRANSFER and sent the body to
+        // standard output, past the decoded-size cap. Set them last, and only the adapter's own.
+        unset($merged[\CURLOPT_RETURNTRANSFER], $merged[\CURLOPT_FILE], $merged[\CURLOPT_WRITEFUNCTION]);
+        $merged[\CURLOPT_RETURNTRANSFER] = false;
+        $merged[\CURLOPT_WRITEFUNCTION] = $limit instanceof DecodedSizeLimit ? $limit->wrap($options[\CURLOPT_WRITEFUNCTION], $exceeded) : $options[\CURLOPT_WRITEFUNCTION];
 
         // Checked once connected, before anything is sent, against the address curl
         // actually connected to: every connection and every redirect hop. Authoritative

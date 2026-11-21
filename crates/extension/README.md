@@ -92,7 +92,10 @@ PHP's warnings apply. A file is read when it is registered, as in PHP, but a JSO
 once per distinct file: Appwrite registers 131 codes at boot and a process reads a few, so this
 keeps about 4.5 MB per process out of memory. Anything else is decoded at registration, so its
 errors are raised at the same point as before. `getTranslations()` builds a language's array once and returns it by
-refcount afterwards, as PHP returns `self::$language[$name]`.
+refcount afterwards, as PHP returns `self::$language[$name]`. The class is built by hand like the
+validators (`src/classes/`): `$default` and `$fallback` are real public properties, and its methods
+skip ext-php-rs's per-call argument parsing and `zend_try`, which made `#[php_class]` slower than
+PHP's class.
 
 Known differences from the PHP class it replaced:
 
@@ -104,7 +107,7 @@ Known differences from the PHP class it replaced:
   keeps the exact bytes.
 - Reading an unregistered default language raises the same `TypeError` without PHP's
   `Undefined array key` warning before it.
-- `serialize()` refuses the object, as it does every class with Rust state.
+- `serialize()` refuses the object, as it did when the class held Rust state.
 
 A warning PHP raises inside the class (`file_get_contents()` of a missing file) names the caller's
 file and line, since the class has no PHP source.
@@ -116,15 +119,17 @@ region (appwrite-labs/cloud#7503), the PHP parser (`UserAgent.php` and `Detectio
 from `packages/user-agent`, which now requires `ext-utopia` like `packages/image`; 0.1.x on
 Packagist is the last release that parses in PHP. What `UserAgent` returns are the package's own
 `OperatingSystem`, `Client`, `Device` and `Bot` objects, built by their PHP constructors once per
-agent and returned as the same object on every call, as in PHP. The class is final with a private constructor
-and the PHP class's private properties, so `==`, `var_dump()` and `(array)` see what they see in PHP.
+agent and returned as the same object on every call, as in PHP. The class is built by hand, like
+`Locale`: it is final with a private constructor, and its state is the PHP class's own private
+typed properties (the promoted `readonly string $value` last), so `==`, `var_dump()`, `(array)`,
+`isset()`, `clone` and `serialize()` behave as in PHP, and arguments are coerced and refused with
+PHP's own `TypeError` and `ArgumentCountError` messages.
 
 `packages/user-agent/tests` run on the extension. Known differences from the PHP class it replaced:
 
-- A `null`, array or object argument and a missing argument raise the same `TypeError` and
-  `ArgumentCountError` with ext-php-rs's message.
-- `isset()` on a private property from outside the class is `true`.
-- `serialize()` refuses the object, as it does every class with Rust state.
+- A closure bound to the class's scope (`Closure::bind($fn, $agent, UserAgent::class)`) cannot
+  read or write its private properties: PHP refuses to bind to an internal class's scope, with a
+  deprecation warning.
 
 ## Utopia\Domains\Domain
 
@@ -332,14 +337,20 @@ makes blowfish (`$2a$`) and portable (`$P$`, with `$H$` accepted) hashes, and ve
 SHA-crypt, DES and extended DES through `crypt()`. `MD5`, `Sha`, `Plaintext`, `Scrypt`,
 `ScryptModified` and `PHPass`'s portable hash compare with `hash_equals()`'s constant time.
 
+Argon2 is `php-std`'s own (`src/argon2.rs`), not the `argon2` crate's, which fills lanes one after
+the other unless rayon's process-wide pool fills them: like libargon2, it fills each slice's lanes
+on threads of their own (`std::thread::scope`), joined before the next slice, so a hash or verify
+with the default 3 threads takes PHP's wall-clock time rather than twice it. Its unit tests check
+it against the `argon2` crate and the reference implementation's example.
+
 `crates/extension/tests/auth.php` prints a corpus that must be identical on both implementations
-(1,356 lines): each class's reflection; the option API over keys PHP converts (`'1'`, `'01'`, `'-0'`,
+(1,374 lines): each class's reflection; the option API over keys PHP converts (`'1'`, `'01'`, `'-0'`,
 binary) and values of every type; arguments of the wrong kind; `MD5`, all nine `Sha` versions and
 `Plaintext` over passwords that are empty, UTF-8, not UTF-8, with NUL bytes and past 72 bytes;
 `Sha` with versions only `setOption()` stores; `Scrypt` over its parameters and every PECL failure
 (`Error`, warning, `false`); `ScryptModified` with Firebase's vector, other options and missing ones;
 `Argon2` and `Bcrypt` over every `password_hash()` option error, each hash checked by the class and
-by PHP's own `password_verify()` and `crypt()`; 84 hashes PHP made (`password_hash()`, every
+by PHP's own `password_verify()` and `crypt()`; 90 hashes PHP made (`password_hash()`, every
 `crypt()` scheme, portable phpass) and 39 malformed ones through every `verify()`; `PHPass` made
 deterministic by a subclass's `getRandomBytes()`, over its options, alphabet and helpers; subclasses
 overriding `setOption()`, `getOption()`, `getOptions()`, `getName()`, `hash()` and `encode64()`;
@@ -353,9 +364,8 @@ and dumps, clones, comparisons and serialization. Its known differences, which n
 - `Argon2` refuses more than 4 GiB of memory with `ValueError('Memory allocation error')`, where
   libargon2 tries to allocate it.
 - `PHPass::getRandomBytes()` reads `/dev/urandom` without consulting `open_basedir`.
-- `Argon2` hashes run their lanes one after the other, where libargon2 runs `threads` of them in
-  parallel: the default (3 threads, 64 MiB, 4 passes) takes about twice the wall-clock time,
-  for the same CPU time.
+- `Argon2` fills at most 16 lanes at once, where libargon2 starts a thread for every lane; the
+  hash is the same.
 
 ## Benchmarks
 
@@ -411,7 +421,9 @@ How it behaves inside a Swoole worker:
 - **Panics.** A panic in a Rust codec is caught and thrown as a PHP `Error` whose message
   starts with `Rust panic:`; the worker keeps running. The release profile must not set
   `panic = "abort"`.
-- **Threads and forks.** The extension starts no thread pool. The pure-Rust AVIF encoder
+- **Threads and forks.** The extension starts no thread pool. `Argon2` fills its lanes on scoped
+  threads that are joined before the call returns, as libargon2's are, so none is left when the
+  worker forks. The pure-Rust AVIF encoder
   (the crate's default `ravif` feature) is left out: with its pool, a process that had
   encoded an AVIF and then forked left the child waiting forever on its next encode.
 

@@ -165,6 +165,21 @@ const METRICS_BY_TYPE: Record<
   [AnalyticsPropertyType.Agent]: ['events', 'visits', 'users', 'visitDuration'],
 }
 
+// Apps have users, sessions and screens rather than visitors, visits and pages.
+const MOBILE_TERMS: Partial<
+  Record<
+    AnalyticsChartMetric,
+    { label: string; info: AnalyticsMetricInfoKey }
+  >
+> = {
+  visitors: { label: 'Active users', info: 'activeUsers' },
+  visits: { label: 'Sessions', info: 'visits' },
+  pageviews: { label: 'Screen views', info: 'screenViews' },
+  users: { label: 'Signed-in users', info: 'users' },
+  viewsPerVisit: { label: 'Screens/session', info: 'screensPerSession' },
+  visitDuration: { label: 'Session length', info: 'visitDuration' },
+}
+
 /** Value of a series-backed metric for one bucket. */
 function bucketValue(
   metric: SeriesMetric,
@@ -481,6 +496,11 @@ export function AnalyticsOverview({
   const metrics = METRICS_BY_TYPE[type]
     .filter((key) => showUsers || key !== 'users')
     .map((key) => OVERVIEW_METRICS.find((metric) => metric.key === key)!)
+    .map((metric) =>
+      type === AnalyticsPropertyType.Mobile
+        ? { ...metric, ...MOBILE_TERMS[metric.key] }
+        : metric,
+    )
 
   // Aggregate metrics can't be read with some filters, so while one is
   // active the chart falls back to the first tab (the tab explains why).

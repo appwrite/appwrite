@@ -28,6 +28,7 @@ import {
 } from './frameworks'
 import {
   box,
+  cylinder,
   ground,
   merge,
   mergeFinishes,
@@ -53,6 +54,9 @@ import {
 import type { FactoryPalette } from './palette'
 import {
   DOCK,
+  EXTENSION_COUNT,
+  EXTENSION_IDS,
+  EXTENSION_STATION,
   BED_BACK,
   BED_FRONT,
   BED_TOP,
@@ -77,6 +81,12 @@ import {
   TOWER_FRONT,
   TOWER_TOP,
   TRACK_Z,
+  UNIT,
+  UNIT_BACK,
+  UNIT_FRONT,
+  UNIT_HEAD,
+  UNIT_POST_TOP,
+  UNIT_Z,
   WALL,
   WAVE_SPEED,
   WAVE_START,
@@ -88,6 +98,7 @@ import {
   getShippedCount,
   getSinceShip,
   getStationStart,
+  extensionX,
   hash01,
   hologramBottom,
   rackZ,
@@ -126,6 +137,13 @@ const BED_Z = (BED_FRONT + BED_BACK) / 2
 const TOE = 0.05
 /** Height of the power line on the bed's front face. */
 const LINE_Y = 0.262
+/** An extension's nameplate: the stations' LCD at three-quarter size, centered on its cabinet's front. */
+const UNIT_PLATE = {
+  scale: 0.75,
+  width: NAMEPLATE_SIZE.width * 0.75,
+  height: NAMEPLATE_SIZE.height * 0.75,
+  y: TOE + (UNIT.height - TOE) / 2,
+} as const
 
 /** Racks stand on a low plinth; their door is glass with the servers behind it. */
 const RACK_BASE = 0.06
@@ -136,8 +154,12 @@ const WALL_CENTER = WALL.y + WALL.height / 2
 const COUNTER_CENTER = COUNTER.y + COUNTER.height / 2
 const BLADE = { pitch: 0.09, height: 0.072, leds: 4 }
 
-/** The gate's tunnel: what the carriers ride into. */
-const TUNNEL = { back: TRACK_Z - 0.46, front: TRACK_Z + 0.46, top: 0.27 }
+/**
+ * The gate's tunnel: what the carriers ride into. Tall and deep enough for
+ * the tallest product, a laptop's open lid, which leans back past the carrier.
+ */
+const TUNNEL = { back: TRACK_Z - 0.58, front: TRACK_Z + 0.48, top: 0.36 }
+const TUNNEL_Z = (TUNNEL.front + TUNNEL.back) / 2
 const GATE_BACK = TUNNEL.back - 0.16
 const GATE_FRONT = BED_FRONT - 0.02
 const GATE_CENTER = GATE.start + GATE.length / 2
@@ -692,6 +714,65 @@ export class FactoryWorld {
       )
     }
 
+    // The extensions: a cabinet in the bed's paint on the floor in front of
+    // its station's bay, a cable duct across to the bed, its nameplate on the
+    // front and, at the back of its top, the post its head turns on (see
+    // `extensions.ts`).
+    for (const id of EXTENSION_IDS) {
+      const x = extensionX(id)
+      machine = ARRIVALS.station(EXTENSION_STATION[id])
+      ground(
+        add(
+          'bed',
+          box(UNIT.width, UNIT.height - TOE, UNIT.depth, 0.045, 4),
+          x,
+          TOE + (UNIT.height - TOE) / 2,
+          UNIT_Z,
+        ),
+        TOE,
+        UNIT.height - TOE,
+      )
+      add(
+        'matte',
+        plain(UNIT.width - 0.05, TOE, UNIT.depth - 0.05),
+        x,
+        TOE / 2,
+        UNIT_Z,
+      )
+      // The duct, from under the bed's overhang to the cabinet's toe.
+      const duct = UNIT.gap + 0.08
+      add(
+        'matte',
+        box(0.2, 0.034, duct, 0.008, 2),
+        x,
+        0.017,
+        UNIT_BACK + 0.02 - duct / 2,
+      )
+      add(
+        'matte',
+        panel(UNIT_PLATE.width + 0.035, UNIT_PLATE.height + 0.035, 0.008, 0.03),
+        x,
+        UNIT_PLATE.y,
+        UNIT_FRONT - 0.002,
+      )
+      const post = UNIT_POST_TOP - UNIT.height
+      add(
+        'aluminum',
+        cylinder(0.085, 0.016, 32),
+        x,
+        UNIT.height + 0.008,
+        UNIT_HEAD.z,
+      )
+      add(
+        'steel',
+        cylinder(0.04, post, 24),
+        x,
+        UNIT.height + post / 2,
+        UNIT_HEAD.z,
+      )
+    }
+    machine = null
+
     // The hologram projectors, one per station: a lens set into the column's
     // top, the fan of light it throws up, and the screen that light draws.
     // Only the lens's housing and glass are there while it is off.
@@ -971,7 +1052,7 @@ export class FactoryWorld {
       ),
       GATE_CENTER,
       (gateTop + tunnelTop) / 2,
-      TRACK_Z,
+      TUNNEL_Z,
     )
     // Dark tunnel lining and a trim frame around its mouth.
     add(
@@ -979,21 +1060,21 @@ export class FactoryWorld {
       plain(GATE.length - 0.08, 0.01, TUNNEL.front - TUNNEL.back),
       GATE_CENTER + 0.03,
       tunnelTop - 0.006,
-      TRACK_Z,
+      TUNNEL_Z,
     )
     add(
       'matte',
       plain(0.02, TUNNEL.top, TUNNEL.front - TUNNEL.back),
       GATE_END - 0.06,
       BED_TOP + TUNNEL.top / 2,
-      TRACK_Z,
+      TUNNEL_Z,
     )
     add(
       'aluminum',
       box(0.03, 0.03, TUNNEL.front - TUNNEL.back + 0.06, 0.008, 1),
       GATE.start - 0.005,
       tunnelTop,
-      TRACK_Z,
+      TUNNEL_Z,
     )
     for (const z of [TUNNEL.back - 0.015, TUNNEL.front + 0.015]) {
       add(
@@ -1049,7 +1130,7 @@ export class FactoryWorld {
     this.curtainSheet.position.set(
       GATE.start + 0.03,
       BED_TOP + TUNNEL.top / 2,
-      TRACK_Z,
+      TUNNEL_Z,
     )
     this.curtainSheet.renderOrder = 8
     this.group.add(this.curtainSheet)
@@ -1094,17 +1175,19 @@ export class FactoryWorld {
       roundedPlane(NAMEPLATE_SIZE.width, NAMEPLATE_SIZE.height, 0.035),
     )
     this.plates = new InstancedBufferAttribute(
-      new Float32Array((STATION_COUNT + 1) * 2),
+      new Float32Array((STATION_COUNT + 1 + EXTENSION_COUNT) * 2),
       2,
     ).setUsage(DynamicDrawUsage)
     plate.setAttribute('aPlate', this.plates)
     kit.nameplate.uniforms.uMap!.value = nameplateTexture
-    kit.nameplate.uniforms.uRows!.value = STATION_COUNT + 1
-    this.nameplates = new InstancedMesh(plate, kit.nameplate, STATION_COUNT + 1)
+    // A row per station, the gate's, then one per extension.
+    const rows = STATION_COUNT + 1 + EXTENSION_COUNT
+    kit.nameplate.uniforms.uRows!.value = rows
+    this.nameplates = new InstancedMesh(plate, kit.nameplate, rows)
     this.nameplates.renderOrder = 3
 
     // Each row of the atlas; placed with their machines as they arrive (see `assemble`).
-    for (let index = 0; index <= STATION_COUNT; index++)
+    for (let index = 0; index < rows; index++)
       this.plates.setXY(index, index, 0)
     for (const mesh of [this.nameplates, this.bladeLeds]) {
       mesh.frustumCulled = false
@@ -1174,7 +1257,7 @@ export class FactoryWorld {
     this.counterScreen.position.copy(spot)
     at(GATE_CENTER, CHEVRON_Y, GATE_FRONT + 0.0075, ARRIVALS.gate)
     this.chevronStrip.position.copy(spot)
-    at(GATE.start + 0.03, BED_TOP + TUNNEL.top / 2, TRACK_Z, ARRIVALS.gate)
+    at(GATE.start + 0.03, BED_TOP + TUNNEL.top / 2, TUNNEL_Z, ARRIVALS.gate)
     this.curtainSheet.position.copy(spot)
 
     for (let index = 0; index < STATION_COUNT; index++) {
@@ -1194,6 +1277,22 @@ export class FactoryWorld {
       STATION_COUNT,
       matrix.makeTranslation(spot.x, spot.y, spot.z),
     )
+    // Each extension's, smaller, on its cabinet's front.
+    EXTENSION_IDS.forEach((id, extension) => {
+      const station = EXTENSION_STATION[id]
+      at(
+        extensionX(id),
+        UNIT_PLATE.y,
+        UNIT_FRONT + 0.0065,
+        ARRIVALS.station(station),
+      )
+      this.nameplates.setMatrixAt(
+        STATION_COUNT + 1 + extension,
+        matrix
+          .makeScale(UNIT_PLATE.scale, UNIT_PLATE.scale, 1)
+          .setPosition(spot),
+      )
+    })
     this.nameplates.instanceMatrix.needsUpdate = true
 
     // The servers' LEDs roll in with their racks, and the racks' painted
@@ -1446,6 +1545,13 @@ export class FactoryWorld {
       }
     }
     this.plates.setY(STATION_COUNT, power)
+    // Extensions come on with the station they stand in front of.
+    EXTENSION_IDS.forEach((id, extension) => {
+      this.plates.setY(
+        STATION_COUNT + 1 + extension,
+        easeOutCubic(stationPower(introTime, EXTENSION_STATION[id])),
+      )
+    })
     this.plates.needsUpdate = true
     if (palette.dark) {
       glows.add(

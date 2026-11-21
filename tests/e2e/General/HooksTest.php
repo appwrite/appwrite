@@ -59,7 +59,7 @@ final class HooksTest extends Scope
             'project' => 'console'
         ], followRedirects: false);
 
-        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals(302, $response['headers']['status-code']);
         $this->assertEquals('http://localhost/?project=console', $response['headers']['location']);
 
         $response = $this->client->call(Client::METHOD_GET, headers: [
@@ -70,7 +70,7 @@ final class HooksTest extends Scope
             'project' => '$this_project_doesnt_exist'
         ], followRedirects: false);
 
-        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals(302, $response['headers']['status-code']);
         $this->assertEquals('http://localhost/?project=%24this_project_doesnt_exist', $response['headers']['location']);
     }
 
@@ -166,7 +166,7 @@ final class HooksTest extends Scope
             'cookie' => $cookie,
         ], followRedirects: false);
 
-        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals(302, $response['headers']['status-code']);
         $this->assertEquals('http://localhost/', $response['headers']['location']);
     }
 }
